@@ -48,7 +48,7 @@ csc = LoadCSC(cfg);
 
 cfg = [];
 evt = LoadEvents(cfg);
-% all_evts = [evt.t{3} evt.t{4}];
+all_evts = [evt.t{3} evt.t{4}];
 
 %%
 %restrict data to first recording of the session
@@ -64,7 +64,7 @@ evt_r = restrict(evt, evt.t{1}(1), evt.t{2}(1));
 %     warning(['Event times for ' evt_r.label{3} ' are somehow equal to ' evt_r.label{4} '.  Check into this...'])
 % end
 
-%% correct for recording time (just to make things easier)
+%% correct for recording time (just to make things easier
 for ii = 1:length(evt_r.t)
     evt_r.t{ii} = evt_r.t{ii} - csc_r.tvec(1);
 end
@@ -75,25 +75,17 @@ end
 all_evts_r = all_evts_r - csc_r.tvec(1);
 
 csc_r.tvec = csc_r.tvec - csc_r.tvec(1);
-
-%% get some recording periods
-peak_threshold = 50;
-[~, Rec_ts] = findpeaks(diff(all_evts_r), 'minpeakheight',peak_threshold);
+% get some recording periods
+Rec_ts = findpeaks(diff(all_evts_r), 'minpeakheight',10);
 fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_ts), length(Rec_ts)/2)
 
 % plot the events and trasitions
 figure(1)
 hold on
-plot(diff(all_evts_r), 'k')
-hline(peak_threshold, '--r')
-plot(Rec_ts, 100, '*k')
-
-% break them into recording sessions
-t_start = Rec_ts(1:2:end-1);
-t_end = Rec_ts(2:2:end);
+plot(diff(all_evts_r))
+plot(Rec_ts, 100 
 
 
-plot([t_start ; t_end]', [50 50], '-b')
 %% plot
 figure(8)
 
