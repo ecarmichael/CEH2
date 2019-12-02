@@ -25,12 +25,20 @@ addpath(genpath(PARAMS.code_base_dir));
 addpath(genpath(PARAMS.code_CEH2_dir));
 cd(PARAMS.data_dir) % move to the data folder
 
+% try the newer NLX loaders for UNIX
+[~, d] = version;
+if str2double(d(end-3:end)) >2014
+    rmpath('/Users/jericcarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared/io/neuralynx')
+    addpath(genpath('/Users/jericcarmichael/Documents/NLX_loaders_UNIX_2015'))
+    disp('Version is greater than 2014b on UNIX so use updated loaders found here:')
+    which Nlx2MatCSC
+end
 
 %%  Laod some stuff
 
 load('ms.mat');
 % load('SFP.mat');
-
+[MS_ts.camNum,MS_ts.frameNum,MS_ts.sysClock,MS_ts.buffer1] = MS_Load_TS('timestamp.dat');
 
 % %% make a video
 % 
@@ -39,19 +47,107 @@ load('ms.mat');
 %     imagesc(SFP(:,:,iframe))
 %     M(iframe) = getframe;
 % end
+%% load MS timestamps
+TS = MS_Load_TS('timestamp.dat');
+TS2 = MS_Load_TS('timestamp2.dat');
 
+% [TS, CAMNUM,FRAMENUM,SYSCLOCK,BUFFER1] = MS_Load_TS('timestamp.dat');
+
+% if length(unique(CAMNUM)) 
+% this_cam = 0;
+%     for ii = unique(CAMNUM)'
+% %         disp(ii)
+%         this_cam = this_cam+1;
+%         idx = CAMNUM == ii;
+%     TS.CAMNUM{this_cam} = CAMNUM(idx);
+%     TS.FRAMENUM{this_cam} = FRAMENUM(idx);
+%     TS.SYSCLOCK{this_cam} = SYSCLOCK(idx);
+%     TS.BUFFER1{this_cam} = BUFFER1(idx);
+% 
+%     end
+   
 
 %% GET nlx data
 cfg = [];
-cfg.fc = {'CSC1.ncs'}%, 'CSC8.ncs'};
+cfg.fc = {'CSC1.ncs'};%, 'CSC8.ncs'};
 csc = LoadCSC(cfg);
 
 cfg = [];
 evt = LoadEvents(cfg);
-% all_evts = [evt.t{3} evt.t{4}];
+evt.t{length(evt.t)+1} = unique(sort([evt.t{3} evt.t{4}]));
+evt.label{length(evt.label)+1} = 'all_evt';
 
-%%
-%restrict data to first recording of the session
+% get the recording start time from NLX header
+if isfield(csc.cfg.hdr{1}, 'TimeCreated')
+    NLX_start = csc.cfg.hdr{1}.TimeCreated; % find the creation time as a string
+    NLX_start = duration(str2double(strsplit(NLX_start(end-8:end),':'))); % pull out hours:mins:sec and convert to a time
+end
+
+% identify major jumps in evts
+
+ all_jumps = diff(evt.t{5}) > (mean(diff(evt.t{5}) +2*std(diff(evt.t{5}))));
+ all_jumps(1) = 0; % correct for first jump;
+ jump_idx = find(all_jumps ==1);
+ rec_evt = [];
+ if sum(all_jumps) > 0 && sum(all_jumps) <2
+     fprintf('Jump found at time: %.0f\n', evt.t{5}(jump_idx))
+     
+     rec1_evt = restrict(evt, evt.t{5}(1), evt.t{5}(jump_idx)); % add one index to compensate for the diff. 
+     rec1_csc = restrict(csc, evt.t{5}(1), evt.t{5}(jump_idx));
+     
+     rec2_evt = restrict(evt, evt.t{5}(jump_idx+1), evt.t{5}(end));
+     rec2_csc = restrict(csc, evt.t{5}(jump_idx+1), evt.t{5}(end));
+     
+ elseif sum(all_jumps) <2
+     
+     for iJ = length(jump_idx):-1:1
+         if iJ ==1
+             rec_evt{iJ} = restrict(evt, evt.t{5}(1), evt.t{5}(jump_idx(iJ)));
+         else
+             rec_evt{iJ} = restrict(evt, evt.t{5}(jump_idx(iJ-1)), evt.t{5}(jump_idx(iJ)));
+         end
+     end
+ end
+
+%% check length of TSs
+disp('TS1')
+for this_cam = 1:length(TS.system_clock)
+fprintf('Number of Scope TS id: %.0f  =   %.0f  at %0.2f Hz\n',this_cam, length(TS.system_clock{this_cam}), 1/(median(diff(TS.system_clock{this_cam}(2:end)))*0.001))
+end
+
+    
+disp('Rec1')
+for this_evt = 3:length(rec1_evt.label) % correct for start and stop recording. 
+    fprintf('Number of evt evts id: %.0f  =   %.0f at %0.2f Hz\n',this_evt, length(rec1_evt.t{this_evt}),1/(median(diff(rec1_evt.t{this_evt}))))
+end
+
+disp('TS2')
+for this_cam = 1:length(TS2.system_clock)
+fprintf('Number of Scope TS id: %.0f  =   %.0f  at %0.2f Hz\n',this_cam, length(TS2.system_clock{this_cam}), 1/(median(diff(TS2.system_clock{this_cam}(2:end)))*0.001))
+end
+
+disp('Rec2')
+for this_evt = 3:length(rec2_evt.label) % correct for start and stop recording. 
+    fprintf('Number of evt evts id: %.0f  =   %.0f at %0.2f Hz\n',this_evt, length(rec2_evt.t{this_evt}),1/(median(diff(rec2_evt.t{this_evt}))))
+end
+
+
+disp('All evt')
+for this_evt = 3:length(evt.label) % correct for start and stop recording. 
+    fprintf('Number of evt evts id: %.0f  =   %.0f at %0.2f Hz\n',this_evt, length(evt.t{this_evt}),1/(median(diff(evt.t{this_evt}))))
+end
+
+% fprintf('Number of NLX events: %.0f, Number of Scope TS: %.0f, Difference: %.0f\n', length(evt.t{this_evt}), length(TS.SYSCLOCK{this_cam}(2:end)), length(evt.t{this_evt}) -  length(TS.SYSCLOCK{this_cam}(2:end)));
+
+
+%% give new TS to MS data 
+% if things checkout
+TS2.NLX_tvec{2} = rec2_evt.t{5}';
+TS2.NLX_tvec{1} = interp(rec2_evt.t{5}, 2)';
+
+%% for JISU DATA
+
+%% restrict data to first recording of the session
 csc_r = restrict(csc, evt.t{1}(1), evt.t{2}(1));
 evt_r = restrict(evt, evt.t{1}(1), evt.t{2}(1));
 
@@ -65,35 +161,62 @@ evt_r = restrict(evt, evt.t{1}(1), evt.t{2}(1));
 % end
 
 %% correct for recording time (just to make things easier)
-for ii = 1:length(evt_r.t)
-    evt_r.t{ii} = evt_r.t{ii} - csc_r.tvec(1);
-end
+% for ii = 1:length(evt_r.t)
+%     evt_r.t{ii} = evt_r.t{ii} - csc_r.tvec(1);
+% end
 
-    all_evts_r = sort([evt_r.t{3} evt_r.t{4}]);
+    all_evts_r = unique(sort(evt_r.t{4}));
 
+    % set a max cutoff_just for plotting
+    
 
-all_evts_r = all_evts_r - csc_r.tvec(1);
+% all_evts_r = all_evts_r - csc_r.tvec(1);
 
-csc_r.tvec = csc_r.tvec - csc_r.tvec(1);
+% csc_r.tvec = csc_r.tvec - csc_r.tvec(1);
 
 %% get some recording periods
-peak_threshold = 50;
-[~, Rec_ts] = findpeaks(diff(all_evts_r), 'minpeakheight',peak_threshold);
-fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_ts), length(Rec_ts)/2)
+peak_threshold = 5;
+[~, Rec_idx] = findpeaks(diff(all_evts_r), 'minpeakheight',peak_threshold);
+fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_idx), length(Rec_idx)/2)
 
 % plot the events and trasitions
 figure(1)
 hold on
 plot(diff(all_evts_r), 'k')
 hline(peak_threshold, '--r')
-plot(Rec_ts, 100, '*k')
+plot(Rec_idx, 100, '*k')
 
 % break them into recording sessions
-t_start = Rec_ts(1:2:end-1);
-t_end = Rec_ts(2:2:end);
+t_start = Rec_idx(1:2:end-1);
+t_end = Rec_idx(2:2:end);
 
 
 plot([t_start ; t_end]', [50 50], '-b')
+
+% convert identified peaks back into a time domain
+Rec_intervals = all_evts_r(Rec_idx);
+Inter_start = Rec_intervals(1:2:end-1);
+Inter_end = Rec_intervals(2:2:end);
+
+Rec_time_from_start = Rec_intervals  - csc.tvec(1);
+
+for ii = 1: length(Inter_start)
+    if ii  ==1
+    time_since = minutes((Inter_start(ii)  - csc.tvec(1))/60);
+    else
+    time_since = minutes(((Inter_start(ii)- csc.tvec(1)) - (Inter_end(ii-1) - csc.tvec(1)))/60);
+    end
+    fprintf('\nDetected intervals %.0f started at %s, %s since last Ca2 recording, and was %.2f minutes long',ii, char(NLX_start + minutes((Inter_start(ii)  - csc.tvec(1))/60)),char(time_since),  (Inter_end(ii) - Inter_start(ii))/60)
+end
+fprintf('\n')
+
+    fprintf('Number of recording sessions from Ca2+ MS file: %.0f\n', length(ms.timestamps))
+
+    
+%% Try to get times from imaging data
+    
+%     [~, peak_idx] = findpeaks(abs(diff(ms.time)), 
+
 %% plot
 figure(8)
 
