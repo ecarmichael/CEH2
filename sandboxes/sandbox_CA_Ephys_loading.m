@@ -139,11 +139,17 @@ for iE = 1:length(rec_evt)
     this_cam = 2;
     if length(rec_evt{iE}.t{5})== length(TS{iE}.system_clock{this_cam})
         disp(['TS and evts align! for Timestamp: ' TS{iE}.filename])
-        TS{iE}.NLX_ts = rec_evt{iE}.t{5};
+        TS{iE}.NLX_ts = rec_evt{iE}.t{5}';
+        TS{iE}
     else
         warning(['TS and evt do not align for Timestamp: ' TS{iE}.filename])
     end
 end
+
+%% make a interpolated signal to see where things are missing
+ts_norm = [0 ;TS{1}.system_clock{2}(2:end)]';
+evt_norm = rec_evt{1}.t{5} - rec_evt{1}.t{5}(1);
+
 
 %% check length of TSs
 disp('TS1')
