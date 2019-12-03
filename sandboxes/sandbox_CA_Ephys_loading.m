@@ -148,7 +148,7 @@ end
 
 %% make a interpolated signal to see where things are missing
 ts_norm = [0 ;TS{1}.system_clock{2}(2:end)]';
-evt_norm = rec_evt{1}.t{5} - rec_evt{1}.t{5}(1);
+evt_norm = rec_evt{1}.t{5} - rec_evt{1}.t{5}(1); 
 
 
 %% check length of TSs
