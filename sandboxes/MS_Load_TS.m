@@ -65,15 +65,11 @@ buffer1 = dataArray{:, 4};
 
 %% extract multiple camera streams and format in the 'ts' manner
 % which timestamp file is this? of how many
-for iTS = 1:length(ts_files_here)
-    if strcmp(ts_files_here(iTS).name, filename)
-    this_ts = iTS;
-    end
-end
+
 TS_out{iFiles}.type = 'ts';
 TS_out{iFiles}.unit = 'ms';
 TS_out{iFiles}.filename = ts_files_here(iFiles).name;
-TS_out{iFiles}.file_num = this_ts;
+TS_out{iFiles}.file_num = iFiles;
 TS_out{iFiles}.file_total = length(ts_files_here);
 TS_out{iFiles}.cfg.history.mfun = [];
 TS_out{iFiles}.cfg.history.cfg = [];
