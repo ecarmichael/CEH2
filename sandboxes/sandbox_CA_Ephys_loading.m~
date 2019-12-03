@@ -141,7 +141,7 @@ for iE = 1:length(rec_evt)
         disp(['TS and evts align! for Timestamp: ' TS{iE}.filename])
         TS{iE}.NLX_ts = rec_evt{iE}.t{5};
     else
-        warning(['TS and evt do not align for Timestamp: ' TS{iE}.filename])
+        d
     end
 end
 
