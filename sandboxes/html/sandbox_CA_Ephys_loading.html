@@ -1,0 +1,828 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>CA2 + ephys sandbox</title><meta name="generator" content="MATLAB 9.7"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-12-03"><meta name="DC.source" content="sandbox_CA_Ephys_loading.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>CA2 + ephys sandbox</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">add paths</a></li><li><a href="#2">Laod some stuff</a></li><li><a href="#3">load MS timestamps</a></li><li><a href="#4">GET nlx data</a></li><li><a href="#5">check length of TSs</a></li><li><a href="#6">give new TS to MS data</a></li><li><a href="#7">for JISU DATA</a></li><li><a href="#8">check length of TSs</a></li><li><a href="#9">restrict data to first recording of the session</a></li><li><a href="#10">correct for recording time (just to make things easier)</a></li><li><a href="#11">get some recording periods</a></li><li><a href="#12">Try to get times from imaging data</a></li><li><a href="#13">plot</a></li></ul></div><h2 id="1">add paths</h2><pre class="codeinput">close <span class="string">all</span>
+restoredefaultpath
+<span class="keyword">global</span> PARAMS
+os = computer;
+
+<span class="keyword">if</span> ismac
+    PARAMS.data_dir = <span class="string">'/Users/jericcarmichael/Documents/Williams_Lab/7_12_2019_PV1069_LTD5'</span>; <span class="comment">% where to find the raw data</span>
+    PARAMS.inter_dir = <span class="string">'/Users/jericcarmichael/Documents/Williams_Lab/Temp/'</span>; <span class="comment">% where to put intermediate files</span>
+    PARAMS.stats_dir = <span class="string">'/Users/jericcarmichael/Documents/Williams_Lab/Stats/'</span>; <span class="comment">% where to put the statistical output .txt</span>
+    PARAMS.code_base_dir = <span class="string">'/Users/jericcarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'</span>; <span class="comment">% where the codebase repo can be found</span>
+    PARAMS.code_CEH2_dir = <span class="string">'/Users/jericcarmichael/Documents/GitHub/CEH2'</span>; <span class="comment">% where the multisite repo can be found</span>
+
+<span class="keyword">elseif</span> strcmp(os, <span class="string">'GLNXA64'</span>)
+
+    PARAMS.data_dir = <span class="string">'/home/ecarmichael/Documents/Williams_Lab/7_12_2019_PV1069_LTD5'</span>; <span class="comment">% where to find the raw data</span>
+    PARAMS.inter_dir = <span class="string">'/home/ecarmichael/Documents/Williams_Lab/Temp/'</span>; <span class="comment">% where to put intermediate files</span>
+    PARAMS.stats_dir = <span class="string">'/home/ecarmichael/Documents/Williams_Lab/Stats/'</span>; <span class="comment">% where to put the statistical output .txt</span>
+    PARAMS.code_base_dir = <span class="string">'/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'</span>; <span class="comment">% where the codebase repo can be found</span>
+    PARAMS.code_CEH2_dir = <span class="string">'/home/ecarmichael/Documents/GitHub/CEH2'</span>; <span class="comment">% where the multisite repo can be found</span>
+
+<span class="keyword">else</span>
+ disp(<span class="string">'on a PC'</span>)
+<span class="keyword">end</span>
+
+
+rng(11,<span class="string">'twister'</span>) <span class="comment">% for reproducibility</span>
+
+
+<span class="comment">% add the required code</span>
+addpath(genpath(PARAMS.code_base_dir));
+addpath(genpath(PARAMS.code_CEH2_dir));
+cd(PARAMS.data_dir) <span class="comment">% move to the data folder</span>
+
+<span class="comment">% try the newer NLX loaders for UNIX</span>
+[~, d] = version;
+<span class="keyword">if</span> str2double(d(end-3:end)) &gt;2014
+    rmpath(<span class="string">'/Users/jericcarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared/io/neuralynx'</span>)
+    addpath(genpath(<span class="string">'/Users/jericcarmichael/Documents/NLX_loaders_UNIX_2015'</span>))
+    disp(<span class="string">'Version is greater than 2014b on UNIX so use updated loaders found here:'</span>)
+    which <span class="string">Nlx2MatCSC</span>
+<span class="keyword">end</span>
+
+clear <span class="string">d</span> <span class="string">os</span>
+</pre><pre class="codeoutput">Warning: Function plot has the same name as a MATLAB builtin. We suggest you
+rename the function to avoid a potential name conflict. 
+Warning:
+"/Users/jericcarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared/io/neuralynx"
+not found in path. 
+Version is greater than 2014b on UNIX so use updated loaders found here:
+/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared/io/neuralynx/Nlx2MatCSC.mexa64
+</pre><h2 id="2">Laod some stuff</h2><pre class="codeinput">tic
+load(<span class="string">'ms.mat'</span>);
+<span class="comment">% load('SFP.mat');</span>
+TS{1} = MS_Load_TS(<span class="string">'timestamp.dat'</span>);
+
+<span class="comment">% [MS_ts.camNum,MS_ts.frameNum,MS_ts.sysClock,MS_ts.buffer1] = MS_Load_TS('timestamp.dat');</span>
+
+<span class="comment">% %% make a video</span>
+<span class="comment">%</span>
+<span class="comment">% for iframe =  1:size(SFP, 3)</span>
+<span class="comment">%</span>
+<span class="comment">%     imagesc(SFP(:,:,iframe))</span>
+<span class="comment">%     M(iframe) = getframe;</span>
+<span class="comment">% end</span>
+
+toc
+</pre><pre class="codeoutput">Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+Warning: While loading an object of class 'VideoReader':
+Reference to non-existent field 'initReader'. 
+</pre><pre class="codeoutput error">Unable to perform assignment because brace indexing is not supported for variables of this type.
+
+Error in sandbox_CA_Ephys_loading (line 52)
+TS{1} = MS_Load_TS('timestamp.dat');
+</pre><h2 id="3">load MS timestamps</h2><pre class="codeinput">TS= MS_Load_TS(<span class="string">'timestamp.dat'</span>);
+TS2 = MS_Load_TS(<span class="string">'timestamp2.dat'</span>);
+
+<span class="comment">% [TS, CAMNUM,FRAMENUM,SYSCLOCK,BUFFER1] = MS_Load_TS('timestamp.dat');</span>
+
+<span class="comment">% if length(unique(CAMNUM))</span>
+<span class="comment">% this_cam = 0;</span>
+<span class="comment">%     for ii = unique(CAMNUM)'</span>
+<span class="comment">% %         disp(ii)</span>
+<span class="comment">%         this_cam = this_cam+1;</span>
+<span class="comment">%         idx = CAMNUM == ii;</span>
+<span class="comment">%     TS.CAMNUM{this_cam} = CAMNUM(idx);</span>
+<span class="comment">%     TS.FRAMENUM{this_cam} = FRAMENUM(idx);</span>
+<span class="comment">%     TS.SYSCLOCK{this_cam} = SYSCLOCK(idx);</span>
+<span class="comment">%     TS.BUFFER1{this_cam} = BUFFER1(idx);</span>
+<span class="comment">%</span>
+<span class="comment">%     end</span>
+</pre><h2 id="4">GET nlx data</h2><pre class="codeinput">tic
+cfg = [];
+cfg.fc = {<span class="string">'CSC4.ncs'</span>};<span class="comment">%, 'CSC8.ncs'};</span>
+csc = LoadCSC(cfg);
+
+cfg = [];
+evt = LoadEvents(cfg);
+evt.t{length(evt.t)+1} = unique(sort([evt.t{3} evt.t{4}]));
+evt.label{length(evt.label)+1} = <span class="string">'all_evt'</span>;
+
+<span class="comment">% get the recording start time from NLX header</span>
+<span class="keyword">if</span> isfield(csc.cfg.hdr{1}, <span class="string">'TimeCreated'</span>)
+    NLX_start = csc.cfg.hdr{1}.TimeCreated; <span class="comment">% find the creation time as a string</span>
+    <span class="keyword">if</span> contains(NLX_start, <span class="string">':'</span>)
+        NLX_start = duration(str2double(strsplit(NLX_start(end-8:end),<span class="string">':'</span>))); <span class="comment">% pull out hours:mins:sec and convert to a time</span>
+    <span class="keyword">else</span>
+        NLX_start = duration([NLX_start(end-5:end-4) <span class="string">':'</span> NLX_start(end-3:end-2) <span class="string">':'</span> NLX_start(end-1:end)]); <span class="comment">% pull out hours:mins:sec and convert to a time</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">% identify major jumps in evts</span>
+
+ all_jumps = diff(evt.t{5}) &gt; (mean(diff(evt.t{5}) +2*std(diff(evt.t{5}))));
+ all_jumps(1) = 0; <span class="comment">% correct for first jump;</span>
+ jump_idx = find(all_jumps ==1);
+ rec_evt = [];
+ <span class="keyword">if</span> sum(all_jumps) &gt; 0 &amp;&amp; sum(all_jumps) &lt;2
+     fprintf(<span class="string">'Jump found at time: %.0f\n'</span>, evt.t{5}(jump_idx))
+
+     rec1_evt = restrict(evt, evt.t{5}(1), evt.t{5}(jump_idx)); <span class="comment">% add one index to compensate for the diff.</span>
+     rec1_csc = restrict(csc, evt.t{5}(1), evt.t{5}(jump_idx));
+
+     rec2_evt = restrict(evt, evt.t{5}(jump_idx+1), evt.t{5}(end));
+     rec2_csc = restrict(csc, evt.t{5}(jump_idx+1), evt.t{5}(end));
+
+ <span class="keyword">elseif</span> sum(all_jumps) &gt;2
+
+     <span class="keyword">for</span> iJ = length(jump_idx):-1:1
+         <span class="keyword">if</span> iJ ==1
+             rec_evt{iJ} = restrict(evt, evt.t{5}(1), evt.t{5}(jump_idx(iJ)));
+         <span class="keyword">else</span>
+             rec_evt{iJ} = restrict(evt, evt.t{5}(jump_idx(iJ-1)), evt.t{5}(jump_idx(iJ)));
+         <span class="keyword">end</span>
+     <span class="keyword">end</span>
+ <span class="keyword">end</span>
+toc
+</pre><h2 id="5">check length of TSs</h2><pre class="codeinput">disp(<span class="string">'TS1'</span>)
+<span class="keyword">for</span> this_cam = 1:length(TS.system_clock)
+fprintf(<span class="string">'Number of Scope TS id: %.0f  =   %.0f  at %0.2f Hz\n'</span>,this_cam, length(TS.system_clock{this_cam}), 1/(median(diff(TS.system_clock{this_cam}(2:end)))*0.001))
+<span class="keyword">end</span>
+
+
+disp(<span class="string">'Rec1'</span>)
+<span class="keyword">for</span> this_evt = 3:length(rec1_evt.label) <span class="comment">% correct for start and stop recording.</span>
+    fprintf(<span class="string">'Number of evt evts id: %.0f  =   %.0f at %0.2f Hz\n'</span>,this_evt, length(rec1_evt.t{this_evt}),1/(median(diff(rec1_evt.t{this_evt}))))
+<span class="keyword">end</span>
+
+disp(<span class="string">'TS2'</span>)
+<span class="keyword">for</span> this_cam = 1:length(TS2.system_clock)
+fprintf(<span class="string">'Number of Scope TS id: %.0f  =   %.0f  at %0.2f Hz\n'</span>,this_cam, length(TS2.system_clock{this_cam}), 1/(median(diff(TS2.system_clock{this_cam}(2:end)))*0.001))
+<span class="keyword">end</span>
+
+disp(<span class="string">'Rec2'</span>)
+<span class="keyword">for</span> this_evt = 3:length(rec2_evt.label) <span class="comment">% correct for start and stop recording.</span>
+    fprintf(<span class="string">'Number of evt evts id: %.0f  =   %.0f at %0.2f Hz\n'</span>,this_evt, length(rec2_evt.t{this_evt}),1/(median(diff(rec2_evt.t{this_evt}))))
+<span class="keyword">end</span>
+
+
+disp(<span class="string">'All evt'</span>)
+<span class="keyword">for</span> this_evt = 3:length(evt.label) <span class="comment">% correct for start and stop recording.</span>
+    fprintf(<span class="string">'Number of evt evts id: %.0f  =   %.0f at %0.2f Hz\n'</span>,this_evt, length(evt.t{this_evt}),1/(median(diff(evt.t{this_evt}))))
+<span class="keyword">end</span>
+
+<span class="comment">% fprintf('Number of NLX events: %.0f, Number of Scope TS: %.0f, Difference: %.0f\n', length(evt.t{this_evt}), length(TS.SYSCLOCK{this_cam}(2:end)), length(evt.t{this_evt}) -  length(TS.SYSCLOCK{this_cam}(2:end)));</span>
+</pre><h2 id="6">give new TS to MS data</h2><p>if things checkout</p><pre class="codeinput">TS2.NLX_tvec{2} = rec2_evt.t{5}';
+TS2.NLX_tvec{1} = interp(rec2_evt.t{5}, 2)';
+</pre><h2 id="7">for JISU DATA</h2><pre class="codeinput">peak_threshold =  (mean(diff(evt.t{5}) +2*std(diff(evt.t{5}))));
+min_dist = 10;
+[~, Rec_idx] = findpeaks(diff(evt.t{5}), <span class="string">'minpeakheight'</span>,peak_threshold, <span class="string">'minpeakdistance'</span>, min_dist);
+fprintf([<span class="string">'\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'</span>], length(Rec_idx), length(Rec_idx)/2)
+
+
+t_start = Rec_idx(1:2:end-1);
+t_end = Rec_idx(2:2:end);
+
+
+ rec_evt = [];
+
+<span class="keyword">for</span> iE = 1:length(t_start)
+    rec_evt{iE} = restrict(evt, evt.t{5}(t_start(iE)), evt.t{5}(t_end(iE)));
+<span class="keyword">end</span>
+
+figure(1)
+hold <span class="string">on</span>
+plot(diff(evt.t{5}), <span class="string">'k'</span>)
+hline(peak_threshold, <span class="string">'--r'</span>)
+plot(Rec_idx, 100, <span class="string">'*k'</span>)
+
+<span class="comment">% break them into recording sessions</span>
+t_start = Rec_idx(1:2:end-1);
+t_end = Rec_idx(2:2:end);
+
+
+plot([t_start ; t_end]', [50 50], <span class="string">'-b'</span>)
+
+
+<span class="comment">%      for iJ = length(Rec_idx):-1:1</span>
+<span class="comment">%          if iJ ==1</span>
+<span class="comment">%              rec_evt{iJ} = restrict(evt, evt.t{5}(1), evt.t{5}(Rec_idx(iJ)));</span>
+<span class="comment">%</span>
+<span class="comment">%          else</span>
+<span class="comment">%              rec_evt{iJ} = restrict(evt, evt.t{5}(Rec_idx(iJ-1)), evt.t{5}(Rec_idx(iJ)));</span>
+<span class="comment">%          end</span>
+<span class="comment">%      end</span>
+</pre><h2 id="8">check length of TSs</h2><pre class="codeinput"><span class="keyword">for</span> iRec = 1:length(rec_evt)
+    disp([<span class="string">'Rec '</span> num2str(iRec)])
+    <span class="keyword">for</span> this_evt = 3:length(rec_evt{iRec}.label) <span class="comment">% correct for start and stop recording.</span>
+        fprintf(<span class="string">'Number ofevts id: %.0f  =   %.0f samples at %0.2f Hz. Start at: %s for ~%.1fs \n'</span>,this_evt, length(rec_evt{iRec}.t{this_evt}),1/(median(diff(rec_evt{iRec}.t{this_evt}))),<span class="keyword">...</span>
+            char(NLX_start + minutes((rec_evt{iRec}.t{this_evt}(1)  - csc.tvec(1))/60)), length(rec_evt{iRec}.t{this_evt})/(1/(median(diff(rec_evt{iRec}.t{this_evt})))))
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="keyword">for</span> iRec = 1:length(TS)
+    disp([<span class="string">'TS '</span> num2str(iRec)])
+    fprintf(<span class="string">'Number of Scope TS id: %.0f  =   %.0f  at %0.2fHz for %.f sec\n'</span>,iRec, length(TS{iRec}.system_clock{1}), 1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001),<span class="keyword">...</span>
+        length(TS{iRec}.system_clock{1})/ (1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001)))
+
+<span class="keyword">end</span>
+
+
+disp(<span class="string">'All evt'</span>)
+<span class="keyword">for</span> this_evt = 3:length(evt.label) <span class="comment">% correct for start and stop recording.</span>
+    fprintf(<span class="string">'Number of evt evts id: %.0f  =   %.0f at %0.2f Hz\n'</span>,this_evt, length(evt.t{this_evt}),1/(median(diff(evt.t{this_evt}))))
+<span class="keyword">end</span>
+
+<span class="comment">% fprintf('Number of NLX events: %.0f, Number of Scope TS: %.0f, Difference: %.0f\n', length(evt.t{this_evt}), length(TS.SYSCLOCK{this_cam}(2:end)), length(evt.t{this_evt}) -  length(TS.SYSCLOCK{this_cam}(2:end)));</span>
+</pre><h2 id="9">restrict data to first recording of the session</h2><pre class="codeinput">csc_r = restrict(csc, evt.t{1}(1), evt.t{2}(1));
+evt_r = restrict(evt, evt.t{1}(1), evt.t{2}(1));
+
+
+<span class="comment">% if evt_r.t{3}(1) &lt; evt_r.t{4}(1)</span>
+<span class="comment">%     all_evts_r = [evt_r.t{3} evt_r.t{4}];</span>
+<span class="comment">% elseif evt_r.t{3}(1) &gt; evt_r.t{4}(1)</span>
+<span class="comment">%     all_evts_r = [evt_r.t{4} evt_r.t{3}];</span>
+<span class="comment">% elseif evt_r.t{3}(1) == evt_r.t{4}(1)</span>
+<span class="comment">%     warning(['Event times for ' evt_r.label{3} ' are somehow equal to ' evt_r.label{4} '.  Check into this...'])</span>
+<span class="comment">% end</span>
+</pre><h2 id="10">correct for recording time (just to make things easier)</h2><p>for ii = 1:length(evt_r.t)     evt_r.t{ii} = evt_r.t{ii} - csc_r.tvec(1); end</p><pre class="codeinput">    all_evts_r = unique(sort(evt.t{5}));
+
+    <span class="comment">% set a max cutoff_just for plotting</span>
+
+
+<span class="comment">% all_evts_r = all_evts_r - csc_r.tvec(1);</span>
+
+<span class="comment">% csc_r.tvec = csc_r.tvec - csc_r.tvec(1);</span>
+</pre><h2 id="11">get some recording periods</h2><pre class="codeinput">peak_threshold = 5;
+[~, Rec_idx] = findpeaks(diff(all_evts_r), <span class="string">'minpeakheight'</span>,peak_threshold);
+fprintf([<span class="string">'\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'</span>], length(Rec_idx), length(Rec_idx)/2)
+
+<span class="comment">% plot the events and trasitions</span>
+figure(1)
+hold <span class="string">on</span>
+plot(diff(all_evts_r), <span class="string">'k'</span>)
+hline(peak_threshold, <span class="string">'--r'</span>)
+plot(Rec_idx, 100, <span class="string">'*k'</span>)
+
+<span class="comment">% break them into recording sessions</span>
+t_start = Rec_idx(1:2:end-1);
+t_end = Rec_idx(2:2:end);
+
+
+plot([t_start ; t_end]', [50 50], <span class="string">'-b'</span>)
+
+<span class="comment">% convert identified peaks back into a time domain</span>
+Rec_intervals = all_evts_r(Rec_idx);
+Inter_start = Rec_intervals(1:2:end-1);
+Inter_end = Rec_intervals(2:2:end);
+
+Rec_time_from_start = Rec_intervals  - csc.tvec(1);
+
+<span class="keyword">for</span> ii = 1: length(Inter_start)
+    <span class="keyword">if</span> ii  ==1
+        time_since = minutes((Inter_start(ii)  - csc.tvec(1))/60);
+    <span class="keyword">else</span>
+        time_since = minutes(((Inter_start(ii)- csc.tvec(1)) - (Inter_end(ii-1) - csc.tvec(1)))/60);
+    <span class="keyword">end</span>
+    fprintf(<span class="string">'\nDetected intervals %.0f started at %s, %s since last Ca2 recording, and was %.2f minutes long'</span>,ii, char(NLX_start + minutes((Inter_start(ii)  - csc.tvec(1))/60)),char(time_since),  (Inter_end(ii) - Inter_start(ii))/60)
+<span class="keyword">end</span>
+fprintf(<span class="string">'\n'</span>)
+
+    fprintf(<span class="string">'Number of recording sessions from Ca2+ MS file: %.0f\n'</span>, length(ms.timestamps))
+</pre><h2 id="12">Try to get times from imaging data</h2><pre class="codeinput"><span class="comment">%     [~, peak_idx] = findpeaks(abs(diff(ms.time)),</span>
+</pre><h2 id="13">plot</h2><pre class="codeinput">figure(8)
+
+<span class="comment">% plot(csc.tvec(1:10000), csc.data(1,1:10000), csc.tvec(1:10000), csc.data(2,1:10000),evt.t{3}, '*k' )</span>
+<span class="comment">% t_start = nearest_idx3(csc.tvec, evt.t{3}(1));</span>
+<span class="comment">% t_end = nearest_idx3(csc.tvec, evt.t{3}(end));</span>
+
+<span class="comment">%</span>
+plot(csc_r.tvec, csc_r.data(1,:))
+<span class="comment">% convert x axis to reasonable time units.  In this case hours</span>
+<span class="comment">% x_val = get(gca, 'xtick');</span>
+<span class="comment">% set(gca, 'xticklabel', round(((x_val - x_val(1))/60)/60,1))</span>
+
+
+hold <span class="string">on</span>
+plot(all_evts_r,max(csc_r.data(1,:)), <span class="string">'*k'</span> )
+<span class="comment">% plot(evt.t{4},max(csc_r.data(1,:)), '*c' )</span>
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% CA2 + ephys sandbox
+
+%% add paths
+
+close all
+restoredefaultpath
+global PARAMS
+os = computer; 
+
+if ismac
+    PARAMS.data_dir = '/Users/jericcarmichael/Documents/Williams_Lab/7_12_2019_PV1069_LTD5'; % where to find the raw data
+    PARAMS.inter_dir = '/Users/jericcarmichael/Documents/Williams_Lab/Temp/'; % where to put intermediate files
+    PARAMS.stats_dir = '/Users/jericcarmichael/Documents/Williams_Lab/Stats/'; % where to put the statistical output .txt
+    PARAMS.code_base_dir = '/Users/jericcarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
+    PARAMS.code_CEH2_dir = '/Users/jericcarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
+
+elseif strcmp(os, 'GLNXA64')
+
+    PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/7_12_2019_PV1069_LTD5'; % where to find the raw data
+    PARAMS.inter_dir = '/home/ecarmichael/Documents/Williams_Lab/Temp/'; % where to put intermediate files
+    PARAMS.stats_dir = '/home/ecarmichael/Documents/Williams_Lab/Stats/'; % where to put the statistical output .txt
+    PARAMS.code_base_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
+    PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
+
+else
+ disp('on a PC')
+end
+
+
+rng(11,'twister') % for reproducibility
+
+
+% add the required code
+addpath(genpath(PARAMS.code_base_dir));
+addpath(genpath(PARAMS.code_CEH2_dir));
+cd(PARAMS.data_dir) % move to the data folder
+
+% try the newer NLX loaders for UNIX
+[~, d] = version;
+if str2double(d(end-3:end)) >2014
+    rmpath('/Users/jericcarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared/io/neuralynx')
+    addpath(genpath('/Users/jericcarmichael/Documents/NLX_loaders_UNIX_2015'))
+    disp('Version is greater than 2014b on UNIX so use updated loaders found here:')
+    which Nlx2MatCSC
+end
+
+clear d os
+%%  Laod some stuff
+tic
+load('ms.mat');
+% load('SFP.mat');
+TS{1} = MS_Load_TS('timestamp.dat');
+
+% [MS_ts.camNum,MS_ts.frameNum,MS_ts.sysClock,MS_ts.buffer1] = MS_Load_TS('timestamp.dat');
+
+% %% make a video
+% 
+% for iframe =  1:size(SFP, 3)
+%     
+%     imagesc(SFP(:,:,iframe))
+%     M(iframe) = getframe;
+% end
+
+toc
+%% load MS timestamps
+TS= MS_Load_TS('timestamp.dat');
+TS2 = MS_Load_TS('timestamp2.dat');
+
+% [TS, CAMNUM,FRAMENUM,SYSCLOCK,BUFFER1] = MS_Load_TS('timestamp.dat');
+
+% if length(unique(CAMNUM)) 
+% this_cam = 0;
+%     for ii = unique(CAMNUM)'
+% %         disp(ii)
+%         this_cam = this_cam+1;
+%         idx = CAMNUM == ii;
+%     TS.CAMNUM{this_cam} = CAMNUM(idx);
+%     TS.FRAMENUM{this_cam} = FRAMENUM(idx);
+%     TS.SYSCLOCK{this_cam} = SYSCLOCK(idx);
+%     TS.BUFFER1{this_cam} = BUFFER1(idx);
+% 
+%     end
+   
+
+%% GET nlx data
+tic
+cfg = [];
+cfg.fc = {'CSC4.ncs'};%, 'CSC8.ncs'};
+csc = LoadCSC(cfg);
+
+cfg = [];
+evt = LoadEvents(cfg);
+evt.t{length(evt.t)+1} = unique(sort([evt.t{3} evt.t{4}]));
+evt.label{length(evt.label)+1} = 'all_evt';
+
+% get the recording start time from NLX header
+if isfield(csc.cfg.hdr{1}, 'TimeCreated')
+    NLX_start = csc.cfg.hdr{1}.TimeCreated; % find the creation time as a string
+    if contains(NLX_start, ':')
+        NLX_start = duration(str2double(strsplit(NLX_start(end-8:end),':'))); % pull out hours:mins:sec and convert to a time
+    else
+        NLX_start = duration([NLX_start(end-5:end-4) ':' NLX_start(end-3:end-2) ':' NLX_start(end-1:end)]); % pull out hours:mins:sec and convert to a time
+    end
+end
+
+% identify major jumps in evts
+
+ all_jumps = diff(evt.t{5}) > (mean(diff(evt.t{5}) +2*std(diff(evt.t{5}))));
+ all_jumps(1) = 0; % correct for first jump;
+ jump_idx = find(all_jumps ==1);
+ rec_evt = [];
+ if sum(all_jumps) > 0 && sum(all_jumps) <2
+     fprintf('Jump found at time: %.0f\n', evt.t{5}(jump_idx))
+     
+     rec1_evt = restrict(evt, evt.t{5}(1), evt.t{5}(jump_idx)); % add one index to compensate for the diff. 
+     rec1_csc = restrict(csc, evt.t{5}(1), evt.t{5}(jump_idx));
+     
+     rec2_evt = restrict(evt, evt.t{5}(jump_idx+1), evt.t{5}(end));
+     rec2_csc = restrict(csc, evt.t{5}(jump_idx+1), evt.t{5}(end));
+     
+ elseif sum(all_jumps) >2
+     
+     for iJ = length(jump_idx):-1:1
+         if iJ ==1
+             rec_evt{iJ} = restrict(evt, evt.t{5}(1), evt.t{5}(jump_idx(iJ)));
+         else
+             rec_evt{iJ} = restrict(evt, evt.t{5}(jump_idx(iJ-1)), evt.t{5}(jump_idx(iJ)));
+         end
+     end
+ end
+toc
+%% check length of TSs
+disp('TS1')
+for this_cam = 1:length(TS.system_clock)
+fprintf('Number of Scope TS id: %.0f  =   %.0f  at %0.2f Hz\n',this_cam, length(TS.system_clock{this_cam}), 1/(median(diff(TS.system_clock{this_cam}(2:end)))*0.001))
+end
+
+    
+disp('Rec1')
+for this_evt = 3:length(rec1_evt.label) % correct for start and stop recording. 
+    fprintf('Number of evt evts id: %.0f  =   %.0f at %0.2f Hz\n',this_evt, length(rec1_evt.t{this_evt}),1/(median(diff(rec1_evt.t{this_evt}))))
+end
+
+disp('TS2')
+for this_cam = 1:length(TS2.system_clock)
+fprintf('Number of Scope TS id: %.0f  =   %.0f  at %0.2f Hz\n',this_cam, length(TS2.system_clock{this_cam}), 1/(median(diff(TS2.system_clock{this_cam}(2:end)))*0.001))
+end
+
+disp('Rec2')
+for this_evt = 3:length(rec2_evt.label) % correct for start and stop recording. 
+    fprintf('Number of evt evts id: %.0f  =   %.0f at %0.2f Hz\n',this_evt, length(rec2_evt.t{this_evt}),1/(median(diff(rec2_evt.t{this_evt}))))
+end
+
+
+disp('All evt')
+for this_evt = 3:length(evt.label) % correct for start and stop recording. 
+    fprintf('Number of evt evts id: %.0f  =   %.0f at %0.2f Hz\n',this_evt, length(evt.t{this_evt}),1/(median(diff(evt.t{this_evt}))))
+end
+
+% fprintf('Number of NLX events: %.0f, Number of Scope TS: %.0f, Difference: %.0f\n', length(evt.t{this_evt}), length(TS.SYSCLOCK{this_cam}(2:end)), length(evt.t{this_evt}) -  length(TS.SYSCLOCK{this_cam}(2:end)));
+
+
+%% give new TS to MS data 
+% if things checkout
+TS2.NLX_tvec{2} = rec2_evt.t{5}';
+TS2.NLX_tvec{1} = interp(rec2_evt.t{5}, 2)';
+
+%% for JISU DATA
+
+peak_threshold =  (mean(diff(evt.t{5}) +2*std(diff(evt.t{5}))));
+min_dist = 10;
+[~, Rec_idx] = findpeaks(diff(evt.t{5}), 'minpeakheight',peak_threshold, 'minpeakdistance', min_dist);
+fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_idx), length(Rec_idx)/2)
+
+
+t_start = Rec_idx(1:2:end-1);
+t_end = Rec_idx(2:2:end);
+
+
+ rec_evt = []; 
+
+for iE = 1:length(t_start)
+    rec_evt{iE} = restrict(evt, evt.t{5}(t_start(iE)), evt.t{5}(t_end(iE)));
+end
+    
+figure(1)
+hold on
+plot(diff(evt.t{5}), 'k')
+hline(peak_threshold, 'REPLACE_WITH_DASH_DASHr')
+plot(Rec_idx, 100, '*k')
+
+% break them into recording sessions
+t_start = Rec_idx(1:2:end-1);
+t_end = Rec_idx(2:2:end);
+
+
+plot([t_start ; t_end]', [50 50], '-b')
+
+
+%      for iJ = length(Rec_idx):-1:1
+%          if iJ ==1
+%              rec_evt{iJ} = restrict(evt, evt.t{5}(1), evt.t{5}(Rec_idx(iJ)));
+% 
+%          else
+%              rec_evt{iJ} = restrict(evt, evt.t{5}(Rec_idx(iJ-1)), evt.t{5}(Rec_idx(iJ)));
+%          end
+%      end
+
+
+%% check length of TSs
+
+for iRec = 1:length(rec_evt)
+    disp(['Rec ' num2str(iRec)])
+    for this_evt = 3:length(rec_evt{iRec}.label) % correct for start and stop recording.
+        fprintf('Number ofevts id: %.0f  =   %.0f samples at %0.2f Hz. Start at: %s for ~%.1fs \n',this_evt, length(rec_evt{iRec}.t{this_evt}),1/(median(diff(rec_evt{iRec}.t{this_evt}))),...
+            char(NLX_start + minutes((rec_evt{iRec}.t{this_evt}(1)  - csc.tvec(1))/60)), length(rec_evt{iRec}.t{this_evt})/(1/(median(diff(rec_evt{iRec}.t{this_evt})))))
+    end
+end
+
+for iRec = 1:length(TS)
+    disp(['TS ' num2str(iRec)])
+    fprintf('Number of Scope TS id: %.0f  =   %.0f  at %0.2fHz for %.f sec\n',iRec, length(TS{iRec}.system_clock{1}), 1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001),...
+        length(TS{iRec}.system_clock{1})/ (1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001)))
+    
+end
+
+
+disp('All evt')
+for this_evt = 3:length(evt.label) % correct for start and stop recording. 
+    fprintf('Number of evt evts id: %.0f  =   %.0f at %0.2f Hz\n',this_evt, length(evt.t{this_evt}),1/(median(diff(evt.t{this_evt}))))
+end
+
+% fprintf('Number of NLX events: %.0f, Number of Scope TS: %.0f, Difference: %.0f\n', length(evt.t{this_evt}), length(TS.SYSCLOCK{this_cam}(2:end)), length(evt.t{this_evt}) -  length(TS.SYSCLOCK{this_cam}(2:end)));
+
+
+%% restrict data to first recording of the session
+csc_r = restrict(csc, evt.t{1}(1), evt.t{2}(1));
+evt_r = restrict(evt, evt.t{1}(1), evt.t{2}(1));
+
+
+% if evt_r.t{3}(1) < evt_r.t{4}(1)
+%     all_evts_r = [evt_r.t{3} evt_r.t{4}];
+% elseif evt_r.t{3}(1) > evt_r.t{4}(1)
+%     all_evts_r = [evt_r.t{4} evt_r.t{3}];
+% elseif evt_r.t{3}(1) == evt_r.t{4}(1)
+%     warning(['Event times for ' evt_r.label{3} ' are somehow equal to ' evt_r.label{4} '.  Check into this...'])
+% end
+
+%% correct for recording time (just to make things easier)
+% for ii = 1:length(evt_r.t)
+%     evt_r.t{ii} = evt_r.t{ii} - csc_r.tvec(1);
+% end
+
+    all_evts_r = unique(sort(evt.t{5}));
+
+    % set a max cutoff_just for plotting
+    
+
+% all_evts_r = all_evts_r - csc_r.tvec(1);
+
+% csc_r.tvec = csc_r.tvec - csc_r.tvec(1);
+
+%% get some recording periods
+peak_threshold = 5;
+[~, Rec_idx] = findpeaks(diff(all_evts_r), 'minpeakheight',peak_threshold);
+fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_idx), length(Rec_idx)/2)
+
+% plot the events and trasitions
+figure(1)
+hold on
+plot(diff(all_evts_r), 'k')
+hline(peak_threshold, 'REPLACE_WITH_DASH_DASHr')
+plot(Rec_idx, 100, '*k')
+
+% break them into recording sessions
+t_start = Rec_idx(1:2:end-1);
+t_end = Rec_idx(2:2:end);
+
+
+plot([t_start ; t_end]', [50 50], '-b')
+
+% convert identified peaks back into a time domain
+Rec_intervals = all_evts_r(Rec_idx);
+Inter_start = Rec_intervals(1:2:end-1);
+Inter_end = Rec_intervals(2:2:end);
+
+Rec_time_from_start = Rec_intervals  - csc.tvec(1);
+
+for ii = 1: length(Inter_start)
+    if ii  ==1
+        time_since = minutes((Inter_start(ii)  - csc.tvec(1))/60);
+    else
+        time_since = minutes(((Inter_start(ii)- csc.tvec(1)) - (Inter_end(ii-1) - csc.tvec(1)))/60);
+    end
+    fprintf('\nDetected intervals %.0f started at %s, %s since last Ca2 recording, and was %.2f minutes long',ii, char(NLX_start + minutes((Inter_start(ii)  - csc.tvec(1))/60)),char(time_since),  (Inter_end(ii) - Inter_start(ii))/60)
+end
+fprintf('\n')
+
+    fprintf('Number of recording sessions from Ca2+ MS file: %.0f\n', length(ms.timestamps))
+
+    
+%% Try to get times from imaging data
+    
+%     [~, peak_idx] = findpeaks(abs(diff(ms.time)), 
+
+%% plot
+figure(8)
+
+% plot(csc.tvec(1:10000), csc.data(1,1:10000), csc.tvec(1:10000), csc.data(2,1:10000),evt.t{3}, '*k' )
+% t_start = nearest_idx3(csc.tvec, evt.t{3}(1));
+% t_end = nearest_idx3(csc.tvec, evt.t{3}(end));
+
+%
+plot(csc_r.tvec, csc_r.data(1,:))
+% convert x axis to reasonable time units.  In this case hours
+% x_val = get(gca, 'xtick');
+% set(gca, 'xticklabel', round(((x_val - x_val(1))/60)/60,1))
+
+
+hold on
+plot(all_evts_r,max(csc_r.data(1,:)), '*k' )
+% plot(evt.t{4},max(csc_r.data(1,:)), '*c' )
+
+
+
+##### SOURCE END #####
+--></body></html>
