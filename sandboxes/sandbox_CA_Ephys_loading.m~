@@ -65,13 +65,11 @@ toc
 %% load MS timestamps
 TS= MS_Load_TS();
 
-fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
 for iT = 1:length(TS)
     if length(TS{iT}.system_clock{1}) == ms.timestamps(iT)
-        disp([TS{iT}.filename   ':  ' num2str(length(TS{iT}.system_clock{1}))   ' - ms TS: ' num2str(ms.timestamps(iT))])
+    disp([TS{iT}.filename   ':  ' num2str(length(TS{iT}.system_clock{1}))   ' - ms TS: ' num2str(ms.timestamps(iT))])
     else
         warning(['TS do not match ms data' TS{iT}.filename   ':  ' num2str(length(TS{iT}.system_clock{1}))   ' - ms TS: ' num2str(ms.timestamps(iT))])
-    end
 end
 
 % TS2 = MS_Load_TS('timestamp2.dat');
