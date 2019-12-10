@@ -65,11 +65,13 @@ toc
 %% load MS timestamps
 TS= MS_Load_TS();
 
+fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
 for iT = 1:length(TS)
     if length(TS{iT}.system_clock{1}) == ms.timestamps(iT)
-    disp([TS{iT}.filename   ':  ' num2str(length(TS{iT}.system_clock{1}))   ' - ms TS: ' num2str(ms.timestamps(iT))])
+        disp([TS{iT}.filename   ':  ' num2str(length(TS{iT}.system_clock{1}))   ' - ms TS: ' num2str(ms.timestamps(iT))  '   ~ ' num2str(length(TS{iT}.system_clock{1}) / TS{iT}.cfg.Fs{1}) 's'])
     else
         warning(['TS do not match ms data' TS{iT}.filename   ':  ' num2str(length(TS{iT}.system_clock{1}))   ' - ms TS: ' num2str(ms.timestamps(iT))])
+    end
 end
 
 % TS2 = MS_Load_TS('timestamp2.dat');
@@ -139,6 +141,7 @@ end
      end
  end
 toc
+%% 
 
 %% if the TSs align with the evt then add it in as a subfield [works for EVA only]
 for iE = 1:length(rec_evt)
@@ -201,6 +204,27 @@ TS2.NLX_tvec{1} = interp(rec2_evt.t{5}, 2)';
 
 %% for JISU DATA
 
+% try plotting all of TS events as an array but with different colors for
+% each section
+all_ts = []; all_ys = []; this_val = 0.5;
+% colors = repmat({'r', 'b', 'g', 'c'},1,length(TS))
+for iT = 1:length(TS)
+    all_ts = [all_ts, TS{iT}.system_clock{1}'];
+    if this_val >0
+        all_ys = [all_ys, repmat(this_val,1, length(TS{iT}.system_clock{1}'))];
+        this_val = -1;
+    elseif this_val <0
+                all_ys = [all_ys, repmat(this_val,1, length(TS{iT}.system_clock{1}'))];
+                this_val =1 ;
+    end
+%     all_ys = [all_ys, repmat(iT, 1, length( TS{iT}.system_clock{1}'))];
+end
+
+
+
+
+
+%%
 peak_threshold =  (mean(diff(evt.t{5}) +2*std(diff(evt.t{5}))));
 min_dist = 10;
 [~, Rec_idx] = findpeaks(diff(evt.t{5}), 'minpeakheight',peak_threshold, 'minpeakdistance', min_dist);
@@ -245,7 +269,7 @@ plot([t_start ; t_end]', [50 50], '-b')
 
 for iRec = 1:length(rec_evt)
     disp(['Rec ' num2str(iRec)])
-    for this_evt = 3:length(rec_evt{iRec}.label) % correct for start and stop recording.
+    for this_evt = length(rec_evt{iRec}.label) % correct for start and stop recording.
         fprintf('Number ofevts id: %.0f  =   %.0f samples at %0.2f Hz. Start at: %s for ~%.1fs \n',this_evt, length(rec_evt{iRec}.t{this_evt}),1/(median(diff(rec_evt{iRec}.t{this_evt}))),...
             char(NLX_start + minutes((rec_evt{iRec}.t{this_evt}(1)  - csc.tvec(1))/60)), length(rec_evt{iRec}.t{this_evt})/(1/(median(diff(rec_evt{iRec}.t{this_evt})))))
     end
