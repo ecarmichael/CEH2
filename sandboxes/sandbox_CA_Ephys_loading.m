@@ -146,6 +146,12 @@ for iE = 1:length(rec_evt)
     end
 end
 
+%% maybe find jumps and fill them in?
+TS_cam_mode = mode(diff(TS{iE}.system_clock{1}(2:end)));
+% for iEvt = length(TS{iE}.system_clock{1}):-1:2
+
+%     if TS{iE}.system_clock{1}(iEvt) - TS{iE}.system_clock{1}(iEvt-1) 
+
 %% make a interpolated signal to see where things are missing
 ts_norm = [0 ;TS{1}.system_clock{2}(2:end)]';
 evt_norm = rec_evt{1}.t{5} - rec_evt{1}.t{5}(1); 
