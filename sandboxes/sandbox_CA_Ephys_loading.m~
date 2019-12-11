@@ -63,7 +63,10 @@ load('ms.mat');
 
 toc
 %% load MS timestamps
-TS= MS_Load_TS();
+cfg_ts = [];
+cfg_ts.correct_time = 1;
+
+TS= MS_Load_TS(cfg_ts);
 
 fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
 for iT = 1:length(TS)
@@ -212,10 +215,10 @@ for iT = 1:length(TS)
     all_ts = [all_ts, TS{iT}.system_clock{1}'];
     if this_val >0
         all_ys = [all_ys, repmat(this_val,1, length(TS{iT}.system_clock{1}'))];
-        this_val = -1;
+        this_val = -.5;
     elseif this_val <0
                 all_ys = [all_ys, repmat(this_val,1, length(TS{iT}.system_clock{1}'))];
-                this_val =1 ;
+                this_val =.5 ;
     end
 %     all_ys = [all_ys, repmat(iT, 1, length( TS{iT}.system_clock{1}'))];
 end
@@ -225,7 +228,7 @@ end
 
 
 %%
-peak_threshold =  (mean(diff(evt.t{5}) +2*std(diff(evt.t{5}))));
+peak_threshold =  (mean(diff(evt.t{5}) +0.00005*std(diff(evt.t{5}))));
 min_dist = 10;
 [~, Rec_idx] = findpeaks(diff(evt.t{5}), 'minpeakheight',peak_threshold, 'minpeakdistance', min_dist);
 fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_idx), length(Rec_idx)/2)
@@ -254,16 +257,7 @@ t_end = Rec_idx(2:2:end);
 
 plot([t_start ; t_end]', [50 50], '-b')
 
-
-%      for iJ = length(Rec_idx):-1:1
-%          if iJ ==1
-%              rec_evt{iJ} = restrict(evt, evt.t{5}(1), evt.t{5}(Rec_idx(iJ)));
-% 
-%          else
-%              rec_evt{iJ} = restrict(evt, evt.t{5}(Rec_idx(iJ-1)), evt.t{5}(Rec_idx(iJ)));
-%          end
-%      end
-
+% collect the jumps and make recording blocks.
 
 %% check length of TSs
 
