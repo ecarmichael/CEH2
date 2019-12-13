@@ -64,6 +64,7 @@ load('ms.mat');
 toc
 %% load MS timestamps
 cfg_ts = [];
+% cfg_ts.fname = {'timestamp12.dat'};
 cfg_ts.correct_time = 1;
 
 TS= MS_Load_TS(cfg_ts);
@@ -144,7 +145,6 @@ end
      end
  end
 toc
-%% 
 
 %% if the TSs align with the evt then add it in as a subfield [works for EVA only]
 for iE = 1:length(rec_evt)
@@ -205,26 +205,24 @@ end
 TS2.NLX_tvec{2} = rec2_evt.t{5}';
 TS2.NLX_tvec{1} = interp(rec2_evt.t{5}, 2)';
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% for JISU DATA
-
-% try plotting all of TS events as an array but with different colors for
-% each section
-all_ts = []; all_ys = []; this_val = 0.5;
-% colors = repmat({'r', 'b', 'g', 'c'},1,length(TS))
-for iT = 1:length(TS)
-    all_ts = [all_ts, TS{iT}.system_clock{1}'];
-    if this_val >0
-        all_ys = [all_ys, repmat(this_val,1, length(TS{iT}.system_clock{1}'))];
-        this_val = -.5;
-    elseif this_val <0
-                all_ys = [all_ys, repmat(this_val,1, length(TS{iT}.system_clock{1}'))];
-                this_val =.5 ;
-    end
-%     all_ys = [all_ys, repmat(iT, 1, length( TS{iT}.system_clock{1}'))];
-end
-
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % try plotting all of TS events as an array but with different colors for
+% % each section
+% all_ts = []; all_ys = []; this_val = 0.5;
+% % colors = repmat({'r', 'b', 'g', 'c'},1,length(TS))
+% for iT = 1:length(TS)
+%     all_ts = [all_ts, TS{iT}.system_clock{1}'];
+%     if this_val >0
+%         all_ys = [all_ys, repmat(this_val,1, length(TS{iT}.system_clock{1}'))];
+%         this_val = -.5;
+%     elseif this_val <0
+%                 all_ys = [all_ys, repmat(this_val,1, length(TS{iT}.system_clock{1}'))];
+%                 this_val =.5 ;
+%     end
+% %     all_ys = [all_ys, repmat(iT, 1, length( TS{iT}.system_clock{1}'))];
+% end
 
 
 %%
@@ -238,36 +236,33 @@ t_start = Rec_idx(1:2:end-1);
 t_end = Rec_idx(2:2:end);
 
 
- rec_evt = []; 
 
-for iE = 1:length(t_start)
-    rec_evt{iE} = restrict(evt, evt.t{5}(t_start(iE)), evt.t{5}(t_end(iE)));
-end
-    
 figure(1)
 hold on
 plot(diff(evt.t{5}), 'k')
 hline(peak_threshold, '--r')
 plot(Rec_idx, 100, '*k')
 
-% break them into recording sessions
-t_start = Rec_idx(1:2:end-1);
-t_end = Rec_idx(2:2:end);
-
-
-plot([t_start ; t_end]', [50 50], '-b')
+% plot([t_start ; t_end]', [50 50], '-b')
 
 %% make some EVT blocks corresponding to the transitions
 
 for iRec = 1:length(Rec_idx)
     if iRec < length(Rec_idx)-1
-        rec_evt{iRec} = restrict(evt, evt.t{5}(Rec_idx(iRec)), evt.t{5}(Rec_idx(iRec+1)));
+        rec_evt{iRec} = restrict(evt, evt.t{5}(Rec_idx(iRec)+1), evt.t{5}(Rec_idx(iRec+1)-1));
     else
-        rec_evt{iRec} = restrict(evt, evt.t{5}(Rec_idx(iRec)), evt.t{5}(end));
+        rec_evt{iRec} = restrict(evt, evt.t{5}(Rec_idx(iRec)+1), evt.t{5}(end));
     end
 end
 
 % collect the jumps and make recording blocks.
+
+%% check for jumps in TS files
+for iT = 1:length(TS)
+   fprintf('\nTS %s     mode diff = %.0f max = %.0f\n', TS{iT}.filename, mode(diff(TS{iT}.system_clock{end})), max(diff(TS{iT}.system_clock{end})))
+    
+    
+end
 
 %% check length of TSs
 all_evt = 0; 
@@ -278,6 +273,7 @@ for iRec = 1:length(rec_evt)
             char(NLX_start + minutes((rec_evt{iRec}.t{this_evt}(1)  - csc.tvec(1))/60)), length(rec_evt{iRec}.t{this_evt})/(1/(median(diff(rec_evt{iRec}.t{this_evt})))))
     end
     all_evt = all_evt + length(rec_evt{iRec}.t{this_evt});
+    all_evt_lens(iRec) = length(rec_evt{iRec}.t{this_evt});
 end
 
 all_TS = 0;
@@ -286,6 +282,8 @@ for iRec = 1:length(TS)
     fprintf('Number of Scope TS id: %.0f  =   %.0f  at %0.2fHz for %.f sec\n',iRec, length(TS{iRec}.system_clock{1}), 1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001),...
         length(TS{iRec}.system_clock{1})/ (1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001)))
     all_TS = all_TS + length(TS{iRec}.system_clock{1});
+    all_TS_len(iRec) = length(TS{iRec}.system_clock{1});
+
 end
 
 fprintf('All EVT: %.0f  All TS: %.0f', all_evt, all_TS)
@@ -303,10 +301,8 @@ disp('Compare')
 for iRec = 1:length(rec_evt)
 %     disp(['Rec ' num2str(iRec)])
     for this_evt = length(rec_evt{iRec}.label) % correct for start and stop recording.
-        fprintf('Evts id: %.0f = %.0f samples   || TS id: %.0f = %.0f samples\n',iRec, length(rec_evt{iRec}.t{this_evt}),iRec, length(TS{iRec}.system_clock{1}))
+        fprintf('Evts id: %.0f = %.0f samples fs ~ %.1f  || TS id: %.0f = %.0f samples fs ~ %.1f\n',iRec, length(rec_evt{iRec}.t{this_evt}),mode(diff(rec_evt{iRec}.t{this_evt}))*1000,iRec, length(TS{iRec}.system_clock{end}), mode(diff(TS{iRec}.system_clock{end})))
     end
-    
-    
 end
 
 %% restrict data to first recording of the session
