@@ -27,6 +27,7 @@ function TS_out = MS_Load_TS(cfg_in)
 %% Initialize variables.
 
 cfg_def = [];
+cfg_def.fname = {};            % put the file names that you want in here: {'timestamp1.dat', 'timstamp2.dat'} EC: make this adaptive to other file paths
 cfg_def.correct_time = 1;
 
 cfg = ProcessConfig2(cfg_def, cfg_in);
@@ -47,23 +48,38 @@ end
 formatSpec = '%f%f%f%f%[^\n\r]';
 
 %% loop over timestamp.dat files found in this dir
-ts_files_here = dir('timestamp*');
 
-% deal with more than 9 TS files
-for ii = 1:length(ts_files_here)
-    temp = regexp(ts_files_here(ii).name, '\d*','Match');
-    temp_ids(ii) = str2num(temp{1});
+
+if isempty(cfg.fname)
+    ts_files_here = dir('timestamp*');
+    
+    % deal with more than 9 TS files
+    for ii = 1:length(ts_files_here)
+        temp = regexp(ts_files_here(ii).name, '\d*','Match');
+        temp_ids(ii) = str2num(temp{1});
+    end
+    
+    [~, idx] = sort(temp_ids);              % sort the file names based on number values
+    ts_files_here = ts_files_here(idx);
+    
+    ts_files_here = {ts_files_here.name}'; % pull out a list of file names. 
+    
+elseif isa(cfg.fname, 'cell')
+    ts_files_here = cfg.fname;  % take the cell array of file names. The order you put in is the order of TS cells you get out. 
+else
+    error('cfg.fname is not a cell or cell array.  If you want all the *timestamp files in a dir leave cfg.fname empty or don''t include it')
 end
 
-[~, idx] = sort(temp_ids);
-ts_files_here = ts_files_here(idx);
+
+
+
 
 
 for iFiles = 1:length(ts_files_here)
 
 
 % Open the text file.
-fileID = fopen(ts_files_here(iFiles).name,'r');
+fileID = fopen(ts_files_here{iFiles},'r');
 
 %% Read columns of data according to the format.
 % This call is based on the structure of the file used to generate this
@@ -100,9 +116,14 @@ end
 
 TS_out{iFiles}.type = 'ts';
 TS_out{iFiles}.unit = 'ms';
-TS_out{iFiles}.filename = ts_files_here(iFiles).name;
+TS_out{iFiles}.filename = ts_files_here{iFiles};
 TS_out{iFiles}.file_num = iFiles;
 TS_out{iFiles}.file_total = length(ts_files_here);
+if isempty(cfg.fname)
+    TS{iFiles}.file_total_flag = 'used given input so total is only from that input array';
+else
+    TS{iFiles}.file_total_flag = 'Used all timestamp* files in dir to get total';
+end
 TS_out{iFiles}.cfg.history.mfun = 'MS_Load_TS';
 TS_out{iFiles}.cfg.history.cfg = cfg;
 TS_out{iFiles}.cfg.filename = fullfile(pwd,TS_out{iFiles}.filename);
