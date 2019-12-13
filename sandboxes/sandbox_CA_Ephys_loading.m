@@ -228,10 +228,10 @@ end
 
 
 %%
-peak_threshold =  (mean(diff(evt.t{5}) +0.00005*std(diff(evt.t{5}))));
+peak_threshold =  (mean(diff(evt.t{5}) +0.05*std(diff(evt.t{5}))));
 min_dist = 10;
 [~, Rec_idx] = findpeaks(diff(evt.t{5}), 'minpeakheight',peak_threshold, 'minpeakdistance', min_dist);
-fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_idx), length(Rec_idx)/2)
+fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_idx), length(Rec_idx))
 
 
 t_start = Rec_idx(1:2:end-1);
@@ -257,25 +257,38 @@ t_end = Rec_idx(2:2:end);
 
 plot([t_start ; t_end]', [50 50], '-b')
 
-% collect the jumps and make recording blocks.
+%% make some EVT blocks corresponding to the transitions
 
-%% check length of TSs
-
-for iRec = 1:length(rec_evt)
-    disp(['Rec ' num2str(iRec)])
-    for this_evt = length(rec_evt{iRec}.label) % correct for start and stop recording.
-        fprintf('Number ofevts id: %.0f  =   %.0f samples at %0.2f Hz. Start at: %s for ~%.1fs \n',this_evt, length(rec_evt{iRec}.t{this_evt}),1/(median(diff(rec_evt{iRec}.t{this_evt}))),...
-            char(NLX_start + minutes((rec_evt{iRec}.t{this_evt}(1)  - csc.tvec(1))/60)), length(rec_evt{iRec}.t{this_evt})/(1/(median(diff(rec_evt{iRec}.t{this_evt})))))
+for iRec = 1:length(Rec_idx)
+    if iRec < length(Rec_idx)-1
+        rec_evt{iRec} = restrict(evt, evt.t{5}(Rec_idx(iRec)), evt.t{5}(Rec_idx(iRec+1)));
+    else
+        rec_evt{iRec} = restrict(evt, evt.t{5}(Rec_idx(iRec)), evt.t{5}(end));
     end
 end
 
-for iRec = 1:length(TS)
-    disp(['TS ' num2str(iRec)])
-    fprintf('Number of Scope TS id: %.0f  =   %.0f  at %0.2fHz for %.f sec\n',iRec, length(TS{iRec}.system_clock{1}), 1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001),...
-        length(TS{iRec}.system_clock{1})/ (1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001)))
-    
+% collect the jumps and make recording blocks.
+
+%% check length of TSs
+all_evt = 0; 
+for iRec = 1:length(rec_evt)
+%     disp(['Rec ' num2str(iRec)])
+    for this_evt = length(rec_evt{iRec}.label) % correct for start and stop recording.
+        fprintf('Number of evts id: %.0f  =   %.0f samples at %0.2f Hz. Start at: %s for ~%.1fs \n',iRec, length(rec_evt{iRec}.t{this_evt}),1/(median(diff(rec_evt{iRec}.t{this_evt}))),...
+            char(NLX_start + minutes((rec_evt{iRec}.t{this_evt}(1)  - csc.tvec(1))/60)), length(rec_evt{iRec}.t{this_evt})/(1/(median(diff(rec_evt{iRec}.t{this_evt})))))
+    end
+    all_evt = all_evt + length(rec_evt{iRec}.t{this_evt});
 end
 
+all_TS = 0;
+for iRec = 1:length(TS)
+%     disp(['TS ' num2str(iRec)])
+    fprintf('Number of Scope TS id: %.0f  =   %.0f  at %0.2fHz for %.f sec\n',iRec, length(TS{iRec}.system_clock{1}), 1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001),...
+        length(TS{iRec}.system_clock{1})/ (1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001)))
+    all_TS = all_TS + length(TS{iRec}.system_clock{1});
+end
+
+fprintf('All EVT: %.0f  All TS: %.0f', all_evt, all_TS)
 
 disp('All evt')
 for this_evt = 3:length(evt.label) % correct for start and stop recording. 
@@ -284,6 +297,17 @@ end
 
 % fprintf('Number of NLX events: %.0f, Number of Scope TS: %.0f, Difference: %.0f\n', length(evt.t{this_evt}), length(TS.SYSCLOCK{this_cam}(2:end)), length(evt.t{this_evt}) -  length(TS.SYSCLOCK{this_cam}(2:end)));
 
+% compare 
+disp('Compare')
+    
+for iRec = 1:length(rec_evt)
+%     disp(['Rec ' num2str(iRec)])
+    for this_evt = length(rec_evt{iRec}.label) % correct for start and stop recording.
+        fprintf('Evts id: %.0f = %.0f samples   || TS id: %.0f = %.0f samples\n',iRec, length(rec_evt{iRec}.t{this_evt}),iRec, length(TS{iRec}.system_clock{1}))
+    end
+    
+    
+end
 
 %% restrict data to first recording of the session
 csc_r = restrict(csc, evt.t{1}(1), evt.t{2}(1));
