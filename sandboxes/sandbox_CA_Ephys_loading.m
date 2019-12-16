@@ -366,10 +366,12 @@ this_seg = 2;
 
 
 ax(1) =subplot(2,1,1);
-timein = (ms_seg.csc{this_seg}.tvec - ms_seg.csc{this_seg}.tvec(1)); % just to fix the timing offset between them back to ebing relative to this segment. 
+timein = (ms_seg.theta_csc{this_seg}.tvec - ms_seg.theta_csc{this_seg}.tvec(1)); % just to fix the timing offset between them back to ebing relative to this segment. 
 % timein = timein
 
- plot(timein, ms_seg.csc{this_seg}.data)
+plot(timein, abs(hilbert(ms_seg.theta_csc{this_seg}.data)), 'b');
+hold on
+plot(timein,ms_seg.theta_csc{this_seg}.data, 'r' );
 xlim([timein(1), timein(end)])
 
 ax(2) =subplot(2,1,2);
