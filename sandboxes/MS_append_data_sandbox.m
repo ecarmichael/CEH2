@@ -38,8 +38,10 @@ if nargin
     end
 end
 
+clear varargin
 % clone the ms_in to maintain it for output.
 ms_out = ms_in;
+
 
 
 %% append the data w/ checks
@@ -54,7 +56,7 @@ for iV = 1:length(var_names)
         if iscell(ms_in.time) && length(var_val{iV}) ~= length(ms_in.time)
             error('input variable ''%s'' is not the same size as ms_in.time and should be examined to avoid misaligned data', var_names{iV})
         else
-            ms_out.(var_names{iV}) = struct(var_names{iV}, var_val{iV}); % if they are the same size than appended them.
+            ms_out.(var_names{iV}) =  var_val{iV}; % if they are the same size than appended them.
         end
     end
 end
