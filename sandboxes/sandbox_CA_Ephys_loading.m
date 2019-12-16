@@ -102,6 +102,12 @@ cfg = [];
 cfg.fc = {'CSC1.ncs'};%, 'CSC8.ncs'};
 csc = LoadCSC(cfg);
 
+% filter into the theta band
+cfg_filt.f = [5 10]; %setting theta (hertz)
+cfg_filt.type = 'cheby1'; %the type of filter I want to use via filterlfp 
+cfg_filt.order = 3; %type filter order 
+theta_csc = FilterLFP(cfg_filt, csc);
+
 cfg = [];
 evt = LoadEvents(cfg);
 evt.t{length(evt.t)+1} = unique(sort([evt.t{3} evt.t{4}]));
@@ -119,31 +125,31 @@ end
 
 % identify major jumps in evts
 
- all_jumps = diff(evt.t{5}) > (mean(diff(evt.t{5}) +0.5*std(diff(evt.t{5}))));
- all_jumps(1) = 0; % correct for first jump;
- jump_idx = find(all_jumps ==1);
- rec_evt = [];
- if sum(all_jumps) > 0 && sum(all_jumps) <2
-     fprintf('Jump found at time: %.0f\n', evt.t{5}(jump_idx))
-     
-     rec_evt{1} = restrict(evt, evt.t{5}(1), evt.t{5}(jump_idx)); % add one index to compensate for the diff. 
-     rec1_csc = restrict(csc, evt.t{5}(1), evt.t{5}(jump_idx));
-     
-     rec_evt{2} = restrict(evt, evt.t{5}(jump_idx+1), evt.t{5}(end));
-     rec2_csc = restrict(csc, evt.t{5}(jump_idx+1), evt.t{5}(end));
-     
- elseif sum(all_jumps) >2
-     
-     for iJ = length(jump_idx):-1:1
-         if iJ ==1
-             rec_evt{iJ} = restrict(evt, evt.t{5}(1), evt.t{5}(jump_idx(iJ)));
-%              rec_csc{iJ} = restrict(csc, evt.t{5}(1), evt.t{5}(jump_idx(iJ)));
-         else
-             rec_evt{iJ} = restrict(evt, evt.t{5}(jump_idx(iJ-1)), evt.t{5}(jump_idx(iJ))); 
-%              rec_csc{iJ} = restrict(csc, evt.t{5}(jump_idx(iJ-1)), evt.t{5}(jump_idx(iJ))); 
-         end
-     end
- end
+%  all_jumps = diff(evt.t{5}) > (mean(diff(evt.t{5}) +0.5*std(diff(evt.t{5}))));
+%  all_jumps(1) = 0; % correct for first jump;
+%  jump_idx = find(all_jumps ==1);
+%  rec_evt = [];
+%  if sum(all_jumps) > 0 && sum(all_jumps) <2
+%      fprintf('Jump found at time: %.0f\n', evt.t{5}(jump_idx))
+%      
+%      rec_evt{1} = restrict(evt, evt.t{5}(1), evt.t{5}(jump_idx)); % add one index to compensate for the diff. 
+%      rec1_csc = restrict(csc, evt.t{5}(1), evt.t{5}(jump_idx));
+%      
+%      rec_evt{2} = restrict(evt, evt.t{5}(jump_idx+1), evt.t{5}(end));
+%      rec2_csc = restrict(csc, evt.t{5}(jump_idx+1), evt.t{5}(end));
+%      
+%  elseif sum(all_jumps) >2
+%      
+%      for iJ = length(jump_idx):-1:1
+%          if iJ ==1
+%              rec_evt{iJ} = restrict(evt, evt.t{5}(1), evt.t{5}(jump_idx(iJ)));
+% %              rec_csc{iJ} = restrict(csc, evt.t{5}(1), evt.t{5}(jump_idx(iJ)));
+%          else
+%              rec_evt{iJ} = restrict(evt, evt.t{5}(jump_idx(iJ-1)), evt.t{5}(jump_idx(iJ))); 
+% %              rec_csc{iJ} = restrict(csc, evt.t{5}(jump_idx(iJ-1)), evt.t{5}(jump_idx(iJ))); 
+%          end
+%      end
+%  end
 toc
 
 %% if the TSs align with the evt then add it in as a subfield [works for EVA only]
@@ -224,6 +230,28 @@ TS2.NLX_tvec{1} = interp(rec2_evt.t{5}, 2)';
 % %     all_ys = [all_ys, repmat(iT, 1, length( TS{iT}.system_clock{1}'))];
 % end
 
+%% flag the longest part of the TS and flag it as a track sesson as it's own TS structure
+
+for iT = 1:length(TS)
+    all_TS_size(iT) = length(TS{iT}.system_clock{end}); 
+    cam_ids(iT,:) = unique(TS{iT}.camera_id{end});    
+end
+
+[largest_TS, idx] = max(all_TS_size); 
+    
+fprintf('\nLargest TS segment is %.0f samples ~ %0.2f mins  cam ID: %.0f\n', largest_TS, (largest_TS/TS{idx}.cfg.Fs{end})/60, cam_ids(idx))
+
+% remove the largest from the TS structure and put it in a new one
+
+% make new TS for track
+TS_track{1} = TS{idx}; 
+% now remove it
+TS(idx) = [];
+
+
+
+    
+    
 
 %%
 peak_threshold =  (mean(diff(evt.t{5}) +0.05*std(diff(evt.t{5}))));
@@ -247,11 +275,17 @@ plot(Rec_idx, 100, '*k')
 
 %% make some EVT blocks corresponding to the transitions
 
+rec_evt = cell(length(Rec_idx));
 for iRec = 1:length(Rec_idx)
     if iRec < length(Rec_idx)-1
-        rec_evt{iRec} = restrict(evt, evt.t{5}(Rec_idx(iRec)+1), evt.t{5}(Rec_idx(iRec+1)-1));
+        rec_evt{iRec} = restrict(evt, evt.t{5}(Rec_idx(iRec)+1), evt.t{5}(Rec_idx(iRec+1)-1)); % restrict the NLX evt struct to ms TTL periods
+        rec_csc{iRec} = restrict(csc, evt.t{5}(Rec_idx(iRec)+1), evt.t{5}(Rec_idx(iRec+1)-1)); % same for the csc
+        rec_theta{iRec} = restrict(theta_csc, evt.t{5}(Rec_idx(iRec)+1), evt.t{5}(Rec_idx(iRec+1)-1)); % same for the csc
+
     else
-        rec_evt{iRec} = restrict(evt, evt.t{5}(Rec_idx(iRec)+1), evt.t{5}(end));
+        rec_evt{iRec} = restrict(evt, evt.t{5}(Rec_idx(iRec)+1), evt.t{5}(end)); % restrict the NLX evt file (last only)
+        rec_csc{iRec} = restrict(csc, evt.t{5}(Rec_idx(iRec)+1), evt.t{5}(end)); % same for csc
+        rec_theta{iRec} = restrict(theta_csc, evt.t{5}(Rec_idx(iRec)+1), evt.t{5}(end)); % same for csc
     end
 end
 
@@ -306,17 +340,44 @@ for iRec = 1:length(rec_evt)
 end
 
 %% restrict data to first recording of the session
-csc_r = restrict(csc, evt.t{1}(1), evt.t{2}(1));
-evt_r = restrict(evt, evt.t{1}(1), evt.t{2}(1));
+
+% try to segment the ms structure
+ms_seg = MS_segment_ms_sandbox(ms);
 
 
-% if evt_r.t{3}(1) < evt_r.t{4}(1)
-%     all_evts_r = [evt_r.t{3} evt_r.t{4}];
-% elseif evt_r.t{3}(1) > evt_r.t{4}(1)
-%     all_evts_r = [evt_r.t{4} evt_r.t{3}];
-% elseif evt_r.t{3}(1) == evt_r.t{4}(1)
-%     warning(['Event times for ' evt_r.label{3} ' are somehow equal to ' evt_r.label{4} '.  Check into this...'])
-% end
+% remove the track segment
+
+ms_seg = MS_remove_data_sandbox(ms_seg, [idx]); 
+
+% append restricted csc files 
+ms_seg = MS_append_data_sandbox(ms_seg, 'csc', rec_csc');
+
+% appened a theta filtered signal
+
+ms_seg = MS_append_data_sandbox(ms_seg, 'theta_csc', rec_csc');
+
+%% Plot some examples of segments
+
+%%%%%%%%%%%%%% this isn't lining up !! %%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+figure(111)
+
+this_seg = 2;
+
+
+ax(1) =subplot(2,1,1);
+timein = (ms_seg.csc{this_seg}.tvec - ms_seg.csc{this_seg}.tvec(1)); % just to fix the timing offset between them back to ebing relative to this segment. 
+% timein = timein
+
+ plot(timein, ms_seg.csc{this_seg}.data)
+xlim([timein(1), timein(end)])
+
+ax(2) =subplot(2,1,2);
+time_in2 = ms_seg.time{this_seg} - ms_seg.time{this_seg}(1); 
+plot(time_in2*0.001, ms_seg.RawTraces{this_seg}(:,1:5))
+xlim([time_in2(1)*0.001 time_in2(end)*0.001])
+
+linkaxes(ax, 'x')
 
 %% correct for recording time (just to make things easier)
 % for ii = 1:length(evt_r.t)
@@ -371,9 +432,7 @@ fprintf('\n')
     fprintf('Number of recording sessions from Ca2+ MS file: %.0f\n', length(ms.timestamps))
 
     
-%% Try to get times from imaging data
-    
-%     [~, peak_idx] = findpeaks(abs(diff(ms.time)), 
+
 
 %% plot
 figure(8)
