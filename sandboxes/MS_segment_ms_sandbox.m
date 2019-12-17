@@ -84,4 +84,5 @@ end
 
 ms_out.format = 'Segmented based on timestamp periods only'; 
 
+disp('Segmented based on timestamp periods only')
 

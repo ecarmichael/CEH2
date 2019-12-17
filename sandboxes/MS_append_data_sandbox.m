@@ -73,3 +73,8 @@ else
     end
 end
 
+% Print what you have done. 
+% if cfg.verbose % should make this ca config option. 
+    fprintf('\nMS_append_data on %s  added ''%s''', date, var_names{ii})
+    fprintf('\n')
+% end
