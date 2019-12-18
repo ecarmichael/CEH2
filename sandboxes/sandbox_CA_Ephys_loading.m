@@ -38,7 +38,7 @@ cd(PARAMS.data_dir) % move to the data folder
 % try the newer NLX loaders for UNIX
 [~, d] = version;
 if str2double(d(end-3:end)) >2014
-    rmpath('/Users/jericcarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared/io/neuralynx')
+    %     rmpath([PARAMS.code_base_dir '/io/neuralynx'])
     addpath(genpath('/Users/jericcarmichael/Documents/NLX_loaders_UNIX_2015'))
     disp('Version is greater than 2014b on UNIX so use updated loaders found here:')
     which Nlx2MatCSC
@@ -101,8 +101,27 @@ end
 %% GET nlx data
 
 check = 1;
-
 tic
+
+
+% load NLX events
+cfg = [];
+evt = LoadEvents(cfg);
+evt.t{length(evt.t)+1} = unique(sort([evt.t{3} evt.t{4}]));
+evt.label{length(evt.label)+1} = 'all_evt';
+
+% get the recording start time from NLX header
+if isfield(csc.cfg.hdr{1}, 'TimeCreated')
+    NLX_start = csc.cfg.hdr{1}.TimeCreated; % find the creation time as a string
+    if contains(NLX_start, ':')
+        NLX_start = duration(str2double(strsplit(NLX_start(end-8:end),':'))); % pull out hours:mins:sec and convert to a time
+    else
+        NLX_start = duration([NLX_start(end-5:end-4) ':' NLX_start(end-3:end-2) ':' NLX_start(end-1:end)]); % pull out hours:mins:sec and convert to a time
+    end
+end
+
+
+% load the NLX 'continuous sampled channels' "CSC"
 cfg = [];
 cfg.fc = {'CSC1.ncs'}%,'CSC6.ncs', 'CSC8.ncs'};
 cfg.decimateByFactor = 8;
@@ -113,7 +132,7 @@ csc = LoadCSC(cfg);
 if check == 1
     len = 1:4000;
     figure(101)
-    subplot(2,1,1)
+    ax(1) =  subplot(2,1,1);
     tvec = csc.tvec(len) - csc.tvec(1);
     offset = 0.0002;
     hold on
@@ -121,6 +140,22 @@ if check == 1
         plot(tvec, csc.data(iC,len)+(offset*iC))
     end
 end
+
+toc
+
+
+%% filters
+
+% filter into the theta band
+cfg_filt = [];
+% cfg_filt.f = [5 11]; %setting theta (hertz)
+cfg_filt.type = 'fdesign'; %the type of filter I want to use via filterlfp
+cfg_filt.f  = [2 5];
+cfg_filt.order = 8; %type filter order
+cfg_filt.display_filter = 1; % use this to see the fvtool (but very slow
+% with ord = 3 for some reason.  Looks like trash with ord ~= 3 in cheby1.
+% Butter and fdesign are also trash.
+delta_csc = FilterLFP(cfg_filt, csc);
 
 % filter into the theta band
 cfg_filt = [];
@@ -146,7 +181,7 @@ theta_csc = FilterLFP(cfg_filt, csc);
 
 if check ==1
     figure(101)
-    subplot(2,1,2)
+    ax(2) = subplot(2,1,2);
     
     hold on
     tvec = theta_csc.tvec(len) - theta_csc.tvec(1);
@@ -154,24 +189,12 @@ if check ==1
     offset = 0.0002;
     for iC = 1:length(theta_csc.label)
         plot(tvec, abs(hilbert(theta_csc.data(iC,len)))+(offset*iC))
-        plot(tvec, abs(theta_csc.data(iC,len))+(offset*iC))
+        plot(tvec, (theta_csc.data(iC,len))+(offset*iC))
     end
+    linkaxes(ax, 'x')
 end
 
-cfg = [];
-evt = LoadEvents(cfg);
-evt.t{length(evt.t)+1} = unique(sort([evt.t{3} evt.t{4}]));
-evt.label{length(evt.label)+1} = 'all_evt';
 
-% get the recording start time from NLX header
-if isfield(csc.cfg.hdr{1}, 'TimeCreated')
-    NLX_start = csc.cfg.hdr{1}.TimeCreated; % find the creation time as a string
-    if contains(NLX_start, ':')
-        NLX_start = duration(str2double(strsplit(NLX_start(end-8:end),':'))); % pull out hours:mins:sec and convert to a time
-    else
-        NLX_start = duration([NLX_start(end-5:end-4) ':' NLX_start(end-3:end-2) ':' NLX_start(end-1:end)]); % pull out hours:mins:sec and convert to a time
-    end
-end
 
 % identify major jumps in evts
 
@@ -200,7 +223,6 @@ end
 %          end
 %      end
 %  end
-toc
 
 %% if the TSs align with the evt then add it in as a subfield [works for EVA only]
 for iE = 1:length(rec_evt)
@@ -306,20 +328,22 @@ TS(idx) = [];
 %% identify peaks in  diff(evt.t{5}) marking transitions in the camera TTLs
 peak_threshold =  (mean(diff(evt.t{5}) +0.05*std(diff(evt.t{5}))));
 min_dist = 10;
-[Rec_peak, Rec_idx] = findpeaks(diff(evt.t{5}), 'minpeakheight',peak_threshold, 'minpeakdistance', min_dist);
+[Rec_peak, Rec_idx] = findpeaks(diff(evt.t{3}), 'minpeakheight',peak_threshold, 'minpeakdistance', min_dist);
 fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_idx), length(Rec_idx))
 
 
 % plot the diff and the detected peaks as a check.
-figure(1)
-hold on
-plot(diff(evt.t{5}), 'k')
-hline(peak_threshold, '--r')
-% plot(Rec_idx, 100, '*k')
-for iRec = 1:length(Rec_idx)
-    % text(Rec_idx(iRec),Rec_peak(iRec),num2str(iRec))
-    text(Rec_idx(iRec),peak_threshold,num2str(iRec))
-    
+if check == 1
+    figure(1)
+    hold on
+    plot(diff(evt.t{3}), 'k')
+    hline(peak_threshold, '--r')
+    % plot(Rec_idx, 100, '*k')
+    for iRec = 1:length(Rec_idx)
+        % text(Rec_idx(iRec),Rec_peak(iRec),num2str(iRec))
+        text(Rec_idx(iRec),peak_threshold,num2str(iRec))
+        
+    end
 end
 
 
@@ -327,7 +351,23 @@ end
 % t_end = Rec_idx(2:2:end);
 % plot([t_start ; t_end]', [50 50], '-b')
 
+%% try getting a spectrogram for sleep state detection
+cfg_spec.win = 512;
+cfg_spec.noverlap = cfg_spec.win/4;
+
+
+
+[~,F,T,P] = spectrogram(csc.data,rectwin(cfg_spec.win),cfg_spec.noverlap,1:120,csc.cfg.hdr{1}.SamplingFrequency);
+
+figure(122)
+ax1 = imagesc(T,F,10*log10(P)); % converting to dB as usual
+set(ax1, 'AlphaData', ~isinf(10*log10(P)))
+%         set(gca,'FontSize',28);
+axis xy; xlabel('Time (s)'); ylabel('Frequency (Hz)');
+
+
 %% check the transitions for jumps and compare them to the TS times.  It seems like the TTL can have gitter around the transition periods.
+t_idx = 3;
 
 for iRec = 1:length(Rec_idx)
     
@@ -337,62 +377,85 @@ for iRec = 1:length(Rec_idx)
     idx_high = NaN;
     
     if iRec == 1
+        low_val = 0;  % only move the low_val 'forward' from zero
+        while ~isempty(idx_low)
+            temp_evt = restrict(evt, evt.t{t_idx}(Rec_idx(iRec)-low_val), evt.t{t_idx}(Rec_idx(iRec+1)));
+            idx_low =find(diff(temp_evt.t{t_idx}(1:20)) > mode(diff(temp_evt.t{t_idx}))*1.05);
+            %     idx_high =find(diff(temp_evt.t{t_idx}(end-50:end)) > mode(diff(temp_evt.t{t_idx}))*1.05);
+            low_val = low_val - 1;
+        end
+        
         
         while ~isempty(idx_high)
-            temp_evt = restrict(evt, evt.t{5}(Rec_idx(iRec)), evt.t{5}(Rec_idx(iRec+1)+high_val));
-            %     idx_low =find(diff(temp_evt.t{5}(1:50)) > mode(diff(temp_evt.t{5}))*1.05)
-            idx_high =find(diff(temp_evt.t{5}(end-11:end)) > mode(diff(temp_evt.t{5}))*1.05)
+            temp_evt = restrict(evt, evt.t{t_idx}(Rec_idx(iRec)), evt.t{t_idx}(Rec_idx(iRec+1)-high_val));
+            %     idx_low =find(diff(temp_evt.t{t_idx}(1:50)) > mode(diff(temp_evt.t{t_idx}))*1.05)
+            idx_high =find(diff(temp_evt.t{t_idx}(end-20:end)) > mode(diff(temp_evt.t{t_idx}))*1.05);
             high_val = high_val +1;
         end
         
         disp(['Corrected indexting ' num2str(0) ' - ' num2str(high_val)])
         
-        times_to_use(iRec,:) = [0, high_val]; % keep the good values for restrictions in the next ce
         
         
     elseif iRec == length(Rec_idx)
+        high_val = 0; % only move backwards from the end.
         
         while ~isempty(idx_low)
-            temp_evt = restrict(evt, evt.t{5}(Rec_idx(iRec)-low_val), evt.t{5}(Rec_idx(end)));
-            idx_low =find(diff(temp_evt.t{5}(1:11)) > mode(diff(temp_evt.t{5}))*1.05)
-            %     idx_high =find(diff(temp_evt.t{5}(end-50:end)) > mode(diff(temp_evt.t{5}))*1.05);
+            temp_evt = restrict(evt, evt.t{t_idx}(Rec_idx(iRec)-low_val), evt.t{t_idx}(end));
+            idx_low =find(diff(temp_evt.t{t_idx}(1:20)) > mode(diff(temp_evt.t{t_idx}))*1.05);
+            %     idx_high =find(diff(temp_evt.t{t_idx}(end-50:end)) > mode(diff(temp_evt.t{t_idx}))*1.05);
             low_val = low_val - 1;
+        end
+        
+        while ~isempty(idx_high)
+            temp_evt = restrict(evt, evt.t{t_idx}(Rec_idx(iRec)), evt.t{t_idx}(end)-high_val);
+            %     idx_low =find(diff(temp_evt.t{t_idx}(1:50)) > mode(diff(temp_evt.t{t_idx}))*1.05)
+            idx_high =find(diff(temp_evt.t{t_idx}(end-20:end)) > mode(diff(temp_evt.t{t_idx}))*1.05);
+            high_val = high_val +1;
         end
         
         
         disp(['Corrected indexting ' num2str(low_val) ' - ' num2str(0)])
         
-        times_to_use(iRec,:) = [low_val, 0]; % keep the good values for restrictions in the next cell.
-        
     else
-        
-        
         
         % loop until you find the index offset that gives no jump in time. for
         % start
         while ~isempty(idx_low)
-            temp_evt = restrict(evt, evt.t{5}(Rec_idx(iRec)-low_val), evt.t{5}(Rec_idx(iRec+1)+high_val));
-            idx_low =find(diff(temp_evt.t{5}(1:11)) > mode(diff(temp_evt.t{5}))*1.05)
-            %     idx_high =find(diff(temp_evt.t{5}(end-50:end)) > mode(diff(temp_evt.t{5}))*1.05);
+            temp_evt = restrict(evt, evt.t{t_idx}(Rec_idx(iRec)-low_val), evt.t{t_idx}(Rec_idx(iRec+1)));
+            idx_low =find(diff(temp_evt.t{t_idx}(1:15)) > mode(diff(temp_evt.t{t_idx}))*1.05);
+            %     idx_high =find(diff(temp_evt.t{t_idx}(end-50:end)) > mode(diff(temp_evt.t{t_idx}))*1.05);
             low_val = low_val - 1;
         end
         
         % loop until you find the index offset that gives no jump in time. for
         % end
         while ~isempty(idx_high)
-            temp_evt = restrict(evt, evt.t{5}(Rec_idx(iRec)-low_val), evt.t{5}(Rec_idx(iRec+1)+high_val));
-            %     idx_low =find(diff(temp_evt.t{5}(1:50)) > mode(diff(temp_evt.t{5}))*1.05)
-            idx_high =find(diff(temp_evt.t{5}(end-11:end)) > mode(diff(temp_evt.t{5}))*1.05)
+            temp_evt = restrict(evt, evt.t{t_idx}(Rec_idx(iRec)-low_val), evt.t{t_idx}(Rec_idx(iRec+1)-high_val));
+            %     idx_low =find(diff(temp_evt.t{t_idx}(1:50)) > mode(diff(temp_evt.t{t_idx}))*1.05)
+            idx_high =find(diff(temp_evt.t{t_idx}(end-15:end)) > mode(diff(temp_evt.t{t_idx}))*1.05);
             high_val = high_val +1;
         end
         
+        
         disp(['Corrected indexting ' num2str(low_val) ' - ' num2str(high_val)])
         
-        times_to_use(iRec,:) = [low_val, high_val]; % keep the good values for restrictions in the next cell.
     end
+    
+    times_to_use(iRec,:) = [low_val+1, high_val-1]; % keep the good values for restrictions in the next cell.
+    
+    if iRec == length(Rec_idx)
+        temp_evt = restrict(evt, evt.t{t_idx}(Rec_idx(iRec)-low_val+1), evt.t{t_idx}(end)-high_val-1);
+    else
+        temp_evt = restrict(evt, evt.t{t_idx}(Rec_idx(iRec)-low_val+1), evt.t{t_idx}(Rec_idx(iRec+1)-high_val-1));
+    end
+    biggest_jumps(iRec) = max(diff(temp_evt.t{t_idx}));
 end
 
-
+for iRec = 1:length(Rec_idx)
+    fprintf('Evt: %.0f Best offsets: start = %.0f  end = %.0f largest jump = %.3f sec\n', iRec, times_to_use(iRec,1), times_to_use(iRec, 2), biggest_jumps(iRec)) 
+    
+end
 
 
 %% make some EVT blocks corresponding to the transitions and chop the data
@@ -406,14 +469,14 @@ rec_theta = cell(length(Rec_idx),1);
 % 'evt', raw lfp : 'csc', filtered lfp = 'theta'
 for iRec = 1:length(Rec_idx)
     if iRec < length(Rec_idx)
-        rec_evt{iRec} = restrict(evt, evt.t{5}(Rec_idx(iRec)-times_to_use(iRec,1)), evt.t{5}(Rec_idx(iRec+1)+times_to_use(iRec,2))); % restrict the NLX evt struct to ms TTL periods
-        rec_csc{iRec} = restrict(csc, evt.t{5}(Rec_idx(iRec)+2), evt.t{5}(Rec_idx(iRec+1)-1)); % same for the csc
-        rec_theta{iRec} = restrict(theta_csc, evt.t{5}(Rec_idx(iRec)+2), evt.t{5}(Rec_idx(iRec+1)-1)); % same for the csc
+        rec_evt{iRec} = restrict(evt, evt.t{t_idx}(Rec_idx(iRec)-times_to_use(iRec,1)), evt.t{t_idx}(Rec_idx(iRec+1)-times_to_use(iRec,2))); % restrict the NLX evt struct to ms TTL periods
+        rec_csc{iRec} = restrict(csc, evt.t{t_idx}(Rec_idx(iRec)+2), evt.t{t_idx}(Rec_idx(iRec+1)-1)); % same for the csc
+        rec_theta{iRec} = restrict(theta_csc, evt.t{t_idx}(Rec_idx(iRec)+2), evt.t{t_idx}(Rec_idx(iRec+1)-1)); % same for the csc
         
     else
-        rec_evt{iRec} = restrict(evt, evt.t{5}(Rec_idx(iRec)-times_to_use(iRec,1)), evt.t{5}(end)); % restrict the NLX evt file (last only)
-        rec_csc{iRec} = restrict(csc, evt.t{5}(Rec_idx(iRec)+2), evt.t{5}(end)); % same for csc
-        rec_theta{iRec} = restrict(theta_csc, evt.t{5}(Rec_idx(iRec)+2), evt.t{5}(end)); % same for csc
+        rec_evt{iRec} = restrict(evt, evt.t{t_idx}(Rec_idx(iRec)-times_to_use(iRec,1)), evt.t{t_idx}(end)); % restrict the NLX evt file (last only)
+        rec_csc{iRec} = restrict(csc, evt.t{t_idx}(Rec_idx(iRec)+2), evt.t{t_idx}(end)); % same for csc
+        rec_theta{iRec} = restrict(theta_csc, evt.t{t_idx}(Rec_idx(iRec)+2), evt.t{t_idx}(end)); % same for csc
     end
 end
 
@@ -437,7 +500,7 @@ end
 all_TS = 0;
 for iRec = 1:length(TS)
     %     disp(['TS ' num2str(iRec)])
-    fprintf('Number of Scope TS id: %.0f  =   %.0f  at %0.2fHz for %.f sec\n',iRec, length(TS{iRec}.system_clock{1}), 1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001),...
+    fprintf('Number of Scope TS id: %.0f  =   %.0f  at %0.2fHz for %.1f sec\n',iRec, length(TS{iRec}.system_clock{1}), 1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001),...
         length(TS{iRec}.system_clock{1})/ (1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001)))
     all_TS = all_TS + length(TS{iRec}.system_clock{1});
     all_TS_len(iRec) = length(TS{iRec}.system_clock{1});
@@ -459,10 +522,13 @@ disp('Compare')
 for iRec = 1:length(rec_evt)
     %     disp(['Rec ' num2str(iRec)])
     for this_evt = length(rec_evt{iRec}.label) % correct for start and stop recording.
-        fprintf('Evts id: %.0f = %.0f samples fs ~ %.1f  || TS id: %.0f = %.0f samples fs ~ %.1f\n',iRec, length(rec_evt{iRec}.t{this_evt}),mode(diff(rec_evt{iRec}.t{this_evt}))*1000,iRec, length(TS{iRec}.system_clock{end}), mode(diff(TS{iRec}.system_clock{end})))
+        fprintf('Evts id: %.0f = %.0f samples fs ~ %.1f time: %0.2f sc || TS id: %.0f = %.0f samples fs ~ %.1f time: %0.2f sc\n',iRec, length(rec_evt{iRec}.t{this_evt}),mode(diff(rec_evt{iRec}.t{this_evt}))*1000,length(rec_evt{iRec}.t{this_evt})/(1/(median(diff(rec_evt{iRec}.t{this_evt})))),...
+            iRec, length(TS{iRec}.system_clock{end}), mode(diff(TS{iRec}.system_clock{end})),...
+            length(TS{iRec}.system_clock{1})/ (1/(median(diff(TS{iRec}.system_clock{1}(2:end)))*0.001)))
     end
     evt_TS_diff(iRec) = length(rec_evt{iRec}.t{this_evt}) - length(TS{iRec}.system_clock{end});
 end
+
 evt_TS_diff % print the offset
 %% restrict data to first recording of the session
 
@@ -483,28 +549,25 @@ ms_seg = MS_append_data_sandbox(ms_seg, 'theta_csc', rec_theta');
 
 %% Plot some examples of segments
 
-%%%%%%%%%%%%%% this isn't lining up !! %%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-figure(111)
-
-this_seg = 1;
-
-
+for iRec = 1:3
+    figure(iRec)
 ax(1) =subplot(2,1,1);
-timein = (ms_seg.theta_csc{this_seg}.tvec - ms_seg.theta_csc{this_seg}.tvec(1)); % just to fix the timing offset between them back to ebing relative to this segment.
+timein = (ms_seg.theta_csc{iRec}.tvec - ms_seg.theta_csc{iRec}.tvec(1)); % just to fix the timing offset between them back to ebing relative to this segment.
 % timein = timein
 
-plot(timein, abs(hilbert(ms_seg.theta_csc{this_seg}.data)), '--r');
+plot(timein, abs(hilbert(ms_seg.theta_csc{iRec}.data)), '--r');
 hold on
-plot(timein,ms_seg.theta_csc{this_seg}.data, '-b' );
+plot(timein,ms_seg.theta_csc{iRec}.data, '-b' );
 xlim([timein(1), timein(end)])
 
 ax(2) =subplot(2,1,2);
-time_in2 = ms_seg.time{this_seg} - ms_seg.time{this_seg}(1);
-plot(time_in2*0.001, ms_seg.RawTraces{this_seg}(:,1:5))
+time_in2 = ms_seg.time{iRec} - ms_seg.time{iRec}(1);
+plot(time_in2*0.001, ms_seg.RawTraces{iRec}(:,1:5))
 xlim([time_in2(1)*0.001 time_in2(end)*0.001])
 
 linkaxes(ax, 'x')
+ax = [];
+end
 
 %% correct for recording time (just to make things easier)
 % for ii = 1:length(evt_r.t)
