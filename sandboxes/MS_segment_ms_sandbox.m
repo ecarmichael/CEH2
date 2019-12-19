@@ -40,9 +40,7 @@ ms_out = rmfield(ms_out, 'vidNum');
 ms_out = rmfield(ms_out, 'frameNum');
 
 
-
 %% get all the time blocks and restrict the data to those blocks
-
 times = ms_in.timestamps1;
 
 % make incremental 

@@ -100,7 +100,7 @@ end
 
 %% GET nlx data
 
-check = 1;
+check = 1; check_fig =101;
 tic
 
 
@@ -110,6 +110,27 @@ evt = LoadEvents(cfg);
 evt.t{length(evt.t)+1} = unique(sort([evt.t{3} evt.t{4}]));
 evt.label{length(evt.label)+1} = 'all_evt';
 
+% load the NLX 'continuous sampled channels' "CSC"
+cfg = [];
+cfg.fc = {'CSC8.ncs'}%,'CSC6.ncs', 'CSC8.ncs'};
+% cfg.decimateByFactor = 8;
+csc = LoadCSC(cfg);
+
+% csc = restrict(csc, 1, 50000);
+
+if check == 1
+    len = 1:4000;
+    figure(check_fig)
+    ax(1) =  subplot(3,1,1);
+    tvec = csc.tvec(len) - csc.tvec(1);
+    offset = 0.0002;
+    hold on
+    for iC = 1:length(csc.label)
+        plot(tvec, csc.data(iC,len)+(offset*iC))
+    end
+end
+
+
 % get the recording start time from NLX header
 if isfield(csc.cfg.hdr{1}, 'TimeCreated')
     NLX_start = csc.cfg.hdr{1}.TimeCreated; % find the creation time as a string
@@ -117,27 +138,6 @@ if isfield(csc.cfg.hdr{1}, 'TimeCreated')
         NLX_start = duration(str2double(strsplit(NLX_start(end-8:end),':'))); % pull out hours:mins:sec and convert to a time
     else
         NLX_start = duration([NLX_start(end-5:end-4) ':' NLX_start(end-3:end-2) ':' NLX_start(end-1:end)]); % pull out hours:mins:sec and convert to a time
-    end
-end
-
-
-% load the NLX 'continuous sampled channels' "CSC"
-cfg = [];
-cfg.fc = {'CSC1.ncs'}%,'CSC6.ncs', 'CSC8.ncs'};
-cfg.decimateByFactor = 8;
-csc = LoadCSC(cfg);
-
-% csc = restrict(csc, 1, 50000);
-
-if check == 1
-    len = 1:4000;
-    figure(101)
-    ax(1) =  subplot(2,1,1);
-    tvec = csc.tvec(len) - csc.tvec(1);
-    offset = 0.0002;
-    hold on
-    for iC = 1:length(csc.label)
-        plot(tvec, csc.data(iC,len)+(offset*iC))
     end
 end
 
@@ -152,9 +152,7 @@ cfg_filt = [];
 cfg_filt.type = 'fdesign'; %the type of filter I want to use via filterlfp
 cfg_filt.f  = [2 5];
 cfg_filt.order = 8; %type filter order
-cfg_filt.display_filter = 1; % use this to see the fvtool (but very slow
-% with ord = 3 for some reason.  Looks like trash with ord ~= 3 in cheby1.
-% Butter and fdesign are also trash.
+% cfg_filt.display_filter = 1; % use this to see the fvtool
 delta_csc = FilterLFP(cfg_filt, csc);
 
 % filter into the theta band
@@ -163,10 +161,12 @@ cfg_filt = [];
 cfg_filt.type = 'cheby1'; %the type of filter I want to use via filterlfp
 cfg_filt.f  = [6 11];
 cfg_filt.order = 3; %type filter order
-% cfg_filt.display_filter = 1; % use this to see the fvtool (but very slow
-% with ord = 3 for some reason.  Looks like trash with ord ~= 3 in cheby1.
-% Butter and fdesign are also trash.
+% cfg_filt.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
+% reason.  Looks like trash with ord ~= 3 in cheby1. Butter and fdesign are also trash.
 theta_csc = FilterLFP(cfg_filt, csc);
+
+% add in the theta -  delta ratio (using just the filtered signals w/ 1s smoothing.
+t_d_ratio = smooth(abs(hilbert(theta_csc.data))./abs(hilbert(delta_csc.data)), theta_csc.cfg.hdr{1}.SamplingFrequency); % get the theta / delta ratio with some smoothing
 
 % % alternative filtering (not used, just a check)
 %
@@ -180,8 +180,8 @@ theta_csc = FilterLFP(cfg_filt, csc);
 
 
 if check ==1
-    figure(101)
-    ax(2) = subplot(2,1,2);
+    figure(check_fig)
+    ax(2) = subplot(3,1,2);
     
     hold on
     tvec = theta_csc.tvec(len) - theta_csc.tvec(1);
@@ -321,10 +321,12 @@ TS_track{1} = TS{idx};
 TS(idx) = [];
 
 
+% try to segment the ms structure
+ms_seg = MS_segment_ms_sandbox(ms);
 
 
-
-
+% remove the track segment
+ms_seg = MS_remove_data_sandbox(ms_seg, [idx]);
 %% identify peaks in  diff(evt.t{5}) marking transitions in the camera TTLs
 peak_threshold =  (mean(diff(evt.t{5}) +0.05*std(diff(evt.t{5}))));
 min_dist = 10;
@@ -334,8 +336,9 @@ fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct rec
 
 % plot the diff and the detected peaks as a check.
 if check == 1
-    figure(1)
+    figure(check_fig)
     hold on
+    subplot(3,1,3)
     plot(diff(evt.t{3}), 'k')
     hline(peak_threshold, '--r')
     % plot(Rec_idx, 100, '*k')
@@ -350,20 +353,6 @@ end
 % t_start = Rec_idx(1:2:end-1);
 % t_end = Rec_idx(2:2:end);
 % plot([t_start ; t_end]', [50 50], '-b')
-
-%% try getting a spectrogram for sleep state detection
-cfg_spec.win = 512;
-cfg_spec.noverlap = cfg_spec.win/4;
-
-
-
-[~,F,T,P] = spectrogram(csc.data,rectwin(cfg_spec.win),cfg_spec.noverlap,1:120,csc.cfg.hdr{1}.SamplingFrequency);
-
-figure(122)
-ax1 = imagesc(T,F,10*log10(P)); % converting to dB as usual
-set(ax1, 'AlphaData', ~isinf(10*log10(P)))
-%         set(gca,'FontSize',28);
-axis xy; xlabel('Time (s)'); ylabel('Frequency (Hz)');
 
 
 %% check the transitions for jumps and compare them to the TS times.  It seems like the TTL can have gitter around the transition periods.
@@ -453,7 +442,7 @@ for iRec = 1:length(Rec_idx)
 end
 
 for iRec = 1:length(Rec_idx)
-    fprintf('Evt: %.0f Best offsets: start = %.0f  end = %.0f largest jump = %.3f sec\n', iRec, times_to_use(iRec,1), times_to_use(iRec, 2), biggest_jumps(iRec)) 
+    fprintf('Evt: %.0f Best offsets: start = %.0f  end = %.0f largest jump = %.3f sec\n', iRec, times_to_use(iRec,1), times_to_use(iRec, 2), biggest_jumps(iRec))
     
 end
 
@@ -471,12 +460,26 @@ for iRec = 1:length(Rec_idx)
     if iRec < length(Rec_idx)
         rec_evt{iRec} = restrict(evt, evt.t{t_idx}(Rec_idx(iRec)-times_to_use(iRec,1)), evt.t{t_idx}(Rec_idx(iRec+1)-times_to_use(iRec,2))); % restrict the NLX evt struct to ms TTL periods
         rec_csc{iRec} = restrict(csc, evt.t{t_idx}(Rec_idx(iRec)+2), evt.t{t_idx}(Rec_idx(iRec+1)-1)); % same for the csc
-        rec_theta{iRec} = restrict(theta_csc, evt.t{t_idx}(Rec_idx(iRec)+2), evt.t{t_idx}(Rec_idx(iRec+1)-1)); % same for the csc
-        
+        % same for filtered traces (if they exist)
+        if exist('delta_csc', 'var')
+            rec_delta{iRec} = restrict(delta_csc, evt.t{t_idx}(Rec_idx(iRec)+2), evt.t{t_idx}(Rec_idx(iRec+1)-1)); % same for the csc
+        end
+        if exist('theta_csc', 'var')
+            rec_theta{iRec} = restrict(theta_csc, evt.t{t_idx}(Rec_idx(iRec)+2), evt.t{t_idx}(Rec_idx(iRec+1)-1)); % same for the csc
+        end
     else
         rec_evt{iRec} = restrict(evt, evt.t{t_idx}(Rec_idx(iRec)-times_to_use(iRec,1)), evt.t{t_idx}(end)); % restrict the NLX evt file (last only)
         rec_csc{iRec} = restrict(csc, evt.t{t_idx}(Rec_idx(iRec)+2), evt.t{t_idx}(end)); % same for csc
-        rec_theta{iRec} = restrict(theta_csc, evt.t{t_idx}(Rec_idx(iRec)+2), evt.t{t_idx}(end)); % same for csc
+        
+        % for filtered traces.
+        if exist('delta_csc', 'var')
+            rec_delta{iRec} = restrict(delta_csc, evt.t{t_idx}(Rec_idx(iRec)+2), evt.t{t_idx}(end)); % same for csc
+        end
+        if exist('theta_csc', 'var')
+            rec_theta{iRec} = restrict(theta_csc, evt.t{t_idx}(Rec_idx(iRec)+2), evt.t{t_idx}(end)); % same for csc
+        end
+        
+        
     end
 end
 
@@ -530,15 +533,8 @@ for iRec = 1:length(rec_evt)
 end
 
 evt_TS_diff % print the offset
-%% restrict data to first recording of the session
+%% Add in csc data to the ms data strucuture.  
 
-% try to segment the ms structure
-ms_seg = MS_segment_ms_sandbox(ms);
-
-
-% remove the track segment
-
-ms_seg = MS_remove_data_sandbox(ms_seg, [idx]);
 
 % append restricted csc files
 ms_seg = MS_append_data_sandbox(ms_seg, 'csc', rec_csc');
@@ -547,27 +543,85 @@ ms_seg = MS_append_data_sandbox(ms_seg, 'csc', rec_csc');
 
 ms_seg = MS_append_data_sandbox(ms_seg, 'theta_csc', rec_theta');
 
+ms_seg = MS_append_data_sandbox(ms_seg, 'delta_csc', rec_delta');
+
 %% Plot some examples of segments
+
+Chans = 1:5; % channels to plot
+c_ord = linspecer(length(Chans)); % nice colours.
+plot_type = '3d'; % ploting style can be '2d' or '3d'
 
 for iRec = 1:3
     figure(iRec)
-ax(1) =subplot(2,1,1);
-timein = (ms_seg.theta_csc{iRec}.tvec - ms_seg.theta_csc{iRec}.tvec(1)); % just to fix the timing offset between them back to ebing relative to this segment.
-% timein = timein
-
-plot(timein, abs(hilbert(ms_seg.theta_csc{iRec}.data)), '--r');
-hold on
-plot(timein,ms_seg.theta_csc{iRec}.data, '-b' );
-xlim([timein(1), timein(end)])
-
-ax(2) =subplot(2,1,2);
-time_in2 = ms_seg.time{iRec} - ms_seg.time{iRec}(1);
-plot(time_in2*0.001, ms_seg.RawTraces{iRec}(:,1:5))
-xlim([time_in2(1)*0.001 time_in2(end)*0.001])
-
-linkaxes(ax, 'x')
-ax = [];
+    ax(1) =subplot(2,1,1);
+    timein = (ms_seg.theta_csc{iRec}.tvec - ms_seg.theta_csc{iRec}.tvec(1)); % just to fix the timing offset between them back to ebing relative to this segment.
+    % timein = timein
+    
+    plot(timein, abs(hilbert(ms_seg.theta_csc{iRec}.data)), '--r');
+    hold on
+    plot(timein,ms_seg.theta_csc{iRec}.data, '-b' );
+    xlim([timein(1), timein(end)])
+    
+    ax(2) =subplot(2,1,2);
+    hold on
+    time_in2 = ms_seg.time{iRec} - ms_seg.time{iRec}(1);
+    switch plot_type
+        % 2d
+        case '2d'
+            for iC = 1:length(Chans)
+                plot(time_in2*0.001, ms_seg.RawTraces{iRec}(:,iC), 'color', c_ord(iC,:))
+            end
+            % 3d
+        case '3d'
+            for iC = 1:length(Chans)
+                plot3(time_in2*0.001, repmat(iC,size(ms_seg.RawTraces{iRec},1),1), ms_seg.RawTraces{iRec}(:,iC), 'color', c_ord(iC,:))
+            end
+            view([0 45])
+    end
+    
+    xlim([time_in2(1)*0.001 time_in2(end)*0.001])
+    linkaxes(ax, 'x')
+    ax = [];
 end
+
+
+%% try getting a spectrogram for sleep state detection (if this works move it to before the data is segmented)
+cfg_spec.win = 512*2;
+cfg_spec.noverlap = floor(cfg_spec.win/10);
+
+
+
+[~,F,T,P] = spectrogram(csc.data(1:round(length(csc.data)/2)),hamming(cfg_spec.win),cfg_spec.noverlap,1:0.1:40,csc.cfg.hdr{1}.SamplingFrequency, 'power');
+
+% chronux
+movingwin=[1 0.5]; % set the moving
+params = [];
+params.Fs = csc.cfg.hdr{1}.SamplingFrequency; % sampling frequency
+params.fpass=[1 100]; % frequencies of
+params.tapers=[3 5]; % tapers
+% params.trialave=1; % average over trials
+% params.err=0; % no error
+[S,t,f]=mtspecgramc(csc.data(1:round(length(csc.data)/2)),movingwin,params);
+
+figure(123)
+   imagesc(t,f,10*log10(S)');axis xy; colorbar; title('Spectrogram');
+% axis xy
+% caxis([-130 -70])
+
+
+figure(122)
+ax1 = imagesc(T/60/60,F,10*log10(P)); % converting to dB as usual
+set(ax1, 'AlphaData', ~isinf(10*log10(P)))
+%         set(gca,'FontSize',28);
+axis xy; xlabel('Time (hr)'); ylabel('Frequency (Hz)');
+% xlim([10 12])
+caxis([-130 -70])
+hold on
+plot(csc.tvec(1:round(length(csc.data)/2)) - csc.tvec(1), (csc.data(1:round(length(csc.data)/2))*10000)+(max(F)/2), 'k')
+plot(csc.tvec(1:round(length(csc.data)/2)) - csc.tvec(1), (theta_csc.data(1:round(length(csc.data)/2))*20000)+10, 'c')
+plot(csc.tvec(1:round(length(csc.data)/2)) - csc.tvec(1), (delta_csc.data(1:round(length(csc.data)/2))*20000)+3, 'm')
+% plot(csc.tvec(1:round(length(csc.data)/2)) - csc.tvec(1), (t_d_ratio(1:round(length(csc.data)/2))*0.5), '--r')
+
 
 %% correct for recording time (just to make things easier)
 % for ii = 1:length(evt_r.t)
