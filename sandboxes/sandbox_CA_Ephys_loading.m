@@ -113,7 +113,7 @@ evt.label{length(evt.label)+1} = 'all_evt';
 % load the NLX 'continuous sampled channels' "CSC"
 cfg = [];
 cfg.fc = {'CSC8.ncs'}%,'CSC6.ncs', 'CSC8.ncs'};
-% cfg.decimateByFactor = 8;
+cfg.decimateByFactor = 8;
 csc = LoadCSC(cfg);
 
 % csc = restrict(csc, 1, 50000);
@@ -150,9 +150,9 @@ toc
 cfg_filt = [];
 % cfg_filt.f = [5 11]; %setting theta (hertz)
 cfg_filt.type = 'fdesign'; %the type of filter I want to use via filterlfp
-cfg_filt.f  = [2 5];
+cfg_filt.f  = [1 5];
 cfg_filt.order = 8; %type filter order
-% cfg_filt.display_filter = 1; % use this to see the fvtool
+cfg_filt.display_filter = 1; % use this to see the fvtool
 delta_csc = FilterLFP(cfg_filt, csc);
 
 % filter into the theta band
@@ -161,12 +161,12 @@ cfg_filt = [];
 cfg_filt.type = 'cheby1'; %the type of filter I want to use via filterlfp
 cfg_filt.f  = [6 11];
 cfg_filt.order = 3; %type filter order
-% cfg_filt.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
+cfg_filt.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
 % reason.  Looks like trash with ord ~= 3 in cheby1. Butter and fdesign are also trash.
 theta_csc = FilterLFP(cfg_filt, csc);
 
 % add in the theta -  delta ratio (using just the filtered signals w/ 1s smoothing.
-t_d_ratio = smooth(abs(hilbert(theta_csc.data))./abs(hilbert(delta_csc.data)), theta_csc.cfg.hdr{1}.SamplingFrequency); % get the theta / delta ratio with some smoothing
+% t_d_ratio = smooth(abs(hilbert(theta_csc.data))./abs(hilbert(delta_csc.data)), theta_csc.cfg.hdr{1}.SamplingFrequency); % get the theta / delta ratio with some smoothing
 
 % % alternative filtering (not used, just a check)
 %
@@ -188,7 +188,7 @@ if check ==1
     hold on
     offset = 0.0002;
     for iC = 1:length(theta_csc.label)
-        plot(tvec, abs(hilbert(theta_csc.data(iC,len)))+(offset*iC))
+%         plot(tvec, abs(hilbert(theta_csc.data(iC,len)))+(offset*iC))
         plot(tvec, (theta_csc.data(iC,len))+(offset*iC))
     end
     linkaxes(ax, 'x')
