@@ -54,7 +54,7 @@ ExpKeys = MS_Load_Keys();
 
 % load the NLX CSC data (using vandermeer lab code) [todo:replace with own]
 cfg_csc = [];
-cfg_csc.fc = {ExpKeys.EMG, ExpKeys.goodCSC}; % use csc files from Keys. Alternatively, just use the actual names {'CSC1.ncs', 'CSC5.ncs'}; 
+cfg_csc.fc = {'CSC7.ncs'}; % use csc files from Keys. Alternatively, just use the actual names {'CSC1.ncs', 'CSC5.ncs'}; 
 % cfg_csc.decimateByFactor = 16;
 csc = LoadCSC(cfg_csc); % need to comment out ExpKeys lines in LoadCSC
 
@@ -151,8 +151,8 @@ end
 if check
 %     plot(114)
     hold on
-    plot(amp_ripple.tvec, csc_ripple.data(2,:),'g');
-    plot(amp_ripple.tvec, amp_ripple.data(2,:),'-k');
+    plot(amp_ripple.tvec, csc_ripple.data(1,:),'g');
+    plot(amp_ripple.tvec, amp_ripple.data(1,:),'-k');
 
     pause(3); close all;
 end
@@ -200,27 +200,46 @@ end
 
     
     
-    %% exclude events with insufficient gamma cycles - count how many exist above same threshold as used for detection
+    %% exclude events with insufficient cycles - count how many exist above same threshold as used for detection
     cfg_cc = [];
     cfg_cc.threshold_type = 'raw';
     cfg_cc.threshold = evt_thr; % use same threshold as for orignal event detection
-    cfg_cc.filter_cfg = cfg_filter;
-    evt = CountCycles(cfg_cc,csc,evt);
+    cfg_cc.filter_cfg = cfg_filt;
+    evt = CountCycles(cfg_cc,csc_ripple,swr_evts);
     
-    cfg_cc = [];
-    cfg_cc.operation = '>=';
-    cfg_cc.threshold = cfg.detect_nCycles-1;
-    evt = SelectIV(cfg_cc,evt,'nCycles');
+    % get get the evetns with sufficient cycles. 
+    cfg_gc = [];
+    cfg_gc.operation = '>=';
+    cfg_gc.threshold = 5;
+    evt = SelectIV(cfg_gc,evt,'nCycles');
+    fprintf('\n MS_SWR_Ca2: %d events remain after cycle count thresholding (%d cycle minimum).\n',length(evt.tstart), cfg_gc.threshold);
     
-    fprintf('\n MASTER_CollectGammaEvents: %d %s events remain after cycle count removal.\n',length(evt.tstart),cfg.f_label{iFreq});
  %% check for evnts that are too long. 
     % add in a user field for the length of the events (currently not used)
     evt.usr.evt_len = (evt.tend - evt.tstart)';
    
     cfg_max_len = [];
     cfg_max_len.operation = '<';
-    cfg_max_len.threshold = 1;
+    cfg_max_len.threshold = .06;
     evt = SelectIV(cfg_max_len,evt,'evt_len');
     
-    fprintf('\n MASTER_CollectGammaEvents: %d %s events remain after max length removal.\n',length(evt.tstart),cfg.f_label{iFreq});
+    fprintf('\n MS_SWR_Ca2: %d events remain after event length cutoff (> %d ms removed).\n',length(evt.tstart), (cfg_max_len.threshold)*1000);
+
+    %% check again
+if check
+    cfg_plot = []; 
+    cfg_plot.display = 'iv'; 
+    cfg_plot.mode = 'center'; 
+    cfg_plot.width = 0.2;
+    cfg_plot.target = csc.label{1};
+
+    PlotTSDfromIV(cfg_plot,evt,csc);
+    %pause(2); close all;
+end
+
+%% make a spectrogram of the average SWR 
+
+
+
+
 
