@@ -55,25 +55,36 @@ ExpKeys = MS_Load_Keys();
 % load the NLX CSC data (using vandermeer lab code) [todo:replace with own]
 cfg_csc = [];
 cfg_csc.fc = {ExpKeys.EMG, ExpKeys.goodCSC}; % use csc files from Keys. Alternatively, just use the actual names {'CSC1.ncs', 'CSC5.ncs'}; 
-cfg_csc.decimateByFactor = 16;
+% cfg_csc.decimateByFactor = 16;
 csc = LoadCSC(cfg_csc); % need to comment out ExpKeys lines in LoadCSC
 
 
 evt = LoadEvents([]);
 
-%% isolate the two sleep sections with CA imagaing....
+%% isolate the two sleep sections with CA imagaing....needs MS or TS files. 
+
+% temp hack to test dectection
+rec.type = 'ts';
+rec.tstart = 4.413082480877258e+06; % place near the end
+rec.tend = evt.t{2}(end);
+
+csc_res = restrict(csc, rec.tstart, rec.tend);
 
 
+%% use whole data
+
+csc_res = csc;
 %% basic filtering and thresholding
 % mouse SWR parameters are based off of Liu, McAfee, & Heck 2017 https://www.nature.com/articles/s41598-017-09511-8#Sec6
+check = 1; % used for visual checks on detected events. 
 
 %set up ripple band 
 cfg_filt = [];
 cfg_filt.type = 'cheby1'; %Cheby1 is sharper than butter
-cfg_filt.f  = [100 250]; % broad, could use 150-200?
+cfg_filt.f  = [140 250]; % broad, could use 150-200?
 cfg_filt.order = 4; %type filter order (fine for this f range)
-cfg_filt.display_filter = 1; % use this to see the fvtool 
-csc_ripple = FilterLFP(cfg_filt, csc);
+cfg_filt.display_filter = 0; % use this to see the fvtool 
+csc_ripple = FilterLFP(cfg_filt, csc_res);
 
 
 % convert to amplitude or power
@@ -84,7 +95,7 @@ for iChan = 1:size(csc_ripple.data,1)
     amp_ripple.data(iChan,:) = abs(csc_ripple.data(iChan,:));
     % Convolve with a gaussian kernel (improves detection)
     kernel = gausskernel(60,20); % note, units are in samples; for paper Methods, need to specify Gaussian SD in ms
-    fprintf('\nGausskernal using 60 samples = %0.3f ms with SD = 20 samples (%0.3fms)\n', csc.cfg.hdr{1}.SamplingFrequency/60, csc.cfg.hdr{1}.SamplingFrequency/20)
+    fprintf('\nGausskernal using 60 samples = %0.0fms with SD = 20 samples (%0.0fms)\n', (60/csc_res.cfg.hdr{1}.SamplingFrequency)*1000, (20/csc_res.cfg.hdr{1}.SamplingFrequency)*1000)
     amp_ripple.data(iChan,:) = conv(amp_ripple.data(iChan,:),kernel,'same');
     amp_ripple.units = 'amplitude';
     % if you want units in power use: 
@@ -95,45 +106,58 @@ end
  
 if check
     figure(10)
-    plot(csc.tvec, csc.data(1,:),'k',csc_ripple.tvec, csc_ripple.data(1,:), 'r',...
+    plot(csc_res.tvec, csc_res.data(1,:),'k',csc_ripple.tvec, csc_ripple.data(1,:), 'r',...
         amp_ripple.tvec, amp_ripple.data(1,:),'b')
     legend({'Raw', '150-200 filt', 'Amp'})
 end
     
 %% remove large amplitude artifacts before SWR detection
 
-check = 1; % used for visual checks on detected events. 
 
-csc_artif = csc;
-csc_artif.data(1,:) = abs(csc_artif.data(1,:)); % detect artifacts both ways
+csc_artif = csc_res;
+for iChan = 1:size(csc_ripple.data,1)
+    csc_artif.data(iChan,:) = abs(csc_artif.data(iChan,:)); % detect artifacts both ways
+end
 
 cfg_artif_det = [];
 cfg_artif_det.method = 'raw';
-cfg_artif_det.threshold = std(csc.data(1,:))*4;
-cfg_artif_det.minlen = 0;
-cfg_artif_det.target = csc.label{1};
+cfg_artif_det.threshold = std(csc_artif.data(1,:))*4;
+% cfg_artif_det.minlen = 0.01;
+cfg_artif_det.target = csc_res.label{1};
 evt_artif = TSDtoIV(cfg_artif_det,csc_artif);
 
 cfg_temp = []; cfg_temp.d = [-0.5 0.5];
 artif_evts = ResizeIV(cfg_temp,evt_artif);
 
-fprintf('\n MS_SWR_Ca2: %d large amplitude artifacts detected and removed from csc_ripple.\n',length(artif_evts.tstart));
 
 % plot
 if check
+    plot(113)
     cfg_plot.display = 'tsd'; % tsd, iv
-    cfg_plot.target = csc.label{1};
-    PlotTSDfromIV(cfg_plot,artif_evts,csc);
-    pause(2); close all;
+    cfg_plot.target = csc_res.label{1};
+    PlotTSDfromIV(cfg_plot,artif_evts,csc_artif);
+    hline(cfg_artif_det.threshold )
+    pause(3); close all;
 end
 
 % zero pad artifacts to improve reliability of subsequent z-scoring
-artif_idx = TSD_getidx2(csc,evt_artif); % if error, try TSD_getidx (slower)
+artif_idx = TSD_getidx2(csc_res,evt_artif); % if error, try TSD_getidx (slower)
 for iChan = 1:size(csc_ripple.data,1)
     csc_ripple.data(iChan,artif_idx) = 0;
     amp_ripple.data(iChan,artif_idx) = 0; 
 end
 
+% plot
+if check
+%     plot(114)
+    hold on
+    plot(amp_ripple.tvec, csc_ripple.data(2,:),'g');
+    plot(amp_ripple.tvec, amp_ripple.data(2,:),'-k');
+
+    pause(3); close all;
+end
+
+fprintf('\n MS_SWR_Ca2: %d large amplitude artifacts detected and zero-padded from csc_ripple.\n',length(artif_evts.tstart));
 
 
 %% isolate candidate events
@@ -143,9 +167,9 @@ cfg_detect = [];
 cfg_detect.operation = '>';
 cfg_detect.dcn = cfg_detect.operation; % b/c odd var naming in TSDtoIV
 cfg_detect.method = 'zscore';
-cfg_detect.threshold = 4;
+cfg_detect.threshold = 3;
 cfg_detect.target = csc.label{1};
-cfg_detect.minlen = 0.040; % 40ms from Vandecasteele et al. 2015
+cfg_detect.minlen = 0.020; % 40ms from Vandecasteele et al. 2015
 
 [swr_evts,evt_thr] = TSDtoIV(cfg_detect,amp_ripple); 
 
@@ -171,7 +195,7 @@ if check
     cfg_plot.target = csc.label{1};
 
     PlotTSDfromIV(cfg_plot,swr_evts,csc);
-    pause(2); close all;
+    %pause(2); close all;
 end
 
     
