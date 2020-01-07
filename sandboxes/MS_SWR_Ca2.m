@@ -13,6 +13,7 @@ if ismac
     PARAMS.stats_dir = '/Users/jericcarmichael/Documents/Williams_Lab/Stats/'; % where to put the statistical output .txt
     PARAMS.code_base_dir = '/Users/jericcarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
     PARAMS.code_CEH2_dir = '/Users/jericcarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
+    PARAMS.ft_code_dir = '/Users/jericcarmichael/Documents/GitHub/fieldtrip'; % FieldTrip toolbbox (used for spectrogram visualization)
 
 elseif strcmp(os, 'GLNXA64')
 
@@ -59,14 +60,14 @@ cfg_csc.fc = {'CSC7.ncs'}; % use csc files from Keys. Alternatively, just use th
 csc = LoadCSC(cfg_csc); % need to comment out ExpKeys lines in LoadCSC
 
 
-evt = LoadEvents([]);
+swr_evt_out = LoadEvents([]);
 
 %% isolate the two sleep sections with CA imagaing....needs MS or TS files. 
 
 % temp hack to test dectection
 rec.type = 'ts';
 rec.tstart = 4.413082480877258e+06; % place near the end
-rec.tend = evt.t{2}(end);
+rec.tend = swr_evt_out.t{2}(end);
 
 csc_res = restrict(csc, rec.tstart, rec.tend);
 
@@ -169,7 +170,8 @@ cfg_detect.dcn = cfg_detect.operation; % b/c odd var naming in TSDtoIV
 cfg_detect.method = 'zscore';
 cfg_detect.threshold = 3;
 cfg_detect.target = csc.label{1};
-cfg_detect.minlen = 0.020; % 40ms from Vandecasteele et al. 2015
+cfg_detect.minlen = 0.040; % 40ms from Vandecasteele et al. 2015
+cfg_detect.merge_thr = 0.04; % merge events that are within 20ms of each other. 
 
 [swr_evts,evt_thr] = TSDtoIV(cfg_detect,amp_ripple); 
 
@@ -205,25 +207,25 @@ end
     cfg_cc.threshold_type = 'raw';
     cfg_cc.threshold = evt_thr; % use same threshold as for orignal event detection
     cfg_cc.filter_cfg = cfg_filt;
-    evt = CountCycles(cfg_cc,csc_ripple,swr_evts);
+    swr_evt_out = CountCycles(cfg_cc,csc_res,swr_evts);
     
     % get get the evetns with sufficient cycles. 
     cfg_gc = [];
     cfg_gc.operation = '>=';
     cfg_gc.threshold = 5;
-    evt = SelectIV(cfg_gc,evt,'nCycles');
-    fprintf('\n MS_SWR_Ca2: %d events remain after cycle count thresholding (%d cycle minimum).\n',length(evt.tstart), cfg_gc.threshold);
+    swr_evt_out = SelectIV(cfg_gc,swr_evt_out,'nCycles');
+    fprintf('\n MS_SWR_Ca2: %d events remain after cycle count thresholding (%d cycle minimum).\n',length(swr_evt_out.tstart), cfg_gc.threshold);
     
  %% check for evnts that are too long. 
     % add in a user field for the length of the events (currently not used)
-    evt.usr.evt_len = (evt.tend - evt.tstart)';
+    swr_evt_out.usr.evt_len = (swr_evt_out.tend - swr_evt_out.tstart)';
    
     cfg_max_len = [];
     cfg_max_len.operation = '<';
     cfg_max_len.threshold = .06;
-    evt = SelectIV(cfg_max_len,evt,'evt_len');
+    swr_evt_out = SelectIV(cfg_max_len,swr_evt_out,'evt_len');
     
-    fprintf('\n MS_SWR_Ca2: %d events remain after event length cutoff (> %d ms removed).\n',length(evt.tstart), (cfg_max_len.threshold)*1000);
+    fprintf('\n MS_SWR_Ca2: %d events remain after event length cutoff (> %d ms removed).\n',length(swr_evt_out.tstart), (cfg_max_len.threshold)*1000);
 
     %% check again
 if check
@@ -233,11 +235,34 @@ if check
     cfg_plot.width = 0.2;
     cfg_plot.target = csc.label{1};
 
-    PlotTSDfromIV(cfg_plot,evt,csc);
+    PlotTSDfromIV(cfg_plot,swr_evt_out,csc);
     %pause(2); close all;
 end
 
 %% make a spectrogram of the average SWR 
+
+% using FieldTrip Toolbox  (https://github.com/fieldtrip)
+
+addpath(PARAMS.ft_code_dir);
+
+ft_defaults
+
+% convert data to ft format and turn into trials. 
+data_ft = TSDtoFT([], csc_res); % convert to ft format. 
+
+% trials
+cfg = [];
+cfg.t = cat(2,swr_evts_out.tstart,swr_evts_out.tend);
+cfg.mode = 'nlx';
+cfg.hdr = data_ft.hdr;
+cfg.twin = [-1 4];
+ 
+trl = ft_maketrl(cfg);
+ 
+cfg = [];
+cfg.trl = trl;
+data_trl = ft_redefinetrial(cfg,data_ft); 
+
 
 
 
