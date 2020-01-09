@@ -17,11 +17,13 @@ if ismac
 
 elseif strcmp(os, 'GLNXA64')
 
-    PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/7_12_2019_PV1069_LTD5'; % where to find the raw data
+    PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/2019-12-04_11-10-01_537day0base1'; % where to find the raw data
     PARAMS.inter_dir = '/home/ecarmichael/Documents/Williams_Lab/Temp/'; % where to put intermediate files
     PARAMS.stats_dir = '/home/ecarmichael/Documents/Williams_Lab/Stats/'; % where to put the statistical output .txt
     PARAMS.code_base_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
     PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
+    PARAMS.chronux_code_dir = '/home/ecarmichael/Documents/chronux/chronux_2_12'; % FieldTrip toolbbox (used for spectrogram visualization)
+    PARAMS.ft_code_dir = '/home/ecarmichael/Documents/GitHub/fieldtrip'; % FieldTrip toolbbox (used for spectrogram visualization)
 
 else
  disp('on a PC')
@@ -53,16 +55,49 @@ clear d os
 %(can be generated with the 'MS_Write_Keys' function) 
 ExpKeys = MS_Load_Keys(); 
 
+% load events
+
+nlx_evts = LoadEvents([]); % get '.nev' file here.  
+
 % load the NLX CSC data (using vandermeer lab code) [todo:replace with own]
 cfg_csc = [];
 cfg_csc.fc = {'CSC7.ncs'}; % use csc files from Keys. Alternatively, just use the actual names {'CSC1.ncs', 'CSC5.ncs'}; 
 % cfg_csc.decimateByFactor = 16;
 csc = LoadCSC(cfg_csc); % need to comment out ExpKeys lines in LoadCSC
 
+%% Ca blocks
+% identify peaks in  diff(evt.t{3}) marking transitions in the camera TTLs
 
-swr_evt_out = LoadEvents([]);
+t_idx = 3; % which event index to use.  
 
-%% isolate the two sleep sections with CA imagaing....needs MS or TS files. 
+peak_threshold =  (mean(diff(nlx_evts.t{t_idx}) +0.05*std(diff(nlx_evts.t{t_idx}))));
+min_dist = 10;
+[Rec_peak, Rec_idx] = findpeaks(diff(nlx_evts.t{t_idx}), 'minpeakheight',peak_threshold, 'minpeakdistance', min_dist);
+fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_idx), length(Rec_idx))
+
+
+for iRec = 1:length(Rec_idx)
+    if iRec < length(Rec_idx)
+        rec_evt{iRec} = restrict(nlx_evts, nlx_evts.t{t_idx}(Rec_idx(iRec)), nlx_evts.t{t_idx}(Rec_idx(iRec+1))); % restrict the NLX evt struct to ms TTL periods
+    else
+        rec_evt{iRec} = restrict(nlx_evts, nlx_evts.t{t_idx}(Rec_idx(iRec)), nlx_evts.t{t_idx}(end)); % restrict the NLX evt file (last only)
+    end
+    all_rec_evt_len(iRec) = length(rec_evt{iRec}.t{t_idx});
+end
+
+% find the largest and use that one for now. 
+[~,large_idx] = max(all_rec_evt_len);
+
+
+%% use the identified largest recording with what should be MS frame grabs
+csc_res = restrict(csc, rec_evt{large_idx}.t{t_idx}(1), rec_evt{large_idx}.t{t_idx}(end));
+fprintf('\nRestricting to section from events file. Duration: %0.0fsecs = %0.2fmins\n', (rec_evt{large_idx}.t{t_idx}(end) -rec_evt{large_idx}.t{t_idx}(1)), (rec_evt{large_idx}.t{t_idx}(end) -rec_evt{large_idx}.t{t_idx}(1))/60)
+
+%% use whole data
+
+csc_res = csc;
+
+%% initial: use a section that looks like SW sleep [use actual timestamps later but needs MS or TS files]; 
 
 % temp hack to test dectection
 rec.type = 'ts';
@@ -70,11 +105,8 @@ rec.tstart = 4.413082480877258e+06; % place near the end
 rec.tend = swr_evt_out.t{2}(end);
 
 csc_res = restrict(csc, rec.tstart, rec.tend);
+fprintf('\nRestricting to visually identified section.  Duration: %0.0fsecs = %0.2fmins\n',  rec.tend - rec.tstart,(rec.tend - rec.tstart)/60)
 
-
-%% use whole data
-
-csc_res = csc;
 %% basic filtering and thresholding
 % mouse SWR parameters are based off of Liu, McAfee, & Heck 2017 https://www.nature.com/articles/s41598-017-09511-8#Sec6
 check = 1; % used for visual checks on detected events. 
@@ -241,18 +273,84 @@ end
 
 %% make a spectrogram of the average SWR 
 
-% using FieldTrip Toolbox  (https://github.com/fieldtrip)
+% spectrogram method using means. 
 
+% Try Chronux?
+addpath(genpath(PARAMS.chronux_code_dir));
+disp('Chronux added to path')
+
+% convert LFP data in to SWR 'Trials'
+cfg_trials = [];
+
+swr_centers = IVcenters(swr_evt_out); % get the center of the swr event. 
+% resize around center. 
+swr_center_iv = iv([swr_centers - 0.05, swr_centers + 0.05]);
+
+cfg_trial = []; cfg_trial.target = csc_res.label{1}; cfg_trial.label = csc_res.label{1}; 
+swr_trials = AddTSDtoIV(cfg_trial, swr_center_iv, csc_res); 
+
+
+% convert data into trials
+for iEvt = length(swr_center_iv.tstart):-1:1
+    
+    data_trials(iEvt,:) = csc_res.data(nearest_idx3(csc_res.data, swr_center_iv.tstart(iEvt)))
+    this_data = restrict(csc_res, swr_center_iv.tstart(iEvt), swr_center_iv.tend(iEvt));
+%     data_trials(iEvt,:) = this_data.data; 
+end
+
+movingwin=[0.01 0.005]; % set the moving window dimensions
+params.Fs=csc_res.cfg.hdr{1}.SamplingFrequency; % sampling frequency
+params.fpass=[50 300]; % frequencies of interest
+params.tapers=[5 9]; % tapers
+params.trialave=1; % average over trials
+params.err=0; % no error computation
+
+
+[S1,t,f] = mtspecgramc(data_trials,movingwin,params); % compute spectrogram
+
+figure(300)
+plot_matrix(S1,t,f);
+xlabel([]); % plot spectrogram
+caxis([8 28]); colorbar;
+
+
+
+
+
+
+
+% DID NO USE. It was a pain to make this work across platforms and MATLAB
+% versions. Great functions but not easy to get mex files to work :/
+% % using FieldTrip Toolbox  (https://github.com/fieldtrip) 
+% 
 addpath(PARAMS.ft_code_dir);
 
 ft_defaults
 
+
+fc = {'CSC7.ncs'};
+data = ft_read_neuralynx_interp(fc);
+
+
+%% leave this until you get your data_ft as a common function across codebases...
+
 % convert data to ft format and turn into trials. 
-data_ft = TSDtoFT([], csc_res); % convert to ft format. 
+data_ft = MS_TSDtoFT([], csc_res); % convert to ft format. 
+
+cfg_plot_TFR              = [];
+cfg_plot_TFR.twin         = [-0.05 0.05];
+cfg_plot_TFR.dt           = 0.001;
+cfg_plot_TFR.method       = 'mtmconvol';
+cfg_plot_TFR.taper        = 'hanning';
+cfg_plot_TFR.foi          = 50:1:300; % frequencies of interest
+% cfg_plot_TFR.subplotdim   = [4 5];
+cfg_plot_TFR.clim         = [0 500]; % sets the caxis for the imagesc plots. default [0 500]
+
+PlotTSDfromIV_TFR(cfg_plot_TFR,swr_center_iv,data_ft)
 
 % trials
 cfg = [];
-cfg.t = cat(2,swr_evts_out.tstart,swr_evts_out.tend);
+cfg.t = cat(2,swr_evt_out.tstart,swr_evt_out.tend);
 cfg.mode = 'nlx';
 cfg.hdr = data_ft.hdr;
 cfg.twin = [-1 4];
