@@ -74,15 +74,28 @@ mode_dts  = mode(md);
 rng       = double(max_all-min_all); % this is small num, can be double
 tsinterp  = [0:mode_dts:rng]; % the timestamp interpolation axis
 
-if size(data_ft.trial) ~= length(data_ft.time)
-    data_ft.time = data_ft.time';
+if size(data_ft.trial{1},1) ~= 1
+    data_ft.trial{1} = data_ft.trial{1}';
 end
 
+if size(data_ft.time{1},1) ~= 1
+    data_ft.time{1} = data_ft.time{1}';
+end
+
+% define hdr to match ft format.
 data_ft.hdr.Fs = Fs;
+data_ft.hdr.label = data.label; 
+data_ft.hdr.nChan = size(data.data,1);
+data_ft.hdr.nTrials = size(data.data,1); 
+data_ft.hdr.nSamplesPre = 0; 
 data_ft.hdr.nSamples = nSamples;
-data_ft.hdr.FirstTimeStamp     = min_all;
-data_ft.hdr.LastTimeStamp      = uint64(tsinterp(end)) + min_all;
 data_ft.hdr.TimeStampPerSample = mode_dts;
+data_ft.hdr.FirstTimeStamp     = min_all;
+data_ft.hdr.chantype = {'unknown'};
+data_ft.hdr.chanunit = {data.units}; 
+data_ft.hdr.LastTimeStamp      = uint64(tsinterp(end)) + min_all;
+
+
 data_ft.label   = data.label;
 data_ft.sampleinfo = [1 data_ft.hdr.nSamples];
 data_ft.fsample = Fs;
