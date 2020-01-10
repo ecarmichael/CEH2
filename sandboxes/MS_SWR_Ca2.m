@@ -102,7 +102,7 @@ csc_res = csc;
 % temp hack to test dectection
 rec.type = 'ts';
 rec.tstart = 4.413082480877258e+06; % place near the end
-rec.tend = swr_evt_out.t{2}(end);
+rec.tend = nlx_evts.t{2}(end);
 
 csc_res = restrict(csc, rec.tstart, rec.tend);
 fprintf('\nRestricting to visually identified section.  Duration: %0.0fsecs = %0.2fmins\n',  rec.tend - rec.tstart,(rec.tend - rec.tstart)/60)
@@ -113,7 +113,7 @@ check = 1; % used for visual checks on detected events.
 
 %set up ripple band 
 cfg_filt = [];
-cfg_filt.type = 'cheby1'; %Cheby1 is sharper than butter
+cfg_filt.type = 'butter'; %Cheby1 is sharper than butter
 cfg_filt.f  = [140 250]; % broad, could use 150-200?
 cfg_filt.order = 4; %type filter order (fine for this f range)
 cfg_filt.display_filter = 0; % use this to see the fvtool 
@@ -141,7 +141,7 @@ if check
     figure(10)
     plot(csc_res.tvec, csc_res.data(1,:),'k',csc_ripple.tvec, csc_ripple.data(1,:), 'r',...
         amp_ripple.tvec, amp_ripple.data(1,:),'b')
-    legend({'Raw', '150-200 filt', 'Amp'})
+    legend({'Raw', '140-250 filt', 'Amp'})
 end
     
 %% remove large amplitude artifacts before SWR detection
@@ -154,7 +154,7 @@ end
 
 cfg_artif_det = [];
 cfg_artif_det.method = 'raw';
-cfg_artif_det.threshold = std(csc_artif.data(1,:))*4;
+cfg_artif_det.threshold = std(csc_artif.data(1,:))*5;
 % cfg_artif_det.minlen = 0.01;
 cfg_artif_det.target = csc_res.label{1};
 evt_artif = TSDtoIV(cfg_artif_det,csc_artif);
@@ -166,7 +166,7 @@ artif_evts = ResizeIV(cfg_temp,evt_artif);
 % plot
 if check
     plot(113)
-    cfg_plot.display = 'tsd'; % tsd, iv
+    cfg_plot.display = 'iv'; % tsd, iv
     cfg_plot.target = csc_res.label{1};
     PlotTSDfromIV(cfg_plot,artif_evts,csc_artif);
     hline(cfg_artif_det.threshold )
@@ -190,6 +190,8 @@ if check
     pause(3); close all;
 end
 
+
+
 fprintf('\n MS_SWR_Ca2: %d large amplitude artifacts detected and zero-padded from csc_ripple.\n',length(artif_evts.tstart));
 
 
@@ -200,10 +202,10 @@ cfg_detect = [];
 cfg_detect.operation = '>';
 cfg_detect.dcn = cfg_detect.operation; % b/c odd var naming in TSDtoIV
 cfg_detect.method = 'zscore';
-cfg_detect.threshold = 3;
+cfg_detect.threshold = 2.5;
 cfg_detect.target = csc.label{1};
-cfg_detect.minlen = 0.040; % 40ms from Vandecasteele et al. 2015
-cfg_detect.merge_thr = 0.04; % merge events that are within 20ms of each other. 
+cfg_detect.minlen = 0.020; % 40ms from Vandecasteele et al. 2015
+cfg_detect.merge_thr = 0.02; % merge events that are within 20ms of each other. 
 
 [swr_evts,evt_thr] = TSDtoIV(cfg_detect,amp_ripple); 
 
@@ -229,7 +231,7 @@ if check
     cfg_plot.target = csc.label{1};
 
     PlotTSDfromIV(cfg_plot,swr_evts,csc);
-    %pause(2); close all;
+    pause(2); close all;
 end
 
     
@@ -248,16 +250,31 @@ end
     swr_evt_out = SelectIV(cfg_gc,swr_evt_out,'nCycles');
     fprintf('\n MS_SWR_Ca2: %d events remain after cycle count thresholding (%d cycle minimum).\n',length(swr_evt_out.tstart), cfg_gc.threshold);
     
- %% check for evnts that are too long. 
+    %% check for evnts that are too long.
     % add in a user field for the length of the events (currently not used)
     swr_evt_out.usr.evt_len = (swr_evt_out.tend - swr_evt_out.tstart)';
-   
+    
     cfg_max_len = [];
     cfg_max_len.operation = '<';
-    cfg_max_len.threshold = .06;
+    cfg_max_len.threshold = .1;
     swr_evt_out = SelectIV(cfg_max_len,swr_evt_out,'evt_len');
     
     fprintf('\n MS_SWR_Ca2: %d events remain after event length cutoff (> %d ms removed).\n',length(swr_evt_out.tstart), (cfg_max_len.threshold)*1000);
+    
+    
+    %% check for evnts with high raw varience. 'var_raw' is added as a swr_evt_out.usr field in CountCycles
+
+    cfg_max_len = [];
+    cfg_max_len.operation = '<';
+    cfg_max_len.threshold = 1;
+    swr_evt_out = SelectIV(cfg_max_len,swr_evt_out,'var_raw');
+    
+    fprintf('\n MS_SWR_Ca2: %d events remain after raw varience thresholding (''var_raw'' > %d removed).\n',length(swr_evt_out.tstart), cfg_max_len.threshold);
+    
+    %% remove events that cooinside with artifacts.
+    swr_evt_out = DifferenceIV([], swr_evt_out, artif_evts);
+    
+    fprintf('\n MS_SWR_Ca2: %d events remain after removing those co-occuring with artifacts.\n',length(swr_evt_out.tstart));
 
     %% check again
 if check
@@ -266,103 +283,107 @@ if check
     cfg_plot.mode = 'center'; 
     cfg_plot.width = 0.2;
     cfg_plot.target = csc.label{1};
-
+    cfg_plot.title = 'var';
     PlotTSDfromIV(cfg_plot,swr_evt_out,csc);
-    %pause(2); close all;
+    pause(3); close all;
 end
 
 %% make a spectrogram of the average SWR 
 
 % spectrogram method using means. 
 
-% Try Chronux?
-addpath(genpath(PARAMS.chronux_code_dir));
-disp('Chronux added to path')
+% %% Try Chronux?
+% addpath(genpath(PARAMS.chronux_code_dir));
+% disp('Chronux added to path')
 
-% convert LFP data in to SWR 'Trials'
-cfg_trials = [];
-
-swr_centers = IVcenters(swr_evt_out); % get the center of the swr event. 
-% resize around center. 
-swr_center_iv = iv([swr_centers - 0.05, swr_centers + 0.05]);
-
-cfg_trial = []; cfg_trial.target = csc_res.label{1}; cfg_trial.label = csc_res.label{1}; 
-swr_trials = AddTSDtoIV(cfg_trial, swr_center_iv, csc_res); 
-
-
-% convert data into trials
-for iEvt = length(swr_center_iv.tstart):-1:1
-    
-    data_trials(iEvt,:) = csc_res.data(nearest_idx3(csc_res.data, swr_center_iv.tstart(iEvt)))
-    this_data = restrict(csc_res, swr_center_iv.tstart(iEvt), swr_center_iv.tend(iEvt));
-%     data_trials(iEvt,:) = this_data.data; 
-end
-
-movingwin=[0.01 0.005]; % set the moving window dimensions
-params.Fs=csc_res.cfg.hdr{1}.SamplingFrequency; % sampling frequency
-params.fpass=[50 300]; % frequencies of interest
-params.tapers=[5 9]; % tapers
-params.trialave=1; % average over trials
-params.err=0; % no error computation
-
-
-[S1,t,f] = mtspecgramc(data_trials,movingwin,params); % compute spectrogram
-
-figure(300)
-plot_matrix(S1,t,f);
-xlabel([]); % plot spectrogram
-caxis([8 28]); colorbar;
-
-
-
-
-
-
+%% convert LFP data in to SWR 'Trials'
 
 % DID NO USE. It was a pain to make this work across platforms and MATLAB
 % versions. Great functions but not easy to get mex files to work :/
-% % using FieldTrip Toolbox  (https://github.com/fieldtrip) 
+%% using FieldTrip Toolbox  (https://github.com/fieldtrip) 
 % 
 addpath(PARAMS.ft_code_dir);
 
 ft_defaults
-
-
-fc = {'CSC7.ncs'};
-data = ft_read_neuralynx_interp(fc);
-
-
-%% leave this until you get your data_ft as a common function across codebases...
+% 
+% fc = {'CSC7.ncs'};
+% data = ft_read_neuralynx_interp(fc); used to updae TSDtoFT to give
+% correct formating. Works as MS_TSDtoFT. 
 
 % convert data to ft format and turn into trials. 
 data_ft = MS_TSDtoFT([], csc_res); % convert to ft format. 
 
-cfg_plot_TFR              = [];
-cfg_plot_TFR.twin         = [-0.05 0.05];
-cfg_plot_TFR.dt           = 0.001;
-cfg_plot_TFR.method       = 'mtmconvol';
-cfg_plot_TFR.taper        = 'hanning';
-cfg_plot_TFR.foi          = 50:1:300; % frequencies of interest
-% cfg_plot_TFR.subplotdim   = [4 5];
-cfg_plot_TFR.clim         = [0 500]; % sets the caxis for the imagesc plots. default [0 500]
+swr_centers = IVcenters(swr_evt_out); % get the center of the swr event. 
 
-PlotTSDfromIV_TFR(cfg_plot_TFR,swr_center_iv,data_ft)
+cfg_trl = [];
+cfg_trl.t = cat(1,swr_centers);
+cfg_trl.t = cfg_trl.t - data_ft.hdr.FirstTimeStamp;
+cfg_trl.twin = [-1 1];
+cfg_trl.hdr = data_ft.hdr;
 
-% trials
-cfg = [];
-cfg.t = cat(2,swr_evt_out.tstart,swr_evt_out.tend);
-cfg.mode = 'nlx';
-cfg.hdr = data_ft.hdr;
-cfg.twin = [-1 4];
- 
-trl = ft_maketrl(cfg);
- 
+trl = ft_maketrl(cfg_trl);
+
 cfg = [];
 cfg.trl = trl;
 data_trl = ft_redefinetrial(cfg,data_ft); 
 
 
+cfg              = []; % start with empty cfg
+cfg.output       = 'pow';
+cfg.channel      = data_ft.label{1};
+cfg.method       = 'mtmconvol';
+cfg.taper        = 'hanning';
+cfg.foi          = 20:2:250; % frequencies of interest
+cfg.t_ftimwin    = ones(size(cfg.foi)).*0.05;%20./cfg.foi;  % window size: fixed at 0.5s
+cfg.toi          = -.2:0.0025:0.2; % times of interest
+cfg.pad          = 'nextpow2'; % recommened by FT to make FFT more efficient. 
+ 
+TFR = ft_freqanalysis(cfg, data_trl);
+
+% track config for plotting. 
+freq_params_str = sprintf('Spec using %0.0d swrs. Method: %s, Taper: %s', length(trl),cfg.method, cfg.taper);
+
+figure
+cfg = []; 
+cfg.channel      = data_ft.label{1};
+cfg.baseline     = [-1 -.01];
+cfg.baselinetype = 'relative';
+cfg.title = freq_params_str;
+ft_singleplotTFR(cfg, TFR);
 
 
+%% attempt to use chronux. 
+% cfg_trials = [];
+% 
+% swr_centers = IVcenters(swr_evt_out); % get the center of the swr event. 
+% % resize around center. 
+% swr_center_iv = iv([swr_centers - 0.05, swr_centers + 0.05]);
+% 
+% % cfg_trial = []; %cfg_trial.target = csc_res.label{1}; cfg_trial.label = csc_res.label{1}; 
+% % swr_trials = AddTSDtoIV(cfg_trial, swr_center_iv, csc_res); 
+% 
+% 
+% % convert data into trials
+% for iEvt = length(swr_center_iv.tstart):-1:1
+%     
+%     data_trials(iEvt,:) = csc_res.data(nearest_idx3(csc_res.data, swr_center_iv.tstart(iEvt)));
+%     this_data = restrict(csc_res, swr_center_iv.tstart(iEvt), swr_center_iv.tend(iEvt));
+% %     data_trials(iEvt,:) = this_data.data; 
+% end
+% 
+% movingwin=[0.01 0.005]; % set the moving window dimensions
+% params.Fs=csc_res.cfg.hdr{1}.SamplingFrequency; % sampling frequency
+% params.fpass=[50 300]; % frequencies of interest
+% params.tapers=[5 9]; % tapers
+% params.trialave=1; % average over trials
+% params.err=0; % no error computation
+% 
+% 
+% [S1,t,f] = mtspecgramc(data_trials,movingwin,params); % compute spectrogram
+% 
+% figure(300)
+% plot_matrix(S1,t,f);
+% xlabel([]); % plot spectrogram
+% caxis([8 28]); colorbar;
 
 
