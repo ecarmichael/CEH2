@@ -54,14 +54,15 @@ if isempty(cfg.fname)
     ts_files_here = dir('timestamp*');
     
     % deal with more than 9 TS files
-    for ii = 1:length(ts_files_here)
-        temp = regexp(ts_files_here(ii).name, '\d*','Match');
-        temp_ids(ii) = str2num(temp{1});
+    if length(ts_files_here) ~=1
+        for ii = 1:length(ts_files_here)
+            temp = regexp(ts_files_here(ii).name, '\d*','Match');
+            temp_ids(ii) = str2num(temp{1});
+        end
+        
+        [~, idx] = sort(temp_ids);              % sort the file names based on number values
+        ts_files_here = ts_files_here(idx);
     end
-    
-    [~, idx] = sort(temp_ids);              % sort the file names based on number values
-    ts_files_here = ts_files_here(idx);
-    
     ts_files_here = {ts_files_here.name}'; % pull out a list of file names. 
     
 elseif isa(cfg.fname, 'cell')
