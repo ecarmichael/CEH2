@@ -19,7 +19,7 @@ elseif strcmp(os, 'GLNXA64')
     PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/'; % where to find the raw data
     PARAMS.inter_dir = '/home/ecarmichael/Documents/Williams_Lab/Temp/'; % where to put intermediate files
     PARAMS.GE_code_dir = '/home/ecarmichael/Documents/GitHub/MiniscopeAnalysis'; % Guillaume Etter's processing codebase with core pipeline. https://github.com/etterguillaume/MiniscopeAnalysis.git
-    PARAMS.cnfm_code_dir = '/home/ecarmichael/Documents/GitHub/CNMF_E'; % CNFM_E code https://github.com/zhoupc/CNMF_E
+    PARAMS.cnfm_code_dir = '/home/ecarmichael/Documents/GitHub/CNMF_E_stable'; % CNFM_E code https://github.com/zhoupc/CNMF_E
     PARAMS.CellReg_code_dir = '/home/ecarmichael/Documents/GitHub/CellReg'; % CellReg codebase. https://github.com/zivlab/CellReg
     PARAMS.NORMCOR_code_dir = '/home/ecarmichael/Documents/GitHub/NoRMCorre'; % NoRMCorre codebase. https://github.com/flatironinstitute/NoRMCorre
     PARAMS.CEH2_code_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % EC_calcium codebase. 
@@ -43,6 +43,15 @@ cnmfe_setup
 
 cd(PARAMS.raw_data_dir) % move to the data folder
 
+% note: CNMFE needs hack in get_data_dimension (line 37) & smod_bigread2 (line 355) when using >v2015
+% because audiovideo.mmreader is deprecated.  Replace with this. 
+%     [~, ver_date] = version; % hack for depreciated audivideo.mmreader after v2017
+%     if str2double(ver_date(end-3:end)) >2015
+%         obj = VideoReader(path_to_file);
+%     else
+%     	obj = audiovideo.mmreader(path_to_file);
+%     end
+%     clear ver_date; 
 
 %% inital stuff
 

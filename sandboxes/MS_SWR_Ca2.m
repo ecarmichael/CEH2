@@ -18,6 +18,7 @@ if ismac
 elseif strcmp(os, 'GLNXA64')
 
     PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/2019-12-04_11-10-01_537day0base1'; % where to find the raw data
+    PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/EV/';
     PARAMS.inter_dir = '/home/ecarmichael/Documents/Williams_Lab/Temp/'; % where to put intermediate files
     PARAMS.stats_dir = '/home/ecarmichael/Documents/Williams_Lab/Stats/'; % where to put the statistical output .txt
     PARAMS.code_base_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
@@ -56,7 +57,6 @@ clear d os
 ExpKeys = MS_Load_Keys(); 
 
 % load events
-
 nlx_evts = LoadEvents([]); % get '.nev' file here.  
 
 % load the NLX CSC data (using vandermeer lab code) [todo:replace with own]
@@ -64,6 +64,18 @@ cfg_csc = [];
 cfg_csc.fc = {'CSC7.ncs'}; % use csc files from Keys. Alternatively, just use the actual names {'CSC1.ncs', 'CSC5.ncs'}; 
 % cfg_csc.decimateByFactor = 16;
 csc = LoadCSC(cfg_csc); % need to comment out ExpKeys lines in LoadCSC
+
+%% get the timestamps
+raw_data_folder = strsplit(PARAMS.data_dir, filesep);
+TS = MS_collect_timestamps(strjoin([PARAMS.raw_data_dir raw_data_folder(end)], ''));
+
+
+%% use labels from TS files. 
+
+
+
+
+
 
 %% Ca blocks
 % identify peaks in  diff(evt.t{3}) marking transitions in the camera TTLs
