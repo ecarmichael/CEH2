@@ -65,9 +65,32 @@ cfg_csc.fc = {'CSC7.ncs'}; % use csc files from Keys. Alternatively, just use th
 % cfg_csc.decimateByFactor = 16;
 csc = LoadCSC(cfg_csc); % need to comment out ExpKeys lines in LoadCSC
 
-%% get the timestamps
+%% load the Miniscope data
+
+load('ms.mat')
+
+% get the timestamps
 raw_data_folder = strsplit(PARAMS.data_dir, filesep);
-TS = MS_collect_timestamps(strjoin([PARAMS.raw_data_dir raw_data_folder(end)], ''));
+[TS TS_name] = MS_collect_timestamps(strjoin([PARAMS.raw_data_dir raw_data_folder(end)], ''));
+
+% compare to TS to ms
+fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
+for iT = 1:length(TS)
+    if length(TS{iT}.system_clock{1}) == ms.timestamps(iT)
+        disp([TS_name{iT}   ':  ' num2str(length(TS{iT}.system_clock{1}))   ' - ms TS: ' num2str(ms.timestamps(iT))  '   ~ ' num2str(length(TS{iT}.system_clock{1}) / TS{iT}.cfg.Fs{1}) 's'])
+    else
+        warning(['TS do not match ms data' TS{iT}.filename   ':  ' num2str(length(TS{iT}.system_clock{1}))   ' - ms TS: ' num2str(ms.timestamps(iT))])
+    end
+end
+
+% extract NLX event epochs
+[evt_iv, evt_duration] = MS_extract_NLX_blocks_sandbox([], nlx_evts);
+
+% compare the TS to the NLX evets
+
+
+
+
 
 
 %% use labels from TS files. 
