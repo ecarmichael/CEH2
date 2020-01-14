@@ -52,17 +52,23 @@ for iF  = 1:length(TS_files)
     switch output_type
         
         case 'cells' 
-            ts_out{iF} = MS_Load_TS(cfg_ts);
+            temp = MS_Load_TS(cfg_ts);
+            ts_out{iF} = temp{1}; 
             
         case 'Cells'
-            ts_out{iF} = MS_Load_TS(cfg_ts);
+            temp = MS_Load_TS(cfg_ts);
+            ts_out{iF} = temp{1}; 
             
         case 'struct' 
-            ts_out.(fldr{end}) = MS_Load_TS(cfg_ts);
+            temp = MS_Load_TS(cfg_ts);
+            ts_out.(fldr{end}) = temp{1}; 
+
         case  'Struct'
-            ts_out.(fldr{end}) = MS_Load_TS(cfg_ts);
+            temp = MS_Load_TS(cfg_ts);
+            ts_out.(fldr{end}) = temp{1}; 
     end
     ts_fnames{iF} = fldr{end};
+    temp = []; 
 end
 
 %% clean up
