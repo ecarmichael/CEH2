@@ -84,11 +84,17 @@ for iT = 1:length(TS)
 end
 
 % extract NLX event epochs
-[evt_iv, evt_duration] = MS_extract_NLX_blocks_sandbox([], nlx_evts);
+[evt_blocks, evt_iv, evt_duration] = MS_extract_NLX_blocks_sandbox([], nlx_evts);
+
+
+% restrict the detected event blocks using gittering to isolate the fewest
+% jumps. 
+
+nlx_rec_evts = MS_isolate_nlx_event_blocks_sandbox([], nlx_evts, evt_iv);
 
 % compare the TS to the NLX evets
 
-
+MS_compare_evt_to_TS_sandbox([],nlx_evts,evt_iv, TS)
 
 
 
