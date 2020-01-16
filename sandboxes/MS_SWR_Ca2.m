@@ -71,7 +71,7 @@ load('ms.mat')
 
 % get the timestamps
 raw_data_folder = strsplit(PARAMS.data_dir, filesep);
-[TS TS_name] = MS_collect_timestamps(strjoin([PARAMS.raw_data_dir raw_data_folder(end)], ''));
+[TS, TS_name] = MS_collect_timestamps(strjoin([PARAMS.raw_data_dir raw_data_folder(end)], ''));
 
 % compare to TS to ms
 fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
@@ -84,18 +84,35 @@ for iT = 1:length(TS)
 end
 
 % extract NLX event epochs
-[evt_blocks, evt_iv, evt_duration] = MS_extract_NLX_blocks_sandbox([], nlx_evts);
+cfg_evt_blocks = [];
+cfg_evt_blocks.t_chan = 5;
+nlx_evts.t{5} = sort([nlx_evts.t{3}, nlx_evts.t{4}]);
+nlx_evts.label{5} = 'merge TTls at 3 and 4';
+[evt_blocks, evt_iv, evt_duration] = MS_extract_NLX_blocks_sandbox(cfg_evt_blocks, nlx_evts);
 
 
 % restrict the detected event blocks using gittering to isolate the fewest
 % jumps. 
 
-nlx_rec_evts = MS_isolate_nlx_event_blocks_sandbox([], nlx_evts, evt_iv);
 
 % compare the TS to the NLX evets
 
-MS_compare_evt_to_TS_sandbox([],nlx_evts,evt_iv, TS)
+% compare to TS to ms
+fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
+if length(TS) ~= length(evt_blocks)
+    warning('Number of Timestamp files (%s) does not match the number of detected NLX event blocks (%s)', num2str(length(TS)),num2str(length(evt_blocks)))
+end
 
+this_chan = 5
+for iT = 1:length(TS)
+    if length(TS{iT}.system_clock{1}) == length(evt_blocks{iT}.t{this_chan})
+        disp(['TS' num2str(iT) '-' TS_name{iT} ': ' num2str(length(TS{iT}.system_clock{1}))   'samples, '  num2str(length(TS{iT}.system_clock{1}) / TS{iT}.cfg.Fs{1},3) 'sec at ' num2str(TS{iT}.cfg.Fs{1},3) 'Hz'...
+            'NLX: ' num2str(length(evt_blocks{iT}.t{this_chan})) ' samples,' num2str(evt_duration(iT),3) 'at ' num2str(1/mode(diff(evt_blocks{iT}.t{this_chan})),3) 'Hz'])
+    else
+        warning('TS do not match nlx .nev data. TS# %s  %s samples  - NLX: %s events',...
+         num2str(iT), num2str(length(TS{iT}.system_clock{1})), num2str(length(evt_blocks{iT}.t{this_chan})))
+    end
+end
 
 
 

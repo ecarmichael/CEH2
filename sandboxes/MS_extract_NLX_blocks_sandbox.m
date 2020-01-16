@@ -53,7 +53,7 @@ cfg = ProcessConfig2(cfg_def, cfg_in);
 
 %% identify peaks in  diff(evt.t{5}) marking transitions in the camera TTLs
 peak_threshold =  (mean(diff(evt.t{cfg.t_chan}) +cfg.peak_threshold*std(diff(evt.t{cfg.t_chan}))));
-[peaks, idx] = findpeaks(diff(evt.t{cfg.t_chan}), 'minpeakheight',peak_threshold, 'minpeakdistance', cfg.min_dist);
+[peaks, idx] = findpeaks(abs(diff(evt.t{cfg.t_chan})), 'minpeakheight',peak_threshold, 'minpeakdistance', cfg.min_dist);
 
 % add on to each end.  
 if idx(1) > 5 % arbitrary at this point, but there should be a peak right at the beginging unless the nlx and the miniscope TTL are the same. 
