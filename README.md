@@ -9,7 +9,7 @@ At the moment the codebase still makes use of the extensive [van der meer lab co
 
 ## Authors
 EC - [Eric Carmichael](https://scholar.google.com/citations?user=V2dTKiMAAAAJ&hl=en)
-
+  
 
 
 ## License
