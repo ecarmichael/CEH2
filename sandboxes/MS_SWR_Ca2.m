@@ -50,20 +50,6 @@ end
 
 clear d os
 
-%% Load data
-
-% load the Keys file with all of the experiment details. 
-%(can be generated with the 'MS_Write_Keys' function) 
-ExpKeys = MS_Load_Keys(); 
-
-% load events
-nlx_evts = LoadEvents([]); % get '.nev' file here.  
-
-% load the NLX CSC data (using vandermeer lab code) [todo:replace with own]
-cfg_csc = [];
-cfg_csc.fc = {'CSC7.ncs'}; % use csc files from Keys. Alternatively, just use the actual names {'CSC1.ncs', 'CSC5.ncs'}; 
-% cfg_csc.decimateByFactor = 16;
-csc = LoadCSC(cfg_csc); % need to comment out ExpKeys lines in LoadCSC
 
 %% load the Miniscope data
 
@@ -82,6 +68,26 @@ for iT = 1:length(TS)
         warning(['TS do not match ms data' TS{iT}.filename   ':  ' num2str(length(TS{iT}.system_clock{1}))   ' - ms TS: ' num2str(ms.timestamps(iT))])
     end
 end
+
+ms_seg = MS_segment_ms_sandbox(ms);
+
+fprintf('\n MS_SWR_Ca2: miniscope data has been segmented into %d individual recording epochs\n method used: %s\n', length(ms_seg.time), ms_seg.format); 
+
+%% Load nlx data
+
+% load the Keys file with all of the experiment details. 
+%(can be generated with the 'MS_Write_Keys' function) 
+ExpKeys = MS_Load_Keys(); 
+
+% load events
+nlx_evts = LoadEvents([]); % get '.nev' file here.  
+
+% load the NLX CSC data (using vandermeer lab code) [todo:replace with own]
+cfg_csc = [];
+cfg_csc.fc = {'CSC7.ncs'}; % use csc files from Keys. Alternatively, just use the actual names {'CSC1.ncs', 'CSC5.ncs'}; 
+% cfg_csc.decimateByFactor = 16;
+csc = LoadCSC(cfg_csc); % need to comment out ExpKeys lines in LoadCSC
+
 
 % extract NLX event epochs
 cfg_evt_blocks = [];
@@ -103,67 +109,95 @@ if length(TS) ~= length(evt_blocks)
     warning('Number of Timestamp files (%s) does not match the number of detected NLX event blocks (%s)', num2str(length(TS)),num2str(length(evt_blocks)))
 end
 
-this_chan = 5
+%% append the NLX data to the ms structure
+this_chan = 5;
+flag = [];
 for iT = 1:length(TS)
     if length(TS{iT}.system_clock{1}) == length(evt_blocks{iT}.t{this_chan})
         disp(['TS' num2str(iT) '-' TS_name{iT} ': ' num2str(length(TS{iT}.system_clock{1}))   'samples, '  num2str(length(TS{iT}.system_clock{1}) / TS{iT}.cfg.Fs{1},3) 'sec at ' num2str(TS{iT}.cfg.Fs{1},3) 'Hz'...
             'NLX: ' num2str(length(evt_blocks{iT}.t{this_chan})) ' samples,' num2str(evt_duration(iT),3) 'at ' num2str(1/mode(diff(evt_blocks{iT}.t{this_chan})),3) 'Hz'])
+        res_csc{iT} = restrict(csc, evt_blocks{iT}.t{this_chan}(1), evt_blocks{iT}.t{this_chan}(end));
+        res_evt{iT} = restrict(nlx_evts, evt_blocks{iT}.t{this_chan}(1), evt_blocks{iT}.t{this_chan}(end));
+        
     else
         warning('TS do not match nlx .nev data. TS# %s  %s samples  - NLX: %s events',...
-         num2str(iT), num2str(length(TS{iT}.system_clock{1})), num2str(length(evt_blocks{iT}.t{this_chan})))
+            num2str(iT), num2str(length(TS{iT}.system_clock{1})), num2str(length(evt_blocks{iT}.t{this_chan})))
+        flag = [flag, iT];
+        res_csc{iT} = [];
+        res_evt{iT} = [];
     end
+end
+res_csc = res_csc(~cellfun('isempty',res_csc));
+res_evt = res_evt(~cellfun('isempty',res_evt));
+
+
+%% update the ms structure with the NLX data
+ms_seg = MS_remove_data_sandbox(ms_seg, [flag]);
+fprintf('\n MS_SWR_Ca2: miniscope epoch: %d was flagged for removal\n', flag); 
+
+ms_seg = MS_append_data_sandbox(ms_seg, 'NLX_csc', res_csc, 'NLX_evt', res_evt);
+fprintf('\n MS_SWR_Ca2: NLX_csc appended\n');
+
+% clear large variables from workspace for memory. 
+clear ms res_csc res_evt flag
+
+
+%% quick check? 
+check = 1; % toggle to skip check plots. 
+check_evt = 1;
+
+if check  ==1
+    figure(101)
+    MS_plot_ca_nlx([], ms, csc)
+    
+    
+    
+    
 end
 
 
-
-%% use labels from TS files. 
-
-
-
-
-
-
-%% Ca blocks
-% identify peaks in  diff(evt.t{3}) marking transitions in the camera TTLs
-
-t_idx = 3; % which event index to use.  
-
-peak_threshold =  (mean(diff(nlx_evts.t{t_idx}) +0.05*std(diff(nlx_evts.t{t_idx}))));
-min_dist = 10;
-[Rec_peak, Rec_idx] = findpeaks(diff(nlx_evts.t{t_idx}), 'minpeakheight',peak_threshold, 'minpeakdistance', min_dist);
-fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_idx), length(Rec_idx))
-
-
-for iRec = 1:length(Rec_idx)
-    if iRec < length(Rec_idx)
-        rec_evt{iRec} = restrict(nlx_evts, nlx_evts.t{t_idx}(Rec_idx(iRec)), nlx_evts.t{t_idx}(Rec_idx(iRec+1))); % restrict the NLX evt struct to ms TTL periods
-    else
-        rec_evt{iRec} = restrict(nlx_evts, nlx_evts.t{t_idx}(Rec_idx(iRec)), nlx_evts.t{t_idx}(end)); % restrict the NLX evt file (last only)
-    end
-    all_rec_evt_len(iRec) = length(rec_evt{iRec}.t{t_idx});
-end
-
-% find the largest and use that one for now. 
-[~,large_idx] = max(all_rec_evt_len);
-
-
-%% use the identified largest recording with what should be MS frame grabs
-csc_res = restrict(csc, rec_evt{large_idx}.t{t_idx}(1), rec_evt{large_idx}.t{t_idx}(end));
-fprintf('\nRestricting to section from events file. Duration: %0.0fsecs = %0.2fmins\n', (rec_evt{large_idx}.t{t_idx}(end) -rec_evt{large_idx}.t{t_idx}(1)), (rec_evt{large_idx}.t{t_idx}(end) -rec_evt{large_idx}.t{t_idx}(1))/60)
-
-%% use whole data
-
-csc_res = csc;
-
-%% initial: use a section that looks like SW sleep [use actual timestamps later but needs MS or TS files]; 
-
-% temp hack to test dectection
-rec.type = 'ts';
-rec.tstart = 4.413082480877258e+06; % place near the end
-rec.tend = nlx_evts.t{2}(end);
-
-csc_res = restrict(csc, rec.tstart, rec.tend);
-fprintf('\nRestricting to visually identified section.  Duration: %0.0fsecs = %0.2fmins\n',  rec.tend - rec.tstart,(rec.tend - rec.tstart)/60)
+%% old block for identifying recording epochs. 
+% %% Ca blocks [old: replaced with MS_extract_NLX_blocks_sandbox]
+% % identify peaks in  diff(evt.t{3}) marking transitions in the camera TTLs
+% 
+% t_idx = 3; % which event index to use.  
+% 
+% peak_threshold =  (mean(diff(nlx_evts.t{t_idx}) +0.05*std(diff(nlx_evts.t{t_idx}))));
+% min_dist = 10;
+% [Rec_peak, Rec_idx] = findpeaks(diff(nlx_evts.t{t_idx}), 'minpeakheight',peak_threshold, 'minpeakdistance', min_dist);
+% fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_idx), length(Rec_idx))
+% 
+% 
+% for iRec = 1:length(Rec_idx)
+%     if iRec < length(Rec_idx)
+%         rec_evt{iRec} = restrict(nlx_evts, nlx_evts.t{t_idx}(Rec_idx(iRec)), nlx_evts.t{t_idx}(Rec_idx(iRec+1))); % restrict the NLX evt struct to ms TTL periods
+%     else
+%         rec_evt{iRec} = restrict(nlx_evts, nlx_evts.t{t_idx}(Rec_idx(iRec)), nlx_evts.t{t_idx}(end)); % restrict the NLX evt file (last only)
+%     end
+%     all_rec_evt_len(iRec) = length(rec_evt{iRec}.t{t_idx});
+% end
+% 
+% % find the largest and use that one for now. 
+% [~,large_idx] = max(all_rec_evt_len);
+% 
+% 
+% %% use the identified largest recording with what should be MS frame grabs
+% csc_res = restrict(csc, rec_evt{large_idx}.t{t_idx}(1), rec_evt{large_idx}.t{t_idx}(end));
+% fprintf('\nRestricting to section from events file. Duration: %0.0fsecs = %0.2fmins\n', (rec_evt{large_idx}.t{t_idx}(end) -rec_evt{large_idx}.t{t_idx}(1)), (rec_evt{large_idx}.t{t_idx}(end) -rec_evt{large_idx}.t{t_idx}(1))/60)
+% 
+% %% use whole data
+% 
+% csc_res = csc;
+% 
+% %% initial: use a section that looks like SW sleep [use actual timestamps later but needs MS or TS files]; 
+% 
+% % temp hack to test dectection
+% rec.type = 'ts';
+% rec.tstart = 4.413082480877258e+06; % place near the end
+% rec.tend = nlx_evts.t{2}(end);
+% 
+% csc_res = restrict(csc, rec.tstart, rec.tend);
+% fprintf('\nRestricting to visually identified section.  Duration: %0.0fsecs = %0.2fmins\n',  rec.tend - rec.tstart,(rec.tend - rec.tstart)/60)
 
 %% basic filtering and thresholding
 % mouse SWR parameters are based off of Liu, McAfee, & Heck 2017 https://www.nature.com/articles/s41598-017-09511-8#Sec6

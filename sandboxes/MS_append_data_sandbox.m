@@ -31,11 +31,18 @@ function ms_out = MS_append_data_sandbox(ms_in, varargin)
 % get additional variable - value pairs and hold them in the workplace by
 % their variable name.
 if nargin
+    var_names = {}; var_vals = {};
     for iV = 1:2:length(varargin)
         eval([varargin{iV}, ' = ', 'varargin{iV+1};']);
-        var_names{iV} = varargin{iV}; % list of variable names
-        var_val{iV} = varargin{iV+1}; % variable values
+        var_names{iV} = varargin{iV};
+        var_vals{iV} = varargin{iV+1};
+        %         var_names = cat(1,var_names, varargin{iV}); % list of variable names
+        %         var_vals = cat(1,var_vals, varargin{iV+1}); % variable values
     end
+    % remove empty cells from above b/c I was too lazy to do this properly.
+    var_names = var_names(~cellfun('isempty',var_names));
+    var_vals = var_vals(~cellfun('isempty',var_vals));
+    
 end
 
 clear varargin
@@ -48,15 +55,15 @@ ms_out = ms_in;
 
 for iV = 1:length(var_names)
     
-    if ~iscell(var_val{iV})
-        ms_out.(var_names{iV}) = struct(var_names{iV}, var_val{iV});
+    if ~iscell(var_vals{iV})
+        ms_out.(var_names{iV}) = struct(var_names{iV}, var_vals{iV});
     else
         % run checks on the number of segments in the ms_in.times vs the
         % input variable
-        if iscell(ms_in.time) && length(var_val{iV}) ~= length(ms_in.time)
+        if iscell(ms_in.time) && length(var_vals{iV}) ~= length(ms_in.time)
             error('input variable ''%s'' is not the same size as ms_in.time and should be examined to avoid misaligned data', var_names{iV})
         else
-            ms_out.(var_names{iV}) =  var_val{iV}; % if they are the same size than appended them.
+            ms_out.(var_names{iV}) =  var_vals{iV}; % if they are the same size than appended them.
         end
     end
 end
@@ -73,8 +80,9 @@ else
     end
 end
 
-% Print what you have done. 
-% if cfg.verbose % should make this ca config option. 
-    fprintf('\nMS_append_data on %s  added ''%s''', date, var_names{ii})
-    fprintf('\n')
-% end
+% Print what you have done.
+% if cfg.verbose % should make this ca config option.
+for ii = 1:length(var_names)
+    fprintf('\nMS_append_data on %s  added ''%s'' \n', date, var_names{ii})
+end
+end % end function
