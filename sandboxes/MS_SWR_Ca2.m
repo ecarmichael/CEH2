@@ -59,6 +59,9 @@ load('ms.mat')
 raw_data_folder = strsplit(PARAMS.data_dir, filesep);
 [TS, TS_name] = MS_collect_timestamps(strjoin([PARAMS.raw_data_dir raw_data_folder(end)], ''));
 
+% get the hypnogram labels
+[hypno_labels, time_labels] = MS_get_hypno_label([], TS_name);
+
 % compare to TS to ms
 fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
 for iT = 1:length(TS)
@@ -69,7 +72,19 @@ for iT = 1:length(TS)
     end
 end
 
-ms_seg = MS_segment_ms_sandbox(ms);
+%%  conver the Ca transitents into a binarized vector
+cfg_bin = [];
+cfg_bin.method = 'zscore'; 
+cfg_bin.threshold = 2; 
+ms = MS_binarize_data_sandbox(cfg_bin, ms);
+fprintf('\n MS_SWR_Ca2: miniscope data has been binarized using a %s method with a threshold of %d\n', cfg_bin.method, cfg_bin.threshold); 
+
+
+
+%% segment the data
+cfg_seg = [];
+cfg_seg.user_fields = {'BinaryTraces'}; 
+ms_seg = MS_segment_ms_sandbox(cfg_seg, ms);
 
 fprintf('\n MS_SWR_Ca2: miniscope data has been segmented into %d individual recording epochs\n method used: %s\n', length(ms_seg.time), ms_seg.format); 
 
@@ -97,12 +112,6 @@ nlx_evts.label{5} = 'merge TTls at 3 and 4';
 [evt_blocks, evt_iv, evt_duration] = MS_extract_NLX_blocks_sandbox(cfg_evt_blocks, nlx_evts);
 
 
-% restrict the detected event blocks using gittering to isolate the fewest
-% jumps. 
-
-
-% compare the TS to the NLX evets
-
 % compare to TS to ms
 fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
 if length(TS) ~= length(evt_blocks)
@@ -112,6 +121,8 @@ end
 %% append the NLX data to the ms structure
 this_chan = 5;
 flag = [];
+res_csc = cell(1, length(TS));
+res_evt = cell(1,length(TS));
 for iT = 1:length(TS)
     if length(TS{iT}.system_clock{1}) == length(evt_blocks{iT}.t{this_chan})
         disp(['TS' num2str(iT) '-' TS_name{iT} ': ' num2str(length(TS{iT}.system_clock{1}))   'samples, '  num2str(length(TS{iT}.system_clock{1}) / TS{iT}.cfg.Fs{1},3) 'sec at ' num2str(TS{iT}.cfg.Fs{1},3) 'Hz'...
@@ -127,32 +138,44 @@ for iT = 1:length(TS)
         res_evt{iT} = [];
     end
 end
+
+% remove unused blocks. In this case it is any one that does not match in
+% the NLX events and the TS timestamps. 
 res_csc = res_csc(~cellfun('isempty',res_csc));
 res_evt = res_evt(~cellfun('isempty',res_evt));
 
+hypno_labels{flag} = []; 
+time_labels{flag} = [];
+hypno_labels = hypno_labels(~cellfun('isempty', hypno_labels));
+time_labels = time_labels(~cellfun('isempty', time_labels));
+
 
 %% update the ms structure with the NLX data
-ms_seg = MS_remove_data_sandbox(ms_seg, [flag]);
+cfg_rem = [];
+cfg_rem.user_fields = {'BinaryTraces'}; 
+ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, [flag]);
 fprintf('\n MS_SWR_Ca2: miniscope epoch: %d was flagged for removal\n', flag); 
 
-ms_seg = MS_append_data_sandbox(ms_seg, 'NLX_csc', res_csc, 'NLX_evt', res_evt);
+ms_seg = MS_append_data_sandbox(ms_seg, 'NLX_csc', res_csc, 'NLX_evt', res_evt, 'hypno_label', hypno_labels, 'time_labels', time_labels);
 fprintf('\n MS_SWR_Ca2: NLX_csc appended\n');
 
 % clear large variables from workspace for memory. 
-clear ms res_csc res_evt flag
+% clear ms res_csc res_evt flag
+
+
 
 
 %% quick check? 
 check = 1; % toggle to skip check plots. 
-check_evt = 1;
 
 if check  ==1
-    figure(101)
-    MS_plot_ca_nlx([], ms, csc)
-    
-    
-    
-    
+    cfg_check = [];
+%     cfg_check.x_zoom = [ 0 5]; 
+%     cfg_check.CA_type = 'FiltTraces'; 
+    cfg_check.Ca_type = 'BinaryTraces'; 
+    cfg_check.plot_type = '3d';
+    cfg_check.label = 'hypno_label'; 
+    MS_plot_ca_nlx(cfg_check, ms_seg, res_csc)
 end
 
 

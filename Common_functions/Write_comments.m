@@ -26,6 +26,7 @@ if nargin ==0
 elseif nargin ==1
     author = 'EC';
 end
+fprintf('function %s', fname) % initial lines
 fprintf('\n%%%% %s:\n%%\n%%\n%%', fname) % initial lines
 fprintf('\n%%    Inputs: \n%%     -\n') % input lines
 fprintf('%%\n%%\n%%') % input lines

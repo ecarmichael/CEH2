@@ -70,13 +70,21 @@ end
 
 %% clean up
 
-if isfield(ms_out, 'history')
+if isfield(ms_out, 'history') && isfield(ms_out.history, 'cfg')
     for ii = 1:length(var_names)
-        ms_out.history{end+1} = {sprintf('MS_append_data on %s  added ''%s''', date, var_names{ii})};
+        ms_out.history.fun_name{end+1} = {sprintf('MS_append_data on %s  added ''%s''', date, var_names{ii})};
+        ms_out.history.cfg{end+1} = {'none'};
+    end
+elseif isfield(ms_out, 'history') && ~isfield(ms_out.history, 'cfg')
+    for ii = 1:length(var_names)
+        ms_out.history.fun_name{end+1} = {sprintf('MS_append_data on %s  added ''%s''', date, var_names{ii})};
+        ms_out.history.cfg = {'none'};
     end
 else
     for ii = 1:length(var_names)
-        ms_out.history = {sprintf('MS_append_data on %s  added ''%s''', date, var_names{ii})};
+        ms_out.history.fun_name = {sprintf('MS_append_data on %s  added ''%s''', date, var_names{ii})};
+        ms_out.history.cfg = {'none'};
+
     end
 end
 
