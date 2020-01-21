@@ -54,7 +54,7 @@ cfg_def =[];
 cfg_def.Ca_type = 'RawTraces'; % can be either 'RawTraces' or FiltTraces' (maybe others?)
 cfg_def.Ca_chan = 1:floor(n_cells/10):n_cells; % get a subset of cells.
 cfg_def.plot_type = '2d'; % '2d' or '3d'
-cfg_def.x_zoom = [0 3]; % where to zoom in on eht x_axis for each plot.
+cfg_def.x_zoom = []; % where to zoom in on eht x_axis for each plot.
 
 cfg = ProcessConfig(cfg_def, cfg_in);
 
@@ -89,11 +89,16 @@ switch type
                         plot3(time_in2*0.001, repmat(iC,size(ms_data_in.(cfg.Ca_type){iRec},1),1), ms_data_in.(cfg.Ca_type){iRec}(:,iC), 'color', c_ord(iC,:))
                     end
                     view([0 45])
+                    set(gca, 'color', [.5 .5 .5])
             end
             
             xlim([time_in2(1)*0.001 time_in2(end)*0.001])
             linkaxes(ax, 'x')
             ax = [];
+            if ~isempty(cfg.x_zoom)
+            xlim(cfg.x_zoom)
+            end
+            title(ms_data_in.(cfg.label){iRec})
         end
         
     case 'continuous'
@@ -125,5 +130,7 @@ switch type
         xlim([time_in2(1)*0.001 time_in2(end)*0.001])
         linkaxes(ax, 'x')
         ax = [];
+        xlim(cfg.x_zoom)
+        
 end % end swtich
 end % end function

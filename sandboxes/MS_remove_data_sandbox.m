@@ -1,4 +1,4 @@
-function ms_out = MS_remove_data_sandbox(ms_in, cells_to_remove)
+function ms_out = MS_remove_data_sandbox(cfg_in,ms_in, cells_to_remove)
 %% MS_remove_data
 %  MS_remove_data will take in a miniscope data structure 'ms_in' and
 %  remove the specified cells while performing some checks to ensure that everything lines up.
@@ -27,6 +27,11 @@ function ms_out = MS_remove_data_sandbox(ms_in, cells_to_remove)
 %       - initial sandbox with basic functions
 %% inialize
 
+cfg_def = [];
+cfg_def.user_fields = {}; % user fields. 
+
+cfg = ProcessConfig(cfg_def, cfg_in); 
+
 if ~iscell(ms_in.RawTraces)
     error('ms_in data is not in cells.  Probably has not been segmented.  See MS_segment_ms_data')
 end
@@ -49,6 +54,12 @@ for iC = sort(cells_to_remove, 'descend') % go backards or else everything is of
     ms_out.FiltTraces(iC) = [];
     ms_out.frameNum(iC) = [];
     ms_out.vidNum(iC) = [];
+    
+if ~isempty(cfg.user_fields)
+    for iF = 1:length(cfg.user_fields)
+        ms_out.(cfg.user_fields{iF})(iC) = []; 
+    end
+end
     
     fprintf('Removing cell: %0.f\n', iC);
 end
@@ -75,11 +86,13 @@ end
 
 
 %% clean up
-ms_out.format = [ms_out.format sprintf('; cell %.0f removed', cells_to_remove)];
+ms_out.format = [ms_out.format sprintf('cell %.0f removed', cells_to_remove)];
 
 if isfield(ms_out, 'history')
-    ms_out.history{end+1} = {sprintf('; cell %.0f removed', cells_to_remove)};
+    ms_out.history.fun_name{end+1} = {sprintf('cell %.0f removed', cells_to_remove)};
+    ms_out.history.cfg{end+1} = cfg;
 else
-    ms_out.history = {sprintf('; cell %.0f removed', cells_to_remove)};
+    ms_out.history.fun_name = {sprintf('cell %.0f removed', cells_to_remove)};
+    ms_out.history.cfg = {cfg};
 end
 
