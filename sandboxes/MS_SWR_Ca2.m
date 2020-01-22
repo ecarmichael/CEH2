@@ -77,7 +77,7 @@ cfg_bin = [];
 cfg_bin.method = 'zscore'; 
 cfg_bin.threshold = 2; 
 ms = MS_binarize_data_sandbox(cfg_bin, ms);
-fprintf('\n MS_SWR_Ca2: miniscope data has been binarized using a %s method with a threshold of %d\n', cfg_bin.method, cfg_bin.threshold); 
+fprintf('\n<strong>MS_SWR_Ca2</strong>: miniscope data has been binarized using a %s method with a threshold of %d\n', cfg_bin.method, cfg_bin.threshold); 
 
 
 
@@ -86,7 +86,7 @@ cfg_seg = [];
 cfg_seg.user_fields = {'BinaryTraces'}; 
 ms_seg = MS_segment_ms_sandbox(cfg_seg, ms);
 
-fprintf('\n MS_SWR_Ca2: miniscope data has been segmented into %d individual recording epochs\n method used: %s\n', length(ms_seg.time), ms_seg.format); 
+fprintf('\n<strong>MS_SWR_Ca2</strong>: miniscope data has been segmented into %d individual recording epochs\n method used: %s\n', length(ms_seg.time), ms_seg.format); 
 
 %% Load nlx data
 
@@ -118,21 +118,20 @@ if length(TS) ~= length(evt_blocks)
     warning('Number of Timestamp files (%s) does not match the number of detected NLX event blocks (%s)', num2str(length(TS)),num2str(length(evt_blocks)))
 end
 
-%% append the NLX data to the ms structure
-this_chan = 5;
+%% append the NLX data to the ms structure (be saure to use the same channel as the one used for extraction (cfg_evt_blocks.t_chan). 
 flag = [];
 res_csc = cell(1, length(TS));
 res_evt = cell(1,length(TS));
 for iT = 1:length(TS)
-    if length(TS{iT}.system_clock{1}) == length(evt_blocks{iT}.t{this_chan})
+    if length(TS{iT}.system_clock{1}) == length(evt_blocks{iT}.t{cfg_evt_blocks.t_chan})
         disp(['TS' num2str(iT) '-' TS_name{iT} ': ' num2str(length(TS{iT}.system_clock{1}))   'samples, '  num2str(length(TS{iT}.system_clock{1}) / TS{iT}.cfg.Fs{1},3) 'sec at ' num2str(TS{iT}.cfg.Fs{1},3) 'Hz'...
-            'NLX: ' num2str(length(evt_blocks{iT}.t{this_chan})) ' samples,' num2str(evt_duration(iT),3) 'at ' num2str(1/mode(diff(evt_blocks{iT}.t{this_chan})),3) 'Hz'])
-        res_csc{iT} = restrict(csc, evt_blocks{iT}.t{this_chan}(1), evt_blocks{iT}.t{this_chan}(end));
-        res_evt{iT} = restrict(nlx_evts, evt_blocks{iT}.t{this_chan}(1), evt_blocks{iT}.t{this_chan}(end));
+            'NLX: ' num2str(length(evt_blocks{iT}.t{cfg_evt_blocks.t_chan})) ' samples,' num2str(evt_duration(iT),3) 'at ' num2str(1/mode(diff(evt_blocks{iT}.t{cfg_evt_blocks.t_chan})),3) 'Hz'])
+        res_csc{iT} = restrict(csc, evt_blocks{iT}.t{cfg_evt_blocks.t_chan}(1), evt_blocks{iT}.t{cfg_evt_blocks.t_chan}(end));
+        res_evt{iT} = restrict(nlx_evts, evt_blocks{iT}.t{cfg_evt_blocks.t_chan}(1), evt_blocks{iT}.t{cfg_evt_blocks.t_chan}(end));
         
     else
         warning('TS do not match nlx .nev data. TS# %s  %s samples  - NLX: %s events',...
-            num2str(iT), num2str(length(TS{iT}.system_clock{1})), num2str(length(evt_blocks{iT}.t{this_chan})))
+            num2str(iT), num2str(length(TS{iT}.system_clock{1})), num2str(length(evt_blocks{iT}.t{cfg_evt_blocks.t_chan})))
         flag = [flag, iT];
         res_csc{iT} = [];
         res_evt{iT} = [];
@@ -154,10 +153,10 @@ time_labels = time_labels(~cellfun('isempty', time_labels));
 cfg_rem = [];
 cfg_rem.user_fields = {'BinaryTraces'}; 
 ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, [flag]);
-fprintf('\n MS_SWR_Ca2: miniscope epoch: %d was flagged for removal\n', flag); 
+fprintf('\n<strong>MS_SWR_Ca2</strong>: miniscope epoch: %d was flagged for removal\n', flag); 
 
 ms_seg = MS_append_data_sandbox(ms_seg, 'NLX_csc', res_csc, 'NLX_evt', res_evt, 'hypno_label', hypno_labels, 'time_labels', time_labels);
-fprintf('\n MS_SWR_Ca2: NLX_csc appended\n');
+fprintf('\n<strong>MS_SWR_Ca2</strong>: NLX_csc appended\n');
 
 % clear large variables from workspace for memory. 
 % clear ms res_csc res_evt flag
@@ -173,54 +172,30 @@ if check  ==1
 %     cfg_check.x_zoom = [ 0 5]; 
 %     cfg_check.CA_type = 'FiltTraces'; 
     cfg_check.Ca_type = 'BinaryTraces'; 
-    cfg_check.plot_type = '3d';
+    cfg_check.plot_type = '2d';
     cfg_check.label = 'hypno_label'; 
     MS_plot_ca_nlx(cfg_check, ms_seg, res_csc)
 end
 
+%% segment data into one of the specified recording blocks should be hard
 
-%% old block for identifying recording epochs. 
-% %% Ca blocks [old: replaced with MS_extract_NLX_blocks_sandbox]
-% % identify peaks in  diff(evt.t{3}) marking transitions in the camera TTLs
-% 
-% t_idx = 3; % which event index to use.  
-% 
-% peak_threshold =  (mean(diff(nlx_evts.t{t_idx}) +0.05*std(diff(nlx_evts.t{t_idx}))));
-% min_dist = 10;
-% [Rec_peak, Rec_idx] = findpeaks(diff(nlx_evts.t{t_idx}), 'minpeakheight',peak_threshold, 'minpeakdistance', min_dist);
-% fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_idx), length(Rec_idx))
-% 
-% 
-% for iRec = 1:length(Rec_idx)
-%     if iRec < length(Rec_idx)
-%         rec_evt{iRec} = restrict(nlx_evts, nlx_evts.t{t_idx}(Rec_idx(iRec)), nlx_evts.t{t_idx}(Rec_idx(iRec+1))); % restrict the NLX evt struct to ms TTL periods
-%     else
-%         rec_evt{iRec} = restrict(nlx_evts, nlx_evts.t{t_idx}(Rec_idx(iRec)), nlx_evts.t{t_idx}(end)); % restrict the NLX evt file (last only)
-%     end
-%     all_rec_evt_len(iRec) = length(rec_evt{iRec}.t{t_idx});
-% end
-% 
-% % find the largest and use that one for now. 
-% [~,large_idx] = max(all_rec_evt_len);
-% 
-% 
-% %% use the identified largest recording with what should be MS frame grabs
-% csc_res = restrict(csc, rec_evt{large_idx}.t{t_idx}(1), rec_evt{large_idx}.t{t_idx}(end));
-% fprintf('\nRestricting to section from events file. Duration: %0.0fsecs = %0.2fmins\n', (rec_evt{large_idx}.t{t_idx}(end) -rec_evt{large_idx}.t{t_idx}(1)), (rec_evt{large_idx}.t{t_idx}(end) -rec_evt{large_idx}.t{t_idx}(1))/60)
-% 
-% %% use whole data
-% 
-% csc_res = csc;
-% 
-% %% initial: use a section that looks like SW sleep [use actual timestamps later but needs MS or TS files]; 
-% 
-% % temp hack to test dectection
-% rec.type = 'ts';
-% rec.tstart = 4.413082480877258e+06; % place near the end
-% rec.tend = nlx_evts.t{2}(end);
-% 
-% csc_res = restrict(csc, rec.tstart, rec.tend);
-% fprintf('\nRestricting to visually identified section.  Duration: %0.0fsecs = %0.2fmins\n',  rec.tend - rec.tstart,(rec.tend - rec.tstart)/60)
+SW_block = 4; % good block based on visual inspection of the check plots with hypno labels (above)
+REM_block = 9; % nice REM block
+
+fprintf('\n<strong>MS_SWR_Ca2</strong>: using recording blocks <strong>SW = %d (%.1fs) REM = %d (%.1fs)</strong>\n', SW_block,(ms_seg.time{SW_block}(end) - ms_seg.time{SW_block}(1))*0.001, REM_block, (ms_seg.time{REM_block}(end) - ms_seg.time{REM_block}(1))*0.001)
+        
+%% extract SWR candidate events
+
+for iBlock = [SW_block, REM_block]
+    
+    this_csc = res_csc{iBlock}; % pull out a block of 
+    
+    
+    
+    
+end
+
+
 
 %% basic filtering and thresholding
 % mouse SWR parameters are based off of Liu, McAfee, & Heck 2017 https://www.nature.com/articles/s41598-017-09511-8#Sec6
@@ -232,7 +207,7 @@ cfg_filt.type = 'butter'; %Cheby1 is sharper than butter
 cfg_filt.f  = [140 250]; % broad, could use 150-200?
 cfg_filt.order = 4; %type filter order (fine for this f range)
 cfg_filt.display_filter = 0; % use this to see the fvtool 
-csc_ripple = FilterLFP(cfg_filt, csc_res);
+csc_ripple = FilterLFP(cfg_filt, this_csc);
 
 
 % convert to amplitude or power
@@ -240,10 +215,10 @@ amp_ripple = csc_ripple; % clone to make things simple and replace
 
 
 for iChan = 1:size(csc_ripple.data,1)
-    amp_ripple.data(iChan,:) = abs(csc_ripple.data(iChan,:));
+    amp_ripple.data(iChan,:) = abs(hilbert(csc_ripple.data(iChan,:)));
     % Convolve with a gaussian kernel (improves detection)
     kernel = gausskernel(60,20); % note, units are in samples; for paper Methods, need to specify Gaussian SD in ms
-    fprintf('\nGausskernal using 60 samples = %0.0fms with SD = 20 samples (%0.0fms)\n', (60/csc_res.cfg.hdr{1}.SamplingFrequency)*1000, (20/csc_res.cfg.hdr{1}.SamplingFrequency)*1000)
+    fprintf('\nGausskernal using 60 samples = %0.0fms with SD = 20 samples (%0.0fms)\n', (60/this_csc.cfg.hdr{1}.SamplingFrequency)*1000, (20/this_csc.cfg.hdr{1}.SamplingFrequency)*1000)
     amp_ripple.data(iChan,:) = conv(amp_ripple.data(iChan,:),kernel,'same');
     amp_ripple.units = 'amplitude';
     % if you want units in power use: 
@@ -253,16 +228,17 @@ for iChan = 1:size(csc_ripple.data,1)
 end
  
 if check
-    figure(10)
-    plot(csc_res.tvec, csc_res.data(1,:),'k',csc_ripple.tvec, csc_ripple.data(1,:), 'r',...
+    figure(111)
+    plot(this_csc.tvec, this_csc.data(1,:),'k',csc_ripple.tvec, csc_ripple.data(1,:), 'r',...
         amp_ripple.tvec, amp_ripple.data(1,:),'b')
     legend({'Raw', '140-250 filt', 'Amp'})
+    pause(1); close;
 end
     
 %% remove large amplitude artifacts before SWR detection
 
 
-csc_artif = csc_res;
+csc_artif = this_csc;
 for iChan = 1:size(csc_ripple.data,1)
     csc_artif.data(iChan,:) = abs(csc_artif.data(iChan,:)); % detect artifacts both ways
 end
@@ -271,7 +247,7 @@ cfg_artif_det = [];
 cfg_artif_det.method = 'raw';
 cfg_artif_det.threshold = std(csc_artif.data(1,:))*5;
 % cfg_artif_det.minlen = 0.01;
-cfg_artif_det.target = csc_res.label{1};
+cfg_artif_det.target = this_csc.label{1};
 evt_artif = TSDtoIV(cfg_artif_det,csc_artif);
 
 cfg_temp = []; cfg_temp.d = [-0.5 0.5];
@@ -282,14 +258,14 @@ artif_evts = ResizeIV(cfg_temp,evt_artif);
 if check
     plot(113)
     cfg_plot.display = 'iv'; % tsd, iv
-    cfg_plot.target = csc_res.label{1};
+    cfg_plot.target = this_csc.label{1};
     PlotTSDfromIV(cfg_plot,artif_evts,csc_artif);
     hline(cfg_artif_det.threshold )
     pause(3); close all;
 end
 
 % zero pad artifacts to improve reliability of subsequent z-scoring
-artif_idx = TSD_getidx2(csc_res,evt_artif); % if error, try TSD_getidx (slower)
+artif_idx = TSD_getidx2(this_csc,evt_artif); % if error, try TSD_getidx (slower)
 for iChan = 1:size(csc_ripple.data,1)
     csc_ripple.data(iChan,artif_idx) = 0;
     amp_ripple.data(iChan,artif_idx) = 0; 
@@ -305,9 +281,7 @@ if check
     pause(3); close all;
 end
 
-
-
-fprintf('\n MS_SWR_Ca2: %d large amplitude artifacts detected and zero-padded from csc_ripple.\n',length(artif_evts.tstart));
+fprintf('\n<strong>MS_SWR_Ca2</strong>: %d large amplitude artifacts detected and zero-padded from csc_ripple.\n',length(artif_evts.tstart));
 
 
 %% isolate candidate events
@@ -317,7 +291,7 @@ cfg_detect = [];
 cfg_detect.operation = '>';
 cfg_detect.dcn = cfg_detect.operation; % b/c odd var naming in TSDtoIV
 cfg_detect.method = 'zscore';
-cfg_detect.threshold = 2.5;
+cfg_detect.threshold = 2;
 cfg_detect.target = csc.label{1};
 cfg_detect.minlen = 0.020; % 40ms from Vandecasteele et al. 2015
 cfg_detect.merge_thr = 0.02; % merge events that are within 20ms of each other. 
@@ -336,7 +310,7 @@ cfg_detect.merge_thr = 0.02; % merge events that are within 20ms of each other.
 
 
 
-fprintf('\n MS_SWR_Ca2: %d events detected initially.\n',length(swr_evts.tstart));
+fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events detected initially.\n',length(swr_evts.tstart));
 
 if check
     cfg_plot = []; 
@@ -356,14 +330,14 @@ end
     cfg_cc.threshold_type = 'raw';
     cfg_cc.threshold = evt_thr; % use same threshold as for orignal event detection
     cfg_cc.filter_cfg = cfg_filt;
-    swr_evt_out = CountCycles(cfg_cc,csc_res,swr_evts);
+    swr_evt_out = CountCycles(cfg_cc,this_csc,swr_evts);
     
     % get get the evetns with sufficient cycles. 
     cfg_gc = [];
     cfg_gc.operation = '>=';
-    cfg_gc.threshold = 5;
+    cfg_gc.threshold = 4;
     swr_evt_out = SelectIV(cfg_gc,swr_evt_out,'nCycles');
-    fprintf('\n MS_SWR_Ca2: %d events remain after cycle count thresholding (%d cycle minimum).\n',length(swr_evt_out.tstart), cfg_gc.threshold);
+    fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after cycle count thresholding (%d cycle minimum).\n',length(swr_evt_out.tstart), cfg_gc.threshold);
     
     %% check for evnts that are too long.
     % add in a user field for the length of the events (currently not used)
@@ -374,7 +348,7 @@ end
     cfg_max_len.threshold = .1;
     swr_evt_out = SelectIV(cfg_max_len,swr_evt_out,'evt_len');
     
-    fprintf('\n MS_SWR_Ca2: %d events remain after event length cutoff (> %d ms removed).\n',length(swr_evt_out.tstart), (cfg_max_len.threshold)*1000);
+    fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (> %d ms removed).\n',length(swr_evt_out.tstart), (cfg_max_len.threshold)*1000);
     
     
     %% check for evnts with high raw varience. 'var_raw' is added as a swr_evt_out.usr field in CountCycles
@@ -384,12 +358,12 @@ end
     cfg_max_len.threshold = 1;
     swr_evt_out = SelectIV(cfg_max_len,swr_evt_out,'var_raw');
     
-    fprintf('\n MS_SWR_Ca2: %d events remain after raw varience thresholding (''var_raw'' > %d removed).\n',length(swr_evt_out.tstart), cfg_max_len.threshold);
+    fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after raw varience thresholding (''var_raw'' > %d removed).\n',length(swr_evt_out.tstart), cfg_max_len.threshold);
     
     %% remove events that cooinside with artifacts.
     swr_evt_out = DifferenceIV([], swr_evt_out, artif_evts);
     
-    fprintf('\n MS_SWR_Ca2: %d events remain after removing those co-occuring with artifacts.\n',length(swr_evt_out.tstart));
+    fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after removing those co-occuring with artifacts.\n',length(swr_evt_out.tstart));
 
     %% check again
 if check
@@ -403,18 +377,11 @@ if check
     pause(3); close all;
 end
 
-%% make a spectrogram of the average SWR 
 
-% spectrogram method using means. 
+% summary
+fprintf('\n<strong>MS_SWR_Ca2</strong>: %.0f candidate events.  Rate: %.1f/min , mean duration: %.1fms\n',length(swr_evt_out.tstart), length(swr_evt_out.tstart)/(((ms_seg.time{SW_block}(end) - ms_seg.time{SW_block}(1))*0.001)/60), (mean([swr_evt_out.tend-swr_evt_out.tstart]))*1000);
 
-% %% Try Chronux?
-% addpath(genpath(PARAMS.chronux_code_dir));
-% disp('Chronux added to path')
 
-%% convert LFP data in to SWR 'Trials'
-
-% DID NO USE. It was a pain to make this work across platforms and MATLAB
-% versions. Great functions but not easy to get mex files to work :/
 %% using FieldTrip Toolbox  (https://github.com/fieldtrip) 
 % 
 addpath(PARAMS.ft_code_dir);
@@ -426,7 +393,7 @@ ft_defaults
 % correct formating. Works as MS_TSDtoFT. 
 
 % convert data to ft format and turn into trials. 
-data_ft = MS_TSDtoFT([], csc_res); % convert to ft format. 
+data_ft = MS_TSDtoFT([], this_csc); % convert to ft format. 
 
 swr_centers = IVcenters(swr_evt_out); % get the center of the swr event. 
 
@@ -467,27 +434,102 @@ cfg.title = freq_params_str;
 ft_singleplotTFR(cfg, TFR);
 
 
-%% attempt to use chronux. 
+%% Ca coactivity with SWRs
+
+swr_centers = IVcenters(swr_evt_out); % convert to centered events;
+
+swr_ms_idx = nearest_idx3(swr_centers, ms_seg.NLX_evt{iBlock}.t{cfg_evt_blocks.t_chan});
+
+for iE = 1:length(swr_ms_idx) % loop SWRS
+    
+    % convert the times to the common time frame in ms data
+    
+    
+    
+    
+    
+end
+
+
+
+
+
+
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OLD BLOCKS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% old block for identifying recording epochs. 
+% %% Ca blocks [old: replaced with MS_extract_NLX_blocks_sandbox]
+% % identify peaks in  diff(evt.t{3}) marking transitions in the camera TTLs
+% 
+% t_idx = 3; % which event index to use.  
+% 
+% peak_threshold =  (mean(diff(nlx_evts.t{t_idx}) +0.05*std(diff(nlx_evts.t{t_idx}))));
+% min_dist = 10;
+% [Rec_peak, Rec_idx] = findpeaks(diff(nlx_evts.t{t_idx}), 'minpeakheight',peak_threshold, 'minpeakdistance', min_dist);
+% fprintf(['\nDetected %.0f trigger transitions treating this as %.0f distinct recordings\n'], length(Rec_idx), length(Rec_idx))
+% 
+% 
+% for iRec = 1:length(Rec_idx)
+%     if iRec < length(Rec_idx)
+%         rec_evt{iRec} = restrict(nlx_evts, nlx_evts.t{t_idx}(Rec_idx(iRec)), nlx_evts.t{t_idx}(Rec_idx(iRec+1))); % restrict the NLX evt struct to ms TTL periods
+%     else
+%         rec_evt{iRec} = restrict(nlx_evts, nlx_evts.t{t_idx}(Rec_idx(iRec)), nlx_evts.t{t_idx}(end)); % restrict the NLX evt file (last only)
+%     end
+%     all_rec_evt_len(iRec) = length(rec_evt{iRec}.t{t_idx});
+% end
+% 
+% % find the largest and use that one for now. 
+% [~,large_idx] = max(all_rec_evt_len);
+% 
+% 
+% %% use the identified largest recording with what should be MS frame grabs
+% this_csc = restrict(csc, rec_evt{large_idx}.t{t_idx}(1), rec_evt{large_idx}.t{t_idx}(end));
+% fprintf('\nRestricting to section from events file. Duration: %0.0fsecs = %0.2fmins\n', (rec_evt{large_idx}.t{t_idx}(end) -rec_evt{large_idx}.t{t_idx}(1)), (rec_evt{large_idx}.t{t_idx}(end) -rec_evt{large_idx}.t{t_idx}(1))/60)
+% 
+% %% use whole data
+% 
+% this_csc = csc;
+% 
+% %% initial: use a section that looks like SW sleep [use actual timestamps later but needs MS or TS files]; 
+% 
+% % temp hack to test dectection
+% rec.type = 'ts';
+% rec.tstart = 4.413082480877258e+06; % place near the end
+% rec.tend = nlx_evts.t{2}(end);
+% 
+% this_csc = restrict(csc, rec.tstart, rec.tend);
+% fprintf('\nRestricting to visually identified section.  Duration: %0.0fsecs = %0.2fmins\n',  rec.tend - rec.tstart,(rec.tend - rec.tstart)/60)
+
+
+%% make a spectrogram of the average SWR 
+
+% spectrogram method using means. 
+% attempt to use chronux. 
+
+% %% Try Chronux?
+% addpath(genpath(PARAMS.chronux_code_dir));
+% disp('Chronux added to path')
 % cfg_trials = [];
 % 
 % swr_centers = IVcenters(swr_evt_out); % get the center of the swr event. 
 % % resize around center. 
 % swr_center_iv = iv([swr_centers - 0.05, swr_centers + 0.05]);
 % 
-% % cfg_trial = []; %cfg_trial.target = csc_res.label{1}; cfg_trial.label = csc_res.label{1}; 
-% % swr_trials = AddTSDtoIV(cfg_trial, swr_center_iv, csc_res); 
+% % cfg_trial = []; %cfg_trial.target = this_csc.label{1}; cfg_trial.label = this_csc.label{1}; 
+% % swr_trials = AddTSDtoIV(cfg_trial, swr_center_iv, this_csc); 
 % 
 % 
 % % convert data into trials
 % for iEvt = length(swr_center_iv.tstart):-1:1
 %     
-%     data_trials(iEvt,:) = csc_res.data(nearest_idx3(csc_res.data, swr_center_iv.tstart(iEvt)));
-%     this_data = restrict(csc_res, swr_center_iv.tstart(iEvt), swr_center_iv.tend(iEvt));
+%     data_trials(iEvt,:) = this_csc.data(nearest_idx3(this_csc.data, swr_center_iv.tstart(iEvt)));
+%     this_data = restrict(this_csc, swr_center_iv.tstart(iEvt), swr_center_iv.tend(iEvt));
 % %     data_trials(iEvt,:) = this_data.data; 
 % end
 % 
 % movingwin=[0.01 0.005]; % set the moving window dimensions
-% params.Fs=csc_res.cfg.hdr{1}.SamplingFrequency; % sampling frequency
+% params.Fs=this_csc.cfg.hdr{1}.SamplingFrequency; % sampling frequency
 % params.fpass=[50 300]; % frequencies of interest
 % params.tapers=[5 9]; % tapers
 % params.trialave=1; % average over trials
@@ -500,5 +542,3 @@ ft_singleplotTFR(cfg, TFR);
 % plot_matrix(S1,t,f);
 % xlabel([]); % plot spectrogram
 % caxis([8 28]); colorbar;
-
-

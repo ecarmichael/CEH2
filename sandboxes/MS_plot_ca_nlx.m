@@ -81,7 +81,12 @@ switch type
                 % 2d
                 case '2d'
                     for iC = 1:length(cfg.Ca_chan)
-                        plot(time_in2*0.001, ms_data_in.(cfg.Ca_type){iRec}(:,iC), 'color', c_ord(iC,:))
+                        if strcmp(cfg.Ca_type, 'BinaryTraces')
+                            plot(time_in2*0.001, ms_data_in.(cfg.Ca_type){iRec}(:,iC)+iC, 'color', c_ord(iC,:))
+%                             area(time_in2*0.001, max(ms_data_in.(cfg.Ca_type){iRec}(:,iC)+iC, iC), iC, 'edgecolor', 'none', 'facecolor', c_ord(iC,:))
+                        else
+                            plot(time_in2*0.001, ms_data_in.(cfg.Ca_type){iRec}(:,iC), 'color', c_ord(iC,:))
+                        end
                     end
                     % 3d
                 case '3d'
@@ -91,8 +96,12 @@ switch type
                     view([0 45])
                     set(gca, 'color', [.5 .5 .5])
             end
-            
+            if strcmp(cfg.Ca_type, 'BinaryTraces')
+                set(gca, 'yticklabel',cfg.Ca_chan);
+                ylabel('Cell ID');
+            end
             xlim([time_in2(1)*0.001 time_in2(end)*0.001])
+            xlabel('time (s)')
             linkaxes(ax, 'x')
             ax = [];
             if ~isempty(cfg.x_zoom)
