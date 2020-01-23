@@ -193,14 +193,13 @@ for iBlock = [SW_block, REM_block]
     
     
     
-end
 
 
 
 %% basic filtering and thresholding
 % mouse SWR parameters are based off of Liu, McAfee, & Heck 2017 https://www.nature.com/articles/s41598-017-09511-8#Sec6
 check = 1; % used for visual checks on detected events. 
-
+ft_check = 1; % use fieldtrip to 
 %set up ripple band 
 cfg_filt = [];
 cfg_filt.type = 'butter'; %Cheby1 is sharper than butter
@@ -257,6 +256,7 @@ artif_evts = ResizeIV(cfg_temp,evt_artif);
 % plot
 if check
     plot(113)
+    cfg_plot=[];
     cfg_plot.display = 'iv'; % tsd, iv
     cfg_plot.target = this_csc.label{1};
     PlotTSDfromIV(cfg_plot,artif_evts,csc_artif);
@@ -378,12 +378,10 @@ if check
 end
 
 
-% summary
-fprintf('\n<strong>MS_SWR_Ca2</strong>: %.0f candidate events.  Rate: %.1f/min , mean duration: %.1fms\n',length(swr_evt_out.tstart), length(swr_evt_out.tstart)/(((ms_seg.time{SW_block}(end) - ms_seg.time{SW_block}(1))*0.001)/60), (mean([swr_evt_out.tend-swr_evt_out.tstart]))*1000);
-
 
 %% using FieldTrip Toolbox  (https://github.com/fieldtrip) 
 % 
+if ft_check == 1
 addpath(PARAMS.ft_code_dir);
 
 ft_defaults
@@ -434,23 +432,82 @@ cfg.title = freq_params_str;
 ft_singleplotTFR(cfg, TFR);
 
 
+clear data_ft data_trl swr_centers
+rmpath(PARAMS.ft_code_dir);
+end % end of ft_check 
+
+%% block clean up
+
+
+% summary
+fprintf('\n<strong>MS_SWR_Ca2</strong>: %.0f candidate events.  Rate: %.1f/min , mean duration: %.1fms\n',length(swr_evt_out.tstart), length(swr_evt_out.tstart)/(((ms_seg.time{SW_block}(end) - ms_seg.time{SW_block}(1))*0.001)/60), (mean([swr_evt_out.tend-swr_evt_out.tstart]))*1000);
+
+
+SWR_candidates.(ms_seg.hypno_label{iBlock}) = swr_evt_out; 
+
+
+clear this_csc artif_evts artif_idx csc_ripple csc_artif
+
+end % end recording block iBlock
+
 %% Ca coactivity with SWRs
 
-swr_centers = IVcenters(swr_evt_out); % convert to centered events;
+swr_centers = IVcenters(SWR_candidates.SW); % convert to centered events;
 
-swr_ms_idx = nearest_idx3(swr_centers, ms_seg.NLX_evt{iBlock}.t{cfg_evt_blocks.t_chan});
+% get the time idx that matches the SWR centers (use this if you just want
+% one frame before and one after or something.  
+swr_ms_idx_centers = nearest_idx3(swr_centers, ms_seg.NLX_evt{SW_block}.t{cfg_evt_blocks.t_chan});
 
-for iE = 1:length(swr_ms_idx) % loop SWRS
+% alternative: 
+% get the idx for the start and end of the event.  
+swr_ms_idx_tstart = nearest_idx3(SWR_candidates.SW.tstart, ms_seg.NLX_evt{SW_block}.t{cfg_evt_blocks.t_chan});
+
+swr_ms_idx_tend = nearest_idx3(SWR_candidates.SW.tend, ms_seg.NLX_evt{SW_block}.t{cfg_evt_blocks.t_chan});
+
+co_mat = NaN(size(ms_seg.BinaryTraces{SW_block},2),size(ms_seg.BinaryTraces{SW_block},2),length(swr_ms_idx)); % Make an empty matrix for co-activity
+corr_mat = NaN(size(ms_seg.BinaryTraces{SW_block},2),size(ms_seg.BinaryTraces{SW_block},2),length(swr_ms_idx)); % Make an empty matrix for correlations
+
+SWR_activity = NaN(size(ms_seg.BinaryTraces{SW_block},2),length(swr_ms_idx));
+
+idx_win = [-2 2]; % window (in index values) around the event.  
+figure(111)
+h = imagesc(corr_mat(:,:,1));
+
+for iE = length(swr_ms_idx):-1:1 % loop SWRS
     
-    % convert the times to the common time frame in ms data
+    this_evt = ms_seg.BinaryTraces{SW_block}(swr_ms_idx_tstart(iE):swr_ms_idx_tstart(iE)+1,:); % get all the values within this event. 
+    SWR_activity(:,iE) = sum(this_evt,1) >0; % see if anything was active. 
     
+    corr_mat(:,:,iE) = corr(SWR_activity', 'rows', 'pairwise');
     
-    
+    for ii = length(SWR_activity(:,iE)):-1:1
+        for jj = length(SWR_activity(:,iE)):-1:1
+            if SWR_activity(ii,iE) == 1 && SWR_activity(jj,iE) == 1
+            co_mat(ii,jj,iE) = 1;
+            elseif (SWR_activity(ii,iE) == 1 && SWR_activity(jj,iE) == 0) || (SWR_activity(ii,iE) == 0 && SWR_activity(jj,iE) == 1)
+            co_mat(ii,jj,iE) = 0;
+            elseif SWR_activity(ii,iE) == 0 && SWR_activity(jj,iE) == 0
+            co_mat(ii,jj,iE) = -1;
+                
+            end
+        end
+    end
+%     h.CData = corr_mat(:,:,iE);
+%     drawnow
+%     pause(.5)
     
     
 end
 
 
+% schemaball(mean(corr_mat,3)) % this doesn't work with so many cells. 
+
+% shuffle the intervals and check to see how the coactivity values change.
+% Might be confounded by adjacent cells picking up each others activity.
+% Could also be confounded by artifacts in the signal. 
+
+% TODO: compare the coactivity matrix for SWRs to those during increased
+% REM theta and task running.  
 
 
 
