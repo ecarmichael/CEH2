@@ -235,13 +235,13 @@ else % use tehe raw values from the peak detection *[NOT RECOMMENEDED]*
 end% end gitter section;
 
 
-%% clean up
-
-if isfield(ms_data_in, 'history')
-        ms_data_in.history.fun_name{end+1} = {sprintf('MS_extract_NLX_blocks on %s', date)};
-        ms_data_in.history.cfg{end+1} = cfg; 
-else
-        ms_data_in.history.fun_name = {sprintf('MS_extract_NLX_blocksa on %s', date)};
-        ms_data_in.history.cfg = {cfg}; 
-end
+% %% clean up
+% 
+% if isfield(ms_data_in, 'history')
+%         ms_data_in.history.fun_name{end+1} = {sprintf('MS_extract_NLX_blocks on %s', date)};
+%         ms_data_in.history.cfg{end+1} = cfg; 
+% else
+%         ms_data_in.history.fun_name = {sprintf('MS_extract_NLX_blocksa on %s', date)};
+%         ms_data_in.history.cfg = {cfg}; 
+% end
 
