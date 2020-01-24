@@ -25,6 +25,7 @@ elseif strcmp(os, 'GLNXA64')
     PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
     PARAMS.chronux_code_dir = '/home/ecarmichael/Documents/chronux/chronux_2_12'; % FieldTrip toolbbox (used for spectrogram visualization)
     PARAMS.ft_code_dir = '/home/ecarmichael/Documents/GitHub/fieldtrip'; % FieldTrip toolbbox (used for spectrogram visualization)
+    PARAMS.seqNMF_dir = '/home/ecarmichael/Documents/GitHub/seqNMF';% seqNMF pathway. used for sequence detection. 
 
 else
  disp('on a PC')
@@ -74,7 +75,7 @@ end
 
 %%  conver the Ca transitents into a binarized vector
 cfg_bin = [];
-cfg_bin.method = 'zscore'; 
+cfg_bin.method = 'rise'; 
 cfg_bin.threshold = 2; 
 ms = MS_binarize_data_sandbox(cfg_bin, ms);
 fprintf('\n<strong>MS_SWR_Ca2</strong>: miniscope data has been binarized using a %s method with a threshold of %d\n', cfg_bin.method, cfg_bin.threshold); 
@@ -464,21 +465,32 @@ swr_ms_idx_tstart = nearest_idx3(SWR_candidates.SW.tstart, ms_seg.NLX_evt{SW_blo
 
 swr_ms_idx_tend = nearest_idx3(SWR_candidates.SW.tend, ms_seg.NLX_evt{SW_block}.t{cfg_evt_blocks.t_chan});
 
-co_mat = NaN(size(ms_seg.BinaryTraces{SW_block},2),size(ms_seg.BinaryTraces{SW_block},2),length(swr_ms_idx)); % Make an empty matrix for co-activity
-corr_mat = NaN(size(ms_seg.BinaryTraces{SW_block},2),size(ms_seg.BinaryTraces{SW_block},2),length(swr_ms_idx)); % Make an empty matrix for correlations
+% initialize some matricies to store the co-activity. 
+co_mat = NaN(size(ms_seg.BinaryTraces{SW_block},2),size(ms_seg.BinaryTraces{SW_block},2),length(swr_ms_idx_tstart)); % Make an empty matrix for co-activity
+corr_mat = NaN(size(ms_seg.BinaryTraces{SW_block},2),size(ms_seg.BinaryTraces{SW_block},2),length(swr_ms_idx_tstart)); % Make an empty matrix for correlations
+SWR_activity = NaN(size(ms_seg.BinaryTraces{SW_block},2),length(swr_ms_idx_tstart));
 
-SWR_activity = NaN(size(ms_seg.BinaryTraces{SW_block},2),length(swr_ms_idx));
+SWR_cat_data = []; 
+idx_win = [-50 50]; % window (in index values) around the event.  
 
-idx_win = [-2 2]; % window (in index values) around the event.  
+% initialize an image to draw over
 figure(111)
-h = imagesc(corr_mat(:,:,1));
+h = imagesc(co_mat(:,:,1));
 
-for iE = length(swr_ms_idx):-1:1 % loop SWRS
+for iE =1: length(swr_ms_idx_tstart)%:-1:1 % loop SWRS
     
-    this_evt = ms_seg.BinaryTraces{SW_block}(swr_ms_idx_tstart(iE):swr_ms_idx_tstart(iE)+1,:); % get all the values within this event. 
+    if swr_ms_idx_tstart(iE)+idx_win(1) <= 0
+        this_evt = ms_seg.BinaryTraces{SW_block}(1:swr_ms_idx_tstart(iE)+idx_win(2),:); % get all the values within this event.
+        
+    elseif swr_ms_idx_tstart(iE)+idx_win(2) >= length(ms_seg.BinaryTraces{SW_block})
+                this_evt = ms_seg.BinaryTraces{SW_block}(swr_ms_idx_tstart(iE)+idx_win(1):end,:); % get all the values within this event.
+
+    else
+        this_evt = ms_seg.BinaryTraces{SW_block}(swr_ms_idx_tstart(iE)+idx_win(1):swr_ms_idx_tstart(iE)+idx_win(2),:); % get all the values within this event.
+    end
     SWR_activity(:,iE) = sum(this_evt,1) >0; % see if anything was active. 
     
-    corr_mat(:,:,iE) = corr(SWR_activity', 'rows', 'pairwise');
+%     corr_mat(:,:,iE) = corr(SWR_activity', 'rows', 'pairwise');
     
     for ii = length(SWR_activity(:,iE)):-1:1
         for jj = length(SWR_activity(:,iE)):-1:1
@@ -492,15 +504,17 @@ for iE = length(swr_ms_idx):-1:1 % loop SWRS
             end
         end
     end
-%     h.CData = corr_mat(:,:,iE);
+%     h.CData = co_mat(:,:,iE);
 %     drawnow
 %     pause(.5)
     
-    
+%     for iCell = length(SWR_activity(:,iE)):-1:1
+        SWR_cat_data = [SWR_cat_data; this_evt]; 
+%     end
 end
 
 
-% schemaball(mean(corr_mat,3)) % this doesn't work with so many cells. 
+% schemaball(mean(co_mat,3)) % this doesn't work with so many cells. 
 
 % shuffle the intervals and check to see how the coactivity values change.
 % Might be confounded by adjacent cells picking up each others activity.
@@ -510,6 +524,13 @@ end
 % REM theta and task running.  
 
 
+
+
+%% try using seqNMF
+
+addpath(PARAMS.seqNMF_dir)
+
+% SWR_cat_data = 
 
 
 %%
