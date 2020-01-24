@@ -29,6 +29,7 @@ cfg_def.rise = []; %Use 'cfg.rise = 1' to only use point where the data crosses 
 cfg_def.threshold = 2; % sd using zscore
 cfg_def.operator = '>'; % which direction. 
 cfg_def.data_type = 'RawTraces'; % can be RawTraces or FiltTraces, but can be others if they already exist in the ms structure. 
+cfg_def.rise.mindistance = 300 ; % seems to work
 
 cfg = ProcessConfig(cfg_def, cfg_in);
 
@@ -47,6 +48,8 @@ for iCell = size(ms_data_in.(cfg.data_type),2):-1:1
 
         case 'rise'
             warning('WIP...');
+            
+%             [~, idx] = findpeaks(data_temp(:,iCell), 'minpeakdistance', cfg.rise.mindistance,'minpeakheight',  2); 
             
     end
     
