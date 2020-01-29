@@ -66,7 +66,7 @@ switch type
     
     case 'segmented'
         
-        for iRec = 1:n_seg
+        for iRec = n_seg:-1:1
             h(iRec) = figure(iRec);
             ax(1) =subplot(2,1,1);
             timein = (csc{iRec}.tvec - csc{iRec}.tvec(1)); % just to fix the timing offset between them back to ebing relative to this segment.
@@ -81,19 +81,19 @@ switch type
                 % 2d
                 case '2d'
                     for iC = 1:length(cfg.Ca_chan)
-                        if strcmp(cfg.Ca_type, 'BinaryTraces')
+%                         if strcmp(cfg.Ca_type, 'BinaryTraces')
                             plot(time_in2*0.001, ms_data_in.(cfg.Ca_type){iRec}(:,iC)+iC, 'color', c_ord(iC,:))
 %                             area(time_in2*0.001, max(ms_data_in.(cfg.Ca_type){iRec}(:,iC)+iC, iC), iC, 'edgecolor', 'none', 'facecolor', c_ord(iC,:))
-                        else
+%                         else
                             plot(time_in2*0.001, ms_data_in.(cfg.Ca_type){iRec}(:,iC), 'color', c_ord(iC,:))
-                        end
+%                         end
                     end
                     % 3d
                 case '3d'
                     for iC = 1:length(cfg.Ca_chan)
-                        plot3(time_in2*0.001, repmat(iC,size(ms_data_in.(cfg.Ca_type){iRec},1),1), ms_data_in.(cfg.Ca_type){iRec}(:,iC), 'color', c_ord(iC,:))
+                        plot3(time_in2*0.001, repmat(iC,size(ms_data_in.(cfg.Ca_type){iRec},1),1), ms_data_in.(cfg.Ca_type){iRec}(:,iC)*3, 'color', c_ord(iC,:))
                     end
-                    view([0 45])
+                    view([0 75])
                     set(gca, 'color', [.5 .5 .5])
             end
             if strcmp(cfg.Ca_type, 'BinaryTraces')
@@ -103,7 +103,7 @@ switch type
             xlim([time_in2(1)*0.001 time_in2(end)*0.001])
             xlabel('time (s)')
             linkaxes(ax, 'x')
-            ax = [];
+%             ax = [];
             if ~isempty(cfg.x_zoom)
             xlim(cfg.x_zoom)
             end
@@ -136,10 +136,10 @@ switch type
                 view([0 45])
         end
         
-        xlim([time_in2(1)*0.001 time_in2(end)*0.001])
-        linkaxes(ax, 'x')
-        ax = [];
-        xlim(cfg.x_zoom)
+        xlim([time_in2(1)*0.001 time_in2(end)*0.001]);
+        linkaxes(ax, 'x');
+%         ax = [];
+        xlim(cfg.x_zoom);
         
 end % end swtich
 end % end function
