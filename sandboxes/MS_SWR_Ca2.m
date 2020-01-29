@@ -72,14 +72,33 @@ for iT = 1:length(TS)
         warning(['TS do not match ms data' TS{iT}.filename   ':  ' num2str(length(TS{iT}.system_clock{1}))   ' - ms TS: ' num2str(ms.timestamps(iT))])
     end
 end
+%% Get some basic statistics for the individual Ca Traces
+cfg_stats = [];
+cfg_stats.data_type = 'RawTraces';
 
-%%  conver the Ca transitents into a binarized vector
+ms = MS_characterize_trace(cfg_stats, ms);
+fprintf('\n<strong>MS_SWR_Ca2</strong>: basic statstics computed for each Ca trace'); 
+
+
+%% remove cells with low quality signals. 
+cfg_remove_trace = [];
+cfg_remove_trace.threshold = 8; 
+cfg_remove_trace.remove_idx = ms.stats.RawTraces.z_max <= cfg_remove_trace.threshold;
+
+ms = MS_Remove_trace(cfg_remove_trace, ms);
+fprintf('\n<strong>MS_SWR_Ca2</strong>: %d Traces had max zscore values  < %d. Taken to indicate poor spike quality \n',sum(cfg_remove_trace.remove_idx), cfg_remove_trace.threshold); 
+
+
+
+%%  convert the Ca transitents into a binarized vector
 cfg_bin = [];
-cfg_bin.method = 'rise'; 
+cfg_bin.method = 'rise';
+cfg_bin.rise.smooth_type = 'sgolay'; 
 cfg_bin.threshold = 2; 
 ms = MS_binarize_data_sandbox(cfg_bin, ms);
 fprintf('\n<strong>MS_SWR_Ca2</strong>: miniscope data has been binarized using a %s method with a threshold of %d\n', cfg_bin.method, cfg_bin.threshold); 
-
+pause(1)
+close all
 
 
 %% segment the data
@@ -153,7 +172,7 @@ time_labels = time_labels(~cellfun('isempty', time_labels));
 %% update the ms structure with the NLX data
 cfg_rem = [];
 cfg_rem.user_fields = {'BinaryTraces'}; 
-ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, [flag]);
+ms_seg = MS_remove_segment_sandbox(cfg_rem, ms_seg, [flag]);
 fprintf('\n<strong>MS_SWR_Ca2</strong>: miniscope epoch: %d was flagged for removal\n', flag); 
 
 ms_seg = MS_append_data_sandbox(ms_seg, 'NLX_csc', res_csc, 'NLX_evt', res_evt, 'hypno_label', hypno_labels, 'time_labels', time_labels);
@@ -171,11 +190,40 @@ check = 1; % toggle to skip check plots.
 if check  ==1
     cfg_check = [];
 %     cfg_check.x_zoom = [ 0 5]; 
-%     cfg_check.CA_type = 'FiltTraces'; 
+%     cfg_check.Ca_type = 'RawTraces'; 
     cfg_check.Ca_type = 'BinaryTraces'; 
-    cfg_check.plot_type = '2d';
+    cfg_check.plot_type = '3d';
     cfg_check.label = 'hypno_label'; 
-    MS_plot_ca_nlx(cfg_check, ms_seg, res_csc)
+    MS_plot_ca_nlx(cfg_check, ms_seg, res_csc);
+    
+    
+    figure
+    subplot(6,6,1:5)
+    plot(ms.time/1000,smoothdata(sum(ms.BinaryTraces,2),'gaussian',1000), 'linewidth', 4)
+    hline(0, 'k')
+    color = get(gcf,'Color');
+    set(gca, 'color', color);
+    %     set(gca,'XColor',color)%,'YColor',color,'TickDir','out')
+    xlim([ms.time(1)/1000 ms.time(end)/1000]);
+    xticks([]);
+    title('Sum by time')
+    subplot(6,6,[12 18 24 30 36])
+    plot(smoothdata(sum(ms.BinaryTraces,1),'gaussian',25),1:size(ms.BinaryTraces,2), 'linewidth', 4)
+    yticks([]); ylim([1 size(ms.BinaryTraces,2)]);
+    ylabel('Sum by cells', 'location', 'right')
+    set(gca, 'color', color);
+    yyaxis right
+    hax = gca;
+    set(hax.YAxis, {'color'}, {'k'})
+    %     set(gca,'XColor',color,'YColor',color,'TickDir','out')
+    ylim([1 size(ms.BinaryTraces,2)]);
+    subplot(6, 6, [7 13 19 25 31 8 14 20 26 32 9 15 21 27 33 10 16 22 28 34 11 17 23 29 35])
+    imagesc(ms.time/1000,1:size(ms.BinaryTraces,2), ms.BinaryTraces)
+    colormap(flipud(hot))
+    ylabel('Cell #'); xlabel('Time (s)');
+    xlim([ms.time(1)/1000 ms.time(end)/1000]);
+
+    
 end
 
 %% segment data into one of the specified recording blocks should be hard

@@ -1,4 +1,4 @@
-function ms_out = MS_remove_data_sandbox(cfg_in,ms_in, cells_to_remove)
+function ms_out = MS_remove_segment_sandbox(cfg_in,ms_in, cells_to_remove)
 %% MS_remove_data
 %  MS_remove_data will take in a miniscope data structure 'ms_in' and
 %  remove the specified cells while performing some checks to ensure that everything lines up.
