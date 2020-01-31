@@ -56,7 +56,8 @@ clear d os
 
 load('ms.mat')
 
-% get the timestamps
+% get the timestampsaddpath(PARAMS.seqNMF_dir)
+
 raw_data_folder = strsplit(PARAMS.data_dir, filesep);
 [TS, TS_name] = MS_collect_timestamps(strjoin([PARAMS.raw_data_dir raw_data_folder(end)], ''));
 
@@ -172,7 +173,7 @@ time_labels = time_labels(~cellfun('isempty', time_labels));
 %% update the ms structure with the NLX data
 cfg_rem = [];
 cfg_rem.user_fields = {'BinaryTraces'}; 
-ms_seg = MS_remove_segment_sandbox(cfg_rem, ms_seg, [flag]);
+ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, [flag]);
 fprintf('\n<strong>MS_SWR_Ca2</strong>: miniscope epoch: %d was flagged for removal\n', flag); 
 
 ms_seg = MS_append_data_sandbox(ms_seg, 'NLX_csc', res_csc, 'NLX_evt', res_evt, 'hypno_label', hypno_labels, 'time_labels', time_labels);
