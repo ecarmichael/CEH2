@@ -17,8 +17,12 @@ if ismac
     
 elseif strcmp(os, 'GLNXA64')
     
-    PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/2019-12-04_11-10-01_537day0base1'; % where to find the raw data
-    PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/EV/';
+    %     PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/2019-12-04_11-10-01_537day0base1'; % where to find the raw data
+    PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/JC/7_12_2019_PV1069_LTD5'; % where to find the raw data
+    
+    %     PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/EV/';
+    PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/JC/'; % raw data location.
+    
     PARAMS.inter_dir = '/home/ecarmichael/Documents/Williams_Lab/Temp/'; % where to put intermediate files
     PARAMS.stats_dir = '/home/ecarmichael/Documents/Williams_Lab/Stats/'; % where to put the statistical output .txt
     PARAMS.code_base_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
@@ -28,7 +32,7 @@ elseif strcmp(os, 'GLNXA64')
     PARAMS.seqNMF_dir = '/home/ecarmichael/Documents/GitHub/seqNMF';% seqNMF pathway. used for sequence detection.
     
 else
-    disp('on a PC')
+    disp('on a PC fill this in yourself....')
 end
 
 
@@ -42,7 +46,7 @@ cd(PARAMS.data_dir) % move to the data folder
 
 % try the newer NLX loaders for UNIX
 [~, d] = version;
-if str2double(d(end-3:end)) >2014
+if str2double(d(end-3:end)) >2014 && strcmp(os, 'GLNXA64')
     rmpath('/Users/jericcarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared/io/neuralynx')
     addpath(genpath('/Users/jericcarmichael/Documents/NLX_loaders_UNIX_2015'))
     disp('Version is greater than 2014b on UNIX so use updated loaders found here:')
@@ -60,6 +64,8 @@ load('ms.mat')
 
 raw_data_folder = strsplit(PARAMS.data_dir, filesep);
 [TS, TS_name] = MS_collect_timestamps(strjoin([PARAMS.raw_data_dir raw_data_folder(end)], ''));
+
+% [TS, TS_name] = MS_collect_timestamps('/home/ecarmichael/Documents/Williams_Lab/7_12_2019_PV1069_LTD5');
 
 % get the hypnogram labels
 [hypno_labels, time_labels] = MS_get_hypno_label([], TS_name);
@@ -113,7 +119,9 @@ fprintf('\n<strong>MS_SWR_Ca2</strong>: miniscope data has been segmented into %
 
 % load the Keys file with all of the experiment details.
 %(can be generated with the 'MS_Write_Keys' function)
-ExpKeys = MS_Load_Keys();
+if exist('*Keys.m', 'file') 
+    ExpKeys = MS_Load_Keys();
+end
 
 % load events
 nlx_evts = LoadEvents([]); % get '.nev' file here.
@@ -138,6 +146,11 @@ fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
 if length(TS) ~= length(evt_blocks)
     warning('Number of Timestamp files (%s) does not match the number of detected NLX event blocks (%s)', num2str(length(TS)),num2str(length(evt_blocks)))
 end
+
+%% need to add a piece that will identify periods where the MS was recording but the NLX was not (example: when the mouse is on the track)
+
+
+% something about is it in the events? or something. 
 
 %% append the NLX data to the ms structure (be saure to use the same channel as the one used for extraction (cfg_evt_blocks.t_chan).
 flag = [];
@@ -191,41 +204,80 @@ check = 1; % toggle to skip check plots.
 if check  ==1
     cfg_check = [];
     %     cfg_check.x_zoom = [ 0 5];
-    %     cfg_check.Ca_type = 'RawTraces';
-    cfg_check.Ca_type = 'BinaryTraces';
+        cfg_check.Ca_type = 'RawTraces';
+%     cfg_check.Ca_type = 'BinaryTraces';
     cfg_check.plot_type = '3d';
     cfg_check.label = 'hypno_label';
     MS_plot_ca_nlx(cfg_check, ms_seg, res_csc);
     
     
-    figure
-    subplot(6,6,1:5)
-    plot(ms.time/1000,smoothdata(sum(ms.BinaryTraces,2),'gaussian',1000), 'linewidth', 4)
-    hline(0, 'k')
-    color = get(gcf,'Color');
-    set(gca, 'color', color);
-    %     set(gca,'XColor',color)%,'YColor',color,'TickDir','out')
-    xlim([ms.time(1)/1000 ms.time(end)/1000]);
-    xticks([]);
-    title('Sum by time')
-    subplot(6,6,[12 18 24 30 36])
-    plot(smoothdata(sum(ms.BinaryTraces,1),'gaussian',25),1:size(ms.BinaryTraces,2), 'linewidth', 4)
-    yticks([]); ylim([1 size(ms.BinaryTraces,2)]);
-    ylabel('Sum by cells')
-    set(gca, 'color', color);
-    yyaxis right
-    hax = gca;
-    set(hax.YAxis, {'color'}, {'k'})
-    %     set(gca,'XColor',color,'YColor',color,'TickDir','out')
-    ylim([1 size(ms.BinaryTraces,2)]);
-    subplot(6, 6, [7 13 19 25 31 8 14 20 26 32 9 15 21 27 33 10 16 22 28 34 11 17 23 29 35])
-    imagesc(ms.time/1000,1:size(ms.BinaryTraces,2), ms.BinaryTraces)
-    colormap(flipud(hot))
-    ylabel('Cell #'); xlabel('Time (s)');
-    xlim([ms.time(1)/1000 ms.time(end)/1000]);
+%     figure
+%     subplot(6,6,1:5)
+%     plot(ms.time/1000,smoothdata(sum(ms.BinaryTraces,2),'gaussian',1000), 'linewidth', 4)
+%     hline(0, 'k')
+%     color = get(gcf,'Color');
+%     set(gca, 'color', color);
+%     %     set(gca,'XColor',color)%,'YColor',color,'TickDir','out')
+%     xlim([ms.time(1)/1000 ms.time(end)/1000]);
+%     xticks([]);
+%     title('Sum by time')
+%     subplot(6,6,[12 18 24 30 36])
+%     plot(smoothdata(sum(ms.BinaryTraces,1),'gaussian',25),1:size(ms.BinaryTraces,2), 'linewidth', 4)
+%     yticks([]); ylim([1 size(ms.BinaryTraces,2)]);
+%     ylabel('Sum by cells')
+%     set(gca, 'color', color);
+%     yyaxis right
+%     hax = gca;
+%     set(hax.YAxis, {'color'}, {'k'})
+%     %     set(gca,'XColor',color,'YColor',color,'TickDir','out')
+%     ylim([1 size(ms.BinaryTraces,2)]);
+%     subplot(6, 6, [7 13 19 25 31 8 14 20 26 32 9 15 21 27 33 10 16 22 28 34 11 17 23 29 35])
+%     imagesc(ms.time/1000,1:size(ms.BinaryTraces,2), ms.BinaryTraces)
+%     colormap(flipud(hot))
+%     ylabel('Cell #'); xlabel('Time (s)');
+%     xlim([ms.time(1)/1000 ms.time(end)/1000]);
     
     
 end
+
+%% spectrogram of an episode
+
+this_block = 10
+[~,F,T,P] = spectrogram(ms_seg.NLX_csc{this_block}.data, rectwin(128), 128/4, 1:.1:40, csc.cfg.hdr{1}.SamplingFrequency);
+
+figure(1112)
+ax1 = imagesc(T,F,10*log10(P));
+set(ax1, 'AlphaData', ~isinf(10*log10(P)))
+set(gca,'FontSize',28);
+axis xy xlabel('Time (s)'); ylabel('Frequency (Hz)');
+ax = gca;
+% ax.YTickLabels = {0 [], [], 60, [], [], 80}; % set
+set(gca, 'tickdir', 'out')
+
+
+hold on
+
+plot(ms_seg.NLX_csc{this_block}.tvec-ms_seg.NLX_csc{this_block}.tvec(1) , (ms_seg.NLX_csc{this_block}.data*10000)+20, 'k' )
+
+
+cfg_filt = [];
+% cfg_filt.f = [5 11]; %setting theta (hertz)
+cfg_filt.type = 'fdesign'; %the type of filter I want to use via filterlfp
+cfg_filt.f  = [1 5];
+cfg_filt.order = 8; %type filter order
+cfg_filt.display_filter = 1; % use this to see the fvtool
+delta_csc = FilterLFP(cfg_filt,ms_seg.NLX_csc{this_block});
+
+% filter into the theta band
+cfg_filt = [];
+% cfg_filt.f = [5 11]; %setting theta (hertz)
+cfg_filt.type = 'cheby1'; %the type of filter I want to use via filterlfp
+cfg_filt.f  = [6 11];
+cfg_filt.order = 8; %type filter order
+cfg_filt.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
+% reason.  Looks like trash with ord ~= 3 in cheby1. Butter and fdesign are also trash.
+theta_csc = FilterLFP(cfg_filt, ms_seg.NLX_csc{this_block});
+
 
 %% segment data into one of the specified recording blocks should be hard
 
