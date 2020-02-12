@@ -8,12 +8,13 @@ function Unzip_MS_data(data_dir, target_dir)
 %
 %
 %%
-
+this_dir = cd; 
 % target_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/JC/7_12_2019_PV1069_LTD5';
 if isempty(data_dir)
     these_files = dir(fullfile(pwd, '*.zip'));
 else
     these_files = dir(fullfile(data_dir, '*.zip'));
+    cd(data_dir); 
 end
 
 for iF = 1:length(these_files)
@@ -27,3 +28,5 @@ for iF = 1:length(these_files)
         
     end
 end
+
+cd(this_dir);

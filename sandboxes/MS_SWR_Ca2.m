@@ -124,14 +124,15 @@ if exist('*Keys.m', 'file')
 end
 
 % load events
-nlx_evts = LoadEvents([]); % get '.nev' file here.
+nlx_evts = LoadEvents([]); % get '.nev' file in this dir.
 
 % load the NLX CSC data (using vandermeer lab code) [todo:replace with own]
 cfg_csc = [];
-cfg_csc.fc = {'CSC7.ncs'}; % use csc files from Keys. Alternatively, just use the actual names {'CSC1.ncs', 'CSC5.ncs'};
-% cfg_csc.decimateByFactor = 16;
-csc = LoadCSC(cfg_csc); % need to comment out ExpKeys lines in LoadCSC
-
+cfg_csc.fc = {'CSC7.ncs', 'CSC1.ncs'}; % use csc files from Keys. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+cfg_csc.desired_sampling_frequency = 2000; 
+csc = MS_LoadCSC(cfg_csc); % need to comment out ExpKeys lines in LoadCSC
+csc.label{1} = 'LFP'; 
+csc.label{2} = 'EMG'; 
 
 % extract NLX event epochs
 cfg_evt_blocks = [];
@@ -148,9 +149,46 @@ if length(TS) ~= length(evt_blocks)
 end
 
 %% need to add a piece that will identify periods where the MS was recording but the NLX was not (example: when the mouse is on the track)
+if length(evt_blocks) < length(TS)
+    fprintf('Length of TS (%d) and evt_blocks (%d) are not equal. Checking for odd MS timestamp lengths out...\n',length(TS), length(evt_blocks));
+    
+    for iT = length(TS):-1:1
+        l_ts(iT) = length(TS{iT}.system_clock{1});
+    end
+    
+    for iE = length(evt_blocks):-1:1
+        l_evt(iE) = length(evt_blocks{iE}.t{cfg_evt_blocks.t_chan});
+    end
+
+    odd_idx = find(~ismembertol(l_ts, l_evt, 5,'OutputAllIndices',true,'DataScale', 1));
+    
+    for iOdd = 1:length(odd_idx)
+     fprintf('Found odd TS files at idx: %d.   Length: %d samples\n', odd_idx(iOdd), length(TS{odd_idx(iOdd)}.system_clock{1}));
+    end
+    
+    % remove from ms struct
+    cfg_rem = [];
+    cfg_rem.user_fields = {'BinaryTraces'};
+    ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, [odd_idx]);
+    
+    % remove from TS and labeling structs
+    TS(odd_idx) = [];
+%     TS = TS(~cellfun('isempty',TS));
+    
+    TS_name(odd_idx)= [];
+%     TS_name = TS_name(~cellfun('isempty',TS_name));
+    
+    hypno_labels(odd_idx) = [];
+%     hypno_labels = hypno_labels(~cellfun('isempty',hypno_labels));
+
+    time_labels(odd_idx) = [];
+%     time_labels = time_labels(~cellfun('isempty',time_labels));
 
 
-% something about is it in the events? or something. 
+    fprintf('\n<strong>MS_SWR_Ca2</strong>: miniscope epoch: %d was flagged for removal\n', odd_idx);
+
+end
+
 
 %% append the NLX data to the ms structure (be saure to use the same channel as the one used for extraction (cfg_evt_blocks.t_chan).
 flag = [];
@@ -177,8 +215,8 @@ end
 res_csc = res_csc(~cellfun('isempty',res_csc));
 res_evt = res_evt(~cellfun('isempty',res_evt));
 
-hypno_labels{flag} = [];
-time_labels{flag} = [];
+hypno_labels(flag) = [];
+time_labels(flag) = [];
 hypno_labels = hypno_labels(~cellfun('isempty', hypno_labels));
 time_labels = time_labels(~cellfun('isempty', time_labels));
 
