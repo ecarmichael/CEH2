@@ -41,6 +41,7 @@ cfg.fc = Chan_to_use;
 cfg.desired_sampling_frequency = 2000; % helps with speed. 
 
 csc = MS_LoadCSC(cfg);
+c_ord = linspecer(length(csc.label)); % predefine some colours.
 
 %% get the psd
 cfg_psd = [];
@@ -90,31 +91,33 @@ end
 %% make a plot of the targets [BETA] relative to bregma. 
 
 % electrode plot (beta)
-if isfield(ExpKeys, 'Target')
-    figure
-c_ord = linspecer(length(csc.label)); % predefine some colours. 
-
-    subplot(2,3,1)
-    targets = fieldnames(ExpKeys.Target);
-    hold on
-    for iT = 1:length(targets)
-        flag = 0;
-        for iLab = 1:length(ExpKeys.Chan_to_use_labels)
-            if strcmp(ExpKeys.Chan_to_use_labels{iLab}(1:3), targets{iT})
-                flag = 1;
+if exist('*Keys', 'file')
+    if isfield(ExpKeys, 'Target')
+        figure
+        c_ord = linspecer(length(csc.label)); % predefine some colours.
+        
+        subplot(2,3,1)
+        targets = fieldnames(ExpKeys.Target);
+        hold on
+        for iT = 1:length(targets)
+            flag = 0;
+            for iLab = 1:length(ExpKeys.Chan_to_use_labels)
+                if strcmp(ExpKeys.Chan_to_use_labels{iLab}(1:3), targets{iT})
+                    flag = 1;
+                end
             end
+            if flag ==1
+                rectangle('Position',[ExpKeys.Target.(targets{iT})(2)-.1, ExpKeys.Target.(targets{iT})(1)-.25, .5, .5],'Curvature',[1 1], 'facecolor', [c_ord(iT,:), .3])
+            else
+                rectangle('Position',[ExpKeys.Target.(targets{iT})(2)-.1, ExpKeys.Target.(targets{iT})(1)-.25, .5, .5],'Curvature',[1 1])
+            end
+            text(ExpKeys.Target.(targets{iT})(2), ExpKeys.Target.(targets{iT})(1),-ExpKeys.Depths.(targets{iT})(1), targets{iT})
         end
-        if flag ==1
-            rectangle('Position',[ExpKeys.Target.(targets{iT})(2)-.1, ExpKeys.Target.(targets{iT})(1)-.25, .5, .5],'Curvature',[1 1], 'facecolor', [c_ord(iT,:), .3])
-        else
-            rectangle('Position',[ExpKeys.Target.(targets{iT})(2)-.1, ExpKeys.Target.(targets{iT})(1)-.25, .5, .5],'Curvature',[1 1])
-        end
-        text(ExpKeys.Target.(targets{iT})(2), ExpKeys.Target.(targets{iT})(1),-ExpKeys.Depths.(targets{iT})(1), targets{iT})
+        text(0, 0, 'Bregma')
+        xlim([-2 4])
+        ylim([-2 2])
+        zlim([-10 0])
     end
-    text(0, 0, 'Bregma')
-    xlim([-2 4])
-    ylim([-2 2])
-    zlim([-10 0])
 end
 
 %% plot the position data.note fails if there is more than one ..nvt file (can happen in RR2)
@@ -127,6 +130,11 @@ end
 % plot(pos.data(1,:), pos.data(2,:), '.')
 % axis off
 %% plot the PSD for each channel on one plot.  
+
+color.blue = double([158,202,225])/255;
+color.green = double([168,221,181])/255;
+color.red = [0.9    0.3    0.3]; 
+
 subplot(3,2,[2,3,5,6])
 for iSite = 1:length(csc.label)
     hold on
@@ -136,15 +144,13 @@ xlim([0 200])
 y_val = ylim;
 xlabel('Frequency (Hz)')
 % colour bars for specific frequencies of interest. 
-% theta (broad 4-12)
-% rectangle('position', [4, y_val(1), 8, y_val(2)-y_val(1)], 'facecolor', [0 0.2 .8 0.2],'edgecolor', [0 0.2 .8 0.2]); %low gamma rectangle
-% low gamma
-% rectangle('position', [45, y_val(1), 20, y_val(2)-y_val(1)], 'facecolor', [0 0.8 .2 0.2],'edgecolor', [0 0.8 .2 0.2]) %high gamma rectangle
-% high gamma
-% rectangle('position', [70, y_val(1), 20, y_val(2)-y_val(1)], 'facecolor', [0 0.8 .2 0.2],'edgecolor', [0 0.8 .2 0.2]) %high gamma rectangle
-
 legend(strrep(csc.label, '_', ' '),  'location', 'southwest', 'orientation', 'vertical');
-
+rectangle('position', [1, y_val(1), 4, y_val(2) - y_val(1)],  'facecolor', [color.red 0.2], 'edgecolor', [color.red 0.2])
+rectangle('position', [6, y_val(1), 4, y_val(2) - y_val(1)],  'facecolor', [color.blue 0.2], 'edgecolor', [color.blue 0.2])
+rectangle('position', [40, y_val(1), 30, y_val(2) - y_val(1)],  'facecolor', [color.green 0.2], 'edgecolor', [color.green 0.2])
+%flip obj order for clearity
+chi=get(gca, 'Children');
+set(gca, 'Children',flipud(chi))
 
 if isunix
 d_name = strsplit(cd, '/'); % what to name the figure.  
@@ -157,15 +163,24 @@ title(strrep(d_name{end}, '_', ' '))
 % zoom in on 0-14 hz in a small plot
 axes('Position',[.7 .6 .2 .3])
 box on
+% add colours for freq bands
+
 for iSite = 2:length(csc.label)
     hold on
     plot(psd.(csc.label{iSite}(1:end-4)).f, 10*log10(psd.(csc.label{iSite}(1:end-4)).pxx), 'color', c_ord(iSite,:),'linewidth', line_width);
 end
-xlim([0 14])
+xlim([0 12])
 y_val = ylim;
+
+rectangle('position', [1, y_val(1), 4, y_val(2) - y_val(1)],  'facecolor', [color.red 0.2], 'edgecolor', [color.red 0.2])
+rectangle('position', [6, y_val(1), 4, y_val(2) - y_val(1)],  'facecolor', [color.blue 0.2], 'edgecolor', [color.blue 0.2])
+
 set(gca,'yticklabels', [])
-
-
+% flip obj order
+chi=get(gca, 'Children');
+set(gca, 'Children',flipud(chi))
+pos = get(gcf, 'position');
+set(gcf, 'position', [pos(1) pos(2) pos(3)*1.5 pos(4)*2])
 % %% plot the coherence between pairs of Chan_to_use. 
 % subplot(2,3,[4,5, 6])
 % for iPairs = 1:length(labels)

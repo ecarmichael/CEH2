@@ -37,7 +37,12 @@ ts_out = [];
     
 TS_files = dir(fullfile(dir_name, '**', 'timestamp*.dat'));  
     
-    
+
+%% sort based on the date of the folder. 
+[~, idx] = sort([TS_files.datenum]);              % sort the file names based on number values
+TS_files  = TS_files(idx);
+
+
 %% extract the values.
 this_dir = pwd;
 
