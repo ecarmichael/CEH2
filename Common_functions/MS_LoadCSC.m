@@ -24,6 +24,7 @@ function csc_tsd = MS_LoadCSC(cfg_in)
 %
 
 cfg_def.fc = {};
+cfg_def.label = {};
 cfg_def.TimeConvFactor = 10^-6; % 10^-6 means convert nlx units to seconds
 cfg_def.VoltageConvFactor = 1; % 1 means output in volts, 1000 in mV, 10^6 in uV
 cfg_def.decimateByFactor = []; % how much would you like to
@@ -200,8 +201,12 @@ for iF = 1:nFiles
     csc_tsd.tvec = tvec;
     csc_tsd.data(iF,:) = data;
     
-    [~,fn,fe] = fileparts(fname);
-    csc_tsd.label{iF} = cat(2,fn,fe);
+    if isempty(cfg.label)
+        [~,fn,fe] = fileparts(fname);
+        csc_tsd.label{iF} = cat(2,fn,fe);
+    else
+        csc_tsd.label{iF} = cfg.label{iF};
+    end
     
     csc_tsd.cfg.hdr{iF} = hdr;
     

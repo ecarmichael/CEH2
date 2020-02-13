@@ -35,10 +35,12 @@ if ~iscell(ms_data_in.RawTraces)
     type = 'continuous';
     n_cells = size(ms_data_in.RawTraces,2);
     n_seg = 1;
+    these_csc = csc.label; % get all the csc channel labels
 else
     type = 'segmented';
     n_cells = size(ms_data_in.RawTraces{1},2);
     n_seg = length(ms_data_in.RawTraces); % how many recording segments.
+    these_csc = csc{1}.label; 
 end
 
 if (iscell(ms_data_in.RawTraces) && ~iscell(csc)) || (~iscell(ms_data_in.RawTraces) && iscell(csc))
@@ -53,6 +55,7 @@ end
 cfg_def =[];
 cfg_def.Ca_type = 'RawTraces'; % can be either 'RawTraces' or FiltTraces' (maybe others?)
 cfg_def.Ca_chan = 1:floor(n_cells/10):n_cells; % get a subset of cells.
+cfg_def.chan_to_plot = these_csc;  % how many channels are in the csc.  Determined above. 
 cfg_def.plot_type = '2d'; % '2d' or '3d'
 cfg_def.x_zoom = []; % where to zoom in on eht x_axis for each plot.
 
@@ -62,19 +65,22 @@ cfg = ProcessConfig(cfg_def, cfg_in);
 %% make the plots
 
 c_ord = linspecer(length(cfg.Ca_chan)); % nice colours.
+c_ord_lfp = linspecer(length(cfg.chan_to_plot));
 switch type
     
     case 'segmented'
         
         for iRec = n_seg:-1:1
             h(iRec) = figure(iRec);
-            ax(1) =subplot(2,1,1);
             timein = (csc{iRec}.tvec - csc{iRec}.tvec(1)); % just to fix the timing offset between them back to ebing relative to this segment.
+            for iChan = 1:length(cfg.chan_to_plot)
+                ax(iChan) =subplot(length(cfg.chan_to_plot)+2,1,iChan);
+                plot(timein,csc{iRec}.data(iChan,:), 'color', c_ord_lfp(iChan,:));
+                title(csc{iRec}.label{iChan})
+                xlim([timein(1), timein(end)])
+            end
             
-            plot(timein,csc{iRec}.data, '-b' );
-            xlim([timein(1), timein(end)])
-            
-            ax(2) =subplot(2,1,2);
+            ax(length(cfg.chan_to_plot)+1) =subplot(length(cfg.chan_to_plot)+2,1,[length(cfg.chan_to_plot)+1 length(cfg.chan_to_plot)+2]);
             hold on
             time_in2 = ms_data_in.time{iRec} - ms_data_in.time{iRec}(1);
             switch cfg.plot_type
