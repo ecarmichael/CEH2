@@ -128,11 +128,11 @@ nlx_evts = LoadEvents([]); % get '.nev' file in this dir.
 
 % load the NLX CSC data (using vandermeer lab code) [todo:replace with own]
 cfg_csc = [];
-cfg_csc.fc = {'CSC7.ncs', 'CSC1.ncs'}; % use csc files from Keys. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+cfg_csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+cfg_csc.label = {'EMG', 'LFP'}; % custom naming for each channel.  
 cfg_csc.desired_sampling_frequency = 2000; 
 csc = MS_LoadCSC(cfg_csc); % need to comment out ExpKeys lines in LoadCSC
-csc.label{1} = 'LFP'; 
-csc.label{2} = 'EMG'; 
+
 
 % extract NLX event epochs
 cfg_evt_blocks = [];
@@ -147,6 +147,53 @@ fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
 if length(TS) ~= length(evt_blocks)
     warning('Number of Timestamp files (%s) does not match the number of detected NLX event blocks (%s)', num2str(length(TS)),num2str(length(evt_blocks)))
 end
+
+%% filtering Delta / theta
+
+% delta filter. 
+cfg_filt_d = [];
+cfg_filt_d.type = 'fdesign'; %the type of filter I want to use via filterlfp
+cfg_filt_d.f  = [1 5];
+cfg_filt_d.order = 8; %type filter order
+% cfg_filt_d.display_filter = 1; % use this to see the fvtool and wait for a keypress before continuing. 
+delta_csc = FilterLFP(cfg_filt_d,csc);
+close all
+
+
+% filter into the theta band
+cfg_filt_t = [];
+cfg_filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
+cfg_filt_t.f  = [6 11];
+cfg_filt_t.order = 3; %type filter order
+% cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
+% reason.  .
+theta_csc = FilterLFP(cfg_filt_t, csc);
+
+
+% get the theta_delta ratio
+lfp_idx = find(strcmp(csc.label, 'LFP')); % use the LFP channel Or some other identifier in the csc.label. ATM this is to avoid using the 'EMG' channel. 
+
+td_ratio = abs(hilbert(theta_csc.data(lfp_idx, :))) ./ abs(hilbert(delta_csc.data(lfp_idx, :)));
+
+td_ratio = filter(gausswin(2000)/sum(gausswin(2000)), 1, td_ratio); % 1d gaussian window with .5s window. 
+
+% conv2(td_ratio,gausswin(1000),'same')
+% conv2(td_ratio,gausskernel(1000,20),'same')
+
+% add delta to the csc as a channel. 
+csc.data = cat(1,csc.data ,delta_csc.data(lfp_idx,:));
+csc.label{end+1} = 'Delta';
+%add theta
+csc.data = cat(1,csc.data ,theta_csc.data(lfp_idx,:));
+csc.label{end+1} = 'Theta';
+
+% add theta-delta
+csc.data = cat(1,csc.data ,td_ratio);
+csc.label{end+1} = 'Theta/delta';
+
+clear delta_csc theta_csc td_ratio
+fprintf('\n<strong>MS_SWR_Ca2</strong>: Delta, Theta, and Theta/Delta have been added as csc channels.\n');
+
 
 %% need to add a piece that will identify periods where the MS was recording but the NLX was not (example: when the mouse is on the track)
 if length(evt_blocks) < length(TS)
@@ -201,6 +248,7 @@ for iT = 1:length(TS)
         res_csc{iT} = restrict(csc, evt_blocks{iT}.t{cfg_evt_blocks.t_chan}(1), evt_blocks{iT}.t{cfg_evt_blocks.t_chan}(end));
         res_evt{iT} = restrict(nlx_evts, evt_blocks{iT}.t{cfg_evt_blocks.t_chan}(1), evt_blocks{iT}.t{cfg_evt_blocks.t_chan}(end));
         
+
     else
         warning('TS do not match nlx .nev data. TS# %s  %s samples  - NLX: %s events',...
             num2str(iT), num2str(length(TS{iT}.system_clock{1})), num2str(length(evt_blocks{iT}.t{cfg_evt_blocks.t_chan})))
@@ -215,6 +263,7 @@ end
 res_csc = res_csc(~cellfun('isempty',res_csc));
 res_evt = res_evt(~cellfun('isempty',res_evt));
 
+   
 hypno_labels(flag) = [];
 time_labels(flag) = [];
 hypno_labels = hypno_labels(~cellfun('isempty', hypno_labels));
@@ -226,6 +275,8 @@ cfg_rem = [];
 cfg_rem.user_fields = {'BinaryTraces'};
 ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, [flag]);
 fprintf('\n<strong>MS_SWR_Ca2</strong>: miniscope epoch: %d was flagged for removal\n', flag);
+
+% add in the NLX data
 
 ms_seg = MS_append_data_sandbox(ms_seg, 'NLX_csc', res_csc, 'NLX_evt', res_evt, 'hypno_label', hypno_labels, 'time_labels', time_labels);
 fprintf('\n<strong>MS_SWR_Ca2</strong>: NLX_csc appended\n');
@@ -242,8 +293,9 @@ check = 1; % toggle to skip check plots.
 if check  ==1
     cfg_check = [];
     %     cfg_check.x_zoom = [ 0 5];
-        cfg_check.Ca_type = 'RawTraces';
+    cfg_check.Ca_type = 'RawTraces';
 %     cfg_check.Ca_type = 'BinaryTraces';
+    cfg_check.chan_to_plot = ms_seg.NLX_csc{1}.label;
     cfg_check.plot_type = '3d';
     cfg_check.label = 'hypno_label';
     MS_plot_ca_nlx(cfg_check, ms_seg, res_csc);
@@ -281,40 +333,27 @@ end
 %% spectrogram of an episode
 
 this_block = 10
-[~,F,T,P] = spectrogram(ms_seg.NLX_csc{this_block}.data, rectwin(128), 128/4, 1:.1:40, csc.cfg.hdr{1}.SamplingFrequency);
+% [~,F,T,P] = spectrogram(ms_seg.NLX_csc{this_block}.data(2,:), rectwin(128), 128/4, 1:.1:40, csc.cfg.hdr{1}.SamplingFrequency);
+[~,F,T,P] = spectrogram(csc.data(2,1:4432000), rectwin(2^12), (2^12)/4, 1:.1:64, csc.cfg.hdr{1}.SamplingFrequency);
+
 
 figure(1112)
+subplot(2,1,1)
 ax1 = imagesc(T,F,10*log10(P));
 set(ax1, 'AlphaData', ~isinf(10*log10(P)))
 set(gca,'FontSize',28);
-axis xy xlabel('Time (s)'); ylabel('Frequency (Hz)');
+axis xy; xlabel('Time (s)'); ylabel('Frequency (Hz)');
 ax = gca;
 % ax.YTickLabels = {0 [], [], 60, [], [], 80}; % set
 set(gca, 'tickdir', 'out')
 
+PC = pca(10*log10(P));
+imagesc(PC(:,1))
 
 hold on
 
 plot(ms_seg.NLX_csc{this_block}.tvec-ms_seg.NLX_csc{this_block}.tvec(1) , (ms_seg.NLX_csc{this_block}.data*10000)+20, 'k' )
 
-
-cfg_filt = [];
-% cfg_filt.f = [5 11]; %setting theta (hertz)
-cfg_filt.type = 'fdesign'; %the type of filter I want to use via filterlfp
-cfg_filt.f  = [1 5];
-cfg_filt.order = 8; %type filter order
-cfg_filt.display_filter = 1; % use this to see the fvtool
-delta_csc = FilterLFP(cfg_filt,ms_seg.NLX_csc{this_block});
-
-% filter into the theta band
-cfg_filt = [];
-% cfg_filt.f = [5 11]; %setting theta (hertz)
-cfg_filt.type = 'cheby1'; %the type of filter I want to use via filterlfp
-cfg_filt.f  = [6 11];
-cfg_filt.order = 8; %type filter order
-cfg_filt.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
-% reason.  Looks like trash with ord ~= 3 in cheby1. Butter and fdesign are also trash.
-theta_csc = FilterLFP(cfg_filt, ms_seg.NLX_csc{this_block});
 
 
 %% segment data into one of the specified recording blocks should be hard
@@ -341,12 +380,12 @@ for iBlock = [SW_block]%, REM_block]
     check = 1; % used for visual checks on detected events.
     ft_check = 1; % use fieldtrip to
     %set up ripple band
-    cfg_filt = [];
-    cfg_filt.type = 'butter'; %Cheby1 is sharper than butter
-    cfg_filt.f  = [140 250]; % broad, could use 150-200?
-    cfg_filt.order = 4; %type filter order (fine for this f range)
-    cfg_filt.display_filter = 0; % use this to see the fvtool
-    csc_ripple = FilterLFP(cfg_filt, this_csc);
+    cfg_filt_d = [];
+    cfg_filt_d.type = 'butter'; %Cheby1 is sharper than butter
+    cfg_filt_d.f  = [140 250]; % broad, could use 150-200?
+    cfg_filt_d.order = 4; %type filter order (fine for this f range)
+    cfg_filt_d.display_filter = 0; % use this to see the fvtool
+    csc_ripple = FilterLFP(cfg_filt_d, this_csc);
     
     
     % convert to amplitude or power
@@ -469,7 +508,7 @@ for iBlock = [SW_block]%, REM_block]
     cfg_cc = [];
     cfg_cc.threshold_type = 'raw';
     cfg_cc.threshold = evt_thr; % use same threshold as for orignal event detection
-    cfg_cc.filter_cfg = cfg_filt;
+    cfg_cc.filter_cfg = cfg_filt_d;
     swr_evt_out = CountCycles(cfg_cc,this_csc,swr_evts);
     
     % get get the evetns with sufficient cycles.
