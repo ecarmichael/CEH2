@@ -216,105 +216,6 @@ fprintf('\n<strong>MS_SWR_Ca2</strong>: Delta, Theta, and Theta/Delta have been 
 
 
 
-%% get some sleep ratios and clustering? based on Dzirasa et al. 2006 (mice HC sleep states) 
-
-% get the ratios and then bin the data to get discrete points. maybe 1s or
-% 5sec?  Then run kmeans on those clusters to pull out W, SW, and REM.
-% Maybe add in a statement that says if in SW and there is a short W
-% followed by long SW call this a micro Arrosal . 
-
-% % delta filter.
-% cfg_filt_d = [];
-% cfg_filt_d.type = 'fdesign'; %the type of filter I want to use via filterlfp
-% cfg_filt_d.f  = [2 4.5];
-% cfg_filt_d.order = 8; %type filter order
-% cfg_filt_d.display_filter = 1; % use this to see the fvtool and wait for a keypress before continuing.
-% low1_csc = FilterLFP(cfg_filt_d,csc);
-% close all
-% 
-% 
-% % filter into the theta band
-% cfg_filt_t = [];
-% cfg_filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
-% cfg_filt_t.f  = [2 9];
-% cfg_filt_t.order = 3; %type filter order
-% cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
-% % reason.  .
-% low2_csc = FilterLFP(cfg_filt_t, csc);
-% 
-% % 'wide' from Watson et al. 2016
-% % filter into the theta band
-% cfg_filt_t = [];
-% cfg_filt_t.type = 'fdesign'; %the type of filter I want to use via filterlfp
-% cfg_filt_t.f  = [2 20];
-% cfg_filt_t.order = 12; %type filter order
-% cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
-% % reason.  .
-% low_wide_csc = FilterLFP(cfg_filt_t, csc);
-% 
-% 
-% % 'wide' from Watson et al. 2016
-% % filter into the theta band
-% cfg_filt_t = [];
-% cfg_filt_t.type = 'fdesign'; %the type of filter I want to use via filterlfp
-% cfg_filt_t.f  = [2 55];
-% cfg_filt_t.order = 8; %type filter order
-% cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
-% % reason.  .
-% wide_csc = FilterLFP(cfg_filt_t, csc);
-
-plot(csc.tvec, csc.data(2,:))
-
-[cuts, ~] = ginput(2);
-    
-rec_1 = restrict(csc, csc.tvec(1), cuts(1));
-% rec_1 = restrict(csc, nlx_evts.t{1}(1), nlx_evts.t{2}(1));
-rec_2 = restrict(csc, cuts(2), csc.tvec(end));
-
-temp_data = [rec_1.data, rec_2.data];
-temp_tvec = 0:1/csc.cfg.hdr{1}.SamplingFrequency:length(temp_data)/csc.cfg.hdr{1}.SamplingFrequency;
-temp_tvec = temp_tvec(1:end-1); 
-
-    [~,F,T,P] = spectrogram(temp_data(2,:), hanning(4000), 2000, 1:.5:64, csc.cfg.hdr{1}.SamplingFrequency);
-imagesc(T,F,10*log10(P)); 
-axis xy
-
-
-%     binsize = 1; % select a small bin size for good time resolution
-%     tbin_edges = T(1):binsize:T(end);
-%     tbin_centers = tbin_edges(1:end-1)+binsize/2;
-%     
-freqs = [2,2,2,2; 4.5, 9 ,20,55]'; 
-f_label = {'low1', 'low2', 'wide_low', 'wide'};
-for iF = 1:length(freqs)
-    f_idx = find(freqs(iF,1) <= F & F <= freqs(iF,2));
-    pow.(f_label{iF}) = mean(10*log10(P(f_idx,:)));
-    
-% 
-%     pow_bin.(f_label{iF}) = histc(pow.(f_label{iF}),tbin_edges);
-%     pow_bin.(f_label{iF}) = pow_bin.(f_label{iF})(1:end-1);
-%     
-end
-    
-
-
-% made it to here.  Don't know if this works. 
-ratio_2 = pow.low1 ./ pow.low2;
-ratio_1 = pow.wide_low ./ pow.wide; 
-
-ratio_1_con = conv2(ratio_1, hanning(csc.cfg.hdr{1}.SamplingFrequency*20));
-ratio_2_con = conv2(ratio_2, hanning(csc.cfg.hdr{1}.SamplingFrequency*20));
-
-ratios_12 = [ratio_1_con; ratio_2_con];
-
-[idx,C] = kmeans(ratios_12,3);
-
-figure
-gscatter(ratios_12(:,1),ratios_12(:,2),idx,'bgm')
-hold on
-plot(C(:,1),C(:,2),'kx')
-legend('Cluster 1','Cluster 2','Cluster 3','Cluster Centroid')
-
 %% need to add a piece that will identify periods where the MS was recording but the NLX was not (example: when the mouse is on the track)
 if length(evt_blocks) < length(TS)
     fprintf('Length of TS (%d) and evt_blocks (%d) are not equal. Checking for odd MS timestamp lengths out...\n',length(TS), length(evt_blocks));
@@ -537,6 +438,188 @@ cfg_resize.cutoffs = cut_vals; % should be [2 x nSegments] row 1 is start and ro
 
 
 ms_seg_resize = MS_resize_segments(cfg_resize, ms_seg); 
+
+
+
+
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%% SLEEP STATE DETECTION %%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+cfg_sleep = [];
+cfg_sleep.cut = 1;
+MS_sleep_state(cfg_sleep, csc); 
+
+%% get some sleep ratios and clustering? based on Dzirasa et al. 2006 (mice HC sleep states) 
+
+% get the ratios and then bin the data to get discrete points. maybe 1s or
+% 5sec?  Then run kmeans on those clusters to pull out W, SW, and REM.
+% Maybe add in a statement that says if in SW and there is a short W
+% followed by long SW call this a micro Arrosal . 
+
+% % delta filter.
+% cfg_filt_d = [];
+% cfg_filt_d.type = 'fdesign'; %the type of filter I want to use via filterlfp
+% cfg_filt_d.f  = [2 4.5];
+% cfg_filt_d.order = 8; %type filter order
+% cfg_filt_d.display_filter = 1; % use this to see the fvtool and wait for a keypress before continuing.
+% low1_csc = FilterLFP(cfg_filt_d,csc);
+% close all
+% 
+% 
+% % filter into the theta band
+% cfg_filt_t = [];
+% cfg_filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
+% cfg_filt_t.f  = [2 9];
+% cfg_filt_t.order = 3; %type filter order
+% cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
+% % reason.  .
+% low2_csc = FilterLFP(cfg_filt_t, csc);
+% 
+% % 'wide' from Watson et al. 2016
+% % filter into the theta band
+% cfg_filt_t = [];
+% cfg_filt_t.type = 'fdesign'; %the type of filter I want to use via filterlfp
+% cfg_filt_t.f  = [2 20];
+% cfg_filt_t.order = 12; %type filter order
+% cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
+% % reason.  .
+% low_wide_csc = FilterLFP(cfg_filt_t, csc);
+% 
+% 
+% % 'wide' from Watson et al. 2016
+% % filter into the theta band
+% cfg_filt_t = [];
+% cfg_filt_t.type = 'fdesign'; %the type of filter I want to use via filterlfp
+% cfg_filt_t.f  = [2 55];
+% cfg_filt_t.order = 8; %type filter order
+% cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
+% % reason.  .
+% wide_csc = FilterLFP(cfg_filt_t, csc);
+% 
+% ratio_2 = abs(hilbert(low_wide_csc.data(2,:))) ./ abs(hilbert(wide_csc.data(2,:)));
+% ratio_1 = abs(hilbert(low1_csc.data(2,:))) ./ abs(hilbert(low2_csc.data(2,:)));
+% 
+% % ratio_con_2 = conv
+% 
+% % ratio_1_2CSC = ratio
+
+
+
+% use spectrogram approach. (not great...)
+plot(csc.tvec, csc.data(2,:))
+
+[cuts, ~] = ginput(2);
+    
+rec_1 = restrict(csc, csc.tvec(1), cuts(1));
+% rec_1 = restrict(csc, nlx_evts.t{1}(1), nlx_evts.t{2}(1));
+rec_2 = restrict(csc, cuts(2), csc.tvec(end));
+
+% temp_data = [rec_1.data, rec_2.data];
+
+temp_data = csc.data; 
+
+temp_tvec = 0:1/csc.cfg.hdr{1}.SamplingFrequency:length(temp_data)/csc.cfg.hdr{1}.SamplingFrequency;
+temp_tvec = temp_tvec(1:end-1); 
+
+    [~,F,T,P] = spectrogram(temp_data(2,:), hanning(4000), 2000, 1:.5:64, csc.cfg.hdr{2}.SamplingFrequency);
+imagesc(T,F,10*log10(P)); 
+axis xy
+
+[~, F_emg, T_emg, P_emg] = spectrogram(temp_data(1,:), hanning(4000), 2000, 100:2:200, csc.cfg.hdr{1}.SamplingFrequency);
+emg = (mean(10*log10(P_emg)))./max(mean(10*log10(P_emg)));
+
+
+%     binsize = 1; % select a small bin size for good time resolution
+%     tbin_edges = T(1):binsize:T(end);
+%     tbin_centers = tbin_edges(1:end-1)+binsize/2;
+%     
+freqs = [2,2,2,2; 4.5, 9 ,20,55]'; 
+f_label = {'low1', 'low2', 'wide_low', 'wide'};
+for iF = 1:length(freqs)
+    f_idx = find(freqs(iF,1) <= F & F <= freqs(iF,2));
+    pow.(f_label{iF}) = (mean(10*log10(P(f_idx,:))))./ max(mean(10*log10(P(f_idx,:))));
+    
+% 
+%     pow_bin.(f_label{iF}) = histc(pow.(f_label{iF}),tbin_edges);
+%     pow_bin.(f_label{iF}) = pow_bin.(f_label{iF})(1:end-1);
+%     
+end
+    
+% made it to here.  Don't know if this works. 
+ratio_2 = pow.low1 ./ pow.low2;
+ratio_1 = pow.wide_low ./ pow.wide; 
+ratio_t_emg = pow.wide ./ emg; 
+
+% ratio_1_con = conv2(ratio_1, gausswin(csc.cfg.hdr{1}.SamplingFrequency*20),'same');
+% ratio_2_con = conv2(ratio_2, gausswin(csc.cfg.hdr{1}.SamplingFrequency*20),'same');
+% ratio_t_emg_con = conv2(ratio_t_emg, hanning(csc.cfg.hdr{1}.SamplingFrequency*20),'same');
+
+ratio_1_con =  smoothdata(ratio_1,'gaussian',30);
+ratio_2_con =  smoothdata(ratio_2,'gaussian',30);
+ratio_t_emg_con =  smoothdata(ratio_t_emg,'gaussian',30);
+
+ratios_12 = [ratio_1_con', ratio_2_con', ratio_t_emg_con'];
+
+[idx,C] = kmeans(ratios_12,3);
+
+figure
+ax_s(1) = subplot(2, 4, 1:2);
+plot(T_emg, pow.low2, T_emg, pow.wide, T_emg, emg);
+legend('theta pow', 'Delta pow', 'EMG')
+ylabel('norm power')
+ax_s(2) = subplot(2, 4, 5:6);
+plot(T_emg, ratio_1_con, T_emg, ratio_2_con, T_emg, ratio_t_emg_con);
+ylabel('Ratios')
+legend({'d./theta', '2-20 / 2-55', '2-55/emg'})
+
+linkaxes(ax_s, 'x')
+subplot(2, 4, [3,4,7,8])
+h = gscatter(ratios_12(:,1),ratios_12(:,2),idx,linspecer(3));
+hold on
+idx_u = unique(idx);
+for ii = 1:numel(idx_u)
+    set(h(ii), 'ZData', ratios_12(idx == idx_u(ii),3));
+end
+plot3(C(:,1),C(:,2),C(:,3),'kx', 'markersize', 12, 'linewidth', 5)
+legend('Cluster 1','Cluster 2','Cluster 3','Cluster Centroid');
+xlabel('2-4.5 / 2-9');
+ylabel('2-20 / 2-55');
+zlabel('2-55 / emg 100-200');
+view(3)
+
+
+%% try again with just theta vs emg
+lfp_idx = 2; 
+h_win = csc.cfg.hdr{1}.SamplingFrequency *5; % 5second window smoothing. 
+
+delta_pow = conv2(abs(hilbert(delta_csc.data(lfp_idx, :))), hanning(h_win),'same');
+theta_pow = conv2(abs(hilbert(theta_csc.data(lfp_idx,:))), hanning(h_win),'same');
+emg_pow = conv2(abs(hilbert(csc.data(1,:))),hanning(h_win),'same'); 
+
+td_ratio = theta_pow ./ delta_pow;
+
+t_emg_ratio = theta_pow ./ emg_pow;
+
+ratios_12 = [td_ratio', t_emg_ratio'];
+
+[idx,C] = kmeans(ratios_12,3);
+
+figure
+gscatter(ratios_12(:,1),ratios_12(:,2),idx,'bgm')
+hold on
+plot(C(:,1),C(:,2),'kx')
+legend('Cluster 1','Cluster 2','Cluster 3','Cluster Centroid');
+ylabel('Ratio 1');
+xlabel('Ratio 2');
+
+
+
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%% SWR DETECTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %% segment data into one of the specified recording blocks should be hard
