@@ -1,5 +1,12 @@
 function ms_seg_out = MS_resize_Segments(cfg_in, ms_seg_in)
 %% MS_resize_Segments: resizes the data segments in the ms_seg structure given cfg.cutoff values.
+%       If cfg.cutoffs are in the Neuralynx time format (cfg.tvec_to_use =
+%       'NLX_csc') then the NLX_evt (events) field will be used to find the
+%       nearest index in the miniscope data and the NLX_csc structure will
+%       be restricted using 'restrict.m'.  If the cutoffs are in 'miniscope
+%       time' (cfg.tvec_to_use = 'time') then the exact indices will be
+%       used for restricting miniscope data fields and the NLX_csc fields
+%       will be determined using the nearest values. 
 %
 %
 %
@@ -29,7 +36,7 @@ function ms_seg_out = MS_resize_Segments(cfg_in, ms_seg_in)
 %
 %% initialize
 cfg_def = [];
-cfg_def.tvec_to_use = 'time'; % what subfield to use as the tvec/time scale (default is ms_seg.time using miniscope timestamps).
+cfg_def.tvec_to_use = 'NLX_csc'; % what subfield to use as the tvec/time scale (default is ms_seg.time using miniscope timestamps).
 cfg_def.cutoffs = NaN(length(ms_seg_in.(cfg_def.tvec_to_use)), 2); % this would result in nothing being restricted.
 
 cfg = ProcessConfig(cfg_def, cfg_in);
@@ -41,7 +48,38 @@ fprintf('\n<strong>MS_resize_Segments</strong>: resizing segments using the %s t
 %% loop through segments and resize all the data in the ms_seg_in
 ms_seg_out = ms_seg_in;
 
+switch cfg.tvec_to_use
+    
+    case 'NLX_csc'
+        % find the index in the NLX_evt.t that is the closest to the
+        % nlx_csc cutoff times.  Use the actual time for nlx_csc which uses
+        % restrict to save the time of cycling through fields. 
+        for iC = length(cfg.cutoffs):-1:1
+            if isnan(cfg.cutoffs(1,iC))
+                tstart_idx.time(iC) = 1;
+                tstart_idx.nlx(iC) = ms_seg_in.NLX_csc{iC}.tvec(1);
+            else
+                tstart_idx.time(iC) = nearest_idx3(cfg.cutoffs(1,iC), ms_seg_in.NLX_evt{iC}.t{end});
+                tstart_idx.nlx(iC) = ms_seg_in.NLX_csc{iC}.tvec(nearest_idx3(cfg.cutoffs(1,iC), ms_seg_in.NLX_csc{iC}.tvec));
+            end
+            
+            if isnan(cfg.cutoffs(2,iC))
+                tend_idx.time(iC) = length(ms_seg_in.NLX_evt{iC}.t{end});
+                tend_idx.nlx(iC) =ms_seg_in.NLX_csc{iC}.tvec(end);
 
+            else
+                tend_idx.time(iC) = nearest_idx3(cfg.cutoffs(2,iC), ms_seg_in.NLX_evt{iC}.t{end});
+                tend_idx.nlx(iC) = ms_seg_in.NLX_csc{iC}.tvec(nearest_idx3(cfg.cutoffs(2,iC), ms_seg_in.NLX_csc{iC}.tvec));
+            end
+            
+        end        
+        
+    case 'time'
+        error('Haven''t built this yet. Probably just need to copy above but look up nlx_evt. EC 2020-02-18')
+        
+        
+        
+end
 
 
 known_cell_num = size(ms_seg_in.RawTraces,1); % should always be the correct number of cells for the number of segments.
@@ -72,32 +110,51 @@ for iF = 1:length(fields)
                 if sum(isnan(cfg.cutoffs(:,iSeg))) ==2
                     ms_seg_out.(fields{iF}){iSeg} = ms_seg_in.(fields{iF}){iSeg};
                 else
-                    if strcmp(cfg.tvec_to_use, 'NLX_csc') || strcmp(cfg.tvec_to_use, 'NLX_evt')
-                        
-                        if strcmp(fields{iF}, 'NLX_csc') || strcmp(fields{iF}, 'NLX_evt')
-                        ms_seg_out.(fields{iF}){iSeg} = restrict(ms_seg_in.(fields{iF}){iSeg}, cfg.cutoffs(1,iSeg), cfg.cutoffs(2,iSeg));
-                        
-                        
-                        fprintf('    Resizing segment # %d between %0.1fs - %0.1fs\n', iSeg, ms_seg_in.(fields{iF}){iSeg}.tvec(1) - ms_seg_in.(fields{iF}){iSeg}.tvec(idx(1)), ms_seg_in.(fields{iF}){iSeg}.tvec(end) - ms_seg_in.(fields{iF}){iSeg}.tvec(idx(2)))
-                        else
-                            [~, idx] =intersect(ms_seg_in.(cfg.tvec_to_use){iSeg}.tvec,cfg.cutoffs(:,iSeg));
-                            this_tvec = ms_seg_in.(cfg.tvec_to_use){iSeg}.tvec - ms_seg_in.(cfg.tvec_to_use){iSeg}.tvec(1);
-                            
-                            
-                            
-                            ms_seg_out.(fields{iF}){iSeg} = restrict(ms_seg_in.(fields{iF}){iSeg}, cfg.cutoffs(1,iSeg), cfg.cutoffs(2,iSeg));
+                    if strcmp(fields{iF}, 'NLX_csc') || strcmp(fields{iF}, 'NLX_evt')
+                       ms_seg_out.(fields{iF}){iSeg} = restrict(ms_seg_out.(fields{iF}){iSeg},tstart_idx.nlx(iSeg), tend_idx.nlx(iSeg));
 
-                            
-                            
-                        end
-                        else
-                        [~, idx] =intersect(ms_seg_in.(cfg.tvec_to_use){iSeg},cfg.cutoffs(:,iSeg));
-                        ms_seg_out.(fields{iF}){iSeg} = ms_seg_in.(fields{iF}){iSeg}(idx(1):idx(2));
-                        fprintf('    Resizing segment # %d between %0.1fs - %0.1fs\n', iSeg, ms_seg_in.(fields{iF}){iSeg}(1) - ms_seg_in.(fields{iF}){iSeg}(idx(1)), ms_seg_in.(fields{iF}){iSeg}(end) - ms_seg_in.(fields{iF}){iSeg}(idx(2)))
-                        
+                    else
+                        ms_seg_out.(fields{iF}){iSeg} = [];
+                        ms_seg_out.(fields{iF}){iSeg} = ms_seg_in.(fields{iF}){iSeg}(tstart_idx.time(iSeg): tend_idx.time(iSeg));
+
                     end
+                    
+%                     fprintf('    Resizing segment # %d between %0.1fs - %0.1fs\n', iSeg, ms_seg_in.(fields{iF}){iSeg}.tvec(1) - ms_seg_in.(fields{iF}){iSeg}.tvec(idx(1)), ms_seg_in.(fields{iF}){iSeg}.tvec(end) - ms_seg_in.(fields{iF}){iSeg}.tvec(idx(2)))
+                    
                 end
             end
+        end
+    end
+end
+                
+%                 if sum(isnan(cfg.cutoffs(:,iSeg))) ==2
+%                     ms_seg_out.(fields{iF}){iSeg} = ms_seg_in.(fields{iF}){iSeg};
+%                 else
+%                     if strcmp(cfg.tvec_to_use, 'NLX_csc') || strcmp(cfg.tvec_to_use, 'NLX_evt')
+%                         
+%                         if strcmp(fields{iF}, 'NLX_csc') || strcmp(fields{iF}, 'NLX_evt')
+%                         ms_seg_out.(fields{iF}){iSeg} = restrict(ms_seg_in.(fields{iF}){iSeg}, cfg.cutoffs(1,iSeg), cfg.cutoffs(2,iSeg));
+%                         
+%                         
+%                         fprintf('    Resizing segment # %d between %0.1fs - %0.1fs\n', iSeg, ms_seg_in.(fields{iF}){iSeg}.tvec(1) - ms_seg_in.(fields{iF}){iSeg}.tvec(idx(1)), ms_seg_in.(fields{iF}){iSeg}.tvec(end) - ms_seg_in.(fields{iF}){iSeg}.tvec(idx(2)))
+%                         else
+%                             [~, idx] =intersect(ms_seg_in.(cfg.tvec_to_use){iSeg}.tvec,cfg.cutoffs(:,iSeg));
+%                             this_tvec = ms_seg_in.(cfg.tvec_to_use){iSeg}.tvec - ms_seg_in.(cfg.tvec_to_use){iSeg}.tvec(1);
+%                             
+%                             
+%                             
+%                             ms_seg_out.(fields{iF}){iSeg} = restrict(ms_seg_in.(fields{iF}){iSeg}, cfg.cutoffs(1,iSeg), cfg.cutoffs(2,iSeg));
+% 
+%                             
+%                             
+%                         end
+%                         else
+%                         [~, idx] =intersect(ms_seg_in.(cfg.tvec_to_use){iSeg},cfg.cutoffs(:,iSeg));
+%                         ms_seg_out.(fields{iF}){iSeg} = ms_seg_in.(fields{iF}){iSeg}(idx(1):idx(2));
+%                         fprintf('    Resizing segment # %d between %0.1fs - %0.1fs\n', iSeg, ms_seg_in.(fields{iF}){iSeg}(1) - ms_seg_in.(fields{iF}){iSeg}(idx(1)), ms_seg_in.(fields{iF}){iSeg}(end) - ms_seg_in.(fields{iF}){iSeg}(idx(2)))
+%                         
+%                     end
+%                 end
             
             
             %             elseif cell_idx == 2 &&  length(field_size) == 3
@@ -109,10 +166,7 @@ for iF = 1:length(fields)
             %             else
             %                 error('Dealing with more dimensions than I had planned for')
             %             end
-        end
-    end
-    
-end
+
 
 %% clean up
 
