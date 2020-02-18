@@ -352,10 +352,10 @@ if check  ==1
 end
 
 %% spectrogram of an episode w/
-these_blocks = [3 7];
+these_blocks = 1:length([3 ,7]);
 
 cut_off = 1; % do you want to use the cut_off selector?
-cut_vals = NaN(2,length(ms_seg.NLX_csc)); % fill in the cutoff values.
+cut_vals = NaN(2,length(ms_seg_re.NLX_csc)); % fill in the cutoff values.
 
 for iBlock  = these_blocks
     win_s = 2^10; % window size for spec keep in base 2
@@ -426,6 +426,13 @@ for iBlock  = these_blocks
         cut_x(2) =ms_seg.NLX_csc{iBlock}.tvec(idx);
         
         cut_vals(:,iBlock) = cut_x;
+        
+        % cut the data based on cut vals. 
+        
+%         ms_seg.NLX_csc{iBlock} = restrict
+        
+        
+        
     end
 end
 
@@ -440,7 +447,90 @@ cfg_resize.cutoffs = cut_vals; % should be [2 x nSegments] row 1 is start and ro
 ms_seg_resize = MS_resize_segments(cfg_resize, ms_seg); 
 
 
+%% spectrogram of an episode w/
+these_blocks = [3 ,7];
 
+cut_off = 1; % do you want to use the cut_off selector?
+cut_vals = NaN(2,length(ms_seg_resize.NLX_csc)); % fill in the cutoff values.
+
+for iBlock  = these_blocks
+    win_s = 2^10; % window size for spec keep in base 2
+    [~,F,T,P] = spectrogram(ms_seg_resize.NLX_csc{iBlock}.data(2,:), rectwin(win_s), win_s/2, 0.5:.1:80, csc.cfg.hdr{1}.SamplingFrequency);
+    % [~,F,T,P] = spectrogram(csc.data(2,1:4432000), rectwin(2^12), (2^12)/4, 1:.1:64, csc.cfg.hdr{1}.SamplingFrequency);
+    
+    
+    figure(iBlock+20)
+    ax_spec(1) = subplot(2,1,1);
+    ax1 = imagesc(T,F,10*log10(P));
+    set(ax1, 'AlphaData', ~isinf(10*log10(P)))
+    set(gca,'FontSize',10);
+    axis xy; xlabel('Time (s)'); ylabel('Frequency (Hz)');
+    ax = gca;
+    % ax.YTickLabels = {0 [], [], 60, [], [], 80}; % set
+    set(gca, 'tickdir', 'out')
+    
+    % PC = pca(10*log10(P));
+    % imagesc(PC(:,1))
+    title([ms_seg_resize.hypno_label{iBlock} ' block id: ' num2str(iBlock)]);
+    
+    ax_spec(2) = subplot(2,1,2);
+    hold on
+    for iChan = length(ms_seg_resize.NLX_csc{iBlock}.label):-1:1
+        this_tvec = ms_seg_resize.NLX_csc{iBlock}.tvec-ms_seg_resize.NLX_csc{iBlock}.tvec(1);
+        if strfind(ms_seg_resize.NLX_csc{iBlock}.label{iChan}, '/')
+            hline(iChan*15, 'k')
+            plot(this_tvec, ((ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)/max(ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)))*10)+iChan*15);
+            text(this_tvec(1), mean(((ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)/max(ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)))*10)+iChan*15)-5, ms_seg_resize.NLX_csc{iBlock}.label{iChan})
+            
+        else
+            plot(this_tvec , (ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)*10000)+iChan*15);
+            text(this_tvec(1), mean((ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)*10000)+iChan*15)-5, ms_seg_resize.NLX_csc{iBlock}.label{iChan})
+        end
+    end
+    xlim([this_tvec(1) this_tvec(end)])
+    
+    linkaxes(ax_spec, 'x');
+    Resize_figure
+    
+    if cut_off ==1 % get data points for resizing.  First point is the start, second click is the end. Don't zoom in when making the cutoffs. 
+        input('Paused for inspection. Press any key to select cutoffs')
+        valid_cutoff = [];
+        while ~strcmp(valid_cutoff, 'y')
+            [cut_x,~] = ginput(2);
+            hold on
+            v_ax(1) = vline(cut_x(1), 'r');
+            t_ax(1) = text(cut_x(1), F(1), 'Cutoff start', 'color', 'r','FontSize',14 );
+            v_ax(2) = vline(cut_x(2), 'r');
+            t_ax(2) = text(cut_x(2), F(1), 'Cutoff end', 'color', 'r','FontSize',14 );
+            if cut_x(1) <= this_tvec(1) && cut_x(2) >= this_tvec(end)
+                valid_cutoff = input('Keep all? y/n\n', 's');
+%                 keep_all = ture; 
+            else
+                valid_cutoff = input('Valid cutoff? y/n\n', 's');
+            end
+            delete(v_ax);
+            delete(t_ax);
+        end
+%                         cut_x(1) = ms_seg_resize.NLX_csc{iBlock}.tvec(end);
+%                 cut_x(2) = ms_seg_resize.NLX_csc{iBlock}.tvec(end);
+        
+        % get te 
+        [~,idx]=min(abs(this_tvec-cut_x(1)));
+        cut_x(1) =ms_seg_resize.NLX_csc{iBlock}.tvec(idx);
+        
+        [~,idx]=min(abs(this_tvec-cut_x(2)));
+        cut_x(2) =ms_seg_resize.NLX_csc{iBlock}.tvec(idx);
+        
+        cut_vals(:,iBlock) = cut_x;
+        
+        % cut the data based on cut vals. 
+        
+%         ms_seg.NLX_csc{iBlock} = restrict
+        
+        
+        
+    end
+end
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
