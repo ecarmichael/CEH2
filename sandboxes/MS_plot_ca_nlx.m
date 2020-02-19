@@ -58,6 +58,7 @@ cfg_def.Ca_chan = 1:floor(n_cells/10):n_cells; % get a subset of cells.
 cfg_def.chan_to_plot = these_csc;  % how many channels are in the csc.  Determined above. 
 cfg_def.plot_type = '2d'; % '2d' or '3d'
 cfg_def.x_zoom = []; % where to zoom in on eht x_axis for each plot.
+cfg_def.emg_range = [];
 
 cfg = ProcessConfig(cfg_def, cfg_in);
 
@@ -75,7 +76,11 @@ switch type
             timein = (csc{iRec}.tvec - csc{iRec}.tvec(1)); % just to fix the timing offset between them back to ebing relative to this segment.
             for iChan = 1:length(cfg.chan_to_plot)
                 ax(iChan) =subplot(length(cfg.chan_to_plot)+2,1,iChan);
+                
                 plot(timein,csc{iRec}.data(iChan,:), 'color', c_ord_lfp(iChan,:));
+                if strcmp(csc{iRec}.label{iChan}, 'EMG') && ~isempty(cfg.emg_range)
+                    ylim(cfg.emg_range)
+                end
                 title(csc{iRec}.label{iChan})
                 xlim([timein(1), timein(end)])
             end
@@ -108,7 +113,9 @@ switch type
             end
             xlim([time_in2(1)*0.001 time_in2(end)*0.001])
             xlabel('time (s)')
-            linkaxes(ax, 'x')
+%             linkaxes(ax, 'x') % only meant for linking 2d axes. 
+            link = linkprop(ax,{'XLim'}); % links x axes across 2d and 3d plots. 
+            setappdata(gcf, 'StoreTheLink', link)
 %             ax = [];
             if ~isempty(cfg.x_zoom)
             xlim(cfg.x_zoom)
