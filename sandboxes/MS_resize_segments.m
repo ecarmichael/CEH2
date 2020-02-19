@@ -1,4 +1,4 @@
-function ms_seg_out = MS_resize_Segments(cfg_in, ms_seg_in)
+function ms_seg_out = MS_resize_segments(cfg_in, ms_seg_in)
 %% MS_resize_Segments: resizes the data segments in the ms_seg structure given cfg.cutoff values.
 %       If cfg.cutoffs are in the Neuralynx time format (cfg.tvec_to_use =
 %       'NLX_csc') then the NLX_evt (events) field will be used to find the
@@ -76,9 +76,7 @@ switch cfg.tvec_to_use
         
     case 'time'
         error('Haven''t built this yet. Probably just need to copy above but look up nlx_evt. EC 2020-02-18')
-        
-        
-        
+
 end
 
 
@@ -95,16 +93,6 @@ for iF = 1:length(fields)
             continue
         else
             fprintf('Resizing traces in <strong>''%s''</strong>...\n', fields{iF})
-            %             if cell_idx == 1 && length(field_size) == 1
-            %                 ms_out.(fields{iF})(cfg.remove_idx) = [];
-            %
-            %             elseif cell_idx == 1 &&  length(field_size) == 2
-            %                 ms_out.(fields{iF})(cfg.remove_idx,:) = [];
-            %
-            %             elseif cell_idx == 1 &&  length(field_size) == 3
-            %                 ms_out.(fields{iF})(cfg.remove_idx,:,:) = [];
-            %
-            %             elseif cell_idx == 2 &&  length(field_size) == 2
             
             for iSeg = length(ms_seg_in.(cfg.tvec_to_use)):-1:1
                 if sum(isnan(cfg.cutoffs(:,iSeg))) ==2
@@ -127,49 +115,10 @@ for iF = 1:length(fields)
     end
 end
                 
-%                 if sum(isnan(cfg.cutoffs(:,iSeg))) ==2
-%                     ms_seg_out.(fields{iF}){iSeg} = ms_seg_in.(fields{iF}){iSeg};
-%                 else
-%                     if strcmp(cfg.tvec_to_use, 'NLX_csc') || strcmp(cfg.tvec_to_use, 'NLX_evt')
-%                         
-%                         if strcmp(fields{iF}, 'NLX_csc') || strcmp(fields{iF}, 'NLX_evt')
-%                         ms_seg_out.(fields{iF}){iSeg} = restrict(ms_seg_in.(fields{iF}){iSeg}, cfg.cutoffs(1,iSeg), cfg.cutoffs(2,iSeg));
-%                         
-%                         
-%                         fprintf('    Resizing segment # %d between %0.1fs - %0.1fs\n', iSeg, ms_seg_in.(fields{iF}){iSeg}.tvec(1) - ms_seg_in.(fields{iF}){iSeg}.tvec(idx(1)), ms_seg_in.(fields{iF}){iSeg}.tvec(end) - ms_seg_in.(fields{iF}){iSeg}.tvec(idx(2)))
-%                         else
-%                             [~, idx] =intersect(ms_seg_in.(cfg.tvec_to_use){iSeg}.tvec,cfg.cutoffs(:,iSeg));
-%                             this_tvec = ms_seg_in.(cfg.tvec_to_use){iSeg}.tvec - ms_seg_in.(cfg.tvec_to_use){iSeg}.tvec(1);
-%                             
-%                             
-%                             
-%                             ms_seg_out.(fields{iF}){iSeg} = restrict(ms_seg_in.(fields{iF}){iSeg}, cfg.cutoffs(1,iSeg), cfg.cutoffs(2,iSeg));
-% 
-%                             
-%                             
-%                         end
-%                         else
-%                         [~, idx] =intersect(ms_seg_in.(cfg.tvec_to_use){iSeg},cfg.cutoffs(:,iSeg));
-%                         ms_seg_out.(fields{iF}){iSeg} = ms_seg_in.(fields{iF}){iSeg}(idx(1):idx(2));
-%                         fprintf('    Resizing segment # %d between %0.1fs - %0.1fs\n', iSeg, ms_seg_in.(fields{iF}){iSeg}(1) - ms_seg_in.(fields{iF}){iSeg}(idx(1)), ms_seg_in.(fields{iF}){iSeg}(end) - ms_seg_in.(fields{iF}){iSeg}(idx(2)))
-%                         
-%                     end
-%                 end
-            
-            
-            %             elseif cell_idx == 2 &&  length(field_size) == 3
-            %                 ms_out.(fields{iF})(:,cfg.remove_idx,:) = [];
-            %
-            %             elseif cell_idx == 3
-            %                 ms_out.(fields{iF})(:,:,cfg.remove_idx) = [];
-            %
-            %             else
-            %                 error('Dealing with more dimensions than I had planned for')
-            %             end
-
 
 %% clean up
-
+ms_seg_out.resize.cfg = cfg;
+ms_seg_out.resize.cfg.date = date; 
 
 
 end

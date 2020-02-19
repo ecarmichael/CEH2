@@ -175,7 +175,7 @@ cfg_filt_t = [];
 cfg_filt_t.type = 'fdesign'; %the type of filter I want to use via filterlfp
 cfg_filt_t.f  = [2 15];
 cfg_filt_t.order = 12; %type filter order
-cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
+% cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
 % reason.  .
 wide_theta_csc = FilterLFP(cfg_filt_t, csc);
 
@@ -269,6 +269,19 @@ for iT = 1:length(TS)
         res_csc{iT} = restrict(csc, evt_blocks{iT}.t{cfg_evt_blocks.t_chan}(1), evt_blocks{iT}.t{cfg_evt_blocks.t_chan}(end));
         res_evt{iT} = restrict(nlx_evts, evt_blocks{iT}.t{cfg_evt_blocks.t_chan}(1), evt_blocks{iT}.t{cfg_evt_blocks.t_chan}(end));
         
+%     elseif abs(length(TS{iT}.system_clock{1}) - length(evt_blocks{iT}.t{cfg_evt_blocks.t_chan})) == 1 && strcmp(cfg.TS_nlx_match, '1-sample')
+%         figure(121)
+%         subplot(2,1,1)
+%         plot(diff(TS{iT}.system_clock{1}))
+%         title(['TS timestamps. Segment: ' num2str(iT)])
+%         subplot(2,1,2)
+%         plot(diff(evt_blocks{iT}.t{cfg_evt_blocks.t_chan}))
+%         title('NLX evt timestamps')
+%         pause(1)
+        
+%         if length(TS{iT}.system_clock{1}) > length(evt_blocks{iT}.t{cfg_evt_blocks.t_chan})
+            
+        
         
     else
         warning('TS do not match nlx .nev data. TS# %s  %s samples  - NLX: %s events',...
@@ -310,6 +323,7 @@ fprintf('\n<strong>MS_SWR_Ca2</strong>: NLX_csc appended\n');
 
 %% quick check?
 check = 1; % toggle to skip check plots.
+emg_chan  = find(ismember(cfg_csc.label, 'EMG')); % used to get the emg range. 
 
 if check  ==1
     cfg_check = [];
@@ -319,6 +333,9 @@ if check  ==1
     cfg_check.chan_to_plot = ms_seg.NLX_csc{1}.label;
     cfg_check.plot_type = '3d';
     cfg_check.label = 'hypno_label';
+     % get the min and max emg range for the first 5mins of the recording. used for consistency. 
+    cfg_check.emg_range = [min(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency))), max(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency)))]; % get the min and max emg range for the first 10s of the recording. used for consistency. 
+    
     MS_plot_ca_nlx(cfg_check, ms_seg, res_csc);
     
     
@@ -352,10 +369,11 @@ if check  ==1
 end
 
 %% spectrogram of an episode w/
-these_blocks = 1:length([3 ,7]);
+these_blocks = [3,7] %1:length(ms_seg.NLX_csc);
+emg_range = [min(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency))), max(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency)))]; % get the min and max emg range for the first 10s of the recording. used for consistency. 
 
 cut_off = 1; % do you want to use the cut_off selector?
-cut_vals = NaN(2,length(ms_seg_re.NLX_csc)); % fill in the cutoff values.
+cut_vals = NaN(2,length(ms_seg.NLX_csc)); % fill in the cutoff values.
 
 for iBlock  = these_blocks
     win_s = 2^10; % window size for spec keep in base 2
@@ -394,6 +412,8 @@ for iBlock  = these_blocks
     xlim([this_tvec(1) this_tvec(end)])
     
     linkaxes(ax_spec, 'x');
+%     Link = linkprop(ax_spec,{'XLim'});
+%         setappdata(gcf, 'StoreTheLink', Link)
     Resize_figure
     
     if cut_off ==1 % get data points for resizing.  First point is the start, second click is the end. Don't zoom in when making the cutoffs. 
@@ -434,6 +454,7 @@ for iBlock  = these_blocks
         
         
     end
+    close
 end
 
 
@@ -450,86 +471,74 @@ ms_seg_resize = MS_resize_segments(cfg_resize, ms_seg);
 %% spectrogram of an episode w/
 these_blocks = [3 ,7];
 
-cut_off = 1; % do you want to use the cut_off selector?
-cut_vals = NaN(2,length(ms_seg_resize.NLX_csc)); % fill in the cutoff values.
-
 for iBlock  = these_blocks
+    this_tvec = [];
     win_s = 2^10; % window size for spec keep in base 2
     [~,F,T,P] = spectrogram(ms_seg_resize.NLX_csc{iBlock}.data(2,:), rectwin(win_s), win_s/2, 0.5:.1:80, csc.cfg.hdr{1}.SamplingFrequency);
     % [~,F,T,P] = spectrogram(csc.data(2,1:4432000), rectwin(2^12), (2^12)/4, 1:.1:64, csc.cfg.hdr{1}.SamplingFrequency);
     
     
-    figure(iBlock+20)
-    ax_spec(1) = subplot(2,1,1);
+    figure(iBlock+200)
+    ax_spec(1) = subplot(7,1,1:2);
     ax1 = imagesc(T,F,10*log10(P));
     set(ax1, 'AlphaData', ~isinf(10*log10(P)))
-    set(gca,'FontSize',10);
+    set(gca,'FontSize',10, 'xtick', []);
     axis xy; xlabel('Time (s)'); ylabel('Frequency (Hz)');
     ax = gca;
     % ax.YTickLabels = {0 [], [], 60, [], [], 80}; % set
-    set(gca, 'tickdir', 'out')
+    set(gca, 'tickdir', 'out');
+    xlim([T(1) T(end)])
     
     % PC = pca(10*log10(P));
     % imagesc(PC(:,1))
     title([ms_seg_resize.hypno_label{iBlock} ' block id: ' num2str(iBlock)]);
     
-    ax_spec(2) = subplot(2,1,2);
+    ax_spec(2) = subplot(7,1,[3:6]);
     hold on
     for iChan = length(ms_seg_resize.NLX_csc{iBlock}.label):-1:1
         this_tvec = ms_seg_resize.NLX_csc{iBlock}.tvec-ms_seg_resize.NLX_csc{iBlock}.tvec(1);
         if strfind(ms_seg_resize.NLX_csc{iBlock}.label{iChan}, '/')
             hline(iChan*15, 'k')
             plot(this_tvec, ((ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)/max(ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)))*10)+iChan*15);
-            text(this_tvec(1), mean(((ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)/max(ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)))*10)+iChan*15)-5, ms_seg_resize.NLX_csc{iBlock}.label{iChan})
-            
+%             text(this_tvec(1), mean(((ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)/max(ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)))*10)+iChan*15)-5, ms_seg_resize.NLX_csc{iBlock}.label{iChan})
+            yticks(iChan) = iChan*15;
+            yticks_label{iChan} = ms_seg_resize.NLX_csc{iBlock}.label{iChan};
+        elseif strcmp(ms_seg_resize.NLX_csc{iBlock}.label{iChan}, 'EMG') && exist('emg_range', 'var')
+         ax_spec(3) = subplot(7,1,7);
+         
+            plot(this_tvec , ms_seg_resize.NLX_csc{iBlock}.data(iChan,:));
+%             text(this_tvec(1)-2, mean(ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)), ms_seg_resize.NLX_csc{iBlock}.label{iChan})
+        
+            ylim(emg_range)
         else
             plot(this_tvec , (ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)*10000)+iChan*15);
-            text(this_tvec(1), mean((ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)*10000)+iChan*15)-5, ms_seg_resize.NLX_csc{iBlock}.label{iChan})
+%             text(this_tvec(1)-1, mean((ms_seg_resize.NLX_csc{iBlock}.data(iChan,:)*10000)+iChan*15), ms_seg_resize.NLX_csc{iBlock}.label{iChan})
+        
+            yticks(iChan) = iChan*15; 
+            yticks_label{iChan} = ms_seg_resize.NLX_csc{iBlock}.label{iChan};
         end
     end
-    xlim([this_tvec(1) this_tvec(end)])
     
+    ax_spec(3) = subplot(7,1,7);
+    y_label = get(gca, 'yticklabel');
+% %     y_label = mat2cell(y_label,[1 3]);
+% %     zero_idx = find(ismember(y_label, '0'));
+%     y_label = (y_label(~cellfun('isempty',y_label)));
+    y_label{ceil(end/2), :} = 'EMG'; 
+    y_label{1} = num2str(ax_spec(3).YAxis.TickValues(1));
+    y_label{end} = num2str(ax_spec(3).YAxis.TickValues(end));
+    set(gca, 'yticklabel', y_label)
+%     ax_spec(3).YAxis.Exponent = -3;
+            xlim([this_tvec(1) this_tvec(end)])
+
+    ax_spec(2) = subplot(7,1,[3:6]);
+    yticks_label = yticks_label(~cellfun('isempty',yticks_label));
+    set(gca, 'ytick', yticks,'yticklabel',yticks_label,  'xtick', [])
+        xlim([this_tvec(1) this_tvec(end)])
+
     linkaxes(ax_spec, 'x');
     Resize_figure
-    
-    if cut_off ==1 % get data points for resizing.  First point is the start, second click is the end. Don't zoom in when making the cutoffs. 
-        input('Paused for inspection. Press any key to select cutoffs')
-        valid_cutoff = [];
-        while ~strcmp(valid_cutoff, 'y')
-            [cut_x,~] = ginput(2);
-            hold on
-            v_ax(1) = vline(cut_x(1), 'r');
-            t_ax(1) = text(cut_x(1), F(1), 'Cutoff start', 'color', 'r','FontSize',14 );
-            v_ax(2) = vline(cut_x(2), 'r');
-            t_ax(2) = text(cut_x(2), F(1), 'Cutoff end', 'color', 'r','FontSize',14 );
-            if cut_x(1) <= this_tvec(1) && cut_x(2) >= this_tvec(end)
-                valid_cutoff = input('Keep all? y/n\n', 's');
-%                 keep_all = ture; 
-            else
-                valid_cutoff = input('Valid cutoff? y/n\n', 's');
-            end
-            delete(v_ax);
-            delete(t_ax);
-        end
-%                         cut_x(1) = ms_seg_resize.NLX_csc{iBlock}.tvec(end);
-%                 cut_x(2) = ms_seg_resize.NLX_csc{iBlock}.tvec(end);
-        
-        % get te 
-        [~,idx]=min(abs(this_tvec-cut_x(1)));
-        cut_x(1) =ms_seg_resize.NLX_csc{iBlock}.tvec(idx);
-        
-        [~,idx]=min(abs(this_tvec-cut_x(2)));
-        cut_x(2) =ms_seg_resize.NLX_csc{iBlock}.tvec(idx);
-        
-        cut_vals(:,iBlock) = cut_x;
-        
-        % cut the data based on cut vals. 
-        
-%         ms_seg.NLX_csc{iBlock} = restrict
-        
-        
-        
-    end
+
 end
 
 %%
