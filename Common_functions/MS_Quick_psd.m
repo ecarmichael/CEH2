@@ -1,4 +1,4 @@
-function [psd, coh] = MS_Quick_psd(Chan_to_use, type)
+function psd = MS_Quick_psd(Chan_to_use, type)
 %% MS_Quick_psd: generates PSDs for each .ncs in the current directory specified in 'Chan_to_use' 
 %   (if empty do all of them). Uses pwelch method.use 'type' input as either 'long' to use all of 
 %   the data or 'fast' to use the first 1/4. 
