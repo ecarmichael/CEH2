@@ -316,7 +316,7 @@ ms_seg = MS_append_data_sandbox(ms_seg, 'NLX_csc', res_csc, 'NLX_evt', res_evt, 
 fprintf('\n<strong>MS_SWR_Ca2</strong>: NLX_csc appended\n');
 
 % clear large variables from workspace for memory.
-% clear ms res_csc res_evt flag
+clear res_csc res_evt flag
 
 
 

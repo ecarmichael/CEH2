@@ -36,7 +36,7 @@ function ms_seg_out = MS_resize_segments(cfg_in, ms_seg_in)
 %
 %% initialize
 cfg_def = [];
-cfg_def.tvec_to_use = 'NLX_csc'; % what subfield to use as the tvec/time scale (default is ms_seg.time using miniscope timestamps).
+cfg_def.tvec_to_use = 'time'; % what subfield to use as the tvec/time scale (default is ms_seg.time using miniscope timestamps).
 cfg_def.cutoffs = NaN(length(ms_seg_in.(cfg_def.tvec_to_use)), 2); % this would result in nothing being restricted.
 
 cfg = ProcessConfig(cfg_def, cfg_in);
@@ -75,7 +75,24 @@ switch cfg.tvec_to_use
         end        
         
     case 'time'
-        error('Haven''t built this yet. Probably just need to copy above but look up nlx_evt. EC 2020-02-18')
+         for iC = length(cfg.cutoffs):-1:1
+            if isnan(cfg.cutoffs(1,iC))
+                tstart_idx.time(iC) = 1;
+            else
+                tstart_idx.time(iC) = cfg.cutoffs(1,iC);
+            end
+            
+            if isnan(cfg.cutoffs(2,iC))
+                tend_idx.time(iC) = length(ms_seg_in.time{iC});
+
+            else
+                tend_idx.time(iC) = cfg.cutoffs(2,iC);
+            end
+            
+        end      
+        
+        
+%         error('Haven''t built this yet. Probably just need to copy above but look up nlx_evt. EC 2020-02-18')
 
 end
 
@@ -106,9 +123,6 @@ for iF = 1:length(fields)
                         ms_seg_out.(fields{iF}){iSeg} = ms_seg_in.(fields{iF}){iSeg}(tstart_idx.time(iSeg): tend_idx.time(iSeg));
 
                     end
-                    
-%                     fprintf('    Resizing segment # %d between %0.1fs - %0.1fs\n', iSeg, ms_seg_in.(fields{iF}){iSeg}.tvec(1) - ms_seg_in.(fields{iF}){iSeg}.tvec(idx(1)), ms_seg_in.(fields{iF}){iSeg}.tvec(end) - ms_seg_in.(fields{iF}){iSeg}.tvec(idx(2)))
-                    
                 end
             end
         end

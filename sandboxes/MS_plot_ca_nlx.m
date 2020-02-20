@@ -59,6 +59,7 @@ cfg_def.chan_to_plot = these_csc;  % how many channels are in the csc.  Determin
 cfg_def.plot_type = '2d'; % '2d' or '3d'
 cfg_def.x_zoom = []; % where to zoom in on eht x_axis for each plot.
 cfg_def.emg_range = [];
+cfg_def.saveas = []; % if empty don't save the images.  Can be '.fig' (matlab fig) or other known saveas format.  I like '.png'. 
 
 cfg = ProcessConfig(cfg_def, cfg_in);
 
@@ -121,6 +122,11 @@ switch type
             xlim(cfg.x_zoom)
             end
             title(ms_data_in.(cfg.label){iRec})
+            if ~isempty(cfg.saveas)
+                mkdir('Seg_plots')
+                
+                saveas(gcf, [pwd filesep 'Seg_plots' filesep 'Seg_' ms_data_in.time_labels{iRec} '_' ms_data_in.hypno_label{iRec} cfg.saveas])
+            end
         end
         
     case 'continuous'
