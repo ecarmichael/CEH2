@@ -161,7 +161,7 @@ MS_Quick_psd
 
 cfg_seg = [];
 % for loading the csc
-cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
 cfg_seg.csc.label = {'EMG', 'LFP'}; % custom naming for each channel.
 cfg_seg.csc.desired_sampling_frequency = 2000;
 
@@ -190,7 +190,7 @@ cfg_seg.resize.save_key = 'return'; % which key to use for saving the selected c
 cfg_seg.resize.remove_key = 'backspace'; % which key to flag the current segment for removal.
 cfg_seg.resize.spec.win_s = 2^10; % spectrogram window size.
 cfg_seg.resize.spec.onverlap = cfg_seg.resize.spec.win_s / 2; % overlap
-cfg_seg.resize.spec.freq = 10.5:0.1:80; % frequency range for spectrogram.
+cfg_seg.resize.spec.freq = 0.5:0.1:80; % frequency range for spectrogram.
 cfg_seg.resize.spec.lfp_chan = 2; % which channel to use for the spectrogram. 
 
 ms_resize = MS_Segment_raw(cfg_seg, ms_dir, csc_dir, ms_resize_dir); 
