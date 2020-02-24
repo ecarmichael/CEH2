@@ -83,7 +83,7 @@ dt = 1/mode(diff(this_sess.time));
 
 %convert ms data to cells
 
-calcium = cell(1,size(this_sess.RawTraces,2));
+calcium = cell(1,size(this_sess.FiltTraces,2));
 
 for iC = size(this_sess.RawTraces,2):-1:1
     
@@ -121,12 +121,29 @@ par.drift.parameter = .01; % if par.drift parameter is not set, the
 % (do not display graph summary)
 par.dographsummary = false;
 
+ML_out.par = par;
+
 % spike estimation
-[spikest fit drift] = spk_est(calcium,par);
+[ML_out.spikest ML_out.fit ML_out.drift] = spk_est(ML_out.calcium,ML_out.par);
 
 figure(1)
-spk_display(dt,spikest,{calcium fit drift})
+spk_display(ML_out.dt,ML_out.spikest,{ML_out.calcium ML_out.fit ML_out.drift})
 set(1,'numbertitle','off','name','MLspike alone')
 
+%% one cell at a time?
+
+this_Cell = 1;
+
+figure(this_Cell)
+spk_display(ML_out.dt,ML_out.spikest{this_Cell},{ML_out.calcium{this_Cell}, ML_out.fit{this_Cell}, ML_out.drift{this_Cell}})
+set(1,'numbertitle','off','name','MLspike alone')
 
 %%  use ML spike to pull out some 
+
+
+load('*ML.mat')
+
+
+figure(1)
+spk_display(dt,spikest,{ML_out.calcium fit drift})
+set(1,'numbertitle','off','name','MLspike alone')
