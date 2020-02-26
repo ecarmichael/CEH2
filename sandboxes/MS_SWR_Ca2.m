@@ -316,7 +316,7 @@ ms_seg = MS_append_data_sandbox(ms_seg, 'NLX_csc', res_csc, 'NLX_evt', res_evt, 
 fprintf('\n<strong>MS_SWR_Ca2</strong>: NLX_csc appended\n');
 
 % clear large variables from workspace for memory.
-clear res_csc res_evt flag
+%clear res_csc res_evt flag
 
 
 
@@ -723,7 +723,7 @@ xlabel('Ratio 2');
 
 %% segment data into one of the specified recording blocks should be hard
 
-SW_block = 4; % good block based on visual inspection of the check plots with hypno labels (above)
+SW_block = 11; % good block based on visual inspection of the check plots with hypno labels (above)
 REM_block = 9; % nice REM block
 
 fprintf('\n<strong>MS_SWR_Ca2</strong>: using recording blocks <strong>SW = %d (%.1fs) REM = %d (%.1fs)</strong>\n', SW_block,(ms_seg.time{SW_block}(end) - ms_seg.time{SW_block}(1))*0.001, REM_block, (ms_seg.time{REM_block}(end) - ms_seg.time{REM_block}(1))*0.001)
@@ -733,12 +733,17 @@ fprintf('\n<strong>MS_SWR_Ca2</strong>: using recording blocks <strong>SW = %d (
 for iBlock = [SW_block]%, REM_block]
     
     this_csc = res_csc{iBlock}; % pull out a block of
-    
+    this_csc.data = [];
+    this_csc.data = res_csc{iBlock}.data(lfp_idx,:);
+    this_csc.label = [];
+    this_csc.label{1} = res_csc{iBlock}.label{lfp_idx};
+    this_csc.cfg.hdr = [];
+    this_csc.cfg.hdr{1} = res_csc{iBlock}.cfg.hdr{lfp_idx};
     
     %% basic filtering and thresholding
     % mouse SWR parameters are based off of Liu, McAfee, & Heck 2017 https://www.nature.com/articles/s41598-017-09511-8#Sec6
     check = 1; % used for visual checks on detected events.
-    ft_check = 1; % use fieldtrip to
+    ft_check = 0; % use fieldtrip to
     %set up ripple band
     cfg_filt_d = [];
     cfg_filt_d.type = 'butter'; %Cheby1 is sharper than butter
@@ -831,7 +836,7 @@ for iBlock = [SW_block]%, REM_block]
     cfg_detect.dcn = cfg_detect.operation; % b/c odd var naming in TSDtoIV
     cfg_detect.method = 'zscore';
     cfg_detect.threshold = 2;
-    cfg_detect.target = csc.label{1};
+    cfg_detect.target = this_csc.label{1};
     cfg_detect.minlen = 0.020; % 40ms from Vandecasteele et al. 2015
     cfg_detect.merge_thr = 0.02; % merge events that are within 20ms of each other.
     
@@ -856,9 +861,9 @@ for iBlock = [SW_block]%, REM_block]
         cfg_plot.display = 'iv';
         cfg_plot.mode = 'center';
         cfg_plot.width = 0.2;
-        cfg_plot.target = csc.label{1};
+        cfg_plot.target = this_csc.label{1};
         
-        PlotTSDfromIV(cfg_plot,swr_evts,csc);
+        PlotTSDfromIV(cfg_plot,swr_evts,this_csc);
         pause(2); close all;
     end
     
@@ -910,9 +915,9 @@ for iBlock = [SW_block]%, REM_block]
         cfg_plot.display = 'iv';
         cfg_plot.mode = 'center';
         cfg_plot.width = 0.2;
-        cfg_plot.target = csc.label{1};
+        cfg_plot.target = this_csc.label{1};
         cfg_plot.title = 'var';
-        PlotTSDfromIV(cfg_plot,swr_evt_out,csc);
+        PlotTSDfromIV(cfg_plot,swr_evt_out,this_csc);
         pause(3); close all;
     end
     
@@ -971,7 +976,6 @@ for iBlock = [SW_block]%, REM_block]
         
         
         clear data_ft data_trl swr_centers
-    end % end of ft_check
     
     
     
@@ -1027,7 +1031,8 @@ for iBlock = [SW_block]%, REM_block]
     end
     
     rmpath(PARAMS.ft_code_dir);
-    
+        end % end of ft_check
+
     %% block clean up
     
     
