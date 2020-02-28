@@ -93,9 +93,9 @@ elseif strcmp(os, 'GLNXA64')
     
 else
     PARAMS.data_dir = 'J:\Williams_Lab\Raw_data\JC\7_12_2019_PV1069_LTD5'; % where to find the raw data
-    PARAMS.raw_data_dir = 'J:\Williams_Lab\Raw_data\JC\'; % raw data location.
-    PARAMS.inter_dir = 'J:\Williams_Lab\Temp\JC\'; % where to put intermediate files
-    PARAMS.stats_dir = 'J:\Williams_Lab\Temp\JC\Stats\'; % where to put the statistical output .txt
+    PARAMS.raw_data_dir = 'J:\Williams_Lab\JC_Sleep\'; % raw data location.
+    PARAMS.inter_dir = 'J:\Williams_Lab\JC_Sleep_inter\'; % where to put intermediate files
+    PARAMS.stats_dir = 'J:\Williams_Lab\JC_Sleep_inter\Stats\'; % where to put the statistical output .txt
     PARAMS.code_base_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; % where the codebase repo can be found
     PARAMS.code_CEH2_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2'; % where the multisite repo can be found
 end
@@ -107,7 +107,7 @@ rng(11,'twister') % for reproducibility
 % add the required code
 addpath(genpath(PARAMS.code_base_dir));
 addpath(genpath(PARAMS.code_CEH2_dir));
-cd(PARAMS.data_dir) % move to the data folder
+cd(PARAMS.raw_data_dir) % move to the data folder
 
 % try the newer NLX loaders for UNIX
 [~, d] = version;
@@ -149,24 +149,73 @@ clear d os
 %
 %
 %  
+
+% this_dir = dir(PARAMS.raw_data_dir);
+% sess_list = [];
+% for iSess = 1:length(this_dir)
+%     if strcmp(this_dir(iSess).name, '.') || strcmp(this_dir(iSess).name, '..')
+%         continue
+%     else
+%         sess_list{iSess} = this_dir(iSess).name;
+%     end
+% end
+% 
+% sess_list = sess_list(~cellfun('isempty',sess_list));
+
+% date_vals = [];
+% for iSess = 1:length(sess_list)
+%     parts = strsplit(sess_list{iSess},'_'); 
+%     id_idx = strfind(parts, 'PV');
+%     id_idx = find(~cellfun('isempty', id_idx));
+%     
+% %     for iP = 1:3
+% %         if iP ==1
+% %         date_vals = [date_vals parts{iP} ];
+% %         else
+% %             date_vals = [date_vals '-' parts{iP} ];
+% %         end
+% %     end
+%             
+%     
+%     
+%     Subjects{iSess} = parts{id_idx};
+% end
+
+
 %  for iSess = sess_list
-%   ms_dir = [PARAMS.data_raw filesep iSess]; 
+%   ms_dir = [PARAMS.data_raw filesep iSess];
 %   csc_dir = [PARAMS.data_raw filesep iSess];
 
-ms_dir = [PARAMS.raw_data_dir '7_12_2019_PV1069_LTD5']; 
-csc_dir = [PARAMS.raw_data_dir '7_12_2019_PV1069_LTD5'];
+ms_dir = 'J:\Williams_Lab\JC_Sleep\11_23_2019_PV1060_HATD5';
+csc_dir = 'J:\Williams_Lab\JC_Sleep\11_23_2019_PV1060_HATD5\2019-11-23_10-10-12_PV1060_HATD5';
 
-ms_resize_dir = ms_dir; %just save the ms_resize struct back into the same place as the ms.mat file. 
+
+    parts = strsplit(ms_dir,filesep);
+    parts = strsplit(parts{end}, '_');
+    id_idx = strfind(parts, 'PV');
+    id_idx = find(~cellfun('isempty', id_idx)); 
+    
+    this_subject = parts{id_idx}; 
+% ms_dir = [PARAMS.raw_data_dir '7_12_2019_PV1069_LTD5']; 
+% csc_dir = [PARAMS.raw_data_dir '7_12_2019_PV1069_LTD5'];
+
+parts = strsplit(ms_dir,  filesep);
+ms_resize_dir = [PARAMS.inter_dir parts{end}];  %just save the ms_resize struct back into the same place as the ms.mat file. 
+mkdir(ms_resize_dir);
 %% run the quick PSD script to pick the best csc channels  (only needs to be run once)
 % warning this is slow because of the high sampling rate in the csc files. 
 cd(csc_dir)
 MS_Quick_psd
 
 %% Segment and select the data
-
+cd(ms_dir)
 cfg_seg = [];
 % for loading the csc
-cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+if strcmp(this_subject, 'PV1060')
+    cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+else
+    cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+end
 cfg_seg.csc.label = {'EMG', 'LFP'}; % custom naming for each channel.
 cfg_seg.csc.desired_sampling_frequency = 2000;
 
@@ -198,5 +247,5 @@ cfg_seg.resize.spec.onverlap = cfg_seg.resize.spec.win_s / 2; % overlap
 cfg_seg.resize.spec.freq = 0.5:0.1:80; % frequency range for spectrogram.
 cfg_seg.resize.spec.lfp_chan = 2; % which channel to use for the spectrogram. 
 
-ms_resize = MS_Segment_raw(cfg_seg, ms_dir, csc_dir, ms_resize_dir); 
+ms_resize = MS_Segment_raw(cfg_seg, csc_dir, ms_dir, ms_resize_dir); 
 

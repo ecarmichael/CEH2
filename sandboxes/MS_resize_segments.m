@@ -105,8 +105,9 @@ for iF = 1:length(fields)
     cell_idx = find(field_size == known_cell_num,1);
     
     
-    if ~isempty(cell_idx)
-        if ischar(ms_seg_in.(fields{iF}){1})
+    if ~isempty(cell_idx) 
+        if  isnumeric(ms_seg_in.(fields{iF})) || ischar(ms_seg_in.(fields{iF}){1})
+            fprintf('Skipping in <strong>''%s''</strong>...\n', fields{iF})
             continue
         else
             fprintf('Resizing traces in <strong>''%s''</strong>...\n', fields{iF})
@@ -120,7 +121,7 @@ for iF = 1:length(fields)
 
                     else
                         ms_seg_out.(fields{iF}){iSeg} = [];
-                        ms_seg_out.(fields{iF}){iSeg} = ms_seg_in.(fields{iF}){iSeg}(tstart_idx.time(iSeg): tend_idx.time(iSeg));
+                        ms_seg_out.(fields{iF}){iSeg} = ms_seg_in.(fields{iF}){iSeg}(tstart_idx.time(iSeg): tend_idx.time(iSeg),:);
 
                     end
                 end

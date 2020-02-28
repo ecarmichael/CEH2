@@ -47,23 +47,24 @@ keep_idx = segments_in(~ismember(segments_in, cells_to_remove));
 %% remove all cells in the data fields with pre-segmented data
 % fields_to_alter = {'time', 'RawTraces', 'FiltTraces', 'frameNum', 'vidNum'};
 
-% for iF = fields_to_alter
-for iC = sort(cells_to_remove, 'descend') % go backards or else everything is off and will not remove the right cells.
-    ms_out.time(iC) = [];
-    ms_out.RawTraces(iC) = [];
-    ms_out.FiltTraces(iC) = [];
-    ms_out.frameNum(iC) = [];
-    ms_out.vidNum(iC) = [];
+known_cell_num = size(ms_in.RawTraces,1); % should always be the correct number of cells for the number of segments.
+fields = fieldnames(ms_in);
+for iF = 1:length(fields)
+    field_size = size(ms_in.(fields{iF}));
     
-if ~isempty(cfg.user_fields)
-    for iF = 1:length(cfg.user_fields)
-        ms_out.(cfg.user_fields{iF})(iC) = []; 
+    cell_idx = find(field_size == known_cell_num,1);
+    
+    
+    if ~isempty(cell_idx)
+        
+        for iC = sort(cells_to_remove, 'descend') % go backards or else everything is off and will not remove the right cells.
+            ms_out.(fields{iF})(iC) = [];
+            
+            
+            fprintf('Removing cell: %0.f in %s\n', iC, fields{iF});
+        end
     end
 end
-    
-    fprintf('Removing cell: %0.f\n', iC);
-end
-% end
 
 
 
