@@ -80,6 +80,7 @@ switch cfg.tvec_to_use
                 tstart_idx.time(iC) = 1;
             else
                 tstart_idx.time(iC) = cfg.cutoffs(1,iC);
+                % track how much time was removed
             end
             
             if isnan(cfg.cutoffs(2,iC))
@@ -119,10 +120,12 @@ for iF = 1:length(fields)
                     if strcmp(fields{iF}, 'NLX_csc') || strcmp(fields{iF}, 'NLX_evt')
                        ms_seg_out.(fields{iF}){iSeg} = restrict(ms_seg_out.(fields{iF}){iSeg},tstart_idx.nlx(iSeg), tend_idx.nlx(iSeg));
 
-                    else
+                    elseif cell_idx ==1
                         ms_seg_out.(fields{iF}){iSeg} = [];
                         ms_seg_out.(fields{iF}){iSeg} = ms_seg_in.(fields{iF}){iSeg}(tstart_idx.time(iSeg): tend_idx.time(iSeg),:);
-
+                    elseif cell_idx ==2
+                        ms_seg_out.(fields{iF}){iSeg} = [];
+                        ms_seg_out.(fields{iF}){iSeg} = ms_seg_in.(fields{iF}){iSeg}(:,tstart_idx.time(iSeg): tend_idx.time(iSeg));
                     end
                 end
             end

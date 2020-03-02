@@ -409,6 +409,11 @@ MS_plot_spec_resize(cfg.resize, ms_seg_resize);
 %     
 %     MS_plot_ca_nlx(cfg.check, ms_seg, res_csc);
 % end
-%% clean up and export the ms_seg_resize
 
+%% binarize the traces in each segment
+
+
+
+
+%% clean up and export the ms_seg_resize
 save([ms_resize_dir filesep 'ms_resize.mat'], 'ms_seg_resize', '-v7.3')
