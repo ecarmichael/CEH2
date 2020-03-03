@@ -1,4 +1,4 @@
-function ms_out = MS_remove_data_sandbox(ms_in, cells_to_remove)
+function ms_out = MS_remove_data_sandbox(cfg_in,ms_in, cells_to_remove)
 %% MS_remove_data
 %  MS_remove_data will take in a miniscope data structure 'ms_in' and
 %  remove the specified cells while performing some checks to ensure that everything lines up.
@@ -27,6 +27,11 @@ function ms_out = MS_remove_data_sandbox(ms_in, cells_to_remove)
 %       - initial sandbox with basic functions
 %% inialize
 
+cfg_def = [];
+cfg_def.user_fields = {}; % user fields. 
+
+cfg = ProcessConfig(cfg_def, cfg_in); 
+
 if ~iscell(ms_in.RawTraces)
     error('ms_in data is not in cells.  Probably has not been segmented.  See MS_segment_ms_data')
 end
@@ -42,17 +47,24 @@ keep_idx = segments_in(~ismember(segments_in, cells_to_remove));
 %% remove all cells in the data fields with pre-segmented data
 % fields_to_alter = {'time', 'RawTraces', 'FiltTraces', 'frameNum', 'vidNum'};
 
-% for iF = fields_to_alter
-for iC = sort(cells_to_remove, 'descend') % go backards or else everything is off and will not remove the right cells.
-    ms_out.time(iC) = [];
-    ms_out.RawTraces(iC) = [];
-    ms_out.FiltTraces(iC) = [];
-    ms_out.frameNum(iC) = [];
-    ms_out.vidNum(iC) = [];
+known_cell_num = size(ms_in.RawTraces,1); % should always be the correct number of cells for the number of segments.
+fields = fieldnames(ms_in);
+for iF = 1:length(fields)
+    field_size = size(ms_in.(fields{iF}));
     
-    fprintf('Removing cell: %0.f\n', iC);
+    cell_idx = find(field_size == known_cell_num,1);
+    
+    
+    if ~isempty(cell_idx)
+        
+        for iC = sort(cells_to_remove, 'descend') % go backards or else everything is off and will not remove the right cells.
+            ms_out.(fields{iF})(iC) = [];
+            
+            
+            fprintf('Removing cell: %0.f in %s\n', iC, fields{iF});
+        end
+    end
 end
-% end
 
 
 
@@ -75,11 +87,13 @@ end
 
 
 %% clean up
-ms_out.format = [ms_out.format sprintf('; cell %.0f removed', cells_to_remove)];
+ms_out.format = [ms_out.format sprintf('cell %.0f removed', cells_to_remove)];
 
 if isfield(ms_out, 'history')
-    ms_out.history{end+1} = {sprintf('; cell %.0f removed', cells_to_remove)};
+    ms_out.history.fun_name{end+1} = {sprintf('cell %.0f removed', cells_to_remove)};
+    ms_out.history.cfg{end+1} = cfg;
 else
-    ms_out.history = {sprintf('; cell %.0f removed', cells_to_remove)};
+    ms_out.history.fun_name = {sprintf('cell %.0f removed', cells_to_remove)};
+    ms_out.history.cfg = {cfg};
 end
 
