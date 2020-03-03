@@ -76,9 +76,9 @@ switch cfg.tvec_to_use
             ms_seg_out.resize.new_times(iC) = (ms_seg_in.time{iC}(tend_idx.time(iC)) - ms_seg_in.time{iC}(tstart_idx.time(iC)))./1000;
             ms_seg_out.resize.diff(iC) = ms_seg_out.resize.org_times(iC)-ms_seg_out.resize.new_times(iC);
             
-            ms_seg_out.resize.org_nlx_times(iC) = ms_seg_in.NLX_csc{iC}.tvec(end) - ms_seg_in.NLX_csc{iC}.tvec(1);
-            ms_seg_out.resize.new_nlx_times(iC) = tend_idx.nlx(iC) - tstart_idx.nlx(iC);
-            ms_seg_out.resize.diff_nlx(iC) = ms_seg_out.resize.org_nlx_times(iC) - ms_seg_out.resize.new_nlx_times(iC);
+            ms_seg_out.resize.org_nlx_times(iT) = ms_seg_in.NLX_csc{iT}.tvec(end) - ms_seg_in.NLX_csc{iC}.tvec(1);
+            ms_seg_out.resize.new_nlx_times(iT) = tend_idx.nlx(iT) - tstart_idx.nlx(iT);
+            ms_seg_out.resize.diff_nlx(iT) = ms_seg_out.resize.org_nlx_times(iT) - ms_seg_out.resize.new_nlx_times(iT);
             
         end        
         
@@ -98,13 +98,20 @@ switch cfg.tvec_to_use
                 tend_idx.time(iC) = cfg.cutoffs(2,iC);
             end
             
-            % collect time differences
-            ms_seg_out.resize.org_times(iC) = (ms_seg_in.time{iC}(end) - ms_seg_in.time{iC}(1))./1000;
-            ms_seg_out.resize.new_times(iC) = (ms_seg_in.time{iC}(tend_idx.time(iC)) - ms_seg_in.time{iC}(tstart_idx.time(iC)))./1000;
-            ms_seg_out.resize.diff(iC) = ms_seg_out.resize.org_times(iC)-ms_seg_out.resize.new_times(iC);
-            
         end      
+        
+        
+%         error('Haven''t built this yet. Probably just need to copy above but look up nlx_evt. EC 2020-02-18')
+
 end
+
+%% collect the time values
+for iT = 1:length(tstart_idx.time)
+
+
+
+end
+
 %% resize
 
 known_cell_num = size(ms_seg_in.RawTraces,1); % should always be the correct number of cells for the number of segments.

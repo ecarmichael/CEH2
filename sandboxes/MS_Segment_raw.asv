@@ -580,7 +580,6 @@ for ii = 1:10
 end
 vline(all_seg_idx(pre_REM_idx), {'r'});
 vline(all_seg_idx(pre_SW_idx),{'g'})
-pause(5)
-close; 
+
 %% clean up and export the ms_seg_resize
 save([ms_resize_dir filesep 'ms_resize.mat'], 'ms_seg_resize', '-v7.3')

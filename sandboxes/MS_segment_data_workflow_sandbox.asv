@@ -208,7 +208,7 @@ for iSess = sess_list
     %% run the quick PSD script to pick the best csc channels  (only needs to be run once)
     % warning this is slow because of the high sampling rate in the csc files.
     if isempty(dir([csc_dir filesep 'PSD_check*'])) %~exist([csc_dir filesep 'PSD_check.png'], 'file')
-        fprintf('<strong>MS_segment_data_workflow_sandbox</strong>: no PSD_check file found.  Running MS_Quick_psd...\n');
+        fprintf('<strong>%s</strong>: no PSD_check file found.  Running MS_Quick_psd...', mfilename);
         cd(csc_dir)
         MS_Quick_psd
         pos = get(gcf, 'position');
@@ -257,12 +257,8 @@ for iSess = sess_list
     cfg_seg.resize.spec.freq = 0.5:0.1:80; % frequency range for spectrogram.
     cfg_seg.resize.spec.lfp_chan = 2; % which channel to use for the spectrogram.
     
-    fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',parts{end});
-
-    % run the actual segmentation workflow
-    MS_Segment_raw(cfg_seg, csc_dir, ms_dir, ms_resize_dir);
+    ms_resize = MS_Segment_raw(cfg_seg, csc_dir, ms_dir, ms_resize_dir);
     
-    fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> complete.\n',parts{end});
-
+    
     
 end
