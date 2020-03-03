@@ -1,4 +1,4 @@
-function ms_out = MS_segment_ms_sandbox(ms_in)
+function ms_out = MS_segment_ms_sandbox(cfg_in,ms_in)
 %% MS_segment_ms: segments the previously concatinated data in the ms stucture
 %   MS_segment_ms takes the previously concatenated and processed miniscope
 %   data in the 'ms' data structure from
@@ -29,6 +29,12 @@ function ms_out = MS_segment_ms_sandbox(ms_in)
 %   - initial sandbox with basic segmentation using samples in the
 %   ms.timestamps and ms.time fields
 %% intialize
+cfg_def = [];
+cfg_def.user_fields = {}; % user fields to remove: example ' BinaryTraces'
+
+cfg = ProcessConfig(cfg_def, cfg_in); 
+
+
 
 ms_out = ms_in; 
 
@@ -38,6 +44,13 @@ ms_out = rmfield(ms_out, 'FiltTraces');
 ms_out = rmfield(ms_out, 'time');
 ms_out = rmfield(ms_out, 'vidNum');
 ms_out = rmfield(ms_out, 'frameNum');
+
+%user specified fields. 
+if ~isempty(cfg.user_fields)
+    for iF = 1:length(cfg.user_fields)
+        ms_out = rmfield(ms_out, cfg.user_fields{iF});
+    end
+end
 
 
 %% get all the time blocks and restrict the data to those blocks
@@ -64,12 +77,22 @@ for iT = 1:length(all_times)
         ms_out.time{iT,1} = ms_in.time(1:all_times(iT));
         ms_out.RawTraces{iT,1} = ms_in.RawTraces(1:all_times(iT),:);
         ms_out.FiltTraces{iT,1} = ms_in.FiltTraces(1:all_times(iT),:);
+        if ~isempty(cfg.user_fields)
+            for iF = 1:length(cfg.user_fields)
+                ms_out.(cfg.user_fields{iF}){iT,1} = ms_in.(cfg.user_fields{iF})(1:all_times(iT),:);
+            end
+        end
         ms_out.frameNum{1,iT} = ms_in.frameNum(1,1:all_times(iT));
         ms_out.vidNum{1,iT} = ms_in.vidNum(1,1:all_times(iT));
     else 
         ms_out.time{iT,1} = ms_in.time(all_times(iT-1)+1:all_times(iT));
         ms_out.RawTraces{iT,1} = ms_in.RawTraces(all_times(iT-1)+1:all_times(iT),:);
         ms_out.FiltTraces{iT,1} = ms_in.FiltTraces(all_times(iT-1)+1:all_times(iT),:);
+        if ~isempty(cfg.user_fields)
+            for iF = 1:length(cfg.user_fields)
+                ms_out.(cfg.user_fields{iF}){iT,1} = ms_in.(cfg.user_fields{iF})(all_times(iT-1)+1:all_times(iT),:);
+            end
+        end
         ms_out.frameNum{1,iT} = ms_in.frameNum(1,all_times(iT-1)+1:all_times(iT));
         ms_out.vidNum{1,iT} = ms_in.vidNum(1,all_times(iT-1)+1:all_times(iT));
     end
