@@ -87,30 +87,30 @@ ms = MS_characterize_trace(cfg_stats, ms);
 fprintf('\n<strong>MS_SWR_Ca2</strong>: basic statstics computed for each Ca trace');
 
 
-%% remove cells with low quality signals.
-cfg_remove_trace = [];
-cfg_remove_trace.threshold = 8;
-cfg_remove_trace.remove_idx = ms.stats.RawTraces.z_max <= cfg_remove_trace.threshold;
-
-ms = MS_Remove_trace(cfg_remove_trace, ms);
-fprintf('\n<strong>MS_SWR_Ca2</strong>: %d Traces had max zscore values  < %d. Taken to indicate poor spike quality \n',sum(cfg_remove_trace.remove_idx), cfg_remove_trace.threshold);
-
-
-
-%%  convert the Ca transitents into a binarized vector
-cfg_bin = [];
-cfg_bin.method = 'rise';
-cfg_bin.rise.smooth_type = 'sgolay';
-cfg_bin.threshold = 2;
-ms = MS_binarize_data_sandbox(cfg_bin, ms);
-fprintf('\n<strong>MS_SWR_Ca2</strong>: miniscope data has been binarized using a %s method with a threshold of %d\n', cfg_bin.method, cfg_bin.threshold);
-pause(2)
-close all
+% %% remove cells with low quality signals.
+% cfg_remove_trace = [];
+% cfg_remove_trace.threshold = 8;
+% cfg_remove_trace.remove_idx = ms.stats.RawTraces.z_max <= cfg_remove_trace.threshold;
+% 
+% ms = MS_Remove_trace(cfg_remove_trace, ms);
+% fprintf('\n<strong>MS_SWR_Ca2</strong>: %d Traces had max zscore values  < %d. Taken to indicate poor spike quality \n',sum(cfg_remove_trace.remove_idx), cfg_remove_trace.threshold);
+% 
+% 
+% 
+% %%  convert the Ca transitents into a binarized vector
+% cfg_bin = [];
+% cfg_bin.method = 'rise';
+% cfg_bin.rise.smooth_type = 'sgolay';
+% cfg_bin.threshold = 2;
+% ms = MS_binarize_data_sandbox(cfg_bin, ms);
+% fprintf('\n<strong>MS_SWR_Ca2</strong>: miniscope data has been binarized using a %s method with a threshold of %d\n', cfg_bin.method, cfg_bin.threshold);
+% pause(2)
+% close all
 
 
 %% segment the data
 cfg_seg = [];
-cfg_seg.user_fields = {'BinaryTraces'};
+% cfg_seg.user_fields = {'BinaryTraces'};
 ms_seg = MS_segment_ms_sandbox(cfg_seg, ms);
 
 fprintf('\n<strong>MS_SWR_Ca2</strong>: miniscope data has been segmented into %d individual recording epochs\n method used: %s\n', length(ms_seg.time), ms_seg.format);
