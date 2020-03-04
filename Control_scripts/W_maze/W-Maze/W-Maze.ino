@@ -16,7 +16,7 @@ const int Reset_button = 2;
 const int ledPin1 = 4;
 const int ledPin2 = 5;
 const int ledPinG = 6;
-const int Reset_button = 2;
+
 // neopixel setup
 #define NEOPIN 3
 #define NUMPIXELS 10
