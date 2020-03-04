@@ -1,7 +1,7 @@
 #include "arduinoFFT.h"
   
-#define SAMPLES 512               //Must be a power of 2
-#define SAMPLING_FREQUENCY 50000  //Hz
+#define SAMPLES 512             //Must be a power of 2
+#define SAMPLING_FREQUENCY 2000  //Hz
 #define REFRESH_RATE 10           //Hz
 #define ARDUINO_IDE_PLOTTER_SIZE 500
   

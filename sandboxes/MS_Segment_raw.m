@@ -460,6 +460,14 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
     
     this_ms = msExtractBinary_detrendTraces(this_ms);
     
+    % check for inactive cells and remove from ms.SFPs just using sum of
+    % binary > 0; 
+    
+    cfg_SFP = [];
+    cfg_SFP.fnc = '=='; 
+    cfg_SFP.remove_val = 0; 
+    this_ms = MS_update_SFP(cfg_SFP, this_ms);
+    
     this_dir = [];
     this_dir = [ms_resize_dir filesep ms_seg_resize.file_names{iSeg}];
     fprintf('<strong>%s</strong>: saving resized ms struct back to %s...\n', mfilename, this_dir)
@@ -578,7 +586,7 @@ hold on
 for ii = 1:10
     plot(all_detrendRaw_pre(:,ii)+ii);
 end
-vline(all_seg_idx(pre_REM_idx), {'r'});
+vline(all_seg_idx(pre_REM_idx), {'r'});    mkdir(ms_resize_dir);
 vline(all_seg_idx(pre_SW_idx),{'g'})
 pause(5)
 close; 
