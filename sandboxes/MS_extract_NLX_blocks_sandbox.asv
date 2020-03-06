@@ -152,14 +152,7 @@ if cfg.gitter ==1
     idx_high = NaN;
     
     if iRec == 1 && idx(iRec) ==1
-        low_val = 0; 
-        while ~isempty(idx_low)
-            low_val = low_val - 1;
-            temp_evt = restrict(evt, evt.t{cfg.t_chan}(idx(iRec)-low_val), evt.t{cfg.t_chan}(idx(iRec+1)));
-            idx_low =find(diff(temp_evt.t{cfg.t_chan}(1:20)) > mode(diff(temp_evt.t{cfg.t_chan}))*cfg.gitter_threshol);
-        end
-        
-        
+        low_val = 0;
         fprintf('\nMS_extract_NLX_blocks_sandbox: First block starts at the begining of the recoring (idx = %.0f).\n', low_val)
    
          while ~isempty(idx_high)

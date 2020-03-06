@@ -56,7 +56,7 @@ cfg_def.csc.label = {'EMG', 'LFP'}; % custom naming for each channel.
 cfg_def.csc.desired_sampling_frequency = 2000;
 cfg_def.evt.comb_chans = [3 4]; % see below.
 cfg_def.evt.t_chan = 5; % which Events channel to use.  Seems to be 3 (ms TTL on) 4(ms TTL off) which combined make a new channel 5
-
+cfg_def.bad_block = [];
 % filters
 cfg_def.filt_d.type = 'fdesign'; %the type of filter I want to use via filterlfp
 cfg_def.filt_d.f  = [1 5];
@@ -137,6 +137,7 @@ cfg_seg = [];
 % cfg_seg.user_fields = {'BinaryTraces'};
 ms_seg = MS_segment_ms_sandbox(cfg_seg, ms);
 
+
 fprintf('\n<strong>MS_Segment_raw</strong>: miniscope data has been segmented into %d individual recording epochs\n method used: %s\n', length(ms_seg.time), ms_seg.format);
 
 %% Load nlx data
@@ -159,6 +160,9 @@ csc = MS_LoadCSC(cfg.csc); % need to comment out ExpKeys lines in LoadCSC
 
 nlx_evts.t{cfg.evt.t_chan} = sort([nlx_evts.t{cfg.evt.comb_chans(1)}, nlx_evts.t{cfg.evt.comb_chans(2)}]);
 nlx_evts.label{5} = ['merge TTls at ' num2str(cfg.evt.comb_chans(1)) ' and ' num2str(cfg.evt.comb_chans(2))];
+
+cfg.evt.bad_block = cfg.bad_block; % flag known bad blocks to avoid running gitter and for later removal. 
+
 [evt_blocks, ~, evt_duration] = MS_extract_NLX_blocks_sandbox(cfg.evt, nlx_evts);
 pause(1)
 close
@@ -229,7 +233,7 @@ if length(evt_blocks) < length(TS)
         l_evt(iE) = length(evt_blocks{iE}.t{cfg.evt.t_chan});
     end
     
-    odd_idx = find(~ismembertol(l_ts, l_evt, 5,'OutputAllIndices',true,'DataScale', 1));
+    odd_idx = find(~ismembertol(l_ts, l_evt, 50,'OutputAllIndices',true,'DataScale', 1));
     
     for iOdd = 1:length(odd_idx)
         fprintf('Found odd TS files at idx: %d.   Length: %d samples\n', odd_idx(iOdd), length(TS{odd_idx(iOdd)}.system_clock{1}));
@@ -264,8 +268,15 @@ if length(evt_blocks) < length(TS)
     
     % remove from main ms struct
     cfg_rem = [];
-    ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, odd_idx);
+    rm_idx = find(odd_idx== ms_seg.seg_id);
+    ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, rm_idx);
     
+    
+    if ~isfield(ms_seg, 'removed')
+        ms_seg.removed = {};
+    end
+    ms_seg.removed{end+1} = TS_name{odd_idx};
+
     % remove from TS and labeling structs
     TS(odd_idx) = [];
     
@@ -276,13 +287,10 @@ if length(evt_blocks) < length(TS)
     time_labels(odd_idx) = [];
     
     
-    fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', odd_idx);
+    fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', rm_idx);
     
 end
-if ~isfield(ms_seg, 'removed')
-    ms_seg.removed = {};
-end
-ms_seg.removed{end+1} = TS_name{odd_idx};
+
 
 
 %% append the NLX data to the ms structure (be saure to use the same channel as the one used for extraction (cfg_evt_blocks.t_chan).
@@ -360,7 +368,8 @@ end
 %% update the ms structure with the NLX data
 cfg_rem = [];
 % cfg_rem.user_fields = {'BinaryTraces'};
-ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, [flag]);
+rm_idx = find(flag == ms_seg.seg_id);
+ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, [rm_idx]);
 fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', flag);
 for iR = 1:length(flag)
     ms_seg.removed{end+1} = TS_name{flag(iR)};
@@ -374,6 +383,9 @@ fprintf('\n<strong>MS_Segment_raw</strong>: NLX_csc appended\n');
 % clear ms res_csc res_evt flag
 
 
+%% remove known bad blocks
+rm_idx = find(cfg.bad_block == ms_seg.seg_id);
+ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, rm_idx);
 
 %% get some emg stats for scaling
 emg_chan  = find(ismember(cfg.csc.label, 'EMG')); % used to get the emg range.
@@ -385,7 +397,7 @@ cfg.resize.emg_range = [min(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFreq
 
 [cut_vals, remove_flag] = MS_plot_spec_resize(cfg.resize, ms_seg);
 
-flag = find(remove_flag);  % makes appending easier ina few steps
+flag = find(remove_flag == ms_seg.seg_id);  % makes appending easier ina few steps
 %% resize the events [WIP: has trouble resizing across ms and NLX timescales]
 cfg_resize = [];
 cfg_resize.tvec_to_use = 'NLX_csc'; % could be 'time', or 'NLX_csc'
