@@ -102,7 +102,7 @@ for iT = 1:length(all_times)
 end
 
 %% clean up
-
+ms_out.seg_id = 1:length(ms_out.RawTraces); 
 ms_out.format = 'Segmented based on timestamp periods only'; 
 
 disp('Segmented based on timestamp periods only')

@@ -194,15 +194,7 @@ for iSess = sess_list
     % ms_dir = 'J:\Williams_Lab\JC_Sleep\11_23_2019_PV1060_HATD5';
     % csc_dir = 'J:\Williams_Lab\JC_Sleep\11_23_2019_PV1060_HATD5\2019-11-23_10-10-12_PV1060_HATD5';
     
-    % get the subject name
-    parts = strsplit(ms_dir,filesep);
-    parts = strsplit(parts{end}, '_');
-    id_idx = strfind(parts, 'PV');
-    id_idx = find(~cellfun('isempty', id_idx));
-    
-    this_subject = parts{id_idx};
-    
-    parts = strsplit(ms_dir,  filesep);
+  
     ms_resize_dir = [PARAMS.inter_dir parts{end}];  %just save the ms_resize struct back into the same place as the ms.mat file.
     mkdir(ms_resize_dir);
     %% run the quick PSD script to pick the best csc channels  (only needs to be run once)
@@ -217,17 +209,48 @@ for iSess = sess_list
         close; clear pos; 
     end
     
+    %% hardcode dir
+    
+    ms_dir = 'J:\Williams_Lab\JC_Sleep\10_18_2019_PV1069_HATD5'
+    csc_dir = 'J:\Williams_Lab\JC_Sleep\10_18_2019_PV1069_HATD5\2019-10-18_10-02-44_PV1069_HATD5'
+    this_subject = 'PV1069'
+    ms_resize_dir = 'J:\Williams_Lab\JC_Sleep_inter\10_18_2019_PV1069_HATD'
+     mkdir(ms_resize_dir);
+     
+
     %% Segment and select the data
+    
+    % get the session info. 
+    parts = strsplit(ms_dir,filesep);
+    parts = strsplit(parts{end}, '_');
+    id_idx = strfind(parts, 'PV');
+    id_idx = find(~cellfun('isempty', id_idx));
+    
+    this_subject = parts{id_idx};
+    
+    parts = strsplit(ms_dir,  filesep);
+    this_sess = parts{end};
+    
+    
     cd(ms_dir)
     cfg_seg = [];
     % for loading the csc
     if strcmp(this_subject, 'PV1060')
+        cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+    elseif strcmp(this_subject, 'PV1069')
         cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
     else
         cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
     end
     cfg_seg.csc.label = {'EMG', 'LFP'}; % custom naming for each channel.
     cfg_seg.csc.desired_sampling_frequency = 2000;
+    
+    % flag known bad recording blocks. 
+    if strcmp(this_sess, '10_18_2019_PV1069_HATD5')
+        cfg_seg.bad_block = [19];
+    else
+        cfg_seg.bad_block = [];
+    end
     
     % filters
     % delta
@@ -257,12 +280,12 @@ for iSess = sess_list
     cfg_seg.resize.spec.freq = 0.5:0.1:80; % frequency range for spectrogram.
     cfg_seg.resize.spec.lfp_chan = 2; % which channel to use for the spectrogram.
     
-    fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',parts{end});
+%     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',parts{end});
 
     % run the actual segmentation workflow
     MS_Segment_raw(cfg_seg, csc_dir, ms_dir, ms_resize_dir);
     
-    fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> complete.\n',parts{end});
+%     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> complete.\n',parts{end});
 
     
 end

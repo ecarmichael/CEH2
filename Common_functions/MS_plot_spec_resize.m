@@ -54,7 +54,7 @@ switch data_type
         error('I haven''t built this...')
         
     case 'other'
-        
+        remove_flag = [];
         for iBlock  = cfg.segments % loop through segments.
             this_tvec = [];
             this_tvec = data_in.NLX_csc{iBlock}.tvec-data_in.NLX_csc{iBlock}.tvec(1);
@@ -137,7 +137,7 @@ switch data_type
                     was_a_key = waitforbuttonpress;
                     key_hit = get(gcf, 'CurrentKey');
                     if strcmp(key_hit, cfg.save_key)
-                        remove_flag(iBlock) = 0;  
+%                         remove_flag(iBlock) = 0;  
                         break_out = 1; 
                         if cut_x(1) <= this_tvec(1) && cut_x(2) >= this_tvec(end)
                             fprintf('\n<strong>TMS_plot_spec_resize:</strong> Segment #%d unchanged\n', iBlock)
@@ -148,7 +148,7 @@ switch data_type
                         
                         
                     elseif strcmp(key_hit, cfg.remove_key)
-                       remove_flag(iBlock) = 1;  
+                       remove_flag(end+1) = iBlock;  
                        break_out = 1; 
                        fprintf('\n<strong>TMS_plot_spec_resize:</strong> Segment #%d flagged for removal\n', iBlock)
                        
