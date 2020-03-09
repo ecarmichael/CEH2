@@ -161,8 +161,7 @@ csc = MS_LoadCSC(cfg.csc); % need to comment out ExpKeys lines in LoadCSC
 nlx_evts.t{cfg.evt.t_chan} = sort([nlx_evts.t{cfg.evt.comb_chans(1)}, nlx_evts.t{cfg.evt.comb_chans(2)}]);
 nlx_evts.label{5} = ['merge TTls at ' num2str(cfg.evt.comb_chans(1)) ' and ' num2str(cfg.evt.comb_chans(2))];
 
-cfg.evt.bad_block = cfg.bad_block; % flag known bad blocks to avoid running gitter and for later removal. 
-
+cfg.evt.bad_block =cfg.bad_block; %find(ismember(TS_name, cfg.bad_block)); % flag known bad blocks to avoid running gitter and for later removal. . 
 [evt_blocks, ~, evt_duration] = MS_extract_NLX_blocks_sandbox(cfg.evt, nlx_evts);
 pause(1)
 close
@@ -285,8 +284,7 @@ if length(evt_blocks) < length(TS)
     hypno_labels(odd_idx) = [];
     
     time_labels(odd_idx) = [];
-    
-    
+        
     fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', rm_idx);
     
 end
@@ -368,7 +366,7 @@ end
 %% update the ms structure with the NLX data
 cfg_rem = [];
 % cfg_rem.user_fields = {'BinaryTraces'};
-rm_idx = find(flag == ms_seg.seg_id);
+rm_idx = flag;
 ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, [rm_idx]);
 fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', flag);
 for iR = 1:length(flag)
@@ -384,9 +382,15 @@ fprintf('\n<strong>MS_Segment_raw</strong>: NLX_csc appended\n');
 
 
 %% remove known bad blocks
-rm_idx = find(cfg.bad_block == ms_seg.seg_id);
-ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, rm_idx);
-
+rm_idx = find(ismember(ms_seg.file_names, cfg.bad_block_name));
+if ~isempty(rm_idx)
+    ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, rm_idx);
+    fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', flag);
+    for iR = 1:length(rm_idx)
+        ms_seg.removed{end+1} = ms_seg.file_names{rm_idx(iR)};
+    end
+    % add
+end
 %% get some emg stats for scaling
 emg_chan  = find(ismember(cfg.csc.label, 'EMG')); % used to get the emg range.
 % get the min and max emg range for the first 5mins of the recording. used for consistency.
@@ -535,7 +539,7 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
 end
 all_seg_idx = [0 all_seg_idx];
 
-fprintf('<strong>%s</strong>: saving concatinating Binary, RawTraces, detrendRaw, and indicies', mfilename);
+fprintf('<strong>%s</strong>: saving concatinating Binary, RawTraces, detrendRaw, and indicies\n', mfilename);
 
 % save everything
 save([ms_resize_dir filesep 'all_seg_idx.mat'], 'all_seg_idx', '-v7.3');
@@ -598,9 +602,15 @@ hold on
 for ii = 1:10
     plot(all_detrendRaw_pre(:,ii)+ii);
 end
-vline(all_seg_idx(pre_REM_idx), {'r'});    mkdir(ms_resize_dir);
+vline(all_seg_idx(pre_REM_idx), {'r'});    
 vline(all_seg_idx(pre_SW_idx),{'g'})
 pause(5)
+if ~exist(ms_resize_dir, '7')
+    mkdir(ms_resize_dir);
+end
+saveas(gcf, [ms_resize_dir filesep 'cat_check'],'fig')
+saveas(gcf, [ms_resize_dir filesep 'cat_check'],'png')
+
 close; 
 %% clean up and export the ms_seg_resize
 save([ms_resize_dir filesep 'ms_resize.mat'], 'ms_seg_resize', '-v7.3')

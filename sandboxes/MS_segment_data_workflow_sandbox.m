@@ -92,10 +92,11 @@ elseif strcmp(os, 'GLNXA64')
     PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
     
 else
-    PARAMS.data_dir = 'J:\Williams_Lab\Raw_data\JC\7_12_2019_PV1069_LTD5'; % where to find the raw data
-    PARAMS.raw_data_dir = 'J:\Williams_Lab\JC_Sleep\'; % raw data location.
-    PARAMS.inter_dir = 'J:\Williams_Lab\JC_Sleep_inter\'; % where to put intermediate files
-    PARAMS.stats_dir = 'J:\Williams_Lab\JC_Sleep_inter\Stats\'; % where to put the statistical output .txt
+    PARAMS.data_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData'; % where to find the raw data
+    PARAMS.raw_data_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData'; % raw data location.
+    PARAMS.csc_data_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo'; % where are the LFP files. If blank will look in the same folder as raw_data.
+    PARAMS.inter_dir = 'J:\Williams_Lab\JC_Sleep_inter'; % where to put intermediate files
+    PARAMS.stats_dir = 'J:\Williams_Lab\JC_Sleep_inter\Stats'; % where to put the statistical output .txt
     PARAMS.code_base_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; % where the codebase repo can be found
     PARAMS.code_CEH2_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2'; % where the multisite repo can be found
 end
@@ -180,112 +181,142 @@ clear d os
 %
 %     Subjects{iSess} = parts{id_idx};
 % end
-
-
-sess_list = MS_list_dir_names(PARAMS.raw_data_dir, {'HAT'}); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
-
-for iSess = sess_list
-    ms_dir = [PARAMS.raw_data_dir  iSess];
+Subjects = MS_list_dir_names(PARAMS.raw_data_dir);
+for iSub = Subjects
+    % set the dir for this subject
+    this_sub_dir = [PARAMS.raw_data_dir filesep iSub];
     
-    % find the csc files
-    TS_files = dir(fullfile(ms_dir, '**', '*.ncs'));
-    csc_dir = TS_files(1).folder;
+    % move to dir and get all sessions.  Can specify a specific string to
+    % find in the dir. ex: MS_list_dir_names(this_sub_dir, 'LTD')
+    cd(this_sub_dir)
+    sess_list = MS_list_dir_names(this_sub_dir, 'LTD'); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
     
-    % ms_dir = 'J:\Williams_Lab\JC_Sleep\11_23_2019_PV1060_HATD5';
-    % csc_dir = 'J:\Williams_Lab\JC_Sleep\11_23_2019_PV1060_HATD5\2019-11-23_10-10-12_PV1060_HATD5';
-    
-  
-    ms_resize_dir = [PARAMS.inter_dir parts{end}];  %just save the ms_resize struct back into the same place as the ms.mat file.
-    mkdir(ms_resize_dir);
-    %% run the quick PSD script to pick the best csc channels  (only needs to be run once)
-    % warning this is slow because of the high sampling rate in the csc files.
-    if isempty(dir([csc_dir filesep 'PSD_check*'])) %~exist([csc_dir filesep 'PSD_check.png'], 'file')
-        fprintf('<strong>MS_segment_data_workflow_sandbox</strong>: no PSD_check file found.  Running MS_Quick_psd...\n');
-        cd(csc_dir)
-        MS_Quick_psd
-        pos = get(gcf, 'position');
-        set(gcf, 'position', [0, 0, pos(3), pos(4)]);
-        pause(5)
-        close; clear pos; 
-    end
-    
-    %% hardcode dir
-    
-    ms_dir = 'J:\Williams_Lab\JC_Sleep\10_18_2019_PV1069_HATD5'
-    csc_dir = 'J:\Williams_Lab\JC_Sleep\10_18_2019_PV1069_HATD5\2019-10-18_10-02-44_PV1069_HATD5'
-    this_subject = 'PV1069'
-    ms_resize_dir = 'J:\Williams_Lab\JC_Sleep_inter\10_18_2019_PV1069_HATD'
-     mkdir(ms_resize_dir);
-     
-
-    %% Segment and select the data
-    
-    % get the session info. 
-    parts = strsplit(ms_dir,filesep);
-    parts = strsplit(parts{end}, '_');
-    id_idx = strfind(parts, 'PV');
-    id_idx = find(~cellfun('isempty', id_idx));
-    
-    this_subject = parts{id_idx};
-    
-    parts = strsplit(ms_dir,  filesep);
-    this_sess = parts{end};
-    
-    
-    cd(ms_dir)
-    cfg_seg = [];
-    % for loading the csc
-    if strcmp(this_subject, 'PV1060')
-        cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
-    elseif strcmp(this_subject, 'PV1069')
-        cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
-    else
-        cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
-    end
-    cfg_seg.csc.label = {'EMG', 'LFP'}; % custom naming for each channel.
-    cfg_seg.csc.desired_sampling_frequency = 2000;
-    
-    % flag known bad recording blocks. 
-    if strcmp(this_sess, '10_18_2019_PV1069_HATD5')
-        cfg_seg.bad_block = [19];
-    else
-        cfg_seg.bad_block = [];
-    end
-    
-    % filters
-    % delta
-    cfg_seg.filt_d.type = 'fdesign'; %the type of filter I want to use via filterlfp
-    cfg_seg.filt_d.f  = [1 5];
-    cfg_seg.filt_d.order = 8; %type filter order
-    % theta
-    cfg_seg.filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
-    cfg_seg.filt_t.f  = [6 11];
-    cfg_seg.filt_t.order = 3; %type filter order
-    
-    cfg_seg.TS_nlx_match = 1; % when evoked, this will resize the ms data to better match the NLX data if it is off by 1 sample.  [
-    
-    cfg.check.Ca_type = 'RawTraces'; % what to use for checking the LFP and Ca Trace
-    cfg.check.saveas = '.png'; % if this is specified it will save the figures in this format. Comment to bypass saving.
-    
-    
-    % for resizing
-    % cfg_seg.resize.segments = [1,2,3,4]; % which segments to process leave
-    % out to use all events.
-    cfg_seg.resize.resize = 1; % use the gui to select the data for resizing.
-    cfg_seg.resize.save_key = 'return'; % which key to use for saving the selected cutoffs
-    % cfg_seg.resize.redo_key = 'downarrow'; % which key for redoing the current cutoffs.
-    cfg_seg.resize.remove_key = 'backspace'; % which key to flag the current segment for removal.
-    cfg_seg.resize.spec.win_s = 2^10; % spectrogram window size.
-    cfg_seg.resize.spec.onverlap = cfg_seg.resize.spec.win_s / 2; % overlap
-    cfg_seg.resize.spec.freq = 0.5:0.1:80; % frequency range for spectrogram.
-    cfg_seg.resize.spec.lfp_chan = 2; % which channel to use for the spectrogram.
-    
-%     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',parts{end});
-
-    % run the actual segmentation workflow
-    MS_Segment_raw(cfg_seg, csc_dir, ms_dir, ms_resize_dir);
-    
-%     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> complete.\n',parts{end});
-
-    
-end
+    for iSess = sess_list
+        ms_dir = [PARAMS.raw_data_dir filesep iSub filesep iSess];
+        
+%         if isempty(PARAMS.csc_data_dir)
+%             csc_dir = ms_dir;
+%         end
+        
+        % crazy line to convert between time formats. 
+        ms_date = datestr(datenum(strrep(iSess(1:(strfind(iSess, '2019')+3)),'_', '/'), 'MM/dd/yyyy'), 'yyyy-MM-dd');
+       
+        [csc_dir, csc_dir_fold] = MS_list_dir_names(PARAMS.csc_data_dir, ms_date);
+        if ~isempty(csc_dir) && length(csc_dir) ==1
+            fprintf('<strong>%s</strong>: found csc folder at: <strong>%s</strong>\n','MS_segment_data_workflow_sandbox', csc_dir{1});
+            csc_dir = [csc_dir_fold{1} filesep csc_dir{1}];
+        elseif ~isempty(csc_dir) && length(csc_dir) >1
+            fprintf('<strong>%s</strong>: Too many CSC folders found\n','MS_segment_data_workflow_sandbox', csc_dir{1});
+            for ii = 1:length(csc_dir)
+                fprintf('<strong>%s</strong>: found csc folder at: <strong>%s</strong>\n','MS_segment_data_workflow_sandbox', csc_dir{ii});
+            end
+        else
+            error('No csc folder found.','MS_segment_data_workflow_sandbox');
+        end
+        % find the csc files
+        % find the matching folder. 
+        
+        
+        
+%         TS_files = dir(fullfile(, '**', '*.ncs'));
+%         csc_dir = TS_files(1).folder;
+        
+        % ms_dir = 'J:\Williams_Lab\JC_Sleep\11_23_2019_PV1060_HATD5';
+        % csc_dir = 'J:\Williams_Lab\JC_Sleep\11_23_2019_PV1060_HATD5\2019-11-23_10-10-12_PV1060_HATD5';
+        
+        
+        ms_resize_dir = [PARAMS.inter_dir  iSub filesep iSess];  %just save the ms_resize struct back into the same place as the ms.mat file.
+        mkdir(ms_resize_dir);
+        %% run the quick PSD script to pick the best csc channels  (only needs to be run once)
+        % warning this is slow because of the high sampling rate in the csc files.
+        if isempty(dir([csc_dir filesep 'PSD_check*'])) %~exist([csc_dir filesep 'PSD_check.png'], 'file')
+            fprintf('<strong>MS_segment_data_workflow_sandbox</strong>: no PSD_check file found.  Running MS_Quick_psd...\n');
+            cd(csc_dir)
+            MS_Quick_psd
+            pos = get(gcf, 'position');
+            set(gcf, 'position', [0, 0, pos(3), pos(4)]);
+            pause(5)
+            close; clear pos;
+        end
+        
+        %% hardcode dir
+        
+        ms_dir = 'J:\Williams_Lab\JC_Sleep\10_18_2019_PV1069_HATD5';
+        csc_dir = 'J:\Williams_Lab\JC_Sleep\10_18_2019_PV1069_HATD5\2019-10-18_10-02-44_PV1069_HATD5';
+        ms_resize_dir = 'J:\Williams_Lab\JC_Sleep_inter\10_18_2019_PV1069_HATD';
+        mkdir(ms_resize_dir);
+        
+        
+        %% Segment and select the data
+        
+        % get the session info.
+        parts = strsplit(ms_dir,filesep);
+        parts = strsplit(parts{end}, '_');
+        id_idx = strfind(parts, 'PV');
+        id_idx = find(~cellfun('isempty', id_idx));
+        
+        this_subject = parts{id_idx};
+        
+        parts = strsplit(ms_dir,  filesep);
+        this_sess = parts{end};
+        
+        
+        cd(ms_dir)
+        cfg_seg = [];
+        % for loading the csc
+        if strcmp(this_subject, 'PV1060')
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+        elseif strcmp(this_subject, 'PV1069')
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+        else
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+        end
+        cfg_seg.csc.label = {'EMG', 'LFP'}; % custom naming for each channel.
+        cfg_seg.csc.desired_sampling_frequency = 2000;
+        
+        % flag known bad recording blocks.
+        if strcmp(this_sess, '10_18_2019_PV1069_HATD5')
+            cfg_seg.bad_block = 19;% This index is based on the number of recording blocks in the NLX evt file.
+            cfg_seg.bad_block_name = {'H15_M37_S21_REmove_withoutLFP'};% what is the name of the unwanted recording block folder.
+        else
+            cfg_seg.bad_block = [];
+            cfg_seg.bad_block_name = {};
+        end
+        
+        % filters
+        % delta
+        cfg_seg.filt_d.type = 'fdesign'; %the type of filter I want to use via filterlfp
+        cfg_seg.filt_d.f  = [1 5];
+        cfg_seg.filt_d.order = 8; %type filter order
+        % theta
+        cfg_seg.filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
+        cfg_seg.filt_t.f  = [6 11];
+        cfg_seg.filt_t.order = 3; %type filter order
+        
+        cfg_seg.TS_nlx_match = 1; % when evoked, this will resize the ms data to better match the NLX data if it is off by 1 sample.  [
+        
+        cfg.check.Ca_type = 'RawTraces'; % what to use for checking the LFP and Ca Trace
+        cfg.check.saveas = '.png'; % if this is specified it will save the figures in this format. Comment to bypass saving.
+        
+        
+        % for resizing
+        % cfg_seg.resize.segments = [1,2,3,4]; % which segments to process leave
+        % out to use all events.
+        cfg_seg.resize.resize = 1; % use the gui to select the data for resizing.
+        cfg_seg.resize.save_key = 'return'; % which key to use for saving the selected cutoffs
+        % cfg_seg.resize.redo_key = 'downarrow'; % which key for redoing the current cutoffs.
+        cfg_seg.resize.remove_key = 'backspace'; % which key to flag the current segment for removal.
+        cfg_seg.resize.spec.win_s = 2^10; % spectrogram window size.
+        cfg_seg.resize.spec.onverlap = cfg_seg.resize.spec.win_s / 2; % overlap
+        cfg_seg.resize.spec.freq = 0.5:0.1:80; % frequency range for spectrogram.
+        cfg_seg.resize.spec.lfp_chan = 2; % which channel to use for the spectrogram.
+        
+        %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',parts{end});
+        
+        % run the actual segmentation workflow
+        MS_Segment_raw(cfg_seg, csc_dir, ms_dir, ms_resize_dir);
+        
+        %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> complete.\n',parts{end});
+        
+    end % session
+end % subject
