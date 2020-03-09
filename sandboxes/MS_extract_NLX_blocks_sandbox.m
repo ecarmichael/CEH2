@@ -54,7 +54,7 @@ cfg = ProcessConfig2(cfg_def, cfg_in);
 
 if ~isempty(cfg.bad_block)
     for ii = cfg.bad_block
-        fprintf('<strong>%s</strong>: block: <strong>%d</strong> flagged for skipping.  Only using first pass detection no, gitter\n', mfilename, ii)
+        fprintf('<strong>%s</strong>: block: <strong>%d</strong> flagged for skipping.  Only using first pass detection, no gitter correction. Removed prior to resizing.\n', mfilename,ii)
     end
 end
 %% identify peaks in  diff(evt.t{5}) marking transitions in the camera TTLs
@@ -167,11 +167,11 @@ if cfg.gitter ==1
             temp_evt = restrict(evt, evt.t{cfg.t_chan}(idx(iRec)), evt.t{cfg.t_chan}(idx(iRec+1)+high_val));
             idx_high =find(diff(temp_evt.t{cfg.t_chan}(end-20:end)) > mode(diff(temp_evt.t{cfg.t_chan}))*cfg.gitter_threshol);
             
-            figure(11)
-            plot(diff(temp_evt.t{cfg.t_chan}))
-            ylim([0 mode(diff(temp_evt.t{cfg.t_chan}))+1])
-            pause(.5)
-            close
+%             figure(11)
+%             plot(diff(temp_evt.t{cfg.t_chan}))
+%             ylim([0 mode(diff(temp_evt.t{cfg.t_chan}))+1])
+%             pause(.5)
+%             close
         end
         
         
