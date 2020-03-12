@@ -190,7 +190,8 @@ for iSub = Subjects
     % find in the dir. ex: MS_list_dir_names(this_sub_dir, 'LTD')
     cd(this_sub_dir)
     sess_list = MS_list_dir_names(this_sub_dir, 'LTD'); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
-    
+%     sess_list = MS_list_dir_names(this_sub_dir); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
+
     for iSess = sess_list
         ms_dir = [PARAMS.raw_data_dir filesep iSub filesep iSess];
         
@@ -201,6 +202,7 @@ for iSub = Subjects
         % crazy line to convert between time formats. 
         ms_date = datestr(datenum(strrep(iSess(1:(strfind(iSess, '2019')+3)),'_', '/'), 'MM/dd/yyyy'), 'yyyy-MM-dd');
        
+        % TODO add in double check using subject and LTD/HAT
         [csc_dir, csc_dir_fold] = MS_list_dir_names(PARAMS.csc_data_dir, ms_date);
         if ~isempty(csc_dir) && length(csc_dir) ==1
             fprintf('<strong>%s</strong>: found csc folder at: <strong>%s</strong>\n','MS_segment_data_workflow_sandbox', csc_dir{1});
@@ -225,7 +227,7 @@ for iSub = Subjects
         % csc_dir = 'J:\Williams_Lab\JC_Sleep\11_23_2019_PV1060_HATD5\2019-11-23_10-10-12_PV1060_HATD5';
         
         
-        ms_resize_dir = [PARAMS.inter_dir  iSub filesep iSess];  %just save the ms_resize struct back into the same place as the ms.mat file.
+        ms_resize_dir = [PARAMS.inter_dir filesep iSub filesep iSess];  %just save the ms_resize struct back into the same place as the ms.mat file.
         mkdir(ms_resize_dir);
         %% run the quick PSD script to pick the best csc channels  (only needs to be run once)
         % warning this is slow because of the high sampling rate in the csc files.
@@ -240,33 +242,39 @@ for iSub = Subjects
         end
         
         %% hardcode dir
+
+
+        ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\7_19_2019_PV1060_LTD5';
+        csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-07-19_10-27-46_PV1060_LTD5';
         
-        ms_dir = 'J:\Williams_Lab\JC_Sleep\10_18_2019_PV1069_HATD5';
-        csc_dir = 'J:\Williams_Lab\JC_Sleep\10_18_2019_PV1069_HATD5\2019-10-18_10-02-44_PV1069_HATD5';
-        ms_resize_dir = 'J:\Williams_Lab\JC_Sleep_inter\10_18_2019_PV1069_HATD';
+        iSess = '7_19_2019_PV1060_LTD5';
+        iSub='PV1060';
+        ms_resize_dir = ['J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\' iSub filesep  '7_19_2019_PV1060_LTD5'];
         mkdir(ms_resize_dir);
         
         
         %% Segment and select the data
         
-        % get the session info.
-        parts = strsplit(ms_dir,filesep);
-        parts = strsplit(parts{end}, '_');
-        id_idx = strfind(parts, 'PV');
-        id_idx = find(~cellfun('isempty', id_idx));
-        
-        this_subject = parts{id_idx};
-        
-        parts = strsplit(ms_dir,  filesep);
-        this_sess = parts{end};
+%         % get the session info.
+%         parts = strsplit(ms_dir,filesep);
+%         parts = strsplit(parts{end}, '_');
+% %         id_idx = strfind(parts, 'PV');
+% %         id_idx = find(~cellfun('isempty', id_idx));
+% %         
+% %         this_subject = parts{id_idx};
+%         
+%         parts = strsplit(ms_dir,  filesep);
+%         this_sess = parts{end};
         
         
         cd(ms_dir)
         cfg_seg = [];
         % for loading the csc
-        if strcmp(this_subject, 'PV1060')
+        if strcmpi(iSub, 'PV1060')
             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
-        elseif strcmp(this_subject, 'PV1069')
+        elseif strcmpi(iSub, 'PV1069')
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+        elseif strcmpi(iSub, 'PV1043')
             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         else
             cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
@@ -275,7 +283,7 @@ for iSub = Subjects
         cfg_seg.csc.desired_sampling_frequency = 2000;
         
         % flag known bad recording blocks.
-        if strcmp(this_sess, '10_18_2019_PV1069_HATD5')
+        if strcmp(iSess, '10_18_2019_PV1069_HATD5')
             cfg_seg.bad_block = 19;% This index is based on the number of recording blocks in the NLX evt file.
             cfg_seg.bad_block_name = {'H15_M37_S21_REmove_withoutLFP'};% what is the name of the unwanted recording block folder.
         else

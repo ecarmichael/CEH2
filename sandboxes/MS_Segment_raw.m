@@ -446,6 +446,7 @@ MS_plot_spec_resize(cfg.resize, ms_seg_resize);
 
 %% binarize the traces in each segment and save each one back to the same folder name as the original Ms TS file.
 % set up empty variables for each PRE v POST and REM v SW
+
 all_binary_pre = []; all_binary_post= [];
 all_RawTraces_pre = []; all_RawTraces_post = [];
 all_detrendRaw_pre = []; all_detrendRaw_post = [];
@@ -463,18 +464,19 @@ pre_SW_idx = []; post_SW_idx = [];
 
 
 for iSeg = 1:length(ms_seg_resize.RawTraces)
+    ms_seg = []; % cleared so that we can use this var name for saving. 
     
     keep_idx = 1:size(ms_seg_resize.RawTraces,1);
     keep_idx =keep_idx(find((keep_idx ~= iSeg)));
     
     cfg_rem = [];
-    this_ms = MS_remove_data_sandbox(cfg_rem, ms_seg_resize, keep_idx);
+    ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg_resize, keep_idx);
     
-    this_ms = MS_de_cell(this_ms);
+    ms_seg = MS_de_cell(ms_seg);
     
     % binarize the trace
     
-    this_ms = msExtractBinary_detrendTraces(this_ms);
+    ms_seg = msExtractBinary_detrendTraces(ms_seg);
     
     % check for inactive cells and remove from ms.SFPs just using sum of
     % binary > 0; 
@@ -482,56 +484,56 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
     cfg_SFP = [];
     cfg_SFP.fnc = '=='; 
     cfg_SFP.remove_val = 0; 
-    this_ms = MS_update_SFP(cfg_SFP, this_ms);
+    ms_seg = MS_update_SFP(cfg_SFP, ms_seg);
     
     this_dir = [];
     this_dir = [ms_resize_dir filesep ms_seg_resize.file_names{iSeg}];
     fprintf('<strong>%s</strong>: saving resized ms struct back to %s...\n', mfilename, this_dir)
     mkdir(this_dir)
-    save([this_dir filesep 'ms_seg_resize_' ms_seg_resize.pre_post{iSeg} '_' ms_seg_resize.hypno_label{iSeg}], 'this_ms', '-v7.3');
+    save([this_dir filesep 'ms_seg_resize_' ms_seg_resize.pre_post{iSeg} '_' ms_seg_resize.hypno_label{iSeg}],'ms_seg', '-v7.3');
     
     % keep the index for the segment.
     if isempty(all_seg_idx)
-        all_seg_idx(iSeg) = length(this_ms.RawTraces);
+        all_seg_idx(iSeg) = length(ms_seg.RawTraces);
     else
-        all_seg_idx(iSeg) = length(this_ms.RawTraces) + all_seg_idx(iSeg -1);
+        all_seg_idx(iSeg) = length(ms_seg.RawTraces) + all_seg_idx(iSeg -1);
     end
     % cat the binary traces for pre V post, and REM v SW
     if strcmp(ms_seg_resize.pre_post{iSeg}, 'pre')
-        all_binary_pre = [all_binary_pre; this_ms.Binary];
-        all_RawTraces_pre = [all_RawTraces_pre; this_ms.RawTraces];
-        all_detrendRaw_pre = [all_detrendRaw_pre; this_ms.detrendRaw];
+        all_binary_pre = [all_binary_pre; ms_seg.Binary];
+        all_RawTraces_pre = [all_RawTraces_pre; ms_seg.RawTraces];
+        all_detrendRaw_pre = [all_detrendRaw_pre; ms_seg.detrendRaw];
         
         
         % break out REM and SW
         if strcmp(ms_seg_resize.hypno_label{iSeg}, 'REM')
-            all_binary_pre_REM = [all_binary_pre_REM; this_ms.Binary];
-            all_RawTraces_pre_REM = [all_RawTraces_pre_REM; this_ms.RawTraces];
-            all_detrendRaw_pre_REM = [all_detrendRaw_pre_REM; this_ms.detrendRaw];
+            all_binary_pre_REM = [all_binary_pre_REM; ms_seg.Binary];
+            all_RawTraces_pre_REM = [all_RawTraces_pre_REM; ms_seg.RawTraces];
+            all_detrendRaw_pre_REM = [all_detrendRaw_pre_REM; ms_seg.detrendRaw];
             pre_REM_idx = [pre_REM_idx, iSeg];
         elseif strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
-            all_binary_pre_SW = [all_binary_pre_SW; this_ms.Binary];
-            all_RawTraces_pre_SW = [all_RawTraces_pre_SW; this_ms.RawTraces];
-            all_detrendRaw_pre_SW = [all_detrendRaw_pre_SW; this_ms.detrendRaw];
+            all_binary_pre_SW = [all_binary_pre_SW; ms_seg.Binary];
+            all_RawTraces_pre_SW = [all_RawTraces_pre_SW; ms_seg.RawTraces];
+            all_detrendRaw_pre_SW = [all_detrendRaw_pre_SW; ms_seg.detrendRaw];
             pre_SW_idx = [pre_SW_idx, iSeg];
         end
         
     elseif strcmp(ms_seg_resize.pre_post{iSeg}, 'post')
-        all_binary_post = [all_binary_post; this_ms.Binary];
-        all_RawTraces_post = [all_RawTraces_post; this_ms.RawTraces];
-        all_detrendRaw_post = [all_detrendRaw_post; this_ms.detrendRaw];
+        all_binary_post = [all_binary_post; ms_seg.Binary];
+        all_RawTraces_post = [all_RawTraces_post; ms_seg.RawTraces];
+        all_detrendRaw_post = [all_detrendRaw_post; ms_seg.detrendRaw];
         
         % break out REM and SW
         if strcmp(ms_seg_resize.hypno_label{iSeg}, 'REM')
-            all_binary_post_REM = [all_binary_post_REM; this_ms.Binary];
-            all_RawTraces_post_REM = [all_RawTraces_post_REM; this_ms.RawTraces];
-            all_detrendRaw_post_REM = [all_detrendRaw_post_REM; this_ms.detrendRaw];
+            all_binary_post_REM = [all_binary_post_REM; ms_seg.Binary];
+            all_RawTraces_post_REM = [all_RawTraces_post_REM; ms_seg.RawTraces];
+            all_detrendRaw_post_REM = [all_detrendRaw_post_REM; ms_seg.detrendRaw];
             post_REM_idx = [post_REM_idx, iSeg];
             
         elseif strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
-            all_binary_post_SW = [all_binary_post_SW; this_ms.Binary];
-            all_RawTraces_post_SW = [all_RawTraces_post_SW; this_ms.RawTraces];
-            all_detrendRaw_post_SW = [all_detrendRaw_post_SW; this_ms.detrendRaw];
+            all_binary_post_SW = [all_binary_post_SW; ms_seg.Binary];
+            all_RawTraces_post_SW = [all_RawTraces_post_SW; ms_seg.RawTraces];
+            all_detrendRaw_post_SW = [all_detrendRaw_post_SW; ms_seg.detrendRaw];
             post_SW_idx = [post_SW_idx, iSeg];
             
         end
@@ -605,7 +607,7 @@ end
 vline(all_seg_idx(pre_REM_idx), {'r'});    
 vline(all_seg_idx(pre_SW_idx),{'g'})
 pause(5)
-if ~exist(ms_resize_dir, '7')
+if ~exist(ms_resize_dir)
     mkdir(ms_resize_dir);
 end
 saveas(gcf, [ms_resize_dir filesep 'cat_check'],'fig')
