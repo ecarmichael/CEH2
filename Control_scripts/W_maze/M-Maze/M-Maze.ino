@@ -86,16 +86,21 @@ void setup()
   pinMode(ledPin1, OUTPUT);
   pinMode(ledPin2, OUTPUT);
   pinMode(ledPinG, OUTPUT);
+  
   // valves
   pinMode(solenoidPin_R, OUTPUT); // Sets the pin as an output
   pinMode(solenoidPin_L, OUTPUT); // Sets the pin as an output
-  Serial.begin(38400);
+
+  //beams
   pinMode(beam_R, INPUT);
   pinMode(beam_CR, INPUT);
   //pinMode(beam_C, INPUT);
   pinMode(beam_CL, INPUT);
   pinMode(beam_L, INPUT);
+  
+  //buttons
   pinMode(Reset_button, INPUT);
+  
   // set reward ports
   pinMode(Port_R, INPUT);
   //pinMode(Port_C, INPUT);
@@ -103,6 +108,10 @@ void setup()
   pixels.begin(); // This initializes the NeoPixel library.
   pixels.clear();
   pixels.show();
+
+  //serial channels
+  Serial.begin(19200) // used for streaming information to the monitor
+  Log.begin(9600) // stream the maze state data to a .txt 
 }
 
 // the loop() methor runs over and over again,
@@ -350,7 +359,31 @@ void loop()
   }
 }
 
+
+// Counter output to serial and csv file.  (from C.D. csBehaviour.ino
+//void dataReport() {
+//  Serial.print("tData");
+//  Serial.print(',');
+//  Serial.print(loopCount);
+//  Serial.print(',');
+//  Serial.print(trialTime);
+//  Serial.print(',');
+//  Serial.print(stateTime);
+//  Serial.print(',');
+//  Serial.print(knownValues[0]); //state
+//  Serial.print(',');
+//  Serial.print(knownValues[8]);  //load cell
+//  Serial.print(',');
+//  Serial.print(pulseTrain_chanA[7]); // lick sensor
+//  Serial.print(',');
+//  Serial.print(encoderAngle);     //rotary encoder value
+//  Serial.print(',');
+//  Serial.println(scopeState);
+//}
+
 // custom functions
+
+//fire a valve
 void FireValve(int valve_pin, int duration)
 {
   digitalWrite(valve_pin, HIGH); // Switch Solenoid ON
@@ -358,3 +391,5 @@ void FireValve(int valve_pin, int duration)
   digitalWrite(valve_pin, LOW); // Switch Solenoid OFF
   Serial.println("Valve Fired");
 }
+
+//log a point in the Maze_data.csv
