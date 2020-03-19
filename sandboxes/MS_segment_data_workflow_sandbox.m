@@ -243,13 +243,14 @@ for iSub = Subjects
         
         %% hardcode dir
 
-
-        ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\7_19_2019_PV1060_LTD5';
-        csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-07-19_10-27-46_PV1060_LTD5';
+%         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\11_26_2019_PV1060_HATSwitch'; %needs recutting
+        ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1069\10_18_2019_PV1069_HATD5';
+        csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-10-18_10-02-44_PV1069_HATD5';
         
-        iSess = '7_19_2019_PV1060_LTD5';
-        iSub='PV1060';
-        ms_resize_dir = ['J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\' iSub filesep  '7_19_2019_PV1060_LTD5'];
+        iSess = '10_18_2019_PV1069_HATD5';
+       
+        iSub='PV1069';
+        ms_resize_dir = ['J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\' iSub filesep  '10_18_2019_PV1069_HATD5'];
         mkdir(ms_resize_dir);
         
         
@@ -286,8 +287,11 @@ for iSub = Subjects
         if strcmp(iSess, '10_18_2019_PV1069_HATD5')
             cfg_seg.bad_block = 19;% This index is based on the number of recording blocks in the NLX evt file.
             cfg_seg.bad_block_name = {'H15_M37_S21_REmove_withoutLFP'};% what is the name of the unwanted recording block folder.
+        elseif strcmp(iSess, '10_22_2019_PV1069_HATSwitch')
+            cfg_seg.bad_block = [12 16];% This index is based on the number of recording blocks in the NLX evt file.
+            cfg_seg.bad_block_name = {'H14_M15_S22_remove', 'H14_M54_S54_remove'};% what is the name of the unwanted recording block folder.
         else
-            cfg_seg.bad_block = [];
+            cfg_seg.bad_block = [] ;
             cfg_seg.bad_block_name = {};
         end
         
