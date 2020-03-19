@@ -161,10 +161,13 @@ csc = MS_LoadCSC(cfg.csc); % need to comment out ExpKeys lines in LoadCSC
 nlx_evts.t{cfg.evt.t_chan} = sort([nlx_evts.t{cfg.evt.comb_chans(1)}, nlx_evts.t{cfg.evt.comb_chans(2)}]);
 nlx_evts.label{5} = ['merge TTls at ' num2str(cfg.evt.comb_chans(1)) ' and ' num2str(cfg.evt.comb_chans(2))];
 
-cfg.evt.bad_block =cfg.bad_block; %find(ismember(TS_name, cfg.bad_block)); % flag known bad blocks to avoid running gitter and for later removal. . 
+cfg.evt.bad_block =[];% cfg.bad_block; %find(ismember(TS_name, cfg.bad_block)); % flag known bad blocks to avoid running gitter and for later removal. . 
+cfg.evt.min_dist = 10;
+cfg.evt.start_search = 3; 
 [evt_blocks, ~, evt_duration] = MS_extract_NLX_blocks_sandbox(cfg.evt, nlx_evts);
 pause(1)
 close
+
 
 % compare to TS to ms
 fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
@@ -274,7 +277,12 @@ if length(evt_blocks) < length(TS)
     if ~isfield(ms_seg, 'removed')
         ms_seg.removed = {};
     end
+    
+    if ~isfield(ms_seg, 'removed_reason')
+        ms_seg.removed_reason = {};
+    end
     ms_seg.removed{end+1} = TS_name{odd_idx};
+    ms_seg.removed_reason{end+1} = 'Odd Index values. Likely Track Segment';
 
     % remove from TS and labeling structs
     TS(odd_idx) = [];
@@ -366,11 +374,11 @@ end
 %% update the ms structure with the NLX data
 cfg_rem = [];
 % cfg_rem.user_fields = {'BinaryTraces'};
-rm_idx = flag;
-ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, [rm_idx]);
+ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, flag);
 fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', flag);
 for iR = 1:length(flag)
     ms_seg.removed{end+1} = TS_name{flag(iR)};
+    ms_seg.removed_reason{end+1} = 'TS and NLX samples do not align';
 end
 % add in the NLX data
 
@@ -382,15 +390,15 @@ fprintf('\n<strong>MS_Segment_raw</strong>: NLX_csc appended\n');
 
 
 %% remove known bad blocks
-rm_idx = find(ismember(ms_seg.file_names, cfg.bad_block_name));
-if ~isempty(rm_idx)
-    ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, rm_idx);
-    fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', flag);
-    for iR = 1:length(rm_idx)
-        ms_seg.removed{end+1} = ms_seg.file_names{rm_idx(iR)};
-    end
-    % add
-end
+% rm_idx = find(ismember(ms_seg.file_names, cfg.bad_block_name));
+% if ~isempty(rm_idx)
+%     ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, rm_idx);
+%     fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', flag);
+%     for iR = 1:length(rm_idx)
+%         ms_seg.removed{end+1} = ms_seg.file_names{rm_idx(iR)};
+%     end
+%     % add
+% end
 %% get some emg stats for scaling
 emg_chan  = find(ismember(cfg.csc.label, 'EMG')); % used to get the emg range.
 % get the min and max emg range for the first 5mins of the recording. used for consistency.
@@ -399,9 +407,24 @@ cfg.resize.emg_range = [min(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFreq
 
 %% spectrogram of an episode w/ability to resize using gui
 
-[cut_vals, remove_flag] = MS_plot_spec_resize(cfg.resize, ms_seg);
+% to reload cut vals you will have to load the ms_resize from the inter
+% dir.  Then cut_vals = ms_seg_resize.resize.cfg.cutoffs  will give the
+% cut off values.  find(ismember(ms_seg.file_names, ms_seg_resize.removed))
+% which will give the indices of any removed sessions.  Once you have done
+% this run the cell above ^^ to clear cfg.resize
 
-flag = find(remove_flag == ms_seg.seg_id);  % makes appending easier ina few steps
+
+
+[cut_vals, remove_flag, remove_file] = MS_plot_spec_resize(cfg.resize, ms_seg);
+ % remove_flag uses the segment ID values.  
+ 
+ %save the cut_vals for quick mannual checks and reruns.  
+ save([ms_resize_dir filesep 'cut_vals.mat'], 'cut_vals',  '-v7.3'); 
+ % save the remove_flag
+  save([ms_resize_dir filesep 'remove_flag.mat'], 'remove_flag',  '-v7.3'); 
+
+ 
+% flag = find(ismember(ms_seg.seg_id,remove_flag));  % makes appending easier ina few steps
 %% resize the events [WIP: has trouble resizing across ms and NLX timescales]
 cfg_resize = [];
 cfg_resize.tvec_to_use = 'NLX_csc'; % could be 'time', or 'NLX_csc'
@@ -413,12 +436,14 @@ ms_seg_resize = MS_resize_segments(cfg_resize, ms_seg);
 %% remove segments that the user flagged in MS_plot_spec_resize
 cfg_rem = [];
 % cfg_rem.user_fields = {'BinaryTraces'};
-ms_seg_resize = MS_remove_data_sandbox(cfg_rem, ms_seg_resize, flag);
-fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', find(remove_flag));
+[ms_seg_resize, remove_fnames] =  MS_remove_data_sandbox(cfg_rem, ms_seg_resize, remove_flag);
 
-if ~isempty(flag)
-    for iR = 1:length(flag)
-        ms_seg.removed{end+1} = TS_name{flag(iR)};
+if ~isempty(remove_fnames)
+    for iR = 1:length(remove_fnames)
+        fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d <strong>%s</strong> was flagged for removal\n', iR, remove_fnames{iR});
+
+        ms_seg_resize.removed{end+1} = remove_fnames{iR};
+        ms_seg_resize.removed_reason{end+1} = 'User flagged for removal';
     end
 end
 
@@ -426,6 +451,7 @@ end
 
 %% spectrogram of an episode w/
 cfg.resize.resize = 0; % don't resize this time just plot.
+cfg.resize.fnames = ms_seg_resize.file_names; 
 MS_plot_spec_resize(cfg.resize, ms_seg_resize);
 
 
@@ -466,7 +492,7 @@ pre_SW_idx = []; post_SW_idx = [];
 for iSeg = 1:length(ms_seg_resize.RawTraces)
     ms_seg = []; % cleared so that we can use this var name for saving. 
     
-    keep_idx = 1:size(ms_seg_resize.RawTraces,1);
+    keep_idx = 1:size(ms_seg_resize.RawTraces,1); % actually this is a remove index
     keep_idx =keep_idx(find((keep_idx ~= iSeg)));
     
     cfg_rem = [];
