@@ -299,8 +299,8 @@ for iSub = Subjects
             cfg_seg.remove_ts = [];
             cfg_seg.remove_nlx_evt = [1]; 
         elseif strcmp(iSess, '7_17_2019_PV1060_LTD3')
-            cfg_seg.remove_ts = [5];
-            cfg_seg.remove_nlx_evt = [5,6]; 
+            cfg_seg.remove_ts = 5;
+            cfg_seg.remove_nlx_evt = []; 
         else
             cfg_seg.bad_block = [] ;
             cfg_seg.bad_block_name = {};
