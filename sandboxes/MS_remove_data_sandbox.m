@@ -1,4 +1,4 @@
-function ms_out = MS_remove_data_sandbox(cfg_in,ms_in, cells_to_remove)
+function [ms_out, removed_fnames] = MS_remove_data_sandbox(cfg_in,ms_in, cells_to_remove)
 %% MS_remove_data
 %  MS_remove_data will take in a miniscope data structure 'ms_in' and
 %  remove the specified cells while performing some checks to ensure that everything lines up.
@@ -46,6 +46,10 @@ keep_idx = segments_in(~ismember(segments_in, cells_to_remove));
 
 %% remove all cells in the data fields with pre-segmented data
 % fields_to_alter = {'time', 'RawTraces', 'FiltTraces', 'frameNum', 'vidNum'};
+removed_fnames = {}; 
+for iC = 1:length(cells_to_remove)
+   removed_fnames{iC} =  ms_in.file_names{cells_to_remove(iC)};
+end
 
 known_cell_num = size(ms_in.RawTraces,1); % should always be the correct number of cells for the number of segments.
 fields = fieldnames(ms_in);

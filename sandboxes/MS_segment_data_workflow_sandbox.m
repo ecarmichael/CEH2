@@ -244,13 +244,17 @@ for iSub = Subjects
         
         %% hardcode dir
 
+%         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\11_26_2019_PV1060_HATSwitch'; %needs recutting
+%         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1069\10_18_2019_PV1069_HATD5';
+        ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1043\6_13_2019_PV1043_LTD3';
 
-        ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\7_19_2019_PV1060_LTD5';
-        csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-07-19_10-27-46_PV1060_LTD5';
+         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-06-13_09-25-16_PV1043_LTD3'; 
+%         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-10-18_10-02-44_PV1069_HATD5';
         
-        iSess = '7_19_2019_PV1060_LTD5';
-        iSub='PV1060';
-        ms_resize_dir = ['J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\' iSub filesep  '7_19_2019_PV1060_LTD5'];
+        iSess = '6_13_2019_PV1043_LTD3';
+       
+        iSub='PV1043';
+        ms_resize_dir = ['J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\' iSub filesep  '6_13_2019_PV1043_LTD3'];
         mkdir(ms_resize_dir);
         
         
@@ -283,12 +287,23 @@ for iSub = Subjects
         cfg_seg.csc.label = {'EMG', 'LFP'}; % custom naming for each channel.
         cfg_seg.csc.desired_sampling_frequency = 2000;
         
-        % flag known bad recording blocks.
+        % flag known bad recording blocks.  [EC ToDo: make another variable
+        % that will remove specific TS or Evt blocks when there is a known
+        % discrepency between the MS files and the .nev stamps. 
         if strcmp(iSess, '10_18_2019_PV1069_HATD5')
             cfg_seg.bad_block = 19;% This index is based on the number of recording blocks in the NLX evt file.
             cfg_seg.bad_block_name = {'H15_M37_S21_REmove_withoutLFP'};% what is the name of the unwanted recording block folder.
+        elseif strcmp(iSess, '10_22_2019_PV1069_HATSwitch')
+            cfg_seg.bad_block = [12 16];% This index is based on the number of recording blocks in the NLX evt file.
+            cfg_seg.bad_block_name = {'H14_M15_S22_remove', 'H14_M54_S54_remove'};% what is the name of the unwanted recording block folder.
+        elseif strcmp(iSess, '6_13_2019_PV1043_LTD3')
+            cfg_seg.remove_ts = [];
+            cfg_seg.remove_nlx_evt = [1]; 
+        elseif strcmp(iSess, '7_17_2019_PV1060_LTD3')
+            cfg_seg.remove_ts = [5];
+            cfg_seg.remove_nlx_evt = [5,6]; 
         else
-            cfg_seg.bad_block = [];
+            cfg_seg.bad_block = [] ;
             cfg_seg.bad_block_name = {};
         end
         
