@@ -26,9 +26,9 @@ elseif strcmp(os, 'GLNXA64')
     PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
     
 else
-    PARAMS.data_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\PV1060\11_21_2019_PV1060_HATD3'; % where to find the raw data
+    PARAMS.data_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\PV1069\7_12_2019_PV1069_LTD5'; % where to find the raw data
     PARAMS.raw_data_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\'; % raw data location.
-    PARAMS.csc_data_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-11-21_09-23-36_PV1060_HATD3'; % where are the LFP files. If blank will look in the same folder as raw_data.
+    PARAMS.csc_data_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-07-12_09-24-26_PV1069_LTD5'; % where are the LFP files. If blank will look in the same folder as raw_data.
     PARAMS.inter_dir = 'J:\Williams_Lab\evt_temp\'; % where to put intermediate files
     PARAMS.stats_dir = 'J:\Williams_Lab\evt_temp\'; % where to put the statistical output .txt
     PARAMS.code_base_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; % where the codebase repo can be found
@@ -67,6 +67,7 @@ clear d os
 %% get a block from a recording? 
 cd(PARAMS.data_dir)
 load('ms_resize.mat')
+%%
 lfp_chan = 2;
 block_idx = 8 ; % sw block
 % block_idx = 9; % REM block
