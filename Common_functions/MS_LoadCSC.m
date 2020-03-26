@@ -84,7 +84,8 @@ for iF = 1:nFiles
     
     % load raw data
     [Timestamps, ~, SampleFrequencies, NumberOfValidSamples, Samples, Header] = Nlx2MatCSC(fname, [1 1 1 1 1], 1, 1, []);
-    
+%         [Timestamps, ~, SampleFrequencies, NumberOfValidSamples, Samples, Header] = Nlx2MatCSC_v3(fname, [1 1 1 1 1], 1, 1, []);
+
     % disabled channels cannot be loaded
     if Timestamps == 0
         error(['No csc data (disabled tetrode channel). Consider deleting ',fname,'.']);
