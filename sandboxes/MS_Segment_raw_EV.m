@@ -1,7 +1,9 @@
-function ms_seg_resize = MS_Segment_raw(cfg_in, csc_dir, ms_dir, ms_resize_dir)
-%% MS_Segment_raw: Load, segment, visualize, and resize miniscope ('ms') and neuralynx ('nlx') data.
+function ms_seg_resize = MS_Segment_raw_EV(cfg_in, csc_dir, ms_dir, raw_ms_dir, ms_resize_dir)
+%% MS_Segment_raw_EV: Load, segment, visualize, and resize miniscope ('ms') and neuralynx ('nlx') data.
 %
-%
+% NOTE: this verison is based on Eva Vico's data structure which splits the
+% pre- and post-task LFP recordings into discrete files. for continous LFP
+% recordings (for say Jisoo's data) use MS_Segmetn_raw. 
 %
 %    Inputs:
 %     - cfg_in: [struct] contains user configurations that wil overwrite
@@ -25,26 +27,28 @@ function ms_seg_resize = MS_Segment_raw(cfg_in, csc_dir, ms_dir, ms_resize_dir)
 %
 %
 %
-% EC 2020-02-18   initial version
+% EC 2020-03-30   initial version
 %
 %
 %% initialize
 
-global PARAMS
+% global PARAMS
 if nargin < 2
     error('Insufficient inputs.  Requires at least: cfg_in, csc_dir')
 elseif nargin ==2
     ms_dir = csc_dir;
     ms_resize_dir = ms_dir;
+    raw_ms_dir = ms_dir; 
     warning('No ''ms_dir'' OR ''ms_resize_dir'' specified, using csc_dir for both...')
 elseif nargin ==3
     ms_resize_dir = ms_dir;
     warning('No ''ms_resize_dir'' specified, using ms_dir...')
 end
 
-fprintf('\n<strong>MS_Segment_raw</strong>: csc_dir = %s \n', csc_dir);
-fprintf('\n                ms_dir = %s \n', ms_dir);
-fprintf('\n                ms_resize_dir = %s \n', ms_resize_dir);
+fprintf('\n<strong>%s</strong>: csc_dir = <strong>%s</strong> ',mfilename, csc_dir{1});
+fprintf('\n                ms_dir = <strong>%s</strong> ', ms_dir);
+fprintf('\n                raw_ms_dir = <strong>%s</strong> ', raw_ms_dir);
+fprintf('\n                ms_resize_dir = <strong>%s</strong> ', ms_resize_dir);
 
 
 % set the default configs.
@@ -86,10 +90,15 @@ if isfield(ms, 'Binary')
    fprintf('<strong>%s</strong>: Binary fubfield detected in loaded ms file.  removing...\n', mfilename); 
 end
 
+%% move to the raw ms data dir and get the timestamps and folder names
+cd(raw_ms_dir)
+
 % collect timestamps. 
-[TS, TS_name] = MS_collect_timestamps(ms_dir);
+[TS, TS_name] = MS_collect_timestamps(raw_ms_dir);
 
 % get the hypnogram labels
+cfg_hypno = [];
+cfg_hypno.label_to_find = {'SW', 'REM', 'lt'}; % labels to find.  lt is linear track for EV data. 
 [hypno_labels, time_labels] = MS_get_hypno_label([], TS_name);
 
 % compare to TS to ms
@@ -147,34 +156,53 @@ ms_seg = MS_segment_ms_sandbox(cfg_seg, ms);
 fprintf('\n<strong>MS_Segment_raw</strong>: miniscope data has been segmented into %d individual recording epochs\n method used: %s\n', length(ms_seg.time), ms_seg.format);
 
 %% Load nlx data
-cd(csc_dir)
-% load the Keys file with all of the experiment details.
-%(can be generated with the 'MS_Write_Keys' function)
-if exist('*Keys.m', 'file')
-    ExpKeys = MS_Load_Keys();
+for iCSC = 1:length(csc_dir)
+    cd(csc_dir{iCSC})
+    % load the Keys file with all of the experiment details.
+    %(can be generated with the 'MS_Write_Keys' function)
+    if exist('*Keys.m', 'file')
+        ExpKeys = MS_Load_Keys();
+    end
+    
+    % load events
+   this_nlx_evts = LoadEvents([]); % get '.nev' file in this dir.
+    
+    % load the NLX CSC data (using vandermeer lab code) [todo:replace with own]
+    
+    this_csc = MS_LoadCSC(cfg.csc); % need to comment out ExpKeys lines in LoadCSC
+    
+    
+    % extract NLX event epochs
+    
+    this_nlx_evts.t{end+1} = sort([this_nlx_evts.t{end-1}, this_nlx_evts.t{end}]);
+    this_nlx_evts.label{end+1} = ['merge TTls at ' num2str(length(this_nlx_evts)-1) ' and ' num2str(length(this_nlx_evts))];
+    
+    all_csc{iCSC} = this_csc;
+    all_nlx_evts{iCSC} = this_nlx_evts;
+    nSig{iCSC} = length(this_nlx_evts.label); 
+    clear this_csc this_nlx_evts
 end
 
-% load events
-nlx_evts = LoadEvents([]); % get '.nev' file in this dir.
+%% combine the lfp recordings
+nlx_evts = all_nlx_evts{1};
+for iT  = 1:length(nlx_evts.t)
+            these_t = [];
+    for iCSC = 1:length(csc_dir)
+        these_t = [these_t, all_nlx_evts{iCSC}.t{iT}];
 
-% load the NLX CSC data (using vandermeer lab code) [todo:replace with own]
+    end
+    nlx_evts.t{iT}= sort(these_t); 
+end
 
-csc = MS_LoadCSC(cfg.csc); % need to comment out ExpKeys lines in LoadCSC
-
-
-% extract NLX event epochs
-
-nlx_evts.t{end+1} = sort([nlx_evts.t{end-1}, nlx_evts.t{end}]);
-nlx_evts.label{end+1} = ['merge TTls at ' num2str(length(nlx_evts)-1) ' and ' num2str(length(nlx_evts))];
-
-cfg.evt.t_chan = length(nlx_evts.t); 
-cfg.evt.bad_block =[];% cfg.bad_block; %find(ismember(TS_name, cfg.bad_block)); % flag known bad blocks to avoid running gitter and for later removal. . 
-cfg.evt.min_dist = 10;
-cfg.evt.start_search = 3; 
-[evt_blocks, ~, evt_duration] = MS_extract_NLX_blocks_sandbox(cfg.evt, nlx_evts);
-pause(1)
-close
-
+%% find the nlx time blocks using the cat csc and evt files.  
+    cfg.evt.t_chan = length(nlx_evts.t);
+    cfg.evt.bad_block =[];% cfg.bad_block; %find(ismember(TS_name, cfg.bad_block)); % flag known bad blocks to avoid running gitter and for later removal. .
+    cfg.evt.min_dist = 10;
+    cfg.evt.start_search = 3;
+    [evt_blocks, ~, evt_duration] = MS_extract_NLX_blocks_sandbox(cfg.evt, nlx_evts);
+    pause(1)
+    close
+    
 
 % compare to TS to ms
 fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
@@ -342,6 +370,10 @@ if length(evt_blocks) < length(TS)
     
 end
 
+% print the length of each event
+for iT =1:min([length(TS) length(evt_blocks)])
+    fprintf('<strong>%s:</strong> block %d: TS: %0.3fs | nlx: %0.3fs\n', mfilename,iT, (TS{iT}.system_clock{1}(end) - TS{iT}.system_clock{1}(1))/1000, evt_blocks{iT}.t{end}(end) - evt_blocks{iT}.t{end}(1));
+end
 
 
 %% append the NLX data to the ms structure (be saure to use the same channel as the one used for extraction (cfg_evt_blocks.t_chan).
