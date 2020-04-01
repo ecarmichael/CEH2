@@ -1,4 +1,4 @@
-%% MS_segment_data_workflow_sandbox
+%% MS_segment_data_workflow_sandbox_EV
 %
 %   This workflow has been designed to allow users to specify a data
 %   directory for neuralynx recordings ('csc_dir') and miniscope data
@@ -92,11 +92,11 @@ elseif strcmp(os, 'GLNXA64')
     PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
     
 else
-    PARAMS.data_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData'; % where to find the raw data
-    PARAMS.raw_data_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData'; % raw data location.
-    PARAMS.csc_data_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo'; % where are the LFP files. If blank will look in the same folder as raw_data.
-    PARAMS.inter_dir = 'J:\Williams_Lab\JC_Sleep_inter'; % where to put intermediate files
-    PARAMS.stats_dir = 'J:\Williams_Lab\JC_Sleep_inter\Stats'; % where to put the statistical output .txt
+    PARAMS.data_dir = 'D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\Processed place'; % where to find the raw data
+    PARAMS.raw_data_dir = 'D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\RAW Calcium\LT&sleep'; % raw data location.
+    PARAMS.csc_data_dir = 'D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\RAW Calcium\LFP'; % where are the LFP files. If blank will look in the same folder as raw_data.
+    PARAMS.inter_dir = 'D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\RAW Calcium\Inter'; % where to put intermediate files
+    PARAMS.stats_dir = 'D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\RAW Calcium\Inter\Stats'; % where to put the statistical output .txt
     PARAMS.code_base_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; % where the codebase repo can be found
     PARAMS.code_CEH2_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2'; % where the multisite repo can be found
 end
@@ -147,94 +147,64 @@ clear d os
 %   You can loop over multiple sessions at this point if you like but this example is just for one session.
 %   to loop over I would make a sess_list = {'7_12_2019_PV1069_LTD5',
 %   7_13_2019_PV1069_LTD5',...} and then loop that as
-%
-%
-%
 
-% this_dir = dir(PARAMS.raw_data_dir);
-% sess_list = [];
-% for iSess = 1:length(this_dir)
-%     if strcmp(this_dir(iSess).name, '.') || strcmp(this_dir(iSess).name, '..')
-%         continue
-%     else
-%         sess_list{iSess} = this_dir(iSess).name;
-%     end
-% end
-%
-% sess_list = sess_list(~cellfun('isempty',sess_list));
-
-% date_vals = [];
-% for iSess = 1:length(sess_list)
-%     parts = strsplit(sess_list{iSess},'_');
-%     id_idx = strfind(parts, 'PV');
-%     id_idx = find(~cellfun('isempty', id_idx));
-%
-% %     for iP = 1:3
-% %         if iP ==1
-% %         date_vals = [date_vals parts{iP} ];
-% %         else
-% %             date_vals = [date_vals '-' parts{iP} ];
-% %         end
-% %     end
-%
-%
-%
-%     Subjects{iSess} = parts{id_idx};
-% end
-Subjects = MS_list_dir_names(PARAMS.raw_data_dir);
+%% loop through subjects/sessions.
+Subjects = MS_list_dir_names(PARAMS.data_dir, '5'); % get the subject names.  limited to dir that start with '5' since subjects are 535, 537, and 540
 for iSub = Subjects
     % set the dir for this subject
-    this_sub_dir = [PARAMS.raw_data_dir filesep iSub];
+    this_sub_dir = [PARAMS.data_dir filesep iSub];
     
     % move to dir and get all sessions.  Can specify a specific string to
     % find in the dir. ex: MS_list_dir_names(this_sub_dir, 'LTD')
     cd(this_sub_dir)
-    sess_list = MS_list_dir_names(this_sub_dir, 'LTD'); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
-%     sess_list = MS_list_dir_names(this_sub_dir); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
-
+    sess_list = MS_list_dir_names(this_sub_dir, iSub); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
+    %     sess_list = MS_list_dir_names(this_sub_dir); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
+    
+    
     for iSess = sess_list
-        ms_dir = [PARAMS.raw_data_dir filesep iSub filesep iSess];
         
-%         if isempty(PARAMS.csc_data_dir)
-%             csc_dir = ms_dir;
-%         end
+        % get the day id (EVA data struct)
+        parts = strsplit(iSess, 'day');
+        day_id = ['day' parts{end}(1)];
         
-        % crazy line to convert between time formats. 
+        % skip day0 for now
+        %         if strcmp(day_id, 'day0')
+        %             fprintf(
+        %             continue
+        %         end
+        
+        % Get the processed ms data dir for this subject/session
+        ms_dir = [PARAMS.data_dir filesep iSub filesep iSess];
+        
+        %Get the raw ms data dir for this subject/session
+        raw_ms_dir =[PARAMS.raw_data_dir filesep iSess(1:(strfind(iSess, '2019')+3)) '_' iSub day_id ];  % contains the raw video files along with timestamps.dat (only thing we really need).
+        
+        % crazy line to convert between time formats.
         ms_date = datestr(datenum(strrep(iSess(1:(strfind(iSess, '2019')+3)),'_', '/'), 'MM/dd/yyyy'), 'yyyy-MM-dd');
-       
+        
         % TODO add in double check using subject and LTD/HAT
-        [csc_dir, csc_dir_fold] = MS_list_dir_names(PARAMS.csc_data_dir, ms_date);
-        if ~isempty(csc_dir) && length(csc_dir) ==1
-            fprintf('<strong>%s</strong>: found csc folder at: <strong>%s</strong>\n','MS_segment_data_workflow_sandbox', csc_dir{1});
-            csc_dir = [csc_dir_fold{1} filesep csc_dir{1}];
-        elseif ~isempty(csc_dir) && length(csc_dir) >1
-            fprintf('<strong>%s</strong>: Too many CSC folders found\n','MS_segment_data_workflow_sandbox', csc_dir{1});
-            for ii = 1:length(csc_dir)
-                fprintf('<strong>%s</strong>: found csc folder at: <strong>%s</strong>\n','MS_segment_data_workflow_sandbox', csc_dir{ii});
+        [csc_dir_foud, csc_dir_fold] = MS_list_dir_names([PARAMS.csc_data_dir filesep day_id], ms_date);
+        if ~isempty(csc_dir_foud) && length(csc_dir_foud) ==1
+            fprintf('<strong>%s</strong>: found csc folder at: <strong>%s</strong>\n','MS_segment_data_workflow_sandbox', csc_dir_foud{1});
+            csc_dir = [csc_dir_fold{1} filesep csc_dir_foud{1}];
+        elseif ~isempty(csc_dir_foud) && length(csc_dir_foud) >1
+            fprintf('<strong>%s</strong>: Too many CSC folders found\n','MS_segment_data_workflow_sandbox');
+            for ii = 1:length(csc_dir_foud)
+                fprintf('<strong>%s</strong>: found csc folder at: <strong>%s</strong>\n','MS_segment_data_workflow_sandbox', csc_dir_foud{ii});
+                csc_dir{ii} = [csc_dir_fold{ii} filesep csc_dir_foud{ii}];
             end
         else
-            error('No csc folder found.','MS_segment_data_workflow_sandbox');
+            error('No csc folder found.');
         end
-        % find the csc files
-        % find the matching folder. 
-        
-        
-        
-%         TS_files = dir(fullfile(, '**', '*.ncs'));
-%         csc_dir = TS_files(1).folder;
-        
-        % ms_dir = 'J:\Williams_Lab\JC_Sleep\11_23_2019_PV1060_HATD5';
-        % csc_dir = 'J:\Williams_Lab\JC_Sleep\11_23_2019_PV1060_HATD5\2019-11-23_10-10-12_PV1060_HATD5';
-        
         
         ms_resize_dir = [PARAMS.inter_dir filesep iSub filesep iSess];  %just save the ms_resize struct back into the same place as the ms.mat file.
         mkdir(ms_resize_dir);
         %% run the quick PSD script to pick the best csc channels  (only needs to be run once)
         % warning this is slow because of the high sampling rate in the csc files.
-        if isempty(dir([csc_dir filesep 'PSD_check*'])) %~exist([csc_dir filesep 'PSD_check.png'], 'file')
+        if isempty(dir([csc_dir_fold{1} filesep  csc_dir{1} filesep 'PSD_check*'])) %~exist([csc_dir filesep 'PSD_check.png'], 'file')
             fprintf('<strong>MS_segment_data_workflow_sandbox</strong>: no PSD_check file found.  Running MS_Quick_psd...\n');
-            cd(csc_dir)
-            MS_Quick_psd
+            cd(csc_dir{1})
+            MS_Quick_psd({}, 'long', ms_resize_dir)
             pos = get(gcf, 'position');
             set(gcf, 'position', [0, 0, pos(3), pos(4)]);
             pause(5)
@@ -242,77 +212,77 @@ for iSub = Subjects
         end
         
         %% hardcode dir
-
-%         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\11_26_2019_PV1060_HATSwitch'; %needs recutting
-%         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1069\10_18_2019_PV1069_HATD5';
-        ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\7_17_2019_PV1060_LTD3';
-
-         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-07-17_09-35-59_PV1060_LTD3'; 
-%         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-10-18_10-02-44_PV1069_HATD5';
         
-        iSess = '7_17_2019_PV1060_LTD3';
-       
-        iSub='PV1060';
-       
-        ms_resize_dir = ['J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\' iSub filesep  '7_17_2019_PV1060_LTD3'];
-        mkdir(ms_resize_dir);
+        % %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\11_26_2019_PV1060_HATSwitch'; %needs recutting
+        % %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1069\10_18_2019_PV1069_HATD5';
+        %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\7_17_2019_PV1060_LTD3';
+        %
+        %          csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-07-17_09-35-59_PV1060_LTD3';
+        % %         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-10-18_10-02-44_PV1069_HATD5';
+        %
+        %         iSess = '7_17_2019_PV1060_LTD3';
+        %
+        %         iSub='PV1060';
+        %
+        %         ms_resize_dir = ['J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\' iSub filesep  '7_17_2019_PV1060_LTD3'];
+        %         mkdir(ms_resize_dir);
         
         
         %% Segment and select the data
         
-%         % get the session info.
-%         parts = strsplit(ms_dir,filesep);
-%         parts = strsplit(parts{end}, '_');
-% %         id_idx = strfind(parts, 'PV');
-% %         id_idx = find(~cellfun('isempty', id_idx));
-% %         
-% %         this_subject = parts{id_idx};
-%         
-%         parts = strsplit(ms_dir,  filesep);
-%         this_sess = parts{end};
+        %         % get the session info.
+        %         parts = strsplit(ms_dir,filesep);
+        %         parts = strsplit(parts{end}, '_');
+        % %         id_idx = strfind(parts, 'PV');
+        % %         id_idx = find(~cellfun('isempty', id_idx));
+        % %
+        % %         this_subject = parts{id_idx};
+        %
+        %         parts = strsplit(ms_dir,  filesep);
+        %         this_sess = parts{end};
         
         
         cd(ms_dir)
         cfg_seg = [];
         % for loading the csc
-        if strcmpi(iSub, 'PV1060')
+        if strcmpi(iSub, '540')
             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
-        elseif strcmpi(iSub, 'PV1069')
-            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
-        elseif strcmpi(iSub, 'PV1043')
-            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+            %         elseif strcmpi(iSub, 'PV1069')
+            %             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+            %         elseif strcmpi(iSub, 'PV1043')
+            %             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         else
-            cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         end
         cfg_seg.csc.label = {'EMG', 'LFP'}; % custom naming for each channel.
         cfg_seg.csc.desired_sampling_frequency = 2000;
         
         % flag known bad recording blocks.  [EC ToDo: make another variable
         % that will remove specific TS or Evt blocks when there is a known
-        % discrepency between the MS files and the .nev stamps. 
+        % discrepency between the MS files and the .nev stamps.
         if strcmp(iSess, '10_18_2019_PV1069_HATD5')
             cfg_seg.bad_block = 19;% This index is based on the number of recording blocks in the NLX evt file.
             cfg_seg.bad_block_name = {'H15_M37_S21_REmove_withoutLFP'};% what is the name of the unwanted recording block folder.
             cfg_seg.remove_ts=[]; % added by Jisoo
             cfg_seg.remove_nlx_evt=[]; % added by Jisoo
-        elseif strcmp(iSess, '10_22_2019_PV1069_HATSwitch')
-            cfg_seg.bad_block = [12 16];% This index is based on the number of recording blocks in the NLX evt file.
-            cfg_seg.bad_block_name = {'H14_M15_S22_remove', 'H14_M54_S54_remove'};% what is the name of the unwanted recording block folder.
-        elseif strcmp(iSess, '6_13_2019_PV1043_LTD3')
-            cfg_seg.remove_ts = [];
-            cfg_seg.remove_nlx_evt = [1]; 
-        elseif strcmp(iSess, '7_17_2019_PV1060_LTD3')
-            cfg_seg.remove_ts = [5];
-            cfg_seg.remove_nlx_evt = [5,6]; 
-        elseif strcmp(iSess, '7_10_2019_PV1069_LTD3') %added by Jisoo
-            cfg_seg.remove_ts = [];
-            cfg_seg.remove_nlx_evt = [1]; 
+            %         elseif strcmp(iSess, '10_22_2019_PV1069_HATSwitch')
+            %             cfg_seg.bad_block = [12 16];% This index is based on the number of recording blocks in the NLX evt file.
+            %             cfg_seg.bad_block_name = {'H14_M15_S22_remove', 'H14_M54_S54_remove'};% what is the name of the unwanted recording block folder.
+            %         elseif strcmp(iSess, '6_13_2019_PV1043_LTD3')
+            %             cfg_seg.remove_ts = [];
+            %             cfg_seg.remove_nlx_evt = [1];
+            %         elseif strcmp(iSess, '7_17_2019_PV1060_LTD3')
+            %             cfg_seg.remove_ts = [5];
+            %             cfg_seg.remove_nlx_evt = [5,6];
+            %         elseif strcmp(iSess, '7_10_2019_PV1069_LTD3') %added by Jisoo
+            %             cfg_seg.remove_ts = [];
+            %             cfg_seg.remove_nlx_evt = [1];
         else
             cfg_seg.bad_block = [] ;
             cfg_seg.bad_block_name = {};
             cfg_seg.remove_ts=[]; % added by Jisoo
             cfg_seg.remove_nlx_evt=[]; % added by Jisoo
-             
+            
         end
         
         % filters
@@ -346,9 +316,72 @@ for iSub = Subjects
         %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',parts{end});
         
         % run the actual segmentation workflow
-        MS_Segment_raw(cfg_seg, csc_dir, ms_dir, ms_resize_dir);
+        ms_seg_resize = MS_Segment_raw_EV(cfg_seg, csc_dir, ms_dir,raw_ms_dir, ms_resize_dir);
         
         %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> complete.\n',parts{end});
+        %% event detection
+        lfp_chan = 2;
         
-    end % session
-end % subject
+        for iB = 1:length(ms_seg_resize.RawTraces)
+            
+            csc = ms_seg_resize.NLX_csc{iB};
+            csc = MS_TSD_SelectChannel(csc, csc.label{lfp_chan});
+            % fprintf('Loading ms_seg block <strong>%s</strong>, using csc channel labeled: <strong>%s</strong>...\n', ms_seg_resize.file_names{block_idx}, csc.label{1})
+            %% run event detection for SWRs
+            
+            if contains(lower(ms_seg_resize.hypno_label{iB}), 'sw')
+                cfg_swr = [];
+                cfg_swr.check = 1; % plot checks.
+                cfg_swr.filt.type = 'butter'; %Cheby1 is sharper than butter
+                cfg_swr.filt.f  = [140 250]; % broad, could use 150-200?
+                cfg_swr.filt.order = 4; %type filter order (fine for this f range)
+                cfg_swr.filt.display_filter = 0; % use this to see the fvtool
+                
+                % detection
+                cfg_swr.threshold = 1;% in sd
+                cfg_swr.method = 'zscore';
+                cfg_swr.min_len = 0.04; % mouse SWR: 40ms from Vandecasteele et al. 2015
+                cfg_swr.merge_thr = 0.02; %merge events that are within 20ms of each other.
+                
+                % restrictions
+                cfg_swr.max_len = 0.1;
+                cfg_swr.nCycles = 3; % number of cycles
+                
+                ms_seg_resize.SWR_evts{iB} = MS_get_LFP_events_sandbox(cfg_swr, csc);
+                
+                cfg_plot.display = 'tsd';
+%                 PlotTSDfromIV(cfg_plot, SWR_evts, csc)
+%                 pause(2)
+                close all
+            else
+                ms_seg_resize.SWR_evts{iB} = iv; % leave an empty iv.
+            end
+            
+            %% gamma events (low)
+            if contains(lower(ms_seg_resize.hypno_label{iB}), 'rem')
+                
+                cfg_lg = [];
+                cfg_lg.check = 1; % plot checks.
+                % filters
+                cfg_lg.filt.type = 'cheby1'; %Cheby1 is sharper than butter
+                cfg_lg.filt.f  = [40 65]; % broad, could use 150-200?
+                cfg_lg.filt.order = 5; %type filter order (fine for this f range)
+                cfg_lg.filt.display_filter = 0; % use this to see the fvtool
+                
+                % detection
+                cfg_lg.threshold = 1;% in sd
+                cfg_lg.method = 'zscore';
+                cfg_lg.min_len = 0.025;
+                cfg_lg.merge_thr = 0;
+                % restrictions
+                cfg_lg.max_len = [];
+                cfg_lg.nCycles = 3; % number of cycles
+                
+                ms_seg_resize.low_gamma_evts{iB} = MS_get_LFP_events_sandbox(cfg_lg, csc);
+                close all
+            else
+                ms_seg_resize.low_gamma_evts{iB} = iv; % leave empty
+            end
+        end % end evt detection blocks.  
+        end % session
+    end % subject

@@ -51,6 +51,7 @@ cfg_def.low_val = 10; % how many samples back you want to start the gitter. Maki
 cfg_def.high_val = 10; % in samples. If this is too big it could overlap with subsequent events.
 cfg_def.bad_block =[]; % known recording blocks to skip.
 cfg_def.search_start = 3; 
+cfg_def.start_samples = 10; % if no peaks are detected in the first n samples set the first index as the start of block one.  
 cfg = ProcessConfig2(cfg_def, cfg_in);
 
 if ~isempty(cfg.bad_block)
@@ -62,8 +63,12 @@ end
 peak_threshold =  (mean(diff(evt.t{cfg.t_chan}) +cfg.peak_threshold*std(diff(evt.t{cfg.t_chan}))));
 [peaks, idx] = findpeaks(abs(diff(evt.t{cfg.t_chan})), 'minpeakheight',peak_threshold, 'minpeakdistance', cfg.min_dist);
 
+if (length(evt.t{cfg.t_chan}) - idx(end)) < cfg.start_samples
+    idx = idx(1:end-1); 
+end
+
 % add on to each end.
-if idx(1) > 5 % arbitrary at this point, but there should be a peak right at the beginging unless the nlx and the miniscope TTL are the same.
+if idx(1) > cfg.start_samples % arbitrary at this point, but there should be a peak right at the beginging unless the nlx and the miniscope TTL are the same.
     idx = [1 idx];
     peaks = [diff(evt.t{cfg.t_chan}(1:2)) peaks];
     disp('No jump in time at the start.  Making the start of the TTLs the start of the first recording block')
@@ -218,6 +223,11 @@ if cfg.gitter ==1
                     high_val = high_val -1;
                     temp_evt = restrict(evt, evt.t{cfg.t_chan}(idx(iRec)-low_val), evt.t{cfg.t_chan}(end+high_val));
                     idx_high =find(diff(temp_evt.t{cfg.t_chan}(end-20:end)) > mode(diff(temp_evt.t{cfg.t_chan}))*cfg.gitter_threshol);
+%                                          figure(11)
+%                                 plot(diff(temp_evt.t{cfg.t_chan}))
+%                                 ylim([0 mode(diff(temp_evt.t{cfg.t_chan}))+1])
+%                                 pause(.5)
+%                                 drawnow
                 end
                 
             else
@@ -287,7 +297,7 @@ if cfg.gitter ==1
         times_to_use(iRec,:) = [low_val, high_val]; % keep the good values for restrictions in the next cell.
         
         if iRec == length(idx)
-            temp_evt = restrict(evt, evt.t{cfg.t_chan}(idx(iRec)-low_val), evt.t{cfg.t_chan}(length(evt.t{cfg.t_chan}))+high_val);
+            temp_evt = restrict(evt, evt.t{cfg.t_chan}(idx(iRec)-low_val), evt.t{cfg.t_chan}(end+high_val));
         else
             temp_evt = restrict(evt, evt.t{cfg.t_chan}(idx(iRec)-low_val), evt.t{cfg.t_chan}(idx(iRec+1)+high_val));
         end
