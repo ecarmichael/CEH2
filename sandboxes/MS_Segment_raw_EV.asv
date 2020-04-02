@@ -46,9 +46,9 @@ elseif nargin ==3
 end
 
 fprintf('\n<strong>%s</strong>: csc_dir = <strong>%s</strong> ',mfilename, csc_dir{1});
-fprintf('\n                ms_dir = <strong>%s</strong> ', ms_dir);
-fprintf('\n                raw_ms_dir = <strong>%s</strong> ', raw_ms_dir);
-fprintf('\n                ms_resize_dir = <strong>%s</strong> ', ms_resize_dir);
+fprintf('\n                   ms_dir = <strong>%s</strong> ', ms_dir);
+fprintf('\n                   raw_ms_dir = <strong>%s</strong> ', raw_ms_dir);
+fprintf('\n                   ms_resize_dir = <strong>%s</strong> ', ms_resize_dir);
 
 
 % set the default configs.
@@ -98,8 +98,8 @@ cd(raw_ms_dir)
 
 % get the hypnogram labels
 cfg_hypno = [];
-cfg_hypno.label_to_find = {'SW', 'REM', 'lt'}; % labels to find.  lt is linear track for EV data. 
-[hypno_labels, time_labels] = MS_get_hypno_label([], TS_name);
+cfg_hypno.label_to_find = {'SW', 'REM', 'lT'}; % labels to find.  lt is linear track for EV data. 
+[hypno_labels, time_labels] = MS_get_hypno_label(cfg_hypno, TS_name);
 
 % compare to TS to ms
 fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
@@ -183,7 +183,8 @@ for iCSC = 1:length(csc_dir)
     clear this_csc this_nlx_evts
 end
 
-%% combine the lfp recordings
+%% combine the lfp recordings and events (*.nev) 
+% combine the events
 nlx_evts = all_nlx_evts{1};
 for iT  = 1:length(nlx_evts.t)
             these_t = [];
@@ -193,6 +194,9 @@ for iT  = 1:length(nlx_evts.t)
     end
     nlx_evts.t{iT}= sort(these_t); 
 end
+
+%combine the CSCs
+csc = MS_append_tsd(all_csc); 
 
 %% find the nlx time blocks using the cat csc and evt files.  
     cfg.evt.t_chan = length(nlx_evts.t);
@@ -284,8 +288,6 @@ if ~isempty(cfg.remove_ts)
     fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', cfg.remove_ts(iT));
     end
 end
-% for PV1060 7_17_2019_PV1060_LTD3 we have to remove evt_blocks(5,6) and
-% TS(5)
 
 %% Remove NLX blocks that have been flagged by the user for removeal in cfg.remove_nlx_evt
 if ~isempty(cfg.remove_nlx_evt)
