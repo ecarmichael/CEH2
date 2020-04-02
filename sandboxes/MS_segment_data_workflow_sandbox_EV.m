@@ -319,14 +319,63 @@ for iSub = Subjects
         ms_seg_resize = MS_Segment_raw_EV(cfg_seg, csc_dir, ms_dir,raw_ms_dir, ms_resize_dir);
         
         %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> complete.\n',parts{end});
-        %% event detection
+
+        %% event detection using blocks.
         lfp_chan = 2;
         
         for iB = 1:length(ms_seg_resize.RawTraces)
             
             csc = ms_seg_resize.NLX_csc{iB};
             csc = MS_TSD_SelectChannel(csc, csc.label{lfp_chan});
-            % fprintf('Loading ms_seg block <strong>%s</strong>, using csc channel labeled: <strong>%s</strong>...\n', ms_seg_resize.file_names{block_idx}, csc.label{1})
+            fprintf('Loading ms_seg block <strong>%s</strong>, using csc channel labeled: <strong>%s</strong>...\n', ms_seg_resize.file_names{iB}, csc.label{1})
+
+           %% Spike Wave Discharges (SWDs)
+                if contains(lower(ms_seg_resize.hypno_label{iB}), 'rem')
+
+                cfg_swd = [];
+                cfg_swd.check = 1; % plot checks.
+                % filters
+                cfg_swd.filt.type = 'cheby1'; %Cheby1 is sharper than butter
+                cfg_swd.filt.f  = [240 750]; % based on EV suggestion
+                cfg_swd.filt.order = 4; %type filter order (fine for this f range)
+                cfg_swd.filt.display_filter = 0; % use this to see the fvtool
+                
+                % use kernel
+%                 cfg_swd.kernel.samples = 60; 
+%                 cfg_swd.kernel.sd = 20;
+                
+                
+                % artifact removal
+%                 cfg_swd.artif_det = [];  % toggle artifact removal.
+%                 cfg_swd.artif_det.method = 'zscore';
+%                 cfg_swd.artif_det.threshold = 5;
+%                 cfg_swd.artif_det.dcn = '>';
+                % cfg_swd.artif_det.minlen = 0.01;
+                
+                % detection
+                cfg_swd.threshold = 3;% in sd
+                cfg_swd.method = 'zscore';
+                cfg_swd.min_len = 0;
+                cfg_swd.merge_thr = 0.01;
+                % restrictions
+%                 cfg_swd.max_len = [];
+%                 cfg_swd.max_len.operation = '<';
+%                 cfg_swd.max_len.threshold = .1;
+%                 cfg_swd.nCycles = 3; % number of cycles
+                
+                % variaence
+                cfg_swd.var = [];
+                cfg_swd.var.operation = '>';
+                cfg_swd.var.threshold = 0.05;
+
+                ms_seg_resize.SWD_evts{iB} = MS_get_LFP_events_sandbox(cfg_swd, csc);
+                close all
+                cfg_plot.display = 'tsd'; 
+                PlotTSDfromIV(cfg_plot, ms_seg_resize.SWD_evts{iB}, csc)
+           else
+                ms_seg_resize.SWD_evts{iB} = iv; % leave an empty iv.
+            end
+            
             %% run event detection for SWRs
             
             if contains(lower(ms_seg_resize.hypno_label{iB}), 'sw')
@@ -344,14 +393,21 @@ for iSub = Subjects
                 cfg_swr.merge_thr = 0.02; %merge events that are within 20ms of each other.
                 
                 % restrictions
-                cfg_swr.max_len = 0.1;
+                cfg_swr.max_len = [];
+                cfg_swr.max_len.operation = '<';
+                cfg_swr.max_len.threshold = .01;
                 cfg_swr.nCycles = 3; % number of cycles
+                
+                % variaence
+%                 cfg_swr.var = [];
+%                 cfg_swr.var.operation = '<';
+%                 cfg_swr.var.threshold = 1;
                 
                 ms_seg_resize.SWR_evts{iB} = MS_get_LFP_events_sandbox(cfg_swr, csc);
                 
                 cfg_plot.display = 'tsd';
-%                 PlotTSDfromIV(cfg_plot, SWR_evts, csc)
-%                 pause(2)
+                %                 PlotTSDfromIV(cfg_plot, SWR_evts, csc)
+                %                 pause(2)
                 close all
             else
                 ms_seg_resize.SWR_evts{iB} = iv; % leave an empty iv.
@@ -364,24 +420,47 @@ for iSub = Subjects
                 cfg_lg.check = 1; % plot checks.
                 % filters
                 cfg_lg.filt.type = 'cheby1'; %Cheby1 is sharper than butter
-                cfg_lg.filt.f  = [40 65]; % broad, could use 150-200?
+                cfg_lg.filt.f  = [30 90]; % broad, could use 150-200?
                 cfg_lg.filt.order = 5; %type filter order (fine for this f range)
                 cfg_lg.filt.display_filter = 0; % use this to see the fvtool
+                
+                % use kernel
+%                 cfg_lg.kernel.samples = 20;
+%                 cfg_lg.kernel.sd = 20;
+                
+                % artifact removal
+                cfg_lg.artif_det = [];  % toggle artifact removal.
+                cfg_lg.artif_det.method = 'zscore';
+                cfg_lg.artif_det.threshold = 2;
+                cfg_lg.artif_det.dcn = '>';
+                cfg_lg.artif_det.rm_len = [-.01 0.1]; 
+%                 cfg_swd.artif_det.minlen = 0.01;
                 
                 % detection
                 cfg_lg.threshold = 1;% in sd
                 cfg_lg.method = 'zscore';
-                cfg_lg.min_len = 0.025;
-                cfg_lg.merge_thr = 0;
+                cfg_lg.min_len = 0.015;
+                cfg_lg.merge_thr = 0.025;
                 % restrictions
                 cfg_lg.max_len = [];
-                cfg_lg.nCycles = 3; % number of cycles
+                cfg_lg.max_len.operation = '<';
+                cfg_lg.max_len.threshold = .1;
+                cfg_lg.nCycles = 2; % number of cycles
                 
-                ms_seg_resize.low_gamma_evts{iB} = MS_get_LFP_events_sandbox(cfg_lg, csc);
+                % variaence
+                cfg_lg.var = [];
+                cfg_lg.var.operation = '<';
+                cfg_lg.var.threshold = 1;
+                
+                lg_events = MS_get_LFP_events_sandbox(cfg_lg, csc);
+                ms_seg_resize.low_gamma_evts{iB} = DifferenceIV([],lg_events, ms_seg_resize.SWD_evts{iB}) ;
                 close all
             else
                 ms_seg_resize.low_gamma_evts{iB} = iv; % leave empty
             end
-        end % end evt detection blocks.  
-        end % session
-    end % subject
+        end % end evt detection blocks.
+        % save the ms_seg_resize over the one prior to event detection. 
+       save([ms_resize_dir filesep 'ms_resize.mat'], 'ms_seg_resize', '-v7.3')
+
+    end % session
+end % subject
