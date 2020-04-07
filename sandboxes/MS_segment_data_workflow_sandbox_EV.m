@@ -149,7 +149,7 @@ clear d os
 %   7_13_2019_PV1069_LTD5',...} and then loop that as
 
 %% loop through subjects/sessions.
-Subjects = MS_list_dir_names(PARAMS.data_dir, '5'); % get the subject names.  limited to dir that start with '5' since subjects are 535, 537, and 540
+Subjects = MS_list_dir_names_any(PARAMS.data_dir, {'5'}); % get the subject names.  limited to dir that start with '5' since subjects are 535, 537, and 540
 for iSub = Subjects
     % set the dir for this subject
     this_sub_dir = [PARAMS.data_dir filesep iSub];
@@ -157,21 +157,20 @@ for iSub = Subjects
     % move to dir and get all sessions.  Can specify a specific string to
     % find in the dir. ex: MS_list_dir_names(this_sub_dir, 'LTD')
     cd(this_sub_dir)
-    sess_list = MS_list_dir_names(this_sub_dir, iSub); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
+    sess_list = MS_list_dir_names_any(this_sub_dir, {iSub}); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
     %     sess_list = MS_list_dir_names(this_sub_dir); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
     
     
     for iSess = sess_list
         
         % get the day id (EVA data struct)
-        parts = strsplit(iSess, 'day');
-        day_id = ['day' parts{end}(1)];
-        
-        % skip day0 for now
-        %         if strcmp(day_id, 'day0')
-        %             fprintf(
-        %             continue
-        %         end
+        if contains(iSess, 'base') %baseline need to have the base in the title while task sessions do not.
+            parts = strsplit(iSess, 'day');
+            day_id = ['day' parts{end}(1:6)];
+        else
+            parts = strsplit(iSess, 'day');
+            day_id = ['day' parts{end}(1)];
+        end
         
         % Get the processed ms data dir for this subject/session
         ms_dir = [PARAMS.data_dir filesep iSub filesep iSess];
@@ -182,16 +181,23 @@ for iSub = Subjects
         % crazy line to convert between time formats.
         ms_date = datestr(datenum(strrep(iSess(1:(strfind(iSess, '2019')+3)),'_', '/'), 'MM/dd/yyyy'), 'yyyy-MM-dd');
         
-        % TODO add in double check using subject and LTD/HAT
-        [csc_dir_foud, csc_dir_fold] = MS_list_dir_names([PARAMS.csc_data_dir filesep day_id], ms_date);
-        if ~isempty(csc_dir_foud) && length(csc_dir_foud) ==1
-            fprintf('<strong>%s</strong>: found csc folder at: <strong>%s</strong>\n','MS_segment_data_workflow_sandbox', csc_dir_foud{1});
-            csc_dir = [csc_dir_fold{1} filesep csc_dir_foud{1}];
-        elseif ~isempty(csc_dir_foud) && length(csc_dir_foud) >1
+        % find the right CSC dir.  use MS_list_dir_names for specific matches with
+        % multiple strings, or MS_list_dir_names_any for any dir names that contain
+        % one of the search strings.
+        if contains(iSess, 'base')
+            [csc_dir_found, csc_dir_fold] = MS_list_dir_names([PARAMS.csc_data_dir filesep day_id(1:4)], {ms_date, day_id});
+        else
+            [csc_dir_found, csc_dir_fold] = MS_list_dir_names([PARAMS.csc_data_dir filesep day_id(1:4)], ms_date);
+        end
+        
+        if ~isempty(csc_dir_found) && length(csc_dir_found) ==1
+            fprintf('<strong>%s</strong>: found csc folder at: <strong>%s</strong>\n','MS_segment_data_workflow_sandbox', csc_dir_found{1});
+            csc_dir{1} = [csc_dir_fold{1} filesep csc_dir_found{1}];
+        elseif ~isempty(csc_dir_found) && length(csc_dir_found) >1
             fprintf('<strong>%s</strong>: Too many CSC folders found\n','MS_segment_data_workflow_sandbox');
-            for ii = 1:length(csc_dir_foud)
-                fprintf('<strong>%s</strong>: found csc folder at: <strong>%s</strong>\n','MS_segment_data_workflow_sandbox', csc_dir_foud{ii});
-                csc_dir{ii} = [csc_dir_fold{ii} filesep csc_dir_foud{ii}];
+            for ii = 1:length(csc_dir_found)
+                fprintf('<strong>%s</strong>: found csc folder at: <strong>%s</strong>\n','MS_segment_data_workflow_sandbox', csc_dir_found{ii});
+                csc_dir{ii} = [csc_dir_fold{ii} filesep csc_dir_found{ii}];
             end
         else
             error('No csc folder found.');
@@ -211,15 +217,13 @@ for iSub = Subjects
             close; clear pos;
         end
         
-        %% hardcode dir
-        
-        % %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\11_26_2019_PV1060_HATSwitch'; %needs recutting
-        % %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1069\10_18_2019_PV1069_HATD5';
-        %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\7_17_2019_PV1060_LTD3';
+        %% hardcode dir (does not work the same ways as before,  
+
+        %       ms_dir = 'D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\Processed place\537\12_4_2019_537day0base1'
         %
-        %          csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-07-17_09-35-59_PV1060_LTD3';
-        % %         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-10-18_10-02-44_PV1069_HATD5';
-        %
+        %       raw_ms_dir = 'D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\RAW Calcium\LT&sleep\12_4_2019_537day0base1'
+        %       
+        %       csc_dir{1} = 
         %         iSess = '7_17_2019_PV1060_LTD3';
         %
         %         iSub='PV1060';
@@ -229,19 +233,6 @@ for iSub = Subjects
         
         
         %% Segment and select the data
-        
-        %         % get the session info.
-        %         parts = strsplit(ms_dir,filesep);
-        %         parts = strsplit(parts{end}, '_');
-        % %         id_idx = strfind(parts, 'PV');
-        % %         id_idx = find(~cellfun('isempty', id_idx));
-        % %
-        % %         this_subject = parts{id_idx};
-        %
-        %         parts = strsplit(ms_dir,  filesep);
-        %         this_sess = parts{end};
-        
-        
         cd(ms_dir)
         cfg_seg = [];
         % for loading the csc
@@ -251,6 +242,8 @@ for iSub = Subjects
             %             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
             %         elseif strcmpi(iSub, 'PV1043')
             %             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+        elseif strcmpi(iSub, '537')
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         else
             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         end
@@ -319,7 +312,7 @@ for iSub = Subjects
         ms_seg_resize = MS_Segment_raw_EV(cfg_seg, csc_dir, ms_dir,raw_ms_dir, ms_resize_dir);
         
         %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> complete.\n',parts{end});
-
+        
         %% event detection using blocks.
         lfp_chan = 2;
         
@@ -328,10 +321,10 @@ for iSub = Subjects
             csc = ms_seg_resize.NLX_csc{iB};
             csc = MS_TSD_SelectChannel(csc, csc.label{lfp_chan});
             fprintf('Loading ms_seg block <strong>%s</strong>, using csc channel labeled: <strong>%s</strong>...\n', ms_seg_resize.file_names{iB}, csc.label{1})
-
-           %% Spike Wave Discharges (SWDs)
-                if contains(lower(ms_seg_resize.hypno_label{iB}), 'rem')
-
+            
+            %% Spike Wave Discharges (SWDs)
+            if contains(lower(ms_seg_resize.hypno_label{iB}), 'rem')
+                
                 cfg_swd = [];
                 cfg_swd.check = 1; % plot checks.
                 % filters
@@ -341,15 +334,15 @@ for iSub = Subjects
                 cfg_swd.filt.display_filter = 0; % use this to see the fvtool
                 
                 % use kernel
-%                 cfg_swd.kernel.samples = 60; 
-%                 cfg_swd.kernel.sd = 20;
+                %                 cfg_swd.kernel.samples = 60;
+                %                 cfg_swd.kernel.sd = 20;
                 
                 
                 % artifact removal
-%                 cfg_swd.artif_det = [];  % toggle artifact removal.
-%                 cfg_swd.artif_det.method = 'zscore';
-%                 cfg_swd.artif_det.threshold = 5;
-%                 cfg_swd.artif_det.dcn = '>';
+                %                 cfg_swd.artif_det = [];  % toggle artifact removal.
+                %                 cfg_swd.artif_det.method = 'zscore';
+                %                 cfg_swd.artif_det.threshold = 5;
+                %                 cfg_swd.artif_det.dcn = '>';
                 % cfg_swd.artif_det.minlen = 0.01;
                 
                 % detection
@@ -358,21 +351,21 @@ for iSub = Subjects
                 cfg_swd.min_len = 0;
                 cfg_swd.merge_thr = 0.01;
                 % restrictions
-%                 cfg_swd.max_len = [];
-%                 cfg_swd.max_len.operation = '<';
-%                 cfg_swd.max_len.threshold = .1;
-%                 cfg_swd.nCycles = 3; % number of cycles
+                %                 cfg_swd.max_len = [];
+                %                 cfg_swd.max_len.operation = '<';
+                %                 cfg_swd.max_len.threshold = .1;
+                %                 cfg_swd.nCycles = 3; % number of cycles
                 
                 % variaence
                 cfg_swd.var = [];
                 cfg_swd.var.operation = '>';
                 cfg_swd.var.threshold = 0.05;
-
+                
                 ms_seg_resize.SWD_evts{iB} = MS_get_LFP_events_sandbox(cfg_swd, csc);
                 close all
-                cfg_plot.display = 'tsd'; 
+                cfg_plot.display = 'tsd';
                 PlotTSDfromIV(cfg_plot, ms_seg_resize.SWD_evts{iB}, csc)
-           else
+            else
                 ms_seg_resize.SWD_evts{iB} = iv; % leave an empty iv.
             end
             
@@ -399,9 +392,9 @@ for iSub = Subjects
                 cfg_swr.nCycles = 3; % number of cycles
                 
                 % variaence
-%                 cfg_swr.var = [];
-%                 cfg_swr.var.operation = '<';
-%                 cfg_swr.var.threshold = 1;
+                %                 cfg_swr.var = [];
+                %                 cfg_swr.var.operation = '<';
+                %                 cfg_swr.var.threshold = 1;
                 
                 ms_seg_resize.SWR_evts{iB} = MS_get_LFP_events_sandbox(cfg_swr, csc);
                 
@@ -425,16 +418,16 @@ for iSub = Subjects
                 cfg_lg.filt.display_filter = 0; % use this to see the fvtool
                 
                 % use kernel
-%                 cfg_lg.kernel.samples = 20;
-%                 cfg_lg.kernel.sd = 20;
+                %                 cfg_lg.kernel.samples = 20;
+                %                 cfg_lg.kernel.sd = 20;
                 
                 % artifact removal
                 cfg_lg.artif_det = [];  % toggle artifact removal.
                 cfg_lg.artif_det.method = 'zscore';
                 cfg_lg.artif_det.threshold = 2;
                 cfg_lg.artif_det.dcn = '>';
-                cfg_lg.artif_det.rm_len = [-.01 0.1]; 
-%                 cfg_swd.artif_det.minlen = 0.01;
+                cfg_lg.artif_det.rm_len = [-.01 0.1];
+                %                 cfg_swd.artif_det.minlen = 0.01;
                 
                 % detection
                 cfg_lg.threshold = 1;% in sd
@@ -459,8 +452,8 @@ for iSub = Subjects
                 ms_seg_resize.low_gamma_evts{iB} = iv; % leave empty
             end
         end % end evt detection blocks.
-        % save the ms_seg_resize over the one prior to event detection. 
-       save([ms_resize_dir filesep 'ms_resize.mat'], 'ms_seg_resize', '-v7.3')
-
+        % save the ms_seg_resize over the one prior to event detection.
+        save([ms_resize_dir filesep 'ms_resize.mat'], 'ms_seg_resize', '-v7.3')
+        
     end % session
 end % subject

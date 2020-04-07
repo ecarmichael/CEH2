@@ -308,7 +308,7 @@ for iSub = Subjects
             cfg_seg.remove_ts = [];
             cfg_seg.remove_nlx_evt = [1]; 
             elseif strcmp(iSess, '7_15_2019_PV1060_LTD1') %added by Jisoo
-            cfg_seg.remove_ts = [1,2,3,4,5,6,7,8,9]; %Event was not recorded at the beginning of the presleep
+            cfg_seg.remove_ts = [1,2,3,4,5,6,7,8,9]; %Event was not recorded at the beginning of the 
             cfg_seg.remove_nlx_evt = []; 
         else
             cfg_seg.bad_block = [] ;

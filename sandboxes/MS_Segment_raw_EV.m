@@ -98,7 +98,7 @@ cd(raw_ms_dir)
 
 % get the hypnogram labels
 cfg_hypno = [];
-cfg_hypno.label_to_find = {'SW', 'REM', 'lT'}; % labels to find.  lt is linear track for EV data. 
+cfg_hypno.label_to_find = {'SW', 'REM', 'SWREM', 'LT'}; % labels to find.  lt is linear track for EV data. 
 [hypno_labels, time_labels] = MS_get_hypno_label(cfg_hypno, TS_name);
 
 % compare to TS to ms
@@ -155,6 +155,18 @@ ms_seg = MS_segment_ms_sandbox(cfg_seg, ms);
 
 fprintf('\n<strong>MS_Segment_raw</strong>: miniscope data has been segmented into %d individual recording epochs\n method used: %s\n', length(ms_seg.time), ms_seg.format);
 
+
+%% if this is a baseline recording fill in the pre_post
+parts = strsplit(ms_dir, filesep); 
+if contains(parts{end}, 'base1')
+    for iC = length(TS):-1:1
+        ms_seg.pre_post{iC} = 'pre';
+    end
+elseif contains(parts{end}, 'base2')
+    for iC = length(TS):-1:1
+        ms_seg.pre_post{iC} = 'post';
+    end
+end
 %% Load nlx data
 for iCSC = 1:length(csc_dir)
     cd(csc_dir{iCSC})
@@ -456,6 +468,10 @@ cfg_rem = [];
 ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, flag);
 fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', flag);
 for iR = 1:length(flag)
+    if ~isfield(ms_seg, 'removed')
+        ms_seg.removed ={};
+        ms_seg.removed_reason = {};
+    end
     ms_seg.removed{end+1} = TS_name{flag(iR)};
     ms_seg.removed_reason{end+1} = 'TS and NLX samples do not align';
 end

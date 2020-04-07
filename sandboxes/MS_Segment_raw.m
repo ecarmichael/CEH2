@@ -658,9 +658,14 @@ hold on
 for ii = 1:10
     plot(all_binary_pre(:,ii)+ii);
 end
-vline(all_seg_idx(pre_REM_idx), {'r'});
-vline(all_seg_idx(pre_SW_idx),{'g'})
-
+% put in vertical lines for the start of REm or SW blocks, if they are
+% present. 
+if ~isempty(pre_REM_idx)
+    vline(all_seg_idx(pre_REM_idx), {'r'});
+end
+if ~isempty(pre_SW_idx)
+    vline(all_seg_idx(pre_SW_idx),{'g'});
+end
 subplot(3,1,2)
 title('RawTraces Pre cat: SW: green REM: red')
 hold on
