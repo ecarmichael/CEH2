@@ -509,7 +509,7 @@ cfg.resize = []; cfg.resize.emg_range = [min(csc.data(emg_chan,1:(300*csc.cfg.hd
 
 
 
-[cut_vals, remove_flag, remove_file] = MS_plot_spec_resize(cfg.resize, ms_seg);
+[cut_vals, remove_flag, remove_file, unclear_flag] = MS_plot_spec_resize(cfg.resize, ms_seg);
  % remove_flag uses the segment ID values.  
  remove_file'
  %save the cut_vals for quick mannual checks and reruns.  
@@ -541,7 +541,12 @@ if ~isempty(remove_fnames)
     end
 end
 
+%% reclassify unclear blocks
 
+for iU = 1:length(unclear_flag)
+    ms_seg_resize.pre_post{iU}
+
+end
 
 %% spectrogram of an episode w/
 cfg.resize.resize = 0; % don't resize this time just plot.

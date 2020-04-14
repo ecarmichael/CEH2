@@ -245,16 +245,16 @@ for iSub = Subjects
 
 %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\11_26_2019_PV1060_HATSwitch'; %needs recutting
 %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1069\10_18_2019_PV1069_HATD5';
-        ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\7_15_2019_PV1060_LTD1';
+        ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\11_15_2019_PV1060_Homecage_Sleep';
 
-         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-07-15_09-50-03_PV1060_LTD1'; 
+         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-11-15_10-12-49_PV1060_Homecagerecording'; 
 %         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-10-18_10-02-44_PV1069_HATD5';
         
-        iSess = '7_15_2019_PV1060_LTD1';
+        iSess = '11_15_2019_PV1060_Homecage_Sleep';
        
         iSub='PV1060';
        
-        ms_resize_dir = ['J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\' iSub filesep  '7_15_2019_PV1060_LTD1'];
+        ms_resize_dir = ['J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\' iSub filesep  '11_15_2019_PV1060_Homecage_Sleep'];
         mkdir(ms_resize_dir);
         
         
@@ -307,9 +307,12 @@ for iSub = Subjects
         elseif strcmp(iSess, '7_10_2019_PV1069_LTD3') %added by Jisoo
             cfg_seg.remove_ts = [];
             cfg_seg.remove_nlx_evt = [1]; 
-            elseif strcmp(iSess, '7_15_2019_PV1060_LTD1') %added by Jisoo
+        elseif strcmp(iSess, '7_15_2019_PV1060_LTD1') %added by Jisoo
             cfg_seg.remove_ts = [1,2,3,4,5,6,7,8,9]; %Event was not recorded at the beginning of the presleep
-            cfg_seg.remove_nlx_evt = []; 
+            cfg_seg.remove_nlx_evt = [];
+        elseif strcmp(iSess, '11_15_2019_PV1060_Homecage_Sleep') %added by Jisoo
+            cfg_seg.remove_ts = [1,2,3,4,5]; %Event was not recorded at the beginning of the presleep
+            cfg_seg.remove_nlx_evt = [];
         else
             cfg_seg.bad_block = [] ;
             cfg_seg.bad_block_name = {};

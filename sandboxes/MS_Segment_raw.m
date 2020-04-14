@@ -146,6 +146,14 @@ ms_seg = MS_segment_ms_sandbox(cfg_seg, ms);
 
 fprintf('\n<strong>MS_Segment_raw</strong>: miniscope data has been segmented into %d individual recording epochs\n method used: %s\n', length(ms_seg.time), ms_seg.format);
 
+%% put in a place holder for pre_post in the homecage recording. 
+
+parts = strsplit(ms_dir, filesep); 
+if contains(lower(parts{end}), 'homecage')
+    for iC = length(TS):-1:1
+        ms_seg.pre_post{iC} = 'pre';
+    end
+end
 %% Load nlx data
 cd(csc_dir)
 % load the Keys file with all of the experiment details.
@@ -422,6 +430,10 @@ cfg_rem = [];
 ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, flag);
 fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', flag);
 for iR = 1:length(flag)
+    if ~isfield(ms_seg, 'removed')
+        ms_seg.removed = {};
+        ms_seg.removed_reason = {};
+    end
     ms_seg.removed{end+1} = TS_name{flag(iR)};
     ms_seg.removed_reason{end+1} = 'TS and NLX samples do not align';
 end
@@ -516,7 +528,11 @@ MS_plot_spec_resize(cfg.resize, ms_seg_resize);
 
 %% binarize the traces in each segment and save each one back to the same folder name as the original Ms TS file.
 % set up empty variables for each PRE v POST and REM v SW
+%% if this is a baseline recording fill in the pre_post
 
+parts = strsplit(ms_dir, filesep); 
+
+ 
 all_binary_pre = []; all_binary_post= [];
 all_RawTraces_pre = []; all_RawTraces_post = [];
 all_detrendRaw_pre = []; all_detrendRaw_post = [];
@@ -560,7 +576,13 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
     this_dir = [ms_resize_dir filesep ms_seg_resize.file_names{iSeg}];
     fprintf('<strong>%s</strong>: saving resized ms struct back to %s...\n', mfilename, this_dir)
     mkdir(this_dir)
-    save([this_dir filesep 'ms_seg_resize_' ms_seg_resize.pre_post{iSeg} '_' ms_seg_resize.hypno_label{iSeg}],'ms_seg', '-v7.3');
+    % if this is a homecage do not use the 'pre' or post' lab.  
+    if ~contains(lower(parts{end}), 'homecage')
+         save([this_dir filesep 'ms_seg_resize_' ms_seg_resize.pre_post{iSeg} '_' ms_seg_resize.hypno_label{iSeg}],'ms_seg', '-v7.3');
+    else
+                 save([this_dir filesep 'ms_seg_resize_' ms_seg_resize.hypno_label{iSeg}],'ms_seg', '-v7.3');
+    end
+    
     
     % keep the index for the segment.
     if isempty(all_seg_idx)
@@ -646,6 +668,7 @@ save([ms_resize_dir filesep 'all_detrendRaw_pre_SW.mat'], 'all_detrendRaw_pre_SW
 save([ms_resize_dir filesep 'all_binary_post_SW.mat' ], 'all_binary_post_SW', '-v7.3');
 save([ms_resize_dir filesep 'all_RawTraces_post_SW.mat'], 'all_RawTraces_post_SW', '-v7.3');
 save([ms_resize_dir filesep 'all_detrendRaw_post_SW.mat'], 'all_detrendRaw_post_SW', '-v7.3');
+
 
 %% clean up and export the ms_seg_resize
 save([ms_resize_dir filesep 'ms_resize.mat'], 'ms_seg_resize', '-v7.3')
