@@ -1,4 +1,4 @@
-function [cut_vals, remove_flag, remove_file] = MS_plot_spec_resize(cfg_in, data_in)
+function [cut_vals, remove_flag, remove_file, unclear_flag] = MS_plot_spec_resize(cfg_in, data_in)
 %% MS_plot_spec_resize: plots a spectrogram of the raw LFP and the traces for all LFP channels for
 %   each segment in ms_seg.
 %
@@ -33,6 +33,7 @@ cfg_def.resize = 1; % use the gui to select the data for resizing.
 cfg_def.save_key = 'return'; % which key to use for saving the selected cutoffs
 % cfg_def.redo_key = 'downarrow'; % which key for redoing the current cutoffs.
 cfg_def.remove_key = 'backspace'; % which key to flag the current segment for removal.
+cfg_def.unclear_key = 'u'; % which key will classify the block as unclear. 
 cfg_def.spec.win_s = 2^10; % spectrogram window size.
 cfg_def.spec.onverlap = cfg_def.spec.win_s / 2; % overlap
 cfg_def.spec.freq = 10.5:0.1:80; % frequency range for spectrogram.
@@ -56,7 +57,7 @@ switch data_type
         error('I haven''t built this...')
         
     case 'other'
-        remove_flag = []; remove_file = []; 
+        remove_flag = []; remove_file = []; unclear_flag = []; 
         for iBlock  = cfg.segments % loop through segments.
             this_tvec = [];
             this_tvec = data_in.NLX_csc{iBlock}.tvec-data_in.NLX_csc{iBlock}.tvec(1);
@@ -155,6 +156,10 @@ switch data_type
                        break_out = 1; 
                        fprintf('\n<strong>TMS_plot_spec_resize:</strong> Segment #%s flagged for removal\n', data_in.file_names{iBlock})
                        
+                       elseif strcmp(key_hit, cfg.unclear_key)
+                        unclear_flag(end+1) = iBlock; 
+                        break_out = 1; 
+                       fprintf('\n<strong>TMS_plot_spec_resize:</strong> Segment #%s flagged as unclear\n', data_in.file_names{iBlock})
                     else
                         fprintf('\n Redo...\n')
 

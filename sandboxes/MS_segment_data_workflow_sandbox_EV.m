@@ -187,7 +187,7 @@ for iSub = Subjects
         if contains(iSess, 'base')
             [csc_dir_found, csc_dir_fold] = MS_list_dir_names([PARAMS.csc_data_dir filesep day_id(1:4)], {ms_date, day_id});
         else
-            [csc_dir_found, csc_dir_fold] = MS_list_dir_names([PARAMS.csc_data_dir filesep day_id(1:4)], ms_date);
+            [csc_dir_found, csc_dir_fold] = MS_list_dir_names_any([PARAMS.csc_data_dir filesep day_id(1:4)], ms_date);
         end
         
         if ~isempty(csc_dir_found) && length(csc_dir_found) ==1
@@ -244,6 +244,8 @@ for iSub = Subjects
             %             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         elseif strcmpi(iSub, '537')
             cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+        elseif strcmpi(iSub, '535')
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC5.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         else
             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         end
@@ -299,7 +301,7 @@ for iSub = Subjects
         % out to use all events.
         cfg_seg.resize.resize = 1; % use the gui to select the data for resizing.
         cfg_seg.resize.save_key = 'return'; % which key to use for saving the selected cutoffs
-        % cfg_seg.resize.redo_key = 'downarrow'; % which key for redoing the current cutoffs.
+        cfg_seg.resize.unclear_key = 'u'; % which key for redoing the current cutoffs.
         cfg_seg.resize.remove_key = 'backspace'; % which key to flag the current segment for removal.
         cfg_seg.resize.spec.win_s = 2^10; % spectrogram window size.
         cfg_seg.resize.spec.onverlap = cfg_seg.resize.spec.win_s / 2; % overlap

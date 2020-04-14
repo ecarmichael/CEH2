@@ -41,7 +41,9 @@ end
 this_dir = dir(dir_name);
 % switch between using the str_to_find
 if  ~isempty(str_to_find)
-    
+        if ischar(str_to_find) == 1
+        str_to_find = {str_to_find};
+    end
     % cycle through strings to find.
     for iStr = 1:length(str_to_find)
         for iF = 1:length(this_dir)
