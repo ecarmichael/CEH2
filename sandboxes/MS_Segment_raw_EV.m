@@ -527,6 +527,13 @@ cfg_resize.cutoffs = cut_vals; % should be [2 x nSegments] row 1 is start and ro
 
 ms_seg_resize = MS_resize_segments(cfg_resize, ms_seg);
 
+
+%% reclassify unclear blocks
+
+for iU = unclear_flag
+    ms_seg_resize.pre_post{iU} = 'unclear';
+end
+
 %% remove segments that the user flagged in MS_plot_spec_resize
 cfg_rem = [];
 % cfg_rem.user_fields = {'BinaryTraces'};
@@ -541,12 +548,6 @@ if ~isempty(remove_fnames)
     end
 end
 
-%% reclassify unclear blocks
-
-for iU = 1:length(unclear_flag)
-    ms_seg_resize.pre_post{iU}
-
-end
 
 %% spectrogram of an episode w/
 cfg.resize.resize = 0; % don't resize this time just plot.
