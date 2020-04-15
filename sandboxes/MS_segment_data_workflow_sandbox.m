@@ -342,7 +342,7 @@ for iSub = Subjects
         % out to use all events.
         cfg_seg.resize.resize = 1; % use the gui to select the data for resizing.
         cfg_seg.resize.save_key = 'return'; % which key to use for saving the selected cutoffs
-        % cfg_seg.resize.redo_key = 'downarrow'; % which key for redoing the current cutoffs.
+        cfg_seg.resize.unclear_key = 'u'; % which key for redoing the current cutoffs.
         cfg_seg.resize.remove_key = 'backspace'; % which key to flag the current segment for removal.
         cfg_seg.resize.spec.win_s = 2^10; % spectrogram window size.
         cfg_seg.resize.spec.onverlap = cfg_seg.resize.spec.win_s / 2; % overlap
