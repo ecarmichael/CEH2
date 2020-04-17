@@ -349,8 +349,8 @@ for iSub = Subjects
                 cfg_swd.merge_thr = 0.01;
                 % restrictions
                 cfg_swd.max_len = [];
-                cfg_swd.max_len.operation = '<';
-                cfg_swd.max_len.threshold = .1;
+%                 cfg_swd.max_len.operation = '<';
+%                 cfg_swd.max_len.threshold = .1;
 %                 cfg_swd.nCycles = 3; % number of cycles
                 
                 % variaence
@@ -384,9 +384,9 @@ for iSub = Subjects
                 
                 % restrictions
                 cfg_swr.max_len = [];
-                cfg_swr.max_len.operation = '<';
-                cfg_swr.max_len.threshold = .01;
-                cfg_swr.nCycles = 3; % number of cycles
+                cfg_swr.max_len.operation = '>';
+                cfg_swr.max_len.threshold = .04;
+%                 cfg_swr.nCycles = 3; % number of cycles
                 
                 % variaence
                 %                 cfg_swr.var = [];
