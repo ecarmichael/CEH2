@@ -101,6 +101,19 @@ cfg_hypno = [];
 cfg_hypno.label_to_find = {'SW', 'REM', 'SWREM', 'LT'}; % labels to find.  lt is linear track for EV data. 
 [hypno_labels, time_labels] = MS_get_hypno_label(cfg_hypno, TS_name);
 
+% remove user specified TS blocks. Example EV data '12_9_2019_537day5 has a
+% blcok with a seizure that is not in the ms.mat file. 
+if ~isempty(cfg.remove_TS_initial)
+    for iT = length(cfg.remove_TS_initial):-1:1
+        fprintf('\n<strong>MS_Segment_raw</strong>: nlx detected epoch: %d - %s was flagged for initial removal\n', cfg.remove_TS_initial(iT), TS_name{cfg.remove_TS_initial});
+        TS(cfg.remove_TS_initial(iT)) = [];
+        TS_name(cfg.remove_TS_initial(iT)) = [];
+        hypno_labels(cfg.remove_TS_initial(iT)) = [];
+        time_labels(cfg.remove_TS_initial(iT)) = [];
+    end 
+end
+
+
 % compare to TS to ms
 fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
 for iT = 1:length(TS)
@@ -195,14 +208,24 @@ for iCSC = 1:length(csc_dir)
     clear this_csc this_nlx_evts
 end
 
-%% combine the lfp recordings and events (*.nev) 
+%% combine the lfp recordings and events (*.nev) [todo: reconstruct for label comparisons.]
 % combine the events
-nlx_evts = all_nlx_evts{1};
-for iT  = 1:length(nlx_evts.t)
-            these_t = [];
-    for iCSC = 1:length(csc_dir)
-        these_t = [these_t, all_nlx_evts{iCSC}.t{iT}];
+for iE = length(all_nlx_evts):-1:1
+    evt_len(iE) = length(all_nlx_evts{iE}.label);
+end
+[~, template_idx] = max(evt_len);
 
+nlx_evts = all_nlx_evts{template_idx};
+   
+% loop over all the events, compare the labels and append the correct events.    
+for iT  = 1:length(nlx_evts.t)
+    these_t = [];
+    for iCSC = 1:length(csc_dir)
+        idx = find(contains(all_nlx_evts{iCSC}.label,nlx_evts.label{iT}));
+        if ~isempty(idx)
+        fprintf('<strong>%s:</strong> matching nlx labels: %s  -  %s \n', mfilename,nlx_evts.label{iT}, all_nlx_evts{iCSC}.label{idx})
+        these_t = [these_t, all_nlx_evts{iCSC}.t{idx}];
+        end
     end
     nlx_evts.t{iT}= sort(these_t); 
 end

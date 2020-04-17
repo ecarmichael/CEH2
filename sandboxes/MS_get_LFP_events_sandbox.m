@@ -202,7 +202,7 @@ if isfield(cfg, 'max_len') && ~isempty(cfg.max_len)
 %     cfg_max_len.threshold = .1;
     events_out = SelectIV(cfg.max_len,events_out,'evt_len');
     
-    fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (> %d ms removed).\n',length(events_out.tstart), (cfg.max_len.threshold)*1000);
+    fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (%s %d ms removed).\n',length(events_out.tstart), cfg.max_len.operation, (cfg.max_len.threshold)*1000);
 end
 
 %% check for evnts with high raw varience. 'var_raw' is added as a events_out.usr field in CountCycles

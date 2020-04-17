@@ -150,6 +150,7 @@ clear d os
 
 %% loop through subjects/sessions.
 Subjects = MS_list_dir_names_any(PARAMS.data_dir, {'5'}); % get the subject names.  limited to dir that start with '5' since subjects are 535, 537, and 540
+%iSub = Subjects{1} % example.  
 for iSub = Subjects
     % set the dir for this subject
     this_sub_dir = [PARAMS.data_dir filesep iSub];
@@ -162,6 +163,7 @@ for iSub = Subjects
     
     
     for iSess = sess_list
+%         iSess = sess_list{4}% picking the 4th session from the list,.  
         
         % get the day id (EVA data struct)
         if contains(iSess, 'base') %baseline need to have the base in the title while task sessions do not.
@@ -245,7 +247,7 @@ for iSub = Subjects
         elseif strcmpi(iSub, '537')
             cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         elseif strcmpi(iSub, '535')
-            cfg_seg.csc.fc = {'CSC1.ncs','CSC5.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         else
             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         end
@@ -255,29 +257,22 @@ for iSub = Subjects
         % flag known bad recording blocks.  [EC ToDo: make another variable
         % that will remove specific TS or Evt blocks when there is a known
         % discrepency between the MS files and the .nev stamps.
-        if strcmp(iSess, '10_18_2019_PV1069_HATD5')
-            cfg_seg.bad_block = 19;% This index is based on the number of recording blocks in the NLX evt file.
-            cfg_seg.bad_block_name = {'H15_M37_S21_REmove_withoutLFP'};% what is the name of the unwanted recording block folder.
+        if strcmp(iSess, '12_17_2019_535day1')
+%             cfg_seg.bad_block = 19;% This index is based on the number of recording blocks in the NLX evt file.
+%             cfg_seg.bad_block_name = {'H15_M37_S21_REmove_withoutLFP'};% what is the name of the unwanted recording block folder.
             cfg_seg.remove_ts=[]; % added by Jisoo
-            cfg_seg.remove_nlx_evt=[]; % added by Jisoo
-            %         elseif strcmp(iSess, '10_22_2019_PV1069_HATSwitch')
-            %             cfg_seg.bad_block = [12 16];% This index is based on the number of recording blocks in the NLX evt file.
-            %             cfg_seg.bad_block_name = {'H14_M15_S22_remove', 'H14_M54_S54_remove'};% what is the name of the unwanted recording block folder.
-            %         elseif strcmp(iSess, '6_13_2019_PV1043_LTD3')
-            %             cfg_seg.remove_ts = [];
-            %             cfg_seg.remove_nlx_evt = [1];
-            %         elseif strcmp(iSess, '7_17_2019_PV1060_LTD3')
-            %             cfg_seg.remove_ts = [5];
-            %             cfg_seg.remove_nlx_evt = [5,6];
-            %         elseif strcmp(iSess, '7_10_2019_PV1069_LTD3') %added by Jisoo
-            %             cfg_seg.remove_ts = [];
-            %             cfg_seg.remove_nlx_evt = [1];
+            cfg_seg.remove_nlx_evt = 10; % known issue with 2 TS in the events. 
+            cfg_seg.remove_TS_initial = [];
+        elseif strcmp(iSess, '12_9_2019_537day5')
+            cfg_seg.remove_ts=[]; % added by Jisoo
+            cfg_seg.remove_nlx_evt=14; 
+            cfg_seg.remove_TS_initial = 15; % known issue with 2 TS in the events.  
         else
             cfg_seg.bad_block = [] ;
             cfg_seg.bad_block_name = {};
             cfg_seg.remove_ts=[]; % added by Jisoo
             cfg_seg.remove_nlx_evt=[]; % added by Jisoo
-            
+            cfg_seg.remove_TS_initial = []; 
         end
         
         % filters
@@ -353,10 +348,10 @@ for iSub = Subjects
                 cfg_swd.min_len = 0;
                 cfg_swd.merge_thr = 0.01;
                 % restrictions
-                %                 cfg_swd.max_len = [];
-                %                 cfg_swd.max_len.operation = '<';
-                %                 cfg_swd.max_len.threshold = .1;
-                %                 cfg_swd.nCycles = 3; % number of cycles
+                cfg_swd.max_len = [];
+                cfg_swd.max_len.operation = '<';
+                cfg_swd.max_len.threshold = .1;
+%                 cfg_swd.nCycles = 3; % number of cycles
                 
                 % variaence
                 cfg_swd.var = [];
