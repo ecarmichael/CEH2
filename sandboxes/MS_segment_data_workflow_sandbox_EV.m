@@ -449,6 +449,15 @@ for iSub = Subjects
                 ms_seg_resize.low_gamma_evts{iB} = iv; % leave empty
             end
         end % end evt detection blocks.
+        %%
+        for iB = 1:length(ms_seg_resize.RawTraces)
+           str_len = length(strcat(ms_seg_resize.file_names{iB},ms_seg_resize.pre_post{iB}, ms_seg_resize.hypno_label{iB})); 
+            fprintf('<strong>%s %s - %s:</strong>', ms_seg_resize.file_names{iB},ms_seg_resize.pre_post{iB}, ms_seg_resize.hypno_label{iB})
+            fprintf(repmat(' ', 1,abs(str_len-23)))
+            fprintf('SWD = %3d   SWR = %3d    low_G = %3d  \n',length(ms_seg_resize.SWD_evts{iB}.tstart), length(ms_seg_resize.SWR_evts{iB}.tstart), length(ms_seg_resize.low_gamma_evts{iB}.tstart))
+            
+        end
+        %%
         % save the ms_seg_resize over the one prior to event detection.
         save([ms_resize_dir filesep 'ms_resize.mat'], 'ms_seg_resize', '-v7.3')
         
