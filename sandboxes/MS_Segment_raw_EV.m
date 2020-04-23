@@ -539,7 +539,8 @@ cfg.resize = []; cfg.resize.emg_range = [min(csc.data(emg_chan,1:(300*csc.cfg.hd
  save([ms_resize_dir filesep 'cut_vals.mat'], 'cut_vals',  '-v7.3'); 
  % save the remove_flag
   save([ms_resize_dir filesep 'remove_flag.mat'], 'remove_flag',  '-v7.3'); 
-
+ % save the unclear_flag
+  save([ms_resize_dir filesep 'unclear_flag.mat'], 'unclear_flag',  '-v7.3');
  
 % flag = find(ismember(ms_seg.seg_id,remove_flag));  % makes appending easier ina few steps
 %% resize the events [WIP: has trouble resizing across ms and NLX timescales]
