@@ -59,6 +59,7 @@ cfg_def.chan_to_plot = these_csc;  % how many channels are in the csc.  Determin
 cfg_def.plot_type = '2d'; % '2d' or '3d'
 cfg_def.x_zoom = []; % where to zoom in on eht x_axis for each plot.
 cfg_def.emg_range = [];
+cfg_def.label = 'file_names'; 
 cfg_def.saveas = []; % if empty don't save the images.  Can be '.fig' (matlab fig) or other known saveas format.  I like '.png'. 
 
 cfg = ProcessConfig(cfg_def, cfg_in);
@@ -97,7 +98,7 @@ switch type
                             plot(time_in2*0.001, ms_data_in.(cfg.Ca_type){iRec}(:,iC)+iC, 'color', c_ord(iC,:))
 %                             area(time_in2*0.001, max(ms_data_in.(cfg.Ca_type){iRec}(:,iC)+iC, iC), iC, 'edgecolor', 'none', 'facecolor', c_ord(iC,:))
 %                         else
-                            plot(time_in2*0.001, ms_data_in.(cfg.Ca_type){iRec}(:,iC), 'color', c_ord(iC,:))
+%                             plot(time_in2*0.001, ms_data_in.(cfg.Ca_type){iRec}(:,iC), 'color', c_ord(iC,:))
 %                         end
                     end
                     % 3d

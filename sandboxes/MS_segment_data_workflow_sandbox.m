@@ -246,15 +246,16 @@ for iSub = Subjects
 
 %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\11_26_2019_PV1060_HATSwitch'; %needs recutting
 %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1069\10_18_2019_PV1069_HATD5';
-        ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1043\6_13_2019_PV1043_LTD3';
+        ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\11_15_2019_PV1060_Homecage_Sleep';
 
-         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-06-13_09-25-16_PV1043_LTD3'; 
+         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-11-15_10-12-49_PV1060_Homecagerecording'; 
 %         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-10-18_10-02-44_PV1069_HATD5';
         
-        iSess = '6_13_2019_PV1043_LTD3';
+        iSess = '11_15_2019_PV1060_Homecage_Sleep';
        
-        iSub='PV1043';
-        ms_resize_dir = ['J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\' iSub filesep  '6_13_2019_PV1043_LTD3'];
+        iSub='PV1060';
+       
+        ms_resize_dir = ['J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\' iSub filesep  '11_15_2019_PV1060_Homecage_Sleep'];
         mkdir(ms_resize_dir);
         
         
@@ -293,6 +294,8 @@ for iSub = Subjects
         if strcmp(iSess, '10_18_2019_PV1069_HATD5')
             cfg_seg.bad_block = 19;% This index is based on the number of recording blocks in the NLX evt file.
             cfg_seg.bad_block_name = {'H15_M37_S21_REmove_withoutLFP'};% what is the name of the unwanted recording block folder.
+            cfg_seg.remove_ts=[]; % added by Jisoo
+            cfg_seg.remove_nlx_evt=[]; % added by Jisoo
         elseif strcmp(iSess, '10_22_2019_PV1069_HATSwitch')
             cfg_seg.bad_block = [12 16];% This index is based on the number of recording blocks in the NLX evt file.
             cfg_seg.bad_block_name = {'H14_M15_S22_remove', 'H14_M54_S54_remove'};% what is the name of the unwanted recording block folder.
@@ -302,9 +305,21 @@ for iSub = Subjects
         elseif strcmp(iSess, '7_17_2019_PV1060_LTD3')
             cfg_seg.remove_ts = [5];
             cfg_seg.remove_nlx_evt = [5,6]; 
+        elseif strcmp(iSess, '7_10_2019_PV1069_LTD3') %added by Jisoo
+            cfg_seg.remove_ts = [];
+            cfg_seg.remove_nlx_evt = [1]; 
+        elseif strcmp(iSess, '7_15_2019_PV1060_LTD1') %added by Jisoo
+            cfg_seg.remove_ts = [1,2,3,4,5,6,7,8,9]; %Event was not recorded at the beginning of the presleep
+            cfg_seg.remove_nlx_evt = [];
+        elseif strcmp(iSess, '11_15_2019_PV1060_Homecage_Sleep') %added by Jisoo
+            cfg_seg.remove_ts = [1,2,3,4,5]; %Event was not recorded at the beginning of the presleep
+            cfg_seg.remove_nlx_evt = [];
         else
             cfg_seg.bad_block = [] ;
             cfg_seg.bad_block_name = {};
+            cfg_seg.remove_ts=[]; % added by Jisoo
+            cfg_seg.remove_nlx_evt=[]; % added by Jisoo
+             
         end
         
         % filters
@@ -328,7 +343,7 @@ for iSub = Subjects
         % out to use all events.
         cfg_seg.resize.resize = 1; % use the gui to select the data for resizing.
         cfg_seg.resize.save_key = 'return'; % which key to use for saving the selected cutoffs
-        % cfg_seg.resize.redo_key = 'downarrow'; % which key for redoing the current cutoffs.
+        cfg_seg.resize.unclear_key = 'u'; % which key for redoing the current cutoffs.
         cfg_seg.resize.remove_key = 'backspace'; % which key to flag the current segment for removal.
         cfg_seg.resize.spec.win_s = 2^10; % spectrogram window size.
         cfg_seg.resize.spec.onverlap = cfg_seg.resize.spec.win_s / 2; % overlap

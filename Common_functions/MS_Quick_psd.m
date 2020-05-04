@@ -1,4 +1,4 @@
-function psd = MS_Quick_psd(Chan_to_use, type)
+function psd = MS_Quick_psd(Chan_to_use, type, save_dir)
 %% MS_Quick_psd: generates PSDs for each .ncs in the current directory specified in 'Chan_to_use' 
 %   (if empty do all of them). Uses pwelch method.use 'type' input as either 'long' to use all of 
 %   the data or 'fast' to use the first 1/4. 
@@ -24,11 +24,13 @@ function psd = MS_Quick_psd(Chan_to_use, type)
 if nargin == 0
     Chan_to_use = {};
     type = 'long';
+    save_dir = cd;
     disp('''Chan_to_use'' not specified.  Using all .ncs files')
     disp('''type'' no specified, using ''long'' for all data. Use type = ''fast'' for only the first 1/4 of the data to save time')
 
 elseif nargin == 1
     type = 'long';
+    save_dir = cd;
     disp(' ''type'' not specified, using ''long'' for all data. Use type = ''fast'' for only the first 1/4 of the data to save time')
 end
 
@@ -191,4 +193,4 @@ set(gcf, 'position', [pos(1) pos(2) pos(3)*1.5 pos(4)*2])
 % ylim([0 1])
 % legend(pair_labels)%, 'location', 'EastOutside', 'orientation', 'vertical')
 % maximize
-saveas(gcf, 'PSD_check.png')
+saveas(gcf,[save_dir filesep 'PSD_check.png'])

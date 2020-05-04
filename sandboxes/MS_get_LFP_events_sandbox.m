@@ -53,9 +53,9 @@ cfg = ProcessConfig(cfg_def, cfg_in);
 %     cfg_filt_d.f  = [140 250]; % broad, could use 150-200?
 %     cfg_filt_d.order = 4; %type filter order (fine for this f range)
 %     cfg_filt_d.display_filter = 0; % use this to see the fvtool
-if cfg.check
-    cfg_filt.display_filter = 1; % use this to see the fvtool
-end
+% if cfg.check
+%     cfg.filt.display_filter = 1; % use this to see the fvtool
+% end
 csc_filt = FilterLFP(cfg.filt, csc);
 
 
@@ -66,9 +66,11 @@ amp_filt = csc_filt; % clone to make things simple and replace
 for iChan = 1:size(csc_filt.data,1)
     amp_filt.data(iChan,:) = abs(hilbert(csc_filt.data(iChan,:)));
     % Convolve with a gaussian kernel (improves detection)
-    kernel = gausskernel(60,20); % note, units are in samples; for paper Methods, need to specify Gaussian SD in ms
-    fprintf('\nGausskernal using 60 samples = %0.0fms with SD = 20 samples (%0.0fms)\n', (60/csc.cfg.hdr{1}.SamplingFrequency)*1000, (20/csc.cfg.hdr{1}.SamplingFrequency)*1000)
-    amp_filt.data(iChan,:) = conv(amp_filt.data(iChan,:),kernel,'same');
+    if isfield(cfg, 'kernel')
+        kernel = gausskernel(cfg.kernel.samples,cfg.kernel.sd); % note, units are in samples; for paper Methods, need to specify Gaussian SD in ms
+        fprintf('\nGausskernal using %d samples = %0.0fms with SD = %d samples (%0.0fms)\n',cfg.kernel.samples, (cfg.kernel.samples/csc.cfg.hdr{1}.SamplingFrequency)*1000,cfg.kernel.sd,(cfg.kernel.sd/csc.cfg.hdr{1}.SamplingFrequency)*1000)
+        amp_filt.data(iChan,:) = conv(amp_filt.data(iChan,:),kernel,'same');
+    end
     amp_filt.units = 'amplitude';
     
     if isfield(cfg.filt, 'units') && strcmpi(cfg.filt.units, 'power')
@@ -81,45 +83,44 @@ if cfg.check
     figure(111)
     plot(csc.tvec, csc.data(1,:),'k',csc_filt.tvec, csc_filt.data(1,:), 'r',...
         amp_filt.tvec, amp_filt.data(1,:),'b')
-    legend({'Raw', '140-250 filt', 'Amp'})
-    pause(1); close;
+    legend({'Raw', 'filt', 'Amp'})
 end
 
 %% remove large amplitude artifacts before SWR detection
 
+if isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
+    csc_artif = csc;
+    for iChan = 1:size(csc_filt.data,1)
+        csc_artif.data(iChan,:) = abs(csc_artif.data(iChan,:)); % detect artifacts both ways
+    end
+    
+%                     cfg.artif_det.threshold = std(csc_artif.data(1,:))*5;
 
-csc_artif = csc;
-for iChan = 1:size(csc_filt.data,1)
-    csc_artif.data(iChan,:) = abs(csc_artif.data(iChan,:)); % detect artifacts both ways
-end
+    evt_artif = TSDtoIV(cfg.artif_det,csc_artif);
+    
+    cfg_temp = []; cfg_temp.d = cfg.artif_det.rm_len;
+    artif_evts = ResizeIV(cfg_temp,evt_artif);
+    
+    
+    % plot
+    if cfg.check
+        plot(113)
+        cfg_plot=[];
+        cfg_plot.display = 'iv'; % tsd, iv
+        cfg_plot.target = csc.label{1};
+        PlotTSDfromIV(cfg_plot,artif_evts,csc_artif);
+%         hline(cfg.artif_det.threshold )
+        pause(3); close all;
+    end
+    
+    % zero pad artifacts to improve reliability of subsequent z-scoring
+    artif_idx = TSD_getidx2(csc,artif_evts); % if error, try TSD_getidx (slower)
+    for iChan = 1:size(csc_filt.data,1)
+        csc_filt.data(iChan,artif_idx) = 0;
+        amp_filt.data(iChan,artif_idx) = 0;
+    end
+    fprintf('\n<strong>MS_SWR_Ca2</strong>: %d large amplitude artifacts detected and zero-padded from csc_filt.\n',length(artif_evts.tstart));
 
-cfg_artif_det = [];
-cfg_artif_det.method = 'raw';
-cfg_artif_det.threshold = std(csc_artif.data(1,:))*5;
-% cfg_artif_det.minlen = 0.01;
-cfg_artif_det.target = csc.label{1};
-evt_artif = TSDtoIV(cfg_artif_det,csc_artif);
-
-cfg_temp = []; cfg_temp.d = [-0.5 0.5];
-artif_evts = ResizeIV(cfg_temp,evt_artif);
-
-
-% plot
-if cfg.check
-    plot(113)
-    cfg_plot=[];
-    cfg_plot.display = 'iv'; % tsd, iv
-    cfg_plot.target = csc.label{1};
-    PlotTSDfromIV(cfg_plot,artif_evts,csc_artif);
-    hline(cfg_artif_det.threshold )
-    pause(3); close all;
-end
-
-% zero pad artifacts to improve reliability of subsequent z-scoring
-artif_idx = TSD_getidx2(csc,evt_artif); % if error, try TSD_getidx (slower)
-for iChan = 1:size(csc_filt.data,1)
-    csc_filt.data(iChan,artif_idx) = 0;
-    amp_filt.data(iChan,artif_idx) = 0;
 end
 
 % plot
@@ -132,7 +133,6 @@ if cfg.check
     pause(3); close all;
 end
 
-fprintf('\n<strong>MS_SWR_Ca2</strong>: %d large amplitude artifacts detected and zero-padded from csc_filt.\n',length(artif_evts.tstart));
 
 %% isolate candidate events
 
@@ -159,6 +159,12 @@ cfg_detect.merge_thr = cfg.merge_thr; % merge events that are within 20ms of eac
 % [evt_ids,~] = TSDtoIV(cfg_select,amp_filt);
 
 
+%% compute general stats (cycle count, varience, filtered varience, mean, min, evt_len)
+cfg_cc = [];
+cfg_cc.threshold_type = 'raw';
+cfg_cc.threshold = evt_thr; % use same threshold as for orignal event detection
+cfg_cc.filter_cfg = cfg.filt;
+events_out = CountCycles(cfg_cc,csc,evt_candidates);
 
 fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events detected initially.\n',length(evt_candidates.tstart));
 
@@ -167,20 +173,16 @@ if cfg.check
     cfg_plot.display = 'iv';
     cfg_plot.mode = 'center';
     cfg_plot.width = 0.2;
-    cfg_plot.target = csc.label{1};
-    
-    PlotTSDfromIV(cfg_plot,evt_candidates,csc);
+    cfg_plot.target = csc.label{1};  
+    cfg_plot.title = 'var'; 
+    PlotTSDfromIV(cfg_plot,events_out,csc);
     pause(2); close all;
 end
 
 
 
 %% exclude events with insufficient cycles - count how many exist above same threshold as used for detection
-cfg_cc = [];
-cfg_cc.threshold_type = 'raw';
-cfg_cc.threshold = evt_thr; % use same threshold as for orignal event detection
-cfg_cc.filter_cfg = cfg.filt;
-events_out = CountCycles(cfg_cc,csc,evt_candidates);
+
 
 % get get the evetns with sufficient cycles.
 if isfield(cfg, 'nCycles') && ~isempty(cfg.nCycles)
@@ -195,28 +197,30 @@ end
 events_out.usr.evt_len = (events_out.tend - events_out.tstart)';
 
 if isfield(cfg, 'max_len') && ~isempty(cfg.max_len)
-    cfg_max_len = [];
-    cfg_max_len.operation = '<';
-    cfg_max_len.threshold = .1;
-    events_out = SelectIV(cfg_max_len,events_out,'evt_len');
+%     cfg_max_len = [];
+%     cfg_max_len.operation = '<';
+%     cfg_max_len.threshold = .1;
+    events_out = SelectIV(cfg.max_len,events_out,'evt_len');
     
-    fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (> %d ms removed).\n',length(events_out.tstart), (cfg_max_len.threshold)*1000);
+    fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (%s %d ms removed).\n',length(events_out.tstart), cfg.max_len.operation, (cfg.max_len.threshold)*1000);
 end
 
 %% check for evnts with high raw varience. 'var_raw' is added as a events_out.usr field in CountCycles
+if isfield(cfg, 'var') && ~isempty(cfg.var)
+% cfg.var = [];
+% cfg.var.operation = '<';
+% cfg.var.threshold = 1;
+events_out = SelectIV(cfg.var,events_out,'var_raw');
+fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after raw varience thresholding (''var_raw'' > %d removed).\n',length(events_out.tstart), cfg.var.threshold);
+end
 
-cfg_var = [];
-cfg_var.operation = '<';
-cfg_var.threshold = 1;
-events_out = SelectIV(cfg_var,events_out,'var_raw');
-
-fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after raw varience thresholding (''var_raw'' > %d removed).\n',length(events_out.tstart), cfg_var.threshold);
 
 %% remove events that cooinside with artifacts.
-events_out = DifferenceIV([], events_out, artif_evts);
-
-fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after removing those co-occuring with artifacts.\n',length(events_out.tstart));
-
+if  isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
+    events_out = DifferenceIV([], events_out, artif_evts);
+    
+    fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after removing those co-occuring with artifacts.\n',length(events_out.tstart));
+end
 %% check again
 if cfg.check
     cfg_plot = [];

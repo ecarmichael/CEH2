@@ -38,12 +38,17 @@ for iT = 1:length(TS_name)
         if contains(TS_name{iT}, cfg.label_to_find{iL}, 'IgnoreCase', true)
             if contains(TS_name{iT}, 'REM', 'IgnoreCase', true)
                 rem_idx = strfind(lower(TS_name{iT}), lower('REM'));
-                [~, status]= str2num(TS_name{iT}(rem_idx+3));
-                if status ~= 1
-                    lab_out = 'Other';
-                else
+%                 if length(TS_name{iT}) >= rem_idx+3  % why did I do this
+%                 (EC)? 
+%                     [~, status]= str2num(TS_name{iT}(rem_idx+3));
+%                     if status ~= 1
+%                         lab_out = 'Other';
+%                     else
+%                         lab_out = cfg.label_to_find{iL};
+%                     end
+%                 else
                     lab_out = cfg.label_to_find{iL};
-                end
+%                 end
             else
                 lab_out = cfg.label_to_find{iL};
             end
