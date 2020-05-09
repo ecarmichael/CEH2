@@ -108,7 +108,7 @@ csc.tvec = csc.tvec - csc.tvec(1);
 Ca_TS = MS_Binary2TS([], ms_seg);
 Ca_TS.usr = [];
 % make a subset of neurons (for speed)
-nS = 500;
+nS = 951;
 Ca_1 = Ca_TS; Ca_1.t = []; Ca_1.label = [];
 for iC  = nS:-1:1
     Ca_1.t{iC} = Ca_TS.t{iC} -csc.tvec(1) ; Ca_1.label{iC} = Ca_TS.label{iC};
@@ -149,10 +149,33 @@ SWRs.tstart(remove_idx) = [];
 SWRs.tend(remove_idx) = [];
 %% get some basic stats for active cells per SWR;
 cfg = [];
-cfg.t_win = [-0.1 0.1]; 
+cfg.t_win = [-0.1 0.5]; 
 cfg.plot = 1;
-MS_event_hist(cfg, Ca_TS, csc, SWRs);
+spike_counts = MS_event_hist(cfg, Ca_TS, csc, SWRs);
 
+t_edges = cfg.t_win(1):0.01:cfg.t_win(end);
+t_centers = t_edges(1:end-1)+0.01/2;
+bar(t_centers*1000,  mean(sum(spike_counts,3))*100);
+vline(0)
+xlabel('time (ms)')
+ylabel('mean % active cells')
+
+%% get shuffle distribution {remember to turn set cfg.plot = 0. }. Can parfor. parfor can do 100 shuffles in 12s with 8 workers and 1000 shuffles in 124s. regular for loop takes 85s. 
+cfg.plot = 0; 
+nShuffle = 100; 
+shuf_counts = nan(nShuffle, length(t_centers));
+tic
+tvec = csc.tvec; 
+parfor iShuffle = 1:nShuffle
+    shuf_IV = MS_get_random_epochs(tvec, SWRs);
+    shuf_counts(iShuffle,:) = mean(sum(MS_event_hist(cfg, Ca_TS, csc, shuf_IV),3));
+    
+end
+toc
+
+hold on
+bar(t_centers*1000, mean(shuf_counts)*100);
+legend('SWR', '1000 shuffle'); 
 %%
 swr_centers = IVcenters(SWRs); % convert to centered events;
 
@@ -271,7 +294,8 @@ end
 
 %% plug it into SeqNMF
 addpath(PARAMS.code_seqnmf_dir)
-load('D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\RAW Calcium\Inter\537\12_5_2019_537day1\all_binary_post_SW.mat')
+% load('D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\RAW Calcium\Inter\537\12_5_2019_537day1\all_binary_post_SW.mat')
+
 
 data_in = all_binary_post_SW'; 
 
@@ -282,9 +306,52 @@ data_in = ms_seg.Binary(:,1:300)';
 data_in = ms_seg.RawTraces(1:1000,:)'; 
 
 data_in = this_evt'; 
-
 Fs =mode(diff(ms_seg.time));
-% Fs = 1/33;
+
+%% try hat5 raw
+% for ref: J:\Williams_Lab\Jisoo\Jisoo_Project\Results\PV1043\LTD5_results
+load('J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1043\6_15_2019_PV1043_LTD5\H13_M30_S2_LTD5\ms.mat')
+clearvars -except ms PARAMS
+load('J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1043\6_15_2019_PV1043_LTD5\H13_M30_S2_LTD5\behav.mat')
+
+ms = msExtractBinary_detrendTraces(ms);
+
+data_in = ms.Binary(1:10000,:)'; 
+pos(:,1) = interp1(behav.time,behav.position(:,1),ms.time);
+pos(:,2) = interp1(behav.time,behav.position(:,2),ms.time);
+velocity = interp1(behav.time, behav.speed, ms.time); 
+
+
+% remove inactive cells
+total_act = sum(data_in,2);
+
+keep_idx = total_act>0;
+
+data_in = data_in(keep_idx,:);
+% limit to movement. 
+% keep_idx = velocity > 1;
+% 
+% pos_move = pos(keep_idx);
+% velo_move = velocity(keep_idx); 
+% data_in = ca_binday(:,keep_idx); 
+Fs = mode(diff(ms.time)); 
+
+Ls = fliplr([0.5 1 2 10 50 100 1000]);
+%%
+addpath(PARAMS.code_seqnmf_dir)
+
+cd('D:\Dropbox (Williams Lab)\Jisoo\JisooProject2020\Inter\PV1069\10_18_2019_PV1069_HATD5');
+
+data_in = all_binary_post_REM';
+data_in = all_RawTraces_post_REM';
+data_in = ms_trk.Binary'; 
+% % normalize(
+% for ii = size(data_in,2):-1:1
+%     data_out(:,ii) = (data_in(:,ii) - min(data_in(:,ii))) / ( max(data_in(:,ii))); 
+% end
+Fs = 33;
+
+%% 
 %% Fit with seqNMF
 %% break data into training set and test set
 splitN = floor(size(data_in,2)*.75); 
@@ -296,8 +363,9 @@ testNEURAL = data_in(:,(splitN+1):end);
 %% plot one example factorization
 rng(235); % fixed rng seed for reproduceability
 X = trainNEURAL;
+for iS = length(Ls):-1:1
 K = 4;
-L = 1; % units of seconds
+L = Ls(iS); % units of seconds
 Lneural = ceil(L*Fs);  
 % Lsong = ceil(L*SONGfs);
 shg
@@ -314,17 +382,31 @@ display('Testing significance of factors on held-out data')
 
 W = W(:,is_significant,:); 
 H = H(is_significant,:); 
+fprintf('Found %d/%d significant factors\n', sum(is_significant), length(is_significant))
+all_sweeps{iS}.K = K;
+all_sweeps{iS}.L = L;
+all_sweeps{iS}.W = W;
+all_sweeps{iS}.H = H;
+all_sweeps{iS}.sig = is_significant;
+all_sweeps{iS}.Train = trainNEURAL;
+all_sweeps{iS}.Trest = testNEURAL;
 
+saveas(gcf,['Seq_Sweeps' filesep 'Sweep_' num2str(L)], 'png')
+close all
+% clearvars -except all_sweeps trainNEURAL testNEURAL Ls
+
+end
+%%
 % plot, sorting neurons by latency within each factor
 [max_factor, L_sort, max_sort, hybrid] = helper.ClusterByFactor(W(:,:,:),1);
 indSort = hybrid(:,3);
 tstart = 180; % plot data starting at this timebin
 figure; WHPlot(W(indSort,:,:),H(:,tstart:end), X(indSort,tstart:end), ...
-    0,trainSONG(:,floor(tstart*SONGfs/VIDEOfs):end))
+    0,trainSONG(:,floor(tstart*Fs/VIDEOfs):end))
 title('Significant seqNMF factors, with raw data')
 figure; WHPlot(W(indSort,:,:),H(:,tstart:end), ...
     helper.reconstruct(W(indSort,:,:),H(:,tstart:end)),...
-    0,trainSONG(:,floor(tstart*SONGfs/VIDEOfs):end))
+    0,trainSONG(:,floor(tstart*Fs/VIDEOfs):end))
 title('SeqNMF reconstruction')
 
 

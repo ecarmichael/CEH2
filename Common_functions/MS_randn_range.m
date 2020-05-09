@@ -23,4 +23,4 @@ function vals =  MS_randn_range(n, m, min_val, max_val)
 
 vals = (max_val-min_val).*rand(n,m) + min_val;
 
-fprintf('<strong>%s</strong>: min: %d  max: %d\n', mfilename, min(vals), max(vals));
+%fprintf('<strong>%s</strong>: min: %d  max: %d\n', mfilename, min(vals), max(vals));
