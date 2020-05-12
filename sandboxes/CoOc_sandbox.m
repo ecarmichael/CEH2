@@ -150,25 +150,27 @@ SWRs.tend(remove_idx) = [];
 %% get some basic stats for active cells per SWR;
 cfg = [];
 cfg.t_win = [-0.1 0.5]; 
-cfg.plot = 1;
+cfg.plot = 0;
+cfg.bin_s = 1/30; 
+% cfg.events = 100:105;
 spike_counts = MS_event_hist(cfg, Ca_TS, csc, SWRs);
 
-t_edges = cfg.t_win(1):0.01:cfg.t_win(end);
-t_centers = t_edges(1:end-1)+0.01/2;
-bar(t_centers*1000,  mean(sum(spike_counts,3))*100);
+t_edges = cfg.t_win(1):cfg.bin_s:cfg.t_win(end);
+t_centers = t_edges(1:end-1)+cfg.bin_s/2;
+bar(t_centers*1000,  mean(sum(spike_counts,3)/size(spike_counts,3))*100);
 vline(0)
 xlabel('time (ms)')
 ylabel('mean % active cells')
 
 %% get shuffle distribution {remember to turn set cfg.plot = 0. }. Can parfor. parfor can do 100 shuffles in 12s with 8 workers and 1000 shuffles in 124s. regular for loop takes 85s. 
 cfg.plot = 0; 
-nShuffle = 100; 
+nShuffle = 1000; 
 shuf_counts = nan(nShuffle, length(t_centers));
 tic
 tvec = csc.tvec; 
 parfor iShuffle = 1:nShuffle
     shuf_IV = MS_get_random_epochs(tvec, SWRs);
-    shuf_counts(iShuffle,:) = mean(sum(MS_event_hist(cfg, Ca_TS, csc, shuf_IV),3));
+    shuf_counts(iShuffle,:) =mean(sum(MS_event_hist(cfg, Ca_TS, csc, shuf_IV),3)/size(MS_event_hist(cfg, Ca_TS, csc, shuf_IV),3));% mean(sum(MS_event_hist(cfg, Ca_TS, csc, shuf_IV),3));
     
 end
 toc
