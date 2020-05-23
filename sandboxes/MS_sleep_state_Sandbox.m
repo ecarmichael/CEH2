@@ -63,15 +63,50 @@ cd('D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\RAW Calcium\LFP\day5\
 
 cfg_LFP = [];
 cfg_LFP.fc = { 'CSC6.ncs'}; 
-cfg_LFP.desired_sampling_frequency = 1000;
+cfg_LFP.desired_sampling_frequency = 2000;
 
 lfp = MS_LoadCSC(cfg_LFP);
 
+
+cfg_LFP = [];
+cfg_LFP.fc = { 'CSC7.ncs'}; 
+cfg_LFP.desired_sampling_frequency = 2000;
+
+lfp_7 = MS_LoadCSC(cfg_LFP);
+
 cfg_EMG = [];
 cfg_EMG.fc = { 'CSC1.ncs'}; 
-cfg_EMG.desired_sampling_frequency = 1000;
+cfg_EMG.desired_sampling_frequency = 2000;
 
 emg = MS_LoadCSC(cfg_EMG);
+% fix issue where first and last points are 0. makes smoothing an issue. 
+emg.data(1,1) = emg.data(1,2);
+emg.data(1,end) = emg.data(1,end-1); 
+
+%% emg correction as per Buz lab code
+axx(1) =subplot(4,1,1);
+plot(emg.tvec, abs(hilbert(emg.data(1,:))))
+axx(2) =subplot(4,1,2);
+
+plot(emg.tvec, zscore(abs(hilbert(emg.data(1,:))).^2))
+
+emg.data(2,:) = smooth(abs(hilbert(emg.data(1,:))),emg.cfg.hdr{1}.SamplingFrequency*4,'moving');
+axx(3) =subplot(4,1,3);
+plot(emg.tvec, emg.data(2,:));
+emg.data(3,:) = detrend(hilbert(emg.data(1,:)));
+axx(4) =subplot(4,1,4);
+plot(emg.tvec, emg.data(3,:));
+linkaxes(axx, 'x')
+
+%Min/Max Normalize
+EMG = bz_NormToRange(emg.data(2,:),[0 1]);
+
+
+dataspan = diff([min(emg.data(2,:)) max(emg.data(2,:))]);
+rangespan = diff([0 1]);
+
+normdata = (emg.data(2,:)-min(emg.data(2,:)))./dataspan;
+normdata = normdata.*rangespan+0;
 %% filter
 % delta filter.
 cfg_filt_d = [];
@@ -119,7 +154,7 @@ csc.data(4,:) = theta_csc.data;
 csc.data(3,:) = delta_csc.data; 
 csc.data(2,:) = lfp.data;
 
-csc.label = {'emg', 'lfp', 'delta', 'theta'}; 
+csc.label = {'emg', 'lfp', 'delta', 'theta', 'wide'}; 
 %  clear theta_csc delta_csc emg lfp
 
  save('D:\Dropbox (Williams Lab)\Sleep_state\sleep_lfp_540day5.mat', 'csc'); 
@@ -148,15 +183,135 @@ csc_detect.label = {};
  %% convert EMG into bins and get the rms
  bins = 1:csc.cfg.hdr{1}.SamplingFrequency*4:length(csc.data(1,:)); 
  emg_binned = NaN(size(bins)); 
+%  delta_binned = NaN(size(bins));
+%  theta_binned = NaN(size(bins));
+%  wide_binned = NaN(size(bins));
+%  
+%  delta_w_binned = delta_binned;
+%  theta_w_binned = theta_binned;
+%  wide_w_binned = wide_binned;
+ 
+ 
  tic;
- parfor iB = 1:length(bins)-1
-
-         emg_binned(iB) = rms(csc.data(1,bins(1): bins(iB+1)));
+for iB = length(bins)-1:-1:1
+        
+%          emg_binned(iB) = rms(emg.data(2,bins(1): bins(iB+1)));
+         delta_binned(iB) = rms(csc.data(3,bins(1): bins(iB+1))); 
+         theta_binned(iB) = rms(csc.data(4,bins(1): bins(iB+1))); 
+         wide_binned(iB) = rms(csc.data(5,bins(1): bins(iB+1))); 
          
-     
-     
+%          delta_w_binned(iB) = bandpower(csc.data(2,bins(1): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 1,4]);
+%          theta_w_binned(iB) = bandpower(csc.data(2,bins(1): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 6,9]);
+%          wide_w_binned(iB) = bandpower(csc.data(2,bins(1): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 1,50]);
+% 
+%      
+%      
  end
  toc
+ 
+        emg_binned = emg_binned(1:end-2);
+          delta_binned = delta_binned(1:end-1); 
+         theta_binned = theta_binned(1:end-1);
+         wide_binned = wide_binned(1:end-1);
+%  delta_binned = 10*log10(delta_binned(2:end-1));
+%  theta_binned = 10*log10(theta_binned(2:end-1));
+%  wide_binned = 10*log10(wide_binned(2:end-1));
+%  
+%  delta_w_binned = 10*log10(delta_w_binned(2:end-1));
+%  theta_w_binned = 10*log10(theta_w_binned(2:end-1));
+%  wide_w_binned = 10*log10(wide_w_binned(2:end-1));
+ 
+ %% plot the bandpower versons
+ 
+
+ [~, F, T,P] =  spectrogram(csc.data(2,:),rectwin(csc.cfg.hdr{1}.SamplingFrequency*8),csc.cfg.hdr{1}.SamplingFrequency*4,0.5:.5:50,csc.cfg.hdr{1}.SamplingFrequency);
+ 
+ t_d = smooth(abs(hilbert(csc.data(4,:)))./abs(hilbert(csc.data(3,:))),csc.cfg.hdr{1}.SamplingFrequency*4,'moving');
+ d_emg =  smooth(abs(hilbert(csc.data(3,:)))./emg.data(2,:),csc.cfg.hdr{1}.SamplingFrequency*4,'moving');
+ t_emg =  smooth(abs(hilbert(csc.data(4,:)))./emg.data(2,:),csc.cfg.hdr{1}.SamplingFrequency*4,'moving');
+ emg_d = smooth(emg.data(2,:)./abs(hilbert(csc.data(3,:))),csc.cfg.hdr{1}.SamplingFrequency*4,'moving');
+ SW_State = NaN(size(t_d)); 
+ REM_State = NaN(size(t_d)); 
+ W_State = NaN(size(t_d)); 
+
+  REM_State(t_emg > 5) = 1; % get putative REM 
+ SW_State(d_emg > 6 & t_emg < 3) = 1;  % get putative SWS
+ W_State(emg_d > .4 & REM_State ~=1) = 1; % get putative Wake 
+ S_State(isnan(S_State)) = 3; % get unclassified. 
+%  S_State(
+
+ %% plot the power of the filtered signals. 
+ c_ord = linspecer(4);
+ 
+ Subs = 8;
+ figure(115)
+ ax2(1) =subplot(Subs,1,1:2);
+ P_p = 10*log10(P);
+ imagesc(T,F,P_p)
+ axis xy
+ hold on
+ plot(csc.tvec-csc.tvec(1), SW_State+38,'*','markersize', 4, 'color', c_ord(4,:), 'linewidth', 4)
+  plot(csc.tvec-csc.tvec(1), W_State+44,'*','markersize', 4, 'color', c_ord(1,:), 'linewidth', 4)
+ plot(csc.tvec-csc.tvec(1), REM_State+41,'*','markersize', 4, 'color', c_ord(2,:), 'linewidth', 4)
+
+ ax2(2) =subplot(Subs,1,3);
+ plot(csc.tvec-csc.tvec(1), emg.data(2,:))
+ xlabel('emg')
+ ax2(3) =subplot(Subs,1,4);
+ plot(csc.tvec-csc.tvec(1), smooth(abs(hilbert(csc.data(3,:))),csc.cfg.hdr{1}.SamplingFrequency*4,'moving'))
+ xlabel('delta')
+ 
+  ax2(4) =subplot(Subs,1,5);
+ plot(csc.tvec-csc.tvec(1), emg_d)
+ xlabel('delta/emg')
+ 
+ ax2(6) =subplot(Subs,1,6);
+ plot(csc.tvec-csc.tvec(1), smooth(abs(hilbert(csc.data(4,:))),csc.cfg.hdr{1}.SamplingFrequency*4,'moving'))
+ xlabel('theta')
+ 
+ ax2(7) =subplot(Subs,1,7);
+ plot(csc.tvec-csc.tvec(1),t_d)
+ xlabel('theta/delta')
+ 
+ ax2(8) =subplot(Subs,1,8);
+ plot(csc.tvec-csc.tvec(1),t_emg)
+ xlabel('theta/emg')
+ 
+ linkaxes(ax2, 'x');
+  xlim([T(1) T(end)])
+
+ %% 
+ 
+  figure(1)
+ 
+ ax(1) =subplot(9,1,1:3);
+ P_p = 10*log10(P);
+ imagesc(T,F,P_p)
+ axis xy
+ 
+ ax(2) =subplot(9,1,4);
+ plot(T, emg_binned);
+ 
+ 
+ ax(3) =subplot(9,1,5);
+ plot(T, delta_binned);
+ 
+ 
+ ax(4) =subplot(9,1,6);
+ plot(T, delta_binned./wide_binned);
+ 
+ ax(5) =subplot(9,1,7);
+ plot(T, theta_binned);
+ 
+ ax(6) =subplot(9,1,8);
+ plot(T, theta_binned./(delta_binned./wide_binned));
+ 
+ ax(7) =subplot(9,1,9);
+ plot(T, theta_binned./(delta_binned));
+
+ linkaxes(ax, 'x')
+ xlim([T(1) T(end)])
+
  %% short fourier transform
  f_d = [1 4];
  f_t = [6 9];
@@ -164,12 +319,14 @@ csc_detect.label = {};
  
 %  [S, F, T] = stft(csc.data(2,:), csc.cfg.hdr{1}.SamplingFrequency, 'Window', hamming(csc.cfg.hdr{1}.SamplingFrequency*40));
  
- [~, F, T,P] =  spectrogram(csc.data(2,:),rectwin(csc.cfg.hdr{1}.SamplingFrequency*8),csc.cfg.hdr{1}.SamplingFrequency*4,0.5:.5:80,csc.cfg.hdr{1}.SamplingFrequency);
- 
- P_p = 20*log10(P); 
+ [~, F, T,P] =  spectrogram(csc.data(1,:),rectwin(csc.cfg.hdr{1}.SamplingFrequency*8),csc.cfg.hdr{1}.SamplingFrequency*4,0.5:.5:50,csc.cfg.hdr{1}.SamplingFrequency);
+ %%
+ P_p = 10*log10(P); 
+ P_p = P_p.^2;
+ P_p = P_p./max(max(P_p)); 
  figure
- subplot(9,1,1:4)
- imagesc(T,F,P_p)
+ ax(1) = subplot(9,1,1:4);
+ imagesc(T,F,P./max(max(P)))
  axis xy
  
          for iS = size(P_p,2):-1:1
@@ -177,33 +334,35 @@ csc_detect.label = {};
            w_p(iS) = mean(P_p(find(F == f_w(1)):find(F == f_w(2)),iS));
            t_p(iS) = mean(P_p(find(F == f_t(1)):find(F == f_t(2)),iS));
          end
+         d_norm = d_p./w_p; 
+         t_norm = t_p./w_p; 
          
-         d_r = d_p ./ w_p; 
-         td_r = t_p./ d_p; 
+         td_norm = t_norm./d_norm;
  
 %  subplot(5,1,2)
 %  plot(csc.tvec - csc.tvec(1), csc.data(1,:))
 %  
- subplot(9,1,5)
+ ax(2) = subplot(9,1,5);
  norm_t = csc.tvec - csc.tvec(1);
  plot(norm_t(bins(2:end-1)),emg_binned(2:end-1))
   xlabel('EMG rms')
   
- subplot(9,1,6)
+ ax(3) = subplot(9,1,6);
  plot(T, d_p);
   xlabel('1-4')
   
-   subplot(9,1,7)
- plot(T, d_r);
+ ax(4) =   subplot(9,1,7);
+ plot(T, d_norm);
   xlabel('1-4/ 1-50')
 
- subplot(9,1,8)
+ ax(6) = subplot(9,1,8);
  plot(T, t_p); 
  xlabel('6-9 / 1-4')
   
- subplot(9,1,9)
- plot(T, td_r); 
+ ax(7) = subplot(9,1,9);
+ plot(T, td_norm); 
  xlabel('6-9 / 1-4')
+ linkaxes(ax, 'x'); 
  
 %   subplot(5,1,4)
 %  plot(csc.tvec - csc.tvec(1), csc.data(3,:))
