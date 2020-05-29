@@ -1,4 +1,4 @@
-function [score_out, IV_out] = MS_Sleep_score_UI(cfg_in, tvec, data, emg, score_in)
+function score = MS_Sleep_score_UI(cfg_in, tvec, data, emg, score_in)
 %% MS_Sleep_score_UI: uses a figure and button presses to move through and score an LFP recording.
 %
 %
@@ -53,9 +53,9 @@ cfg_def.emg_range = [-0.001 0.001]; % default, should be based on real data.
 cfg_def.emg_chan = []; % emg channel.  Can be empty.
 cfg_def.lfp_chans = []; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data.
 cfg_def.resize = 1; % use the gui to select the data for resizing.
-cfg_def.state_val = [1,2,3, NaN, 4]; % what numerical value for each state.
+cfg_def.state_val = [1,2,3, 4, 5]; % what numerical value for each state.
 cfg_def.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 'numpad0', 'backspace'}; % which key to press for each state_val
-cfg_def.state_name = {'Wake', 'SWS', 'REM', 'Unknown', 'Transition', 'Redo'}; %
+cfg_def.state_name = {'Wake', 'SWS', 'REM', 'Quiescence', 'Transition', 'Redo'}; %
 cfg_def.spec.win_s = 2^11; % spectrogram window size.
 cfg_def.spec.onverlap = pow2(floor(log2(cfg_def.spec.win_s/4)));%cfg_def.spec.win_s /8 ; % overlap
 cfg_def.spec.freq_low = .5:0.25:14; % frequency range for spectrogram for delta/theta
@@ -279,9 +279,16 @@ while ishandle(h)
         %         subplot(nSubplots, 1, 1)
         %         plot(tvec- tvec(1), score);
         %         drawnow;
-        this_idx = nearest_idx(xlim+cfg.tvec_range(2),tvec-tvec(1)); % get the tvec index for the current window
-        spec_idx = nearest_idx(xlim+cfg.tvec_range(2), T{1});
-        spec_h_idx = nearest_idx(xlim+cfg.tvec_range(2), Th{1});
+        if xlim+cfg.tvec_range(2) <= max(tvec-tvec(1))
+            this_idx = nearest_idx(xlim+cfg.tvec_range(2),tvec-tvec(1)); % get the tvec index for the current window
+            spec_idx = nearest_idx(xlim+cfg.tvec_range(2), T{1});
+            spec_h_idx = nearest_idx(xlim+cfg.tvec_range(2), Th{1});
+        else
+            this_idx = [xlim(1)+cfg.tvec_range(2) length(tvec)]; % get the tvec index for the current window
+            spec_idx = [xlim(1)+cfg.tvec_range(2) length(T{1})];
+            spec_h_idx = [xlim(1)+cfg.tvec_range(2) length(Th{1})];
+            disp('at the end')
+        end
     elseif ismember(key_hit,  cfg.state_keys(end))
                 fprintf('REDO   \n')
         this_idx = nearest_idx(xlim-cfg.tvec_range(2),tvec-tvec(1)); % get the tvec index for the current window
@@ -332,9 +339,12 @@ end
 %         ax(999) = subplot(nSubplots, 1, nSubplots);
 %         ylim([min(emg(cfg.emg_chan,:)), max(emg(cfg.emg_chan,:))])
 %     end
-    
-    
 end
+
+%% to do get the transitions and convert to iv format. 
+
+% IV_out = iv(
+
 
 
 

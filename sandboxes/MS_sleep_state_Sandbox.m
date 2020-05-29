@@ -90,8 +90,11 @@ cfg_sleep.tvec_range = [0 10];  % number of seconds per window.
 cfg_sleep.emg_range = [-0.001 0.001]; % default, should be based on real data.
 cfg_sleep.emg_chan = 1; % emg channel.  Can be empty. 
 cfg_sleep.lfp_chans = 2; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data. 
+cfg_sleep.state_name = {'Wake', 'SWS', 'REM', 'Quiescence', 'Transition', 'Redo'}; %
 
-[sleep_score, IV_Sleep] = MS_Sleep_score_UI(cfg_sleep, csc.tvec, csc.data, abs(hilbert(emg.data(2,:))));
+score = MS_Sleep_score_UI(cfg_sleep, csc.tvec, csc.data, abs(hilbert(emg.data(2,:))));
+
+
 
 %% filter
 % delta filter.
@@ -217,7 +220,9 @@ swr_t_binned = NaN(size(bins));
 emg_d_binned = NaN(size(bins));
 emg_t_binned = NaN(size(bins));
 emg_swr_binned = NaN(size(bins));
- 
+% if exist('score')
+%     Sleepscore_binned = NaN(size(bins));
+% end
  tic;
  for iB = length(bins):-1:1
      
@@ -244,11 +249,13 @@ emg_swr_binned = NaN(size(bins));
          emg_swr_binned(iB) = mean(emg.data(2,bins(iB): end)./abs(hilbert(csc.data(5,bins(iB):end))));
 
          t_d_emg_binned(iB) = t_d_binned(iB)./mean(emg.data(2,bins(iB): end));
+         
 
      else
          delta_w_binned(iB) = bandpower(csc.data(2,bins(iB): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 1,4]);
          theta_w_binned(iB) = bandpower(csc.data(2,bins(iB): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 6,9]);
          wide_w_binned(iB) = bandpower(csc.data(2,bins(iB): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 1,50]);
+         swr_w_binned(iB) =  bandpower(csc.data(2,bins(iB): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 125,250]);
          %
          d_w_binned(iB) = mean(abs(hilbert(csc.data(3,bins(iB): bins(iB+1))))./abs(hilbert(csc.data(5,bins(iB): bins(iB+1)))));
          emg_binned(iB) = mean(emg.data(2,bins(iB):bins(iB+1)));
@@ -290,19 +297,20 @@ emg_swr_binned = NaN(size(bins));
 
 %% try PCA of d t emg???? 
 
-[p_coeff, p_score] = pca([zscore(delta_w_binned); zscore(theta_w_binned); zscore(emg_binned)]);
+[p_coeff, p_score] = pca([zscore(delta_w_binned); zscore(theta_w_binned);zscore(swr_w_binned); zscore(emg_binned)]);
 figure(200)
 subplot(411)
 plot(T, emg_binned(1:end-2))
 subplot(412)
-plot(T, p_coeff(1:end-2,1))
+plot(T, MS_norm_range(p_coeff(1:end-2,1), 0, 1))
 subplot(413)
 plot(T, p_coeff(1:end-2,2))
 subplot(414)
 plot(T, p_coeff(1:end-2,3))
 
 figure(201)
-scatter(p_coeff(:,2), p_coeff(:,1))
+scatter(p_coeff(:,2), p_coeff(:,1), '.')
+
 
 
 %% get the sleep state for the blocks? 
@@ -323,19 +331,37 @@ sample_multi = 2;
  
  % to do: try normalizing the data within the band to make transitions more
  % clear than raw amplitude. 
- t_d = smooth(abs(hilbert(csc.data(4,:)))./abs(hilbert(csc.data(3,:))),csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
- t_swr = smooth(abs(hilbert(csc.data(4,:)))./abs(hilbert(csc.data(5,:))),csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
- swr_t = smooth(abs(hilbert(csc.data(5,:)))./abs(hilbert(csc.data(4,:))),csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
+ d_amp = abs(hilbert(csc.data(3,:)));
+ t_amp = abs(hilbert(csc.data(4,:)));
+ r_amp = abs(hilbert(csc.data(5,:)));
+ emg_amp = emg.data(2,:);
+ 
+ d_amp = MS_norm_range(d_amp, 0,1);
+ t_amp = MS_norm_range(t_amp, 0,1);
+ r_amp = MS_norm_range(r_amp, 0,1);
+ emg_amp = MS_norm_range(emg_amp, 0,1);
 
- d_emg =  smooth(abs(hilbert(csc.data(3,:)))./emg.data(2,:),csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
- t_emg =  smooth(abs(hilbert(csc.data(4,:)))./emg.data(2,:),csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
- emg_d = smooth(emg.data(2,:)./abs(hilbert(csc.data(3,:))),csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
- emg_t = smooth(emg.data(2,:)./abs(hilbert(csc.data(4,:))),csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
- emg_swr = smooth(emg.data(2,:)./abs(hilbert(csc.data(5,:))),csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
+ t_d = smooth(t_amp./d_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
+ t_r = smooth(t_amp./r_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
+ r_t = smooth(r_amp./t_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
 
- SW_State = NaN(size(t_d)); 
- REM_State = NaN(size(t_d)); 
- W_State = NaN(size(t_d)); 
+ d_emg =  smooth(d_amp./emg_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
+ t_emg =  smooth(t_amp./emg_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
+ emg_d = smooth(emg_amp./d_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
+ emg_t = smooth(emg_amp./t_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
+ emg_swr = smooth(emg_amp./r_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
+
+ SW_State = NaN(size(score)); 
+ REM_State = NaN(size(score)); 
+ W_State = NaN(size(score)); 
+ Q_State = NaN(size(score)); 
+ T_State = NaN(size(score)); 
+
+ W_State(score ==1) = 1; 
+ SW_State(score ==2) = 1; 
+ REM_State(score ==3) = 1; 
+ Q_State(score==4) = 1; 
+ T_State(score==5) = 1; 
 
 %   REM_State(t_emg > 5) = 1; % get putative REM 
 %  SW_State(d_emg > 6 & t_emg < 3) = 1;  % get putative SWS
@@ -344,7 +370,7 @@ sample_multi = 2;
 %  S_State(
 
  %% plot the power of the filtered signals. 
- c_ord = linspecer(4);
+ c_ord = linspecer(5);
  
  Subs = 9;
  figure(115)
@@ -353,41 +379,44 @@ sample_multi = 2;
  imagesc(T,F,P_p)
  axis xy
  hold on
- plot(csc.tvec-csc.tvec(1), SW_State+F(end-3),'*','markersize', 4, 'color', c_ord(4,:), 'linewidth', 4)
-  plot(csc.tvec-csc.tvec(1), W_State+F(end-1),'*','markersize', 4, 'color', c_ord(1,:), 'linewidth', 4)
- plot(csc.tvec-csc.tvec(1), REM_State+F(end-2),'*','markersize', 4, 'color', c_ord(2,:), 'linewidth', 4)
-
+ plot(csc.tvec-csc.tvec(1), W_State+max(F)+1,  'color', c_ord(1,:), 'linewidth', 4)
+ plot(csc.tvec-csc.tvec(1), Q_State+max(F)+1,  'color', c_ord(5,:), 'linewidth', 4)
+ plot(csc.tvec-csc.tvec(1), SW_State+max(F)+1, 'color', c_ord(3,:), 'linewidth', 4)
+ plot(csc.tvec-csc.tvec(1), REM_State+max(F)+1, 'color', c_ord(2,:), 'linewidth', 4)
+ plot(csc.tvec-csc.tvec(1), T_State+max(F)+1, 'color', c_ord(4,:), 'linewidth', 4)
+ylim([F(1) F(end)+5])
  ax2(2) =subplot(Subs,1,3);
- plot(csc.tvec-csc.tvec(1), emg.data(2,:))
- xlabel('emg')
+ plot(csc.tvec-csc.tvec(1), emg_amp)
+ text(-500, nanmedian(emg_amp),'emg/amp');
+ 
  ax2(3) =subplot(Subs,1,4);
- plot(csc.tvec-csc.tvec(1), smooth(abs(hilbert(csc.data(3,:))),csc.cfg.hdr{1}.SamplingFrequency*4,'moving'))
- xlabel('delta')
+ plot(csc.tvec-csc.tvec(1), d_amp)
+ text(-500, nanmedian(d_amp),'d/amp')
  
   ax2(4) =subplot(Subs,1,5);
- plot(csc.tvec-csc.tvec(1), d_emg)
- xlabel('delta/emg')
+ plot(csc.tvec-csc.tvec(1), t_amp)
+ text(-500, nanmedian(t_amp),'t/amp')
  
  ax2(5) =subplot(Subs,1,6);
- plot(csc.tvec-csc.tvec(1), smooth(abs(hilbert(csc.data(4,:))),csc.cfg.hdr{1}.SamplingFrequency*4,'moving'))
- xlabel('theta')
+ plot(csc.tvec-csc.tvec(1), r_amp)
+ text(-500, nanmedian(r_amp),'r/amp')
  
  ax2(6) =subplot(Subs,1,7);
- plot(csc.tvec-csc.tvec(1),t_d)
- xlabel('theta/delta')
+  plot(csc.tvec-csc.tvec(1), d_emg)
+ text(-500, nanmedian(d_emg),'d/emg')
  
  ax2(7) =subplot(Subs,1,8);
- plot(csc.tvec-csc.tvec(1),t_emg)
- xlabel('theta/emg')
+ plot(csc.tvec-csc.tvec(1),t_d)
+ text(-500, nanmedian(t_d),'t/d')
+
  
- 
-  ax2(8) =subplot(Subs,1,9);
-   swr_t([1 end]) = NaN; 
- t_swr([1 end]) = NaN; 
- plot(csc.tvec-csc.tvec(1),swr_t, 'r', csc.tvec-csc.tvec(1),t_swr, 'b')
- xlabel('swr/t')
+ ax2(8) =subplot(Subs,1,9);
+ swr_t([1 end]) = NaN;
+ t_swr([1 end]) = NaN;
+ plot(csc.tvec-csc.tvec(1),t_swr)
+ text(-500, nanmedian(t_swr),'t/swr')
  linkaxes(ax2, 'x');
-  xlim([T(1) T(end)])
+ xlim([T(1) T(end)])
 
  %% binned data blocks. 
  
