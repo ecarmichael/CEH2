@@ -336,21 +336,38 @@ sample_multi = 2;
  r_amp = abs(hilbert(csc.data(5,:)));
  emg_amp = emg.data(2,:);
  
- d_amp = MS_norm_range(d_amp, 0,1);
- t_amp = MS_norm_range(t_amp, 0,1);
- r_amp = MS_norm_range(r_amp, 0,1);
- emg_amp = MS_norm_range(emg_amp, 0,1);
+ 
+%  d_amp = MS_norm_range(d_amp, 0,1);
+%  t_amp = MS_norm_range(t_amp, 0,1);
+%  r_amp = MS_norm_range(r_amp, 0,1);
+%  emg_amp = MS_norm_range(emg_amp, 0,1);
 
- t_d = smooth(t_amp./d_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
- t_r = smooth(t_amp./r_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
- r_t = smooth(r_amp./t_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
+ tvec_down = csc.tvec(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end)-csc.tvec(1);
+score_down = score(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end); 
 
- d_emg =  smooth(d_amp./emg_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
- t_emg =  smooth(t_amp./emg_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
- emg_d = smooth(emg_amp./d_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
- emg_t = smooth(emg_amp./t_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
- emg_swr = smooth(emg_amp./r_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving');
 
+ t_d = smooth(t_amp./d_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+ t_r = smooth(t_amp./r_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+ r_t = smooth(r_amp./t_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+
+ d_amp = smooth(d_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+t_amp = smooth(t_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+r_amp = smooth(r_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+emg_amp = smooth(emg_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+ 
+ d_emg =  smooth(d_amp./emg_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+ t_emg =  smooth(t_amp./emg_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+ emg_d = smooth(emg_amp./d_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+ emg_t = smooth(emg_amp./t_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+ emg_swr = smooth(emg_amp./r_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+ 
+ 
+ % downsample
+ t_d = t_d(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+ d_emg = d_emg(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+ t_emg = t_emg(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+ emg_amp = emg_amp(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+ 
  SW_State = NaN(size(score)); 
  REM_State = NaN(size(score)); 
  W_State = NaN(size(score)); 
@@ -361,13 +378,92 @@ sample_multi = 2;
  SW_State(score ==2) = 1; 
  REM_State(score ==3) = 1; 
  Q_State(score==4) = 1; 
- T_State(score==5) = 1; 
+ T_State(score==5) = 1;
 
-%   REM_State(t_emg > 5) = 1; % get putative REM 
-%  SW_State(d_emg > 6 & t_emg < 3) = 1;  % get putative SWS
-%  W_State(emg_d > .4 & REM_State ~=1) = 1; % get putative Wake 
-%  S_State(isnan(S_State)) = 3; % get unclassified. 
-%  S_State(
+ 
+
+ 
+ %% try auto-detect   scores {'Wake', 'SWS', 'REM', 'Quiescence', 'Transition'}
+
+ SW_State_auto = NaN(size(t_emg)); 
+ REM_State_auto = NaN(size(t_emg)); 
+ W_State_auto = NaN(size(t_emg)); 
+ Q_State_auto = NaN(size(t_emg)); 
+ T_State_auto = NaN(size(t_emg)); 
+ All_State_auto = NaN(size(t_emg)); 
+ 
+ d_emg_th = 3.5; % if greater should be awake
+ t_emg_th = 5; % if greater, then REM
+ emg_t_th = 0.3;
+ emg_amp_th = 0.00003; % if greater Awake
+ t_d_th = 1.25; 
+ r_t_th = 2; 
+ t_r_th = 0.6; 
+ 
+%  for td = 0:.1:7
+% Rem (rare
+ All_State_auto((t_emg >= t_emg_th)  & (t_d > t_d_th) ) = 3;
+ 
+ figure(1010)
+subplot(2,1,1)
+ hold on
+%  plot(tvec_down, (emg_amp < emg_amp_th)*1, '.r');
+plot(tvec_down, (d_emg < d_emg_th)*1, '.r');text(-1000, 1,'d emg');
+plot(tvec_down, ((All_State_auto==3)*3)+.5, '.m')
+plot(tvec_down, (t_emg >= t_emg_th)*2, '.g');  text(-1000, 2,'t emg');
+plot(tvec_down, (t_d > t_d_th)*3, '.b');text(-1000,3,'t d');
+% plot(tvec_down, (t_emg >= t_emg_th  & t_d > t_d_th)*4, '.k');text(-500, 4,'rem?');
+ plot(tvec_down, ((score_down==3)*3)+.25, '.k');
+
+
+ xlim([min(tvec_down) max(tvec_down)])
+
+ subplot(2,1,2)   
+ hold on
+ plot(tvec_down, ((All_State_auto==3)*3)+.2, '.r');
+ plot(tvec_down, score_down, '.k');
+ text(-1000, 1, 'Wake');
+ text(-1000, 2, 'SWS');
+ text(-1000, 3, 'REM');
+ text(-1000, 4, 'Q');
+ text(-1000, 5, 'T');
+
+xlim([min(csc.tvec-csc.tvec(1)) max(csc.tvec-csc.tvec(1))])
+
+% check the score. 
+score_rem = score_down==3; 
+
+rem_auto = t_emg >= t_emg_th  & emg_amp < emg_amp_th & t_d > t_d_th; 
+overlap = nansum(rem_auto == score_rem)/length(score_rem);
+
+title(['Overlap: ' num2str(overlap*100,2)])
+ 
+%  end
+ % SWS
+%  All_State_auto(d_emg >= 15 & emg_amp_n < emg_amp_th & t_d < t_d_th) = 2;
+%   % Quiescence
+%   All_State_auto(emg_amp < emg_amp_th  & t_emg < t_emg_th) = 4;
+%  % Wake
+%   All_State_auto(emg_amp >= emg_amp_th  & t_d >= t_d_th) = 1;
+% 
+% figure(222)
+% hold on
+% plot(csc.tvec-csc.tvec(1), score, '.k');
+% plot(csc.tvec-csc.tvec(1), All_State_auto+0.2, '.r');
+% ylim([0 6]);
+% set(gca, 'ytick', 1:5, 'yticklabel', {'Wake', 'SWS', 'REM', 'Quiet', 'Tran'}); 
+% %  % to do loop this to optimize. 
+% % REM_State_auto(t_emg > 5 & emg_amp_n < 0.2 ) = 1; % get putative REM 
+% % All_State_auto(~isnan(REM_State_auto)) =3;
+% 
+% % SW_State_auto(d_emg > 15 & emg_amp_n < 0.2 & t_d < 2) = 1;  % get putative SWS
+% % W_State_auto(emg_amp_n >= 0.2 & REM_State_auto ~=1) = 1; % get putative Wake 
+% % % Q_State_auto(isnan(S_State)) = 3; % get unclassified. 
+% overlap = nansum(All_State_auto == score)/length(score);
+% 
+% title(['Overlap: ' num2str(overlap*100,2) '%'])
+
+%% check overlap. 
 
  %% plot the power of the filtered signals. 
  c_ord = linspecer(5);
@@ -386,35 +482,64 @@ sample_multi = 2;
  plot(csc.tvec-csc.tvec(1), T_State+max(F)+1, 'color', c_ord(4,:), 'linewidth', 4)
 ylim([F(1) F(end)+5])
  ax2(2) =subplot(Subs,1,3);
- plot(csc.tvec-csc.tvec(1), emg_amp)
+ plot(tvec_down, emg_amp)
  text(-500, nanmedian(emg_amp),'emg/amp');
+ hline(emg_amp_th)
  
  ax2(3) =subplot(Subs,1,4);
- plot(csc.tvec-csc.tvec(1), d_amp)
+ if length(d_amp) ~= length(csc.tvec)
+    plot(tvec_down, d_amp)
+ else
+     plot(csc.tvec-csc.tvec(1), d_amp)
+ end
  text(-500, nanmedian(d_amp),'d/amp')
- 
+
   ax2(4) =subplot(Subs,1,5);
- plot(csc.tvec-csc.tvec(1), t_amp)
+ if length(t_amp) ~= length(csc.tvec)
+    plot(tvec_down, t_amp)
+ else
+     plot(csc.tvec-csc.tvec(1), t_amp)
+ end
  text(-500, nanmedian(t_amp),'t/amp')
- 
+
  ax2(5) =subplot(Subs,1,6);
- plot(csc.tvec-csc.tvec(1), r_amp)
- text(-500, nanmedian(r_amp),'r/amp')
+ if length(r_t) ~= length(csc.tvec)
+    plot(tvec_down, r_t)
+ else
+     plot(csc.tvec-csc.tvec(1), t_r)
+ end
+ text(-500, nanmedian(r_t),'r/t')
  
  ax2(6) =subplot(Subs,1,7);
-  plot(csc.tvec-csc.tvec(1), d_emg)
+ if length(d_emg) ~= length(csc.tvec)
+    plot(tvec_down, d_emg)
+ else
+     plot(csc.tvec-csc.tvec(1), d_emg)
+ end
  text(-500, nanmedian(d_emg),'d/emg')
- 
+  hline(d_emg_th)
+
  ax2(7) =subplot(Subs,1,8);
- plot(csc.tvec-csc.tvec(1),t_d)
+ if length(t_d) ~= length(csc.tvec)
+    plot(tvec_down, t_d)
+ else
+     plot(csc.tvec-csc.tvec(1), t_d)
+ end
  text(-500, nanmedian(t_d),'t/d')
+  hline(t_d_th)
 
  
  ax2(8) =subplot(Subs,1,9);
  swr_t([1 end]) = NaN;
  t_swr([1 end]) = NaN;
- plot(csc.tvec-csc.tvec(1),t_swr)
- text(-500, nanmedian(t_swr),'t/swr')
+ emg_d(end-10:end) = NaN;
+ if length(t_emg) ~= length(csc.tvec)
+    plot(tvec_down, t_emg)
+ else
+     plot(csc.tvec-csc.tvec(1), t_emg)
+ end
+ text(-500, nanmedian(t_emg),'t_emg')
+ hline(t_emg_th)
  linkaxes(ax2, 'x');
  xlim([T(1) T(end)])
 
