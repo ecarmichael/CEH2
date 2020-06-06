@@ -137,7 +137,7 @@ cfg_filt_t = [];
 cfg_filt_t.type = 'fdesign'; %the type of filter I want to use via filterlfp
 cfg_filt_t.f  = [15 300];
 cfg_filt_t.order = 16; %type filter order
-cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
+% cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
 % reason.  .
 emg = FilterLFP(cfg_filt_t, emg);
 
@@ -175,7 +175,14 @@ csc.data(5,:) = theta_csc.data;
 csc.data(4,:) = delta_csc.data;
 csc.data(3,:) = lfp.data;
 
-csc.label = {'emg', 'emg_filt', 'lfp', 'delta', 'theta', 'wide', 'SWR'};
+emg_chan = 2;
+raw_chan = 3; 
+d_chan = 4;
+t_chan = 5;
+w_chan = 6;
+r_chan = 7; 
+
+csc.label = {'emg', 'emg_filt', 'lfp', 'delta', 'theta', 'wide', 'ripple'};
 %  clear theta_csc delta_csc emg lfp
 
 %  save('D:\Dropbox (Williams Lab)\Sleep_state\sleep_lfp_540day5.mat', 'csc');
@@ -224,6 +231,9 @@ swr_t_binned = NaN(size(bins));
 emg_d_binned = NaN(size(bins));
 emg_t_binned = NaN(size(bins));
 emg_swr_binned = NaN(size(bins));
+
+tvec_binned = csc.tvec(bins) - csc.tvec(1); 
+
 % if exist('score')
 %     Sleepscore_binned = NaN(size(bins));
 % end
@@ -244,25 +254,23 @@ for iB = length(bins):-1:1
         %
 
 
-        d_w_binned(iB) = mean(abs(hilbert(csc.data(3,bins(iB):end)))./abs(hilbert(csc.data(5,bins(iB): end))));
-        emg_binned(iB) = mean(emg.data(2,bins(iB):end));
-        t_d_binned(iB) = mean(abs(hilbert(csc.data(4,bins(iB): end)))./abs(hilbert(csc.data(3,bins(iB): end))));
-        d_emg_binned(iB) =  mean(abs(hilbert(csc.data(3,bins(iB): end)))./emg.data(2,bins(iB): end));
-        t_emg_binned(iB) =  mean(abs(hilbert(csc.data(4,bins(iB): end)))./emg.data(2,bins(iB): end));
-        t_swr_binned(iB) =  mean(abs(hilbert(csc.data(4,bins(iB): end)))./abs(hilbert(csc.data(5,bins(iB): end))));
-        swr_t_binned(iB) =  mean(abs(hilbert(csc.data(6,bins(iB): end)))./abs(hilbert(csc.data(4,bins(iB): end))));
-        swr_emg_binned(iB) =  mean(abs(hilbert(csc.data(6,bins(iB): end)))./abs(hilbert(csc.data(2,bins(iB): end))));
+        d_w_binned(iB) = mean(abs(hilbert(csc.data(d_chan,bins(iB):end)))./abs(hilbert(csc.data(w_chan,bins(iB):end))));
+        emg_binned(iB) = mean(csc.data(emg_chan,bins(iB):end));
+        t_d_binned(iB) = mean(abs(hilbert(csc.data(t_chan,bins(iB):end)))./abs(hilbert(csc.data(d_chan,bins(iB):end))));
+        d_emg_binned(iB) =  mean(abs(hilbert(csc.data(d_chan,bins(iB):end)))./csc.data(emg_chan,bins(iB):end));
+        t_emg_binned(iB) =  mean(abs(hilbert(csc.data(t_chan,bins(iB):end)))./csc.data(emg_chan,bins(iB):end));
+        t_swr_binned(iB) =  mean(abs(hilbert(csc.data(t_chan,bins(iB):end)))./abs(hilbert(csc.data(r_chan,bins(iB):end))));
+        swr_t_binned(iB) =  mean(abs(hilbert(csc.data(r_chan,bins(iB):end)))./abs(hilbert(csc.data(t_chan,bins(iB):end))));
+        swr_emg_binned(iB) =  mean(abs(hilbert(csc.data(r_chan,bins(iB):end)))./abs(hilbert(csc.data(emg_chan,bins(iB):end))));
 
-        emg_d_binned(iB) = mean(emg.data(2,bins(iB): end)./abs(hilbert(csc.data(3,bins(iB): end))));
-        emg_t_binned(iB) = mean(emg.data(2,bins(iB): end)./abs(hilbert(csc.data(4,bins(iB): end))));
-        emg_swr_binned(iB) = mean(emg.data(2,bins(iB): end)./abs(hilbert(csc.data(6,bins(iB):end))));
+        emg_d_binned(iB) = mean(csc.data(emg_chan,bins(iB):end)./abs(hilbert(csc.data(d_chan,bins(iB):end))));
+        emg_t_binned(iB) = mean(csc.data(emg_chan,bins(iB):end)./abs(hilbert(csc.data(t_chan,bins(iB):end))));
+        emg_swr_binned(iB) = mean(csc.data(emg_chan,bins(iB):end)./abs(hilbert(csc.data(r_chan,bins(iB):end))));
         
-        t_d_emg_binned(iB) = mean((abs(hilbert(csc.data(4,bins(iB): end)))./abs(hilbert(csc.data(2,bins(iB): end))))./...
-            (abs(hilbert(csc.data(3,bins(iB): end)))./abs(hilbert(csc.data(2,bins(iB): end)))));
-        
-        d_swr_emg_binned(iB) = mean(((abs(hilbert(csc.data(4,bins(iB): end))).*abs(hilbert(csc.data(5,bins(iB): end)))))./(emg.data(2,bins(iB): end)));
-        
-        t_d_emg_binned(iB) = t_d_binned(iB)./mean(emg.data(2,bins(iB): end));
+        t_d_emg_binned(iB) = mean((abs(hilbert(csc.data(t_chan,bins(iB):end)))./abs(hilbert(csc.data(emg_chan,bins(iB):end))))./...
+            (abs(hilbert(csc.data(d_chan,bins(iB):end)))./abs(hilbert(csc.data(emg_chan,bins(iB):end)))));
+                
+%         t_d_emg_binned(iB) = t_d_binned(iB)./mean(csc.data(emg_chan,bins(iB):end));
 %         
         
     else
@@ -274,30 +282,26 @@ for iB = length(bins):-1:1
 %         swr_binned(iB) = rms(csc.data(5,bins(1): bins(iB+1)));
                 
         
-        delta_w_binned(iB) = bandpower(csc.data(2,bins(iB): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 1,4]);
-        theta_w_binned(iB) = bandpower(csc.data(2,bins(iB): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 6,9]);
-        wide_w_binned(iB) = bandpower(csc.data(2,bins(iB): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 1,50]);
-        swr_w_binned(iB) =  bandpower(csc.data(2,bins(iB): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 125,250]);
+%         delta_w_binned(iB) = bandpower(csc.data(raw_chan,bins(iB): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 1,4]);
+%         theta_w_binned(iB) = bandpower(csc.data(raw_chan,bins(iB): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 6,9]);
+%         wide_w_binned(iB) = bandpower(csc.data(raw_chan,bins(iB): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 1,50]);
+%         swr_w_binned(iB) =  bandpower(csc.data(raw_chan,bins(iB): bins(iB+1)), csc.cfg.hdr{1}.SamplingFrequency,[ 125,250]);
         %
-        d_w_binned(iB) = mean(abs(hilbert(csc.data(3,bins(iB): bins(iB+1))))./abs(hilbert(csc.data(5,bins(iB): bins(iB+1)))));
-        emg_binned(iB) = mean(emg.data(2,bins(iB):bins(iB+1)));
-        t_d_binned(iB) = mean(abs(hilbert(csc.data(4,bins(iB): bins(iB+1))))./abs(hilbert(csc.data(3,bins(iB): bins(iB+1)))));
-        d_emg_binned(iB) =  mean(abs(hilbert(csc.data(3,bins(iB): bins(iB+1))))./emg.data(2,bins(iB): bins(iB+1)));
-        t_emg_binned(iB) =  mean(abs(hilbert(csc.data(4,bins(iB): bins(iB+1))))./emg.data(2,bins(iB): bins(iB+1)));
-        t_swr_binned(iB) =  mean(abs(hilbert(csc.data(4,bins(iB): bins(iB+1))))./abs(hilbert(csc.data(6,bins(iB): bins(iB+1)))));
-        swr_t_binned(iB) =  mean(abs(hilbert(csc.data(6,bins(iB): bins(iB+1))))./abs(hilbert(csc.data(4,bins(iB): bins(iB+1)))));
-        swr_emg_binned(iB) =  mean(abs(hilbert(csc.data(6,bins(iB): bins(iB+1))))./abs(hilbert(csc.data(2,bins(iB): bins(iB+1)))));
+        d_w_binned(iB) = mean(abs(hilbert(csc.data(d_chan,bins(iB):bins(iB+1))))./abs(hilbert(csc.data(w_chan,bins(iB):bins(iB+1)))));
+        emg_binned(iB) = mean(csc.data(emg_chan,bins(iB):bins(iB+1)));
+        t_d_binned(iB) = mean(abs(hilbert(csc.data(t_chan,bins(iB):bins(iB+1))))./abs(hilbert(csc.data(d_chan,bins(iB):bins(iB+1)))));
+        d_emg_binned(iB) =  mean(abs(hilbert(csc.data(d_chan,bins(iB):bins(iB+1))))./csc.data(emg_chan,bins(iB):bins(iB+1)));
+        t_emg_binned(iB) =  mean(abs(hilbert(csc.data(t_chan,bins(iB):bins(iB+1))))./csc.data(emg_chan,bins(iB):bins(iB+1)));
+        t_swr_binned(iB) =  mean(abs(hilbert(csc.data(t_chan,bins(iB):bins(iB+1))))./abs(hilbert(csc.data(r_chan,bins(iB):bins(iB+1)))));
+        swr_t_binned(iB) =  mean(abs(hilbert(csc.data(r_chan,bins(iB):bins(iB+1))))./abs(hilbert(csc.data(t_chan,bins(iB):bins(iB+1)))));
+        swr_emg_binned(iB) =  mean(abs(hilbert(csc.data(r_chan,bins(iB):bins(iB+1))))./abs(hilbert(csc.data(emg_chan,bins(iB):bins(iB+1)))));
 
-        emg_d_binned(iB) = mean(emg.data(2,bins(iB): bins(iB+1))./abs(hilbert(csc.data(3,bins(iB): bins(iB+1)))));
-        emg_t_binned(iB) = mean(emg.data(2,bins(iB): bins(iB+1))./abs(hilbert(csc.data(4,bins(iB): bins(iB+1)))));
-        emg_swr_binned(iB) = mean(emg.data(2,bins(iB): bins(iB+1))./abs(hilbert(csc.data(6,bins(iB): bins(iB+1)))));
+        emg_d_binned(iB) = mean(csc.data(emg_chan,bins(iB):bins(iB+1))./abs(hilbert(csc.data(d_chan,bins(iB):bins(iB+1)))));
+        emg_t_binned(iB) = mean(csc.data(emg_chan,bins(iB):bins(iB+1))./abs(hilbert(csc.data(t_chan,bins(iB):bins(iB+1)))));
+        emg_swr_binned(iB) = mean(csc.data(emg_chan,bins(iB):bins(iB+1))./abs(hilbert(csc.data(r_chan,bins(iB):bins(iB+1)))));
         
-        t_d_emg_binned(iB) = t_d_binned(iB)./mean(emg.data(2,bins(iB): bins(iB+1)));
-        
-        t_d_emg_binned(iB) = mean((abs(hilbert(csc.data(4,bins(iB):bins(iB+1))))./abs(hilbert(csc.data(2,bins(iB): bins(iB+1)))))./...
-            (abs(hilbert(csc.data(3,bins(iB): bins(iB+1))))./abs(hilbert(csc.data(2,bins(iB): bins(iB+1))))));
-        
-        d_swr_emg_binned(iB) = mean(((abs(hilbert(csc.data(4,bins(iB): bins(iB+1)))).*abs(hilbert(csc.data(5,bins(iB): bins(iB+1))))))./(emg.data(2,bins(iB): bins(iB+1))));
+        t_d_emg_binned(iB) = mean((abs(hilbert(csc.data(t_chan,bins(iB):bins(iB+1))))./abs(hilbert(csc.data(emg_chan,bins(iB):bins(iB+1)))))./...
+            (abs(hilbert(csc.data(d_chan,bins(iB):bins(iB+1))))./abs(hilbert(csc.data(emg_chan,bins(iB):bins(iB+1))))));
 
     end
     %
@@ -349,13 +353,13 @@ toc
 %% plot the bandpower versons
 sample_multi = 2;
 
-[~, F, T,P] =  spectrogram(csc.data(3,:),rectwin(csc.cfg.hdr{1}.SamplingFrequency*4),csc.cfg.hdr{1}.SamplingFrequency*sample_multi,0.5:.1:14,csc.cfg.hdr{1}.SamplingFrequency);
+[~, F, T,P] =  spectrogram(csc.data(raw_chan,:),rectwin(csc.cfg.hdr{1}.SamplingFrequency*4),csc.cfg.hdr{1}.SamplingFrequency*sample_multi,0.5:.1:14,csc.cfg.hdr{1}.SamplingFrequency);
 
 % to do: try normalizing the data within the band to make transitions more
 % clear than raw amplitude.
-d_amp = abs(hilbert(csc.data(4,:)));
-t_amp = abs(hilbert(csc.data(5,:)));
-r_amp = abs(hilbert(csc.data(6,:)));
+d_amp = abs(hilbert(csc.data(d_chan,:)));
+t_amp = abs(hilbert(csc.data(t_chan,:)));
+r_amp = abs(hilbert(csc.data(r_chan,:)));
 emg_amp = emg.data(2,:);
 
 
@@ -380,6 +384,7 @@ emg_amp = smooth(emg_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')
 d_emg =  (d_amp./emg_amp);
 t_emg =  (t_amp./emg_amp);
 t_d_emg = ((t_amp./emg_amp)./(d_amp./emg_amp));
+r_emg = (r_amp./emg_amp);
 
 %  d_emg =  smooth(d_amp./emg_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
 %  t_emg =  smooth(t_amp./emg_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
@@ -398,8 +403,10 @@ emg_swr = (emg_amp./r_amp);
 t_d = t_d(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 d_emg = d_emg(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 t_emg = t_emg(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+r_emg = r_emg(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 d_amp = d_amp(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 t_amp = t_amp(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+r_amp = r_amp(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 emg_amp = emg_amp(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 t_d_emg = t_d_emg(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 
@@ -416,8 +423,9 @@ Q_State(score==4) = 1;
 T_State(score==5) = 1;
 
 %% try PCA of d t emg????
+% [p_coeff, p_score] = pca([zscore(d_amp); zscore(t_amp);zscore(r_amp); zscore(emg_amp)]);
 
-[p_coeff, p_score] = pca([zscore(delta_w_binned); zscore(theta_w_binned);zscore(swr_w_binned); zscore(emg_binned)]);
+[p_coeff, p_score] = pca([zscore(d_emg); zscore(t_emg);zscore(r_amp); zscore(emg_amp)]);
 figure(200)
 subplot(411)
 plot(T, emg_binned(1:end-2))
@@ -429,7 +437,11 @@ subplot(414)
 plot(T, p_coeff(1:end-2,3))
 
 figure(201)
-scatter(p_coeff(:,2), p_coeff(:,1), '.')
+scatter3(p_coeff(:,3),p_coeff(:,2), p_coeff(:,1), '.')
+%% try some K means clustering
+data_in = [d_emg_binned', t_emg_binned', t_d_binned',emg_binned'];
+
+MS_kmean_scatter(data_in, 3,[4,3,2,1], 20);
 
 
 %% try auto-detect   scores {'Wake', 'SWS', 'REM', 'Quiescence', 'Transition'}
@@ -517,18 +529,7 @@ title(['Overlap: ' num2str(overlap*100,4) '%'])
 %
 % title(['Overlap: ' num2str(overlap*100,2) '%'])
 
-%% check overlap. try model classification ??
 
-% class_data(:,1) = score_down;
-% class_data(:,2) = t_d';
-% class_data(:,3) = emg_amp';
-% class_data(:,4) = d_amp';
-% class_data(:,5) = t_amp';
-% class_data(:,6) = d_emg';
-% class_data(:,7) = t_emg';
-% class_data(:,8) = t_d_emg';
-
-% best case was 77% with Medium Tree or linear discrim.  Most model types were around 75%.
 %% plot the power of the filtered signals.
 c_ord = linspecer(5);
 
@@ -557,6 +558,8 @@ else
     plot(csc.tvec-csc.tvec(1), d_amp)
 end
 text(-500, nanmedian(d_amp),'d/amp')
+hline(d_amp_th)
+
 
 ax2(4) =subplot(Subs,1,5);
 if length(t_amp) ~= length(csc.tvec)
@@ -611,7 +614,6 @@ xlim([T(1) T(end)])
 
 %% try to auto classify. 
 
-tvec_binned = csc.tvec(bins) - csc.tvec(1); 
 
 SW_State_auto_B = NaN(size(t_d_binned));
 REM_State_auto_B = NaN(size(t_d_binned));
@@ -824,21 +826,22 @@ xlim([T(1) T(end)])
 
 %% %%%%%%%%%%%%%%%%%%%%%%%
 % short fourier transform method
-f_d = [1 4];
-f_t = [6 9];
-f_w = [1 50];
+f_d = [20 80];
+f_t = [5 9];
+f_w = [10 50];
 
 %  [S, F, T] = stft(csc.data(2,:), csc.cfg.hdr{1}.SamplingFrequency, 'Window', hamming(csc.cfg.hdr{1}.SamplingFrequency*40));
 
-[~, F, T,P] =  spectrogram(csc.data(1,:),rectwin(csc.cfg.hdr{1}.SamplingFrequency*8),csc.cfg.hdr{1}.SamplingFrequency*4,0.5:.5:50,csc.cfg.hdr{1}.SamplingFrequency);
+[~, F, T,P] =  spectrogram(csc.data(raw_chan,:),hanning(csc.cfg.hdr{1}.SamplingFrequency*4),csc.cfg.hdr{1}.SamplingFrequency*2,1:1:150,csc.cfg.hdr{1}.SamplingFrequency);
 %%
 P_p = 10*log10(P);
-P_p = P_p.^2;
-P_p = P_p./max(max(P_p));
+% P_p = P_p.^2;
+P_p = P_p./min(min(P_p));
 figure(125)
 ax(1) = subplot(9,1,1:4);
-imagesc(T,F,P./max(max(P)))
+imagesc(T,F,P_p)
 axis xy
+d_p = []; w_p = []; t_p=[];
 
 for iS = size(P_p,2):-1:1
     d_p(iS) = mean(P_p(find(F == f_d(1)):find(F == f_d(2)),iS));
@@ -849,6 +852,7 @@ d_norm = d_p./w_p;
 t_norm = t_p./w_p;
 
 td_norm = t_norm./d_norm;
+td = t_p./d_p; 
 
 %  subplot(5,1,2)
 %  plot(csc.tvec - csc.tvec(1), csc.data(1,:))
@@ -867,7 +871,7 @@ plot(T, d_norm);
 xlabel('1-4/ 1-50')
 
 ax(6) = subplot(9,1,8);
-plot(T, t_p);
+plot(T, td);
 xlabel('6-9 / 1-4')
 
 ax(7) = subplot(9,1,9);
@@ -889,7 +893,18 @@ linkaxes(ax, 'x');
 %         shading flat
 %         colorbar
 %         ylim([0 120])
+%% check overlap. try model classification ??
 
+% class_data(:,1) = score_down;
+% class_data(:,2) = t_d';
+% class_data(:,3) = emg_amp';
+% class_data(:,4) = d_amp';
+% class_data(:,5) = t_amp';
+% class_data(:,6) = d_emg';
+% class_data(:,7) = t_emg';
+% class_data(:,8) = t_d_emg';
+
+% best case was 77% with Medium Tree or linear discrim.  Most model types were around 75%.
 %% try to auto class based on binned data
 % spec_class= cat(2,score_down(2:end-1),emg_binned(2:end-1)', P_p');
 
