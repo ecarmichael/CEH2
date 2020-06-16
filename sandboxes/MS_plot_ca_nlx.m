@@ -54,9 +54,9 @@ end
 %% set up defaults.
 cfg_def =[];
 cfg_def.Ca_type = 'RawTraces'; % can be either 'RawTraces' or FiltTraces' (maybe others?)
-cfg_def.Ca_chan = 1:floor(n_cells/10):n_cells; % get a subset of cells.
-cfg_def.chan_to_plot = these_csc;  % how many channels are in the csc.  Determined above. 
-cfg_def.plot_type = '2d'; % '2d' or '3d'
+cfg_def.Ca_chan = 1:floor(n_cells/20):n_cells; % get a subset of cells.
+cfg_def.chan_to_plot = 2;  % how many channels are in the csc.  Determined above. 
+cfg_def.plot_type = '3d'; % '2d' or '3d'
 cfg_def.x_zoom = []; % where to zoom in on eht x_axis for each plot.
 cfg_def.emg_range = [];
 cfg_def.label = 'file_names'; 

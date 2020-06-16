@@ -66,10 +66,10 @@ for iB = 1:length(ms_seg_resize.RawTraces)
     str_len = length(strcat(ms_seg_resize.file_names{iB},ms_seg_resize.pre_post{iB}, ms_seg_resize.hypno_label{iB}));
     fprintf('<strong>%s %s - %s:</strong>', ms_seg_resize.file_names{iB},ms_seg_resize.pre_post{iB}, ms_seg_resize.hypno_label{iB})
     fprintf(repmat(' ', 1,abs(str_len-23)))
-    fprintf('SWD:%3d  %2.1f/s   SWR:%3d  %2.1f/s   low_G:%3d  %2.1f/s \n',...
-        length(ms_seg_resize.SWD_evts{iB}.tstart),length(ms_seg_resize.SWD_evts{iB}.tstart)/len,....
+    fprintf(' SWD:%3d  %2.1f/s   SWR:%3d  %2.1f/s   low_G:%3d  %2.1f/s   time: %2.1fs \n',...
+        length(ms_seg_resize.SWD_evts{iB}.tstart),length(ms_seg_resize.SWD_evts{iB}.tstart)/len,...
         length(ms_seg_resize.SWR_evts{iB}.tstart),length(ms_seg_resize.SWR_evts{iB}.tstart)/len,...
-        length(ms_seg_resize.low_gamma_evts{iB}.tstart),length(ms_seg_resize.low_gamma_evts{iB}.tstart)/len)
+        length(ms_seg_resize.low_gamma_evts{iB}.tstart),length(ms_seg_resize.low_gamma_evts{iB}.tstart)/len,len)
 end
 fprintf('_______________________________________________________________________________\n')
 %% start with one block.
@@ -133,10 +133,10 @@ for iT  = traces
     hold on
     this_B = ms_seg.Binary(:, iT);
     this_B(this_B == 0) = NaN; 
-    plot(ms_seg.time/1000,    (this_B*(0.01*length(traces)))+iT, 'linewidth', 2)
+    plot((ms_seg.time/1000)-ms_seg.time(1)/1000,    (this_B*(0.01*length(traces)))+iT, 'linewidth', 2)
     this_B =[]; 
 end
-xlim([ms_seg.time(1)/1000, ms_seg.time(end)/1000]);
+xlim([(ms_seg.time(1)/1000)-ms_seg.time(1)/1000, (ms_seg.time(end)/1000)-ms_seg.time(1)/1000]);
 ylim([traces(1) traces(end)]);
 linkaxes(ax, 'x')
 

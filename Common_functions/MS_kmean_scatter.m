@@ -1,4 +1,4 @@
-function MS_kmean_scatter(data_in, nGroups, dim, markersize)
+function g_idx = MS_kmean_scatter(data_in, nGroups, dim, markersize)
 %% kmeans 3d scatter with grouped colours 
 
 
@@ -29,3 +29,7 @@ end
 colors = linspecer(length(uni_groups));  %or any other way of creating the colormap
 markersize = 20;   %change to suit taste
 scatter3(data_in(:,dim(1)), data_in(:,dim(2)), data_in(:,dim(3)), markersize, colors(IC,:));
+
+%% output the grouping index
+
+g_idx = idx; 

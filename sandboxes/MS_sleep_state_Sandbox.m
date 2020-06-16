@@ -436,12 +436,37 @@ plot(T, p_coeff(1:end-2,2))
 subplot(414)
 plot(T, p_coeff(1:end-2,3))
 
-figure(201)
-scatter3(p_coeff(:,3),p_coeff(:,2), p_coeff(:,1), '.')
+% figure(201)
+% scatter3(p_coeff(:,3),p_coeff(:,2), p_coeff(:,1), '.')
 %% try some K means clustering
 data_in = [d_emg_binned', t_emg_binned', t_d_binned',emg_binned'];
+figure(221)
+subplot(2,2,1)
+g_idx = MS_kmean_scatter(data_in, 3,[4,3,2,1], 20);
+xlabel('emg'); ylabel('t/d'); zlabel('t / emg');
+[az, el] = view(45, 35); 
+subplot(2,2,2)
+% hold on
+sleep_3_score = score_down;
+sleep_3_score(sleep_3_score==4) = 2; 
+sleep_3_score(sleep_3_score==5) = 1; 
 
-MS_kmean_scatter(data_in, 3,[4,3,2,1], 20);
+[uni_groups, ~, IC] = unique(score_down); % get the index values 
+colors = linspecer(length(uni_groups));  %or any other way of creating the colormap
+markersize = 20;   %change to suit taste
+scatter3(emg_binned',  t_d_binned', t_emg_binned', markersize, colors(IC,:),'x');
+xlabel('emg'); ylabel('t/d'); zlabel('t / emg');
+view(az, el)
+
+subplot(2,2,3:4)
+correct = IC == g_idx;
+incorrect = IC ~=g_idx; 
+hold on
+scatter3(emg_binned(correct)',  t_d_binned(correct)', t_emg_binned(correct)', markersize, colors(IC(correct),:),'o');
+scatter3(emg_binned(incorrect)',  t_d_binned(incorrect)', t_emg_binned(incorrect)', markersize, colors(IC(incorrect),:),'x');
+xlabel('emg'); ylabel('t/d'); zlabel('t / emg');
+view(az, el)
+grid on;
 
 
 %% try auto-detect   scores {'Wake', 'SWS', 'REM', 'Quiescence', 'Transition'}
@@ -452,6 +477,8 @@ W_State_auto = NaN(size(t_emg));
 Q_State_auto = NaN(size(t_emg));
 T_State_auto = NaN(size(t_emg));
 All_State_auto = NaN(size(t_emg));
+
+d_amp_th = 2; 
 
 d_emg_th = 3; % if greater should be awake
 t_emg_th = 5; % if greater, then REM
@@ -473,7 +500,7 @@ All_State_auto((d_emg >= d_emg_th)  & (t_d > t_d_th) ) = 2;
 figure(1010)
 subplot(2,1,1)
 hold on
-%  plot(tvec_down, (emg_amp < emg_amp_th)*1, '.r');
+ plot(tvec_down, (emg_amp < emg_amp_th)*4, '.c');
 plot(tvec_down, (d_emg < d_emg_th)*1, '.r');text(-1000, 1,'d emg');
 plot(tvec_down, ((All_State_auto==3)*3)+.5, '.m')
 plot(tvec_down, (t_emg >= t_emg_th)*2, '.g');  text(-1000, 2,'t emg');
