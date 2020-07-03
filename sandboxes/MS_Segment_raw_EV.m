@@ -552,7 +552,7 @@ cfg_resize.cutoffs = cut_vals; % should be [2 x nSegments] row 1 is start and ro
 ms_seg_resize = MS_resize_segments(cfg_resize, ms_seg);
 
 
-%% reclassify unclear blocks
+%% reclassify unclear blocks  [todo: make new field for unclear flags to avoid issues where we don't know if it was pre or post]
 
 for iU = unclear_flag
     ms_seg_resize.pre_post{iU} = 'unclear';

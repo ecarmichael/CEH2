@@ -40,6 +40,7 @@ cfg_def.filt.f  = [140 250]; % broad, could use 150-200?
 cfg_def.filt.order = 4; %type filter order (fine for this f range)
 cfg_def.filt.display_filter = 1; % use this to see the fvtool
 cfg_def.filt.units = 'amplitude'; % units can also be in 'power'
+cfg_def.nan_idx = [];
 
 
 cfg = ProcessConfig(cfg_def, cfg_in);
@@ -86,6 +87,7 @@ if cfg.check
     legend({'Raw', 'filt', 'Amp'})
 end
 
+
 %% remove large amplitude artifacts before SWR detection
 
 if isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
@@ -93,13 +95,18 @@ if isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
     for iChan = 1:size(csc_filt.data,1)
         csc_artif.data(iChan,:) = abs(csc_artif.data(iChan,:)); % detect artifacts both ways
     end
+    %
+    %     switch cfg.artif_det.method
+    %         case 'zscore'
+    %         art_thresh = std(csc_artif.data(1,:))*cfg.artif_det.threshold;
+    %     end
     
-%                     cfg.artif_det.threshold = std(csc_artif.data(1,:))*5;
-
-    evt_artif = TSDtoIV(cfg.artif_det,csc_artif);
     
-    cfg_temp = []; cfg_temp.d = cfg.artif_det.rm_len;
-    artif_evts = ResizeIV(cfg_temp,evt_artif);
+    artif_evts = TSDtoIV(cfg.artif_det,csc_artif);
+    
+    cfg_temp = [];
+    cfg_temp.d = [-cfg.artif_det.rm_len cfg.artif_det.rm_len];
+    artif_evts = ResizeIV(cfg_temp,artif_evts);
     
     
     % plot
@@ -108,8 +115,8 @@ if isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
         cfg_plot=[];
         cfg_plot.display = 'iv'; % tsd, iv
         cfg_plot.target = csc.label{1};
-        PlotTSDfromIV(cfg_plot,artif_evts,csc_artif);
-%         hline(cfg.artif_det.threshold )
+        PlotTSDfromIV(cfg_plot,artif_evts,csc);
+        %         hline(cfg.artif_det.threshold )
         pause(3); close all;
     end
     
@@ -120,7 +127,7 @@ if isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
         amp_filt.data(iChan,artif_idx) = 0;
     end
     fprintf('\n<strong>MS_SWR_Ca2</strong>: %d large amplitude artifacts detected and zero-padded from csc_filt.\n',length(artif_evts.tstart));
-
+    
 end
 
 % plot
@@ -128,6 +135,7 @@ if cfg.check
     %     plot(114)
     hold on
     plot(amp_filt.tvec, csc_filt.data(1,:),'g');
+    %     hline(cfg.artif_det.threshold, '--g')
     plot(amp_filt.tvec, amp_filt.data(1,:),'-k');
     
     pause(3); close all;
@@ -145,8 +153,8 @@ cfg_detect.threshold = cfg.threshold;
 cfg_detect.target = csc.label{1};
 cfg_detect.minlen = cfg.min_len; % mouse SWR: 40ms from Vandecasteele et al. 2015
 cfg_detect.merge_thr = cfg.merge_thr; % merge events that are within 20ms of each other.
-
-[evt_candidates,evt_thr] = TSDtoIV(cfg_detect,amp_filt);
+cfg_detect.bad_idx = cfg.nan_idx; % indices to remove before thresholding.
+[evt_candidates,evt_thr] = MS_TSDtoIV(cfg_detect,amp_filt);
 
 % % now apply to all data
 % cfg_select = [];
@@ -157,7 +165,6 @@ cfg_detect.merge_thr = cfg.merge_thr; % merge events that are within 20ms of eac
 % cfg_select.minlen = cfg_detect.minlen;
 %
 % [evt_ids,~] = TSDtoIV(cfg_select,amp_filt);
-
 
 %% compute general stats (cycle count, varience, filtered varience, mean, min, evt_len)
 cfg_cc = [];
@@ -173,45 +180,57 @@ if cfg.check
     cfg_plot.display = 'iv';
     cfg_plot.mode = 'center';
     cfg_plot.width = 0.2;
-    cfg_plot.target = csc.label{1};  
-    cfg_plot.title = 'var'; 
+    cfg_plot.target = csc.label{1};
+    cfg_plot.title = 'var';
     PlotTSDfromIV(cfg_plot,events_out,csc);
     pause(2); close all;
 end
-
-
 
 %% exclude events with insufficient cycles - count how many exist above same threshold as used for detection
 
 
 % get get the evetns with sufficient cycles.
 if isfield(cfg, 'nCycles') && ~isempty(cfg.nCycles)
-    cfg_gc = [];
-    cfg_gc.operation = '>=';
-    cfg_gc.threshold = cfg.nCycles;
-    events_out = SelectIV(cfg_gc,events_out,'nCycles');
-    fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after cycle count thresholding (%d cycle minimum).\n',length(events_out.tstart), cfg_gc.threshold);
+    cfg_Nc = [];
+    if  isfield(cfg, 'nCycles_operation')
+        cfg_Nc.operation = cfg.nCycles_operation;
+    else
+        cfg_Nc.operation = '>=';
+    end
+    cfg_Nc.threshold = cfg.nCycles;
+    events_out = SelectIV(cfg_Nc,events_out,'nCycles');
+    fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after cycle count thresholding (%d cycle minimum).\n',length(events_out.tstart), cfg_Nc.threshold);
 end
 %% check for evnts that are too long.
 % add in a user field for the length of the events (currently not used)
 events_out.usr.evt_len = (events_out.tend - events_out.tstart)';
 
 if isfield(cfg, 'max_len') && ~isempty(cfg.max_len)
-%     cfg_max_len = [];
-%     cfg_max_len.operation = '<';
-%     cfg_max_len.threshold = .1;
+    %     cfg_max_len = [];
+    %     cfg_max_len.operation = '<';
+    %     cfg_max_len.threshold = .1;
     events_out = SelectIV(cfg.max_len,events_out,'evt_len');
     
     fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (%s %d ms removed).\n',length(events_out.tstart), cfg.max_len.operation, (cfg.max_len.threshold)*1000);
 end
 
+
+% if isfield(cfg, 'min_len') && ~isempty(cfg.min_len)
+% %     cfg_max_len = [];
+% %     cfg_max_len.operation = '<';
+% %     cfg_max_len.threshold = .1;
+%     events_out = SelectIV(cfg.min_len,events_out,'evt_len');
+%
+%     fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (%s %d ms removed).\n',length(events_out.tstart), cfg.min_len.operation, (cfg.min_len.threshold)*1000);
+% end
+
 %% check for evnts with high raw varience. 'var_raw' is added as a events_out.usr field in CountCycles
 if isfield(cfg, 'var') && ~isempty(cfg.var)
-% cfg.var = [];
-% cfg.var.operation = '<';
-% cfg.var.threshold = 1;
-events_out = SelectIV(cfg.var,events_out,'var_raw');
-fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after raw varience thresholding (''var_raw'' > %d removed).\n',length(events_out.tstart), cfg.var.threshold);
+    % cfg.var = [];
+    % cfg.var.operation = '<';
+    % cfg.var.threshold = 1;
+    events_out = SelectIV(cfg.var,events_out,'var_raw');
+    fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after raw varience thresholding (''var_raw'' %s %.2f removed).\n',length(events_out.tstart),cfg.var.operation, cfg.var.threshold);
 end
 
 
@@ -221,6 +240,9 @@ if  isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
     
     fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after removing those co-occuring with artifacts.\n',length(events_out.tstart));
 end
+
+
+
 %% check again
 if cfg.check
     cfg_plot = [];
@@ -228,7 +250,7 @@ if cfg.check
     cfg_plot.mode = 'center';
     cfg_plot.width = 0.2;
     cfg_plot.target = csc.label{1};
-    cfg_plot.title = 'var';
+    cfg_plot.title = 'var_raw';
     PlotTSDfromIV(cfg_plot,events_out,csc);
     pause(3); close all;
 end
