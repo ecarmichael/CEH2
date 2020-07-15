@@ -53,9 +53,9 @@ cfg_def.emg_range = [-0.001 0.001]; % default, should be based on real data.
 cfg_def.emg_chan = []; % emg channel.  Can be empty.
 cfg_def.lfp_chans = []; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data.
 cfg_def.resize = 1; % use the gui to select the data for resizing.
-cfg_def.state_val = [1,2,3, 4, 5]; % what numerical value for each state.
-cfg_def.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 'numpad0', 'backspace'}; % which key to press for each state_val
-cfg_def.state_name = {'Wake', 'SWS', 'REM', 'Quiescence', 'Transition', 'Redo'}; %
+cfg_def.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 'numpad0', 'backspace','backquote' }; % which key to press for each state_val
+cfg_def.state_name = {'Wake', 'SWS', 'REM', 'Quiescence', 'Transition', 'Redo', 'Exit'}; %
+cfg_def.state_val = 1:length(cfg_def.state_name); % what numerical value for each state.
 cfg_def.spec.win_s = 2^11; % spectrogram window size.
 cfg_def.spec.onverlap = pow2(floor(log2(cfg_def.spec.win_s/4)));%cfg_def.spec.win_s /8 ; % overlap
 cfg_def.spec.freq_low = .5:0.25:14; % frequency range for spectrogram for delta/theta
@@ -70,7 +70,11 @@ cfg_def.theta_f = [6 9];
 cfg = ProcessConfig(cfg_def, cfg_in);
 
 %% setup some variables
-score = NaN(size(tvec));
+if isempty(score_in)
+    score = NaN(size(tvec));
+else
+    score = score_in;
+end
 
 
 %% generate spectrograms
@@ -186,7 +190,8 @@ text(tvec(1)- tvec(1), median(data(cfg.lfp_chans(iChan),:)), 'LFP')
 if ~isempty(emg)
     ax(999) = subplot(nSubplots, 1, nSubplots);
     plot(tvec- tvec(1), emg(cfg.emg_chan,:))
-    ylim([min(emg(cfg.emg_chan,:)), max(emg(cfg.emg_chan,:))])
+%     ylim([min(emg(cfg.emg_chan,:)), max(emg(cfg.emg_chan,:))])
+    ylim(cfg.emg_range)
     text(tvec(1)- tvec(1), cfg.emg_range(2)*.8, 'EMG')
 end
 
@@ -241,7 +246,8 @@ drawnow;
 if ~isempty(emg)
     ax(999) = subplot(nSubplots, 1, nSubplots);
     plot(tvec(this_idx(1):this_idx(2)) - tvec(1), emg(cfg.emg_chan,this_idx(1):this_idx(2)))
-    ylim([min(emg(cfg.emg_chan,:)), max(emg(cfg.emg_chan,:))])
+        ylim(cfg.emg_range)
+%     ylim([min(emg(cfg.emg_chan,:)), max(emg(cfg.emg_chan,:))])
 %     text(tvec(1)- tvec(1), cfg.emg_range(2)*.8, 'EMG')
 drawnow; 
 end
@@ -258,7 +264,7 @@ xlim([cut_x cut_x+cfg.tvec_range(2)])
 xval = xlim;
 
 
-
+done =0; 
 while ishandle(h)
     
     % to do make this more specific with selectable buttons and
@@ -272,24 +278,33 @@ while ishandle(h)
     
     was_a_key = waitforbuttonpress;
     key_hit = get(gcf, 'CurrentKey');
-    if ismember(key_hit, cfg.state_keys(1:end-1))
+    if ismember(key_hit, cfg.state_keys(1:end-2))
         iK = find(ismember(cfg.state_keys, key_hit));
         fprintf('%s ', cfg.state_name{iK})
         score(this_idx(1):this_idx(2)) = cfg.state_val(iK);
+        x_lim = xlim;
+        if done == 1 
+            disp('Exiting')
+            break
+        end
         %         subplot(nSubplots, 1, 1)
         %         plot(tvec- tvec(1), score);
         %         drawnow;
-        if xlim+cfg.tvec_range(2) <= max(tvec-tvec(1))
+        if x_lim(2)+cfg.tvec_range(2) < T{1}(end)
             this_idx = nearest_idx(xlim+cfg.tvec_range(2),tvec-tvec(1)); % get the tvec index for the current window
             spec_idx = nearest_idx(xlim+cfg.tvec_range(2), T{1});
             spec_h_idx = nearest_idx(xlim+cfg.tvec_range(2), Th{1});
         else
-            this_idx = [xlim(1)+cfg.tvec_range(2) length(tvec)]; % get the tvec index for the current window
-            spec_idx = [xlim(1)+cfg.tvec_range(2) length(T{1})];
-            spec_h_idx = [xlim(1)+cfg.tvec_range(2) length(Th{1})];
             disp('at the end')
+            done = 1; % used to break loop. 
+            this_idx = [nearest_idx(x_lim(1)+cfg.tvec_range(2),tvec-tvec(1)), length(tvec)]; % get the tvec index for the current window
+            spec_idx = [nearest_idx(x_lim(1)+cfg.tvec_range(2), T{1}),length(T{1})];
+            spec_h_idx = [nearest_idx(x_lim(1)+cfg.tvec_range(2), Th{1}),length(Th{1})];
         end
     elseif ismember(key_hit,  cfg.state_keys(end))
+        disp('Exiting')
+        break
+    elseif ismember(key_hit,  cfg.state_keys(end-1))
                 fprintf('REDO   \n')
         this_idx = nearest_idx(xlim-cfg.tvec_range(2),tvec-tvec(1)); % get the tvec index for the current window
         spec_idx = nearest_idx(xlim-cfg.tvec_range(2), T{1});
@@ -329,7 +344,7 @@ drawnow;
 if ~isempty(emg)
     ax(999) = subplot(nSubplots, 1, nSubplots);
     plot(tvec(this_idx(1):this_idx(2)) - tvec(1), emg(cfg.emg_chan,this_idx(1):this_idx(2)))
-    ylim([min(emg(cfg.emg_chan,:)), max(emg(cfg.emg_chan,:))])
+    ylim(cfg.emg_range)
 %     text(tvec(1)- tvec(1), cfg.emg_range(2)*.8, 'EMG')
 drawnow; 
 end
@@ -341,9 +356,9 @@ end
 %     end
 end
 
-%% to do get the transitions and convert to iv format. 
+%% [to do] get the transitions and convert to iv format. 
 
-% IV_out = iv(
+fprintf('<strong>%s</strong>: complete. Returning complete sleep score\n', mfilename); 
 
 
 

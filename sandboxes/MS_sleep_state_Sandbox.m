@@ -59,10 +59,13 @@ clear d os
 
 
 %% load some LFP data
-cd('D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\RAW Calcium\LFP\day5\2019-12-15_12-29-53_540day5base2');
+% cd('D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\RAW Calcium\LFP\day5\2019-12-15_12-29-53_540day5base2');
+% cd('D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\RAW Calcium\LFP\day5\2019-12-21_13-23-49_535day5base2');
 
 cfg_LFP = [];
-cfg_LFP.fc = { 'CSC6.ncs'};
+cfg_LFP.fc = { 'CSC6.ncs'}; %for 540
+% cfg_LFP.fc = { 'CSC7.ncs'}; % for 535
+
 cfg_LFP.desired_sampling_frequency = 2000;
 
 lfp = MS_LoadCSC(cfg_LFP);
@@ -82,24 +85,17 @@ emg = MS_LoadCSC(cfg_EMG);
 % fix issue where first and last points are 0. makes smoothing an issue.
 
 
-%% manually score the sleep states
+%% if Jisoo data split using events
+evts = LoadEvents([]);
 
-cfg_sleep = [];
-cfg_sleep.tvec_range = [0 10];  % number of seconds per window.
-cfg_sleep.emg_range = [-0.001 0.001]; % default, should be based on real data.
-cfg_sleep.emg_chan = 1; % emg channel.  Can be empty.
-cfg_sleep.lfp_chans = 2; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data.
-cfg_sleep.state_name = {'Wake', 'SWS', 'REM', 'Quiescence', 'Transition', 'Redo'}; %
-
-score = MS_Sleep_score_UI(cfg_sleep, csc.tvec, csc.data, abs(hilbert(emg.data(2,:))));
-
-
+lfp = restrict(lfp, evts.t{1}(2), evts.t{2}(2));
+emg = restrict(emg, evts.t{1}(2), evts.t{2}(2));
 
 %% filter
 % delta filter.
 cfg_filt_d = [];
 cfg_filt_d.type = 'fdesign'; %the type of filter I want to use via filterlfp
-cfg_filt_d.f  = [1 4];
+cfg_filt_d.f  = [0.5 4];
 cfg_filt_d.order = 8; %type filter order
 % cfg_filt_d.display_filter = 1; % use this to see the fvtool and wait for a keypress before continuing.
 delta_csc = FilterLFP(cfg_filt_d,lfp);
@@ -118,7 +114,7 @@ theta_csc = FilterLFP(cfg_filt_t, lfp);
 % 'wide' for normalization
 cfg_filt_t = [];
 cfg_filt_t.type = 'fdesign'; %the type of filter I want to use via filterlfp
-cfg_filt_t.f  = [1 50];
+cfg_filt_t.f  = [2 16];
 cfg_filt_t.order = 12; %type filter order
 % cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
 % reason.  .
@@ -141,16 +137,18 @@ cfg_filt_t.order = 16; %type filter order
 % reason.  .
 emg = FilterLFP(cfg_filt_t, emg);
 
+emg.data(2,:) = abs(hilbert(emg.data(1,:)));
+emg.label{2} = 'Filt';
 
-%% emg correction as per Buz lab code
+%%% emg correction as per Buz lab code
 % axx(1) =subplot(4,1,1);
 % plot(emg.tvec, abs(hilbert(emg.data(1,:))))
 % axx(2) =subplot(4,1,2);
 %
 % plot(emg.tvec, zscore(abs(hilbert(emg.data(1,:))).^2))
 
-emg.data(2,:) = abs(hilbert(emg.data(1,:)));
-emg.label{2} = 'Filt';
+% emg.data(2,:) = abs(hilbert(emg.data(1,:)));
+% emg.label{2} = 'Filt';
 % axx(3) =subplot(4,1,3);
 % plot(emg.tvec, emg.data(2,:));
 % emg.data(3,:) = detrend(hilbert(emg.data(1,:)));
@@ -183,12 +181,38 @@ w_chan = 6;
 r_chan = 7; 
 
 csc.label = {'emg', 'emg_filt', 'lfp', 'delta', 'theta', 'wide', 'ripple'};
-%  clear theta_csc delta_csc emg lfp
+ clear theta_csc delta_csc lfp
 
 %  save('D:\Dropbox (Williams Lab)\Sleep_state\sleep_lfp_540day5.mat', 'csc');
 
-%% load some premade lfp data to save time.
-load('D:\Dropbox (Williams Lab)\Sleep_state\sleep_lfp_540day5.mat', 'csc');
+
+%% manually score the sleep states
+
+cfg_sleep = [];
+cfg_sleep.tvec_range = [0 4];  % number of seconds per window.
+cfg_sleep.emg_range = [min(emg.data(2,:)) mean(emg.data(2,:)) + std(emg.data(2,:))*5]; % default, should be based on real data.
+cfg_sleep.emg_chan = 1; % emg channel.  Can be empty.
+cfg_sleep.lfp_chans = 1; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data.
+cfg_sleep.state_name = {'Wake', 'SWS', 'REM', 'Quiescence', 'Transition','micro', 'Redo','Exit'}; %
+cfg_sleep.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 'numpad0','numpad1' 'backspace','backquote' }; % which key to press for each state_val
+
+
+score = MS_Sleep_score_UI(cfg_sleep, csc.tvec, csc.data(3,:), emg.data(2,:));
+% score = MS_Sleep_score_UI(cfg_sleep, csc.tvec, csc.data(3,:), emg.data(2,:), score);
+
+%% combine scores if you redo them. 
+
+if length(ans) == length(score)
+    score_out = ans; 
+    score_out(isnan(score_out)) = score(isnan(score_out));
+    score_og = score; 
+    score = score_out;
+end
+
+
+
+% %% load some premade lfp data to save time.
+% load('D:\Dropbox (Williams Lab)\Sleep_state\sleep_lfp_540day5.mat', 'csc');
 
 % csc_detect = csc;
 % csc_detect.data = [];
@@ -206,7 +230,12 @@ load('D:\Dropbox (Williams Lab)\Sleep_state\sleep_lfp_540day5.mat', 'csc');
 %  %% bandpower method
 %
 %  wide = bandpower(csc.data(3,:));
+%% write an audio file 
 
+R_chan = MS_norm_range(csc.data(5,:),-1, 1);
+L_chan = MS_norm_range(csc.data(1,:),-1, 1); 
+
+audiowrite('NLX_th_delta.wav', [R_chan; L_chan]', csc.cfg.hdr{1}.SamplingFrequency);
 
 %% convert EMG into bins and get the rms
 bins = 1:csc.cfg.hdr{1}.SamplingFrequency*2:length(csc.data(1,:));
@@ -350,7 +379,8 @@ toc
 %  B_SW_State(d_emg > 6 & t_emg < 3) = 1;  % get putative SWS
 %  S_State(isnan(S_State)) = 3; % get unclassified.
 
-%% plot the bandpower versons
+%% ratios
+tic
 sample_multi = 2;
 
 [~, F, T,P] =  spectrogram(csc.data(raw_chan,:),rectwin(csc.cfg.hdr{1}.SamplingFrequency*4),csc.cfg.hdr{1}.SamplingFrequency*sample_multi,0.5:.1:14,csc.cfg.hdr{1}.SamplingFrequency);
@@ -359,7 +389,9 @@ sample_multi = 2;
 % clear than raw amplitude.
 d_amp = abs(hilbert(csc.data(d_chan,:)));
 t_amp = abs(hilbert(csc.data(t_chan,:)));
-r_amp = abs(hilbert(csc.data(r_chan,:)));
+% r_amp = abs(hilbert(csc.data(r_chan,:)));
+w_amp = abs(hilbert(csc.data(w_chan,:)));
+
 emg_amp = emg.data(2,:);
 
 
@@ -369,22 +401,28 @@ emg_amp = emg.data(2,:);
 %  emg_amp = MS_norm_range(emg_amp, 0,1);
 
 tvec_down = csc.tvec(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end)-csc.tvec(1);
-score_down = score(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 
 
 t_d = smooth(t_amp./d_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
-t_r = smooth(t_amp./r_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
-r_t = smooth(r_amp./t_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+t_w = smooth(t_amp./w_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+
+% t_r = smooth(t_amp./r_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+% r_t = smooth(r_amp./t_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
 
 d_amp = smooth(d_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
 t_amp = smooth(t_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
-r_amp = smooth(r_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+w_amp = smooth(w_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
+% r_amp = smooth(r_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
 emg_amp = smooth(emg_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
 
 d_emg =  (d_amp./emg_amp);
 t_emg =  (t_amp./emg_amp);
-t_d_emg = ((t_amp./emg_amp)./(d_amp./emg_amp));
-r_emg = (r_amp./emg_amp);
+d_wide = (d_amp./w_amp);
+t_wide = (t_amp./w_amp); 
+t_w_d_w = (t_amp./w_amp)./(d_amp./w_amp); 
+% t_d_emg = (t_amp./emg_amp)./(d_amp./emg_amp);
+t_d_emg = t_d./emg_amp; 
+% r_emg = (r_amp./emg_amp);
 
 %  d_emg =  smooth(d_amp./emg_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
 %  t_emg =  smooth(t_amp./emg_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
@@ -392,7 +430,7 @@ r_emg = (r_amp./emg_amp);
 
 emg_d = (emg_amp./d_amp);
 emg_t = (emg_amp./t_amp);
-emg_swr = (emg_amp./r_amp);
+% emg_swr = (emg_amp./r_amp);
 
 %  emg_d = smooth(emg_amp./d_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
 %  emg_t = smooth(emg_amp./t_amp,csc.cfg.hdr{1}.SamplingFrequency*sample_multi,'moving')';
@@ -403,52 +441,66 @@ emg_swr = (emg_amp./r_amp);
 t_d = t_d(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 d_emg = d_emg(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 t_emg = t_emg(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
-r_emg = r_emg(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+% r_emg = r_emg(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 d_amp = d_amp(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 t_amp = t_amp(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
-r_amp = r_amp(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+w_amp = w_amp(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+
+% r_amp = r_amp(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 emg_amp = emg_amp(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
 t_d_emg = t_d_emg(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+
+d_wide = d_wide(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+t_wide = t_wide(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+t_w_d_w = t_w_d_w(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+toc 
+
+%%  downsample and pull out score for plotting. 
+score_down = score(1:csc.cfg.hdr{1}.SamplingFrequency*sample_multi:end);
+
 
 SW_State = NaN(size(score));
 REM_State = NaN(size(score));
 W_State = NaN(size(score));
 Q_State = NaN(size(score));
 T_State = NaN(size(score));
+M_State = NaN(size(score));
 
 W_State(score ==1) = 1;
 SW_State(score ==2) = 1;
 REM_State(score ==3) = 1;
 Q_State(score==4) = 1;
 T_State(score==5) = 1;
-
+M_State(score==6) = 1; 
 %% try PCA of d t emg????
 % [p_coeff, p_score] = pca([zscore(d_amp); zscore(t_amp);zscore(r_amp); zscore(emg_amp)]);
 
-[p_coeff, p_score] = pca([zscore(d_emg); zscore(t_emg);zscore(r_amp); zscore(emg_amp)]);
+[p_coeff, p_score] = pca([zscore(d_emg); zscore(t_emg);zscore(w_amp); zscore(emg_amp)]);
 figure(200)
-subplot(411)
+subplot(511)
 plot(T, emg_binned(1:end-2))
-subplot(412)
+subplot(512)
 plot(T, MS_norm_range(p_coeff(1:end-2,1), 0, 1))
-subplot(413)
+subplot(513)
 plot(T, p_coeff(1:end-2,2))
-subplot(414)
+subplot(514)
 plot(T, p_coeff(1:end-2,3))
+subplot(515)
+plot(T, zscore(p_coeff(1:end-2,3)));
 
 % figure(201)
 % scatter3(p_coeff(:,3),p_coeff(:,2), p_coeff(:,1), '.')
 %% try some K means clustering
 data_in = [d_emg_binned', t_emg_binned', t_d_binned',emg_binned'];
 figure(221)
-subplot(2,2,1)
-g_idx = MS_kmean_scatter(data_in, 3,[4,3,2,1], 20);
+subplot(2,1,1)
+g_idx = MS_kmean_scatter(data_in, 4,[4,3,2,1], 20);
 xlabel('emg'); ylabel('t/d'); zlabel('t / emg');
 [az, el] = view(45, 35); 
-subplot(2,2,2)
+subplot(2,1,2)
 % hold on
 sleep_3_score = score_down;
-sleep_3_score(sleep_3_score==4) = 2; 
+% sleep_3_score(sleep_3_score==4) = 2; 
 sleep_3_score(sleep_3_score==5) = 1; 
 
 [uni_groups, ~, IC] = unique(score_down); % get the index values 
@@ -458,7 +510,8 @@ scatter3(emg_binned',  t_d_binned', t_emg_binned', markersize, colors(IC,:),'x')
 xlabel('emg'); ylabel('t/d'); zlabel('t / emg');
 view(az, el)
 
-subplot(2,2,3:4)
+figure(222)
+% subplot(2,2,3:4)
 correct = IC == g_idx;
 incorrect = IC ~=g_idx; 
 hold on
@@ -468,6 +521,175 @@ xlabel('emg'); ylabel('t/d'); zlabel('t / emg');
 view(az, el)
 grid on;
 
+%% zscore to 'training period'
+%540
+% SWS_training = 10:200;
+% wake_training = 350:400;
+% REM_training = 2190:2260;
+
+% % 535 
+% SWS_training = 10:200;
+% wake_training = 350:400;
+% REM_training = 5522:5588;
+
+
+% 1043 LTD3
+SWS_training = nearest_idx(5150, tvec_down):nearest_idx(5250, tvec_down);%1040:7350;
+wake_training =nearest_idx(3940, tvec_down):nearest_idx(4040, tvec_down);% 5650:5760;
+REM_training = nearest_idx(2260, tvec_down):nearest_idx(2360, tvec_down);
+
+% 1043 LTD 5
+% SWS_training = nearest_idx(7925, tvec_down):nearest_idx(8025, tvec_down);%1040:7350;
+% wake_training =nearest_idx(5650, tvec_down):nearest_idx(5760, tvec_down);% 5650:5760;
+% REM_training = nearest_idx(7410, tvec_down):nearest_idx(7600, tvec_down);
+
+% use a training session
+% wake_training = find(score_down ==1); 
+% SWS_training = find(score_down==2); 
+% REM_training = find(score_down==3); 
+% wake
+[~,mu_wake_emg, sigma_wake_emg] = zscore(emg_amp(wake_training));
+[~,mu_wake_demg, sigma_wake_demg] = zscore(d_emg(wake_training));
+[~,mu_wake_temg, sigma_wake_temg] = zscore(t_emg(wake_training));
+[~,mu_wake_td, sigma_wake_td] = zscore(t_d(wake_training));
+
+
+%SWS
+[~,mu_SWS_emg, sigma_SWS_emg] = zscore(emg_amp(SWS_training));
+[~,mu_SWS_demg, sigma_SWS_demg] = zscore(d_emg(SWS_training));
+[~,mu_SWS_temg, sigma_SWS_temg] = zscore(t_emg(SWS_training));
+[~,mu_SWS_td, sigma_SWS_td] = zscore(t_d(SWS_training));
+
+
+% REM
+[~,mu_REM_emg, sigma_REM_emg] = zscore(emg_amp(REM_training));
+[~,mu_REM_temg, sigma_REM_temg] = zscore(t_emg(REM_training));
+[~,mu_REM_td, sigma_REM_td] = zscore(t_d(REM_training));
+[~,mu_REM_demg, sigma_REM_demg] = zscore(d_emg(REM_training));
+
+[~, mu, sigma] = zscore(emg_amp); 
+
+
+
+%% plot with some thresholds
+% 1043_LTD5
+% thresh.emg.wake = mu_wake_emg-sigma_wake_emg*1.25;
+% thresh.emg.rem = mu_REM_emg+sigma_REM_emg*6;
+% thresh.emg.sws= mu_SWS_emg+sigma_SWS_emg*12;
+% 
+% thresh.demg.wake = mu_wake_demg+sigma_wake_demg*1.5;
+% thresh.demg.rem = mu_REM_demg-sigma_REM_demg*1;
+% thresh.demg.sws = mu_SWS_demg-sigma_SWS_demg*2;
+% 
+% thresh.temg.wake = mu_wake_temg-sigma_wake_temg*.5;
+% thresh.temg.rem = mu_REM_temg-sigma_REM_temg*1.8;
+% thresh.temg.sws = mu_SWS_temg-sigma_SWS_temg*1.5;
+% 
+% thresh.td.wake = mu_wake_td-sigma_wake_td*0.5;
+% thresh.td.rem = mu_REM_td-sigma_REM_td*.75;
+% thresh.td.sws = mu_SWS_td+sigma_SWS_td*1;
+
+
+% 1043_ltd3
+thresh.emg.wake = mu_wake_emg-sigma_wake_emg*1.5;
+thresh.emg.rem = mu_REM_emg+sigma_REM_emg*6;
+thresh.emg.sws= mu_SWS_emg+sigma_SWS_emg*15;
+
+thresh.demg.wake = mu_wake_demg+sigma_wake_demg*1.5;
+thresh.demg.rem = mu_REM_demg-sigma_REM_demg*1;
+thresh.demg.sws = mu_SWS_demg-sigma_SWS_demg*2;
+
+thresh.temg.wake = mu_wake_temg-sigma_wake_temg*.5;
+thresh.temg.rem = mu_REM_temg-sigma_REM_temg*1.8;
+thresh.temg.sws = mu_SWS_temg-sigma_SWS_temg*1.5;
+
+thresh.td.wake = mu_wake_td-sigma_wake_td*0.5;
+thresh.td.rem = mu_REM_td-sigma_REM_td*.75;
+thresh.td.sws = mu_SWS_td+sigma_SWS_td*1;
+
+c_ord = linspecer(5);
+
+Subs = 6;
+figure(115)
+ax2(1) =subplot(Subs,1,1);
+P_p = 10*log10(P);
+imagesc(T,F,P_p)
+axis xy
+hold on
+plot(csc.tvec-csc.tvec(1), W_State+max(F)+1,  'color', c_ord(1,:), 'linewidth', 4)
+plot(csc.tvec-csc.tvec(1), Q_State+max(F)+1,  'color', c_ord(4,:), 'linewidth', 4)
+plot(csc.tvec-csc.tvec(1), SW_State+max(F)+1, 'color', c_ord(3,:), 'linewidth', 4)
+plot(csc.tvec-csc.tvec(1), REM_State+max(F)+1, 'color', c_ord(2,:), 'linewidth', 4)
+% plot(csc.tvec-csc.tvec(1), T_State+max(F)+1, 'color', c_ord(5,:), 'linewidth', 4)
+plot(csc.tvec-csc.tvec(1), M_State+max(F)+1, 'color', c_ord(5,:), 'linewidth', 4)
+
+ylim([F(1) F(end)+5])
+ax2(2) =subplot(Subs,1,2);
+plot(tvec_down, emg_amp)
+text(-500, nanmedian(emg_amp),'emg/amp');
+hline(thresh.emg.rem, '-r')
+hline(thresh.emg.sws, '--g')
+hline(thresh.emg.wake, 'b')
+ylim([mu-sigma*1 mu+sigma*3])
+
+
+ax2(3) =subplot(Subs,1,3);
+if length(d_emg) ~= length(csc.tvec)
+    plot(tvec_down, d_emg)
+else
+    plot(csc.tvec-csc.tvec(1), d_emg)
+end
+text(-500, nanmedian(d_emg),'d/emg')
+% hline(d_emg_th)
+hline(thresh.demg.rem, '-r')
+hline(thresh.demg.sws, '--g')
+hline(thresh.demg.wake, 'b')
+
+
+
+ax2(4) =subplot(Subs,1,4);
+if length(t_emg) ~= length(csc.tvec)
+    plot(tvec_down, t_emg)
+else
+    plot(csc.tvec-csc.tvec(1), t_emg)
+end
+text(-500, nanmedian(t_emg),'t/emg')
+% hline(d_emg_th)
+hline(thresh.temg.rem, '-r')
+hline(thresh.temg.sws, '--g')
+hline(thresh.temg.wake, 'b')
+
+title('t/emg')
+
+
+ax2(5) =subplot(Subs,1,5);
+if length(t_d) ~= length(csc.tvec)
+    plot(tvec_down, t_d)
+else
+    plot(csc.tvec-csc.tvec(1), t_d)
+end
+text(-500, nanmedian(t_d),'t/d')
+% hline(d_emg_th)
+hline(thresh.td.rem, '-r')
+hline(thresh.td.sws, '--g')
+hline(thresh.td.wake, 'b')
+title('td')
+
+% ax2(6) =subplot(Subs,1,6);
+% if length(t_w_d_w) ~= length(csc.tvec)
+%     plot(tvec_down, t_w_d_w)
+% else
+%     plot(csc.tvec-csc.tvec(1), t_w_d_w)
+% end
+% text(-500, nanmedian(t_w_d_w),'t/w / d/w')
+% % hline(d_emg_th)
+% % hline(mu_REM_td-sigma_REM_td*.75, '-r')
+% % hline(mu_wake_td-sigma_wake_td*0.5, 'b')
+% % hline(mu_SWS_td-sigma_SWS_td*1, '--g')
+% title('t/w / d/w')
+
+linkaxes(ax2, 'x');
+xlim([T(1) T(end)])
 
 %% try auto-detect   scores {'Wake', 'SWS', 'REM', 'Quiescence', 'Transition'}
 
@@ -478,59 +700,126 @@ Q_State_auto = NaN(size(t_emg));
 T_State_auto = NaN(size(t_emg));
 All_State_auto = NaN(size(t_emg));
 
-d_amp_th = 2; 
+% 540
+% d_amp_th = 2; 
+% d_emg_th = 3; % if greater should be awake
+% t_emg_th = 5; % if greater, then REM
+% emg_t_th = 0.3;
+% emg_amp_th = 0.00003; % if greater Awake
+% emg_amp_th_low = 0.00002; % lower end. if less than SWS or REM. 
+% t_d_th = 1;
+% r_t_th = 2;
+% t_r_th = 0.6;
+% t_d_emg = 30000;
 
-d_emg_th = 3; % if greater should be awake
-t_emg_th = 5; % if greater, then REM
-emg_t_th = 0.3;
-emg_amp_th = 0.00003; % if greater Awake
-emg_amp_th_low = 0.00002; % lower end. if less than SWS or REM. 
-t_d_th = 1;
-r_t_th = 2;
-t_r_th = 0.6;
-t_d_emg = 30000;
 
+
+
+% actually run some 
 %  for td = 0:.1:7
-% Rem (rare
-All_State_auto((t_emg >= t_emg_th)  & (t_d > t_d_th) ) = 3;
-% SWS events
-All_State_auto((d_emg >= d_emg_th)  & (t_d > t_d_th) ) = 2;
+
+% Quiet?
+All_State_auto((emg_amp > thresh.emg.sws) & (d_emg > thresh.demg.wake)) =4;  % (d_emg > thresh.demg.wake)) = 4; %  (emg_amp >= mu_SWS_emg+sigma_SWS_emg*1) ) = 4;
+
+% wake
+All_State_auto((emg_amp >= thresh.emg.wake)  ) = 1;  %(t_d > thresh.td.wake)
+% All_State_auto((emg_amp >= mu_SWS_emg+sigma_SWS_emg*.75) & (t_d > mu_wake_td-sigma_wake_td*.5) ) = 1;  %
+
+% % Rem (rare
+% % All_State_auto((t_emg >= t_emg_th)  & (t_d > t_d_th) ) = 3;
+% All_State_auto((emg_amp <= mu_REM_emg+sigma_REM_emg*.5) & (t_d >= mu_REM_td-sigma_REM_td*.5)  & (t_emg >= mu_REM_temg-sigma_REM_temg*0.5)) =3 ;% &  (d_emg <= mu_REM_demg-sigma_REM_demg*1)
 
 
-figure(1010)
-subplot(2,1,1)
+% % SWS events
+% All_State_auto((emg_amp < mu_SWS_emg+sigma_SWS_emg*1)& (d_emg >= mu_SWS_demg-sigma_SWS_demg*1.5)) = 2; %(t_emg <  mu_REM_temg-sigma_REM_temg*1.5) &  & (t_d <= mu_REM_td-sigma_REM_td*0.5) 
+All_State_auto((emg_amp < thresh.emg.sws)  & (d_emg >= thresh.demg.sws)) = 2;  %& (t_d < thresh.td.sws)& (emg_amp > thresh.emg.rem)
+
+All_State_auto((emg_amp < thresh.emg.rem)  & ((t_d >= thresh.td.rem) | (t_emg >= thresh.temg.rem))) = 3; %& (t_emg >= thresh.temg.rem))
+
+
+% % Rem (rare
+% % All_State_auto((t_emg >= t_emg_th)  & (t_d > t_d_th) ) = 3;
+% All_State_auto((emg_amp <= mu_REM_emg+sigma_REM_emg*.5) & (t_d >= mu_REM_td-sigma_REM_td*.5)  & (t_emg >= mu_REM_temg-sigma_REM_temg*0.5)) =3 ;% &  (d_emg <= mu_REM_demg-sigma_REM_demg*1)
+
+
+
+
+
+
+
+% transitions
+All_State_auto(isnan(All_State_auto)) = 5;
+
+
+% temp simple class
+All_State_auto(All_State_auto == 5 | All_State_auto == 4) = 1; 
+score_down(score_down == 5 | score_down == 4) = 1; 
+score_down(score_down == 6) = 2; 
+
+% figure(1010)
+% subplot(2,1,1)
+% hold on
+%  plot(tvec_down, (emg_amp < mu_REM_emg+sigma_REM_emg*3.5)*4, '.c'); text(-1000, 4,'emg')
+% % plot(tvec_down, (d_emg < d_emg_th)*1, '.r');text(-1000, 1,'d emg');
+% plot(tvec_down, ((All_State_auto==3)*3)+.5, '.m')
+% plot(tvec_down, (t_emg >= mu_REM_temg-sigma_REM_temg*1.5)*2, '.g');  text(-1000, 2,'t emg');
+% plot(tvec_down, (t_d > mu_REM_td-sigma_REM_td*1.5)*3, '.b');text(-1000,3,'t d');
+% % plot(tvec_down, (t_emg >= t_emg_th  & t_d > t_d_th)*4, '.k');text(-500, 4,'rem?');
+% plot(tvec_down, ((score_down==3)*3)+.25, '.k');
+% 
+% ylim([.8 5])
+% xlim([min(tvec_down) max(tvec_down)])
+% 
+% subplot(2,1,2)
+% hold on
+% plot(tvec_down, ((All_State_auto==1)*1)+.2, '.b');
+% plot(tvec_down, ((All_State_auto==2)*2)+.2, '.g');
+% plot(tvec_down, ((All_State_auto==3)*3)+.2, '.r');
+% plot(tvec_down, ((All_State_auto==4)*4)+.2, '.m');
+% 
+% 
+% plot(tvec_down, score_down, '.k');
+% text(-1000, 1, 'Wake');
+% text(-1000, 2, 'SWS');
+% text(-1000, 3, 'REM');
+% text(-1000, 4, 'Q');
+% text(-1000, 5, 'T');
+% ylim([0.5 4.5])
+% xlim([min(csc.tvec-csc.tvec(1)) max(csc.tvec-csc.tvec(1))])
+
+%update previous plot
+figure(115)
+ax2(7) =subplot(Subs,1,Subs);
+hold off
+plot(tvec_down, ((All_State_auto==1)*1)+.2,'.', 'color', c_ord(1,:));
 hold on
- plot(tvec_down, (emg_amp < emg_amp_th)*4, '.c');
-plot(tvec_down, (d_emg < d_emg_th)*1, '.r');text(-1000, 1,'d emg');
-plot(tvec_down, ((All_State_auto==3)*3)+.5, '.m')
-plot(tvec_down, (t_emg >= t_emg_th)*2, '.g');  text(-1000, 2,'t emg');
-plot(tvec_down, (t_d > t_d_th)*3, '.b');text(-1000,3,'t d');
-% plot(tvec_down, (t_emg >= t_emg_th  & t_d > t_d_th)*4, '.k');text(-500, 4,'rem?');
-plot(tvec_down, ((score_down==3)*3)+.25, '.k');
+plot(tvec_down, ((All_State_auto==2)*2)+.2,'.', 'color', c_ord(3,:));
+plot(tvec_down, ((All_State_auto==3)*3)+.2,'.', 'color', c_ord(2,:));
+plot(tvec_down, ((All_State_auto==4)*4)+.2,'.', 'color', c_ord(4,:));
+plot(tvec_down, ((All_State_auto==5)*5)+.2,'.', 'color', c_ord(5,:));
 
-ylim([.8 5])
-xlim([min(tvec_down) max(tvec_down)])
 
-subplot(2,1,2)
-hold on
-plot(tvec_down, ((All_State_auto==3)*3)+.2, '.r');
 plot(tvec_down, score_down, '.k');
 text(-1000, 1, 'Wake');
 text(-1000, 2, 'SWS');
 text(-1000, 3, 'REM');
 text(-1000, 4, 'Q');
 text(-1000, 5, 'T');
-
+ylim([0.5 6.5])
 xlim([min(csc.tvec-csc.tvec(1)) max(csc.tvec-csc.tvec(1))])
-
+linkaxes(ax2, 'x');
+xlim([T(1) T(end)])
 % check the score.
 score_rem = score_down==3;
 
-rem_auto = t_emg >= t_emg_th  & emg_amp < emg_amp_th & t_d > t_d_th;
-overlap = nansum(rem_auto == score_rem')/length(score_rem);
+% rem_auto = t_emg >= t_emg_th  & emg_amp < emg_amp_th & t_d > t_d_th;
+% overlap = nansum(rem_auto == score_rem')/length(score_rem);
 
+
+overlap = nansum(All_State_auto == score_down')/length(score_down); 
 title(['Overlap: ' num2str(overlap*100,4) '%'])
 
+% xlim([5050 5350])
 %  end
 % SWS
 %  All_State_auto(d_emg >= 15 & emg_amp_n < emg_amp_th & t_d < t_d_th) = 2;
@@ -556,6 +845,15 @@ title(['Overlap: ' num2str(overlap*100,4) '%'])
 %
 % title(['Overlap: ' num2str(overlap*100,2) '%'])
 
+
+figure(505)
+close(505)
+figure(505)
+hold off
+cm = confusionchart(score_down',All_State_auto);
+cm.RowSummary = 'row-normalized';
+cm.ColumnSummary = 'column-normalized';
+cm.Title = 'Online user set Z score thresholding';
 
 %% plot the power of the filtered signals.
 c_ord = linspecer(5);
@@ -921,17 +1219,97 @@ linkaxes(ax, 'x');
 %         colorbar
 %         ylim([0 120])
 %% check overlap. try model classification ??
+class_score = []; class_data = []; 
+class_score = score_down;
+class_score(class_score == 4) = 1;
+% class_score(class_score == 5) = 2;
 
-% class_data(:,1) = score_down;
-% class_data(:,2) = t_d';
-% class_data(:,3) = emg_amp';
-% class_data(:,4) = d_amp';
-% class_data(:,5) = t_amp';
-% class_data(:,6) = d_emg';
-% class_data(:,7) = t_emg';
+class_score = categorical(class_score,[1 2 3 5],{'wake' 'SWS' 'REM' 'Transition'})';
+
+
+% table('State', class_score, 't_d', t_d', 'emg_amp', emg_amp')
+class_data(:,1) = class_score;
+class_data(:,2) = t_d';
+class_data(:,3) = emg_amp';
+class_data(:,4) = d_amp';
+class_data(:,5) = t_amp';
+class_data(:,6) = d_emg';
+class_data(:,7) = t_emg';
 % class_data(:,8) = t_d_emg';
 
+class_table = table(class_score, t_d, emg_amp, d_amp, t_amp, d_emg, t_emg);
+
+%%
+
+% load 1043
+load('J:\Williams_Lab\JC_Sleep_inter\6_15_2019_PV1043_LTD5_whole concatenation\TrainedModel.mat')
+% test_idx = nearest_idx(5050, T):nearest_idx(5250, T);
+% 
+% test_data(:,1) = t_d(test_idx)';
+% test_data(:,2) = emg_amp(test_idx)';
+% test_data(:,3) = d_amp(test_idx)';
+% test_data(:,4) = t_amp(test_idx)';
+
+test_data(:,1) = t_d';
+test_data(:,2) = emg_amp';
+test_data(:,3) = d_amp';
+test_data(:,4) = t_amp';
+test_data(:,5) = d_emg';
+test_data(:,6) = t_emg';
+
+pred = trainedModel.predictFcn(test_data); 
+
+
+class_score = score_down;
+% class_score(class_score == 4) = 2;
+
+figure(550)
+close(550)
+figure(550)
+hold off
+cm = confusionchart(score_down',pred);
+cm.RowSummary = 'row-normalized';
+cm.ColumnSummary = 'column-normalized';
+cm.Title = 'Trained SVD on new session';
+
+% plot(tvec_down, pred, '-r', tvec_down, class_score, '-b') 
+
 % best case was 77% with Medium Tree or linear discrim.  Most model types were around 75%.
+
+% got this up to 89% for 535 (probably due to sustainted wake /SWS. best
+% was a penalized 
+
+%% try with whole data
+class_data =[];
+class_score = score_down;
+class_score(class_score == 4) = 2;
+
+class_score = categorical(class_score,[1 2 3 5],{'wake' 'SWS' 'REM' 'Transition'});
+
+class_data(:,1) = class_score;
+class_data(:,2) = abs(hilbert(csc.data(t_chan,:)))./abs(hilbert(csc.data(d_chan,:)));
+class_data(:,3) = emg.data(2,:)';
+class_data(:,4) = abs(hilbert(csc.data(d_chan,:)))';
+class_data(:,5) = abs(hilbert(csc.data(t_chan,:)))';
+% class_data(:,6) = d_emg';
+% class_data(:,7) = t_emg';
+% d_amp = abs(hilbert(csc.data(d_chan,:)));
+% t_amp = abs(hilbert(csc.data(t_chan,:)));
+% emg_amp = emg.data(2,:);
+
+%% try with binned data rather than subsampled
+class_data =[];
+class_score = score_down;
+class_score(class_score == 4) = 2;
+
+class_score = categorical(class_score,[1 2 3 5],{'wake' 'SWS' 'REM' 'Transition'});
+
+class_data(:,1) = class_score;
+class_data(:,2) = t_d_binned';
+class_data(:,3) = emg_binned';
+class_data(:,4) = d_emg_binned';
+class_data(:,5) = t_emg_binned';
+
 %% try to auto class based on binned data
 % spec_class= cat(2,score_down(2:end-1),emg_binned(2:end-1)', P_p');
 
