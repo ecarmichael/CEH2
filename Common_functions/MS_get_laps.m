@@ -1,4 +1,4 @@
-function [laps] = MS_get_laps(direction, length_thresh)
+function [laps, start_idx, end_idx] = MS_get_laps(direction, length_thresh)
 %% MS_extract_laps: attempts to pull out linear track laps based on sustained running using a direction vector. 
 %
 %
@@ -13,7 +13,11 @@ function [laps] = MS_get_laps(direction, length_thresh)
 %    - laps [1 x nSamples]  vector with lap number.  (eg:
 %    111111110000000022222200000003333333300000...)
 %
+%    - start_idx [nLaps]   the indicies that correspond to the start of
+%    each lap. 
 %
+%    - end_idx [nLaps]   the indicies that correspond to the end of
+%    each lap. 
 %
 %
 % EC 2020-07-15   initial version 
@@ -28,4 +32,15 @@ end
 
 %% get the transitions in direction and put them into blocks. 
 
-findpeaks(diff(direction))
+[pks, loc, width] = findpeaks(direction*1, 'MinPeakWidth', length_thresh);
+
+laps = zeros(size(direction)); % clone size of direction
+
+for iP = 1:length(pks)
+    laps(loc(iP):loc(iP)+width(iP)) = iP;
+end
+
+start_idx = loc;
+end_idx = loc+width; 
+
+

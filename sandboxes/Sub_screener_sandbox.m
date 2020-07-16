@@ -228,13 +228,17 @@ if behav.time(end) ~= ms.time(end) || length(behav.time) ~= length(ms.time)
     behav_aligned = MS_align_data(behav, ms);
 end
 
-left_idx = MS_get_direction(behav_aligned.position(:,1), -.2); % use -threshold for leftbound and + for right. 
-right_idx = MS_get_direction(behav_aligned.position(:,1), .2); % use -threshold for leftbound and + for right.
+left_idx = MS_get_direction(behav_aligned.position(:,1), -.1); % use -threshold for leftbound and + for right. 
+right_idx = MS_get_direction(behav_aligned.position(:,1), .1); % use -threshold for leftbound and + for right.
+[laps, lap_start_idx, lap_end_idx] = MS_get_laps(left_idx, floor(2*(1/frame_time))); 
+
 
 movement_thresh = 5; % in cm/s
 movement_idx = behav_aligned.speed >movement_thresh; % get times when the animal was moving. 
 left_idx = left_idx & movement_idx; % only keep the indices when they are moving to the left. 
 right_idx = right_idx & movement_idx; 
+
+[laps, lap_start_idx, lap_end_idx] = MS_get_laps(left_idx, floor(2*(1/frame_time))); 
 %% plot basics
 iC = 1; % loop through cells
 
@@ -253,11 +257,16 @@ hold on
 plot(behav_aligned.time/1000, behav_aligned.position(:,1), 'color', PARAMS.L_grey)
 plot(behav_aligned.time(left_idx)/1000, behav_aligned.position(left_idx,1),'.', 'color', PARAMS.green)
 plot(behav_aligned.time(right_idx)/1000, behav_aligned.position(right_idx,1),'.', 'color', PARAMS.blue)
+plot(behav_aligned.time/1000, laps*20,'--', 'color', PARAMS.gold)
+% 
+% plot(behav_aligned.time(lap_start_idx)/1000, behav_aligned.position(lap_start_idx,1),'d', 'color', PARAMS.green)
+% plot(behav_aligned.time(lap_end_idx)/1000, behav_aligned.position(lap_end_idx,1),'d', 'color', PARAMS.green)
+
 
 % plot(behav_aligned.time/1000, behav_aligned.position(:,2),'color', PARAMS.blue)
 ylabel('delta position')
 xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
-legend({'x', 'y'})
+% legend({'x', 'y'})
 
 
 subplot(M, N, N*2+1:N*2+3) % title information. Top right corner,
@@ -265,9 +274,10 @@ hold on
 plot(behav_aligned.time/1000, behav_aligned.speed, 'color', PARAMS.L_grey)
 
 plot(behav_aligned.time(movement_idx)/1000, behav_aligned.speed(movement_idx),'.', 'color', PARAMS.gold, 'markersize', 1)
+% legend('Speed', 'box', 'off')
+
 xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
 ylabel('Speed cm/s')
-legend('Speed')
 xlabel('time (s)')
 
 
