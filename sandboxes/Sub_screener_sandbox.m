@@ -36,12 +36,12 @@ else
 end
 
 % colours
-PARAMS.L_grey = [0.8 0.8 0.8]; 
-PARAMS.D_grey = [0.2 0.2 0.2]; 
-PARAMS.blue = [0.3639    0.5755    0.7484]; 
-PARAMS.red = [0.9153    0.2816    0.2878]; 
-PARAMS.green= [0.4416    0.7490    0.4322]; 
-PARAMS.gold = [1.0000    0.5984    0.2000]; 
+PARAMS.L_grey = [0.8 0.8 0.8];
+PARAMS.D_grey = [0.2 0.2 0.2];
+PARAMS.blue = [0.3639    0.5755    0.7484];
+PARAMS.red = [0.9153    0.2816    0.2878];
+PARAMS.green= [0.4416    0.7490    0.4322];
+PARAMS.gold = [1.0000    0.5984    0.2000];
 
 rng(11,'twister') % for reproducibility
 
@@ -71,7 +71,7 @@ clear d os
 
 load('567_ms.mat')
 
-ms = MS_msExtractBinary_detrendTraces(ms, 4);
+ms = MS_msExtractBinary_detrendTraces(ms, 2);
 
 %% try to classify the cells as long or short tailed
 peak_window = 33; % how far from the onset of the transient do you look for the peak.
@@ -83,7 +83,7 @@ all_trans_dur = []; % array for all the durations across cells/transients. used 
 min_separation = 0.250; % minimum distance from a previous/subsequent event.  From Roy 2017;
 
 
-frame_time = 0.001*(mode(diff((ms.time))));  % convert time frame to seconds. 
+frame_time = 0.001*(mode(diff((ms.time))));  % convert time frame to seconds.
 cfg.plot = 0;
 cfg.overlap = 0;
 
@@ -98,8 +98,8 @@ for iC = size(ms.RawTraces,2):-1:1  % loop over cells in the ms struct
         [pks, loc] = findpeaks(diff(ms.Binary(:,iC)), 'MinPeakDistance',33);
         
         overlap = zeros(1,length(loc)); % hold a record of transients that overlapped with prior transients.
-
-        diff_loc_sec = diff(loc)*frame_time; 
+        
+        diff_loc_sec = diff(loc)*frame_time;
         loc =loc+1; %offset diff
         if cfg.plot
             
@@ -170,10 +170,10 @@ for iC = size(ms.RawTraces,2):-1:1  % loop over cells in the ms struct
                 end
             end
             
-            if iTran > 1 && overlap(iTran-1) % check if the previous transient didn't reach the threshold before this transient began. 
-                end_idx = NaN; 
+            if iTran > 1 && overlap(iTran-1) % check if the previous transient didn't reach the threshold before this transient began.
+                end_idx = NaN;
             end
-%             end_idx = end_idx(1); % get the first index where it drops below the threshold.
+            %             end_idx = end_idx(1); % get the first index where it drops below the threshold.
             
             
             
@@ -187,7 +187,7 @@ for iC = size(ms.RawTraces,2):-1:1  % loop over cells in the ms struct
         all_trans_dur = [all_trans_dur, these_dur]; % collect all the durations for plotting a distribution a la
     end % above binary threshold check.
     fprintf('done.\n')
-    if cfg.plot;  cla(h); end % clear the plot axes. 
+    if cfg.plot;  cla(h); end % clear the plot axes.
 end
 
 
@@ -206,7 +206,7 @@ ylabel('frequency')
 title('Mean Ca^2^+ transient duration across all cells')
 text(log_thres,max(N/length(all_dur))*0.9,[num2str(tail_thresh) 's cutoff'],'HorizontalAlignment', 'left')
 xlim([-1 4]);
-[mval, midx] = max(N/length(all_dur)); % find the peak idx for text. 
+[mval, midx] = max(N/length(all_dur)); % find the peak idx for text.
 text(X(midx),mval,[num2str(10^X(midx), '%2.2f') 's mean'],'HorizontalAlignment', 'left')
 
 
@@ -228,125 +228,150 @@ if behav.time(end) ~= ms.time(end) || length(behav.time) ~= length(ms.time)
     behav_aligned = MS_align_data(behav, ms);
 end
 
-left_idx = MS_get_direction(behav_aligned.position(:,1), -.1); % use -threshold for leftbound and + for right. 
+left_idx = MS_get_direction(behav_aligned.position(:,1), -.1); % use -threshold for leftbound and + for right.
 right_idx = MS_get_direction(behav_aligned.position(:,1), .1); % use -threshold for leftbound and + for right.
-[laps, lap_start_idx, lap_end_idx] = MS_get_laps(left_idx, floor(2*(1/frame_time))); 
 
 
-movement_thresh = 5; % in cm/s
-movement_idx = behav_aligned.speed >movement_thresh; % get times when the animal was moving. 
-left_idx = left_idx & movement_idx; % only keep the indices when they are moving to the left. 
-right_idx = right_idx & movement_idx; 
+movement_thresh = 2.5; % in cm/s
+movement_idx = behav_aligned.speed >movement_thresh; % get times when the animal was moving.
+left_idx = left_idx & movement_idx; % only keep the indices when they are moving to the left.
+right_idx = right_idx & movement_idx;
 
-[laps, lap_start_idx, lap_end_idx] = MS_get_laps(left_idx, floor(2*(1/frame_time))); 
+[L_laps, L_lap_start_idx, L_lap_end_idx] = MS_get_laps(left_idx, floor(1.5*(1/frame_time)),floor(10*(1/frame_time)));
+[R_laps, R_lap_start_idx, R_lap_end_idx] = MS_get_laps(right_idx, floor(1.5*(1/frame_time)),floor(10*(1/frame_time)));
+
 %% plot basics
-iC = 1; % loop through cells
-
-M = 7; % rows
-N = 6; % columns
-figure(100) % main figure
-
-subplot(M, N, 1:3) % title information. Top right corner, 
-plot(ms.time/1000, ms.RawTraces(:,iC), 'color', PARAMS.blue)
-xlim([ms.time(1)/1000 ms.time(end)/1000]);
-xlabel('time(s)');
-
-
-subplot(M, N, N+1:N+3) % title information. Top right corner,
-hold on
-plot(behav_aligned.time/1000, behav_aligned.position(:,1), 'color', PARAMS.L_grey)
-plot(behav_aligned.time(left_idx)/1000, behav_aligned.position(left_idx,1),'.', 'color', PARAMS.green)
-plot(behav_aligned.time(right_idx)/1000, behav_aligned.position(right_idx,1),'.', 'color', PARAMS.blue)
-plot(behav_aligned.time/1000, laps*20,'--', 'color', PARAMS.gold)
-% 
-% plot(behav_aligned.time(lap_start_idx)/1000, behav_aligned.position(lap_start_idx,1),'d', 'color', PARAMS.green)
-% plot(behav_aligned.time(lap_end_idx)/1000, behav_aligned.position(lap_end_idx,1),'d', 'color', PARAMS.green)
-
-
-% plot(behav_aligned.time/1000, behav_aligned.position(:,2),'color', PARAMS.blue)
-ylabel('delta position')
-xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
-% legend({'x', 'y'})
-
-
-subplot(M, N, N*2+1:N*2+3) % title information. Top right corner,
-hold on
-plot(behav_aligned.time/1000, behav_aligned.speed, 'color', PARAMS.L_grey)
-
-plot(behav_aligned.time(movement_idx)/1000, behav_aligned.speed(movement_idx),'.', 'color', PARAMS.gold, 'markersize', 1)
-% legend('Speed', 'box', 'off')
-
-xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
-ylabel('Speed cm/s')
-xlabel('time (s)')
-
-
-subplot(M, N, [N-2 (N*2)-2]) % title information. Top right corner, 
-text(0, 10, ['Cell id: ' num2str(iC)])
-if all_dur(iC) >= tail_thresh
-text(0, 8, ['Mean tail length: ' num2str(all_dur(iC),'%2.2f') 's "Long"'])
-else
-text(0, 8, ['Mean tail length: ' num2str(all_dur(iC),'%2.2f') 's "Short"'])
+for iC = 100:120; % loop through cells
+    
+    M = 7; % rows
+    N = 6; % columns
+    figure(100) % main figure
+    
+    %%% title information
+    subplot(M, N, [N-2 (N*2)-2]) % title information. Top right corner,
+    text(0, 10, ['Cell id: ' num2str(iC)])
+    text(0, 8, ['Binary thresh: ' num2str(ms.Binary_threshold)])
+    
+    if all_dur(iC) >= tail_thresh
+        text(0, 6, ['Mean tail length: ' num2str(all_dur(iC),'%2.2f') 's "Long"'])
+    else
+        text(0, 6, ['Mean tail length: ' num2str(all_dur(iC),'%2.2f') 's "Short"'])
+    end
+    ylim([0 10])
+    axis off
+    
+    
+    %%% raw trace
+    subplot(M, N, 1:3)
+    plot(ms.time/1000, ms.RawTraces(:,iC), 'color', PARAMS.blue)
+    xlim([ms.time(1)/1000 ms.time(end)/1000]);
+    xlabel('time(s)');
+    
+    
+    
+    %%% X Y position
+    subplot(M, N, N+1:N+3)
+    hold on
+    plot(behav_aligned.time/1000, behav_aligned.position(:,1), 'color', PARAMS.L_grey)
+    plot(behav_aligned.time(left_idx)/1000, behav_aligned.position(left_idx,1),'.', 'color', PARAMS.green)
+    plot(behav_aligned.time(right_idx)/1000, behav_aligned.position(right_idx,1),'.', 'color', PARAMS.blue)
+    plot(behav_aligned.time/1000, laps*10,'--', 'color', PARAMS.gold)
+    %
+    % plot(behav_aligned.time(lap_start_idx)/1000, behav_aligned.position(lap_start_idx,1),'d', 'color', PARAMS.green)
+    % plot(behav_aligned.time(lap_end_idx)/1000, behav_aligned.position(lap_end_idx,1),'d', 'color', PARAMS.green)
+    
+    
+    % plot(behav_aligned.time/1000, behav_aligned.position(:,2),'color', PARAMS.blue)
+    ylabel('delta position')
+    xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
+    % legend({'x', 'y'})
+    
+    
+    %%% speed info
+    subplot(M, N, N*2+1:N*2+3)
+    hold on
+    plot(behav_aligned.time/1000, behav_aligned.speed, 'color', PARAMS.L_grey)
+    plot(behav_aligned.time(movement_idx)/1000, behav_aligned.speed(movement_idx),'.', 'color', PARAMS.gold, 'markersize', 1)
+    % legend('Speed', 'box', 'off')
+    
+    xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
+    ylabel('Speed cm/s')
+    xlabel('time (s)')
+    
+    
+    % %%% orientation info
+    % subplot(M, N, N*3+1:N*3+3)
+    % plot(behav_aligned.time/1000,ones(size(behav_aligned.time)), 'color', 'w')
+    % hold on
+    % text(behav_aligned.time(floor(length(behav_aligned.time)/3))/1000, pi, 'HD placeholder')
+    % ylabel('HD')
+    % ylim([-pi pi])
+    % set(gca, 'ytick', [-pi pi], 'yticklabel', {'-pi' 'pi'})
+    
+    %%% plot the binary times on the position
+    subplot(M, N, [ N*3+4:N*3+6]) % N*4+4:N*4+6
+    hold on
+    plot(behav_aligned.position(:,1), behav_aligned.position(:,2), 'color', PARAMS.L_grey)
+    xlim([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))])
+    ylim(round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]));
+    %get binary 'event times'
+    t_binary = find(ms.Binary(:,iC) ==1);
+    % put dots on positions when the cell was active.
+    plot(behav_aligned.position(t_binary,1), behav_aligned.position(t_binary,2),'.', 'color', PARAMS.red)
+    xlabel('position (cm)');
+    ylabel('position (cm)');
+    set(gca, 'ytick', round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]));
+    
+    
+    % get the transient/position values
+    % tran_x = interp1(behav_aligned.time(1:end-1),behav_aligned.position(1:end-1,1),ms.time(t_binary),'linear');
+    % tran_y = interp1(behav_aligned.time(1:end-1),behav_aligned.position(1:end-1,2),ms.time(t_binary),'linear');
+    %
+    % plot(tran_x,tran_y,'.', 'color', PARAMS.red);
+    
+    
+    %%% update position in time with binary 'spikes'
+    subplot(M, N, N+1:N+3)
+    plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red);
+    plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,2),'.', 'color', PARAMS.red);
+    
+    
+    %%% add the SPF for this cell.
+    subplot(M, N, [N (N*2)]) % spf with centroid.
+    imagesc(ms.SFPs(:,:,iC))
+    hold on
+    
+    
+    %%% Plot the laps
+    subplot(M, N, N*5+4:N*5+6)
+    MS_plot_laps(behav_aligned, R_laps, t_binary)
+    ylabel('R laps');
+    
+    subplot(M, N, N*6+4:N*6+6)
+    MS_plot_laps(behav_aligned, L_laps, t_binary)
+    ylabel('L laps');
+    
+    %%% add in the place/spatial information?
+    subplot(M, N, N*4+4:N*4+6)
+    bins = min(behav_aligned.position(:,1)):2.5:max(behav_aligned.position(:,1));
+    bin_centers = bins + 2.5/2;
+    bin_centers = bin_centers(1:end-1);
+    [MI, posterior, occupancy, p_active, likelihood] = MS_get_spatial_information(ms.Binary(:,iC), ms.time, behav_aligned.position(:,1), bins);
+    plot(bin_centers, likelihood)
+    ylabel('p active')
+    
+    %%% add speed mod score
+    
+    
+    %%% customize figure stuff
+    
+    pos = get(gcf, 'position');
+    set(gcf, 'position', [pos(1)-pos(1)*.6 pos(2)-pos(2)*.6 pos(3)*1.8 pos(4) *1.6])
+    
+    
+    pause(1)
+    close(100)
 end
-ylim([0 10])
-axis off
-
-% plot the binary times on the position 
-subplot(M, N, [N*3+4:N*3+6 N*4+4:N*4+6])
-
-hold on
-plot(behav_aligned.position(:,1), behav_aligned.position(:,2), 'color', PARAMS.L_grey)
-xlim([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))])
-ylim([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]);
-%get binary 'event times'
-t_binary = find(ms.Binary(:,iC) ==1); 
-% put dots on positions when the cell was active. 
-plot(behav_aligned.position(t_binary,1), behav_aligned.position(t_binary,2),'.', 'color', PARAMS.red)
-xlabel('position (cm)'); 
-ylabel('position (cm)'); 
-
-
-% get the transient/position values
-% tran_x = interp1(behav_aligned.time(1:end-1),behav_aligned.position(1:end-1,1),ms.time(t_binary),'linear');
-% tran_y = interp1(behav_aligned.time(1:end-1),behav_aligned.position(1:end-1,2),ms.time(t_binary),'linear');
-%  
-% plot(tran_x,tran_y,'.', 'color', PARAMS.red);
-
-
-% update position in time with binary 'spikes'
-subplot(M, N, N+1:N+3) 
-plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red);
-plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,2),'.', 'color', PARAMS.red);
-
-
-% add the SPF for this cell.  
-subplot(M, N, [N (N*2)]) % spf with centroid.  
-imagesc(ms.SFPs(:,:,iC))
-hold on
-
-
-% Plot the laps
-
-% for iLap
-
-
-% add in the spatial information?
-
-
-
-% add in the HD information. 
-
-
-
-
-
-% customize figure stuff
-
-pos = get(gcf, 'position');
-set(gcf, 'position', [pos(1)-pos(1)*.6 pos(2)-pos(2)*.6 pos(3)*1.4 pos(4) *1.4])
-
-
-
 
 
 
