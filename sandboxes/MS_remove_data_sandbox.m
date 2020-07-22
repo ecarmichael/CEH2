@@ -29,7 +29,7 @@ function [ms_out, removed_fnames] = MS_remove_data_sandbox(cfg_in,ms_in, cells_t
 
 cfg_def = [];
 cfg_def.user_fields = {}; % user fields. 
-
+cfg_def.verbose = 1; 
 cfg = ProcessConfig(cfg_def, cfg_in); 
 
 if ~iscell(ms_in.RawTraces)
@@ -64,8 +64,9 @@ for iF = 1:length(fields)
         for iC = sort(cells_to_remove, 'descend') % go backards or else everything is off and will not remove the right cells.
             ms_out.(fields{iF})(iC) = [];
             
-            
-            fprintf('Removing cell: %0.f in %s\n', iC, fields{iF});
+            if cfg.verbose
+                fprintf('Removing cell: %0.f in %s\n', iC, fields{iF});
+            end
         end
     end
 end

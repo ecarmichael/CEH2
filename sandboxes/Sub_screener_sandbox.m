@@ -241,7 +241,7 @@ right_idx = right_idx & movement_idx;
 [R_laps, R_lap_start_idx, R_lap_end_idx] = MS_get_laps(right_idx, floor(1.5*(1/frame_time)),floor(10*(1/frame_time)));
 
 %% plot basics
-for iC = 100:120; % loop through cells
+for iC = 10:30; % loop through cells
     
     M = 7; % rows
     N = 6; % columns
@@ -275,7 +275,9 @@ for iC = 100:120; % loop through cells
     plot(behav_aligned.time/1000, behav_aligned.position(:,1), 'color', PARAMS.L_grey)
     plot(behav_aligned.time(left_idx)/1000, behav_aligned.position(left_idx,1),'.', 'color', PARAMS.green)
     plot(behav_aligned.time(right_idx)/1000, behav_aligned.position(right_idx,1),'.', 'color', PARAMS.blue)
-    plot(behav_aligned.time/1000, laps*10,'--', 'color', PARAMS.gold)
+%     plot(behav_aligned.time/1000, L_laps*10,'.-', 'color', PARAMS.gold, 'linewidth', 0.25)
+%     plot(behav_aligned.time/1000, R_laps*10,'.-', 'color', PARAMS.gold,'linewidth', 0.25)
+
     %
     % plot(behav_aligned.time(lap_start_idx)/1000, behav_aligned.position(lap_start_idx,1),'d', 'color', PARAMS.green)
     % plot(behav_aligned.time(lap_end_idx)/1000, behav_aligned.position(lap_end_idx,1),'d', 'color', PARAMS.green)
@@ -334,6 +336,10 @@ for iC = 100:120; % loop through cells
     subplot(M, N, N+1:N+3)
     plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red);
     plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,2),'.', 'color', PARAMS.red);
+    
+    %%% update speed in time with binary 'spikes'
+    subplot(M, N, N*2+1:N*2+3)
+    plot(behav_aligned.time(t_binary)/1000,behav_aligned.speed(t_binary,1),'.', 'color', PARAMS.red);
     
     
     %%% add the SPF for this cell.

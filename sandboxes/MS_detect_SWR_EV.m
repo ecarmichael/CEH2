@@ -387,8 +387,8 @@ for iSub = 1:length(Subjects)
         events.SWD.tstart_idx =  nearest_idx3(SWD_evts.tstart, csc.tvec);
         events.SWD.tend_idx =  nearest_idx3(SWD_evts.tend, csc.tvec);
         
-        events.SWR.iv = SWD_evts;
-        events.SWR.cfg = cfg_swd;
+        events.SWR.iv = SWR_evts;
+        events.SWR.cfg = cfg_swr;
         events.SWR.center_idx =  nearest_idx3(IVcenters(SWR_evts), csc.tvec);
         events.SWR.tstart_idx =  nearest_idx3(SWR_evts.tstart, csc.tvec);
         events.SWR.tend_idx =  nearest_idx3(SWR_evts.tend, csc.tvec);
