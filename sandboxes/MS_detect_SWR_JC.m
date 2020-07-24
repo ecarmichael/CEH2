@@ -88,9 +88,9 @@ clear d os
 
 %% loop through subjects/sessions.
 Subjects = MS_list_dir_names(PARAMS.raw_data_dir);
-for iSub = Subjects
+for iSub = length(Subjects)
     % set the dir for this subject
-    this_sub_dir = [PARAMS.raw_data_dir filesep iSub];
+    this_sub_dir = [PARAMS.raw_data_dir filesep Subjects{iSub}];
     
     % move to dir and get all sessions.  Can specify a specific string to
     % find in the dir. ex: MS_list_dir_names(this_sub_dir, 'LTD')
@@ -98,15 +98,15 @@ for iSub = Subjects
     sess_list = MS_list_dir_names(this_sub_dir, 'LTD'); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
 %     sess_list = MS_list_dir_names(this_sub_dir); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
 
-    for iSess = sess_list
-        ms_dir = [PARAMS.raw_data_dir filesep iSub filesep iSess];
+    for iSess = 1:length(sess_list)
+        ms_dir = [PARAMS.raw_data_dir filesep Subjects{iSub} filesep sess_list{iSess}];
         
 %         if isempty(PARAMS.csc_data_dir)
 %             csc_dir = ms_dir;
 %         end
         
         % crazy line to convert between time formats. 
-        ms_date = datestr(datenum(strrep(iSess(1:(strfind(iSess, '2019')+3)),'_', '/'), 'MM/dd/yyyy'), 'yyyy-MM-dd');
+        ms_date = datestr(datenum(strrep(sess_list{iSess}(1:(strfind(sess_list{iSess}, '2019')+3)),'_', '/'), 'MM/dd/yyyy'), 'yyyy-MM-dd');
        
         % TODO add in double check using subject and LTD/HAT
         [csc_dir, csc_dir_fold] = MS_list_dir_names(PARAMS.csc_data_dir, ms_date);
@@ -123,15 +123,15 @@ for iSub = Subjects
         end
 
         
-        ms_inter_dir = [PARAMS.inter_dir filesep iSub filesep iSess];  %just save the ms_resize struct back into the same place as the ms.mat file.
+        ms_inter_dir = [PARAMS.inter_dir filesep Subjects{iSub} filesep sess_list{iSess}];  %just save the ms_resize struct back into the same place as the ms.mat file.
         mkdir(ms_inter_dir);        
         %% Select the CSC data to be loaded
-        if strcmpi(iSub, 'PV1060')
-            cfg_load.fc = {'CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
-        elseif strcmpi(iSub, 'PV1069')
+        if strcmpi(Subjects{iSub}, 'PV1060')
+            cfg_load.fc = {'CSC8.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+        elseif strcmpi(Subjects{iSub}, 'PV1069')
             cfg_load.fc = {'CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
-        elseif strcmpi(iSub, 'PV1043')
-            cfg_load.fc = {'CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+        elseif strcmpi(Subjects{iSub}, 'PV1043')
+            cfg_load.fc = {'CSC7.ncs'}; % CSC6 was used for resizing given the nice theta. 
         else
             cfg_load.fc = {'CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         end
@@ -141,26 +141,23 @@ for iSub = Subjects
         cfg.check.saveas = '.png'; % if this is specified it will save the figures in this format. Comment to bypass saving.
         
         %% load data
-        cd(ms_inter_dir)
-        load('ms_resize.mat');
         
         cd(csc_dir)
         csc = MS_LoadCSC(cfg_load);
         
               %% restrict to section half of sleep (post task)
-        
-        Events = LoadEvents([]);
-        
-        if length(Events.t{1}) ==2
-        csc = restrict(csc, Events.t{1}(2),  Events.t{2}(2));
-        else
-            disp('more than 2 start times')
-        end
+%         NLX_events = LoadEvents([]);
+%         
+%         if length(NLX_events.t{1}) ==2
+%         csc = restrict(csc, NLX_events.t{1}(2),  NLX_events.t{2}(2));
+%         else
+%             disp('more than 2 start times')
+%         end
         
         %% run event detection for SWRs
         
         cfg_swr = [];
-        cfg_swr.check = 1; % plot checks.
+        cfg_swr.check = 0; % plot checks.
         cfg_swr.filt.type = 'butter'; %Cheby1 is sharper than butter
         cfg_swr.filt.f  = [120 250]; % broad, could use 150-200?
         cfg_swr.filt.order = 4; %type filter order (fine for this f range)
@@ -201,12 +198,16 @@ for iSub = Subjects
         
         SWR_evts = MS_get_LFP_events_sandbox(cfg_swr, csc);
         
-        cfg_plot.display = 'tsd';
-        %                 PlotTSDfromIV(cfg_plot, SWR_evts, csc)
-        %                 pause(2)        
-        figure(1)
-        saveas(gcf, 'SWR_evts_examples', 'png');
-        close all
+%         cfg_plot.display = 'tsd';
+%                         PlotTSDfromIV(cfg_plot, SWR_evts, csc)
+        %                 pause(2)
+        
+        g = groot;
+        if ~isempty(g.Children)
+            figure(1)
+            saveas(gcf, 'SWR_evts_examples', 'png');
+            close all
+        end
         
 %         %% get theta blocks (mostly to exclude false-positive SWR
 %         cfg_th = [];
@@ -306,27 +307,37 @@ for iSub = Subjects
 %             length(lg_evts.tstart),length(lg_evts.tstart)/(csc.tvec(end)-csc.tvec(1)))
         
         %% collect the events and cfgs and convert time to idx.
-        
+        events.SWR.session = sess_list{iSess}; 
         events.SWR.iv = SWR_evts;
         events.SWR.cfg = cfg_swr;
         events.SWR.center_idx =  nearest_idx3(IVcenters(SWR_evts), csc.tvec);
         events.SWR.tstart_idx =  nearest_idx3(SWR_evts.tstart, csc.tvec);
         events.SWR.tend_idx =  nearest_idx3(SWR_evts.tend, csc.tvec);
         
-        save('SWR_evts.mat', 'events', '-v7.3')
+        mkdir([PARAMS.inter_dir filesep 'SWRs']);
+        save([PARAMS.inter_dir filesep 'SWRs' filesep sess_list{iSess} '_evts.mat'], 'events', '-v7.3')
+        
+        %% get the start and stop times for the pre and post parts of the csc. 
+        
+        NLX_evt = LoadEvents([]);
+        
+        pre_end = NLX_evt.t{2}(1); 
+        post_start = NLX_evt.t{1}(2); 
         
         %% make a cell x time x event array. 
         
-               cd(ms_inter_dir)
+              
+        % move the miniscope data dir
+        cd(ms_inter_dir)
         load('ms_resize.mat');
-        
-        ms_seg_resize = MS_msExtractBinary_detrendTraces(ms_seg_resize, 2);
         
         
         nFrames = 33; % number of frames before and after the center of each event.
         
         % initialize some arrays for later concatenation. 
-        all_SWR_activity = [];
+        all_SWR_activity_pre = [];
+        all_SWR_activity_post = [];
+
 %         all_SWR_LFP.data = [];
 %         all_SWR_LFP.tvec = []; 
         %% loop through Ca block blocks and get the Ca activity around the SWR.
@@ -337,33 +348,35 @@ for iSub = Subjects
             if ~isempty(swr_r.tstart) % if there are no events here, then skip 
                 
                 swr_centers = IVcenters(swr_r); % get the swr center.
-
-            keep_idx = 1:size(ms_seg_resize.RawTraces,1); % actually this is a remove index
-            keep_idx =keep_idx(find((keep_idx ~= iSeg)));
-            
-            cfg_rem = []; cfg_rem.verbose = 0; 
-            this_ms = MS_remove_data_sandbox(cfg_rem, ms_seg_resize, keep_idx);
-            
-            this_ms = MS_de_cell(this_ms);
-            
-            this_ms = MS_msExtractBinary_detrendTraces(this_ms, 2);
-            
+                
+                keep_idx = 1:size(ms_seg_resize.RawTraces,1); % actually this is a remove index
+                keep_idx =keep_idx(find((keep_idx ~= iSeg)));
+                
+                cfg_rem = []; cfg_rem.verbose = 0;
+                this_ms = MS_remove_data_sandbox(cfg_rem, ms_seg_resize, keep_idx);
+                
+                this_ms = MS_de_cell(this_ms);
+                
+                this_ms = MS_msExtractBinary_detrendTraces(this_ms, 2);
+                
             
                 
                 % debugging
-                        cfg_plot.display = 'tsd';
-                        cfg_plot.target = 'LFP';
-%                         ca_frames = iv(this_ms.NLX_evt.t{end}-0.001, this_ms.NLX_evt.t{end}+0.001);
-% %                         PlotTSDfromIV(cfg_plot, ca_frames, ms_seg_resize.NLX_csc{iSeg})
-%                         PlotTSDfromIV(cfg_plot, swr_r, ms_seg_resize.NLX_csc{iSeg})
-%                         PlotTSDfromIV(cfg_plot, swr_r, csc)
-
+                cfg_plot.display = 'tsd';
+                cfg_plot.target = 'LFP';
+                %                         ca_frames = iv(this_ms.NLX_evt.t{end}-0.001, this_ms.NLX_evt.t{end}+0.001);
+                % %                         PlotTSDfromIV(cfg_plot, ca_frames, ms_seg_resize.NLX_csc{iSeg})
+                %                         PlotTSDfromIV(cfg_plot, swr_r, ms_seg_resize.NLX_csc{iSeg})
+                %                         PlotTSDfromIV(cfg_plot, swr_r, csc)
+                
                 %
                 swr_idx = nearest_idx(swr_centers, this_ms.NLX_evt.t{end}); % get the SWR indicies using NLX events (TTL from frame) which correspond to the ms frame number
                 
                 
                 count = 0; % initialize the counter.
-                SWR_activity = [];
+                SWR_activity_pre = [];
+                SWR_activity_post = [];
+
                 %                     SWR_LFP_data = []; SWR_LFP_tvec = [];
                 
                 for iE = length(swr_idx):-1:1
@@ -377,19 +390,34 @@ for iSub = Subjects
                         %                 SWR_LFP_data(count,:) = this_swr.data;
                         %                 SWR_LFP_tvec(count,:) = this_swr.tvec;
                         
-                        for iC = this_ms.numNeurons:-1:1
-                            SWR_activity(iC, :, count) = this_ms.Binary(swr_idx(iE)-nFrames: swr_idx(iE)+nFrames, iC);
+                        % split into 'pre' or 'post' recording. 
+                        if swr_centers(iE) <= pre_end  
+                            for iC = this_ms.numNeurons:-1:1
+                                SWR_activity_pre(iC, :, count) = this_ms.Binary(swr_idx(iE)-nFrames: swr_idx(iE)+nFrames, iC);
+                            end
+                        elseif swr_centers(iE) >= post_start
+                            for iC = this_ms.numNeurons:-1:1
+                                SWR_activity_post(iC, :, count) = this_ms.Binary(swr_idx(iE)-nFrames: swr_idx(iE)+nFrames, iC);
+                            end
                         end
                     end
                 end
                 % append to the master array;
-                all_SWR_activity = cat(3,all_SWR_activity, SWR_activity);
+                if swr_centers(end) <= pre_end
+                    all_SWR_activity_pre = cat(3,all_SWR_activity_pre, SWR_activity_pre);
+                elseif  swr_centers(end) >= post_start
+                    all_SWR_activity_post = cat(3,all_SWR_activity_post, SWR_activity_post);
+                end
                 %             all_SWR_LFP.data = cat(2,all_SWR_LFP.data, SWR_LFP_data);
                 
             end % if swr_idx is empty. 
         end  % recording segments/blocks
-        %% 
+        %% save the output in the inter folder for this project. 
         
+        mkdir([PARAMS.inter_dir filesep 'SWRs']);
+        save([PARAMS.inter_dir filesep 'SWRs' filesep sess_list{iSess} '_activity_pre.mat'], 'all_SWR_activity_pre', '-v7.3')
+        save([PARAMS.inter_dir filesep 'SWRs' filesep sess_list{iSess} '_activity_post.mat'], 'all_SWR_activity_post', '-v7.3')
+
         clear csc csc_dir
     end % session
 end % subject

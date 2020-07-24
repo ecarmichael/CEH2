@@ -28,7 +28,7 @@
 
 %% get the file paths and loop
 
-function ms_seg_resize = MS_re_binarize_JC(z_threshold, ms_load_dir, ms_save_dir, ms_fname_load, ms_fname_save)
+function ms_seg_resize = MS_re_binarize_JC(z_threshold, ms_load_dir, ms_save_dir, ms_fname_load, ms_fname_save, csc)
 %% MS_reclass_hynpo: simple script for reclassifying the hypno labels in segemented ms data.
 %
 %
@@ -113,8 +113,73 @@ trk_end_time = datevec(datestr(temp_time, 'HH:MM:SS'));
 save('ms_trk.mat','ms_trk', '-v7.3')
 
 % etime(trk_end_time, trk_time);
-%% recompute the all pre/post SW vs REM blocks.
+%% compute the power in different frequency bands if a csc is given as an input
+if exist('csc','var')
+    
+    cfg_d = [];
+    % filters
+    cfg_d.type = 'fdesign'; %Cheby1 is sharper than butter
+    cfg_d.f  = [1 5]; % broad, could use 150-200?
+    cfg_d.order = 8; %type filter order (fine for this f range)
+    cfg_d.display_filter = 0; % use this to see the fvtool
+        
+    delta = FilterLFP(cfg_d, csc);
+    
+    
+    cfg_t = [];
+    % filters
+    cfg_t.type = 'cheby1'; %Cheby1 is sharper than butter
+    cfg_t.f  = [6 11]; % broad, could use 150-200?
+    cfg_t.order = 3; %type filter order (fine for this f range)
+    cfg_t.display_filter = 0; % use this to see the fvtool
+        
+    theta = FilterLFP(cfg_t, csc);
+    
 
+    cfg_lg = [];
+    cfg_lg.check = 0; % plot checks.
+    % filters
+    cfg_lg.type = 'cheby1'; %Cheby1 is sharper than butter
+    cfg_lg.f  = [30 55]; % 
+    cfg_lg.order = 5; %type filter order (fine for this f range)
+    cfg_lg.display_filter =0; % use this to see the fvtool
+    
+    LG = FilterLFP(cfg_lg, csc);
+    
+    cfg_hg = [];
+    % filters
+    cfg_hg.type = 'cheby1'; %Cheby1 is sharper than butter
+    cfg_hg.f  = [70 90]; % 
+    cfg_hg.order = 5; %type filter order (fine for this f range)
+    cfg_hg.display_filter =0; % use this to see the fvtool
+    
+    HG = FilterLFP(cfg_hg, csc);
+    
+    
+    cfg_rip = [];
+    % filters
+    cfg_rip.type = 'butter'; %Cheby1 is sharper than butter
+    cfg_rip.f  = [120 250]; % 
+    cfg_rip.order = 4; %type filter order (fine for this f range)
+    cfg_rip.display_filter =0; % use this to see the fvtool
+    
+    Ripple = FilterLFP(cfg_rip, csc);
+
+
+    Fs = floor(1/(0.001*(mode(diff((ms_seg_resize.time{1})))))); 
+    
+    D_amp = smooth(abs(hilbert(delta.data)), floor(Fs*0.1));
+    T_amp = smooth(abs(hilbert(theta.data)), floor(Fs*0.1));
+    LG_amp = smooth(abs(hilbert(LG.data)), floor(Fs*0.1));
+    HG_amp = smooth(abs(hilbert(HG.data)), floor(Fs*0.1));
+    Rip_amp = smooth(abs(hilbert(Ripple.data)), floor(Fs*0.1));
+
+
+end
+
+
+
+%% recompute the all pre/post SW vs REM blocks.
 all_binary_pre = []; all_binary_post= [];
 all_RawTraces_pre = []; all_RawTraces_post = [];
 all_detrendRaw_pre = []; all_detrendRaw_post = [];
@@ -148,6 +213,56 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
     
     % check for inactive cells and remove from ms.SFPs just using sum of
     % binary > 0;
+    
+    %% add in the amplitude for 
+    
+    if exist('csc','var')
+    % get the indicies for each miniscope 
+    these_idx = nearest_idx(ms_seg.NLX_evt.t{end},csc.tvec);
+    
+    ms_seg.d_amp = D_amp(these_idx);
+    ms_seg.t_amp = T_amp(these_idx);
+    ms_seg.LG_amp = LG_amp(these_idx);
+    ms_seg.HG_amp = HG_amp(these_idx);
+    ms_seg.Rip_amp = Rip_amp(these_idx);
+    
+    % check plot
+    figure(100)
+    subplot(7,1,1:2)
+    hold on
+    c_ord = [linspecer(10);linspecer(10)];
+    for iC = 1:20
+        plot(ms_seg.time*0.001, ms_seg.RawTraces(:,iC)+iC, 'color', c_ord(iC,:))
+    end
+    xlim([ms_seg.time(1) ms_seg.time(end)]*0.001)
+    
+    subplot(7,1,3)
+    plot(ms_seg.time*0.001, ms_seg.d_amp,'color', c_ord(1,:));
+    legend('delta')
+    xlim([ms_seg.time(1) ms_seg.time(end)]*0.001)
+    
+    subplot(7,1,4)
+    plot(ms_seg.time*0.001, ms_seg.t_amp,'color',c_ord(2,:));
+    legend('theta')
+    xlim([ms_seg.time(1) ms_seg.time(end)]*0.001)
+    
+    subplot(7,1,5)
+    plot(ms_seg.time*0.001, ms_seg.LG_amp,'color',c_ord(3,:));
+    legend('low gamma')
+    xlim([ms_seg.time(1) ms_seg.time(end)]*0.001)
+    
+    subplot(7,1,6)
+    plot(ms_seg.time*0.001, ms_seg.HG_amp,'color',c_ord(4,:));
+    legend('high gamma')
+    xlim([ms_seg.time(1) ms_seg.time(end)]*0.001)
+    
+    subplot(7,1,7)
+    plot(ms_seg.time*0.001, ms_seg.Rip_amp,'color',c_ord(5,:));
+    legend('Ripple')
+    xlim([ms_seg.time(1) ms_seg.time(end)]*0.001)
+    end
+    
+    %% to do add in thing that pulls out power for theta/lowG/highG/ripple? 
     
     
     % add the spiking probability for different cell types.
@@ -277,5 +392,5 @@ cfgs.z_theshold = z_threshold;
 cfgs.date = datestr(date, 'yyyy_mm_dd'); 
 save([ms_save_dir filesep 'cfgs_z_' strrep(num2str(z_threshold), '.','p') '_on_' cfgs.date   '.mat'], 'cfgs', '-v7.3')
 
-
+close all
 end % end function

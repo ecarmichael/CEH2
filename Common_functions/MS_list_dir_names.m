@@ -65,8 +65,8 @@ if  ~isempty(str_to_find)
     
     % get all the cases where all the str_to_find are all present in the
     % dir name.
-    f_names_found = this_dir(sum(keep_mat,1) == length(str_to_find)).name;
-    f_fold_found = this_dir(sum(keep_mat,1) == length(str_to_find)).folder;
+    f_names_found = {this_dir(sum(keep_mat,1) == length(str_to_find)).name};
+    f_fold_found = {this_dir(sum(keep_mat,1) == length(str_to_find)).folder};
 else
     for iF = 1:length(this_dir)
         if strcmp(this_dir(iF).name, '.') || strcmp(this_dir(iF).name, '..')
