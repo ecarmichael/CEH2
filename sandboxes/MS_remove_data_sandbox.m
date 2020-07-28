@@ -1,4 +1,4 @@
-function ms_out = MS_remove_data_sandbox(cfg_in,ms_in, cells_to_remove)
+function [ms_out, removed_fnames] = MS_remove_data_sandbox(cfg_in,ms_in, cells_to_remove)
 %% MS_remove_data
 %  MS_remove_data will take in a miniscope data structure 'ms_in' and
 %  remove the specified cells while performing some checks to ensure that everything lines up.
@@ -29,7 +29,7 @@ function ms_out = MS_remove_data_sandbox(cfg_in,ms_in, cells_to_remove)
 
 cfg_def = [];
 cfg_def.user_fields = {}; % user fields. 
-
+cfg_def.verbose = 1; 
 cfg = ProcessConfig(cfg_def, cfg_in); 
 
 if ~iscell(ms_in.RawTraces)
@@ -46,6 +46,10 @@ keep_idx = segments_in(~ismember(segments_in, cells_to_remove));
 
 %% remove all cells in the data fields with pre-segmented data
 % fields_to_alter = {'time', 'RawTraces', 'FiltTraces', 'frameNum', 'vidNum'};
+removed_fnames = {}; 
+for iC = 1:length(cells_to_remove)
+   removed_fnames{iC} =  ms_in.file_names{cells_to_remove(iC)};
+end
 
 known_cell_num = size(ms_in.RawTraces,1); % should always be the correct number of cells for the number of segments.
 fields = fieldnames(ms_in);
@@ -60,8 +64,9 @@ for iF = 1:length(fields)
         for iC = sort(cells_to_remove, 'descend') % go backards or else everything is off and will not remove the right cells.
             ms_out.(fields{iF})(iC) = [];
             
-            
-            fprintf('Removing cell: %0.f in %s\n', iC, fields{iF});
+            if cfg.verbose
+                fprintf('Removing cell: %0.f in %s\n', iC, fields{iF});
+            end
         end
     end
 end

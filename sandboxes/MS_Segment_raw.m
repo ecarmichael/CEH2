@@ -54,9 +54,7 @@ cfg_def.save_ms_resize = 1; % can be 0 to not save the ms_resize and instead jus
 cfg_def.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
 cfg_def.csc.label = {'EMG', 'LFP'}; % custom naming for each channel.
 cfg_def.csc.desired_sampling_frequency = 2000;
-cfg_def.evt.comb_chans = [3 4]; % see below.
-cfg_def.evt.t_chan = 5; % which Events channel to use.  Seems to be 3 (ms TTL on) 4(ms TTL off) which combined make a new channel 5
-
+cfg_def.bad_block = [];
 % filters
 cfg_def.filt_d.type = 'fdesign'; %the type of filter I want to use via filterlfp
 cfg_def.filt_d.f  = [1 5];
@@ -82,6 +80,13 @@ cd(ms_dir)
 load('ms.mat')
 
 
+% check for Binary subfield in loaded data. 
+if isfield(ms, 'Binary')
+   ms = rmfield(ms, 'Binary'); 
+   fprintf('<strong>%s</strong>: Binary fubfield detected in loaded ms file.  removing...\n', mfilename); 
+end
+
+% collect timestamps. 
 [TS, TS_name] = MS_collect_timestamps(ms_dir);
 
 % get the hypnogram labels
@@ -133,12 +138,22 @@ ms = MS_append_data_sandbox(ms, 'file_names', TS_name);
 
 
 %% segment the data
-cfg_seg = [];
+cfg_seg = []; 
 % cfg_seg.user_fields = {'BinaryTraces'};
 ms_seg = MS_segment_ms_sandbox(cfg_seg, ms);
 
+
+
 fprintf('\n<strong>MS_Segment_raw</strong>: miniscope data has been segmented into %d individual recording epochs\n method used: %s\n', length(ms_seg.time), ms_seg.format);
 
+%% put in a place holder for pre_post in the homecage recording. 
+
+parts = strsplit(ms_dir, filesep); 
+if contains(lower(parts{end}), 'homecage')
+    for iC = length(TS):-1:1
+        ms_seg.pre_post{iC} = 'pre';
+    end
+end
 %% Load nlx data
 cd(csc_dir)
 % load the Keys file with all of the experiment details.
@@ -157,11 +172,17 @@ csc = MS_LoadCSC(cfg.csc); % need to comment out ExpKeys lines in LoadCSC
 
 % extract NLX event epochs
 
-nlx_evts.t{cfg.evt.t_chan} = sort([nlx_evts.t{cfg.evt.comb_chans(1)}, nlx_evts.t{cfg.evt.comb_chans(2)}]);
-nlx_evts.label{5} = ['merge TTls at ' num2str(cfg.evt.comb_chans(1)) ' and ' num2str(cfg.evt.comb_chans(2))];
+nlx_evts.t{end+1} = sort([nlx_evts.t{end-1}, nlx_evts.t{end}]);
+nlx_evts.label{end+1} = ['merge TTls at ' num2str(length(nlx_evts)-1) ' and ' num2str(length(nlx_evts))];
+
+cfg.evt.t_chan = length(nlx_evts.t); 
+cfg.evt.bad_block =[];% cfg.bad_block; %find(ismember(TS_name, cfg.bad_block)); % flag known bad blocks to avoid running gitter and for later removal. . 
+cfg.evt.min_dist = 10;
+cfg.evt.start_search = 3; 
 [evt_blocks, ~, evt_duration] = MS_extract_NLX_blocks_sandbox(cfg.evt, nlx_evts);
 pause(1)
 close
+
 
 % compare to TS to ms
 fprintf('\n****Comparing TS files to processed miniscope (ms) data\n')
@@ -215,6 +236,44 @@ csc.label{end+1} = 'theta/emg';
 clear delta_csc theta_csc td_ratio t_emg_ratio
 fprintf('\n<strong>MS_Segment_raw</strong>: Delta, Theta, Theta./Delta ratio, and Theta./EMG have been added as csc channels.\n');
 
+%% [done] EC add in another block for removing specified nlx_evt blocks or TS files if there is a known issue in the data (ie: Ms file was corrupted or crashed)
+
+if ~isempty(cfg.remove_ts)
+    % make removed and removed_reason if they don't exist. 
+    if ~isfield(ms_seg, 'removed')
+        ms_seg.removed = {};
+    end
+    
+    if ~isfield(ms_seg, 'removed_reason')
+        ms_seg.removed_reason = {};
+    end
+    % cycle backwards through ts blocks to remove. 
+    for iT = length(cfg.remove_ts):-1:1
+        cfg_rem = [];
+        ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, cfg.remove_ts(iT));
+        
+        ms_seg.removed{end+1} = TS_name{cfg.remove_ts(iT)};
+        ms_seg.removed_reason{end+1} = 'Flagged for removal by user in cfg.remove_ts';
+        
+            % remove from TS and labeling structs
+    TS(cfg.remove_ts(iT)) = [];
+    TS_name(cfg.remove_ts(iT))= [];
+    hypno_labels(cfg.remove_ts(iT)) = [];
+    time_labels(cfg.remove_ts(iT)) = [];
+        
+    fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', cfg.remove_ts(iT));
+    end
+end
+% for PV1060 7_17_2019_PV1060_LTD3 we have to remove evt_blocks(5,6) and
+% TS(5)
+
+%% Remove NLX blocks that have been flagged by the user for removeal in cfg.remove_nlx_evt
+if ~isempty(cfg.remove_nlx_evt)
+    for iT = length(cfg.remove_nlx_evt):-1:1
+        evt_blocks(cfg.remove_nlx_evt(iT)) = [];
+            fprintf('\n<strong>MS_Segment_raw</strong>: nlx detected epoch: %d was flagged for removal\n', cfg.remove_nlx_evt(iT));
+    end 
+end
 
 
 %% need to add a piece that will identify periods where the MS was recording but the NLX was not (example: when the mouse is on the track)
@@ -229,7 +288,7 @@ if length(evt_blocks) < length(TS)
         l_evt(iE) = length(evt_blocks{iE}.t{cfg.evt.t_chan});
     end
     
-    odd_idx = find(~ismembertol(l_ts, l_evt, 5,'OutputAllIndices',true,'DataScale', 1));
+    odd_idx = find(~ismembertol(l_ts, l_evt, 50,'OutputAllIndices',true,'DataScale', 1));
     
     for iOdd = 1:length(odd_idx)
         fprintf('Found odd TS files at idx: %d.   Length: %d samples\n', odd_idx(iOdd), length(TS{odd_idx(iOdd)}.system_clock{1}));
@@ -237,7 +296,7 @@ if length(evt_blocks) < length(TS)
     
     % keep the track ms struct and save
     keep_idx = 1:size(ms_seg.RawTraces,1);
-    keep_idx =keep_idx(find((keep_idx ~= odd_idx)));
+    keep_idx =keep_idx((keep_idx ~= odd_idx));
     
     % get the pre, trk, post values
     for iC = length(TS):-1:1
@@ -264,8 +323,20 @@ if length(evt_blocks) < length(TS)
     
     % remove from main ms struct
     cfg_rem = [];
+%     rm_idx = find(odd_idx== ms_seg.seg_id); % why is this here? 
     ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, odd_idx);
     
+    
+    if ~isfield(ms_seg, 'removed')
+        ms_seg.removed = {};
+    end
+    
+    if ~isfield(ms_seg, 'removed_reason')
+        ms_seg.removed_reason = {};
+    end
+    ms_seg.removed{end+1} = TS_name{odd_idx};
+    ms_seg.removed_reason{end+1} = 'Odd Index values. Likely Track Segment';
+
     % remove from TS and labeling structs
     TS(odd_idx) = [];
     
@@ -274,15 +345,11 @@ if length(evt_blocks) < length(TS)
     hypno_labels(odd_idx) = [];
     
     time_labels(odd_idx) = [];
-    
-    
-    fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', odd_idx);
+        
+    fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: #%d : <strong>%s</strong> was flagged for removal\n', odd_idx, ms_seg.removed{end});
     
 end
-if ~isfield(ms_seg, 'removed')
-    ms_seg.removed = {};
-end
-ms_seg.removed{end+1} = TS_name{odd_idx};
+
 
 
 %% append the NLX data to the ms structure (be saure to use the same channel as the one used for extraction (cfg_evt_blocks.t_chan).
@@ -360,10 +427,15 @@ end
 %% update the ms structure with the NLX data
 cfg_rem = [];
 % cfg_rem.user_fields = {'BinaryTraces'};
-ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, [flag]);
+ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, flag);
 fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', flag);
 for iR = 1:length(flag)
+    if ~isfield(ms_seg, 'removed')
+        ms_seg.removed = {};
+        ms_seg.removed_reason = {};
+    end
     ms_seg.removed{end+1} = TS_name{flag(iR)};
+    ms_seg.removed_reason{end+1} = 'TS and NLX samples do not align';
 end
 % add in the NLX data
 
@@ -374,18 +446,41 @@ fprintf('\n<strong>MS_Segment_raw</strong>: NLX_csc appended\n');
 % clear ms res_csc res_evt flag
 
 
-
+%% remove known bad blocks
+% rm_idx = find(ismember(ms_seg.file_names, cfg.bad_block_name));
+% if ~isempty(rm_idx)
+%     ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, rm_idx);
+%     fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', flag);
+%     for iR = 1:length(rm_idx)
+%         ms_seg.removed{end+1} = ms_seg.file_names{rm_idx(iR)};
+%     end
+%     % add
+% end
 %% get some emg stats for scaling
 emg_chan  = find(ismember(cfg.csc.label, 'EMG')); % used to get the emg range.
 % get the min and max emg range for the first 5mins of the recording. used for consistency.
-cfg.resize = [];
-cfg.resize.emg_range = [min(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency))), max(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency)))]; % get the min and max emg range for the first 10s of the recording. used for consistency.
+cfg.resize = []; cfg.resize.emg_range = [min(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency))), max(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency)))]; % get the min and max emg range for the first 10s of the recording. used for consistency.
 
 %% spectrogram of an episode w/ability to resize using gui
 
-[cut_vals, remove_flag] = MS_plot_spec_resize(cfg.resize, ms_seg);
+% to reload cut vals you will have to load the ms_resize from the inter
+% dir.  Then cut_vals = ms_seg_resize.resize.cfg.cutoffs  will give the
+% cut off values.  find(ismember(ms_seg.file_names, ms_seg_resize.removed))
+% which will give the indices of any removed sessions.  Once you have done
+% this run the cell above ^^ to clear cfg.resize
 
-flag = find(remove_flag);  % makes appending easier ina few steps
+
+
+[cut_vals, remove_flag, remove_file] = MS_plot_spec_resize(cfg.resize, ms_seg);
+ % remove_flag uses the segment ID values.  
+ remove_file'
+ %save the cut_vals for quick mannual checks and reruns.  
+ save([ms_resize_dir filesep 'cut_vals.mat'], 'cut_vals',  '-v7.3'); 
+ % save the remove_flag
+  save([ms_resize_dir filesep 'remove_flag.mat'], 'remove_flag',  '-v7.3'); 
+
+ 
+% flag = find(ismember(ms_seg.seg_id,remove_flag));  % makes appending easier ina few steps
 %% resize the events [WIP: has trouble resizing across ms and NLX timescales]
 cfg_resize = [];
 cfg_resize.tvec_to_use = 'NLX_csc'; % could be 'time', or 'NLX_csc'
@@ -397,12 +492,14 @@ ms_seg_resize = MS_resize_segments(cfg_resize, ms_seg);
 %% remove segments that the user flagged in MS_plot_spec_resize
 cfg_rem = [];
 % cfg_rem.user_fields = {'BinaryTraces'};
-ms_seg_resize = MS_remove_data_sandbox(cfg_rem, ms_seg_resize, flag);
-fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d was flagged for removal\n', find(remove_flag));
+[ms_seg_resize, remove_fnames] =  MS_remove_data_sandbox(cfg_rem, ms_seg_resize, remove_flag);
 
-if ~isempty(flag)
-    for iR = 1:length(flag)
-        ms_seg.removed{end+1} = TS_name{flag(iR)};
+if ~isempty(remove_fnames)
+    for iR = 1:length(remove_fnames)
+        fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: %d <strong>%s</strong> was flagged for removal\n', iR, remove_fnames{iR});
+
+        ms_seg_resize.removed{end+1} = remove_fnames{iR};
+        ms_seg_resize.removed_reason{end+1} = 'User flagged for removal';
     end
 end
 
@@ -410,6 +507,7 @@ end
 
 %% spectrogram of an episode w/
 cfg.resize.resize = 0; % don't resize this time just plot.
+cfg.resize.fnames = ms_seg_resize.file_names; 
 MS_plot_spec_resize(cfg.resize, ms_seg_resize);
 
 
@@ -430,6 +528,11 @@ MS_plot_spec_resize(cfg.resize, ms_seg_resize);
 
 %% binarize the traces in each segment and save each one back to the same folder name as the original Ms TS file.
 % set up empty variables for each PRE v POST and REM v SW
+%% if this is a baseline recording fill in the pre_post
+
+parts = strsplit(ms_dir, filesep); 
+
+ 
 all_binary_pre = []; all_binary_post= [];
 all_RawTraces_pre = []; all_RawTraces_post = [];
 all_detrendRaw_pre = []; all_detrendRaw_post = [];
@@ -447,18 +550,19 @@ pre_SW_idx = []; post_SW_idx = [];
 
 
 for iSeg = 1:length(ms_seg_resize.RawTraces)
+    ms_seg = []; % cleared so that we can use this var name for saving. 
     
-    keep_idx = 1:size(ms_seg_resize.RawTraces,1);
+    keep_idx = 1:size(ms_seg_resize.RawTraces,1); % actually this is a remove index
     keep_idx =keep_idx(find((keep_idx ~= iSeg)));
     
     cfg_rem = [];
-    this_ms = MS_remove_data_sandbox(cfg_rem, ms_seg_resize, keep_idx);
+    ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg_resize, keep_idx);
     
-    this_ms = MS_de_cell(this_ms);
+    ms_seg = MS_de_cell(ms_seg);
     
     % binarize the trace
     
-    this_ms = msExtractBinary_detrendTraces(this_ms);
+    ms_seg = msExtractBinary_detrendTraces(ms_seg);
     
     % check for inactive cells and remove from ms.SFPs just using sum of
     % binary > 0; 
@@ -466,56 +570,62 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
     cfg_SFP = [];
     cfg_SFP.fnc = '=='; 
     cfg_SFP.remove_val = 0; 
-    this_ms = MS_update_SFP(cfg_SFP, this_ms);
+    ms_seg = MS_update_SFP(cfg_SFP, ms_seg);
     
     this_dir = [];
     this_dir = [ms_resize_dir filesep ms_seg_resize.file_names{iSeg}];
     fprintf('<strong>%s</strong>: saving resized ms struct back to %s...\n', mfilename, this_dir)
     mkdir(this_dir)
-    save([this_dir filesep 'ms_seg_resize_' ms_seg_resize.pre_post{iSeg} '_' ms_seg_resize.hypno_label{iSeg}], 'this_ms', '-v7.3');
+    % if this is a homecage do not use the 'pre' or post' lab.  
+    if ~contains(lower(parts{end}), 'homecage')
+         save([this_dir filesep 'ms_seg_resize_' ms_seg_resize.pre_post{iSeg} '_' ms_seg_resize.hypno_label{iSeg}],'ms_seg', '-v7.3');
+    else
+                 save([this_dir filesep 'ms_seg_resize_' ms_seg_resize.hypno_label{iSeg}],'ms_seg', '-v7.3');
+    end
+    
     
     % keep the index for the segment.
     if isempty(all_seg_idx)
-        all_seg_idx(iSeg) = length(this_ms.RawTraces);
+        all_seg_idx(iSeg) = length(ms_seg.RawTraces);
     else
-        all_seg_idx(iSeg) = length(this_ms.RawTraces) + all_seg_idx(iSeg -1);
+        all_seg_idx(iSeg) = length(ms_seg.RawTraces) + all_seg_idx(iSeg -1);
     end
     % cat the binary traces for pre V post, and REM v SW
     if strcmp(ms_seg_resize.pre_post{iSeg}, 'pre')
-        all_binary_pre = [all_binary_pre; this_ms.Binary];
-        all_RawTraces_pre = [all_RawTraces_pre; this_ms.RawTraces];
-        all_detrendRaw_pre = [all_detrendRaw_pre; this_ms.detrendRaw];
+        all_binary_pre = [all_binary_pre; ms_seg.Binary];
+        all_RawTraces_pre = [all_RawTraces_pre; ms_seg.RawTraces];
+        all_detrendRaw_pre = [all_detrendRaw_pre; ms_seg.detrendRaw];
         
         
         % break out REM and SW
         if strcmp(ms_seg_resize.hypno_label{iSeg}, 'REM')
-            all_binary_pre_REM = [all_binary_pre_REM; this_ms.Binary];
-            all_RawTraces_pre_REM = [all_RawTraces_pre_REM; this_ms.RawTraces];
-            all_detrendRaw_pre_REM = [all_detrendRaw_pre_REM; this_ms.detrendRaw];
+            all_binary_pre_REM = [all_binary_pre_REM; ms_seg.Binary];
+            all_RawTraces_pre_REM = [all_RawTraces_pre_REM; ms_seg.RawTraces];
+            all_detrendRaw_pre_REM = [all_detrendRaw_pre_REM; ms_seg.detrendRaw];
             pre_REM_idx = [pre_REM_idx, iSeg];
         elseif strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
-            all_binary_pre_SW = [all_binary_pre_SW; this_ms.Binary];
-            all_RawTraces_pre_SW = [all_RawTraces_pre_SW; this_ms.RawTraces];
-            all_detrendRaw_pre_SW = [all_detrendRaw_pre_SW; this_ms.detrendRaw];
+            all_binary_pre_SW = [all_binary_pre_SW; ms_seg.Binary];
+            all_RawTraces_pre_SW = [all_RawTraces_pre_SW; ms_seg.RawTraces];
+            all_detrendRaw_pre_SW = [all_detrendRaw_pre_SW; ms_seg.detrendRaw];
             pre_SW_idx = [pre_SW_idx, iSeg];
         end
         
     elseif strcmp(ms_seg_resize.pre_post{iSeg}, 'post')
-        all_binary_post = [all_binary_post; this_ms.Binary];
-        all_RawTraces_post = [all_RawTraces_post; this_ms.RawTraces];
-        all_detrendRaw_post = [all_detrendRaw_post; this_ms.detrendRaw];
+        all_binary_post = [all_binary_post; ms_seg.Binary];
+        all_RawTraces_post = [all_RawTraces_post; ms_seg.RawTraces];
+        all_detrendRaw_post = [all_detrendRaw_post; ms_seg.detrendRaw];
         
         % break out REM and SW
         if strcmp(ms_seg_resize.hypno_label{iSeg}, 'REM')
-            all_binary_post_REM = [all_binary_post_REM; this_ms.Binary];
-            all_RawTraces_post_REM = [all_RawTraces_post_REM; this_ms.RawTraces];
-            all_detrendRaw_post_REM = [all_detrendRaw_post_REM; this_ms.detrendRaw];
+            all_binary_post_REM = [all_binary_post_REM; ms_seg.Binary];
+            all_RawTraces_post_REM = [all_RawTraces_post_REM; ms_seg.RawTraces];
+            all_detrendRaw_post_REM = [all_detrendRaw_post_REM; ms_seg.detrendRaw];
             post_REM_idx = [post_REM_idx, iSeg];
             
         elseif strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
-            all_binary_post_SW = [all_binary_post_SW; this_ms.Binary];
-            all_RawTraces_post_SW = [all_RawTraces_post_SW; this_ms.RawTraces];
-            all_detrendRaw_post_SW = [all_detrendRaw_post_SW; this_ms.detrendRaw];
+            all_binary_post_SW = [all_binary_post_SW; ms_seg.Binary];
+            all_RawTraces_post_SW = [all_RawTraces_post_SW; ms_seg.RawTraces];
+            all_detrendRaw_post_SW = [all_detrendRaw_post_SW; ms_seg.detrendRaw];
             post_SW_idx = [post_SW_idx, iSeg];
             
         end
@@ -523,7 +633,7 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
 end
 all_seg_idx = [0 all_seg_idx];
 
-fprintf('<strong>%s</strong>: saving concatinating Binary, RawTraces, detrendRaw, and indicies', mfilename);
+fprintf('<strong>%s</strong>: saving concatinating Binary, RawTraces, detrendRaw, and indicies\n', mfilename);
 
 % save everything
 save([ms_resize_dir filesep 'all_seg_idx.mat'], 'all_seg_idx', '-v7.3');
@@ -559,7 +669,11 @@ save([ms_resize_dir filesep 'all_binary_post_SW.mat' ], 'all_binary_post_SW', '-
 save([ms_resize_dir filesep 'all_RawTraces_post_SW.mat'], 'all_RawTraces_post_SW', '-v7.3');
 save([ms_resize_dir filesep 'all_detrendRaw_post_SW.mat'], 'all_detrendRaw_post_SW', '-v7.3');
 
-% visualize
+
+%% clean up and export the ms_seg_resize
+save([ms_resize_dir filesep 'ms_resize.mat'], 'ms_seg_resize', '-v7.3')
+
+%% visualize
 figure(1010)
 subplot(3,1,1)
 title('Binary Pre cat: SW: green REM: red')
@@ -567,9 +681,14 @@ hold on
 for ii = 1:10
     plot(all_binary_pre(:,ii)+ii);
 end
-vline(all_seg_idx(pre_REM_idx), {'r'});
-vline(all_seg_idx(pre_SW_idx),{'g'})
-
+% put in vertical lines for the start of REm or SW blocks, if they are
+% present. 
+if ~isempty(pre_REM_idx)
+    vline(all_seg_idx(pre_REM_idx), {'r'});
+end
+if ~isempty(pre_SW_idx)
+    vline(all_seg_idx(pre_SW_idx),{'g'});
+end
 subplot(3,1,2)
 title('RawTraces Pre cat: SW: green REM: red')
 hold on
@@ -586,9 +705,14 @@ hold on
 for ii = 1:10
     plot(all_detrendRaw_pre(:,ii)+ii);
 end
-vline(all_seg_idx(pre_REM_idx), {'r'});    mkdir(ms_resize_dir);
+vline(all_seg_idx(pre_REM_idx), {'r'});    
 vline(all_seg_idx(pre_SW_idx),{'g'})
 pause(5)
+if ~exist(ms_resize_dir)
+    mkdir(ms_resize_dir);
+end
+saveas(gcf, [ms_resize_dir filesep 'cat_check'],'fig')
+saveas(gcf, [ms_resize_dir filesep 'cat_check'],'png')
+
 close; 
-%% clean up and export the ms_seg_resize
-save([ms_resize_dir filesep 'ms_resize.mat'], 'ms_seg_resize', '-v7.3')
+

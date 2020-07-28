@@ -32,11 +32,26 @@ hypno_labels = cell(1, length(TS_name));
 time_labels = cell(1,length(TS_name));
 for iT = 1:length(TS_name)
     
-    lab_out = []; 
+    lab_out = [];
     for iL = 1:length(cfg.label_to_find)
         
         if contains(TS_name{iT}, cfg.label_to_find{iL}, 'IgnoreCase', true)
-            lab_out = [lab_out cfg.label_to_find{iL}]; 
+            if contains(TS_name{iT}, 'REM', 'IgnoreCase', true)
+                rem_idx = strfind(lower(TS_name{iT}), lower('REM'));
+%                 if length(TS_name{iT}) >= rem_idx+3  % why did I do this
+%                 (EC)? 
+%                     [~, status]= str2num(TS_name{iT}(rem_idx+3));
+%                     if status ~= 1
+%                         lab_out = 'Other';
+%                     else
+%                         lab_out = cfg.label_to_find{iL};
+%                     end
+%                 else
+                    lab_out = cfg.label_to_find{iL};
+%                 end
+            else
+                lab_out = cfg.label_to_find{iL};
+            end
         end
     end
     if isempty(lab_out)

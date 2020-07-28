@@ -1,8 +1,8 @@
-function [f_names, f_fold] = MS_list_dir_names(dir_name, str_to_find)
-%% MS_list_dir_names: get the names of all the files/folders in the dir_name. Removes the '.' and '..' dirs and can look for a specific string 'str_to_find'
-%    MS_list_dir_names returns the dir name and dir of all dirs that
-%    contain all of the str_to_find.  For cases where any of the str_to_find are
-%    found use MS_list_dir_names_any
+function [f_names, f_fold] = MS_list_dir_names_any(dir_name, str_to_find)
+%% MS_list_dir_names_any: get the names of all the files/folders in the dir_name. Removes the '.' and '..' dirs and can look for a specific string 'str_to_find'
+%    MS_list_dir_names_any returns the dir name and dir of all dirs that
+%    contain any of the str_to_find.  For cases where all str_to_find are
+%    found use MS_list_dir_names
 %
 %
 %    Inputs:
@@ -14,7 +14,7 @@ function [f_names, f_fold] = MS_list_dir_names(dir_name, str_to_find)
 %                   [ 0   0   1   1   0   0   0   0]
 %                   [ 0   0   1   0   1   0   1   0]
 %                   returns
-%      keep_idx =   [ 0   0   1   0   0   0   0   0]
+%      keep_idx =   [ 0   0   1   1   1   0   1   0]
 %
 %    Outputs:
 %     - f_name: [n x1 cell array] contains the names of the folders/files
@@ -39,11 +39,9 @@ end
 
 %% get the name
 this_dir = dir(dir_name);
-
 % switch between using the str_to_find
 if  ~isempty(str_to_find)
-    %workaround to get str_to_find into a cell array. 
-    if ischar(str_to_find) == 1
+        if ischar(str_to_find) == 1
         str_to_find = {str_to_find};
     end
     % cycle through strings to find.
@@ -65,8 +63,8 @@ if  ~isempty(str_to_find)
     
     % get all the cases where all the str_to_find are all present in the
     % dir name.
-    f_names_found = {this_dir(sum(keep_mat,1) == length(str_to_find)).name};
-    f_fold_found = {this_dir(sum(keep_mat,1) == length(str_to_find)).folder};
+    f_names_found = {this_dir(sum(keep_mat,1) >0).name};
+    f_fold_found = {this_dir(sum(keep_mat,1) >0).folder};
 else
     for iF = 1:length(this_dir)
         if strcmp(this_dir(iF).name, '.') || strcmp(this_dir(iF).name, '..')
@@ -88,5 +86,6 @@ if ischar(f_names_found)
     f_fold{1} = f_fold_found;
 else
     f_names = f_names_found;
-    f_fold = f_fold_found; 
+    f_fold = f_fold_found;
+end
 end

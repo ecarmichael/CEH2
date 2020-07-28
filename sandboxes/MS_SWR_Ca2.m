@@ -615,9 +615,9 @@ rec_1 = restrict(csc, csc.tvec(1), cuts(1));
 % rec_1 = restrict(csc, nlx_evts.t{1}(1), nlx_evts.t{2}(1));
 rec_2 = restrict(csc, cuts(2), csc.tvec(end));
 
-% temp_data = [rec_1.data, rec_2.data];
+temp_data = [rec_1.data, rec_2.data];
 
-temp_data = csc.data; 
+% temp_data = csc.data; 
 
 temp_tvec = 0:1/csc.cfg.hdr{1}.SamplingFrequency:length(temp_data)/csc.cfg.hdr{1}.SamplingFrequency;
 temp_tvec = temp_tvec(1:end-1); 

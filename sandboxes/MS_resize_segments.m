@@ -116,7 +116,7 @@ for iF = 1:length(fields)
     
     
     if ~isempty(cell_idx) 
-        if  isnumeric(ms_seg_in.(fields{iF})) || ischar(ms_seg_in.(fields{iF}){1})
+        if   ischar(ms_seg_in.(fields{iF})) || isnumeric(ms_seg_in.(fields{iF})) || ischar(ms_seg_in.(fields{iF}){1})
             fprintf('Skipping in <strong>''%s''</strong>...\n', fields{iF})
             continue
         else
