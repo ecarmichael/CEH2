@@ -43,7 +43,7 @@ function ms_seg_resize = MS_re_binarize_JC(z_threshold, ms_load_dir, ms_save_dir
 %
 %     - ms_fname_save [char] name of the .mat file to save
 %
-
+%     - csc [struct]  'csc' 
 %    Outputs:
 %     - ms_seg_resize: [struct] ms data that has been segmented.  contains
 %     the updated ms_seg.resize.hypnolabel field.

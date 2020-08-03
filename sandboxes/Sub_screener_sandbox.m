@@ -70,7 +70,7 @@ clear d os
 %%  load data
 
 load('567_ms.mat')
-
+load('567_behav.mat')
 ms = MS_msExtractBinary_detrendTraces(ms, 2);
 
 %% try to classify the cells as long or short tailed
@@ -226,6 +226,8 @@ if behav.time(end) ~= ms.time(end) || length(behav.time) ~= length(ms.time)
     
     
     behav_aligned = MS_align_data(behav, ms);
+%     behav_aligned = MS_align_data(behav, ms);
+
 end
 
 left_idx = MS_get_direction(behav_aligned.position(:,1), -.1); % use -threshold for leftbound and + for right.
@@ -241,7 +243,7 @@ right_idx = right_idx & movement_idx;
 [R_laps, R_lap_start_idx, R_lap_end_idx] = MS_get_laps(right_idx, floor(1.5*(1/frame_time)),floor(10*(1/frame_time)));
 
 %% plot basics
-for iC = 10:30; % loop through cells
+for iC = 1:30; % loop through cells
     
     M = 7; % rows
     N = 6; % columns
