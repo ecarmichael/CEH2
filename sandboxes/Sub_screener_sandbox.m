@@ -243,7 +243,7 @@ right_idx = right_idx & movement_idx;
 [R_laps, R_lap_start_idx, R_lap_end_idx] = MS_get_laps(right_idx, floor(1.5*(1/frame_time)),floor(10*(1/frame_time)));
 
 %% plot basics
-for iC = 1:30; % loop through cells
+for iC = 1; % loop through cells
     
     M = 7; % rows
     N = 6; % columns
@@ -321,6 +321,7 @@ for iC = 1:30; % loop through cells
     %get binary 'event times'
     t_binary = find(ms.Binary(:,iC) ==1);
     % put dots on positions when the cell was active.
+    
     plot(behav_aligned.position(t_binary,1), behav_aligned.position(t_binary,2),'.', 'color', PARAMS.red)
     xlabel('position (cm)');
     ylabel('position (cm)');

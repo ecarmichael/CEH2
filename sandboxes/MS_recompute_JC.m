@@ -61,15 +61,16 @@ clear d os
 
 %% Locations of the data to be processed.
 Subjects = MS_list_dir_names(PARAMS.raw_data_dir);
-for iSub = 1:length(Subjects)
+for iSub = 2:length(Subjects)
     % set the dir for this subject
     this_sub_dir = [PARAMS.raw_data_dir filesep Subjects{iSub}];
     
     % move to dir and get all sessions.  Can specify a specific string to
     % find in the dir. ex: MS_list_dir_names(this_sub_dir, 'LTD')
     cd(this_sub_dir)
-    sess_list = MS_list_dir_names(this_sub_dir, 'LTD'); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
-%     sess_list = MS_list_dir_names(this_sub_dir); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
+%     sess_list = MS_list_dir_names(this_sub_dir, {'LTD', 'HAT'}); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
+    sess_list = MS_list_dir_names_any(this_sub_dir, {'LTD', 'HAT'}); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
+
 
     for iSess = 1:length(sess_list)
         ms_dir = [PARAMS.raw_data_dir filesep Subjects{iSub} filesep sess_list{iSess}];
@@ -124,7 +125,8 @@ for iSub = 1:length(Subjects)
         if exist([ms_inter_dir filesep 'ms_resize.mat'], 'file')
             MS_re_binarize_JC(2, ms_inter_dir, ms_inter_dir, 'ms_resize', 'ms_resize', csc);
         else
-            error(sprintf('No ms_resize.mat file can be found in inter dir: <strong>%s</strong>', ms_inter_dir))
+            continue
+            warning(sprintf('No ms_resize.mat file can be found in inter dir: <strong>%s</strong>', ms_inter_dir))
         end
         clear csc csc_dir
     end % session
