@@ -1,4 +1,4 @@
-function [spk_counts, cfg_out] = MS_event_hist(cfg_in,S, csc, varargin)
+function [spk_count_all, cfg_out] = MS_event_hist(cfg_in,S, csc, varargin)
 %% MS_event_hist: 
 %
 %
@@ -44,6 +44,7 @@ cfg_def.t_win = [0 0];  % window around the events
 cfg_def.plot_chan = 'LFP';
 cfg_def.ms_field = 'Binary'; % which ms field to use.   Can also be 'RawTraces'
 cfg_def.bin_s = 0.01; 
+cfg_def.events = length(IV_in.tstart):-1:1; %cycle through all events. 
 
 cfg = ProcessConfig(cfg_def, cfg_in);
 %% get the histogram of activity. 
@@ -54,13 +55,13 @@ IV_new = iv([centers+cfg.t_win(1) centers+cfg.t_win(end)]);
 % IV_in.tend = IV_in.tend+cfg.t_win(2); 
 
     % loop events
-    for iEvt = length(IV_new.tstart):-1:1
+    for iEvt = cfg.events
         tbins = IV_new.tstart(iEvt):cfg.bin_s:IV_new.tend(iEvt); % make t bins
         tbins_center = tbins(1:end-1)+cfg.bin_s/2; % get the centers of the t bins
         
         for iC = length(S.t):-1:1
             spk_count = [];
-            spk_count = histc(S.t{iC},tbins)'; % get spike counts for each bin
+            spk_count = histc(S.t{iC},tbins); % get spike counts for each bin
             spk_count_all(iC,:, iEvt) = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
         end
         % sum for each event.  Helpful for plotting. 
@@ -81,7 +82,7 @@ if cfg.plot
     xlim([csc.tvec(1) csc.tvec(end)])
     ax(2) = subplot(5,1,2:4);
     cfg_rast = [];
-    cfg_rast.LineWidth  = 1;
+    cfg_rast.LineWidth  = 2;
     cfg_rast.openNewFig = 0;
     h = MultiRaster(cfg_rast,S);
 %     set(gca, 'linewidth', 2)
@@ -89,7 +90,7 @@ if cfg.plot
     vline(centers)
     linkaxes(ax, 'x')
     
-    for iEvt = 1:length(IV_in.tstart)
+    for iEvt = fliplr(cfg.events)
         subplot(5,1,1);
         xlim([IV_new.tstart(iEvt), IV_new.tend(iEvt)])
         title(num2str(iEvt))
