@@ -56,7 +56,7 @@ for iIV = nIV:-1:1
     this_data_raw = tsd_in.data(TSD_getidx2(tsd_in,iv_in.tstart(iIV),iv_in.tend(iIV)));
     this_data_h = tsd_h(TSD_getidx2(tsd_f,iv_in.tstart(iIV),iv_in.tend(iIV)));
     
-    % peaks are zero crossings in hilbert
+    % peaks with zero crossings in hilbert
     temp_h = this_data_h > 0;
     this_pk_idx = find(diff(temp_h) == 1);
     if isempty(this_pk_idx)

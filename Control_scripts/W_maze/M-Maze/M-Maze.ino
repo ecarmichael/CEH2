@@ -25,7 +25,9 @@
 // experiment parameters
 
 uint32_t ExpTime = 1 * 60000L;
-uint32_t tStart = millis();
+
+uint32_t tStart = millis(); 
+uint32_t eTime = 0; 
 
 const int Reset_button = 2;
 // Teensy 3.x / Teensy LC have the LED on pin 13
@@ -124,6 +126,7 @@ void loop()
   while ((millis() - tStart) < ExpTime) {
     uint32_t eTime = millis() - tStart;
     //Serial.print(eTime);
+
     // Rest_button
     if (digitalRead(Reset_button) == HIGH)
     {

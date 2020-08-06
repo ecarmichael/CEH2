@@ -66,14 +66,14 @@ for iB = 1:length(ms_seg_resize.RawTraces)
     str_len = length(strcat(ms_seg_resize.file_names{iB},ms_seg_resize.pre_post{iB}, ms_seg_resize.hypno_label{iB}));
     fprintf('<strong>%s %s - %s:</strong>', ms_seg_resize.file_names{iB},ms_seg_resize.pre_post{iB}, ms_seg_resize.hypno_label{iB})
     fprintf(repmat(' ', 1,abs(str_len-23)))
-    fprintf('SWD:%3d  %2.1f/s   SWR:%3d  %2.1f/s   low_G:%3d  %2.1f/s \n',...
-        length(ms_seg_resize.SWD_evts{iB}.tstart),length(ms_seg_resize.SWD_evts{iB}.tstart)/len,....
+    fprintf(' SWD:%3d  %2.1f/s   SWR:%3d  %2.1f/s   low_G:%3d  %2.1f/s   time: %2.1fs \n',...
+        length(ms_seg_resize.SWD_evts{iB}.tstart),length(ms_seg_resize.SWD_evts{iB}.tstart)/len,...
         length(ms_seg_resize.SWR_evts{iB}.tstart),length(ms_seg_resize.SWR_evts{iB}.tstart)/len,...
-        length(ms_seg_resize.low_gamma_evts{iB}.tstart),length(ms_seg_resize.low_gamma_evts{iB}.tstart)/len)
+        length(ms_seg_resize.low_gamma_evts{iB}.tstart),length(ms_seg_resize.low_gamma_evts{iB}.tstart)/len,len)
 end
 fprintf('_______________________________________________________________________________\n')
 %% start with one block.
-iSeg = 1;
+iSeg = 12;
 
 keep_idx = 1:size(ms_seg_resize.RawTraces,1); % actually this is a remove index
 keep_idx =keep_idx(find((keep_idx ~= iSeg)));
@@ -96,9 +96,9 @@ cfg_SFP.remove_val = 0;
 ms_seg = MS_update_SFP(cfg_SFP, ms_seg);
 
 csc = ms_seg.NLX_csc;
-SWRs = ms_seg.SWR_evts;
-SWRs.tstart = SWRs.tstart - csc.tvec(1);
-SWRs.tend = SWRs.tend - csc.tvec(1);
+evts = ms_seg.SWD_evts;
+evts.tstart = evts.tstart- csc.tvec(1);
+evts.tend = evts.tend- csc.tvec(1);
 nlx_evts = ms_seg.NLX_evt;
 nlx_evts.t{end} = nlx_evts.t{end} - csc.tvec(1);
 % correc the tvec;
@@ -107,11 +107,20 @@ csc.tvec = csc.tvec - csc.tvec(1);
 
 Ca_TS = MS_Binary2TS([], ms_seg);
 Ca_TS.usr = [];
+% correct for start of block (make everything relative to time = 0s
+nS = length(Ca_TS.t);
+for iC  = nS:-1:1
+    Ca_TS.t{iC} = Ca_TS.t{iC} -(ms_seg_resize.time{iSeg}(1)/1000);
+end
+
+
 % make a subset of neurons (for speed)
-nS = 951;
+nS = length(Ca_TS.t);
 Ca_1 = Ca_TS; Ca_1.t = []; Ca_1.label = [];
 for iC  = nS:-1:1
     Ca_1.t{iC} = Ca_TS.t{iC} -csc.tvec(1) ; Ca_1.label{iC} = Ca_TS.label{iC};
+%     Ca_1.t{iC} = Ca_TS.t{iC} ; Ca_1.label{iC} = Ca_TS.label{iC};
+
 end
 
 
@@ -122,7 +131,7 @@ figure(12)
 traces = 1:nS;
 ax(1)= subplot(4,1,1);
 cfg.target = 'LFP';
-PlotTSDfromIV(cfg, SWRs, csc);
+PlotTSDfromIV(cfg, evts, csc);
 %     plot(csc.tvec - csc.tvec(1), csc.data(2,:))
 xlim([csc.tvec(1) csc.tvec(end)])
 
@@ -133,10 +142,10 @@ for iT  = traces
     hold on
     this_B = ms_seg.Binary(:, iT);
     this_B(this_B == 0) = NaN; 
-    plot(ms_seg.time/1000,    (this_B*(0.01*length(traces)))+iT, 'linewidth', 2)
+    plot((ms_seg.time/1000)-ms_seg.time(1)/1000,    (this_B*(0.01*length(traces)))+iT, 'linewidth', 2)
     this_B =[]; 
 end
-xlim([ms_seg.time(1)/1000, ms_seg.time(end)/1000]);
+xlim([(ms_seg.time(1)/1000)-ms_seg.time(1)/1000, (ms_seg.time(end)/1000)-ms_seg.time(1)/1000]);
 ylim([traces(1) traces(end)]);
 linkaxes(ax, 'x')
 
@@ -145,15 +154,15 @@ linkaxes(ax, 'x')
 % [SWRs, removed_idx] = MS_check_IV([], csc, ms_seg, SWRs);
 
 remove_idx = [22    30    67    68    69    90   132   133   141   142]; % save time for 537-12-5-2019 day 1
-SWRs.tstart(remove_idx) = [];
-SWRs.tend(remove_idx) = [];
+evts.tstart(remove_idx) = [];
+evts.tend(remove_idx) = [];
 %% get some basic stats for active cells per SWR;
 cfg = [];
-cfg.t_win = [-0.1 0.5]; 
+cfg.t_win = [-0.5 0.5]; 
 cfg.plot = 0;
 cfg.bin_s = 1/30; 
 % cfg.events = 100:105;
-spike_counts = MS_event_hist(cfg, Ca_TS, csc, SWRs);
+spike_counts = MS_event_hist(cfg, Ca_TS, csc, evts);
 
 t_edges = cfg.t_win(1):cfg.bin_s:cfg.t_win(end);
 t_centers = t_edges(1:end-1)+cfg.bin_s/2;
@@ -169,23 +178,26 @@ shuf_counts = nan(nShuffle, length(t_centers));
 tic
 tvec = csc.tvec; 
 parfor iShuffle = 1:nShuffle
-    shuf_IV = MS_get_random_epochs(tvec, SWRs);
+    shuf_IV = MS_get_random_epochs(tvec, evts);
     shuf_counts(iShuffle,:) =mean(sum(MS_event_hist(cfg, Ca_TS, csc, shuf_IV),3)/size(MS_event_hist(cfg, Ca_TS, csc, shuf_IV),3));% mean(sum(MS_event_hist(cfg, Ca_TS, csc, shuf_IV),3));
     
 end
 toc
 
 hold on
-bar(t_centers*1000, mean(shuf_counts)*100);
+plot(t_centers*1000, mean(shuf_counts)*100, 'r', 'linewidth', 3)
+plot(t_centers*1000, (mean(shuf_counts)+std(shuf_counts)*2)*100, '--r', 'linewidth', 1 );
+plot(t_centers*1000, (mean(shuf_counts)-std(shuf_counts)*2)*100, '--r', 'linewidth', 1 );
+
 legend('SWR', '1000 shuffle'); 
 %%
-swr_centers = IVcenters(SWRs); % convert to centered events;
+swr_centers = IVcenters(evts); % convert to centered events;
 
 
 % make a wider SWRs IV
 
-SWRs_wide = SWRs;
-SWRs_wide.tend = SWRs.tend + 1;
+SWRs_wide = evts;
+SWRs_wide.tend = evts.tend + 1;
 
 % get the time idx that matches the SWR centers (use this if you just want
 % one frame before and one after or something.
@@ -193,9 +205,9 @@ swr_ms_idx_centers = nearest_idx3(swr_centers, nlx_evts.t{end});
 
 % alternative:
 % get the idx for the start and end of the event.
-swr_ms_idx_tstart = nearest_idx3(SWRs.tstart, nlx_evts.t{end});
+swr_ms_idx_tstart = nearest_idx3(evts.tstart, nlx_evts.t{end});
 
-swr_ms_idx_tend = nearest_idx3(SWRs.tend, nlx_evts.t{end});
+swr_ms_idx_tend = nearest_idx3(evts.tend, nlx_evts.t{end});
 
 % initialize some matricies to store the co-activity.
 co_mat = NaN(size(ms_seg.Binary,2),size(ms_seg.Binary,2),length(swr_ms_idx_tstart)); % Make an empty matrix for co-activity
