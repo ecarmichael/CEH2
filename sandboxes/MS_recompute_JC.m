@@ -33,6 +33,7 @@ else
     PARAMS.data_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData'; % where to find the raw data
     PARAMS.raw_data_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData'; % raw data location.
     PARAMS.csc_data_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo'; % where are the LFP files. If blank will look in the same folder as raw_data.
+    PARAMS.cell_ID_dir = 'D:\Dropbox (Williams Lab)\Jisoo\JisooProject2020\2020_Results_aftercutting\4.PlaceCell'; % where are the cell classifications? 
     PARAMS.inter_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\Inter'; % where to put intermediate files
     PARAMS.stats_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\Stats'; % where to put the statistical output .txt
     PARAMS.code_base_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; % where the codebase repo can be found
@@ -61,7 +62,7 @@ clear d os
 
 %% Locations of the data to be processed.
 Subjects = MS_list_dir_names(PARAMS.raw_data_dir);
-for iSub = 2:length(Subjects)
+for iSub = 1:length(Subjects)
     % set the dir for this subject
     this_sub_dir = [PARAMS.raw_data_dir filesep Subjects{iSub}];
     
@@ -117,17 +118,38 @@ for iSub = 2:length(Subjects)
         cfg.check.saveas = '.png'; % if this is specified it will save the figures in this format. Comment to bypass saving.
         
         %% extract and restrict csc blocks 
+%         
+%         cd(csc_dir)
+%         csc = MS_LoadCSC(cfg_load);
+%         
+%         cd(ms_inter_dir) % assumes this directory has the pre process/segmented data here.
+%         if exist([ms_inter_dir filesep 'ms_resize.mat'], 'file')
+%             MS_re_binarize_JC(2, ms_inter_dir, ms_inter_dir, 'ms_resize', 'ms_resize', csc);
+%         else
+%             continue
+%             warning(sprintf('No ms_resize.mat file can be found in inter dir: <strong>%s</strong>', ms_inter_dir))
+%         end
+%         clear csc csc_dir
+%         
         
-        cd(csc_dir)
-        csc = MS_LoadCSC(cfg_load);
+        %% extract the means for all the measures realtive to track time.
+                cd(ms_inter_dir) % assumes this directory has the pre process/segmented data here.
+
+                % run for all cells
+                [data_out_all, data_out_REM_all, data_out_SWS_all] = MS_extract_means_JC(); 
+                
+                
+                %find all the cell types
+                cell_id_dir = [PARAMS.cell_ID_dir filesep lower(Subjects{iSub}) filesep sess_list{iSess}(end-3:end)]; 
+                if exist(cell_id_dir)
+                    load([cell_id_dir filesep 'spatial_analysis_classif.mat'])
+                    Place_cell_idx = unique(sort(SA.WholePlaceCell)); % get the place cell indices.
+                    
+                    [data_out_Place, data_out_REM_Place, data_out_SWS_Place] = MS_extract_means_JC(Place_cell_idx);
+                    
+                    % same thing here but get the anxiety cells.
+                    
+                end
         
-        cd(ms_inter_dir) % assumes this directory has the pre process/segmented data here.
-        if exist([ms_inter_dir filesep 'ms_resize.mat'], 'file')
-            MS_re_binarize_JC(2, ms_inter_dir, ms_inter_dir, 'ms_resize', 'ms_resize', csc);
-        else
-            continue
-            warning(sprintf('No ms_resize.mat file can be found in inter dir: <strong>%s</strong>', ms_inter_dir))
-        end
-        clear csc csc_dir
     end % session
 end % subject
