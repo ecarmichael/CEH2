@@ -1,13 +1,13 @@
 /* M-Maze Control script,
-  B_* : beams       R_*: reward valves
+   : reward valves
       _ _ _       _ _ _
      /      \    /      \
-    /    B_CL\  / B_CR   \
-  B_L/          \/          \ B_R
+    /        \  /        \
+   / beam_CL  \/          \ beam_CR
   |                        |
   |                        |
   |                        |
-  R_left                   R_right
+  beam_L * valve_R         beam_R *  valve_L
 
 
   Based on sections from:
@@ -24,10 +24,10 @@
 
 // experiment parameters
 
-uint32_t ExpTime = 1 * 60000L;
+uint32_t ExpTime = 1 * 600000L;
 
-uint32_t tStart = millis(); 
-uint32_t eTime = 0; 
+unsigned long tStart = millis();
+unsigned long eTime = tStart;
 
 const int Reset_button = 2;
 // Teensy 3.x / Teensy LC have the LED on pin 13
@@ -47,9 +47,9 @@ const int beam_L = 18;
 
 
 // vale sensors
-const int Port_R = 7;
+//const int Port_R = 7;
 // const int Port_C = 8;// from W-maze
-const int Port_L = 9;
+//const int Port_L = 9;
 
 //photo beam names
 char* photolabels[] = {"Right", "Right_Center", "Center", "Left_Center", "Left"};
@@ -74,6 +74,8 @@ int Prior_STATE = 0;
 int R_STATE = 0;
 uint16_t i = 0;
 int First = 0; // used for printing outputs
+int history = 0; // initialize a history of all the states
+int prior_state = 0; 
 
 // Pixel colors
 uint32_t green = pixels.Color(0, 10, 0, 0);
@@ -107,9 +109,9 @@ void setup()
   pinMode(Reset_button, INPUT);
 
   // set reward ports
-  pinMode(Port_R, INPUT);
+  //pinMode(Port_R, INPUT);
   //pinMode(Port_C, INPUT);
-  pinMode(Port_L, INPUT);
+  //pinMode(Port_L, INPUT);
   pixels.begin(); // This initializes the NeoPixel library.
   pixels.clear();
   pixels.show();
@@ -124,8 +126,8 @@ void setup()
 void loop()
 {
   while ((millis() - tStart) < ExpTime) {
-    uint32_t eTime = millis() - tStart;
-    //Serial.print(eTime);
+    unsigned long eTime = millis() - tStart;
+    //Serial.println(eTime);
 
     // Rest_button
     if (digitalRead(Reset_button) == HIGH)
@@ -167,216 +169,216 @@ void loop()
     // Right beam
     while (digitalRead(beam_R) == LOW)
     {
-      CheckState(beam_R, ledPin1, 0);
-    }
-    
-       // Right-center beam
-    while (digitalRead(beam_CR) == LOW)
-    {
-      CheckState(beam_CR, ledPin1, 1);
-    }
-    
-       // Left_center beam
-    while (digitalRead(beam_CL) == LOW)
-    {
-      CheckState(beam_CL, ledPin1, 3);
+      CheckState(beam_R, ledPin1, 0, eTime);
     }
 
-       // Left beam
+    // Right-center beam
+    while (digitalRead(beam_CR) == LOW)
+    {
+      CheckState(beam_CR, ledPin1, 1, eTime);
+    }
+
+    // Left_center beam
+    while (digitalRead(beam_CL) == LOW)
+    {
+      CheckState(beam_CL, ledPin1, 3, eTime);
+    }
+
+    // Left beam
     while (digitalRead(beam_L) == LOW)
     {
-      CheckState(beam_L, ledPin1, 4);
+      CheckState(beam_L, ledPin1, 4, eTime);
     }
 
     if (digitalRead(Reset_button) == HIGH)
     {
-    
+
+    }
+    //
+    //    if (STATE == 1)
+    //    {
+    //      buttonPushCounter1++;
+    //      digitalWrite(ledPin1, LOW);
+    //      Serial.println(".");
+    //      Serial.print("STATE: Right #");
+    //      First = 0;
+    //      Prior_STATE = 1;
+    //      STATE = 0;
+    //    }
+    //    // Centre Right beam
+    //    while (digitalRead(beam_CR) == LOW)
+    //    {
+    //      if (First == 0)
+    //      {
+    //        Serial.println();
+    //        Serial.print("Center Right Beam broken...");
+    //        digitalWrite(ledPin1, HIGH); // set the LED off
+    //        digitalWrite(ledPinG, HIGH);
+    //        pixels.clear();
+    //        pixels.show();
+    //        pixels.setPixelColor(2, pixels.Color(10, 0, 0, 0)); // Moderately bright green color.
+    //        pixels.show(); // This sends the updated pixel color to the hardware.
+    //        First = 1;
+    //      }
+    //      STATE = 2;
+    //      delay(500);
+    //      Serial.print(".");
+    //    }
+    //    if (STATE == 2)
+    //    {
+    //      buttonPushCounter1++;
+    //      digitalWrite(ledPin1, LOW);
+    //      digitalWrite(ledPinG, LOW);
+    //      Serial.println();
+    //      Serial.println("STATE: Center Right #");
+    //      First = 0;
+    //      Prior_STATE = 2;
+    //      STATE = 0;
+    //    }
+    //    //    // Centre beam
+    //    //    while (digitalRead(beam_C) == LOW)
+    //    //    {
+    //    //      if (First == 0)
+    //    //      {
+    //    //        Serial.print("Center Beam broken...");
+    //    //        digitalWrite(ledPinG, HIGH);
+    //    //        pixels.clear();
+    //    //        pixels.show();
+    //    //        pixels.setPixelColor(3, pixels.Color(10, 0, 0, 0)); // Moderately bright green color.
+    //    //        pixels.show(); // This sends the updated pixel color to the hardware.
+    //    //        First = 1;
+    //    //      }
+    //    //      STATE = 3;
+    //    //      delay(500);
+    //    //      Serial.print(".");
+    //    //    }
+    //    //    while (digitalRead(Port_R) == HIGH)
+    //    //    {
+    //    //      Serial.print("Center Reward...");
+    //    //      // digitalWrite(ledPinG, HIGH);
+    //    //      pixels.clear();
+    //    //      pixels.show();
+    //    //      pixels.setPixelColor(7, pixels.Color(0, 10, 0, 0)); // Moderately bright green color.
+    //    //      pixels.show(); // This sends the updated pixel color to the hardware.
+    //    //      R_STATE = 2;
+    //    //      delay(200);
+    //    //      Serial.print(".");
+    //    //    }
+    //    //    if (STATE == 3 && R_STATE == 0)
+    //    //    {
+    //    //      buttonPushCounter1++;
+    //    //      digitalWrite(ledPinG, LOW);
+    //    //      Serial.println();
+    //    //      Serial.print("STATE: Center #");
+    //    //      Serial.println(buttonPushCounter1);
+    //    //      // digitalWrite(solenoidPin_R, HIGH);    //Switch Solenoid ON
+    //    //      // delay(500);                      //Wait 1 Second
+    //    //      // valve_L++;
+    //    //      // Serial.println("...Reward #: ");
+    //    //      // Serial.println(valve_L);
+    //    //      // digitalWrite(solenoidPin_R, LOW);     //Switch Solenoid OFF
+    //    //      nTrials++;
+    //    //      Serial.print("Correct Right Trials: ");
+    //    //      Serial.println(RTrials);
+    //    //      Serial.println("/");
+    //    //      Serial.println(nTrials);
+    //    //      Prior_STATE = 3;
+    //    //      STATE = 0;
+    //    //    }
+    //    //    if (Prior_STATE == 3 && R_STATE == 2)
+    //    //    {
+    //    //      FireValve(solenoidPin_R, 500);
+    //    //      for (int nFlash = 1; nFlash < 8; nFlash++)
+    //    //      {
+    //    //        pixels.clear();
+    //    //        pixels.show();
+    //    //        pixels.setPixelColor(nFlash, pixels.Color(0, 0, 0, 10)); // Moderately bright green color.
+    //    //        pixels.show(); // This sends the updated pixel color to the hardware.
+    //    //        delay(50);
+    //    //        pixels.clear();
+    //    //        pixels.show();
+    //    //      }
+    //    //      pixels.setPixelColor(3, pixels.Color(0, 10, 0, 0)); // Moderately bright green color.
+    //    //      pixels.show();
+    //    //      nTrials++;
+    //    //      Serial.println();
+    //    //      Serial.print("Correct Right Trials: ");
+    //    //      Serial.print(RTrials);
+    //    //      Serial.print("/");
+    //    //      Serial.println(nTrials);
+    //    //      Prior_STATE = 3;
+    //    //      R_STATE = 0;
+    //    //      STATE = 0;
+    //    //    }
+    //    //    else if (R_STATE == 3)
+    //    //    {
+    //    //      R_STATE = 0;
+    //    //    }
+    //    // Centre Left beam
+    //    while (digitalRead(beam_CL) == LOW)
+    //    {
+    //      if (First == 0)
+    //      {
+    //        Serial.print("Center Left Beam broken...");
+    //        digitalWrite(ledPin2, HIGH); // set the LED off
+    //        digitalWrite(ledPinG, HIGH);
+    //        pixels.clear();
+    //        pixels.show();
+    //        pixels.setPixelColor(4, pixels.Color(10, 0, 0, 0)); // Moderately bright green color.
+    //        pixels.show(); // This sends the updated pixel color to the hardware.
+    //        First = 1;
+    //      }
+    //      STATE = 4;
+    //      delay(500);
+    //      Serial.print(".");
+    //    }
+    //    if (STATE == 4)
+    //    {
+    //      buttonPushCounter1++;
+    //      digitalWrite(ledPin2, LOW);
+    //      digitalWrite(ledPinG, LOW);
+    //      Serial.println();
+    //      Serial.print("STATE: Center Left #");
+    //      Serial.println(buttonPushCounter1);
+    //      //
+    //      Prior_STATE = 4;
+    //      STATE = 0;
+    //    }
+    //    // LEFT BEAM
+    //    while (digitalRead(beam_L) == LOW)
+    //    {
+    //      if (First == 0)
+    //      {
+    //        Serial.print("Left Beam broken...");
+    //        digitalWrite(ledPin2, HIGH); // set the LED off
+    //        pixels.clear();
+    //        pixels.show();
+    //        pixels.setPixelColor(5, pixels.Color(10, 0, 0, 0)); // Moderately bright green color.
+    //        pixels.show(); // This sends the updated pixel color to the hardware.
+    //        First = 1;
+    //      }
+    //      STATE = 5;
+    //      delay(500);
+    //      Serial.print(".");
+    //    }
+    //    if (STATE == 5)
+    //    {
+    //      buttonPushCounter2++;
+    //      digitalWrite(ledPin2, LOW);
+    //      Serial.println();
+    //      Serial.print("STATE: Left #");
+    //      Serial.println(buttonPushCounter2);
+    //      // digitalWrite(solenoidPin_L, HIGH);    //Switch Solenoid ON
+    //      // delay(500);                      //Wait 1 Second
+    //      // valve_L++;
+    //      // Serial.println("...Reward #: ");
+    //      // Serial.println(valve_L);
+    //      // digitalWrite(solenoidPin_L, LOW);     //Switch Solenoid OFF
+    //      // Prior_STATE = 5;
+    //      Prior_STATE = 5;
+    //      STATE = 0;
+    //    }
   }
-  //
-  //    if (STATE == 1)
-  //    {
-  //      buttonPushCounter1++;
-  //      digitalWrite(ledPin1, LOW);
-  //      Serial.println(".");
-  //      Serial.print("STATE: Right #");
-  //      First = 0;
-  //      Prior_STATE = 1;
-  //      STATE = 0;
-  //    }
-  //    // Centre Right beam
-  //    while (digitalRead(beam_CR) == LOW)
-  //    {
-  //      if (First == 0)
-  //      {
-  //        Serial.println();
-  //        Serial.print("Center Right Beam broken...");
-  //        digitalWrite(ledPin1, HIGH); // set the LED off
-  //        digitalWrite(ledPinG, HIGH);
-  //        pixels.clear();
-  //        pixels.show();
-  //        pixels.setPixelColor(2, pixels.Color(10, 0, 0, 0)); // Moderately bright green color.
-  //        pixels.show(); // This sends the updated pixel color to the hardware.
-  //        First = 1;
-  //      }
-  //      STATE = 2;
-  //      delay(500);
-  //      Serial.print(".");
-  //    }
-  //    if (STATE == 2)
-  //    {
-  //      buttonPushCounter1++;
-  //      digitalWrite(ledPin1, LOW);
-  //      digitalWrite(ledPinG, LOW);
-  //      Serial.println();
-  //      Serial.println("STATE: Center Right #");
-  //      First = 0;
-  //      Prior_STATE = 2;
-  //      STATE = 0;
-  //    }
-  //    //    // Centre beam
-  //    //    while (digitalRead(beam_C) == LOW)
-  //    //    {
-  //    //      if (First == 0)
-  //    //      {
-  //    //        Serial.print("Center Beam broken...");
-  //    //        digitalWrite(ledPinG, HIGH);
-  //    //        pixels.clear();
-  //    //        pixels.show();
-  //    //        pixels.setPixelColor(3, pixels.Color(10, 0, 0, 0)); // Moderately bright green color.
-  //    //        pixels.show(); // This sends the updated pixel color to the hardware.
-  //    //        First = 1;
-  //    //      }
-  //    //      STATE = 3;
-  //    //      delay(500);
-  //    //      Serial.print(".");
-  //    //    }
-  //    //    while (digitalRead(Port_R) == HIGH)
-  //    //    {
-  //    //      Serial.print("Center Reward...");
-  //    //      // digitalWrite(ledPinG, HIGH);
-  //    //      pixels.clear();
-  //    //      pixels.show();
-  //    //      pixels.setPixelColor(7, pixels.Color(0, 10, 0, 0)); // Moderately bright green color.
-  //    //      pixels.show(); // This sends the updated pixel color to the hardware.
-  //    //      R_STATE = 2;
-  //    //      delay(200);
-  //    //      Serial.print(".");
-  //    //    }
-  //    //    if (STATE == 3 && R_STATE == 0)
-  //    //    {
-  //    //      buttonPushCounter1++;
-  //    //      digitalWrite(ledPinG, LOW);
-  //    //      Serial.println();
-  //    //      Serial.print("STATE: Center #");
-  //    //      Serial.println(buttonPushCounter1);
-  //    //      // digitalWrite(solenoidPin_R, HIGH);    //Switch Solenoid ON
-  //    //      // delay(500);                      //Wait 1 Second
-  //    //      // valve_L++;
-  //    //      // Serial.println("...Reward #: ");
-  //    //      // Serial.println(valve_L);
-  //    //      // digitalWrite(solenoidPin_R, LOW);     //Switch Solenoid OFF
-  //    //      nTrials++;
-  //    //      Serial.print("Correct Right Trials: ");
-  //    //      Serial.println(RTrials);
-  //    //      Serial.println("/");
-  //    //      Serial.println(nTrials);
-  //    //      Prior_STATE = 3;
-  //    //      STATE = 0;
-  //    //    }
-  //    //    if (Prior_STATE == 3 && R_STATE == 2)
-  //    //    {
-  //    //      FireValve(solenoidPin_R, 500);
-  //    //      for (int nFlash = 1; nFlash < 8; nFlash++)
-  //    //      {
-  //    //        pixels.clear();
-  //    //        pixels.show();
-  //    //        pixels.setPixelColor(nFlash, pixels.Color(0, 0, 0, 10)); // Moderately bright green color.
-  //    //        pixels.show(); // This sends the updated pixel color to the hardware.
-  //    //        delay(50);
-  //    //        pixels.clear();
-  //    //        pixels.show();
-  //    //      }
-  //    //      pixels.setPixelColor(3, pixels.Color(0, 10, 0, 0)); // Moderately bright green color.
-  //    //      pixels.show();
-  //    //      nTrials++;
-  //    //      Serial.println();
-  //    //      Serial.print("Correct Right Trials: ");
-  //    //      Serial.print(RTrials);
-  //    //      Serial.print("/");
-  //    //      Serial.println(nTrials);
-  //    //      Prior_STATE = 3;
-  //    //      R_STATE = 0;
-  //    //      STATE = 0;
-  //    //    }
-  //    //    else if (R_STATE == 3)
-  //    //    {
-  //    //      R_STATE = 0;
-  //    //    }
-  //    // Centre Left beam
-  //    while (digitalRead(beam_CL) == LOW)
-  //    {
-  //      if (First == 0)
-  //      {
-  //        Serial.print("Center Left Beam broken...");
-  //        digitalWrite(ledPin2, HIGH); // set the LED off
-  //        digitalWrite(ledPinG, HIGH);
-  //        pixels.clear();
-  //        pixels.show();
-  //        pixels.setPixelColor(4, pixels.Color(10, 0, 0, 0)); // Moderately bright green color.
-  //        pixels.show(); // This sends the updated pixel color to the hardware.
-  //        First = 1;
-  //      }
-  //      STATE = 4;
-  //      delay(500);
-  //      Serial.print(".");
-  //    }
-  //    if (STATE == 4)
-  //    {
-  //      buttonPushCounter1++;
-  //      digitalWrite(ledPin2, LOW);
-  //      digitalWrite(ledPinG, LOW);
-  //      Serial.println();
-  //      Serial.print("STATE: Center Left #");
-  //      Serial.println(buttonPushCounter1);
-  //      //
-  //      Prior_STATE = 4;
-  //      STATE = 0;
-  //    }
-  //    // LEFT BEAM
-  //    while (digitalRead(beam_L) == LOW)
-  //    {
-  //      if (First == 0)
-  //      {
-  //        Serial.print("Left Beam broken...");
-  //        digitalWrite(ledPin2, HIGH); // set the LED off
-  //        pixels.clear();
-  //        pixels.show();
-  //        pixels.setPixelColor(5, pixels.Color(10, 0, 0, 0)); // Moderately bright green color.
-  //        pixels.show(); // This sends the updated pixel color to the hardware.
-  //        First = 1;
-  //      }
-  //      STATE = 5;
-  //      delay(500);
-  //      Serial.print(".");
-  //    }
-  //    if (STATE == 5)
-  //    {
-  //      buttonPushCounter2++;
-  //      digitalWrite(ledPin2, LOW);
-  //      Serial.println();
-  //      Serial.print("STATE: Left #");
-  //      Serial.println(buttonPushCounter2);
-  //      // digitalWrite(solenoidPin_L, HIGH);    //Switch Solenoid ON
-  //      // delay(500);                      //Wait 1 Second
-  //      // valve_L++;
-  //      // Serial.println("...Reward #: ");
-  //      // Serial.println(valve_L);
-  //      // digitalWrite(solenoidPin_L, LOW);     //Switch Solenoid OFF
-  //      // Prior_STATE = 5;
-  //      Prior_STATE = 5;
-  //      STATE = 0;
-  //    }
-  //  }
 }
 
 
@@ -403,20 +405,20 @@ void loop()
 
 // custom functions
 
-void CheckState(int photo_pin, int LED, int state_id)
+void CheckState(int photo_pin, int LED, int state_id, unsigned long eTime)
 {
 
-    Serial.print(photolabels[state_id]);
-    Serial.print(" Beam broken...");
-    digitalWrite(LED, HIGH); // set the LED off
-    // delay(500);
-    // digitalWrite(ledPin2, LOW);    // set the LED off
-    pixels.clear();
-    pixels.show();
-    pixels.setPixelColor(state_id, pixels.Color(10, 0, 0, 0)); // Moderately bright green color.
-    pixels.show(); // This sends the updated pixel color to the hardware.
-    First = 1;
-    
+  Serial.print(photolabels[state_id]);
+  Serial.print(" Beam broken...");
+  digitalWrite(LED, HIGH); // set the LED off
+  // delay(500);
+  // digitalWrite(ledPin2, LOW);    // set the LED off
+  pixels.clear();
+  pixels.show();
+  pixels.setPixelColor(state_id, pixels.Color(10, 0, 0, 0)); // Moderately bright green color.
+  pixels.show(); // This sends the updated pixel color to the hardware.
+  First = 1;
+
   STATE = state_id;
   delay(500);
   Serial.print(".");
@@ -425,11 +427,21 @@ void CheckState(int photo_pin, int LED, int state_id)
     buttonPushCounter1++;
     digitalWrite(LED, LOW);
     Serial.println();
-    Serial.print("STATE: ");
+    Serial.print("This STATE: ");
     Serial.print(photolabels[state_id]);
     Serial.print("#");
     Serial.println(buttonPushCounter1);
+    Serial.print("From: ");
+    Serial.print(photolabels[prior_state]);
+    Serial.print(" to  ");
+    Serial.print(photolabels[state_id]);
+    Serial.print(" at ");
+    Serial.print(eTime);
+    Serial.println();
+
+
     //
+    prior_state = STATE;
     history += STATE;
     STATE = 0;
   }
