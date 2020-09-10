@@ -283,6 +283,7 @@ while ishandle(h)
         fprintf('%s ', cfg.state_name{iK})
         score(this_idx(1):this_idx(2)) = cfg.state_val(iK);
         x_lim = xlim;
+        disp(x_lim);
         if done == 1 
             disp('Exiting')
             break
@@ -337,7 +338,7 @@ for iSub = 1:length(cfg.lfp_chans)
 end
 ax(99) = subplot(nSubplots, 1, nSubplots-1);
 plot(tvec(this_idx(1):this_idx(2))- tvec(1), data(cfg.lfp_chans(iChan),this_idx(1):this_idx(2)))
-%     xlim(cfg.emg_range)
+xlim([tvec(this_idx(1))- tvec(1), tvec(this_idx(2))- tvec(1)]);
 % text(tvec(1)- tvec(1), median(data(cfg.lfp_chans(iChan),:)), 'LFP')
 drawnow; 
 
@@ -345,6 +346,7 @@ if ~isempty(emg)
     ax(999) = subplot(nSubplots, 1, nSubplots);
     plot(tvec(this_idx(1):this_idx(2)) - tvec(1), emg(cfg.emg_chan,this_idx(1):this_idx(2)))
     ylim(cfg.emg_range)
+    xlim([tvec(this_idx(1))- tvec(1), tvec(this_idx(2))- tvec(1)]);
 %     text(tvec(1)- tvec(1), cfg.emg_range(2)*.8, 'EMG')
 drawnow; 
 end

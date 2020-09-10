@@ -176,7 +176,7 @@ for iF = 1:nFiles
     % "automated decimation" (get a desired sampling frequency given the
     % data). Save the time/memory from having to do this after.
     % decimate data if specified
-    if ~isempty(cfg.desired_sampling_frequency) && isempty(cfg.decimateByFactor) % make sure you are not trying to decimate and not also automating the downsampling.
+    if ~isempty(cfg.desired_sampling_frequency) && isempty(cfg.decimateByFactor) && (hdr.SamplingFrequency~= cfg.desired_sampling_frequency) % make sure you are not trying to decimate and not also automating the downsampling.
         
         this_Fs = hdr.SamplingFrequency;
         this_decimate = round(this_Fs / cfg.desired_sampling_frequency); % must be a whole number.
@@ -235,7 +235,7 @@ end
 
 % put the decimation factor back in if it was reactive instead of hard
 % coded in the decimateByFactor.
-if ~isempty(cfg.desired_sampling_frequency) && isempty(cfg.decimateByFactor)
+if ~isempty(cfg.desired_sampling_frequency) && isempty(cfg.decimateByFactor)  && (hdr.SamplingFrequency~= cfg.desired_sampling_frequency)
     cfg.decimateByFactor = this_decimate;
 end
 

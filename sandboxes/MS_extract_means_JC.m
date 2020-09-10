@@ -1,4 +1,4 @@
-function [data_out, data_out_REM, data_out_SWS] = MS_extract_means_JC(cell_idx)
+function [data_out, data_out_REM, data_out_SWS,Threshold] = MS_extract_means_JC(cell_idx)
 %% MS_extract_means_JC: used for pulling out the mean values for several measures and the time of the recording relative to the track experiment.
 % The function will loop through all the session folders in the processed
 % ms data and loads the ms_seg*.mat file.
@@ -67,7 +67,7 @@ for iF = 1:length(this_dir)
         data_out_REM(iF,4) = mean(ms_seg.t_amp);
         data_out_REM(iF,5) = mean(ms_seg.LG_amp);
         data_out_REM(iF,6) = mean(ms_seg.HG_amp);
-    elseif contains(this_dir(iF).name, 'SWS')
+    elseif contains(this_dir(iF).name, 'SWS') % maybe 'SW' just in case when i forgot to type SWS?
         this_state = 0;
         data_out_SWS(iF,1) = ms_seg.time2trk;
         data_out_SWS(iF,2) = mean(sum(ms_seg.Binary(:,cell_idx))/(length(ms_seg.Binary)/Fs));
@@ -84,6 +84,12 @@ for iF = 1:length(this_dir)
     data_out(iF,6) = mean(ms_seg.HG_amp);
     % save the REM or SWS state. REM == 1 SWS ==0;
     data_out(iF,7) = this_state;
+    
+    %% Added by Jisoo
+    
+    Threshold = ms_seg.Binary_threshold;
+    
+    %% 
     cd(this_dir(iF).folder)
 end
 
@@ -92,7 +98,7 @@ REM_idx = find(data_out(:,7) == 1); % get REM indicies
 SWS_idx = find(data_out(:,7)==0);
 c_ord = linspecer(2); % set nice colours.
 
-figure
+H=figure
 subplot(5,1,1)
 hold on
 plot(data_out(REM_idx,1), data_out(REM_idx, 2), '--*', 'color', c_ord(2,:))
@@ -127,4 +133,5 @@ plot(data_out(REM_idx,1), data_out(REM_idx, 6), '--*', 'color', c_ord(2,:))
 plot(data_out(SWS_idx,1), data_out(SWS_idx, 6), '--*', 'color', c_ord(1,:))
 legend('REM', 'SWS')
 ylabel('Mean HG')
+saveas(H,'Dynamics_across_episodes.png') %added by jisoo
 

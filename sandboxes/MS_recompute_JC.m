@@ -33,7 +33,9 @@ else
     PARAMS.data_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData'; % where to find the raw data
     PARAMS.raw_data_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData'; % raw data location.
     PARAMS.csc_data_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo'; % where are the LFP files. If blank will look in the same folder as raw_data.
-    PARAMS.cell_ID_dir = 'D:\Dropbox (Williams Lab)\Jisoo\JisooProject2020\2020_Results_aftercutting\4.PlaceCell'; % where are the cell classifications? 
+    PARAMS.cell_ID_dir = 'D:\Dropbox (Williams Lab)\Jisoo\JisooProject2020\2020_Results_aftercutting\4.PlaceCell'; % where are the cell classifications? /Place cell
+    PARAMS.Selective_cell_ID_dir = 'D:\Dropbox (Williams Lab)\Jisoo\JisooProject2020\2020_Results_aftercutting\2.Selective_cell'; %only for HATD5, HATDSwitch
+    PARAMS.Anxiety_Safety_cell_ID_dir = 'D:\Dropbox (Williams Lab)\Jisoo\JisooProject2020\2020_Results_aftercutting\3.Anxiety_SafetyCell'; %only for HATD5, HATDSwitch
     PARAMS.inter_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\Inter'; % where to put intermediate files
     PARAMS.stats_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\Stats'; % where to put the statistical output .txt
     PARAMS.code_base_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; % where the codebase repo can be found
@@ -70,8 +72,8 @@ for iSub = 1:length(Subjects)
     % find in the dir. ex: MS_list_dir_names(this_sub_dir, 'LTD')
     cd(this_sub_dir)
 %     sess_list = MS_list_dir_names(this_sub_dir, {'LTD', 'HAT'}); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
-    sess_list = MS_list_dir_names_any(this_sub_dir, {'LTD', 'HAT'}); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
-
+%sess_list = MS_list_dir_names_any(this_sub_dir, {'LTD', 'HAT'}); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
+sess_list = MS_list_dir_names_any(this_sub_dir, {'HATD3','HATD5','HATSwitch'});
 
     for iSess = 1:length(sess_list)
         ms_dir = [PARAMS.raw_data_dir filesep Subjects{iSub} filesep sess_list{iSess}];
@@ -136,20 +138,47 @@ for iSub = 1:length(Subjects)
                 cd(ms_inter_dir) % assumes this directory has the pre process/segmented data here.
 
                 % run for all cells
-                [data_out_all, data_out_REM_all, data_out_SWS_all] = MS_extract_means_JC(); 
+                %[data_out_all, data_out_REM_all, data_out_SWS_all] = MS_extract_means_JC();
+                [data_out_all, data_out_REM_all, data_out_SWS_all,Threshold] = MS_extract_means_JC(); %Modified by Jisoo
                 
+               %% Save output in the AcrossEpisodes folder _ added by jisoo
+                
+           
+               mkdir('AcrossEpisodes');
+               Out_all.data_out_all=data_out_all;
+               Out_all.data_out_REM_all=data_out_REM_all;
+               Out_all.data_out_SWS_all=data_out_SWS_all;
+               Out_all.Threshold=Threshold;
+               
+             
+             
+               save([pwd,'/AcrossEpisodes/Out_all_',num2str(Threshold),'.mat'], 'Out_all')
+               
+                %% 
                 
                 %find all the cell types
-                cell_id_dir = [PARAMS.cell_ID_dir filesep lower(Subjects{iSub}) filesep sess_list{iSess}(end-3:end)]; 
-                if exist(cell_id_dir)
-                    load([cell_id_dir filesep 'spatial_analysis_classif.mat'])
-                    Place_cell_idx = unique(sort(SA.WholePlaceCell)); % get the place cell indices.
-                    
-                    [data_out_Place, data_out_REM_Place, data_out_SWS_Place] = MS_extract_means_JC(Place_cell_idx);
-                    
-                    % same thing here but get the anxiety cells.
-                    
-                end
-        
+%                 cell_id_dir = [PARAMS.cell_ID_dir filesep lower(Subjects{iSub}) filesep sess_list{iSess}(end-3:end)]; %for place cell
+%                 
+%                 if exist(cell_id_dir)
+%                     load([cell_id_dir filesep 'spatial_analysis_classif.mat'])
+%                     Place_cell_idx = unique(sort(SA.WholePlaceCell)); % get the place cell indices.
+%                     
+%                     [data_out_Place, data_out_REM_Place, data_out_SWS_Place,Threshold] = MS_extract_means_JC(Place_cell_idx);
+%                     
+%                     %added by jisoo
+%                  
+%                     % same thing here but get the anxiety cells.
+%                     
+%                 end
+%                 %% Added by jisoo
+%               Out_Place.data_out_Place=data_out_Place;
+%                 Out_Place.data_out_REM_Place=data_out_REM_Place;
+%                 Out_Place.data_out_SWS_Place=data_out_SWS_Place;
+%                 Out_Place.Threshold=Threshold;
+%                 
+%                 save([pwd,'/AcrossEpisodes/Out_Place_',num2str(Threshold),'.mat'], 'Out_Place')
+
+                
+                
     end % session
 end % subject
