@@ -115,19 +115,73 @@ for iSub = 1:length(Subjects)
         for iB  = 1:length(blocks)
             fprintf('Processing Block %d / %d...\n', iB, length(blocks))
             if iB == 1
-                score{iB} = MS_Sleep_score_UI(cfg_sleep, this_csc{iRec}.tvec(1:blocks(iB+1)), this_csc{iRec}.data(1,1:blocks(iB+1)), emg_h(1:blocks(iB+1)));
+                score{iB} = MS_Sleep_score_UI(cfg_sleep, this_csc{iRec}.tvec(1:blocks(iB+1)-1), this_csc{iRec}.data(1,1:blocks(iB+1)-1), emg_h(1:blocks(iB+1)-1));
             elseif iB == length(blocks)
                 score{iB} = MS_Sleep_score_UI(cfg_sleep, this_csc{iRec}.tvec(blocks(iB):end), this_csc{iRec}.data(1,blocks(iB):end), emg_h(blocks(iB):end));
             else
-                score{iB} = MS_Sleep_score_UI(cfg_sleep, this_csc{iRec}.tvec(blocks(iB):blocks(iB+1)), this_csc{iRec}.data(1,blocks(iB):blocks(iB+1)), emg_h(blocks(iB):blocks(iB+1)));
+                score{iB} = MS_Sleep_score_UI(cfg_sleep, this_csc{iRec}.tvec(blocks(iB):blocks(iB+1)-1), this_csc{iRec}.data(1,blocks(iB):blocks(iB+1)-1), emg_h(blocks(iB):blocks(iB+1)-1));
             end
         end % blocks
+        
+        % catch cases where the sleep score will add in too many points to
+        % match the range. 
+        if length(score{end}) ~= length(this_csc{iRec}.tvec(blocks(iB)-1:end))
+%             score{end} = 
+        end
+        
+        
         % save the scores
         sleep_score{iRec}.tvec = this_csc{iRec}.tvec; 
         sleep_score{iRec}.score = score;
         save([PARAMS.inter_dir filesep Subjects{iSub} '_sleep_data.mat'], 'sleep_score', '-v7.3')
+        
+        
         % put the score blocks back together
         this_csc{iRec}.score = cat(1,score{:}); 
     end % recordings
 end % subjects
+
+%% temporary fix for OG code recordings
+
+% for iS = 1:length(score)
+%     if iS == 1
+%         score{iS} = score{iS}(1:end-1);
+%     elseif iS == length(score)
+%         score{iS} = score{iS}(2:end); 
+%     else
+% score{iS} = score{iS}(2:end-1); 
+%     end
+% end
+%% split the data into 1 hour blocks
+
+% normalize the time across recording blocks
+t_start = this_csc{1}.tvec(1); 
+Z0 = datetime(datestr('04-Sep-2020 08:00:00', 'dd-mmm-yyyy HH:MM:SS')); 
+clock_start = seconds(this_csc{1}.tstart - Z0); 
+
+all_tvec = [];
+all_score = [];
+for iRec = 1:length(sleep_score)
+    all_tvec = [all_tvec; (sleep_score{iRec}.tvec - t_start)+ double(clock_start)];
+    if iscell(sleep_score{iRec}.score)
+        all_score = [all_score; cat(1,sleep_score{iRec}.score{:})];
+    else
+        all_score = [all_score; sleep_score{iRec}.score];
+    end
+end
+
+%% Fill in gaps in the recording with NaNs
+
+
+
+%% break into 24 periods
+day_secs = (ceil(clock_start/3600))*3600:(24*3600):all_tvec(end); 
+
+day_idx = nearest_idx(day_secs,all_tvec); 
+
+day1_tvec = all_tvec(day_idx(1):day_idx(2));
+day2_tvec = all_tvec(day_idx(2)+1:day_idx(3));
+
+floor(max(all_tvec/3600))/24
+
 
