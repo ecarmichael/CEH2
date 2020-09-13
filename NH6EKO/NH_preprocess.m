@@ -57,10 +57,10 @@ Subjects = fieldnames(PARAMS.Subjects);
 
 for iSub = 1:length(Subjects)
     fprintf('<strong>%s</strong>: loading data for %s...\n', mfilename, Subjects{iSub}); 
-    all_csc.tvec = []; 
-    all_csc.data = []; 
+%     all_csc.tvec = []; 
+%     all_csc.data = []; 
     
-    for iRec  = 8:length(this_dir)
+    for iRec  = 1:length(this_dir)
         cd(this_dir(iRec).name) % move to the specific recording block dir.
         
         % load the csc for LFP and EMG channel decimate to 2k if needed. 
