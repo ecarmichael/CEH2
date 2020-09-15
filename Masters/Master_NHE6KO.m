@@ -75,7 +75,7 @@ PARAMS.Subjects.M11.EMG_Chan = 'CSC47.ncs';  % best EMG channel.
 PARAMS.Subjects.M11.genotype = 'ko';
 
 PARAMS.Subjects.M12.dir_name = 'NHE6KO_12_13_11_02'; % which foler type.  Can be either NHE6KO_12_13_11_02 or NHE6KO_05 based on which NLX system was used.
-PARAMS.Subjects.M12.LFP_Chan = 'CSC1.ncs';  % best LFP channel.
+PARAMS.Subjects.M12.LFP_Chan = 'CSC7.ncs';  % best LFP channel.
 PARAMS.Subjects.M12.EMG_Chan = 'CSC16.ncs';  % best EMG channel.
 PARAMS.Subjects.M12.genotype = 'ko';
 
@@ -95,7 +95,6 @@ Subjects = fieldnames(PARAMS.Subjects);
 for iSub = 1:length(Subjects)
     % load the data for each subject
     load([PARAMS.inter_dir filesep Subjects{iSub} '_raw_data.mat']);
-    
     for iRec = 1:length(this_csc)
         emg_h = abs(hilbert(this_csc{iRec}.data(2,:))); % get the emg power for plotting.
         
@@ -123,6 +122,7 @@ for iSub = 1:length(Subjects)
             end
         end % blocks
         
+%         score{iB} = 1*ones(length(this_csc{iRec}.tvec(blocks(iB):end)),1)
         % catch cases where the sleep score will add in too many points to
         % match the range.
         if length(score{end}) ~= length(this_csc{iRec}.tvec(blocks(iB):end))
@@ -182,7 +182,7 @@ for iRec = 1:length(sleep_score)
     all_tvec = [all_tvec; (padded_tvec - t_start)+ double(clock_start)];
     
     %% get all the data with padding
-    all_data = [all_data, [this_csc{iRec}.data(1,:); N_pad']]; 
+    all_data = [all_data, [this_csc{iRec}.data(1,:), N_pad]]; 
     
     % collect the score (should be in cells based on 1 hour blocks.  
     if iscell(sleep_score{iRec}.score)
@@ -237,8 +237,8 @@ rectangle('position', [1 0.1 12 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor'
 plot(1:24, WAKE_out*100,'-o', 'color', c_ord(1,:))
 xlabel('time from light onset')
 ylabel('% wake');
-set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex')
-% set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
+% set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex')
+set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
 ylim([0 100]); xlim([1 24]);  
 
 % bar plot for light vs dark
@@ -247,15 +247,14 @@ groups = [ones(1,12),2*ones(1,12)];
 h{1} = boxplot(WAKE_out, groups);
 set(gca, 'xticklabel', {'light', 'dark'})
 
-figure(1001)
 subplot(4,4,5:7)
 hold on
 rectangle('position', [1 0.1 12 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
 plot(1:24, NREM_out*100,'-o', 'color', c_ord(3,:))
 xlabel('time from light onset')
 ylabel('% NREM');
-% set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
-set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex');
+set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
+% set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex');
 ylim([0 100]); xlim([1 24]); 
 
 % bar plot for light vs dark
@@ -265,17 +264,16 @@ h{1} = boxplot(NREM_out, groups);
 set(gca, 'xticklabel', {'light', 'dark'})
 
 
-figure(1001)
 subplot(4,4,9:11)
 hold on
-rectangle('position', [1 0.1 12 15], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+rectangle('position', [1 0.1 12 20], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
 plot(1:24, REM_out*100,'-o', 'color', c_ord(2,:))
 xlabel('time from light onset')
 ylabel('% REM');
-set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex')
-% set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
+% set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex')
+set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
 % set(gca, 'xtick', 1:2:24, 'xticklabel', {'Z0','Z2', 'Z4', 'Z6','Z8', 'Z10', 'Z12','Z14', 'Z16','Z18','Z20', 'Z22', 'Z24'})
-ylim([0 15]); xlim([1 24]); 
+ylim([0 20]); xlim([1 24]); 
 
 subplot(4,4,12)
 groups = [ones(1,12),2*ones(1,12)];
@@ -284,20 +282,65 @@ set(gca, 'xticklabel', {'light', 'dark'})
 
 
 %% break out the sleep states and get the normalized PSD
+win = 2048/2; 
 
-%%% NEEDS all_data!! 
+% WAKE
+all_wake = all_data;
+all_wake(all_score ~= 1) = []; 
+
+[WAKE_ppx, WAKE_F] = pwelch(all_wake, hanning(win), win/2, 2*win, 1/Fs);
+Norm_idx = nearest_idx([0.125 100],WAKE_F); % should be the same across WAKE/NREM/REM given the windows but recomputed to be safe.  
+
+% NREM
+all_nrem = all_data;
+all_nrem(all_score ~= 2) = []; 
+
+[NREM_ppx, NREM_F] = pwelch(all_nrem, hanning(win), win/2, 2*win, 1/Fs);
+Norm_idx = nearest_idx([0.125 100],NREM_F); 
+
+% REM
 all_rem = all_data;
 all_rem(all_score ~= 3) = []; 
 
-win = 2048; 
-[REM_ppx, REM_F] = pwelch(all_rem, hanning(win), win/2, 2*win, Fs);
+[REM_ppx, REM_F] = pwelch(all_rem, hanning(win), win/2, 2*win, 1/Fs);
+Norm_idx = nearest_idx([0.125 100],REM_F); 
 
+
+%% add the PSD plots
+figure(1001)
 subplot(4,4,13)
-plot(REM_F, 10*log10(REM_ppx)); 
-xlim([0 20])
+plot(WAKE_F, ((WAKE_ppx))/sum((WAKE_ppx(Norm_idx))), 'color', c_ord(1,:), 'linewidth', 3);  % using normalization method from Colby-Milley et al. 2015
+xlim([0 50])
+ylabel('WAKE power')
+xlabel('frequency (Hz)')
+vline([4, 8])
 
+subplot(4,4,14)
+plot(NREM_F, ((NREM_ppx))/sum((NREM_ppx(Norm_idx))), 'color', c_ord(3,:), 'linewidth', 3);  
+xlim([0 50])
+ylabel('NREM power')
+xlabel('frequency (Hz)')
 
+subplot(4,4,15)
+plot(REM_F, ((REM_ppx))/sum((REM_ppx(Norm_idx))), 'color', c_ord(2,:), 'linewidth', 3); 
+xlim([0 50])
+ylabel('REM power')
+xlabel('frequency (Hz)')
+% add in a spare plot with subject info
 
+subplot(4,4,16)
+text(0, .75, ['Subject: ' Subjects{iSub}])
+text(0, .5, ['Genotype: ' PARAMS.Subjects.(Subjects{iSub}).genotype])
+text(0, 0.25, [num2str(length(hour_scores.hrs)/24) 'x24hrs'])
+axis off
+
+pos = get(gcf, 'position');
+set(gcf, 'position', [pos(1) pos(2)*.6 pos(3)*1.4 pos(4)*1.4]);
+
+saveas(gcf, [PARAMS.inter_dir filesep Subjects{iSub} 'summary.png']); 
+saveas(gcf, [PARAMS.inter_dir filesep Subjects{iSub} 'summary.fig']); 
+
+%%
 % day_idx = nearest_idx(day_secs,all_tvec);
 % 
 % day1_tvec = all_tvec(day_idx(1):day_idx(2));
