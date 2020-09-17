@@ -32,6 +32,8 @@ elseif nargin == 1
     type = 'long';
     save_dir = cd;
     disp(' ''type'' not specified, using ''long'' for all data. Use type = ''fast'' for only the first 1/4 of the data to save time')
+elseif nargin ==2
+    save_dir = cd;
 end
 
 line_width = 2;

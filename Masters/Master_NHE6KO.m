@@ -64,15 +64,15 @@ PARAMS.Subjects.M02.EMG_Chan = 'CSC63.ncs';  % best EMG channel.
 PARAMS.Subjects.M02.genotype = 'wt';
 
 PARAMS.Subjects.M05.dir_name = 'NHE6KO_05'; % which foler type.  Can be either NHE6KO_12_13_11_02 or NHE6KO_05 based on which NLX system was used.
-PARAMS.Subjects.M05.LFP_Chan = 'CSCXX.ncs';  % best LFP channel.
-PARAMS.Subjects.M05.EMG_Chan = 'CSCXX.ncs';  % best EMG channel.
+PARAMS.Subjects.M05.LFP_Chan = 'CSC1.ncs';  % best LFP channel.
+PARAMS.Subjects.M05.EMG_Chan = 'CSC15.ncs';  % best EMG channel.
 PARAMS.Subjects.M05.genotype = 'wt';
 
 % K/O
-PARAMS.Subjects.M11.dir_name = 'NHE6KO_12_13_11_02'; % which foler type.  Can be either NHE6KO_12_13_11_02 or NHE6KO_05 based on which NLX system was used.
-PARAMS.Subjects.M11.LFP_Chan = 'CSC39.ncs';  % best LFP channel.
-PARAMS.Subjects.M11.EMG_Chan = 'CSC47.ncs';  % best EMG channel.
-PARAMS.Subjects.M11.genotype = 'ko';
+% PARAMS.Subjects.M11.dir_name = 'NHE6KO_12_13_11_02'; % which foler type.  Can be either NHE6KO_12_13_11_02 or NHE6KO_05 based on which NLX system was used.
+% PARAMS.Subjects.M11.LFP_Chan = 'CSC39.ncs';  % best LFP channel.
+% PARAMS.Subjects.M11.EMG_Chan = 'CSC47.ncs';  % best EMG channel.
+% PARAMS.Subjects.M11.genotype = 'ko';
 
 PARAMS.Subjects.M12.dir_name = 'NHE6KO_12_13_11_02'; % which foler type.  Can be either NHE6KO_12_13_11_02 or NHE6KO_05 based on which NLX system was used.
 PARAMS.Subjects.M12.LFP_Chan = 'CSC7.ncs';  % best LFP channel.
@@ -83,6 +83,9 @@ PARAMS.Subjects.M13.dir_name = 'NHE6KO_12_13_11_02'; % which foler type.  Can be
 PARAMS.Subjects.M13.LFP_Chan = 'CSC17.ncs';  % best LFP channel.
 PARAMS.Subjects.M13.EMG_Chan = 'CSC32.ncs';  % best EMG channel.
 PARAMS.Subjects.M13.genotype = 'ko';
+
+Subjects = fieldnames(PARAMS.Subjects);
+
 %% load and append data across multiple recording blocks.  To prevent buffer errors and corrupted data the 72hr recording period was broken down into several blocks of 8-11 hours (30hrs for mouse #05).
 
 
@@ -90,7 +93,6 @@ NH_preprocess(PARAMS.raw_data_dir, PARAMS.inter_dir); % run this script once to 
 
 
 %% Classify the sleep states by visual inspection.
-Subjects = fieldnames(PARAMS.Subjects);
 
 for iSub = 1:length(Subjects)
     % load the data for each subject
@@ -122,7 +124,7 @@ for iSub = 1:length(Subjects)
             end
         end % blocks
         
-%         score{iB} = 1*ones(length(this_csc{iRec}.tvec(blocks(iB):end)),1)
+        %         score{iB} = 1*ones(length(this_csc{iRec}.tvec(blocks(iB):end)),1)
         % catch cases where the sleep score will add in too many points to
         % match the range.
         if length(score{end}) ~= length(this_csc{iRec}.tvec(blocks(iB):end))
@@ -131,7 +133,7 @@ for iSub = 1:length(Subjects)
         
         
         % save the scores
-        sleep_score{iRec}.tvec = this_csc{iRec}.tvec;
+        sleep_score{iRec}.tvec = this_csc{iRec}.tvec(1:length(cat(1,score{:}))); % catch cases where you don't want all the recording blocks (M05)
         sleep_score{iRec}.score = score;
         save([PARAMS.inter_dir filesep Subjects{iSub} '_sleep_data.mat'], 'sleep_score', '-v7.3')
         
@@ -162,8 +164,8 @@ clock_start = seconds(this_csc{1}.tstart - Z0);
 
 all_tvec = [];
 all_score = [];
-all_data = []; 
-Fs = mode(diff(sleep_score{iRec}.tvec));
+all_data = [];
+Fs = mode(diff(sleep_score{1}.tvec));
 for iRec = 1:length(sleep_score)
     
     % pad with NaNs between recordings;
@@ -182,38 +184,43 @@ for iRec = 1:length(sleep_score)
     all_tvec = [all_tvec; (padded_tvec - t_start)+ double(clock_start)];
     
     %% get all the data with padding
-    all_data = [all_data, [this_csc{iRec}.data(1,:), N_pad]]; 
+    all_data = [all_data, [this_csc{iRec}.data(1,1:length(this_csc{iRec}.score)), N_pad]];
     
-    % collect the score (should be in cells based on 1 hour blocks.  
+    % collect the score (should be in cells based on 1 hour blocks.
     if iscell(sleep_score{iRec}.score)
         padded_data = [cat(1,sleep_score{iRec}.score{:}); N_pad'];
         all_score = [all_score; padded_data];
-    else % odd case which has it as a vector. 
-        padded_data = [sleep_score{iRec}.score; N_pad']; % add in the end padding 
+    else % odd case which has it as a vector.
+        padded_data = [sleep_score{iRec}.score; N_pad']; % add in the end padding
         all_score = [all_score; padded_data];
     end
-    clear padded_tvec paddec_data 
+    clear padded_tvec paddec_data
 end
 
 
 %% break into 24 periods
 % day_secs = (ceil(clock_start/3600))*3600:(24*3600):all_tvec(end);
-hrs = (ceil(clock_start/3600))*3600:3600:52*3600;
+max_hrs = (floor((all_tvec(end) - all_tvec(1))/3600)-1)*3600;
+hrs = (ceil(clock_start/3600))*3600:3600:(47+ceil(clock_start/3600))*3600; % correct for offset and number of scored hours.
+hrs_actual = hrs;
+while sum(hrs_actual>=24*3600) >0 % correct for times >24hrs, 48hrs, ...
+    hrs_actual(hrs_actual>=24*3600) = hrs_actual(hrs_actual>=24*3600)-24*3600;
+end
 
-for iH = 1:length(hrs)
-    this_h_idx = nearest_idx([hrs(iH),hrs(iH)+3600],all_tvec); 
-    disp(hrs(iH))
+% collect mean values for percentage of time in each sleep state.
+for iH = length(hrs):-1:1
+    this_h_idx = nearest_idx([hrs(iH),hrs(iH)+3600],all_tvec);
+    disp(hrs(iH)/3600)
     WAKE(iH) = sum(all_score(this_h_idx(1):this_h_idx(2)) == 1)/length(all_score(this_h_idx(1):this_h_idx(2)));
     NREM(iH) = sum(all_score(this_h_idx(1):this_h_idx(2)) == 2)/length(all_score(this_h_idx(1):this_h_idx(2)));
     REM(iH) = sum(all_score(this_h_idx(1):this_h_idx(2)) == 3)/length(all_score(this_h_idx(1):this_h_idx(2)));
 end
 
-hour_scores.hrs = hrs; 
+hour_scores.hrs = hrs;
 hour_scores.WAKE = WAKE;
 hour_scores.NREM = NREM;
-hour_scores.REM = REM; 
+hour_scores.REM = REM;
 
-   save([PARAMS.inter_dir filesep Subjects{iSub} '_hour_data.mat'], 'hour_scores', '-v7.3')
 
 
 % split into n x 24 array
@@ -222,13 +229,47 @@ WAKE_out = mean(reshape(circshift(WAKE,ceil(clock_start/3600)),24,2),2)';
 NREM_out = mean(reshape(circshift(NREM,ceil(clock_start/3600)),24,2),2)';
 REM_out = mean(reshape(circshift(REM,ceil(clock_start/3600)),24,2),2)';
 
+%% break out the sleep states and get the normalized PSD
+win = 2048/2;
+
+% WAKE
+all_wake = all_data;
+all_wake(all_score ~= 1) = [];
+
+[WAKE_ppx, WAKE_F] = pwelch(all_wake, hanning(win), win/2, 2*win, 1/Fs);
+Norm_idx = nearest_idx([0.125 100],WAKE_F); % should be the same across WAKE/NREM/REM given the windows but recomputed to be safe.
+
+% NREM
+all_nrem = all_data;
+all_nrem(all_score ~= 2) = [];
+
+[NREM_ppx, NREM_F] = pwelch(all_nrem, hanning(win), win/2, 2*win, 1/Fs);
+Norm_idx = nearest_idx([0.125 100],NREM_F);
+
+% REM
+all_rem = all_data;
+all_rem(all_score ~= 3) = [];
+
+[REM_ppx, REM_F] = pwelch(all_rem, hanning(win), win/2, 2*win, 1/Fs);
+Norm_idx = nearest_idx([0.125 100],REM_F);
+
+hour_scores.PSD.WAKE_F = WAKE_F;
+hour_scores.PSD.WAKE_ppx = WAKE_ppx;
+hour_scores.PSD.NREM_F = NREM_F;
+hour_scores.PSD.NREM_ppx = NREM_ppx;
+hour_scores.PSD.REM_F = REM_F;
+hour_scores.PSD.REM_ppx = REM_ppx;
+
+save([PARAMS.inter_dir filesep Subjects{iSub} '_hour_data.mat'], 'hour_scores', '-v7.3')
+
+
 %% make some plots
 c_ord = linspecer(9);
 % tick labels with Z and real time
-	XTickString{1} = '$$\begin{array}{c} Z0\\8:00\\ \end{array}$$';
-    XTickString{2} = '$$\begin{array}{c} Z6\\14:00\\ \end{array}$$';
-    XTickString{3} = '$$\begin{array}{c} Z12\\20:00\\ \end{array}$$';
-    XTickString{4} = '$$\begin{array}{c} Z18\\2:00\\ \end{array}$$';
+XTickString{1} = '$$\begin{array}{c} Z0\\8:00\\ \end{array}$$';
+XTickString{2} = '$$\begin{array}{c} Z6\\14:00\\ \end{array}$$';
+XTickString{3} = '$$\begin{array}{c} Z12\\20:00\\ \end{array}$$';
+XTickString{4} = '$$\begin{array}{c} Z18\\2:00\\ \end{array}$$';
 
 figure(1001)
 subplot(4,4,1:3)
@@ -239,13 +280,17 @@ xlabel('time from light onset')
 ylabel('% wake');
 % set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex')
 set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
-ylim([0 100]); xlim([1 24]);  
+ylim([0 100]); xlim([1 24]);
 
 % bar plot for light vs dark
 subplot(4,4,4)
 groups = [ones(1,12),2*ones(1,12)];
-h{1} = boxplot(WAKE_out, groups);
+boxplot(WAKE_out*100, groups);
 set(gca, 'xticklabel', {'light', 'dark'})
+h = findobj(gca,'Tag','Box');
+patch(get(h(2),'XData'),get(h(2),'YData'),c_ord(5,:),'FaceAlpha',.5);
+patch(get(h(1),'XData'),get(h(1),'YData'),c_ord(1,:),'FaceAlpha',.5);
+
 
 subplot(4,4,5:7)
 hold on
@@ -255,14 +300,16 @@ xlabel('time from light onset')
 ylabel('% NREM');
 set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
 % set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex');
-ylim([0 100]); xlim([1 24]); 
+ylim([0 100]); xlim([1 24]);
 
 % bar plot for light vs dark
 subplot(4,4,8)
 groups = [ones(1,12),2*ones(1,12)];
-h{1} = boxplot(NREM_out, groups);
+boxplot(NREM_out*100, groups);
 set(gca, 'xticklabel', {'light', 'dark'})
-
+h = findobj(gca,'Tag','Box');
+patch(get(h(2),'XData'),get(h(2),'YData'),c_ord(5,:),'FaceAlpha',.5);
+patch(get(h(1),'XData'),get(h(1),'YData'),c_ord(3,:),'FaceAlpha',.5);
 
 subplot(4,4,9:11)
 hold on
@@ -273,59 +320,61 @@ ylabel('% REM');
 % set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex')
 set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
 % set(gca, 'xtick', 1:2:24, 'xticklabel', {'Z0','Z2', 'Z4', 'Z6','Z8', 'Z10', 'Z12','Z14', 'Z16','Z18','Z20', 'Z22', 'Z24'})
-ylim([0 20]); xlim([1 24]); 
+ylim([0 20]); xlim([1 24]);
 
 subplot(4,4,12)
 groups = [ones(1,12),2*ones(1,12)];
-h{1} = boxplot(REM_out, groups);
+boxplot(REM_out*100, groups);
 set(gca, 'xticklabel', {'light', 'dark'})
+h = findobj(gca,'Tag','Box');
+patch(get(h(2),'XData'),get(h(2),'YData'),c_ord(5,:),'FaceAlpha',.5);
+patch(get(h(1),'XData'),get(h(1),'YData'),c_ord(2,:),'FaceAlpha',.5);
 
 
-%% break out the sleep states and get the normalized PSD
-win = 2048/2; 
 
-% WAKE
-all_wake = all_data;
-all_wake(all_score ~= 1) = []; 
-
-[WAKE_ppx, WAKE_F] = pwelch(all_wake, hanning(win), win/2, 2*win, 1/Fs);
-Norm_idx = nearest_idx([0.125 100],WAKE_F); % should be the same across WAKE/NREM/REM given the windows but recomputed to be safe.  
-
-% NREM
-all_nrem = all_data;
-all_nrem(all_score ~= 2) = []; 
-
-[NREM_ppx, NREM_F] = pwelch(all_nrem, hanning(win), win/2, 2*win, 1/Fs);
-Norm_idx = nearest_idx([0.125 100],NREM_F); 
-
-% REM
-all_rem = all_data;
-all_rem(all_score ~= 3) = []; 
-
-[REM_ppx, REM_F] = pwelch(all_rem, hanning(win), win/2, 2*win, 1/Fs);
-Norm_idx = nearest_idx([0.125 100],REM_F); 
 
 
 %% add the PSD plots
 figure(1001)
 subplot(4,4,13)
-plot(WAKE_F, ((WAKE_ppx))/sum((WAKE_ppx(Norm_idx))), 'color', c_ord(1,:), 'linewidth', 3);  % using normalization method from Colby-Milley et al. 2015
-xlim([0 50])
+plot(WAKE_F, 10*log10(WAKE_ppx), 'color', c_ord(1,:), 'linewidth', 2);
+% plot(WAKE_F, ((WAKE_ppx))/sum((WAKE_ppx(Norm_idx))), 'color', c_ord(1,:), 'linewidth', 2);  % using normalization method from Colby-Milley et al. 2015
+xlim([0 20])
 ylabel('WAKE power')
 xlabel('frequency (Hz)')
-vline([4, 8])
+set(gca, 'xtick', 0:5:20);
+% subplot(4,4,13)
+% axes('Position',[.7 .6 .2 .3])
+% box on
+% plot(WAKE_F, ((WAKE_ppx))/sum((WAKE_ppx(Norm_idx))), 'color', c_ord(3,:), 'linewidth', 3);
+% xlim([20 50])
 
 subplot(4,4,14)
-plot(NREM_F, ((NREM_ppx))/sum((NREM_ppx(Norm_idx))), 'color', c_ord(3,:), 'linewidth', 3);  
-xlim([0 50])
+plot(NREM_F, 10*log10(NREM_ppx), 'color', c_ord(3,:), 'linewidth', 2);
+% plot(NREM_F, ((NREM_ppx))/sum((NREM_ppx(Norm_idx))), 'color', c_ord(3,:), 'linewidth', 2);
+xlim([0 20])
 ylabel('NREM power')
 xlabel('frequency (Hz)')
+set(gca, 'xtick', 0:5:20);
+% axes('Position',[.7 .6 .2 .3])
+% box on
+% plot(NREM_F, ((NREM_ppx))/sum((NREM_ppx(Norm_idx))), 'color', c_ord(3,:), 'linewidth', 3);
+% xlim([20 50])
+
 
 subplot(4,4,15)
-plot(REM_F, ((REM_ppx))/sum((REM_ppx(Norm_idx))), 'color', c_ord(2,:), 'linewidth', 3); 
-xlim([0 50])
+plot(REM_F, 10*log10(REM_ppx), 'color', c_ord(2,:), 'linewidth', 2);
+% plot(REM_F, ((REM_ppx))/sum((REM_ppx(Norm_idx))), 'color', c_ord(2,:), 'linewidth', 2);
+xlim([0 20])
 ylabel('REM power')
 xlabel('frequency (Hz)')
+set(gca, 'xtick', 0:5:20);
+% axes('Position',[.7 .6 .2 .3])
+% box on
+% plot(REM_F, ((REM_ppx))/sum((REM_ppx(Norm_idx))), 'color', c_ord(3,:), 'linewidth', 3);
+% xlim([20 50])
+
+
 % add in a spare plot with subject info
 
 subplot(4,4,16)
@@ -337,12 +386,231 @@ axis off
 pos = get(gcf, 'position');
 set(gcf, 'position', [pos(1) pos(2)*.6 pos(3)*1.4 pos(4)*1.4]);
 
-saveas(gcf, [PARAMS.inter_dir filesep Subjects{iSub} 'summary.png']); 
-saveas(gcf, [PARAMS.inter_dir filesep Subjects{iSub} 'summary.fig']); 
+saveas(gcf, [PARAMS.inter_dir filesep Subjects{iSub} 'summary.png']);
+saveas(gcf, [PARAMS.inter_dir filesep Subjects{iSub} 'summary.fig']);
+
+%%  Cross subject data table
+% types = {'ko', 'wt
+Sub_id = [];
+Gene_id = {};
+Z_val = [];  % time in Zeitgeber time Z0 = lights turn on. 
+LD_val = {}; % light or dak cycle value for each hour. 
+wake_val = [];
+NREM_val = [];
+REM_val = [];
+
+for iSub = 1:length(Subjects)
+%     if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'ko')
+        Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}) = load([PARAMS.inter_dir filesep Subjects{iSub} '_hour_data.mat']);
+%     elseif contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'wt')
+%         Sub_scores.wt.(Subjects{iSub}) = load([PARAMS.inter_dir filesep Subjects{iSub} '_hour_data.mat']);
+%     end
+%     
+    wake_val = [wake_val, circshift(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).hour_scores.WAKE,ceil(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).hour_scores.hrs(1)/3600))];
+    NREM_val = [NREM_val,circshift(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).hour_scores.NREM,ceil(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).hour_scores.hrs(1)/3600))];
+    REM_val = [REM_val,circshift(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).hour_scores.REM,ceil(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).hour_scores.hrs(1)/3600))];
+    
+    Sub_id = [Sub_id, repmat(str2double(Subjects{iSub}(2:end)),1,length(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).hour_scores.hrs))];
+    gene_temp = cell(1,length(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).hour_scores.hrs)); 
+    gene_temp(:) = {PARAMS.Subjects.(Subjects{iSub}).genotype};
+    Gene_id = [Gene_id, gene_temp]; 
+    Z_val = [Z_val, [0:23 0:23]]; 
+        LD_temp = cell(1,length(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).hour_scores.hrs)); 
+    LD_temp(1:24) = {'Light'}; LD_temp(25:end) = {'Dark'}; 
+    LD_val = [LD_val, LD_temp]; 
+end
+
+
+NHE6_tbl = table(nominal(Sub_id), nominal(Gene_id), ordinal(Z_val), nominal(LD_val),wake_val, NREM_val, REM_val, 'VariableNames',{'Subject', 'Genotype', 'Ztime','Light_Dark', 'Wake', 'NREM', 'REM'}); 
+
+
+
 
 %%
+
+c_ord = linspecer(9);
+% tick labels with Z and real time
+XTickString{1} = '$$\begin{array}{c} Z0\\8:00\\ \end{array}$$';
+XTickString{2} = '$$\begin{array}{c} Z6\\14:00\\ \end{array}$$';
+XTickString{3} = '$$\begin{array}{c} Z12\\20:00\\ \end{array}$$';
+XTickString{4} = '$$\begin{array}{c} Z18\\2:00\\ \end{array}$$';
+
+figure(1001)
+subplot(4,4,1:3)
+hold on
+rectangle('position', [1 0.1 12 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+ko_mean = []; wt_mean = [];
+for iSub = 1:length(Subjects)
+    if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'ko')
+        this_val =Sub_scores.ko.(Subjects{iSub}).hour_scores.WAKE;
+        this_time = Sub_scores.ko.(Subjects{iSub}).hour_scores.hrs/3600;
+        p(iSub) = plot(1:24, mean(reshape(circshift(this_val,ceil(this_time)),24,2),2)'*100,'-.', 'color',[c_ord(1,:) .2], 'MarkerEdgeColor',c_ord(1,:));
+        ko_mean = [ko_mean; this_val];
+    end
+    
+    if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'wt')
+        this_val =Sub_scores.wt.(Subjects{iSub}).hour_scores.WAKE;
+        this_time = Sub_scores.wt.(Subjects{iSub}).hour_scores.hrs/3600;
+        p(iSub) = plot(1:24, mean(reshape(circshift(this_val,ceil(this_time)),24,2),2)'*100,'--', 'color',[0 0 0 .2], 'MarkerEdgeColor',[0 0 0]);
+        wt_mean = [wt_mean; this_val];
+    end
+    
+    
+end
+p(iSub+1) = plot(1:24, mean(reshape(circshift(mean(wt_mean),ceil(this_time)),24,2),2)'*100,'-*', 'color','k', 'MarkerEdgeColor','k', 'linewidth',1.5 );
+p(iSub+2) = plot(1:24, mean(reshape(circshift(mean(ko_mean),ceil(this_time)),24,2),2)'*100,'-x', 'color',c_ord(1,:), 'MarkerEdgeColor',c_ord(1,:), 'linewidth', 1.5 );
+% plot(1:24, WAKE_out*100,'-o', 'color', c_ord(1,:))
+xlabel('time from light onset')
+ylabel('% wake');
+% set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex')
+set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
+ylim([0 100]); xlim([1 24]);
+legend([p(iSub+1) p(iSub+2)],{'wt', 'ko'});
+
+
+% bar plot for light vs dark
+subplot(4,4,4)
+hold on
+rectangle('position', [0, 0, 3, 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+data = [NHE6_tbl.Wake(NHE6_tbl.Genotype == 'wt' & NHE6_tbl.Light_Dark == 'Light')*100; NHE6_tbl.Wake(NHE6_tbl.Genotype == 'ko' & NHE6_tbl.Light_Dark == 'Light')*100;...
+%     NaN(size(NHE6_tbl.Wake(NHE6_tbl.Genotype == 'ko'& NHE6_tbl.Light_Dark == 'Light'))); ...
+    NHE6_tbl.Wake(NHE6_tbl.Genotype == 'wt' & NHE6_tbl.Light_Dark == 'Dark')*100; NHE6_tbl.Wake(NHE6_tbl.Genotype == 'ko' & NHE6_tbl.Light_Dark == 'Dark')*100]; 
+groups = [ones(1,length(data)), 2*ones(1,length(data)),  4*ones(1,length(data)), 5*ones(1,length(data))]; 
+boxplot(data', groups, 'Notch','on', 'Positions', [1,2,4,5])
+% groups = [ones(1,12),2*ones(1,12)];
+% boxplot(WAKE_out*100, groups);
+set(gca, 'xticklabel', {'w/t', 'k/o','w/t', 'k/o'})
+h = findobj(gca,'Tag','Box');
+patch(get(h(4),'XData'),get(h(4),'YData'),c_ord(1,:),'FaceAlpha',.5);
+patch(get(h(2),'XData'),get(h(2),'YData'),c_ord(1,:),'FaceAlpha',.5);
+patch(get(h(3),'XData'),get(h(3),'YData'),'k','FaceAlpha',.5);
+patch(get(h(1),'XData'),get(h(1),'YData'),'k','FaceAlpha',.5);
+ylim([0 100])
+
+
+% same for NREM
+subplot(4,4,5:7)
+hold on
+rectangle('position', [1 0.1 12 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+ko_mean = []; wt_mean = [];
+for iSub = 1:length(Subjects)
+    if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'ko')
+        this_val =Sub_scores.ko.(Subjects{iSub}).hour_scores.NREM;
+        this_time = Sub_scores.ko.(Subjects{iSub}).hour_scores.hrs/3600;
+        p(iSub) = plot(1:24, mean(reshape(circshift(this_val,ceil(this_time/3600)),24,2),2)'*100,'-.', 'color',[c_ord(3,:) .2], 'MarkerEdgeColor',c_ord(3,:));
+        ko_mean = [ko_mean; this_val];
+    end
+    
+    if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'wt')
+        this_val =Sub_scores.wt.(Subjects{iSub}).hour_scores.NREM;
+        this_time = Sub_scores.wt.(Subjects{iSub}).hour_scores.hrs/3600;
+        p(iSub) = plot(1:24, mean(reshape(circshift(this_val,ceil(this_time/3600)),24,2),2)'*100,'--', 'color',[0 0 0 .2], 'MarkerEdgeColor',[0 0 0]);
+        wt_mean = [wt_mean; this_val];
+    end
+end
+p(iSub+1) = plot(1:24, mean(reshape(circshift(mean(wt_mean),ceil(this_time/3600)),24,2),2)'*100,'-*', 'color','k', 'MarkerEdgeColor','k', 'linewidth',1.5 );
+p(iSub+2) = plot(1:24, mean(reshape(circshift(mean(ko_mean),ceil(this_time/3600)),24,2),2)'*100,'-x', 'color',c_ord(3,:), 'MarkerEdgeColor',c_ord(3,:), 'linewidth', 1.5 );
+% plot(1:24, NREM_out*100,'-o', 'color', c_ord(3,:))
+xlabel('time from light onset')
+ylabel('% NREM');
+set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
+% set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex');
+ylim([0 100]); xlim([1 24]);
+legend([p(iSub+1) p(iSub+2)],{'wt', 'ko'});
+
+subplot(4,4,8)
+hold on
+rectangle('position', [0, 0, 3, 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+data = [NHE6_tbl.NREM(NHE6_tbl.Genotype == 'wt' & NHE6_tbl.Light_Dark == 'Light')*100; NHE6_tbl.NREM(NHE6_tbl.Genotype == 'ko' & NHE6_tbl.Light_Dark == 'Light')*100;...
+%     NaN(size(NHE6_tbl.Wake(NHE6_tbl.Genotype == 'ko'& NHE6_tbl.Light_Dark == 'Light'))); ...
+    NHE6_tbl.NREM(NHE6_tbl.Genotype == 'wt' & NHE6_tbl.Light_Dark == 'Dark')*100; NHE6_tbl.NREM(NHE6_tbl.Genotype == 'ko' & NHE6_tbl.Light_Dark == 'Dark')*100]; 
+groups = [ones(1,length(data)), 2*ones(1,length(data)),  4*ones(1,length(data)), 5*ones(1,length(data))]; 
+boxplot(data', groups, 'Notch','on', 'Positions', [1,2,4,5])
+% groups = [ones(1,12),2*ones(1,12)];
+% boxplot(WAKE_out*100, groups);
+set(gca, 'xticklabel', {'w/t', 'k/o','w/t', 'k/o'})
+h = findobj(gca,'Tag','Box');
+patch(get(h(4),'XData'),get(h(4),'YData'),c_ord(1,:),'FaceAlpha',.5);
+patch(get(h(2),'XData'),get(h(2),'YData'),c_ord(1,:),'FaceAlpha',.5);
+patch(get(h(3),'XData'),get(h(3),'YData'),'k','FaceAlpha',.5);
+patch(get(h(1),'XData'),get(h(1),'YData'),'k','FaceAlpha',.5);
+ylim([0 100])
+
+
+subplot(4,4,9:11)
+hold on
+rectangle('position', [1 0.1 12 20], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+ko_mean = []; wt_mean = [];
+for iSub = 1:length(Subjects)
+    if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'ko')
+        this_val =Sub_scores.ko.(Subjects{iSub}).hour_scores.REM;
+        this_time = Sub_scores.ko.(Subjects{iSub}).hour_scores.hrs/3600;
+        p(iSub) = plot(1:24, mean(reshape(circshift(this_val,ceil(this_time/3600)),24,2),2)'*100,'-.', 'color',[c_ord(2,:) .2], 'MarkerEdgeColor',c_ord(2,:));
+        ko_mean = [ko_mean; this_val];
+    end
+    
+    if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'wt')
+        this_val =Sub_scores.wt.(Subjects{iSub}).hour_scores.REM;
+        this_time = Sub_scores.wt.(Subjects{iSub}).hour_scores.hrs/3600;
+        p(iSub) = plot(1:24, mean(reshape(circshift(this_val,ceil(this_time/3600)),24,2),2)'*100,'--', 'color',[0 0 0 .2], 'MarkerEdgeColor',[0 0 0]);
+        wt_mean = [wt_mean; this_val];
+    end
+end
+p(iSub+1) = plot(1:24, mean(reshape(circshift(mean(wt_mean),ceil(this_time/3600)),24,2),2)'*100,'-*', 'color','k', 'MarkerEdgeColor','k', 'linewidth',1.5 );
+p(iSub+2) = plot(1:24, mean(reshape(circshift(mean(ko_mean),ceil(this_time/3600)),24,2),2)'*100,'-x', 'color',c_ord(2,:), 'MarkerEdgeColor',c_ord(2,:), 'linewidth', 1.5 );
+% plot(1:24, REM_out*100,'-o', 'color', c_ord(2,:))
+xlabel('time from light onset')
+ylabel('% REM');
+% set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex')
+set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
+% set(gca, 'xtick', 1:2:24, 'xticklabel', {'Z0','Z2', 'Z4', 'Z6','Z8', 'Z10', 'Z12','Z14', 'Z16','Z18','Z20', 'Z22', 'Z24'})
+ylim([0 20]); xlim([1 24]);
+legend([p(iSub+1) p(iSub+2)],{'wt', 'ko'});
+
+subplot(4,4,12)
+hold on
+rectangle('position', [0, 0, 3, 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+data = [NHE6_tbl.REM(NHE6_tbl.Genotype == 'wt' & NHE6_tbl.Light_Dark == 'Light')*100; NHE6_tbl.REM(NHE6_tbl.Genotype == 'ko' & NHE6_tbl.Light_Dark == 'Light')*100;...
+%     NaN(size(NHE6_tbl.Wake(NHE6_tbl.Genotype == 'ko'& NHE6_tbl.Light_Dark == 'Light'))); ...
+    NHE6_tbl.REM(NHE6_tbl.Genotype == 'wt' & NHE6_tbl.Light_Dark == 'Dark')*100; NHE6_tbl.REM(NHE6_tbl.Genotype == 'ko' & NHE6_tbl.Light_Dark == 'Dark')*100]; 
+groups = [ones(1,length(data)), 2*ones(1,length(data)),  4*ones(1,length(data)), 5*ones(1,length(data))]; 
+boxplot(data', groups, 'Notch','on', 'Positions', [1,2,4,5])
+% groups = [ones(1,12),2*ones(1,12)];
+% boxplot(WAKE_out*100, groups);
+set(gca, 'xticklabel', {'w/t', 'k/o','w/t', 'k/o'})
+h = findobj(gca,'Tag','Box');
+patch(get(h(4),'XData'),get(h(4),'YData'),c_ord(1,:),'FaceAlpha',.5);
+patch(get(h(2),'XData'),get(h(2),'YData'),c_ord(1,:),'FaceAlpha',.5);
+patch(get(h(3),'XData'),get(h(3),'YData'),'k','FaceAlpha',.5);
+patch(get(h(1),'XData'),get(h(1),'YData'),'k','FaceAlpha',.5);
+ylim([0 20])
+
+%% add in the mean PSDs
+mean_wake_psd = [];
+mean_NREM_psd = [];
+mean_REM_psd = [];
+
+%%%%%%%% fix this by normalizing in this loop.  also need to get PSDs saved
+%%%%%%%% for iSub 1
+for iSub = 1:length(Subjects)
+mean_wake_psd = [mean_wake_psd, Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).hour_scores.PSD.WAKE_ppx]; 
+mean_NREM_psd = [mean_NREM_psd, Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).hour_scores.PSD.NREM_ppx];
+mean_REM_psd = [mean_REM_psd, Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).hour_scores.PSD.REM_ppx]; 
+end
+
+
+% subplot(4,4,12)
+% groups = [ones(1,12),2*ones(1,12)];
+%  boxplot(REM_out*100, groups);
+% set(gca, 'xticklabel', {'light', 'dark'})
+% h = findobj(gca,'Tag','Box');
+% patch(get(h(2),'XData'),get(h(2),'YData'),c_ord(5,:),'FaceAlpha',.5);
+% patch(get(h(1),'XData'),get(h(1),'YData'),c_ord(2,:),'FaceAlpha',.5);
+
+
+
 % day_idx = nearest_idx(day_secs,all_tvec);
-% 
+%
 % day1_tvec = all_tvec(day_idx(1):day_idx(2));
 % day2_tvec = all_tvec(day_idx(2)+1:day_idx(3));
 

@@ -97,6 +97,12 @@ for iSub = 1:length(Subjects)
         this_csc{iRec}.label = {'LFP', 'EMG'};
         
         clear emg
+        % workaround for cheetah '5.6.3' which does not track the start time.  Had to get them from the log file.  
+        if strcmp(Subjects{iSub}, 'M05') && iRec == 1
+            this_csc{iRec}.cfg.hdr{1}.TimeCreated = '2020/09/04 144812';
+        elseif strcmp(Subjects{iSub}, 'M05') && iRec == 2
+            this_csc{iRec}.cfg.hdr{1}.TimeCreated = '2020/09/05 210032';
+        end
         
         tstart = this_csc{iRec}.cfg.hdr{1}.TimeCreated;
         this_csc{iRec}.tstart = datetime(datestr([tstart(1:10) ' ' tstart(12:13) ':' tstart(14:15) ':' tstart(16:17)]));
