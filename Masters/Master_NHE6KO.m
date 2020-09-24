@@ -155,7 +155,7 @@ end % subjects
 % score{iS} = score{iS}(2:end-1);
 %     end
 % end
-%% split the data into 1 hour blocks
+%% append the data from 1 hour scoring blocks into a continous vector with NaN padding between actual recordings. 
 
 % normalize the time across recording blocks
 t_start = this_csc{1}.tvec(1);
@@ -197,11 +197,19 @@ for iRec = 1:length(sleep_score)
     clear padded_tvec paddec_data
 end
 
+save([PARAMS.inter_dir filesep Subjects{iSub} '_all_score.mat'], 'all_score', '-v7.3');
+save([PARAMS.inter_dir filesep Subjects{iSub} '_all_data.mat'], 'all_data', '-v7.3');
+save([PARAMS.inter_dir filesep Subjects{iSub} '_all_tvec.mat'], 'all_tvec', '-v7.3');
+
+
 %% get the state block durations and transitions
 
-    [start_idx, end_idx, tran_val] = NH_extract_epochs(all_score);
-
-
+    [start_idx, end_idx, tran_states] = NH_extract_epochs(all_score);
+    Fs = mode(diff(all_tvec));
+    for iState = length(start_idx):-1:1
+       event_len{iState} = round((end_idx{iState} - start_idx{iState}) * Fs); 
+       fprintf('State <strong>%d</strong> mean = %0.2fs median = %0.0fs +/- %2.2fs\n', iState, mean(event_len{iState}),median(event_len{iState}), std(event_len{iState})/sqrt(length(event_len{iState})))
+    end
 
 %% break into 24 periods
 % day_secs = (ceil(clock_start/3600))*3600:(24*3600):all_tvec(end);
@@ -428,9 +436,6 @@ end
 
 
 NHE6_tbl = table(nominal(Sub_id), nominal(Gene_id), ordinal(Z_val), nominal(LD_val),wake_val, NREM_val, REM_val, 'VariableNames',{'Subject', 'Genotype', 'Ztime','Light_Dark', 'Wake', 'NREM', 'REM'}); 
-
-
-
 
 %%
 
@@ -781,19 +786,24 @@ saveas(gcf, [PARAMS.inter_dir filesep 'All_subject_summary.fig']);
 for iSub = 1:length(Subjects)
     fprintf('Loading Subject: %s...\n', Subjects{iSub})
     load([PARAMS.inter_dir filesep Subjects{iSub} '_sleep_data.mat'])
-    
-    
+    score_out = []; 
+    for iS =1:length(sleep_score)
+        score_out = [score_out, sleep_score{iS}.score];
+    end
+    [start_idx, end_idx, tran_val] = NH_extract_epochs(cat(1,score_out{:})); 
     
     
 end
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% same thing but in minutes  and add in event duration, transition, rate values
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 interval = 10; % in minutes. 
 % mins = ((ceil(clock_start/3600))*60):interval:((47*60)+(ceil(clock_start/3600)*60)); % correct for offset and number of scored hours.
-mins = (ceil(clock_start/3600))*3600:(interval*60):(47+ceil(clock_start/3600))*3600; 
+mins = (ceil(clock_start/3600))*3600:(interval*60):(48+ceil(clock_start/3600))*3600; 
+mins = mins(1:end-1); 
 mins_actual = mins;
-while sum(mins_actual>=24*60) >0 % correct for times >24hrs, 48hrs, ...
-    mins_actual(mins_actual>=24*60) = mins_actual(mins_actual>=24*60)-(24*60);
+while sum(mins_actual>=48*3600) >0 % correct for times >24hrs, 48hrs, ...
+    mins_actual(mins_actual>=48*3600) = mins_actual(mins_actual>=48*3600)-(48*3600);
 end
 
 WAKE = []; NREM = []; REM = []; 
@@ -808,40 +818,40 @@ end
 
 
 
-min_scores.mins = mins;
+min_scores.mins = mins_actual;
 min_scores.WAKE = WAKE;
 min_scores.NREM = NREM;
 min_scores.REM = REM;
-
+min_scores.clock_start = clock_start; 
 
 
 % split into n x 24 array
-mins_out = circshift(mins/60,((ceil(clock_start/3600)-1)*(60/interval))+1);
-WAKE_out = circshift(WAKE,((ceil(clock_start/3600)-1)*(60/interval))+1);
-NREM_out = circshift(NREM,((ceil(clock_start/3600)-1)*(60/interval))+1);
-REM_out = circshift(REM,((ceil(clock_start/3600)-1)*(60/interval))+1);
-
-
+mins_out = circshift(min_scores.mins/60,((ceil(min_scores.clock_start/3600))*(60/interval)));
+WAKE_out = circshift(min_scores.WAKE,((ceil(min_scores.clock_start/3600))*(60/interval)));
+NREM_out = circshift(min_scores.NREM,((ceil(min_scores.clock_start/3600))*(60/interval)));
+REM_out = circshift(min_scores.REM,((ceil(min_scores.clock_start/3600))*(60/interval)));
 
 save([PARAMS.inter_dir filesep Subjects{iSub} '_min_data.mat'], 'min_scores', '-v7.3')
 
 %% make some plots
 c_ord = linspecer(9);
 
+groups = [ones(1,length(0:1/(60/interval):12)-1),2*ones(1,length(0:1/(60/interval):12)-1),ones(1,length(0:1/(60/interval):12)-1),2*ones(1,length(0:1/(60/interval):12)-1)];
+
 figure(1002)
 subplot(4,4,1:3)
 hold on
-rectangle('position', [1 0.1 12 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
-plot(mins_out, WAKE_out*100,'-o', 'color', c_ord(1,:))
+rectangle('position', [0 0.1 12 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+rectangle('position', [24 0.1 12 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+plot(mins_out/60, WAKE_out*100, 'color', c_ord(1,:))
 xlabel('time from light onset')
 ylabel('% wake');
 % set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex')
-set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
-ylim([0 100]); xlim([1 24]);
+set(gca, 'xtick', 0:12:48, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
+ylim([0 100]); xlim([0 48]);
 
 % bar plot for light vs dark
 subplot(4,4,4)
-groups = [ones(1,12),2*ones(1,12)];
 boxplot(WAKE_out*100, groups);
 set(gca, 'xticklabel', {'light', 'dark'})
 h = findobj(gca,'Tag','Box');
@@ -851,17 +861,17 @@ patch(get(h(1),'XData'),get(h(1),'YData'),c_ord(1,:),'FaceAlpha',.5);
 
 subplot(4,4,5:7)
 hold on
-rectangle('position', [1 0.1 12 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
-plot(1:24, NREM_out*100,'-o', 'color', c_ord(3,:))
+rectangle('position', [0 0.1 12 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+rectangle('position', [24 0.1 12 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+plot(mins_out/60, NREM_out*100,'color', c_ord(4,:))
 xlabel('time from light onset')
 ylabel('% NREM');
-set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
+set(gca, 'xtick', 0:12:48, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
 % set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex');
-ylim([0 100]); xlim([1 24]);
+ylim([0 100]); xlim([0 48]);
 
 % bar plot for light vs dark
 subplot(4,4,8)
-groups = [ones(1,12),2*ones(1,12)];
 boxplot(NREM_out*100, groups);
 set(gca, 'xticklabel', {'light', 'dark'})
 h = findobj(gca,'Tag','Box');
@@ -870,17 +880,17 @@ patch(get(h(1),'XData'),get(h(1),'YData'),c_ord(3,:),'FaceAlpha',.5);
 
 subplot(4,4,9:11)
 hold on
-rectangle('position', [1 0.1 12 20], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
-plot(1:24, REM_out*100,'-o', 'color', c_ord(2,:))
+rectangle('position', [0 0.1 12 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+rectangle('position', [24 0.1 12 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+plot(mins_out/60, REM_out*100, 'color', c_ord(2,:))
 xlabel('time from light onset')
 ylabel('% REM');
 % set(gca, 'xtick', 1:6:24, 'XTickLabel',XTickString,'TickLabelInterpreter','latex')
-set(gca, 'xtick', 1:6:24, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
+set(gca, 'xtick', 1:12:48, 'xticklabel', {'Z0', 'Z6', 'Z12', 'Z18', 'Z24'})
 % set(gca, 'xtick', 1:2:24, 'xticklabel', {'Z0','Z2', 'Z4', 'Z6','Z8', 'Z10', 'Z12','Z14', 'Z16','Z18','Z20', 'Z22', 'Z24'})
-ylim([0 20]); xlim([1 24]);
+ylim([0 40]); xlim([0 48]);
 
 subplot(4,4,12)
-groups = [ones(1,12),2*ones(1,12)];
 boxplot(REM_out*100, groups);
 set(gca, 'xticklabel', {'light', 'dark'})
 h = findobj(gca,'Tag','Box');
@@ -888,14 +898,188 @@ patch(get(h(2),'XData'),get(h(2),'YData'),c_ord(5,:),'FaceAlpha',.5);
 patch(get(h(1),'XData'),get(h(1),'YData'),c_ord(2,:),'FaceAlpha',.5);
 
 
-% subplot(4,4,12)
-% groups = [ones(1,12),2*ones(1,12)];
-%  boxplot(REM_out*100, groups);
-% set(gca, 'xticklabel', {'light', 'dark'})
-% h = findobj(gca,'Tag','Box');
-% patch(get(h(2),'XData'),get(h(2),'YData'),c_ord(5,:),'FaceAlpha',.5);
-% patch(get(h(1),'XData'),get(h(1),'YData'),c_ord(2,:),'FaceAlpha',.5);
 
+saveas(gcf, [PARAMS.inter_dir filesep Subjects{iSub} '_' num2str(interval) '_min_summary.png']);
+saveas(gcf, [PARAMS.inter_dir filesep Subjects{iSub} '_' num2str(interval) '_min_summary.fig']);
+
+
+%% 
+%%  Cross subject data table using minutes
+% types = {'ko', 'wt
+Sub_id = [];
+Gene_id = {};
+Z_val = [];  % time in Zeitgeber time Z0 = lights turn on. 
+LD_val = {}; % light or dak cycle value for each hour. 
+wake_val = [];
+NREM_val = [];
+REM_val = [];
+min_val = [];
+for iSub = 1:length(Subjects)
+%     if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'ko')
+        Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}) = load([PARAMS.inter_dir filesep Subjects{iSub} '_min_data.mat']);
+%     elseif contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'wt')
+%         Sub_scores.wt.(Subjects{iSub}) = load([PARAMS.inter_dir filesep Subjects{iSub} '_hour_data.mat']);
+%     end
+%     
+interval = mode(diff(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.mins/60));  % get the minute interval from the time vector; 
+shift_val = ceil((Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.clock_start/3600))*(60/interval); 
+
+    this_min = circshift(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.mins,shift_val);
+    min_val = [min_val, circshift(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.mins,shift_val)];
+    wake_val = [wake_val, circshift(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.WAKE,shift_val)];
+    NREM_val = [NREM_val,circshift(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.NREM,shift_val)];
+    REM_val = [REM_val,circshift(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.REM,shift_val)];
+    
+    Sub_id = [Sub_id, repmat(str2double(Subjects{iSub}(2:end)),1,length(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.mins))];
+    gene_temp = cell(1,length(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.mins)); 
+    gene_temp(:) = {PARAMS.Subjects.(Subjects{iSub}).genotype};
+    Gene_id = [Gene_id, gene_temp]; 
+    Z_val = [Z_val, this_min]; 
+        LD_temp = cell(1,length(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.mins)); 
+        L_idx = this_min <= 12*3600 | (this_min >= 24*3600  & this_min <= 36*3600); 
+        LD_temp(L_idx) = {'Light'}; 
+        LD_temp(~L_idx) = {'Dark'}; 
+%     LD_temp(1:interval/12) = {'Light'}; LD_temp(13:24) = {'Dark'}; LD_temp(25:36) = {'Light'}; LD_temp(37:48) = {'Dark'}; 
+%     LD_binary = [ones(1,12) zeros(1,12) ones(1,12) zeros(1,12)]; 
+    LD_val = [LD_val, LD_temp]; 
+end
+
+
+NHE6_tbl = table(nominal(Sub_id), nominal(Gene_id), ordinal(Z_val), nominal(LD_val),wake_val, NREM_val, REM_val, 'VariableNames',{'Subject', 'Genotype', 'Ztime','Light_Dark', 'Wake', 'NREM', 'REM'}); 
+
+
+%%
+c_ord = linspecer(9);
+
+figure(1001)
+subplot(3,4,1:3)
+hold on
+rectangle('position', [0 0.1 12 100], 'facecolor',[c_ord(5,:), 0.3], 'edgecolor', [c_ord(5,:), 0]);
+rectangle('position', [12 0.1 12 100], 'facecolor',[0.2,0.2,0.2, 0.1], 'edgecolor', [.02 .02 .02 0]);
+rectangle('position', [24 0.1 12 100], 'facecolor',[c_ord(5,:), 0.3], 'edgecolor', [c_ord(5,:), 0]);
+rectangle('position', [36 0.1 12 100], 'facecolor',[0.2,0.2,0.2, 0.1], 'edgecolor', [.02 .02 .02 0]);
+ko_mean = []; wt_mean = [];
+for iSub = 1:length(Subjects)
+    interval = mode(diff(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.mins/60));  % get the minute interval from the time vector; 
+    shift_val = ceil((Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.clock_start/3600))*(60/interval); 
+
+    if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'ko')
+        this_val =circshift(Sub_scores.ko.(Subjects{iSub}).min_scores.WAKE, shift_val);
+        this_time = circshift(Sub_scores.ko.(Subjects{iSub}).min_scores.mins/3600, shift_val);
+        ko_mean = [ko_mean; this_val];
+    end
+    
+    if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'wt')
+        this_val =circshift(Sub_scores.wt.(Subjects{iSub}).min_scores.WAKE, shift_val);
+        this_time = circshift(Sub_scores.wt.(Subjects{iSub}).min_scores.mins/3600, shift_val);
+        wt_mean = [wt_mean; this_val];
+    end
+end
+% p(iSub+1) = plot(this_time, median(wt_mean)'*100,'-*', 'color','k', 'MarkerEdgeColor','k', 'linewidth',1.5 );
+% p(iSub+2) = plot(this_time, median(ko_mean)'*100,'-x', 'color',c_ord(1,:), 'MarkerEdgeColor',c_ord(1,:), 'linewidth', 1.5 );
+p(iSub+2) = bar(this_time, median(ko_mean)'*100, 'facecolor', 'k', 'facealpha',0.7);
+p(iSub+1) = bar(this_time, median(wt_mean)'*100, 'facecolor', c_ord(1,:),'facealpha', 1);
+ylabel('% wake');
+set(gca, 'xtick', 0:12:48, 'xticklabel', {'Z0', 'Z12', 'Z24', 'Z36', 'Z48'})
+ylim([0 100]); xlim([0 48]);
+legend([p(iSub+1) p(iSub+2)],{'wt', 'ko'}, 'box', 'off', 'orientation', 'horizontal');
+
+subplot(3,4,4)
+% text(.5, .9, 
+
+
+% same for NREM
+subplot(3,4,5:7)
+hold on
+rectangle('position', [0 0.1 12 100], 'facecolor',[c_ord(5,:), 0.3], 'edgecolor', [c_ord(5,:), 0]);
+rectangle('position', [12 0.1 12 100], 'facecolor',[0.2,0.2,0.2, 0.1], 'edgecolor', [.02 .02 .02 0]);
+rectangle('position', [24 0.1 12 100], 'facecolor',[c_ord(5,:), 0.3], 'edgecolor', [c_ord(5,:), 0]);
+rectangle('position', [36 0.1 12 100], 'facecolor',[0.2,0.2,0.2, 0.1], 'edgecolor', [.02 .02 .02 0]);
+ko_mean = []; wt_mean = [];
+for iSub = 1:length(Subjects)
+    interval = mode(diff(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.mins/60));  % get the minute interval from the time vector; 
+    shift_val = ceil((Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.clock_start/3600))*(60/interval); 
+
+    if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'ko')
+        this_val =circshift(Sub_scores.ko.(Subjects{iSub}).min_scores.NREM, shift_val);
+        this_time = circshift(Sub_scores.ko.(Subjects{iSub}).min_scores.mins/3600, shift_val);
+        ko_mean = [ko_mean; this_val];
+    end
+    
+    if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'wt')
+        this_val =circshift(Sub_scores.wt.(Subjects{iSub}).min_scores.NREM, shift_val);
+        this_time = circshift(Sub_scores.wt.(Subjects{iSub}).min_scores.mins/3600, shift_val);
+        wt_mean = [wt_mean; this_val];
+    end
+end
+% p(iSub+1) = plot(this_time, median(wt_mean)'*100,'-*', 'color','k', 'MarkerEdgeColor','k', 'linewidth',1.5 );
+% p(iSub+2) = plot(this_time, median(ko_mean)'*100,'-x', 'color',c_ord(3,:), 'MarkerEdgeColor',c_ord(3,:), 'linewidth', 1.5 );
+p(iSub+2) = bar(this_time, median(ko_mean)'*100, 'facecolor', 'k', 'facealpha',0.7);
+p(iSub+1) = bar(this_time, median(wt_mean)'*100, 'facecolor', c_ord(3,:),'facealpha', 1);
+ylabel('% NREM');
+set(gca, 'xtick', 0:12:48, 'xticklabel', {'Z0', 'Z12', 'Z24', 'Z36', 'Z48'})
+ylim([0 100]); xlim([0 48]);
+legend([p(iSub+1) p(iSub+2)],{'wt', 'ko'}, 'box', 'off', 'orientation', 'horizontal');
+
+
+subplot(3,4,9:11)
+hold on
+rectangle('position', [0 0.1 12 100], 'facecolor',[c_ord(5,:), 0.3], 'edgecolor', [c_ord(5,:), 0]);
+rectangle('position', [12 0.1 12 100], 'facecolor',[0.2,0.2,0.2, 0.1], 'edgecolor', [.02 .02 .02 0]);
+rectangle('position', [24 0.1 12 100], 'facecolor',[c_ord(5,:), 0.3], 'edgecolor', [c_ord(5,:), 0]);
+rectangle('position', [36 0.1 12 100], 'facecolor',[0.2,0.2,0.2, 0.1], 'edgecolor', [.02 .02 .02 0]);
+ko_mean = []; wt_mean = [];
+for iSub = 1:length(Subjects)
+    interval = mode(diff(Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.mins/60));  % get the minute interval from the time vector; 
+    shift_val = ceil((Sub_scores.(PARAMS.Subjects.(Subjects{iSub}).genotype).(Subjects{iSub}).min_scores.clock_start/3600))*(60/interval); 
+
+    if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'ko')
+        this_val =circshift(Sub_scores.ko.(Subjects{iSub}).min_scores.REM, shift_val);
+        this_time = circshift(Sub_scores.ko.(Subjects{iSub}).min_scores.mins/3600, shift_val);
+        ko_mean = [ko_mean; this_val];
+    end
+    
+    if contains(PARAMS.Subjects.(Subjects{iSub}).genotype, 'wt')
+        this_val =circshift(Sub_scores.wt.(Subjects{iSub}).min_scores.REM, shift_val);
+        this_time = circshift(Sub_scores.wt.(Subjects{iSub}).min_scores.mins/3600, shift_val);
+        wt_mean = [wt_mean; this_val];
+    end
+end
+% p(iSub+1) = plot(this_time, median(wt_mean)'*100,'-*', 'color','k', 'MarkerEdgeColor','k', 'linewidth',1.5 );
+% p(iSub+2) = plot(this_time, median(ko_mean)'*100,'-x', 'color',c_ord(2,:), 'MarkerEdgeColor',c_ord(2,:), 'linewidth', 1.5 );
+p(iSub+2) = bar(this_time, median(ko_mean)'*100, 'facecolor', 'k', 'facealpha',0.7);
+p(iSub+1) = bar(this_time, median(wt_mean)'*100, 'facecolor', c_ord(2,:),'facealpha', 1);
+ylabel('% REM');
+set(gca, 'xtick', 0:12:48, 'xticklabel', {'Z0', 'Z12', 'Z24', 'Z36', 'Z48'})
+ylim([0 40]); xlim([0 48]);
+legend([p(iSub+1) p(iSub+2)],{'wt', 'ko'}, 'box', 'off', 'orientation', 'horizontal');
+
+
+
+
+% subplot(5,4,12)
+% hold on
+% rectangle('position', [0, 0, 3, 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])
+% rectangle('position', [3, 0, 3, 100], 'facecolor',[0.2,0.2,0.2, 0.2], 'edgecolor', [.02 .02 .02 0])
+% 
+% % data = [NHE6_tbl.REM(NHE6_tbl.Genotype == 'wt' & NHE6_tbl.Light_Dark == 'Light')*100; NHE6_tbl.REM(NHE6_tbl.Genotype == 'ko' & NHE6_tbl.Light_Dark == 'Light')*100;...
+% % %     NaN(size(NHE6_tbl.Wake(NHE6_tbl.Genotype == 'ko'& NHE6_tbl.Light_Dark == 'Light'))); ...
+% %     NHE6_tbl.REM(NHE6_tbl.Genotype == 'wt' & NHE6_tbl.Light_Dark == 'Dark')*100; NHE6_tbl.REM(NHE6_tbl.Genotype == 'ko' & NHE6_tbl.Light_Dark == 'Dark')*100]; 
+% % % groups = [ones(1,length(data)), 2*ones(1,length(data)),  4*ones(1,length(data)), 5*ones(1,length(data))]; 
+% % boxplot(data', 'Notch','on', 'Positions', [1,2,4,5])
+% data = [reshape(circshift(wt_mean, ceil(this_time(1)),2), 1, numel(wt_mean)),reshape(circshift(ko_mean, ceil(this_time(1)),2), 1, numel(ko_mean))] ; 
+% groups = [repmat([ones(1,12) 3*ones(1,12)],1,2),repmat([ones(1,12) 3*ones(1,12)],1,2), repmat([2*ones(1,12) 4*ones(1,12)],1,2),repmat([2*ones(1,12) 4*ones(1,12)],1,2)]; % groups ([wtL1-12 wtL25-36] [koL1-12 koL25-36] [wtD1-12 wtD25-36] [koD1-12 koD25-36]
+% boxplot(data'*100, groups, 'Notch','on', 'Positions', [1,2,4,5])
+% % groups = [ones(1,12),2*ones(1,12)];
+% % boxplot(WAKE_out*100, groups);
+% set(gca, 'xticklabel', {'w/t', 'k/o','w/t', 'k/o'})
+% h = findobj(gca,'Tag','Box');
+% patch(get(h(1),'XData'),get(h(1),'YData'),c_ord(2,:),'FaceAlpha',.5);
+% patch(get(h(3),'XData'),get(h(3),'YData'),c_ord(2,:),'FaceAlpha',.5);
+% patch(get(h(2),'XData'),get(h(2),'YData'),'k','FaceAlpha',.5);
+% patch(get(h(4),'XData'),get(h(4),'YData'),'k','FaceAlpha',.5);
+% ylim([0 20])
+% 
 
 
 % day_idx = nearest_idx(day_secs,all_tvec);
