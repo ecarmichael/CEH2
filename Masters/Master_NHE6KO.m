@@ -203,13 +203,32 @@ save([PARAMS.inter_dir filesep Subjects{iSub} '_all_tvec.mat'], 'all_tvec', '-v7
 
 
 %% get the state block durations and transitions
+State_ids = {'Wake', 'NREM', 'REM'};
+[start_idx, end_idx, tran_states] = NH_extract_epochs(all_score);
+Fs = mode(diff(all_tvec));
+for iState = length(start_idx):-1:1
+    event_len.(State_ids{iState}) = round((end_idx{iState} - start_idx{iState}) * Fs);
+    fprintf('State <strong>%s</strong> mean = %0.2fs median = %0.0fs +/- %2.2fs\n', State_ids{iState}, mean(event_len.(State_ids{iState})),median(event_len.(State_ids{iState})), std(event_len.(State_ids{iState}))/sqrt(length(event_len.(State_ids{iState}))))
+end
 
-    [start_idx, end_idx, tran_states] = NH_extract_epochs(all_score);
-    Fs = mode(diff(all_tvec));
-    for iState = length(start_idx):-1:1
-       event_len{iState} = round((end_idx{iState} - start_idx{iState}) * Fs); 
-       fprintf('State <strong>%d</strong> mean = %0.2fs median = %0.0fs +/- %2.2fs\n', iState, mean(event_len{iState}),median(event_len{iState}), std(event_len{iState})/sqrt(length(event_len{iState})))
-    end
+% get number of transitions into an our of a state
+Transitions.S12 = sum(tran_states{1} == 12)./length(tran_states{1});
+Transitions.S13 = sum(tran_states{1} == 13)./length(tran_states{1});
+Transitions.S21 = sum(tran_states{2} == 21)./length(tran_states{2});
+Transitions.S23 = sum(tran_states{2} == 23)./length(tran_states{2});
+Transitions.S31 = sum(tran_states{3} == 31)./length(tran_states{3});
+Transitions.S32 = sum(tran_states{3} == 32)./length(tran_states{3});
+
+% put it all in a struct to save.
+events.tran_states = tran_states;
+events.event_len = event_len;
+events.start_idx = start_idx;
+events.end_idx = end_idx;
+events.State_ids = State_ids;
+events.Transitions = Transitions;
+events.Sub = Subjects{iSub};
+
+save([PARAMS.inter_dir filesep Subjects{iSub} '_events.mat'], 'events', '-v7.3');
 
 %% break into 24 periods
 % day_secs = (ceil(clock_start/3600))*3600:(24*3600):all_tvec(end);

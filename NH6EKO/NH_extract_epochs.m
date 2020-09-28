@@ -51,7 +51,8 @@ for iVal = length(uVals):-1:1
     % corrections
     if start_idx{iVal}(end) > end_idx{iVal}(end) % correct for cases where it ends with the desired value.
         end_idx{iVal} = [end_idx{iVal}; length(data)];
-        tran_val{iVal} = data(end_idx{iVal}(1:end-1)); %transition values
+        tran_val{iVal} = data(end_idx{iVal}(1:end-1)+1); % drop last one and 
+%         tran_val{iVal} = data(end_idx{iVal}+1); %transition values
     else
         tran_val{iVal} = data(end_idx{iVal}+1); %transition values
     end
