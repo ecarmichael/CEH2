@@ -2,6 +2,12 @@ function h = SetFigure(cfg_in, h)
 %  SetFigure will set the properties of figre "h" to the standards for EC
 %  figure.
 %          Inputs:
+%           - cfg_in: [struct]  configuration parameters.  defaults:
+%                 cfg_def.ft_size = 18;
+%                 cfg_def.font = 'helvetica';
+%                 cfg_def.grid = 'off';
+%                 cfg_def.resize = 1;
+%
 %           - h : figure handle
 %          Outputs:
 %           - h : figure handle

@@ -37,6 +37,8 @@ else
     PARAMS.fig_dir = 'J:\Williams_Lab\NHE6KO\Figs'; % where to store figures.  Best to have subfolders and use dates.
     PARAMS.code_base_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; % where the codebase repo can be found
     PARAMS.code_CEH2_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2'; % where the multisite repo can be found
+        PARAMS.ft_code_dir = 'C:\Users\ecarm\Documents\GitHub\fieldtrip'; % FieldTrip toolbbox (used for spectrogram visualization)
+
 end
 
 rng(11,'twister') % for reproducibility
@@ -85,7 +87,7 @@ PARAMS.Subjects.M13.EMG_Chan = 'CSC32.ncs';  % best EMG channel.
 PARAMS.Subjects.M13.genotype = 'ko';
 
 Subjects = fieldnames(PARAMS.Subjects);
-
+State_ids = {'Wake', 'NREM', 'REM'};
 %% load and append data across multiple recording blocks.  To prevent buffer errors and corrupted data the 72hr recording period was broken down into several blocks of 8-11 hours (30hrs for mouse #05).
 
 
@@ -799,20 +801,241 @@ set(gcf, 'position', [pos(1) pos(2)*.4 pos(3)*1.4 pos(4)*1.4]);
 saveas(gcf, [PARAMS.inter_dir filesep 'All_subject_summary.png']);
 saveas(gcf, [PARAMS.inter_dir filesep 'All_subject_summary.fig']);
 
+
+%% just cross subject PSDs for comparison
+F_wake = Sub_scores.(PARAMS.Subjects.(Subjects{1}).genotype).(Subjects{1}).hour_scores.PSD.WAKE_F; 
+F_nrem = Sub_scores.(PARAMS.Subjects.(Subjects{1}).genotype).(Subjects{1}).hour_scores.PSD.NREM_F; 
+F_rem = Sub_scores.(PARAMS.Subjects.(Subjects{1}).genotype).(Subjects{1}).hour_scores.PSD.REM_F; 
+
+figure(200)
+subplot(3,1,1)
+hold on
+% plot(F_wake, median(wt_mean_wake_psd,2), 'color', [0.8 0.8 0.8], 'linewidth', 2);
+% errorb(Sub_scores.(PARAMS.Subjects.(Subjects{1}).genotype).(Subjects{1}).hour_scores.PSD.REM_F, median(ko_mean_REM_psd,2), std(ko_mean_REM_psd,0,2)/sqrt(length(ko_mean_REM_psd))); 
+h1 = shadedErrorBar(F_wake, median(wt_mean_wake_psd,2), std(wt_mean_wake_psd,0,2)/sqrt(length(wt_mean_wake_psd)));
+h1.mainLine.Color = [0.6 .6 .6];
+h1.mainLine.LineWidth =2;
+h1.mainLine.LineStyle = '--'; 
+h1.patch.FaceColor = [0.6 .6 .6];
+h1.patch.EdgeColor = [0.6 .6 .6];
+h1.patch.FaceAlpha = .2;
+h1.patch.EdgeAlpha = .2;
+xlim([0 80])
+% ylabel('normalized power')
+% xlabel('frequency (Hz)')
+set(gca, 'xtick', 0:5:80);
+y_val = ylim;
+text(11, y_val(2)*.9, 'w/t wake', 'color', [0.6 0.6 0.6], 'fontweight', 'bold')
+% legend({'REM'}, 'box', 'off','FontSize',10)
+
+
+% plot(F_wake, median(ko_mean_wake_psd,2), 'color', c_ord(1,:), 'linewidth', 2);
+% errorb(Sub_scores.(PARAMS.Subjects.(Subjects{1}).genotype).(Subjects{1}).hour_scores.PSD.REM_F, median(ko_mean_REM_psd,2), std(ko_mean_REM_psd,0,2)/sqrt(length(ko_mean_REM_psd))); 
+h1 = shadedErrorBar(F_wake, median(ko_mean_wake_psd,2), std(ko_mean_wake_psd,0,2)/sqrt(length(ko_mean_wake_psd)));
+h1.mainLine.Color = c_ord(1, :);
+h1.mainLine.LineWidth =2;
+h1.patch.FaceColor = c_ord(1, :);
+h1.patch.EdgeColor = c_ord(1, :);
+h1.patch.FaceAlpha = .2;
+h1.patch.EdgeAlpha = .2;
+xlim([0 80])
+% ylabel('normalized power')
+% xlabel('frequency (Hz)')
+set(gca, 'xtick', 0:5:80);
+y_val = ylim;
+text(11, y_val(2)*.8, 'k/o wake', 'color', c_ord(1,:), 'fontweight', 'bold')
+% legend({'REM'}, 'box', 'off','FontSize',10)
+og = gca; 
+
+
+% same but with zoomed 
+set(gca, 'xtick', []);
+ axes('Parent', gcf, 'Position', [0.5 0.8 .4 .1]);
+hold on
+% plot(F_wake, median(wt_mean_wake_psd,2), 'color', c_ord(1,:), 'linewidth', 1);
+h1 = shadedErrorBar(F_wake, median(wt_mean_wake_psd,2), std(wt_mean_wake_psd,0,2)/sqrt(length(wt_mean_wake_psd)));
+h1.mainLine.Color = [0.6 .6 .6];
+h1.mainLine.LineWidth =2;
+h1.mainLine.LineStyle = '--';
+h1.patch.FaceColor = [0.6 .6 .6];
+h1.patch.EdgeColor = [0.6 .6 .6];
+h1.patch.FaceAlpha = .2;
+h1.patch.EdgeAlpha = .2;
+xlim([20 65])
+% ylabel('normalized power')
+% xlabel('frequency (Hz)')
+set(gca, 'xtick', 20:5:65);
+
+% % plot(F_wake, median(ko_mean_wake_psd,2), 'color', c_ord(1,:), 'linewidth', 1);
+h1 = shadedErrorBar(F_wake, median(ko_mean_wake_psd,2), std(ko_mean_wake_psd,0,2)/sqrt(length(ko_mean_wake_psd)));
+h1.mainLine.Color = c_ord(1, :);
+h1.mainLine.LineWidth =2;
+h1.patch.FaceColor = c_ord(1, :);
+h1.patch.EdgeColor = c_ord(1, :);
+h1.patch.FaceAlpha = .2;
+h1.patch.EdgeAlpha = .2;
+xlim([20 65])
+% ylabel('normalized power')
+% xlabel('frequency (Hz)')
+set(gca, 'xtick', 20:5:65);
+set(og, 'xtick', 0:5:80);
+
+% NREM
+subplot(3,1,2)
+hold on
+% plot(F_wake, median(wt_mean_wake_psd,2), 'color', [0.8 0.8 0.8], 'linewidth', 2);
+% errorb(Sub_scores.(PARAMS.Subjects.(Subjects{1}).genotype).(Subjects{1}).hour_scores.PSD.REM_F, median(ko_mean_REM_psd,2), std(ko_mean_REM_psd,0,2)/sqrt(length(ko_mean_REM_psd))); 
+h1 = shadedErrorBar(F_nrem, median(wt_mean_NREM_psd,2), std(wt_mean_NREM_psd,0,2)/sqrt(length(wt_mean_NREM_psd)));
+h1.mainLine.Color = [0.6 .6 .6];
+h1.mainLine.LineWidth =2;
+h1.mainLine.LineStyle = '--'; 
+h1.patch.FaceColor = [0.6 .6 .6];
+h1.patch.EdgeColor = [0.6 .6 .6];
+h1.patch.FaceAlpha = .2;
+h1.patch.EdgeAlpha = .2;
+xlim([0 80])
+% ylabel('normalized power')
+% xlabel('frequency (Hz)')
+set(gca, 'xtick', 0:5:80);
+y_val = ylim;
+text(11, y_val(2)*.9, 'w/t NREM', 'color', [0.6 0.6 0.6], 'fontweight', 'bold')
+% legend({'REM'}, 'box', 'off','FontSize',10)
+
+
+% plot(F_wake, median(ko_mean_wake_psd,2), 'color', c_ord(1,:), 'linewidth', 2);
+% errorb(Sub_scores.(PARAMS.Subjects.(Subjects{1}).genotype).(Subjects{1}).hour_scores.PSD.REM_F, median(ko_mean_REM_psd,2), std(ko_mean_REM_psd,0,2)/sqrt(length(ko_mean_REM_psd))); 
+h1 = shadedErrorBar(F_nrem, median(ko_mean_NREM_psd,2), std(ko_mean_NREM_psd,0,2)/sqrt(length(ko_mean_NREM_psd)));
+h1.mainLine.Color = c_ord(3, :);
+h1.mainLine.LineWidth =2;
+h1.patch.FaceColor = c_ord(3, :);
+h1.patch.EdgeColor = c_ord(3, :);
+h1.patch.FaceAlpha = .2;
+h1.patch.EdgeAlpha = .2;
+xlim([0 80])
+% ylabel('normalized power')
+% xlabel('frequency (Hz)')
+set(gca, 'xtick', 0:5:80);
+y_val = ylim;
+text(11, y_val(2)*.8, 'k/o NREM', 'color', c_ord(3,:), 'fontweight', 'bold')
+% legend({'REM'}, 'box', 'off','FontSize',10)
+og = gca; 
+
+
+% same but with zoomed 
+set(gca, 'xtick', []);
+ axes('Parent', gcf, 'Position', [0.5 0.5 .4 .1]);
+hold on
+% plot(F_wake, median(wt_mean_wake_psd,2), 'color', c_ord(1,:), 'linewidth', 1);
+h1 = shadedErrorBar(F_nrem, median(wt_mean_NREM_psd,2), std(wt_mean_NREM_psd,0,2)/sqrt(length(wt_mean_NREM_psd)));
+h1.mainLine.Color = [0.6 .6 .6];
+h1.mainLine.LineWidth =2;
+h1.mainLine.LineStyle = '--';
+h1.patch.FaceColor = [0.6 .6 .6];
+h1.patch.EdgeColor = [0.6 .6 .6];
+h1.patch.FaceAlpha = .2;
+h1.patch.EdgeAlpha = .2;
+xlim([20 65])
+% ylabel('normalized power')
+% xlabel('frequency (Hz)')
+set(gca, 'xtick', 20:5:65);
+
+% % plot(F_wake, median(ko_mean_wake_psd,2), 'color', c_ord(1,:), 'linewidth', 1);
+h1 = shadedErrorBar(F_nrem, median(ko_mean_NREM_psd,2), std(ko_mean_NREM_psd,0,2)/sqrt(length(ko_mean_NREM_psd)));
+h1.mainLine.Color = c_ord(3, :);
+h1.mainLine.LineWidth =2;
+h1.patch.FaceColor = c_ord(3, :);
+h1.patch.EdgeColor = c_ord(3, :);
+h1.patch.FaceAlpha = .2;
+h1.patch.EdgeAlpha = .2;
+xlim([20 65])
+% ylabel('normalized power')
+% xlabel('frequency (Hz)')
+set(gca, 'xtick', 20:5:65);
+set(og, 'xtick', 0:5:80);
+
+% REM
+subplot(3,1,3)
+hold on
+% plot(F_wake, median(wt_mean_wake_psd,2), 'color', [0.8 0.8 0.8], 'linewidth', 2);
+% errorb(Sub_scores.(PARAMS.Subjects.(Subjects{1}).genotype).(Subjects{1}).hour_scores.PSD.REM_F, median(ko_mean_REM_psd,2), std(ko_mean_REM_psd,0,2)/sqrt(length(ko_mean_REM_psd))); 
+h1 = shadedErrorBar(F_rem, median(wt_mean_REM_psd,2), std(wt_mean_REM_psd,0,2)/sqrt(length(wt_mean_REM_psd)));
+h1.mainLine.Color = [0.6 .6 .6];
+h1.mainLine.LineWidth =2;
+h1.mainLine.LineStyle = '--'; 
+h1.patch.FaceColor = [0.6 .6 .6];
+h1.patch.EdgeColor = [0.6 .6 .6];
+h1.patch.FaceAlpha = .2;
+h1.patch.EdgeAlpha = .2;
+xlim([0 80])
+% ylabel('normalized power')
+% xlabel('frequency (Hz)')
+set(gca, 'xtick', 0:5:80);
+y_val = ylim;
+text(11, y_val(2)*.9, 'w/t REM', 'color', [0.6 0.6 0.6], 'fontweight', 'bold')
+
+
+h1 = shadedErrorBar(F_rem, median(ko_mean_REM_psd,2), std(ko_mean_REM_psd,0,2)/sqrt(length(ko_mean_REM_psd)));
+h1.mainLine.Color = c_ord(2, :);
+h1.mainLine.LineWidth =2;
+h1.patch.FaceColor = c_ord(2, :);
+h1.patch.EdgeColor = c_ord(2, :);
+h1.patch.FaceAlpha = .2;
+h1.patch.EdgeAlpha = .2;
+xlim([0 80])
+ylabel('normalized power')
+xlabel('frequency (Hz)')
+set(gca, 'xtick', 0:5:80);
+y_val = ylim;
+text(11, y_val(2)*.8, 'k/o REM', 'color', c_ord(2,:), 'fontweight', 'bold')
+% legend({'REM'}, 'box', 'off','FontSize',10)
+og = gca; 
+
+
+% same but with zoomed 
+set(gca, 'xtick', []);
+ axes('Parent', gcf, 'Position', [0.5 0.2 .4 .1]);
+hold on
+% plot(F_wake, median(wt_mean_wake_psd,2), 'color', c_ord(1,:), 'linewidth', 1);
+h1 = shadedErrorBar(F_rem, median(wt_mean_REM_psd,2), std(wt_mean_REM_psd,0,2)/sqrt(length(wt_mean_REM_psd)));
+h1.mainLine.Color = [0.6 .6 .6];
+h1.mainLine.LineWidth =2;
+h1.mainLine.LineStyle = '--';
+h1.patch.FaceColor = [0.6 .6 .6];
+h1.patch.EdgeColor = [0.6 .6 .6];
+h1.patch.FaceAlpha = .2;
+h1.patch.EdgeAlpha = .2;
+xlim([20 65])
+% ylabel('normalized power')
+% xlabel('frequency (Hz)')
+set(gca, 'xtick', 20:5:65);
+
+% % plot(F_wake, median(ko_mean_wake_psd,2), 'color', c_ord(1,:), 'linewidth', 1);
+h1 = shadedErrorBar(F_rem, median(ko_mean_REM_psd,2), std(ko_mean_REM_psd,0,2)/sqrt(length(ko_mean_REM_psd)));
+h1.mainLine.Color = c_ord(2, :);
+h1.mainLine.LineWidth =2;
+h1.patch.FaceColor = c_ord(2, :);
+h1.patch.EdgeColor = c_ord(2, :);
+h1.patch.FaceAlpha = .2;
+h1.patch.EdgeAlpha = .2;
+xlim([20 65])
+% ylabel('normalized power')
+% xlabel('frequency (Hz)')
+set(gca, 'xtick', 20:5:65);
+set(og, 'xtick', 0:5:80);
 %%  Get the epoch stats across subjects
-
-
-for iSub = 1:length(Subjects)
-    fprintf('Loading Subject: %s...\n', Subjects{iSub})
-    load([PARAMS.inter_dir filesep Subjects{iSub} '_sleep_data.mat'])
-    score_out = []; 
-    for iS =1:length(sleep_score)
-        score_out = [score_out, sleep_score{iS}.score];
-    end
-    [start_idx, end_idx, tran_val] = NH_extract_epochs(cat(1,score_out{:})); 
-    
-    
-end
+% 
+% 
+% for iSub = 1:length(Subjects)
+%     fprintf('Loading Subject: %s...\n', Subjects{iSub})
+%     load([PARAMS.inter_dir filesep Subjects{iSub} '_sleep_data.mat'])
+%     score_out = []; 
+%     for iS =1:length(sleep_score)
+%         score_out = [score_out, sleep_score{iS}.score];
+%     end
+%     [start_idx, end_idx, tran_val] = NH_extract_epochs(cat(1,score_out{:})); 
+%     
+%     
+% end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% same thing but in minutes  and add in event duration, transition, rate values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1074,8 +1297,384 @@ ylim([0 40]); xlim([0 48]);
 legend([p(iSub+1) p(iSub+2)],{'wt', 'ko'}, 'box', 'off', 'orientation', 'horizontal');
 
 
+%% new plot with epoch lengths
+
+for iSub = 1:length(Subjects)
+    % load the data for each subject
+    all_epochs.(Subjects{iSub}) = load([PARAMS.inter_dir filesep Subjects{iSub} '_events.mat']);
+end
+
+% get the max value (just used for plotting; 
+for iSub = 1:length(Subjects)
+    for iState = 1:length(State_ids)
+        all_min_max.(State_ids{iState})(iSub,1) =min(all_epochs.(Subjects{iSub}).events.event_len.(State_ids{iState}));
+        all_min_max.(State_ids{iState})(iSub,2) =max(all_epochs.(Subjects{iSub}).events.event_len.(State_ids{iState}));
+        fprintf('%s  min = %d  max = %d\n', State_ids{iState},all_min_max.(State_ids{iState})(iSub,1),all_min_max.(State_ids{iState})(iSub,2))
+    end
+end
+
+%%
+c_ord = linspecer(9); 
+figure(1005)
+% wake block
+subplot(20,2,[1 3 5]); 
+histogram((all_epochs.M02.events.event_len.Wake),10:10:all_min_max.Wake(iSub,2),'facecolor', c_ord(1,:)); xlim([10 (all_min_max.Wake(iSub,2))]);
+title('Wake')
+legend('M02- wt', 'box','off');  
+set(gca, 'xtick', []);
+ axes('Parent', gcf, 'Position', [.3 .85 .15 .05]);
+histogram((all_epochs.M02.events.event_len.Wake),10:10:600,'facecolor', c_ord(1,:)); xlim([10 600]);
+y_lim = ylim; 
+str_val = ['Median: ' num2str(median(all_epochs.M02.events.event_len.Wake)) ' +/- ' num2str(std(all_epochs.M02.events.event_len.Wake)/sqrt(length(all_epochs.M02.events.event_len.Wake)),2)];
+text(all_min_max.NREM(iSub,2)*.3, y_lim(2)*.7, str_val)
+text(all_min_max.NREM(iSub,2)*.3, y_lim(2)*.4, [num2str(length(all_epochs.M02.events.event_len.Wake)) ' events'])
+
+subplot(20,2,[7 9 11])
+histogram((all_epochs.M05.events.event_len.Wake),10:10:all_min_max.Wake(iSub,2),'facecolor', c_ord(4,:)); xlim([10 (all_min_max.Wake(iSub,2))]);
+legend('M05- wt','box','off');  
+axes('Parent', gcf, 'Position', [.3 .725 .15 .05]);
+histogram((all_epochs.M05.events.event_len.Wake),10:10:600,'facecolor', c_ord(4,:)); xlim([10 600]);
+y_lim = ylim; 
+str_val = ['Median: ' num2str(median(all_epochs.M05.events.event_len.Wake)) ' +/- ' num2str(std(all_epochs.M05.events.event_len.Wake)/sqrt(length(all_epochs.M05.events.event_len.Wake)),2)];
+text(all_min_max.NREM(iSub,2)*.3, y_lim(2)*.7, str_val)
+text(all_min_max.NREM(iSub,2)*.3, y_lim(2)*.4, [num2str(length(all_epochs.M05.events.event_len.Wake)) ' events'])
 
 
+subplot(20,2,[2 4 6])
+histogram((all_epochs.M12.events.event_len.Wake),10:10:all_min_max.Wake(iSub,2),'facecolor', c_ord(2,:)); xlim([10 (all_min_max.Wake(iSub,2))]);
+legend('M12- ko','box','off'); 
+set(gca, 'xtick', []);
+axes('Parent', gcf, 'Position', [.75 .85 .15 .05]);
+histogram((all_epochs.M12.events.event_len.Wake),10:10:600,'facecolor', c_ord(2,:)); xlim([10 600]);
+y_lim = ylim; 
+str_val = ['Median: ' num2str(median(all_epochs.M12.events.event_len.Wake)) ' +/- ' num2str(std(all_epochs.M12.events.event_len.Wake)/sqrt(length(all_epochs.M12.events.event_len.Wake)),2)];
+text(all_min_max.NREM(iSub,2)*.3, y_lim(2)*.7, str_val)
+text(all_min_max.NREM(iSub,2)*.3, y_lim(2)*.4, [num2str(length(all_epochs.M12.events.event_len.Wake)) ' events'])
+
+
+
+subplot(20,2,[8 10 12])
+histogram((all_epochs.M13.events.event_len.Wake),10:10:all_min_max.Wake(iSub,2),'facecolor', c_ord(3,:)); xlim([10 (all_min_max.Wake(iSub,2))]);
+legend('M13-ko','box','off'); 
+axes('Parent', gcf, 'Position', [.75 .725 .15 .05]);
+histogram((all_epochs.M13.events.event_len.Wake),10:10:600,'facecolor', c_ord(3,:)); xlim([10 600]);
+y_lim = ylim; 
+str_val = ['Median: ' num2str(median(all_epochs.M13.events.event_len.Wake)) ' +/- ' num2str(std(all_epochs.M13.events.event_len.Wake)/sqrt(length(all_epochs.M13.events.event_len.Wake)),2)];
+text(all_min_max.NREM(iSub,2)*.3, y_lim(2)*.7, str_val)
+text(all_min_max.NREM(iSub,2)*.3, y_lim(2)*.4, [num2str(length(all_epochs.M13.events.event_len.Wake)) ' events'])
+
+% NREM
+
+subplot(20,2,15:2:19)
+histogram((all_epochs.M02.events.event_len.NREM),10:10:all_min_max.NREM(iSub,2),'facecolor', c_ord(1,:)); xlim([10 (all_min_max.NREM(iSub,2))]);
+title('NREM')
+set(gca, 'xtick', []);
+legend('M02-wt','box','off'); y_lim = ylim; 
+str_val = ['Median: ' num2str(median(all_epochs.M02.events.event_len.NREM)) ' +/- ' num2str(std(all_epochs.M02.events.event_len.NREM)/sqrt(length(all_epochs.M02.events.event_len.NREM)),2)];
+text(all_min_max.NREM(iSub,2)*.6, y_lim(2)*.7, str_val)
+text(all_min_max.NREM(iSub,2)*.6, y_lim(2)*.5, [num2str(length(all_epochs.M02.events.event_len.NREM)) ' events'])
+
+subplot(20,2,21:2:25)
+histogram((all_epochs.M05.events.event_len.NREM),10:10:all_min_max.NREM(iSub,2),'facecolor', c_ord(4,:)); xlim([10 (all_min_max.NREM(iSub,2))]);
+legend('M05-wt','box','off'); y_lim = ylim; 
+str_val = ['Median: ' num2str(median(all_epochs.M05.events.event_len.NREM)) ' +/- ' num2str(std(all_epochs.M05.events.event_len.NREM)/sqrt(length(all_epochs.M05.events.event_len.NREM)),2)];
+text(all_min_max.NREM(iSub,2)*.6, y_lim(2)*.7, str_val)
+text(all_min_max.NREM(iSub,2)*.6, y_lim(2)*.5, [num2str(length(all_epochs.M05.events.event_len.NREM)) ' events'])
+
+
+subplot(20,2,16:2:20)
+histogram((all_epochs.M12.events.event_len.NREM),10:10:all_min_max.NREM(iSub,2),'facecolor', c_ord(2,:)); xlim([10 (all_min_max.NREM(iSub,2))]);
+legend('M12-ko','box','off'); 
+set(gca, 'xtick', []);
+y_lim = ylim; 
+str_val = ['Median: ' num2str(median(all_epochs.M12.events.event_len.NREM)) ' +/- ' num2str(std(all_epochs.M12.events.event_len.NREM)/sqrt(length(all_epochs.M12.events.event_len.NREM)),2)];
+text(all_min_max.NREM(iSub,2)*.6, y_lim(2)*.7, str_val)
+text(all_min_max.NREM(iSub,2)*.6, y_lim(2)*.5, [num2str(length(all_epochs.M12.events.event_len.NREM)) ' events'])
+
+subplot(20,2,22:2:26)
+histogram((all_epochs.M13.events.event_len.NREM),10:10:all_min_max.NREM(iSub,2),'facecolor', c_ord(3,:)); xlim([10 (all_min_max.NREM(iSub,2))]);
+legend('M13-ko','box','off'); y_lim = ylim; 
+str_val = ['Median: ' num2str(median(all_epochs.M13.events.event_len.NREM)) ' +/- ' num2str(std(all_epochs.M13.events.event_len.NREM)/sqrt(length(all_epochs.M13.events.event_len.NREM)),2)];
+text(all_min_max.NREM(iSub,2)*.6, y_lim(2)*.7, str_val)
+text(all_min_max.NREM(iSub,2)*.6, y_lim(2)*.5, [num2str(length(all_epochs.M13.events.event_len.NREM)) ' events'])
+
+
+% REM
+subplot(20,2,29:2:33)
+histogram((all_epochs.M02.events.event_len.REM),10:10:all_min_max.REM(iSub,2),'facecolor', c_ord(1,:)); xlim([10 (all_min_max.REM(iSub,2))]);
+title('REM')
+set(gca, 'xtick', []);
+legend('M02-wt','box','off'); y_lim = ylim;
+str_val = ['Median: ' num2str(median(all_epochs.M02.events.event_len.REM)) ' +/- ' num2str(std(all_epochs.M02.events.event_len.REM)/sqrt(length(all_epochs.M02.events.event_len.REM)),2)];
+text(all_min_max.REM(iSub,2)*.6, y_lim(2)*.7, str_val)
+text(all_min_max.REM(iSub,2)*.6, y_lim(2)*.5, [num2str(length(all_epochs.M02.events.event_len.REM)) ' events'])
+
+subplot(20,2,35:2:39)
+histogram((all_epochs.M05.events.event_len.REM),10:10:all_min_max.REM(iSub,2),'facecolor', c_ord(4,:)); xlim([10 (all_min_max.REM(iSub,2))]);
+xlabel('duration (s)'); ylabel('event count');
+% set(gca, 'xtick', []);
+legend('M05-wt','box','off'); y_lim = ylim;
+str_val = ['Median: ' num2str(median(all_epochs.M05.events.event_len.REM)) ' +/- ' num2str(std(all_epochs.M05.events.event_len.REM)/sqrt(length(all_epochs.M05.events.event_len.REM)),2)];
+text(all_min_max.REM(iSub,2)*.6, y_lim(2)*.7, str_val)
+text(all_min_max.REM(iSub,2)*.6, y_lim(2)*.5, [num2str(length(all_epochs.M05.events.event_len.REM)) ' events'])
+
+subplot(20,2,30:2:34)
+histogram((all_epochs.M12.events.event_len.REM),10:10:all_min_max.REM(iSub,2),'facecolor', c_ord(2,:)); xlim([10 (all_min_max.REM(iSub,2))]);
+legend('M12-ko','box','off'); y_lim = ylim;
+set(gca, 'xtick', []);
+str_val = ['Median: ' num2str(median(all_epochs.M12.events.event_len.REM)) ' +/- ' num2str(std(all_epochs.M12.events.event_len.REM)/sqrt(length(all_epochs.M12.events.event_len.REM)),2)];
+text(all_min_max.REM(iSub,2)*.6, y_lim(2)*.7, str_val)
+text(all_min_max.REM(iSub,2)*.6, y_lim(2)*.5, [num2str(length(all_epochs.M12.events.event_len.REM)) ' events'])
+
+subplot(20,2,36:2:40)
+histogram((all_epochs.M13.events.event_len.REM),10:10:all_min_max.REM(iSub,2),'facecolor', c_ord(3,:)); xlim([10 (all_min_max.REM(iSub,2))]);
+legend('M13-ko','box','off'); y_lim = ylim;
+str_val = ['Median: ' num2str(median(all_epochs.M13.events.event_len.REM)) ' +/- ' num2str(std(all_epochs.M13.events.event_len.REM)/sqrt(length(all_epochs.M13.events.event_len.REM)),2)];
+text(all_min_max.REM(iSub,2)*.6, y_lim(2)*.7, str_val)
+text(all_min_max.REM(iSub,2)*.6, y_lim(2)*.5, [num2str(length(all_epochs.M13.events.event_len.REM)) ' events'])
+
+%%  Find SWD and SWR events in the SWS times;
+for iSub = 1:length(Subjects)
+
+    all_SWS = all_data;
+    all_SWS(all_score ~= 2) = [];
+    
+    all_SWS_tvec = all_tvec;
+    all_SWS_tvec(all_score ~=2) = [];
+    
+    this_csc = tsd(all_SWS_tvec, all_SWS);
+    this_csc.cfg.hdr{1}.SamplingFrequency = 2000; 
+    this_csc.label{1} ='LFP';
+    % set up detection:  
+     cfg_swd = [];
+        cfg_swd.check = 0; % plot checks.
+        % filters
+        cfg_swd.filt.type = 'cheby1'; %Cheby1 is sharper than butter
+        cfg_swd.filt.f  = [220 800]; % based on EV suggestion
+        cfg_swd.filt.order = 4; %type filter order (fine for this f range)
+        cfg_swd.filt.display_filter = 0; % use this to see the fvtool
+        
+        % detection
+        cfg_swd.threshold = 6;% in sd
+        cfg_swd.method = 'zscore';
+        cfg_swd.min_len = 0.005;
+        cfg_swd.merge_thr = 0.01;
+        % restrictions
+        cfg_swd.max_len = 0.05;
+%         cfg_swd.nCycles = 4; 
+            cfg_swr.nCycles = 5; % number of cycles
+        cfg_swr.nCycles_operation = '=<'; % number of cycles
+cfg_swr.nan_idx = find(all_score ==2); 
+        
+        SWD_evts = MS_get_LFP_events_sandbox(cfg_swd, this_csc);
+               
+        SWD_center = IVcenters(SWD_evts);
+
+        close all
+        cfg_plot.display = 'tsd';
+        PlotTSDfromIV(cfg_plot, SWD_evts, this_csc)
+        
+        % plot a subset
+        temp = SWD_evts; 
+        Subset = round(MS_randn_range(1, 100, 1, length(temp.tstart))); 
+        temp.tstart = temp.tstart(Subset);
+        temp.tend = temp.tend(Subset);
+                cfg_plot.display = 'iv';
+        PlotTSDfromIV(cfg_plot, temp, this_csc)
+        %                 saveas(gcf, 'SWD_evts.fig');
+
+%         SWD_idx = TSD_getidx2(this_csc,SWD_evts); % if error, try TSD_getidx (slower)
+        
+        %% make a Event triggered average;
+        EtA = NaN(length(SWD_center), 401); 
+        for iEvt =length(SWD_center):-1:1
+            center_idx = nearest_idx3(SWD_center(iEvt), this_csc.tvec);
+
+            EtA(iEvt,:) = this_csc.data(center_idx-200:center_idx+200);
+            
+        end
+        figure(100)
+        subplot(2,2,1)
+        hold on
+        plot(-0.100:1/2000:0.100, nanmedian(EtA))
+        SEM = std(EtA)/sqrt(length(EtA)); 
+        plot(-0.100:1/2000:0.100, nanmedian(EtA) +std(EtA), '--r')
+        plot(-0.100:1/2000:0.100, nanmedian(EtA) -std(EtA), '--r')
+        
+            addpath(PARAMS.ft_code_dir);
+        
+        ft_defaults
+        %
+        % fc = {'CSC7.ncs'};
+        % data = ft_read_neuralynx_interp(fc); used to updae TSDtoFT to give
+        % correct formating. Works as MS_TSDtoFT.
+        
+        % convert data to ft format and turn into trials.
+        data_ft = MS_TSDtoFT([], this_csc); % convert to ft format.
+        data_ft.fsample = 1/mode(diff(data_ft.time{1}));  % fix for SWS segment concatenation
+        data_ft.hdr.Fs = 2000; 
+        
+        cfg_trl = [];
+        cfg_trl.t = cat(1,SWD_center);
+        cfg_trl.t = cfg_trl.t - data_ft.hdr.FirstTimeStamp;
+        cfg_trl.twin = [-1 1];
+        cfg_trl.hdr = data_ft.hdr;
+        
+        trl = ft_maketrl(cfg_trl);
+        
+        cfg = [];
+        cfg.trl = trl;
+        data_trl = ft_redefinetrial(cfg,data_ft);
+        
+        cfg              = []; % start with empty cfg
+        cfg.trials       = 1:800; 
+        cfg.output       = 'pow';
+        cfg.channel      = data_ft.label{1};
+        cfg.method       = 'wavelet';%'mtmconvol';
+        cfg.taper        = 'hanning';
+        cfg.foi          = 100:2.5:300; % frequencies of interest
+        cfg.t_ftimwin    = ones(size(cfg.foi)).*0.05;%20./cfg.foi;  % window size: fixed at 0.5s
+        cfg.toi          = -.5:0.0025:0.5; % times of interest
+        cfg.pad          = 'nextpow2'; % recommened by FT to make FFT more efficient.
+        
+        TFR = ft_freqanalysis(cfg, data_trl);
+        
+        % track config for plotting.
+        freq_params_str = sprintf('Spec using %0.0d swrs. Method: %s, Taper: %s', length(trl),cfg.method, cfg.taper);
+        figure(100)
+        subplot(2,2,2)
+        cfg = [];
+        cfg.channel      = data_ft.label{1};
+        cfg.baseline     = [-1 -.01];
+        cfg.baselinetype = 'relative';
+        cfg.title = freq_params_str;
+        ft_singleplotTFR(cfg, TFR);
+        
+% save
+
+%% SWR 
+   cfg_swr = [];
+        cfg_swr.check = 0; % plot checks.
+        cfg_swr.filt.type = 'butter'; %Cheby1 is sharper than butter
+        cfg_swr.filt.f  = [120 250]; % broad, could use 150-200?
+        cfg_swr.filt.order = 4; %type filter order (fine for this f range)
+        cfg_swr.filt.display_filter = 0; % use this to see the fvtool
+        
+        % artifact removal (for SWDs that got away)
+        %                 cfg_swr.artif_det.threshold = 2.5;
+        %                 cfg_swr.artif_det.method = 'zscore';
+        %                 cfg_swr.artif_det.rm_len = 0.25;
+        %                 cfg_swr.artif_det.dcn = '>';
+        
+        % smoothing
+        cfg_swr.kernel.samples = this_csc.cfg.hdr{1}.SamplingFrequency/100;
+        cfg_swr.kernel.sd = this_csc.cfg.hdr{1}.SamplingFrequency/100;
+        
+        % detection
+        cfg_swr.threshold = 2.5;% in sd
+        cfg_swr.method = 'zscore';
+        cfg_swr.min_len = 0.04; % mouse SWR: 40ms from Vandecasteele et al. 2014
+        cfg_swr.merge_thr = 0.01; %merge events that are within 20ms of each other.
+        cfg_swr.nan_idx = find(all_score ~=2); % where are any nans, say from excluding artifacts, other events...
+        
+        % restrictions
+        cfg_swr.max_len = .1;
+        
+        %                 cfg_swr.min_len = [];
+        %                 cfg_swr.min_len.operation = '<';
+        %                 cfg_swr.min_len.threshold = .2;
+        cfg_swr.nCycles = 20; % number of cycles
+        cfg_swr.nCycles_operation = '=<'; % number of cycles
+        
+        % variaence
+        cfg_swr.var = [];
+        cfg_swr.var.operation = '<';
+        cfg_swr.var.threshold = 1;
+        
+        SWR_evts = MS_get_LFP_events_sandbox(cfg_swr, this_csc);
+        SWR_centers = IVcenters(SWR_evts); 
+
+           % plot a subset
+        temp = SWR_evts; 
+        Subset = round(MS_randn_range(1, 160, 1, length(temp.tstart))); 
+        temp.tstart = temp.tstart(Subset);
+        temp.tend = temp.tend(Subset);
+                cfg_plot.display = 'iv';
+        PlotTSDfromIV(cfg_plot, temp, this_csc)
+        
+        %% make a Event triggered average;
+        EtA = NaN(length(SWR_centers), 401); 
+        for iEvt =length(SWR_centers):-1:1
+            center_idx = nearest_idx3(SWR_centers(iEvt), this_csc.tvec);
+
+            EtA(iEvt,:) = this_csc.data(center_idx-200:center_idx+200);
+            
+        end
+        figure(100)
+        subplot(2,2,3)
+        hold on
+        plot(-0.100:1/2000:0.100, nanmedian(EtA))
+        SEM = std(EtA)/sqrt(length(EtA)); 
+        plot(-0.100:1/2000:0.100, nanmedian(EtA) +std(EtA), '--r')
+        plot(-0.100:1/2000:0.100, nanmedian(EtA) -std(EtA), '--r')
+        
+            addpath(PARAMS.ft_code_dir);
+        
+        ft_defaults
+        %
+        % fc = {'CSC7.ncs'};
+        % data = ft_read_neuralynx_interp(fc); used to updae TSDtoFT to give
+        % correct formating. Works as MS_TSDtoFT.
+        
+        % convert data to ft format and turn into trials.
+        data_ft = MS_TSDtoFT([], this_csc); % convert to ft format.
+        data_ft.fsample = 1/mode(diff(data_ft.time{1}));  % fix for SWS segment concatenation
+        data_ft.hdr.Fs = 2000; 
+        
+        cfg_trl = [];
+        cfg_trl.t = cat(1,SWR_centers);
+        cfg_trl.t = cfg_trl.t - data_ft.hdr.FirstTimeStamp;
+        cfg_trl.twin = [-1 1];
+        cfg_trl.hdr = data_ft.hdr;
+        
+        trl = ft_maketrl(cfg_trl);
+        
+        cfg = [];
+        cfg.trl = trl;
+        data_trl = ft_redefinetrial(cfg,data_ft);
+        
+        cfg              = []; % start with empty cfg
+        cfg.trials       =1:800; 
+        cfg.output       = 'pow';
+        cfg.channel      = data_ft.label{1};
+        cfg.method       = 'mtmconvol';
+        cfg.taper        = 'hanning';
+        cfg.foi          = 30:2.5:300; % frequencies of interest
+        cfg.t_ftimwin    = ones(size(cfg.foi)).*0.05;%20./cfg.foi;  % window size: fixed at 0.5s
+        cfg.toi          = -.5:0.0025:0.5; % times of interest
+        cfg.pad          = 'maxperlen'; %'nextpow2'; % recommened by FT to make FFT more efficient.
+        
+        TFR = ft_freqanalysis(cfg, data_trl);
+        
+        % track config for plotting.
+        freq_params_str = sprintf('Spec using %0.0d swrs. Method: %s, Taper: %s', length(trl),cfg.method, cfg.taper);
+        
+        figure(100)
+        subplot(2,2,4)
+        cfg = [];
+        cfg.channel      = data_ft.label{1};
+        cfg.baseline     = [-1 -.01];
+        cfg.baselinetype = 'relative';
+        cfg.title = freq_params_str;
+        ft_singleplotTFR(cfg, TFR);
+        
+end
+
+
+
+
+
+%%
 % subplot(5,4,12)
 % hold on
 % rectangle('position', [0, 0, 3, 100], 'facecolor',[c_ord(5,:), 0.5], 'edgecolor', [c_ord(5,:), 0])

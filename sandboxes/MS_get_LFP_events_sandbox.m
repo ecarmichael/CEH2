@@ -206,23 +206,23 @@ end
 events_out.usr.evt_len = (events_out.tend - events_out.tstart)';
 
 if isfield(cfg, 'max_len') && ~isempty(cfg.max_len)
-    %     cfg_max_len = [];
-    %     cfg_max_len.operation = '<';
-    %     cfg_max_len.threshold = .1;
-    events_out = SelectIV(cfg.max_len,events_out,'evt_len');
+        cfg_max_len = [];
+        cfg_max_len.operation = '<';
+        cfg_max_len.threshold = cfg.max_len;
+    events_out = SelectIV(cfg_max_len,events_out,'evt_len');
     
-    fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (%s %d ms removed).\n',length(events_out.tstart), cfg.max_len.operation, (cfg.max_len.threshold)*1000);
+    fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (%s %d ms removed).\n',length(events_out.tstart), cfg_max_len.operation, (cfg_max_len.threshold)*1000);
 end
 
 
-% if isfield(cfg, 'min_len') && ~isempty(cfg.min_len)
-% %     cfg_max_len = [];
-% %     cfg_max_len.operation = '<';
-% %     cfg_max_len.threshold = .1;
-%     events_out = SelectIV(cfg.min_len,events_out,'evt_len');
-%
-%     fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (%s %d ms removed).\n',length(events_out.tstart), cfg.min_len.operation, (cfg.min_len.threshold)*1000);
-% end
+if isfield(cfg, 'min_len') && ~isempty(cfg.min_len)
+    cfg_min_len = [];
+    cfg_min_len.operation = '>';
+    cfg_min_len.threshold = cfg.min_len;
+    events_out = SelectIV(cfg_min_len,events_out,'evt_len');
+
+    fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (%s %d ms removed).\n',length(events_out.tstart), cfg_min_len.operation, (cfg_min_len.threshold)*1000);
+end
 
 %% check for evnts with high raw varience. 'var_raw' is added as a events_out.usr field in CountCycles
 if isfield(cfg, 'var') && ~isempty(cfg.var)
