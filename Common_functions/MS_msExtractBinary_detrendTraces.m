@@ -24,7 +24,7 @@ end
     [bFilt,aFilt] = butter(2,  2/(floor(1/(0.001*(mode(diff((ms.time))))))/2), 'low');
 
     for trace_i = 1:ms.numNeurons
-        detrend_raw_trace=detrend(ms.RawTraces(:,trace_i),2);   
+        detrend_raw_trace=detrend(ms.FiltTraces(:,trace_i),2);   
         filt_trace = zscore(filtfilt(bFilt,aFilt,detrend_raw_trace));
 
         diff_trace = diff(filt_trace);

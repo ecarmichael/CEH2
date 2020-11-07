@@ -57,23 +57,28 @@ end
 
 clear d os
 
+%% Generate a list of ms.mat files in this dir. 
 
-%% load the Miniscope data
-this_dir = dir;
+dir(fullfile(cd, '**', 'ms.mat'))
 
-for iF = 1:length(this_dir)
-   if strfind(this_dir(iF).name, 'ms.mat')
-       warning('off')
-       temp = load(this_dir(iF).name);
-       All_sess.(['M' this_dir(iF).name(1:3)]) = temp.ms;
-       clear temp
-       warning('on')
-       fprintf('<strong>MS_Ca_classification</strong>: %s loaded as a field in All_sess\n', this_dir(iF).name)
-       
-   else
-       continue
-   end
-end
+
+
+% %% load the Miniscope data with multiple MS.mat files in the dir. 
+% this_dir = dir;
+% 
+% for iF = 1:length(this_dir)
+%    if strfind(this_dir(iF).name, 'ms.mat')
+%        warning('off')
+%        temp = load(this_dir(iF).name);
+%        All_sess.(['M' this_dir(iF).name(1:3)]) = temp.ms;
+%        clear temp
+%        warning('on')
+%        fprintf('<strong>MS_Ca_classification</strong>: %s loaded as a field in All_sess\n', this_dir(iF).name)
+%        
+%    else
+%        continue
+%    end
+% end
 
 
 %% Get data ready for ML_spike

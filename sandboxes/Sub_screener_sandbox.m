@@ -15,14 +15,14 @@ if ismac
     %
 elseif strcmp(os, 'GLNXA64')
     
-    %     %     PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/2019-12-04_11-10-01_537day0base1'; % where to find the raw data
-    %     PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/JC/7_12_2019_PV1069_LTD5'; % where to find the raw data
-    %     %     PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/EV/';
-    %     PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/JC/'; % raw data location.
-    %     PARAMS.inter_dir = '/home/ecarmichael/Documents/Williams_Lab/Temp/'; % where to put intermediate files
-    %     PARAMS.stats_dir = '/home/ecarmichael/Documents/Williams_Lab/Stats/'; % where to put the statistical output .txt
-    %     PARAMS.code_base_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
-    %     PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
+    %     PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/2019-12-04_11-10-01_537day0base1'; % where to find the raw data
+    PARAMS.data_dir = '/mnt/Data/Williams_Lab/II_classification/msbehavplace/ck2cre1'; % where to find the raw data
+    %     PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/EV/';
+    %         PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/JC/'; % raw data location.
+    PARAMS.inter_dir = '/home/ecarmichael/Documents/Williams_Lab/II_classification/'; % where to put intermediate files
+    PARAMS.stats_dir = '/home/ecarmichael/Documents/Williams_Lab/II_classification/'; % where to put the statistical output .txt
+    PARAMS.code_base_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
+    PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
     %
 else
     PARAMS.data_dir = 'J:\Williams_Lab\II_classification'; % where to find the raw data
@@ -49,7 +49,7 @@ rng(11,'twister') % for reproducibility
 % add the required code
 addpath(genpath(PARAMS.code_base_dir));
 addpath(genpath(PARAMS.code_CEH2_dir));
-cd(PARAMS.raw_data_dir) % move to the data folder
+cd(PARAMS.data_dir) % move to the data folder
 
 % make the Inter and Stats dir if they don't exist.
 if ~exist(PARAMS.stats_dir,'dir')
@@ -69,9 +69,12 @@ clear d os
 
 %%  load data
 
-load('567_ms.mat')
-load('567_behav.mat')
+load('behav.mat')
+load('ms.mat')
 ms = MS_msExtractBinary_detrendTraces(ms, 2);
+
+cfg_rm.remove_idx = 21:22;
+ms = MS_Remove_trace(cfg_rm, ms);
 
 %% try to classify the cells as long or short tailed
 peak_window = 33; % how far from the onset of the transient do you look for the peak.
@@ -195,6 +198,14 @@ end
 n_bins = 50;
 
 figure(101)
+subplot(3,1,1:2)
+cfg_plot.view =[0 75];
+cfg_plot.plot_type = '2d';
+MS_plot_ca(cfg_plot, ms)
+
+
+
+subplot(3,1,3)
 log_dur = log10(all_dur); % convert to log10
 log_thres = log10(tail_thresh);  % match Roy 2017
 
@@ -210,7 +221,7 @@ xlim([-1 4]);
 text(X(midx),mval,[num2str(10^X(midx), '%2.2f') 's mean'],'HorizontalAlignment', 'left')
 
 
-axes('Position',[.7 .7 .2 .2])
+axes('Position',[.7 .2 .2 .1])
 box on
 [N, X] = hist(all_dur, n_bins);
 bar(X, N/length(all_dur));
@@ -226,8 +237,8 @@ if behav.time(end) ~= ms.time(end) || length(behav.time) ~= length(ms.time)
     
     
     behav_aligned = MS_align_data(behav, ms);
-%     behav_aligned = MS_align_data(behav, ms);
-
+    %     behav_aligned = MS_align_data(behav, ms);
+    
 end
 
 left_idx = MS_get_direction(behav_aligned.position(:,1), -.1); % use -threshold for leftbound and + for right.
@@ -243,143 +254,307 @@ right_idx = right_idx & movement_idx;
 [R_laps, R_lap_start_idx, R_lap_end_idx] = MS_get_laps(right_idx, floor(1.5*(1/frame_time)),floor(10*(1/frame_time)));
 
 %% plot basics
-for iC = 1; % loop through cells
-    
-    M = 7; % rows
-    N = 6; % columns
-    figure(100) % main figure
-    
-    %%% title information
-    subplot(M, N, [N-2 (N*2)-2]) % title information. Top right corner,
-    text(0, 10, ['Cell id: ' num2str(iC)])
-    text(0, 8, ['Binary thresh: ' num2str(ms.Binary_threshold)])
-    
-    if all_dur(iC) >= tail_thresh
-        text(0, 6, ['Mean tail length: ' num2str(all_dur(iC),'%2.2f') 's "Long"'])
-    else
-        text(0, 6, ['Mean tail length: ' num2str(all_dur(iC),'%2.2f') 's "Short"'])
-    end
-    ylim([0 10])
-    axis off
-    
-    
-    %%% raw trace
-    subplot(M, N, 1:3)
-    plot(ms.time/1000, ms.RawTraces(:,iC), 'color', PARAMS.blue)
-    xlim([ms.time(1)/1000 ms.time(end)/1000]);
-    xlabel('time(s)');
-    
-    
-    
-    %%% X Y position
-    subplot(M, N, N+1:N+3)
-    hold on
-    plot(behav_aligned.time/1000, behav_aligned.position(:,1), 'color', PARAMS.L_grey)
-    plot(behav_aligned.time(left_idx)/1000, behav_aligned.position(left_idx,1),'.', 'color', PARAMS.green)
-    plot(behav_aligned.time(right_idx)/1000, behav_aligned.position(right_idx,1),'.', 'color', PARAMS.blue)
+for iC = 1:10%size(ms.Binary,2) % loop through cells
+pthreshold = 0.05; % value for pvalue cut off;
+M = 7; % rows
+N = 6; % columns
+figure(iC) % main figure
+
+%%% title information
+subplot(M, N, [N-2 (N*2)-2]) % title information. Top right corner,
+
+% get the cell and session information 
+[full,this_dir]=fileparts(pwd);
+[~,this_parent] = fileparts(full);
+
+text(0, 10, ['Cell id: ' num2str(iC)]);
+text(0, 8, ['Session;' strrep(this_dir, '_','-')]);
+text(0, 6, ['Date: ' datestr(this_parent)]); 
+text(0, 2, ['Binary thresh: ' num2str(ms.Binary_threshold)])
+
+if all_dur(iC) >= tail_thresh
+    text(0, 0, ['Mean tail length: ' num2str(all_dur(iC),'%2.2f') 's "Long"'])
+else
+    text(0, 0, ['Mean tail length: ' num2str(all_dur(iC),'%2.2f') 's "Short"'])
+end
+ylim([0 10])
+axis off
+
+
+%%% raw trace
+subplot(M, N, 1:3)
+plot(ms.time/1000, ms.RawTraces(:,iC), 'color', PARAMS.blue)
+xlim([ms.time(1)/1000 ms.time(end)/1000]);
+xlabel('time(s)');
+ylabel('dF/F');
+hline(mean(ms.RawTraces(:,iC))+2*std(ms.RawTraces(:,iC)));
+
+
+
+%%% X Y position
+subplot(M, N, N+1:N+3)
+hold on
+plot(behav_aligned.time/1000, behav_aligned.position(:,1), 'color', PARAMS.L_grey)
+plot(behav_aligned.time(left_idx)/1000, behav_aligned.position(left_idx,1),'.', 'color', PARAMS.green)
+plot(behav_aligned.time(right_idx)/1000, behav_aligned.position(right_idx,1),'.', 'color', PARAMS.blue)
 %     plot(behav_aligned.time/1000, L_laps*10,'.-', 'color', PARAMS.gold, 'linewidth', 0.25)
 %     plot(behav_aligned.time/1000, R_laps*10,'.-', 'color', PARAMS.gold,'linewidth', 0.25)
 
-    %
-    % plot(behav_aligned.time(lap_start_idx)/1000, behav_aligned.position(lap_start_idx,1),'d', 'color', PARAMS.green)
-    % plot(behav_aligned.time(lap_end_idx)/1000, behav_aligned.position(lap_end_idx,1),'d', 'color', PARAMS.green)
-    
-    
-    % plot(behav_aligned.time/1000, behav_aligned.position(:,2),'color', PARAMS.blue)
-    ylabel('delta position')
-    xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
-    % legend({'x', 'y'})
-    
-    
-    %%% speed info
-    subplot(M, N, N*2+1:N*2+3)
-    hold on
-    plot(behav_aligned.time/1000, behav_aligned.speed, 'color', PARAMS.L_grey)
-    plot(behav_aligned.time(movement_idx)/1000, behav_aligned.speed(movement_idx),'.', 'color', PARAMS.gold, 'markersize', 1)
-    % legend('Speed', 'box', 'off')
-    
-    xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
-    ylabel('Speed cm/s')
-    xlabel('time (s)')
-    
-    
-    % %%% orientation info
+%
+% plot(behav_aligned.time(lap_start_idx)/1000, behav_aligned.position(lap_start_idx,1),'d', 'color', PARAMS.green)
+% plot(behav_aligned.time(lap_end_idx)/1000, behav_aligned.position(lap_end_idx,1),'d', 'color', PARAMS.green)
+
+
+% plot(behav_aligned.time/1000, behav_aligned.position(:,2),'color', PARAMS.blue)
+ylabel('linear position')
+xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
+% legend({'x', 'y'})
+
+
+%%% speed info
+subplot(M, N, N*2+1:N*2+3)
+hold on
+plot(behav_aligned.time/1000, behav_aligned.speed, 'color', PARAMS.L_grey)
+plot(behav_aligned.time(movement_idx)/1000, behav_aligned.speed(movement_idx),'.', 'color', PARAMS.gold, 'markersize', 1)
+% legend('Speed', 'box', 'off')
+
+xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
+ylabel('Speed cm/s')
+xlabel('time (s)')
+
+
+% %%% orientation info
     % subplot(M, N, N*3+1:N*3+3)
-    % plot(behav_aligned.time/1000,ones(size(behav_aligned.time)), 'color', 'w')
-    % hold on
-    % text(behav_aligned.time(floor(length(behav_aligned.time)/3))/1000, pi, 'HD placeholder')
-    % ylabel('HD')
-    % ylim([-pi pi])
-    % set(gca, 'ytick', [-pi pi], 'yticklabel', {'-pi' 'pi'})
-    
-    %%% plot the binary times on the position
-    subplot(M, N, [ N*3+4:N*3+6]) % N*4+4:N*4+6
-    hold on
-    plot(behav_aligned.position(:,1), behav_aligned.position(:,2), 'color', PARAMS.L_grey)
-    xlim([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))])
-    ylim(round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]));
-    %get binary 'event times'
-    t_binary = find(ms.Binary(:,iC) ==1);
-    % put dots on positions when the cell was active.
-    
-    plot(behav_aligned.position(t_binary,1), behav_aligned.position(t_binary,2),'.', 'color', PARAMS.red)
-    xlabel('position (cm)');
-    ylabel('position (cm)');
-    set(gca, 'ytick', round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]));
-    
-    
-    % get the transient/position values
-    % tran_x = interp1(behav_aligned.time(1:end-1),behav_aligned.position(1:end-1,1),ms.time(t_binary),'linear');
-    % tran_y = interp1(behav_aligned.time(1:end-1),behav_aligned.position(1:end-1,2),ms.time(t_binary),'linear');
-    %
-    % plot(tran_x,tran_y,'.', 'color', PARAMS.red);
-    
-    
-    %%% update position in time with binary 'spikes'
-    subplot(M, N, N+1:N+3)
-    plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red);
-    plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,2),'.', 'color', PARAMS.red);
-    
-    %%% update speed in time with binary 'spikes'
-    subplot(M, N, N*2+1:N*2+3)
-    plot(behav_aligned.time(t_binary)/1000,behav_aligned.speed(t_binary,1),'.', 'color', PARAMS.red);
-    
-    
-    %%% add the SPF for this cell.
-    subplot(M, N, [N (N*2)]) % spf with centroid.
-    imagesc(ms.SFPs(:,:,iC))
-    hold on
-    
-    
-    %%% Plot the laps
-    subplot(M, N, N*5+4:N*5+6)
-    MS_plot_laps(behav_aligned, R_laps, t_binary)
-    ylabel('R laps');
-    
-    subplot(M, N, N*6+4:N*6+6)
-    MS_plot_laps(behav_aligned, L_laps, t_binary)
-    ylabel('L laps');
-    
-    %%% add in the place/spatial information?
-    subplot(M, N, N*4+4:N*4+6)
-    bins = min(behav_aligned.position(:,1)):2.5:max(behav_aligned.position(:,1));
-    bin_centers = bins + 2.5/2;
+% plot(behav_aligned.time/1000,ones(size(behav_aligned.time)), 'color', 'w')
+% hold on
+% text(behav_aligned.time(floor(length(behav_aligned.time)/3))/1000, pi, 'HD placeholder')
+%     % ylabel('HD')
+% ylim([-pi pi])
+% set(gca, 'ytick', [-pi pi], 'yticklabel', {'-pi' 'pi'})
+
+%%% plot the binary times on the position
+subplot(M, N, [N*2+4:N*2+6]) % N*4+4:N*4+6
+hold on
+plot(behav_aligned.position(:,1), behav_aligned.position(:,2), 'color', PARAMS.L_grey)
+xlim([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))])
+ylim(round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]));
+%get binary 'event times'
+t_binary = find(ms.Binary(:,iC) ==1);
+% put dots on positions when the cell was active.
+
+plot(behav_aligned.position(t_binary,1), behav_aligned.position(t_binary,2),'.', 'color', PARAMS.red)
+xlabel('position (cm)');
+ylabel('position (cm)');
+set(gca, 'ytick', round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]));
+
+
+% get the transient/position values
+% tran_x = interp1(behav_aligned.time(1:end-1),behav_aligned.position(1:end-1,1),ms.time(t_binary),'linear');
+% tran_y = interp1(behav_aligned.time(1:end-1),behav_aligned.position(1:end-1,2),ms.time(t_binary),'linear');
+%
+% plot(tran_x,tran_y,'.', 'color', PARAMS.red);
+
+
+%%% update position in time with binary 'spikes'
+subplot(M, N, N+1:N+3)
+plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red);
+plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,2),'.', 'color', PARAMS.red);
+
+%%% update speed in time with binary 'spikes'
+subplot(M, N, N*2+1:N*2+3)
+plot(behav_aligned.time(t_binary)/1000,behav_aligned.speed(t_binary,1),'.', 'color', PARAMS.red);
+
+
+%%% add the SPF for this cell.
+subplot(M, N, [N (N*2)]) % spf with centroid.
+Spr = winter(32);
+colormap([0 0 0 ; Spr(16:end,:)]);
+% c_lim = [0.2*max(max(ms.PeakToNoiseProj)), max(max(ms.PeakToNoiseProj))]; % helps clean up the projection by increasing the floor of the colormap to take in the lowest x% of the data
+% imagesc(ms.PeakToNoiseProj, c_lim)
+MS_plot_all_SFPs(ms.SFPs); % custom function to plot all the SFPs on top of each other.  Cleaner than ms.PeakToNoiseProj.
+hold on
+quiver(ms.Centroids(iC,2)-30,ms.Centroids(iC,1)+5, 22,-3,-10,'color', 'w', 'linewidth', 2, 'MaxHeadSize', 5); % add an arrow pointing to the current cell.
+%     scatter(ms.Centroids(iC,2), ms.Centroids(iC,1),60,'w', 'o','LineWidth',.5); % put a circle around the current cell.
+
+
+%%% Plot the laps
+subplot(M, N, N*3+4:N*3+6)
+MS_plot_laps(behav_aligned, R_laps, t_binary)
+ylabel('R laps');
+
+subplot(M, N, N*5+4:N*5+6)
+MS_plot_laps(behav_aligned, L_laps, t_binary)
+ylabel('L laps');
+
+%%% add in the place/spatial information?
+%     subplot(M, N, N*3+4:N*3+6)
+    bin_size = 2.5;
+    bins = min(behav_aligned.position(:,1)):bin_size:max(behav_aligned.position(:,1));
+    bin_centers = bins +  bin_size/2;
     bin_centers = bin_centers(1:end-1);
-    [MI, posterior, occupancy, p_active, likelihood] = MS_get_spatial_information(ms.Binary(:,iC), ms.time, behav_aligned.position(:,1), bins);
-    plot(bin_centers, likelihood)
-    ylabel('p active')
+%     [MI, posterior, occupancy, p_active, likelihood] = MS_get_spatial_information(ms.Binary(left_idx,iC), ms.time(left_idx), behav_aligned.position(left_idx,1), bins);
+%     plot(bin_centers, likelihood)
+%     ylabel('p active')
+
+% Left Laps only 
+% Bootstramp method
+subplot(M, N, N*6+4:N*6+6)
+[MI, posterior, occupancy, p_active, likelihood] = MS_get_spatial_information(ms.Binary(left_idx,iC), ms.time(left_idx), behav_aligned.position(left_idx,1), bins);
+y_lim = ylim; 
+text(.1*max(bins), .8*y_lim(2), ['MI: ' num2str(MI,2)]);
+
+nShuff = 1000;
+actual_bootstrap_tuning_curve = zeros(length(bin_centers), nShuff);
+shuffled_bootstrap_tuning_curve = zeros(length(bin_centers), nShuff);
+for iShuff = nShuff:-1:1
+    split_ts = ceil(MS_randn_range(1,1,1,length(ms.time)));
+    this_shuff = [ms.Binary(end-split_ts+1:end,iC); ms.Binary(1:end-split_ts,iC)]; % cut the data at a point and put the ends together.
     
-    %%% add speed mod score
+    bootstrap_ts = left_idx;
+    for ii = 1:length(bootstrap_ts)
+        if bootstrap_ts(ii) == 1 && rand < 0.5
+            bootstrap_ts(ii) = 0;
+        end
+    end
     
+    % Compute the actual tuning curve using a bootstrapped sample
+    %         [actual_bootstrap_MI(iShuff), actual_bootstrap_PDF(:,iShuff), ~, actual_bootstrap_prob_being_active(iShuff), actual_bootstrap_tuning_curve(:,iShuff) ] = MS_get_spatial_information(ms.Binary(:,iC), behav_aligned.position(:,1), bins, split_ts);
+    [actual_bootstrap_MI(iShuff), actual_bootstrap_PDF(:,iShuff), ~, actual_bootstrap_prob_being_active(iShuff), actual_bootstrap_tuning_curve(:,iShuff)] = MS_get_spatial_information(ms.Binary(bootstrap_ts,iC),ms.time(bootstrap_ts), behav_aligned.position(bootstrap_ts,1), bins);
     
-    %%% customize figure stuff
+    % Compute the shuffled tuning curve using the same bootstrapped sample
+    [shuffled_bootstrap_MI(iShuff), shuffled_bootstrap_PDF(:,iShuff), ~, shuffled_bootstrap_prob_being_active(iShuff), shuffled_bootstrap_tuning_curve(:,iShuff)] = MS_get_spatial_information(this_shuff(bootstrap_ts), ms.time(bootstrap_ts),behav_aligned.position(bootstrap_ts,1), bins);
+end
+%     hold on
+%     plot(bin_centers,shuffled_bootstrap_tuning_curve, 'r')
+%     plot(bin_centers,actual_bootstrap_tuning_curve, 'k')
+
+
+% Find the 95% confidence interval
+sorted_BS_tuning_curves = sort(actual_bootstrap_tuning_curve,2);
+CI_idx_loc = 0.95*nShuff/2;
+median_idx = round(nShuff/2);
+upper_CI95_idx = median_idx+CI_idx_loc;
+lower_CI95_idx = median_idx-CI_idx_loc;
+
+% This will make sure that upper and lower bounds are withing the actual bootstrap data
+upper_CI95_idx(upper_CI95_idx > nShuff) = nShuff;
+upper_CI95_idx(upper_CI95_idx < 1) = 1;
+lower_CI95_idx(lower_CI95_idx > nShuff) = nShuff;
+lower_CI95_idx(lower_CI95_idx < 1) = 1;
+
+upper_CI95 = sorted_BS_tuning_curves(:,upper_CI95_idx);
+lower_CI95 = sorted_BS_tuning_curves(:,lower_CI95_idx);
+
+
+plot(bin_centers, actual_bootstrap_tuning_curve, 'color', [0.8 0.8 0.8], 'Linewidth', 0.5)
+hold on
+plot(bin_centers,likelihood, 'k', 'Linewidth', 1)
+plot(bin_centers,upper_CI95, 'r', 'Linewidth', 1)
+plot(bin_centers,lower_CI95, 'r', 'Linewidth', 1)
+ylabel('p(A|S) L')
+
+
+
+
+% same for right laps
+subplot(M, N, N*4+4:N*4+6)
+hold on
+[MI, posterior, occupancy, p_active, likelihood] = MS_get_spatial_information(ms.Binary(right_idx,iC), ms.time(right_idx), behav_aligned.position(right_idx,1), bins);
+plot(bin_centers, likelihood)
+y_lim = ylim; 
+text(.1*max(bins), .8*y_lim(2), ['MI: ' num2str(MI,2)]);
+ylabel('p active')
+
+% Bootstramp method
+nShuff = 1000;
+actual_bootstrap_tuning_curve = zeros(length(bin_centers), nShuff);
+shuffled_bootstrap_tuning_curve = zeros(length(bin_centers), nShuff);
+for iShuff = nShuff:-1:1
+    split_ts = ceil(MS_randn_range(1,1,1,length(ms.time)));
+    this_shuff = [ms.Binary(end-split_ts+1:end,iC); ms.Binary(1:end-split_ts,iC)]; % cut the data at a point and put the ends together.
     
-    pos = get(gcf, 'position');
-    set(gcf, 'position', [pos(1)-pos(1)*.6 pos(2)-pos(2)*.6 pos(3)*1.8 pos(4) *1.6])
+    bootstrap_ts = right_idx;
+    for ii = 1:length(bootstrap_ts)
+        if bootstrap_ts(ii) == 1 && rand < 0.5
+            bootstrap_ts(ii) = 0;
+        end
+    end
     
+    % Compute the actual tuning curve using a bootstrapped sample
+    %         [actual_bootstrap_MI(iShuff), actual_bootstrap_PDF(:,iShuff), ~, actual_bootstrap_prob_being_active(iShuff), actual_bootstrap_tuning_curve(:,iShuff) ] = MS_get_spatial_information(ms.Binary(:,iC), behav_aligned.position(:,1), bins, split_ts);
+    [actual_bootstrap_MI(iShuff), actual_bootstrap_PDF(:,iShuff), ~, actual_bootstrap_prob_being_active(iShuff), actual_bootstrap_tuning_curve(:,iShuff)] = MS_get_spatial_information(ms.Binary(bootstrap_ts,iC),ms.time(bootstrap_ts), behav_aligned.position(bootstrap_ts,1), bins);
     
-    pause(1)
-    close(100)
+    % Compute the shuffled tuning curve using the same bootstrapped sample
+    [shuffled_bootstrap_MI(iShuff), shuffled_bootstrap_PDF(:,iShuff), ~, shuffled_bootstrap_prob_being_active(iShuff), shuffled_bootstrap_tuning_curve(:,iShuff)] = MS_get_spatial_information(this_shuff(bootstrap_ts), ms.time(bootstrap_ts),behav_aligned.position(bootstrap_ts,1), bins);
+end
+%     hold on
+%     plot(bin_centers,shuffled_bootstrap_tuning_curve, 'r')
+%     plot(bin_centers,actual_bootstrap_tuning_curve, 'k')
+
+
+% Find the 95% confidence interval
+sorted_BS_tuning_curves = sort(actual_bootstrap_tuning_curve,2);
+CI_idx_loc = 0.95*nShuff/2;
+median_idx = round(nShuff/2);
+upper_CI95_idx = median_idx+CI_idx_loc;
+lower_CI95_idx = median_idx-CI_idx_loc;
+
+% This will make sure that upper and lower bounds are withing the actual bootstrap data
+upper_CI95_idx(upper_CI95_idx > nShuff) = nShuff;
+upper_CI95_idx(upper_CI95_idx < 1) = 1;
+lower_CI95_idx(lower_CI95_idx > nShuff) = nShuff;
+lower_CI95_idx(lower_CI95_idx < 1) = 1;
+
+upper_CI95 = sorted_BS_tuning_curves(:,upper_CI95_idx);
+lower_CI95 = sorted_BS_tuning_curves(:,lower_CI95_idx);
+
+plot(bin_centers, actual_bootstrap_tuning_curve, 'color', [0.8 0.8 0.8], 'Linewidth', 0.5)
+
+plot(bin_centers,likelihood, 'k', 'Linewidth', 1)
+plot(bin_centers,upper_CI95, 'r', 'Linewidth', 1)
+plot(bin_centers,lower_CI95, 'r', 'Linewidth', 1)
+ylabel('p(A|S) R')
+
+%%
+%     % add in shuffle (based on Guillaume's CaImDecoding)
+%     subplot(M, N, N*4+1:N*4+3)
+%     nShuff = 1000;
+%     for iSuff = nShuff:-1:1
+%         split_ts = ceil(MS_randn_range(1,1,1,length(ms.time)));
+%         this_shuff = [ms.Binary(end-split_ts+1:end,iC); ms.Binary(1:end-split_ts,iC)]; % cut the data at a point and put the ends together.
+%         [~, ~, ~, ~, shuff_TC(:, iSuff)] = MS_get_spatial_information(this_shuff, ms.time, behav_aligned.position(:,1), bins);
+%
+%     end
+%     pval = sum(shuff_TC> likelihood,2)/nShuff; %  p-value, supra-threshold tests
+%     sig_vals = likelihood;
+%     sig_vals(pval > pthreshold) = 0;
+%     hold on
+%     plot(bin_centers, likelihood, 'k');
+%     plot(bin_centers, sig_vals, 'r');
+%     ylabel('p val')
+
+
+
+
+%% add speed mod score
+
+
+%%% customize figure stuff
+
+pos = get(gcf, 'position');
+set(gcf, 'position', [pos(1)-pos(1)*.6 pos(2)-pos(2)*.6 pos(3)*1.8 pos(4) *1.6])
+
+
+% pause(3)
+%     close(100)
+[full,this_dir]=fileparts(pwd);
+[~,this_parent] = fileparts(full);
+mkdir([PARAMS.inter_dir  this_parent filesep this_dir]);
+saveas(gcf, [PARAMS.inter_dir  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.fig'])
+saveas(gcf, [PARAMS.inter_dir  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.png'])
+
+
+% close(iC)
 end
 
 

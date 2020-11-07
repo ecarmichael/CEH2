@@ -98,7 +98,7 @@ REM_idx = find(data_out(:,7) == 1); % get REM indicies
 SWS_idx = find(data_out(:,7)==0);
 c_ord = linspecer(2); % set nice colours.
 
-H=figure
+H=figure;
 subplot(5,1,1)
 hold on
 plot(data_out(REM_idx,1), data_out(REM_idx, 2), '--*', 'color', c_ord(2,:))

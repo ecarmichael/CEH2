@@ -124,7 +124,7 @@ if exist('csc','var') && isstruct(csc)
     cfg_d = [];
     % filters
     cfg_d.type = 'fdesign'; %Cheby1 is sharper than butter
-    cfg_d.f  = [1 5]; % broad, could use 150-200?
+    cfg_d.f  = [1 5]; % broad
     cfg_d.order = 8; %type filter order (fine for this f range)
     cfg_d.display_filter = 0; % use this to see the fvtool
     delta = FilterLFP(cfg_d, csc);
@@ -132,7 +132,7 @@ if exist('csc','var') && isstruct(csc)
     cfg_t = [];
     % filters
     cfg_t.type = 'cheby1'; %Cheby1 is sharper than butter
-    cfg_t.f  = [6 11]; % broad, could use 150-200?
+    cfg_t.f  = [6 11]; % 
     cfg_t.order = 3; %type filter order (fine for this f range)
     cfg_t.display_filter = 0; % use this to see the fvtool
     theta = FilterLFP(cfg_t, csc);
@@ -140,7 +140,7 @@ if exist('csc','var') && isstruct(csc)
     cfg_lg = [];
     % filters
     cfg_lg.type = 'cheby1'; %Cheby1 is sharper than butter
-    cfg_lg.f  = [30 55]; %
+    cfg_lg.f  = [30 55]; % "mouse  low gamma'
     cfg_lg.order = 5; %type filter order (fine for this f range)
     cfg_lg.display_filter =0; % use this to see the fvtool
     LG = FilterLFP(cfg_lg, csc);
@@ -156,13 +156,14 @@ if exist('csc','var') && isstruct(csc)
     cfg_rip = [];
     % filters
     cfg_rip.type = 'butter'; %Cheby1 is sharper than butter
-    cfg_rip.f  = [120 250]; %
+    cfg_rip.f  = [120 250]; % 
     cfg_rip.order = 4; %type filter order (fine for this f range)
     cfg_rip.display_filter =0; % use this to see the fvtool
     Ripple = FilterLFP(cfg_rip, csc);
     
     Fs = floor(1/(0.001*(mode(diff((ms_seg_resize.time{1}))))));
     
+    % smooth the amplitude using 100ms
     D_amp = smooth(abs(hilbert(delta.data)), floor(Fs*0.1));
     T_amp = smooth(abs(hilbert(theta.data)), floor(Fs*0.1));
     LG_amp = smooth(abs(hilbert(LG.data)), floor(Fs*0.1));

@@ -111,7 +111,7 @@ for iA = 1:length(CS_A)
     all_CS_AA(iA) = cont_A(nearest_idx3(CS_A(iA),cont_A)) - CS_A(iA);
     prox_lick(iA) = Licks(nearest_idx3(CS_A(iA),Licks)) - CS_A(iA);
     if abs(all_CS_AA(iA)) <= 4
-        Con_AA = [Con_AA, all_CS_AA(iA)];
+        Con_AA = [Con_AA,cont_A(nearest_idx3(CS_A(iA),cont_A))];
         Rew_AA = [Rew_AA, CS_A(iA)];
         if prox_lick(iA) >0  && prox_lick(iA) < 2
             Lick_AA = [Lick_AA, CS_A(iA)];
@@ -119,14 +119,14 @@ for iA = 1:length(CS_A)
     end
 end
 % extract context A CS B
-for iA = 1:length(CS_A)
-    all_CS_AB(iA) = cont_B(nearest_idx3(CS_A(iA),cont_B)) - CS_A(iA);
-    prox_lick(iA) = Licks(nearest_idx3(CS_A(iA),Licks)) - CS_A(iA);
+for iA = 1:length(CS_B)
+    all_CS_AB(iA) = cont_B(nearest_idx3(CS_B(iA),cont_A)) - CS_B(iA);
+    prox_lick(iA) = Licks(nearest_idx3(CS_B(iA),Licks)) - CS_B(iA);
     if abs(all_CS_AB(iA)) <= 4
-        Con_AB = [Con_AB, all_CS_AB(iA)];
-        Rew_AB = [Rew_AB, CS_A(iA)];
+        Con_AB = [Con_AB, cont_B(nearest_idx3(CS_B(iA),cont_A))];
+        Rew_AB = [Rew_AB, CS_B(iA)];
         if prox_lick(iA) >0  && prox_lick(iA) < 2
-            Lick_AB = [Lick_AB, CS_A(iA)];
+            Lick_AB = [Lick_AB, CS_B(iA)];
         end
     end
 end
@@ -141,7 +141,7 @@ for iA = 1:length(CS_A)
     all_CS_BA(iA) = cont_B(nearest_idx3(CS_A(iA),cont_B)) - CS_A(iA);
     prox_lick(iA) = Licks(nearest_idx3(CS_A(iA),Licks)) - CS_A(iA);
     if abs(all_CS_BA(iA)) <= 4
-        Con_BA = [Con_BA, all_CS_BA(iA)];
+        Con_BA = [Con_BA, cont_B(nearest_idx3(CS_A(iA),cont_B))];
         Rew_BA = [Rew_BA, CS_A(iA)];
         if prox_lick(iA) >0  && prox_lick(iA) < 2
             Lick_BA = [Lick_BA, CS_A(iA)];
@@ -153,7 +153,7 @@ for iA = 1:length(CS_B)
     all_CS_BB(iA) = cont_B(nearest_idx3(CS_B(iA),cont_B)) - CS_B(iA);
     prox_lick(iA) = Licks(nearest_idx3(CS_B(iA),Licks)) - CS_B(iA);
     if abs(all_CS_BB(iA)) <= 4
-        Con_BB = [Con_BB, all_CS_BB(iA)];
+        Con_BB = [Con_BB, cont_B(nearest_idx3(CS_B(iA),cont_B))];
         Rew_BB = [Rew_BB, CS_B(iA)];
         if prox_lick(iA) >0  && prox_lick(iA) < 2
             Lick_BB = [Lick_BB, CS_B(iA)];

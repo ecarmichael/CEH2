@@ -29,6 +29,9 @@ fieldnames = fields(struct2align);
 for iF =1:length(fieldnames) % loop through thr fields that are the same length as the time vector in struct2align
     
     if length(aligned_struct.(fieldnames{iF})) == length(struct2align.time)
+        if strcmp(fieldnames{iF}, 'vidNum') || strcmp(fieldnames{iF}, 'frameNum') 
+            continue
+        end
         fprintf('<strong>%s</strong>: interp on field: <strong>%s</strong>...\n', mfilename, fieldnames{iF})
         aligned_struct.(fieldnames{iF}) = [];
         %         if size(aligned_struct.(fieldnames{iF}),2) == 1
