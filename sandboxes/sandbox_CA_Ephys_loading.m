@@ -126,7 +126,7 @@ if check == 1
     offset = 0.0002;
     hold on
     for iC = 1:length(csc.label)
-        plot(tvec, csc.data(iC,len)+(offset*iC))cfg_filt = [];
+%         plot(tvec, csc.data(iC,len)+(offset*iC))cfg_filt = [];
 cfg_filt.type = 'butter'; %Cheby1 is sharper than butter
 cfg_filt.f  = [140 250]; % broad, could use 150-200?
 cfg_filt.order = 4; %type filter order (fine for this f range)
