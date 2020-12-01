@@ -34,7 +34,7 @@ function [MI, posterior, occupancy_vector, p_active, likelihood] = MS_get_spatia
 %% initialize
 
 if nargin <4
-    error('requires binary_in, binary_tvec, position_in inputs')
+    error('requires binary_in, position_in(n x2), X bins, Y bins, as inputs')
 end
 
 
@@ -48,16 +48,17 @@ likelihood = zeros(length(Y_bin_vec)-1,length(X_bin_vec)-1);
 occupancy_vector = zeros(length(Y_bin_vec)-1,length(X_bin_vec)-1);
 MI = 0;
 
-for ii = 1:length(bin_vec)-1
+for iY = 1:length(Y_bin_vec)-1
+    for iX = 1:length(X_bin_vec)-1
     binarized_spatial_vector = 0*binary_in;
-    position_idx = find(position_in >= bin_vec(ii) & position_in < bin_vec(ii+1));
+    position_idx = find(position_in(:,1) >= X_bin_vec(iX) & position_in(:,1) < X_bin_vec(iX+1) & position_in(:,2) >= Y_bin_vec(iY) & position_in(:,2) < Y_bin_vec(iY+1));
     
     if ~isempty(position_idx)
         binarized_spatial_vector(position_idx)=1;
-        occupancy_vector(ii) = length(position_idx)/length(binary_in);
+        occupancy_vector(iX, iY) = length(position_idx)/length(binary_in);
         activity_in_bin_idx = find(binary_in == 1 & binarized_spatial_vector == 1);
         inactivity_in_bin_idx = find(binary_in == 0 & binarized_spatial_vector == 1);
-        likelihood(ii) = length(activity_in_bin_idx)/length(position_idx);
+        likelihood(iX, iY) = length(activity_in_bin_idx)/length(position_idx);
         
         joint_prob_active = length(activity_in_bin_idx)./length(binary_in);
         joint_prob_inactive = length(inactivity_in_bin_idx)./length(binary_in);
@@ -69,6 +70,7 @@ for ii = 1:length(bin_vec)-1
         if joint_prob_inactive ~= 0
             MI = MI + joint_prob_inactive*log2(joint_prob_inactive./(prob_in_bin*(1-p_active)));
         end
+    end
     end
 end
 

@@ -49,6 +49,10 @@ cfg_def.saveas = []; % if empty don't save the images.  Can be '.fig' (matlab fi
 
 cfg = ProcessConfig(cfg_def, cfg_in);
 
+if n_cells < 20
+    cfg.Ca_chan = 1:n_cells;
+end
+
 %% make the plots
 if isempty(cfg.colors)
     c_basic = linspecer(10); % basic color range
