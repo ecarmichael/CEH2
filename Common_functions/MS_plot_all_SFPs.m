@@ -44,7 +44,7 @@ for ii = 1:size(SFPs_in,3)
         hi = imagesc(this_spf);
         set(hi,'alphadata',~isnan(this_spf));
 end
-
+axis xy
 xlim([0 size(SFPs_in,2)])
 ylim([0 size(SFPs_in,1)])
 
