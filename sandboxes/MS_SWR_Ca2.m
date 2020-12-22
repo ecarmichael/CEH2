@@ -369,7 +369,7 @@ if check  ==1
 end
 
 %% spectrogram of an episode w/
-these_blocks = [3,7] %1:length(ms_seg.NLX_csc);
+these_blocks = [3,7]; %1:length(ms_seg.NLX_csc);
 emg_range = [min(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency))), max(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency)))]; % get the min and max emg range for the first 10s of the recording. used for consistency. 
 
 cut_off = 1; % do you want to use the cut_off selector?
