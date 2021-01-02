@@ -67,6 +67,28 @@ end
 clear d os
 beep off %I know when I mess up without that annoying beep, thanks.
 
+
+%% parameters
+cfg.p_thres = 0.05; % value for pvalue cut off;
+cfg.stability_thres = 0.5; % from van der Veldt 2020
+cfg.nShuff = 1000;
+cfg.p_bin_size = 3 ; % in cm
+cfg.split_gaus_sd = 3; % sd for gaussian smoothing of place tuning for split session xcorr.
+
+% speed
+cfg.s_bin_size = 1.375;
+cfg.s_bins  =  2.5:cfg.s_bin_size:30; % between -2cm/s^2 and 2cm/s^s with 20 bins matches van de Veldt et al. 2020
+cfg.s_bins(cfg.s_bins==0) = []; %remove 0 bin.
+
+% acceleration
+cfg.accel_bin_size = .2;
+cfg.accel_bins  =  -2:cfg.accel_bin_size:2; % between -2cm/s^2 and 2cm/s^s with 20 bins matches van de Veldt et al. 2020
+cfg.accel_bins(cfg.accel_bins==0) = []; %remove 0 bin.
+
+%% navigate the desired directory.
+% just doing this mannually for now.
+
+
 %% get the file info
 parts = strsplit(cd, filesep);
 
@@ -96,24 +118,6 @@ cfg_plot.plot_type = '2d';
 MS_plot_ca(cfg_plot, ms)
 xlabel('time (s)')
 title([f_info.subject ' ' f_info.date ' ' f_info.task])
-
-%% parameters
-cfg.p_thres = 0.05; % value for pvalue cut off;
-cfg.stability_thres = 0.5; % from van der Veldt 2020
-cfg.nShuff = 1000;
-cfg.p_bin_size = 3 ; % in cm
-cfg.split_gaus_sd = 3; % sd for gaussian smoothing of place tuning for split session xcorr.
-
-% speed
-cfg.s_bin_size = 1.375;
-cfg.s_bins  =  2.5:cfg.s_bin_size:30; % between -2cm/s^2 and 2cm/s^s with 20 bins matches van de Veldt et al. 2020
-cfg.s_bins(cfg.s_bins==0) = []; %remove 0 bin.
-
-% acceleration
-cfg.accel_bin_size = .2;
-cfg.accel_bins  =  -2:cfg.accel_bin_size:2; % between -2cm/s^2 and 2cm/s^s with 20 bins matches van de Veldt et al. 2020
-cfg.accel_bins(cfg.accel_bins==0) = []; %remove 0 bin.
-
 
 %% align behaviour and Ca
 
@@ -203,8 +207,8 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     %% speed information
     % make bins
-    S_bin_centers = cfg.accel_bins + cfg.accel_bin_size/2;
-    S_bin_centers = S_bin_centers(1:end-1);
+    Speed_bin_centers = cfg.s_bins + cfg.s_bin_size/2;
+    Speed_bin_centers = Speed_bin_centers(1:end-1);
     
     %get the spatial info
     [Speed_MI, ~, Speed_occupancy,Speed_p_active, Speed_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx,iC),ms.time(movement_idx), behav_aligned.speed(movement_idx), cfg.s_bins);
@@ -213,7 +217,7 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     Speed_shuff_tuning_curve = MS_split_shuff(ms.Binary(movement_idx,iC), behav_aligned.speed(movement_idx),movement_idx, cfg.nShuff, cfg.s_bins);
     
     %get stats
-    Speed_stats= MS_boot_shuff(ms.Binary(movement_idx(1:end-1),iC), behav_aligned.speed,movement_idx(1:end-1), cfg.nShuff, cfg.accel_bins);
+    Speed_stats= MS_boot_shuff(ms.Binary(movement_idx(1:end-1),iC), behav_aligned.speed,movement_idx(1:end-1), cfg.nShuff, cfg.s_bins);
     
     %get sig tuning
     Speed_Sig_TC = sum(Speed_shuff_tuning_curve > Speed_tuning_curve,2)/cfg.nShuff;
@@ -245,8 +249,8 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     %% acceleration information
     
-    A_bin_centers = cfg.accel_bins + cfg.accel_bin_size/2;
-    A_bin_centers = A_bin_centers(1:end-1);
+    Acc_bin_centers = cfg.accel_bins + cfg.accel_bin_size/2;
+    Acc_bin_centers = Acc_bin_centers(1:end-1);
     
     % for debugging.
     %     accel_hist = hist(behav_aligned.accel(movement_idx(1:end-1)), A_bin_centers);
@@ -526,14 +530,18 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     %get binary 'event times' to be plotted as dots
     t_binary = ms.Binary(:,iC) & movement_idx;
-    %     accel_t_binary = find(ms.Binary(1:end-1,iC)==1);
+    accel_t_binary = find(ms.Binary(1:end-1,iC)==1);
     
     
     %%% title information
-    subplot(M, N, [N-2 (N*2)-2]) % title information. Top right corner,
-    text(0, 10, ['Cell id: ' num2str(iC)])
-    text(0, 8, ['Binary thresh: ' num2str(ms.Binary_threshold)])
+    subplot(M, N, 3:4) % title information. Top right corner,
     ylim([0 10])
+    text(0,9,['Cell id: ' num2str(iC)])
+    text(0,7,['Subject: ' f_info.subject]);
+    text(0,5,['Session: ' f_info.task]);
+    text(0,3,['Date: ' f_info.date]);
+    text(0,1,['Binary thresh: ' num2str(ms.Binary_threshold)])
+    
     axis off
     
     
@@ -589,8 +597,9 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     % plot the MI and p value for the cell.
     subplot(M, N, N+5)
-    text(0, .8*max(ylim), {'MI:'; num2str(All_cells.place.MI,3)}, 'HorizontalAlignment', 'left', 'color', 'K')
-    text(0, .2*max(ylim), {'split corr:'; num2str(All_cells.place.split.Stability_corr,3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    text(0, 1*max(ylim), 'Place', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
+    text(0, .6*max(ylim), {'MI:'; num2str(All_cells.place.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    text(0, .2*max(ylim), {'split corr:'; num2str(All_cells.place.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
     axis off
     
     % GE method for confirmation
@@ -631,12 +640,19 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     % update speed in time with binary 'spikes'
     plot(behav_aligned.time(t_binary)/1000,behav_aligned.speed(t_binary,1),'.', 'color', PARAMS.red);
     
+    % accel stats
+    subplot(M, N, N*2+5)
+    text(0, 1*max(ylim), 'Speed', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
+    text(0, .6*max(ylim), {'MI:'; num2str(All_cells.speed.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    text(0, .2*max(ylim), {'split corr:'; num2str(All_cells.speed.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    axis off
     
     % p(active | speed)
-    
-    
-    
-    
+    subplot(M, N, N*2+3:N*2+4)
+    S_h = shadedErrorBar(Speed_bin_centers, All_cells.speed.stats{iC}.mean', [All_cells.speed.stats{iC}.upper_CI95'; All_cells.speed.stats{iC}.lower_CI95']);
+    S_h.mainLine.Color = PARAMS.gold; S_h.mainLine.LineWidth = 2;
+    xlabel('speed (cm/s)');
+    ylabel('P(act | speed)');
     
     %%% acceleration info
     subplot(M, N, N*3+1:N*3+2)
@@ -651,6 +667,19 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     %%% update accel in time with binary 'spikes'
     plot(behav_aligned.time(accel_t_binary)/1000,behav_aligned.accel(accel_t_binary,1),'.', 'color', PARAMS.red);
     
+    % accel stats
+    subplot(M, N, N*3+5)
+    text(0, 1*max(ylim), 'Accel', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
+    text(0, .6*max(ylim), {'MI:'; num2str(All_cells.accel.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    text(0, .2*max(ylim), {'split corr:'; num2str(All_cells.accel.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    axis off
+    
+    %plot the MI with CI
+    subplot(M, N, N*3+3:N*3+4)
+    S_h = shadedErrorBar(Acc_bin_centers, All_cells.accel.stats{iC}.mean', [All_cells.accel.stats{iC}.upper_CI95'; All_cells.accel.stats{iC}.lower_CI95']);
+    S_h.mainLine.Color = PARAMS.green; S_h.mainLine.LineWidth = 2;
+    xlabel('acceleration (cm/s^2)');
+    ylabel('P(act | acceleration)');
     
     % %%% orientation info
     % subplot(M, N, N*3+1:N*3+3)
@@ -670,13 +699,22 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     %
     % plot(tran_x,tran_y,'.', 'color', PARAMS.red);
     
+    % customize figure stuff
+    
+    pos = get(gcf, 'position');
+    set(gcf, 'position', [pos(1)-pos(1)*.6 pos(2)-pos(2)*.6 pos(3)*1.8 pos(4) *1.6])
     
     
+    % pause(3)
+    %     close(100)
+    %     [full,this_dir]=fileparts(pwd);
+    %     [~,this_parent] = fileparts(full);
+    %     mkdir([PARAMS.inter_dir  this_parent filesep this_dir]);
+    %     saveas(gcf, [PARAMS.inter_dir  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.fig'])
+    %     saveas(gcf, [PARAMS.inter_dir  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.png'])
+    %
     
-    
-    
-    
-    
+    %     close(300)
     
     
     %%
@@ -743,18 +781,18 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     % make speed bins
     movement_idx = behav_aligned.speed >= cfg.min_speed;
     cfg.speed_bins =  cfg.min_speed:cfg.min_speed:30;
-    S_bin_centers = cfg.speed_bins +  cfg.bin_size/2;
-    S_bin_centers = S_bin_centers(1:end-1);
+    Speed_bin_centers = cfg.speed_bins +  cfg.bin_size/2;
+    Speed_bin_centers = Speed_bin_centers(1:end-1);
     
-    speed_hist = hist(behav_aligned.speed(movement_idx), S_bin_centers);
-    speed_active_hist = hist(behav_aligned.speed(t_binary), S_bin_centers);
+    speed_hist = hist(behav_aligned.speed(movement_idx), Speed_bin_centers);
+    speed_active_hist = hist(behav_aligned.speed(t_binary), Speed_bin_centers);
     yyaxis left
-    bar(S_bin_centers, speed_hist./mode(diff(behav_aligned.time)), 'facecolor', PARAMS.D_grey, 'edgecolor', PARAMS.D_grey)
+    bar(Speed_bin_centers, speed_hist./mode(diff(behav_aligned.time)), 'facecolor', PARAMS.D_grey, 'edgecolor', PARAMS.D_grey)
     ylabel('time at speed (s)')
     
     %         plot(S_bin_centers, speed_active_hist./mode(diff(behav_aligned.time)), 'color', PARAMS.red)
     yyaxis right
-    plot(S_bin_centers, speed_active_hist./speed_hist, 'color', PARAMS.red)
+    plot(Speed_bin_centers, speed_active_hist./speed_hist, 'color', PARAMS.red)
     %     legend({'occupancy', 'acitve'});
     xlabel('speed (cm/s)')
     ylabel('p active')
@@ -764,8 +802,8 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     % get boostrapped values for speed using MI
     nShuff = 1000;
-    actual_bootstrap_tuning_curve = zeros(length(S_bin_centers), nShuff);
-    shuffled_bootstrap_tuning_curve = zeros(length(S_bin_centers), nShuff);
+    actual_bootstrap_tuning_curve = zeros(length(Speed_bin_centers), nShuff);
+    shuffled_bootstrap_tuning_curve = zeros(length(Speed_bin_centers), nShuff);
     % make sure these varibales are cleared before trying to fill them.
     clear actual_bootstrap_*
     clear shuffled_bootstrap_*
@@ -809,13 +847,13 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     upper_CI95 = sorted_BS_tuning_curves(:,upper_CI95_idx);
     lower_CI95 = sorted_BS_tuning_curves(:,lower_CI95_idx);
     
-    plot(S_bin_centers, actual_bootstrap_tuning_curve', 'color', [0.8 0.8 0.8], 'Linewidth', 0.5)
+    plot(Speed_bin_centers, actual_bootstrap_tuning_curve', 'color', [0.8 0.8 0.8], 'Linewidth', 0.5)
     hold on
     
     % shadedErrorBar(S_bin_centers,S_likelihood,[upper_CI95, lower_CI95])
-    plot(S_bin_centers,S_likelihood, 'color', PARAMS.gold, 'Linewidth', 2)
-    plot(S_bin_centers,upper_CI95, 'color', PARAMS.red, 'Linewidth', 2)
-    plot(S_bin_centers,lower_CI95, 'color', PARAMS.red, 'Linewidth', 2)
+    plot(Speed_bin_centers,S_likelihood, 'color', PARAMS.gold, 'Linewidth', 2)
+    plot(Speed_bin_centers,upper_CI95, 'color', PARAMS.red, 'Linewidth', 2)
+    plot(Speed_bin_centers,lower_CI95, 'color', PARAMS.red, 'Linewidth', 2)
     text(.7*max(xlim), .8*max(ylim), {'MI: ' num2str(S_MI,3)}, 'HorizontalAlignment', 'right')
     
     
@@ -837,18 +875,18 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     cfg.accel_bins  =  -2:.2:2; % between -2cm/s^2 and 2cm/s^s with 20 bins matches van de Veldt et al. 2020
     cfg.accel_bins(cfg.accel_bins==0) = []; %remove 0 bin.
-    A_bin_centers = cfg.accel_bins + cfg.bin_size/2;
-    A_bin_centers = A_bin_centers(1:end-1);
+    Acc_bin_centers = cfg.accel_bins + cfg.bin_size/2;
+    Acc_bin_centers = Acc_bin_centers(1:end-1);
     
-    accel_hist = hist(behav_aligned.accel(keep_idx), A_bin_centers);
-    accel_active_hist = hist(behav_aligned.accel(t_binary), A_bin_centers);
+    accel_hist = hist(behav_aligned.accel(keep_idx), Acc_bin_centers);
+    accel_active_hist = hist(behav_aligned.accel(t_binary), Acc_bin_centers);
     yyaxis left
-    bar(A_bin_centers, accel_hist./mode(diff(behav_aligned.time)), 'facecolor', PARAMS.D_grey, 'edgecolor', PARAMS.D_grey)
+    bar(Acc_bin_centers, accel_hist./mode(diff(behav_aligned.time)), 'facecolor', PARAMS.D_grey, 'edgecolor', PARAMS.D_grey)
     ylabel('time in acceleration (s)')
     
     %         plot(S_bin_centers, speed_active_hist./mode(diff(behav_aligned.time)), 'color', PARAMS.red)
     yyaxis right
-    plot(A_bin_centers, accel_active_hist./accel_hist, 'color', PARAMS.red)
+    plot(Acc_bin_centers, accel_active_hist./accel_hist, 'color', PARAMS.red)
     %     legend({'occupancy', 'acitve'});
     xlabel('acceleration (cm/s^2)')
     ylabel('p active')
@@ -858,8 +896,8 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     % get boostrapped values for speed using MI
     nShuff = 1000;
-    actual_bootstrap_tuning_curve = zeros(length(A_bin_centers), nShuff);
-    shuffled_bootstrap_tuning_curve = zeros(length(A_bin_centers), nShuff);
+    actual_bootstrap_tuning_curve = zeros(length(Acc_bin_centers), nShuff);
+    shuffled_bootstrap_tuning_curve = zeros(length(Acc_bin_centers), nShuff);
     % make sure these varibales are cleared before trying to fill them.
     clear actual_bootstrap_*
     clear shuffled_bootstrap_*
@@ -903,32 +941,17 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     upper_CI95 = sorted_BS_tuning_curves(:,upper_CI95_idx);
     lower_CI95 = sorted_BS_tuning_curves(:,lower_CI95_idx);
     
-    plot(A_bin_centers, actual_bootstrap_tuning_curve', 'color', [0.8 0.8 0.8], 'Linewidth', 0.5)
+    plot(Acc_bin_centers, actual_bootstrap_tuning_curve', 'color', [0.8 0.8 0.8], 'Linewidth', 0.5)
     hold on
     
     % shadedErrorBar(A_bin_centers,A_likelihood,[upper_CI95, lower_CI95])
-    plot(A_bin_centers,A_likelihood, 'color', PARAMS.green, 'Linewidth', 2)
-    plot(A_bin_centers,upper_CI95, 'color', PARAMS.red, 'Linewidth', 2)
-    plot(A_bin_centers,lower_CI95, 'color', PARAMS.red, 'Linewidth', 2)
+    plot(Acc_bin_centers,A_likelihood, 'color', PARAMS.green, 'Linewidth', 2)
+    plot(Acc_bin_centers,upper_CI95, 'color', PARAMS.red, 'Linewidth', 2)
+    plot(Acc_bin_centers,lower_CI95, 'color', PARAMS.red, 'Linewidth', 2)
     text(max(xlim), .8*max(ylim), {'MI: ' num2str(A_MI,3)}, 'HorizontalAlignment', 'right')
     
     
-    %% customize figure stuff
     
-    pos = get(gcf, 'position');
-    set(gcf, 'position', [pos(1)-pos(1)*.6 pos(2)-pos(2)*.6 pos(3)*1.8 pos(4) *1.6])
-    
-    
-    % pause(3)
-    %     close(100)
-    [full,this_dir]=fileparts(pwd);
-    [~,this_parent] = fileparts(full);
-    mkdir([PARAMS.inter_dir  this_parent filesep this_dir]);
-    saveas(gcf, [PARAMS.inter_dir  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.fig'])
-    saveas(gcf, [PARAMS.inter_dir  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.png'])
-    
-    
-    close(iC)
 end
 
 

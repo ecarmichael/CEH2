@@ -110,9 +110,8 @@ lower_CI95_idx(lower_CI95_idx < 1) = 1;
 stats_out.nShuff = nShuff;
 
 if isempty(bins2)
-    stats_out.mean = mean(actual_bs_TC);
-    stats_out.median = median(actual_bs_TC);
-    
+    stats_out.mean = mean(actual_bs_TC,2);
+    stats_out.median = median(actual_bs_TC,2);
 else
     stats_out.mean = mean(actual_bs_TC, 3);
     stats_out.median = median(actual_bs_TC, 3);
