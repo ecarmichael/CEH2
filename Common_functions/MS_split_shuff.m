@@ -33,8 +33,8 @@ elseif nargin < 3
     nShuff = 1000; % default number of shuffles.
     
 elseif nargin < 4
-    nShuff = 1000; % default number of shuffles.
-elseif nargin < 5
+    nShuff = 1000; % default number of shuffles.  TODO: fix this because you would not have a case with less than 4 inputs since it would not ahve a bin to work with. 
+elseif nargin < 6
     bins2 = []; % if only 1D then keep this empty.
 end
 %% use 1 or 2 methods.

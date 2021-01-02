@@ -41,7 +41,7 @@ elseif nargin < 3
     
 elseif nargin < 4
     nShuff = 1000; % default number of shuffles.
-elseif nargin < 5
+elseif nargin < 6
     bins2 = []; % if only 1D then keep this empty.
 end
 
