@@ -25,9 +25,11 @@ aligned_struct = struct2align; % clone the struct
 
 fieldnames = fields(struct2align);
 
+[~, u_index] = unique(struct2align.time); % used to make sure there are no dubplicates which will break the interp1.
+
 
 for iF =1:length(fieldnames) % loop through thr fields that are the same length as the time vector in struct2align
-    
+
     if length(aligned_struct.(fieldnames{iF})) == length(struct2align.time)
         if strcmp(fieldnames{iF}, 'vidNum') || strcmp(fieldnames{iF}, 'frameNum') 
             continue
@@ -43,9 +45,9 @@ for iF =1:length(fieldnames) % loop through thr fields that are the same length 
         end
         for iD = 1:size(struct2align.(fieldnames{iF}),dim)
             if dim == 2
-                aligned_struct.(fieldnames{iF})(:,iD) = interp1(struct2align.time,struct2align.(fieldnames{iF})(:,iD),struct2match.time);
+                aligned_struct.(fieldnames{iF})(:,iD) = interp1(struct2align.time(u_index),struct2align.(fieldnames{iF})(u_index,iD),struct2match.time);
             elseif dim == 1
-                aligned_struct.(fieldnames{iF})(iD,:) = interp1(struct2align.time,struct2align.(fieldnames{iF})(iD,:),struct2match.time);
+                aligned_struct.(fieldnames{iF})(iD,:) = interp1(struct2align.time(u_index),struct2align.(fieldnames{iF})(iD,u_index),struct2match.time);
             end
             
 %             if isnan(aligned_struct.(fieldnames{iF})(end))

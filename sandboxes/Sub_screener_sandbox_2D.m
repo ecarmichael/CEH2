@@ -534,13 +534,13 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     
     %%% title information
-    subplot(M, N, 3:4) % title information. Top right corner,
+    subplot(M, N, 4:5) % title information. Top right corner,
     ylim([0 10])
-    text(0,9,['Cell id: ' num2str(iC)])
+    text(0,9,['Cell id: ' num2str(iC)], 'fontweight', 'bold')
     text(0,7,['Subject: ' f_info.subject]);
     text(0,5,['Session: ' f_info.task]);
     text(0,3,['Date: ' f_info.date]);
-    text(0,1,['Binary thresh: ' num2str(ms.Binary_threshold)])
+    text(0,1,['Binary thresh: ' num2str(ms.Binary_threshold) 'sd'])
     
     axis off
     
@@ -558,7 +558,7 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     
     %%% add the SPF for this cell.
-    subplot(M, N, N) % spf with centroid.
+    subplot(M, N, 3) % spf with centroid.
     Spr = winter(32);
     colormap([0 0 0 ; Spr(16:end,:)]);
     % c_lim = [0.2*max(max(ms.PeakToNoiseProj)), max(max(ms.PeakToNoiseProj))]; % helps clean up the projection by increasing the floor of the colormap to take in the lowest x% of the data
@@ -598,8 +598,8 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     % plot the MI and p value for the cell.
     subplot(M, N, N+5)
     text(0, 1*max(ylim), 'Place', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
-    text(0, .6*max(ylim), {'MI:'; num2str(All_cells.place.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
-    text(0, .2*max(ylim), {'split corr:'; num2str(All_cells.place.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    text(0, .8*max(ylim), {'MI:'; num2str(All_cells.place.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    text(0, .4*max(ylim), {'split corr:'; num2str(All_cells.place.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
     axis off
     
     % GE method for confirmation
@@ -640,17 +640,24 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     % update speed in time with binary 'spikes'
     plot(behav_aligned.time(t_binary)/1000,behav_aligned.speed(t_binary,1),'.', 'color', PARAMS.red);
     
-    % accel stats
+    % speed stats
     subplot(M, N, N*2+5)
     text(0, 1*max(ylim), 'Speed', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
-    text(0, .6*max(ylim), {'MI:'; num2str(All_cells.speed.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
-    text(0, .2*max(ylim), {'split corr:'; num2str(All_cells.speed.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    text(0, .8*max(ylim), {'MI:'; num2str(All_cells.speed.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    text(0, .4*max(ylim), {'split corr:'; num2str(All_cells.speed.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
     axis off
     
     % p(active | speed)
     subplot(M, N, N*2+3:N*2+4)
     S_h = shadedErrorBar(Speed_bin_centers, All_cells.speed.stats{iC}.mean', [All_cells.speed.stats{iC}.upper_CI95'; All_cells.speed.stats{iC}.lower_CI95']);
     S_h.mainLine.Color = PARAMS.gold; S_h.mainLine.LineWidth = 2;
+    
+    S_h.patch.FaceAlpha = .6; % how transparent the shading will be. 
+    S_h.patch.FaceColor = PARAMS.L_grey; 
+    S_h.edge(1).Color = PARAMS.D_grey;
+    S_h.edge(2).Color = PARAMS.D_grey;
+
+    
     xlabel('speed (cm/s)');
     ylabel('P(act | speed)');
     
@@ -676,8 +683,15 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     %plot the MI with CI
     subplot(M, N, N*3+3:N*3+4)
-    S_h = shadedErrorBar(Acc_bin_centers, All_cells.accel.stats{iC}.mean', [All_cells.accel.stats{iC}.upper_CI95'; All_cells.accel.stats{iC}.lower_CI95']);
-    S_h.mainLine.Color = PARAMS.green; S_h.mainLine.LineWidth = 2;
+    A_h = shadedErrorBar(Acc_bin_centers, All_cells.accel.stats{iC}.mean', [All_cells.accel.stats{iC}.upper_CI95'; All_cells.accel.stats{iC}.lower_CI95']);
+    A_h.mainLine.Color = PARAMS.green; A_h.mainLine.LineWidth = 2;
+    
+    A_h.patch.FaceAlpha = .6; % how transparent the shading will be. 
+    A_h.patch.FaceColor = PARAMS.L_grey; 
+    A_h.edge(1).Color = PARAMS.D_grey;
+    A_h.edge(2).Color = PARAMS.D_grey;
+    
+    
     xlabel('acceleration (cm/s^2)');
     ylabel('P(act | acceleration)');
     
@@ -702,8 +716,8 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     % customize figure stuff
     
     pos = get(gcf, 'position');
-    set(gcf, 'position', [pos(1)-pos(1)*.6 pos(2)-pos(2)*.6 pos(3)*1.8 pos(4) *1.6])
-    
+    set(gcf, 'position', [pos(1)-pos(1)*.8 pos(2)-pos(2)*.8 pos(3)*2.7 pos(4) *1.8])
+    tightfig
     
     % pause(3)
     %     close(100)
