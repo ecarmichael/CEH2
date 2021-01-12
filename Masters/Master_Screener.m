@@ -82,7 +82,7 @@ cfg.binary_thresh = 2; % number of sd for binary thresholding of zscored Ca data
 % place
 cfg.p_thres = 0.05; % value for pvalue cut off;
 cfg.stability_thres = 0.5; % from van der Veldt 2020
-cfg.nShuff = 1000;
+cfg.nShuff = 200;
 cfg.p_bin_size = 3 ; % in cm
 cfg.split_gaus_sd = 3; % sd for gaussian smoothing of place tuning for split session xcorr.
 

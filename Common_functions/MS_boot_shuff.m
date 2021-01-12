@@ -99,7 +99,7 @@ median_idx = round(nShuff/2);
 upper_CI95_idx = median_idx+CI_idx_loc;
 lower_CI95_idx = median_idx-CI_idx_loc;
 
-% This will make sure that upper and lower bounds are withing the actual bootstrap data
+% This will make sure that upper and lower bounds are within the actual bootstrap data
 upper_CI95_idx(upper_CI95_idx > nShuff) = nShuff;
 upper_CI95_idx(upper_CI95_idx < 1) = 1;
 lower_CI95_idx(lower_CI95_idx > nShuff) = nShuff;

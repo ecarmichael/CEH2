@@ -92,7 +92,37 @@ cfg = ProcessConfig(cfg_def, cfg_in);
     
     
     %% plot basics for each cell
-    for iC = 1:size(ms.Binary,2) % loop through cells
+    for iC = 1:10%size(ms.Binary,2) % loop through cells
+        fprintf('\nProcessing cell %d...', iC);
+        %% activity measures
+        
+        % number of transients
+        ca_evts = MS_get_binary_events(ms.Binary(:,iC));
+
+        % activity index
+        diff_act = diff(ms.Binary(:,iC)); % get the change in activity states
+        
+        activity_idx = sum(diff_act == 1)/length(diff_act); % get the p (inactive -> active)
+        
+%         % bursting index p(active -> active)  % TODO make this A) work B)
+%         more efficient
+%         for ii = length(ms.Binary(:,iC)):-1:2
+%            if ms.Binary(ii-1,iC) == 1  && ms.Binary(ii,iC) == 1
+%             burst_tran(ii) = 1;
+%            else
+%                burst_tran(ii) = 0; 
+%            end
+%         end
+%         
+%         
+%         for ii = length(x):-1:2
+%            if x(ii-1) == 1  && x(ii) == 1
+%             burst_tran(ii) = 1;
+%            else
+%                burst_tran(ii) = 0; 
+%            end
+%         end
+        
         %% get the place information and stats
         
         X_bins = min(behav_aligned.position(:,1)):cfg.p_bin_size:max(behav_aligned.position(:,1));
@@ -125,7 +155,6 @@ cfg = ProcessConfig(cfg_def, cfg_in);
         %     split_1(1:ceil(length(ms.Binary(:,1))/2)) = 1;
         
         % split based on number of transients;
-        ca_evts = MS_get_binary_events(ms.Binary(:,iC));
         split_evt_idx = ca_evts(ceil(length(ca_evts)/2),1); % get the start of the middle event.
         split_1(1:split_evt_idx) = 1;
         
@@ -153,7 +182,6 @@ cfg = ProcessConfig(cfg_def, cfg_in);
         % smooth with guassian
         S1_tuning_curve_smooth = imgaussfilt(Place_S1_tuning_curve, 2);
         S2_tuning_curve_smooth = imgaussfilt(Place_S2_tuning_curve, 2);
-        
         Place_Stability_corr = corr2(S1_tuning_curve_smooth, S2_tuning_curve_smooth);
         
         
@@ -254,14 +282,25 @@ cfg = ProcessConfig(cfg_def, cfg_in);
         
         Acc_Stability_corr = corr2(Acc_S1_tuning_curve_smooth, Acc_S2_tuning_curve_smooth);
         
+        
+        % compute split corr for shuffle and use for comparing to real
+        % split corr.  If >95% CI then classify as a place cell. 
+        
+        % if the number of transients is < 3 then this will not be
+        % realistic.  
+        
+        % if statement. 
+        
         %% collect information from each cell.
-        All_cells.fname{iC} = f_info.fname;
+        All_cells.fname{iC} = f_info;
         
         % place info
         All_cells.place.MI(iC) = Place_MI;
         All_cells.place.Sig_map(:,:,iC) = Place_Sig_map;
         All_cells.place.occupanyc(:,:,iC) = Place_occupancy;
-        All_cells.accel.stats{iC} = Acc_stats;
+        All_cells.place.stats{iC} =  Place_stats;
+        All_cells.place.n_evts(iC) = length(ca_evts);
+        All_cells.place.ca_evts{iC} = ca_evts;
         
         All_cells.place.split.S1_MI(iC) = Place_S1_MI;
         All_cells.place.split.S1_Sig_map(:,:,iC) = Place_S1_Sig_map;
@@ -315,9 +354,9 @@ cfg = ProcessConfig(cfg_def, cfg_in);
         text(0,1, ['Cell # ' num2str(iC)]); 
         text(0,.8,'Whole session')
         text(0,.6,['MI: ' num2str(Place_MI,2)]);
-        text(0,.2, ['Num trans: ' num2str(length(ca_evts))]); 
+        text(0,.4, ['Num trans: ' num2str(length(ca_evts))]); 
         colormap(gca, 'cool')
-        colorbar('location', 'south', 'ticks', [0, 1], 'ticklabels', {'1^s^t', 'last'})
+        colorbar('location', 'southoutside', 'ticks', [0, 1], 'ticklabels', {'1^s^t', 'last'})
         
         
         subplot(3,4,2)
@@ -683,11 +722,35 @@ cfg = ProcessConfig(cfg_def, cfg_in);
         %
         
         %     close(300)
-        
+                fprintf('\n');
+
     end % end cell loop.
     
     pause(1)
     %% make a plot of population level activity
+    
+    
+    % plot the population place scores. 
+    
+    figure(400)
+    hold on
+    
+%     bar(1:length(All_cells.place.MI))
+    subplot(3,1,1)
+    bar(1:length(All_cells.place.MI),All_cells.place.MI, 'facecolor', PARAMS.red)
+%     xlabel(1:length(All_cells.place.MI));
+    ylabel('MI');
+        
+    subplot(3,1,2)
+    bar(1:length(All_cells.place.MI),All_cells.place.split.Stability_corr,'facecolor', PARAMS.blue)
+%     xlabel(1:length(All_cells.place.MI));
+    ylabel('Split corr');
+    
+    
+        subplot(3,1,3)
+    bar(1:length(All_cells.place.MI),All_cells.place.n_evts,'facecolor', PARAMS.gold)
+        xlabel('cell ID');
+    ylabel('n Transients');
     
     %population speed modulation
     
