@@ -1,11 +1,15 @@
-function evts = MS_get_binary_events(data_in) 
+function evts = MS_get_binary_events(data_in, endflag) 
 %% MS_get_ca_events: identify all the Ca transients cross a threshold. 
 %
 %
 %
 %    Inputs: 
 %    - data_in [1 x nSamples] binary signal.  
-
+%
+%    - endflag [logical]   (optional) : what to do with events that do not end before the
+%    end of the recording.  can be 0 (default) or 1.  If 0 then set end of last event as last index. If 1 then exclude the
+%    last event.
+%
 %
 %    Outputs: 
 %    - evts    [nEvents x 2]  start and stop indicies for each Ca
@@ -21,7 +25,7 @@ function evts = MS_get_binary_events(data_in)
 %% initialize
 
 if nargin == 1
-    thresh = 2; % 2 SD as the default.  
+    endflag= 0; % 2 SD as the default.  
 end
 
 
@@ -35,8 +39,16 @@ end
 
 % correct for diff. 
 evts(:,1) = starts+1; 
-evts(:,2) = ends;
 
+if length(starts) > length(ends) % correct for events at the end of the recording.  
+        evts(:,2) = [ends; length(data_in)];
+else
+    evts(:,2) = ends;
+end
+
+if endflag
+    evts = evts(:,1:end-1);
+end
 
 %% plot for debugging
 
