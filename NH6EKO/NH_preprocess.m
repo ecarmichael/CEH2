@@ -80,16 +80,29 @@ for iSub = 1:length(Subjects)
         this_csc{iRec} = MS_LoadCSC(cfg_lfp);
         
         % load the emg
-        cfg_emg.fc = {PARAMS.Subjects.(Subjects{iSub}).EMG_Chan}; % which channel to load
+        if numel(PARAMS.Subjects.(Subjects{iSub}).EMG_Chan) ==1
+            cfg_emg.fc = {PARAMS.Subjects.(Subjects{iSub}).EMG_Chan}; % which channel to load
+        else
+            cfg_emg.fc = PARAMS.Subjects.(Subjects{iSub}).EMG_Chan; % which channel to load
+        end
         cfg_emg.desired_sampling_frequency = 2000; %desired sampling frequency.
         emg = MS_LoadCSC(cfg_emg);
         
+        % determine how to process the emg.  
+        
+        % if infered through the xcorr of two LFP channels....
+        if strcmp(PARAMS.Subjects.M11.emg_type, 'infered')
+            emg_corr = MS_infer_EMG([], emg);
+            
+        else % or through the filtered raw channel; 
         % filter the EMG between 15 and 300Hz
         cfg_f_emg = [];
         cfg_f_emg.f = [15 300];
         cfg_f_emg.type = 'fdesign'; %the type of filter I want to use via filterlfp
         cfg_f_emg.order = 16; %type filter order
-        emg = FilterLFP(cfg_f_emg, emg);
+        emg_corr = FilterLFP(cfg_f_emg, emg_corr);
+        
+        end
         
         % put the emg back into the lfp struct as a data channel
         this_csc{iRec}.data(2,:) = emg.data;

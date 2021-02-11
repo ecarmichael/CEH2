@@ -64,27 +64,35 @@ PARAMS.Subjects.M02.dir_name = 'NHE6KO_12_13_11_02'; % which foler type.  Can be
 PARAMS.Subjects.M02.LFP_Chan = 'CSC50.ncs';  % best LFP channel.
 PARAMS.Subjects.M02.EMG_Chan = 'CSC63.ncs';  % best EMG channel.
 PARAMS.Subjects.M02.genotype = 'wt';
+PARAMS.Subjects.M02.emg_type = 'raw'; % determines how the emg is calculated. Can be 'raw' (just use the channel) or 'infered' (use xcorr between LFP and EMG channels)
+
 
 PARAMS.Subjects.M05.dir_name = 'NHE6KO_05'; % which foler type.  Can be either NHE6KO_12_13_11_02 or NHE6KO_05 based on which NLX system was used.
 PARAMS.Subjects.M05.LFP_Chan = 'CSC1.ncs';  % best LFP channel.
 PARAMS.Subjects.M05.EMG_Chan = 'CSC15.ncs';  % best EMG channel.
-PARAMS.Subjects.M05.genotype = 'wt';
+PARAMS.Subjects.M05.emg_type = 'raw';
 
 % K/O
-% PARAMS.Subjects.M11.dir_name = 'NHE6KO_12_13_11_02'; % which foler type.  Can be either NHE6KO_12_13_11_02 or NHE6KO_05 based on which NLX system was used.
-% PARAMS.Subjects.M11.LFP_Chan = 'CSC39.ncs';  % best LFP channel.
-% PARAMS.Subjects.M11.EMG_Chan = 'CSC47.ncs';  % best EMG channel.
-% PARAMS.Subjects.M11.genotype = 'ko';
+PARAMS.Subjects.M11.dir_name = 'NHE6KO_12_13_11_02'; % which foler type.  Can be either NHE6KO_12_13_11_02 or NHE6KO_05 based on which NLX system was used.
+PARAMS.Subjects.M11.LFP_Chan = 'CSC39.ncs';  % best LFP channel.
+PARAMS.Subjects.M11.EMG_Chan = {'CSC34.ncs', 'CSC36.ncs'};  % in this case it is not a good signal.  So we will infer the emg from the xcorr in two channels between 300-600hz (as per Buz
+PARAMS.Subjects.M11.emg_type = 'infered'; % estimate the emg from the LFP and EMG channels. 
 
 PARAMS.Subjects.M12.dir_name = 'NHE6KO_12_13_11_02'; % which foler type.  Can be either NHE6KO_12_13_11_02 or NHE6KO_05 based on which NLX system was used.
 PARAMS.Subjects.M12.LFP_Chan = 'CSC7.ncs';  % best LFP channel.
 PARAMS.Subjects.M12.EMG_Chan = 'CSC16.ncs';  % best EMG channel.
-PARAMS.Subjects.M12.genotype = 'ko';
+PARAMS.Subjects.M12.emg_type = 'raw';
+
+% for testing xcorr_emg method. 
+% PARAMS.Subjects.M12.LFP_Chan = 'CSC16.ncs';  % best LFP channel.
+% PARAMS.Subjects.M12.EMG_Chan = {'CSC7.ncs','CSC8.ncs'};  % best EMG channel.
+% PARAMS.Subjects.M12.emg_type = 'infered';
+
 
 PARAMS.Subjects.M13.dir_name = 'NHE6KO_12_13_11_02'; % which foler type.  Can be either NHE6KO_12_13_11_02 or NHE6KO_05 based on which NLX system was used.
 PARAMS.Subjects.M13.LFP_Chan = 'CSC17.ncs';  % best LFP channel.
 PARAMS.Subjects.M13.EMG_Chan = 'CSC32.ncs';  % best EMG channel.
-PARAMS.Subjects.M13.genotype = 'ko';
+PARAMS.Subjects.M13.emg_type = 'raw';
 
 Subjects = fieldnames(PARAMS.Subjects);
 State_ids = {'Wake', 'NREM', 'REM'};
@@ -93,6 +101,8 @@ State_ids = {'Wake', 'NREM', 'REM'};
 
 % NH_preprocess(PARAMS.raw_data_dir, PARAMS.inter_dir); % run this script once to load, preprocess, and save all the 'good' channels for each subject to the PARAMS.inter_dir.
 
+
+%% if needed extract pseudo emg from high freq coherence across channels.  
 
 %% Classify the sleep states by visual inspection.
 
