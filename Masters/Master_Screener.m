@@ -112,7 +112,7 @@ for iSess = 1:length(d)
 end
 
 % loop across sessions.
-for iSess = 1:length(sess_list) % loop through sessions for this subject.
+for iSess = 3:length(sess_list) % loop through sessions for this subject.
     
     cd([parent_dir filesep sess_list{iSess}])
     
@@ -151,9 +151,9 @@ for iSess = 1:length(sess_list) % loop through sessions for this subject.
         %% run the screening script 
         
         % TODO help this function handle LT data as 1D. maybe as a cfg?
-        These_cells = Spatial_screener(cfg, f_info); 
+        These_cells{iSess, iTask} = Spatial_screener(cfg, f_info); 
         
-        
+        close all
     end % end tasks
     
 end %sessions

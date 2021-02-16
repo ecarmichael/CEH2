@@ -70,8 +70,8 @@ switch cfg.plot_type
     case '2d'
         for iC = 1:length(cfg.Ca_chan)
             
-            plot(time_in2*0.001, ms_data_in.(cfg.Ca_type)(:,iC)+iC*0.5, 'color', c_ord(iC,:))
-            tick_val(iC) = median(ms_data_in.(cfg.Ca_type)(:,iC)+iC*0.5); 
+            plot(time_in2*0.001, ms_data_in.(cfg.Ca_type)(:,iC)+iC, 'color', c_ord(iC,:))
+            tick_val(iC) = median(ms_data_in.(cfg.Ca_type)(:,iC)+iC); 
             tick_label{iC} = num2str(iC); 
         end
         % 3d
@@ -91,7 +91,8 @@ end
 
 switch cfg.plot_type
     case '2d'
-        set(gca, 'ytick', tick_val, 'yticklabel', tick_label);
+        [~, sort_idx] = sort(tick_val); % get past cases where the signal is lower than the offset previous. 
+        set(gca, 'ytick', tick_val(sort_idx), 'yticklabel', tick_label(sort_idx));
         ylabel('cell id')
 end
 end % end function

@@ -76,10 +76,12 @@ title([f_info.subject ' ' f_info.date ' ' f_info.task])
 %% align behaviour and Ca
 
 % check if the behav needs to be interpolated.
-if behav.time(end) ~= ms.time(end) && length(behav.time) ~= length(ms.time)
+if behav.time(end) ~= ms.time(end) || length(behav.time) ~= length(ms.time)
     fprintf('<strong> %s </strong>: behaviour and Ca are not the same length or end time.  attempting alignment \n', mfilename);
     
     behav_aligned = MS_align_data(behav, ms);
+else 
+    behav_aligned = behav; 
 end
 
 %smooth speed
@@ -95,7 +97,7 @@ behav_aligned.accel = diff(smooth(behav_aligned.speed, 3*mode(diff(ms.time))));
 
 %% plot basics for each cell
 
-for iC = 1:length(ms.Binary) % loop through cells
+for iC = 1:size(ms.Binary,2) % loop through cells
     fprintf('\nProcessing cell %d...', iC);
     %% activity measures
     
@@ -887,6 +889,9 @@ subplot(3,1,3)
 bar(1:length(All_cells.place.MI),All_cells.place.n_evts,'facecolor', PARAMS.gold)
 xlabel('cell ID');
 ylabel('n Transients');
+
+    saveas(gcf, [PARAMS.inter_dir filesep 'Summary' filesep  this_parent filesep this_dir filesep  '_Pop_place.fig'])
+    saveas(gcf, [PARAMS.inter_dir filesep 'Summary' filesep  this_parent filesep this_dir filesep  '_Pop_place.png'])
 
 %population speed modulation
 

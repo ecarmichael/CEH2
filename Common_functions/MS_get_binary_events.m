@@ -1,4 +1,4 @@
-function evts = MS_get_binary_events(data_in, endflag) 
+function evts = MS_get_binary_events(data_in, cutflag) 
 %% MS_get_ca_events: identify all the Ca transients cross a threshold. 
 %
 %
@@ -6,7 +6,7 @@ function evts = MS_get_binary_events(data_in, endflag)
 %    Inputs: 
 %    - data_in [1 x nSamples] binary signal.  
 %
-%    - endflag [logical]   (optional) : what to do with events that do not end before the
+%    - cutflag [logical]   (optional) : what to do with events that do not  start before the start of the recoridn or end before the
 %    end of the recording.  can be 0 (default) or 1.  If 0 then set end of last event as last index. If 1 then exclude the
 %    last event.
 %
@@ -25,7 +25,7 @@ function evts = MS_get_binary_events(data_in, endflag)
 %% initialize
 
 if nargin == 1
-    endflag= 0; % 2 SD as the default.  
+    cutflag= 0; % 2 SD as the default.  
 end
 
 
@@ -38,16 +38,33 @@ end
 
 
 % correct for diff. 
-evts(:,1) = starts+1; 
 
-if length(starts) > length(ends) % correct for events at the end of the recording.  
-        evts(:,2) = [ends; length(data_in)];
+if length(starts) < length(ends) 
+    starts = [1; starts+1];
+    start_flag = 1; 
 else
-    evts(:,2) = ends;
+    start_flag = 0; 
 end
 
-if endflag
-    evts = evts(:,1:end-1);
+if length(starts) > length(ends) % correct for events at the end of the recording.  
+    ends = [ends; length(data_in)];
+        endflag = 1; 
+else
+    endflag = 0; 
+end
+
+
+
+if cutflag
+    if startflag && ~ endflag
+        evts = [starts(2:end) , ends]; 
+    elseif endflag && ~startflag
+        evts = [starts , ends(1:end-1)]; 
+    else
+        evts = [starts, ends]; 
+    end
+else
+    evts = [starts, ends]; 
 end
 
 %% plot for debugging
