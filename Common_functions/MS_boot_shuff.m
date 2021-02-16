@@ -75,10 +75,10 @@ for iShuff = nShuff:-1:1
     
     % Compute the actual tuning curve using a bootstrapped sample
     if isempty(bins2) % 1d methods
-        [actual_bs_MI(iShuff), ~, ~, actual_bs_prob_being_active(iShuff), actual_bs_TC(:,iShuff)] = MS_get_spatial_information(data_in(bootstrap_ts),this_shuff_samples(bootstrap_ts), pos_in(bootstrap_ts,1), bins1);
+        [actual_bs_MI(iShuff), ~, ~, actual_bs_prob_being_active(iShuff), actual_bs_TC(:,iShuff)] = MS_get_spatial_information(data_in(bootstrap_ts), pos_in(bootstrap_ts,1), bins1);
         
         % Compute the shuffled tuning curve using the same bootstrapped sample
-        [shuffled_bs_MI(iShuff), ~, ~, shuffled_bs_prob_being_active(iShuff), shuffled_bs_TC(:,iShuff)]  = MS_get_spatial_information(data_in(bootstrap_ts),this_shuff_samples(bootstrap_ts), pos_in(bootstrap_ts,1), bins1);
+        [shuffled_bs_MI(iShuff), ~, ~, shuffled_bs_prob_being_active(iShuff), shuffled_bs_TC(:,iShuff)]  = MS_get_spatial_information(data_in(bootstrap_ts), pos_in(bootstrap_ts,1), bins1);
         
     else % 2d methods.
         %         [actual_bootstrap_MI(iShuff), actual_bootstrap_PDF(:,iShuff), ~, actual_bootstrap_prob_being_active(iShuff), actual_bootstrap_tuning_curve(:,iShuff) ] = data_in_get_spatial_information(data_in.Binary(:,iC), behav_aligned.position(:,1), bins, split_ts);

@@ -139,10 +139,10 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     Y_bin_centers = Y_bin_centers(1:end-1);
     
     % get place information
-    [Place_MI, Place_posterior, Place_occupancy, ~, Place_tuning_curve] = MS_get_spatial_information_2D(ms.Binary(movement_idx,iC),behav_aligned.position(movement_idx,:), X_bins, Y_bins );
+    [Place_MI, Place_posterior, Place_occupancy, ~, Place_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx,iC),behav_aligned.position(movement_idx,1), X_bins);
     
     % get shuffle data
-    Place_shuff_tuning_curve = MS_split_shuff(ms.Binary(:,iC), behav_aligned.position,movement_idx, cfg.nShuff, X_bins, Y_bins);
+    Place_shuff_tuning_curve = MS_split_shuff(ms.Binary(:,iC), behav_aligned.position(:,1),movement_idx, cfg.nShuff, X_bins);
     
     % get stats
     Place_stats= MS_boot_shuff(ms.Binary(:,iC), behav_aligned.position,movement_idx, cfg.nShuff, X_bins, Y_bins);
@@ -168,16 +168,16 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     split_2 = logical(~split_1);
     
     % split 1
-    [Place_S1_MI, ~, Place_S1_occupancy, ~, Place_S1_tuning_curve] = MS_get_spatial_information_2D(ms.Binary(movement_idx & split_1,iC),behav_aligned.position(movement_idx & split_1,:), X_bins, Y_bins );
-    Place_S1_shuff_tuning_curve = MS_split_shuff(ms.Binary(split_1,iC), behav_aligned.position(split_1,:),movement_idx, cfg.nShuff, X_bins, Y_bins);
+    [Place_S1_MI, ~, Place_S1_occupancy, ~, Place_S1_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx & split_1,iC),behav_aligned.position(movement_idx & split_1,1), X_bins);
+    Place_S1_shuff_tuning_curve = MS_split_shuff(ms.Binary(split_1,iC), behav_aligned.position(split_1,1),movement_idx, cfg.nShuff, X_bins);
     pval_S1 = sum(Place_S1_shuff_tuning_curve > Place_S1_tuning_curve,3)/cfg.nShuff;
     
     Place_S1_Sig_map = Place_S1_tuning_curve;
     Place_S1_Sig_map(pval_S1 > cfg.p_thres) = 0;
     
     % split 2
-    [Place_S2_MI, ~, Place_S2_occupancy, ~, Place_S2_tuning_curve] = MS_get_spatial_information_2D(ms.Binary(movement_idx & split_2,iC),behav_aligned.position(movement_idx & split_2,:), X_bins, Y_bins );
-    Place_S2_shuff_tuning_curve = MS_split_shuff(ms.Binary(split_2,iC), behav_aligned.position(split_2,:),movement_idx, cfg.nShuff, X_bins, Y_bins);
+    [Place_S2_MI, ~, Place_S2_occupancy, ~, Place_S2_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx & split_2,iC),behav_aligned.position(movement_idx & split_2,1), X_bins);
+    Place_S2_shuff_tuning_curve = MS_split_shuff(ms.Binary(split_2,iC), behav_aligned.position(split_2,1),movement_idx, cfg.nShuff, X_bins);
     pval_S2 = sum(Place_S2_shuff_tuning_curve > Place_S2_tuning_curve,3)/cfg.nShuff;
     
     Place_S2_Sig_map = Place_S2_tuning_curve;
@@ -185,19 +185,19 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     
     % smooth with guassian
-    S1_tuning_curve_smooth = imgaussfilt(Place_S1_tuning_curve, 2);
-    S2_tuning_curve_smooth = imgaussfilt(Place_S2_tuning_curve, 2);
-    Place_Stability_corr = corr2(S1_tuning_curve_smooth, S2_tuning_curve_smooth);
+    S1_tuning_curve_smooth = smooth(Place_S1_tuning_curve, 2);
+    S2_tuning_curve_smooth = smooth(Place_S2_tuning_curve, 2);
+    Place_Stability_corr = corr(S1_tuning_curve_smooth, S2_tuning_curve_smooth);
     
     % get the 95% CI for split shuff corr for comparison to real data
     for iShuff = cfg.nShuff:-1:1
-        S1_shuff_tuning_curve_smooth = imgaussfilt(Place_S1_shuff_tuning_curve(:,:,iShuff), 2);
-        S2_shuff_tuning_curve_smooth = imgaussfilt(Place_S2_shuff_tuning_curve(:,:,iShuff), 2);
-        Place_Shuff_Stability_corr(iShuff) = corr2(S1_shuff_tuning_curve_smooth, S2_shuff_tuning_curve_smooth);
+        S1_shuff_tuning_curve_smooth = smooth(Place_S1_shuff_tuning_curve(:,iShuff), 2);
+        S2_shuff_tuning_curve_smooth = smooth(Place_S2_shuff_tuning_curve(:,iShuff), 2);
+        Place_Shuff_Stability_corr(iShuff) = corr(S1_shuff_tuning_curve_smooth, S2_shuff_tuning_curve_smooth);
     end
     
     % GE method
-    sorted_Place_shuff_corr = sort(Place_Shuff_Stability_corr,2);
+    sorted_Place_shuff_corr = sort(Place_Shuff_Stability_corr);
     CI_idx_loc = cfg.CI*cfg.nShuff/2;
     median_idx = round(cfg.nShuff/2);
     upper_CI95_idx = median_idx+CI_idx_loc;
@@ -209,8 +209,8 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     lower_CI95_idx(lower_CI95_idx > cfg.nShuff) = cfg.nShuff;
     lower_CI95_idx(lower_CI95_idx < 1) = 1;
     
-    Place_split_stats.upper_CI95 = sorted_Place_shuff_corr(:,upper_CI95_idx); % get upp CI
-    Place_split_stats.lower_CI95 = sorted_Place_shuff_corr(:,lower_CI95_idx); % get lower CI
+    Place_split_stats.upper_CI95 = sorted_Place_shuff_corr(upper_CI95_idx); % get upp CI
+    Place_split_stats.lower_CI95 = sorted_Place_shuff_corr(lower_CI95_idx); % get lower CI
     
     Place_split_stats.percentile_95 = prctile(Place_Shuff_Stability_corr, cfg.CI*100); % add the percentile for good measure
     
@@ -335,7 +335,7 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     %     ylabel('p active')
     
     % get acceleration information
-    [Acc_MI, ~, Acc_occupancy,Acc_p_active, Acc_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx(1:end-1),iC), behav_aligned.accel(movement_idx(1:end-1)), cfg.accel_bins);
+    [Acc_MI, ~, Acc_occupancy,Acc_p_active, Acc_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx(1:end-1),iC),behav_aligned.accel(movement_idx(1:end-1)), cfg.accel_bins);
     
     % get shuffle data
     Acc_shuff_tuning_curve = MS_split_shuff(ms.Binary(movement_idx(1:end-1),iC), behav_aligned.accel(movement_idx(1:end-1)),movement_idx(1:end-1), cfg.nShuff, cfg.accel_bins);
@@ -381,11 +381,11 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     %% collect information from each cell.
     All_cells.fname{iC} = f_info;
-    
+
     % place info
     All_cells.place.MI(iC) = Place_MI;
-    All_cells.place.Sig_map(:,:,iC) = Place_Sig_map;
-    All_cells.place.occupanyc(:,:,iC) = Place_occupancy;
+    All_cells.place.Sig_map(:,iC) = Place_Sig_map;
+    All_cells.place.occupanyc(:,iC) = Place_occupancy;
     All_cells.place.stats{iC} =  Place_stats;
     All_cells.place.n_evts(iC) = length(ca_evts);
     All_cells.place.ca_evts{iC} = ca_evts;
@@ -397,19 +397,19 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     All_cells.place.split.stats = Place_split_stats;
     
     All_cells.place.split.S1_MI(iC) = Place_S1_MI;
-    All_cells.place.split.S1_Sig_map(:,:,iC) = Place_S1_Sig_map;
-    All_cells.place.split.S1_occupanyc(:,:,iC) = Place_S1_occupancy;
+    All_cells.place.split.S1_Sig_map(:,iC) = Place_S1_Sig_map;
+    All_cells.place.split.S1_occupanyc(:,iC) = Place_S1_occupancy;
     
     All_cells.place.split.S2_MI(iC) = Place_S2_MI;
-    All_cells.place.split.S2_Sig_map(:,:,iC) = Place_S2_Sig_map;
-    All_cells.place.split.S2_occupanyc(:,:,iC) = Place_S2_occupancy;
+    All_cells.place.split.S2_Sig_map(:,iC) = Place_S2_Sig_map;
+    All_cells.place.split.S2_occupanyc(:,iC) = Place_S2_occupancy;
     
     
     
     % speed
     All_cells.speed.MI(iC) = Speed_MI;
-    All_cells.speed.Sig_map(:,:,iC) = Speed_Sig_map;
-    All_cells.speed.occupanyc(:,:,iC) = Speed_occupancy;
+    All_cells.speed.Sig_map(:,iC) = Speed_Sig_map;
+    All_cells.speed.occupanyc(:,iC) = Speed_occupancy;
     All_cells.speed.stats{iC} = Speed_stats;
     
     %     All_cells.speed.split.S1_MI(iC) = Speed_S1_MI;
@@ -424,8 +424,8 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     % acceleration
     All_cells.accel.MI(iC) = Acc_MI;
-    All_cells.accel.Sig_map(:,:,iC) = Acc_Sig_map;
-    All_cells.accel.occupanyc(:,:,iC) = Acc_occupancy;
+    All_cells.accel.Sig_map(:,iC) = Acc_Sig_map;
+    All_cells.accel.occupanyc(:,iC) = Acc_occupancy;
     All_cells.accel.stats{iC} = Acc_stats;
     
     %     All_cells.accel.split.S1_MI(iC) = Acc_S1_MI;
@@ -439,9 +439,6 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     
     %% figure 2 place information
-    %     if ishandle(200)
-    %         close(200)
-    %     end
     figure(iC)
     
     subplot(6,4,[1 5])
@@ -454,7 +451,7 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     colorbar('location', 'southoutside', 'ticks', [0, 1], 'ticklabels', {'1^s^t', 'last'})
     
     
-    if contains(All_cells.fname{iC}.task, 'rec')
+    if contains(All_cells.fname{iC}.task, 'rec') || contains(All_cells.fname{iC}.task, 'LT')
         subplot(6,4,2)
         axis off
         title('Activity')
@@ -464,25 +461,15 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     end
     t_binary = ms.Binary(:,iC) & movement_idx;
     hold on
-    plot(behav_aligned.position(:,2), behav_aligned.position(:,1), 'color', PARAMS.L_grey)
-    %     xlim([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))])
-    %     ylim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]));
+    plot(behav_aligned.time, behav_aligned.position(:,1), 'color', PARAMS.L_grey)
     set(gca, 'xtick', [], 'ytick', []);
     % put dots on positions when the cell was active.
-    MS_color_plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1), '.', cool(length(behav_aligned.position(t_binary,2))))
-    %     plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1),'.', 'color',  cool(length(behav_aligned.position(t_binary,2))))
-    %     xlim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]))
-    %     ylim(round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]))
+    MS_color_plot(behav_aligned.time(t_binary), behav_aligned.position(t_binary,1), '.', cool(length(behav_aligned.position(t_binary,1))))
     axis off
-    %     x_lim = xlim;
-    %     y_lim = ylim;
-    %     hold on
-    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
+
     
     % overall occupancy map
-    if contains(All_cells.fname{iC}.task, 'rec')
+    if contains(All_cells.fname{iC}.task, 'rec') || contains(All_cells.fname{iC}.task, 'LT')
         subplot(6,4,3)
         title('Occupancy')
         axis off
@@ -491,20 +478,13 @@ for iC = 1:size(ms.Binary,2) % loop through cells
         subplot(6,4,[3 7]);
         title('Occupancy')
     end
-    imagesc(Y_bin_centers, X_bin_centers,  Place_occupancy);
-    set(gca,'YDir','normal'); % fix the Y direction to match the activity plot.
+   imagesc('XData', X_bin_centers, 'CData', Place_occupancy');
     set(gca, 'xtick', [], 'ytick', []);
     axis off
-    %     ylim([min(Y_bin_centers) max(Y_bin_centers)])
-    %     x_lim = xlim;
-    %     y_lim = ylim;
-    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
     
     % overall tuning map
     % overall occupancy map
-    if contains(All_cells.fname{iC}.task, 'rec')
+    if contains(All_cells.fname{iC}.task, 'rec') || contains(All_cells.fname{iC}.task, 'LT')
         subplot(6,4,4)
         title(['Sig at p < ' num2str(cfg.p_thres)])
         axis off
@@ -513,17 +493,11 @@ for iC = 1:size(ms.Binary,2) % loop through cells
         subplot(6,4,[4 8]);
         title(['Sig at p < ' num2str(cfg.p_thres)])
     end
-    imagesc(Y_bin_centers,X_bin_centers, Place_Sig_map)
+   imagesc('XData', X_bin_centers, 'CData',Place_Sig_map');
     hold on
-    set(gca,'YDir','normal'); % fix the Y direction to match the activity plot.
     set(gca, 'xtick', [], 'ytick', []);
     axis off
-    %     x_lim = xlim;
-    %     y_lim = ylim;
-    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-    
+   
     
     % first half
     
@@ -531,129 +505,92 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     axis off
     text(0,.8,'1^s^t half split')
     text(0,.6,['MI: ' num2str(Place_S1_MI,2)]);
-    
-    
-    if contains(All_cells.fname{iC}.task, 'rec')
+        
+    if contains(All_cells.fname{iC}.task, 'rec') || contains(All_cells.fname{iC}.task, 'LT')
         subplot(6,4,14)
     else
         subplot(6,4,[10 14])
     end
     t_binary = ms.Binary(:,iC) & movement_idx & split_1;
     hold on
-    plot(behav_aligned.position(movement_idx & split_1,2), behav_aligned.position(movement_idx & split_1,1), 'color', PARAMS.L_grey)
-    %     xlim([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))])
-    %     ylim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]));
+    plot(behav_aligned.time(movement_idx & split_1), behav_aligned.position(movement_idx & split_1,1), 'color', PARAMS.L_grey)
+
     set(gca, 'xtick', [], 'ytick', []);
     % put dots on positions when the cell was active.
-    plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red)
-    %     xlim(round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]))
-    %     ylim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]))
+    plot(behav_aligned.time(t_binary,1), behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red)
     axis off
-    %     x_lim = xlim;
-    %     y_lim = ylim;
-    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-    
+
     % overall occupancy map
-    if contains(All_cells.fname{iC}.task, 'rec')
+    if contains(All_cells.fname{iC}.task, 'rec') || contains(All_cells.fname{iC}.task, 'LT')
         subplot(6,4,15);
     else
         subplot(6,4,[11 15]);
     end
-    imagesc(Y_bin_centers, X_bin_centers,  Place_S1_occupancy);
-    set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
+    imagesc('XData', X_bin_centers, 'CData',  Place_S1_occupancy');
     set(gca, 'xtick', [], 'ytick', []);
     axis off
-    %     x_lim = xlim;
-    %     y_lim = ylim;
-    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-    
+
     % 1st half tuning map
-    if contains(All_cells.fname{iC}.task, 'rec')
+    if contains(All_cells.fname{iC}.task, 'rec') || contains(All_cells.fname{iC}.task, 'LT')
         subplot(6,4,16);
     else
         subplot(6,4,[12 16]);
     end
-    imagesc(Y_bin_centers, X_bin_centers,  Place_S1_tuning_curve);
-    set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
+    imagesc('XData', X_bin_centers, 'CData', Place_S1_tuning_curve');
     set(gca, 'xtick', [], 'ytick', []);
     axis off
-    %     x_lim = xlim;
-    %     y_lim = ylim;
-    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-    
+
     
     % second half
     
     subplot(6,4,17)
     axis off
     text(0,.8,'2^n^d half split')
-    text(0,.4,['MI: ' num2str(Place_S2_MI,2)]);
-    text(0,.0,['split xcorr: ' num2str(Place_Stability_corr,2)]);
+    text(0,.6,['MI: ' num2str(Place_S2_MI,2)]);
+    text(0,.4,['split xcorr: ' num2str(Place_Stability_corr,2)]);
     
-    if contains(All_cells.fname{iC}.task, 'rec')
+    if contains(All_cells.fname{iC}.task, 'rec') || contains(All_cells.fname{iC}.task, 'LT')
         subplot(6,4,22)
     else
         subplot(6,4,[18 22])
     end
     t_binary = ms.Binary(:,iC) & movement_idx & split_2;
     hold on
-    plot(behav_aligned.position(movement_idx & split_2,2), behav_aligned.position(movement_idx & split_2,1), 'color', PARAMS.L_grey)
-    %     xlim([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))])
-    %     ylim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]));
+    plot(behav_aligned.time(movement_idx & split_2), behav_aligned.position(movement_idx & split_2,1), 'color', PARAMS.L_grey)
+
     set(gca, 'xtick', [], 'ytick', []);
     % put dots on positions when the cell was active.
-    plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red)
-    %     xlim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]))
-    %     ylim(round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]))
+    plot(behav_aligned.time(t_binary), behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red)
     axis off
-    %     x_lim = xlim;
-    %     y_lim = ylim;
-    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-    
+
     % 2nd half occupancy
-    if contains(All_cells.fname{iC}.task, 'rec')
+    if contains(All_cells.fname{iC}.task, 'rec') || contains(All_cells.fname{iC}.task, 'LT')
         subplot(6,4,23);
     else
         subplot(6,4,[19 23]);
     end
-    imagesc(Y_bin_centers,X_bin_centers, Place_S2_occupancy);
-    set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
+    imagesc('XData', X_bin_centers, 'CData', Place_S2_occupancy');
     set(gca, 'xtick', [], 'ytick', []);
     axis off
-    %     x_lim = xlim;
-    %     y_lim = ylim;
-    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
     
     % overall tuning map
-    if contains(All_cells.fname{iC}.task, 'rec')
+    if contains(All_cells.fname{iC}.task, 'rec') || contains(All_cells.fname{iC}.task, 'LT')
         subplot(6,4,24);
     else
         subplot(6,4,[20 24]);
     end
     hold on
-    imagesc(X_bin_centers, Y_bin_centers, Place_S2_tuning_curve);
-    set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
+    imagesc('XData', X_bin_centers, 'CData', Place_S2_tuning_curve');
     set(gca, 'xtick', [], 'ytick', []);
     axis off
     x_lim = xlim;
     y_lim = ylim;
-    plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-    plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-    text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-    
+    plot([x_lim(2)-8, x_lim(2)],[y_lim(1)-(.1*y_lim(1)), y_lim(1)-(.1*y_lim(1))], 'k', 'linewidth', 1)
+    text(x_lim(2)-8, y_lim(1)-(.5*y_lim(1)), '10cm', 'fontsize', 6)
+%     
     saveas(gcf, [PARAMS.inter_dir 'Place_figs' filesep f_info.subject '_' f_info.date '_' f_info.task '_Cell_' num2str(iC)], 'png')
     saveas(gcf, [PARAMS.inter_dir  'Place_figs' filesep f_info.subject '_' f_info.date '_' f_info.task '_Cell_' num2str(iC)], 'fig')
-    
+%     
     %% plot everything
     %     if ishandle(300)
     %         close(300)
@@ -668,8 +605,8 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     %get binary 'event times' to be plotted as dots
     t_binary = ms.Binary(:,iC) & movement_idx;
 %     accel_t_binary = find(ms.Binary(1:end-1,iC)==1);
-        accel_t_binary = t_binary(1:end-1); 
-
+    accel_t_binary = t_binary(1:end-1); 
+    
     
     %%% title information
     subplot(M, N, 4:5) % title information. Top right corner,
@@ -714,11 +651,9 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     subplot(M, N, N+1:N+2)
     hold on
     plot(behav_aligned.time/1000, behav_aligned.position(:,1), 'color', PARAMS.L_grey)
-    plot(behav_aligned.time/1000, behav_aligned.position(:,2), 'color', PARAMS.D_grey)
     
     % update position in time with binary 'spikes'
     plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red);
-    plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,2),'.', 'color', PARAMS.red);
     
     % plot(behav_aligned.time/1000, behav_aligned.position(:,2),'color', PARAMS.blue)
     ylabel('linear position')
@@ -729,30 +664,28 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     % plot the binary times on the position
     subplot(M, N, N+3) % N*4+4:N*4+6
     hold on
-    plot(behav_aligned.position(:,2), behav_aligned.position(:,1), 'color', PARAMS.L_grey)
+    plot(behav_aligned.position(:,1), behav_aligned.position(:,2), 'color', PARAMS.L_grey)
     set(gca, 'xtick', [], 'ytick', []);
     % put dots on positions when the cell was active.
-    MS_color_plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1), '.', cool(length(behav_aligned.position(t_binary,2))))
+    MS_color_plot(behav_aligned.position(t_binary,1), behav_aligned.position(t_binary,2), '.', cool(length(behav_aligned.position(t_binary,1))))
     axis off
-    tmp=get(gca,'position'); % scale size of plot to match the
-    set(gca,'position',[tmp(1) tmp(2) tmp(3) (max(behav_aligned.position(:,1)) /max(behav_aligned.position(:,2)))*tmp(4)])
+ 
     
     
     % add in the 2D place/spatial information?
     subplot(M, N, N+4) % N*4+4:N*4+6
-    imagesc(Y_bin_centers,X_bin_centers,Place_posterior);
+    imagesc('XData', X_bin_centers, 'CData',Place_posterior');
     set(gca, 'YDir', 'normal');
     xlabel('position (cm)');
     ylabel('position (cm)');
-    tmp=get(gca,'position');
-    set(gca,'position',[tmp(1) tmp(2) tmp(3) (X_bin_centers(end) /Y_bin_centers(end))*tmp(4)])
+
     
     
     % plot the MI and p value for the cell.
     subplot(M, N, N+5)
     text(0, 1*max(ylim), 'Place', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
-    text(0, .8*max(ylim), {'MI:'; num2str(All_cells.place.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
-    text(0, .4*max(ylim), {'split corr:'; num2str(All_cells.place.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    text(0, .5*max(ylim), {'MI:'; num2str(All_cells.place.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    text(0, .1*max(ylim), {'split corr:'; num2str(All_cells.place.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
     axis off
     
     
@@ -774,7 +707,7 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     % speed stats
     subplot(M, N, N*2+5)
     text(0, 1*max(ylim), 'Speed', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
-    text(0, .8*max(ylim), {'MI:'; num2str(All_cells.speed.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    text(0, .5*max(ylim), {'MI:'; num2str(All_cells.speed.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
     %     text(0, .4*max(ylim), {'split corr:'; num2str(All_cells.speed.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
     axis off
     
@@ -809,7 +742,7 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     % accel stats
     subplot(M, N, N*3+5)
     text(0, 1*max(ylim), 'Accel', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
-    text(0, .6*max(ylim), {'MI:'; num2str(All_cells.accel.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    text(0, .5*max(ylim), {'MI:'; num2str(All_cells.accel.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
     %     text(0, .2*max(ylim), {'split corr:'; num2str(All_cells.accel.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
     axis off
     
@@ -856,16 +789,15 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     [full,this_dir]=fileparts(pwd);
     [~,this_parent] = fileparts(full);
     mkdir([PARAMS.inter_dir filesep 'Summary' filesep this_parent filesep this_dir]);
-    saveas(gcf, [PARAMS.inter_dir filesep 'Summary' filesep  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.fig'])
-    saveas(gcf, [PARAMS.inter_dir filesep 'Summary' filesep  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.png'])
-    %
+%     saveas(gcf, [PARAMS.inter_dir filesep 'Summary' filesep  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.fig'])
+%     saveas(gcf, [PARAMS.inter_dir filesep 'Summary' filesep  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.png'])
+%     %
     
     %     close(300)
     fprintf('\n');
     
 end % end cell loop.
 
-pause(1)
 %% make a plot of population level activity
 
 

@@ -70,7 +70,7 @@ for iShuff = nShuff:-1:1
     
     if isempty(bins2) % 1d methods
         
-        [~,~,~,~, shuffled_TC(:,iShuff)]  = MS_get_spatial_information(data_in(bootstrap_ts),this_shuff_samples(bootstrap_ts), pos_in(bootstrap_ts,1), bins1);
+        [~,~,~,~, shuffled_TC(:,iShuff)]  = MS_get_spatial_information(data_in(bootstrap_ts), pos_in(bootstrap_ts,1), bins1);
         
     else % 2d methods.
         

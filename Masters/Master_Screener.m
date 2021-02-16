@@ -82,7 +82,7 @@ cfg.binary_thresh = 2; % number of sd for binary thresholding of zscored Ca data
 % place
 cfg.p_thres = 0.05; % value for pvalue cut off;
 cfg.stability_thres = 0.5; % from van der Veldt 2020
-cfg.nShuff = 200;
+cfg.nShuff = 600;
 cfg.p_bin_size = 3 ; % in cm
 cfg.split_gaus_sd = 3; % sd for gaussian smoothing of place tuning for split session xcorr.
 
@@ -112,7 +112,7 @@ for iSess = 1:length(d)
 end
 
 % loop across sessions.
-for iSess = 3:length(sess_list) % loop through sessions for this subject.
+for iSess = 4:length(sess_list) % loop through sessions for this subject.
     
     cd([parent_dir filesep sess_list{iSess}])
     
@@ -147,11 +147,16 @@ for iSess = 3:length(sess_list) % loop through sessions for this subject.
         f_info.time = datestr([sess_parts{end-2}(2:end),':', sess_parts{end-1}(2:end),':',sess_parts{end}(2:end)],'HH:MM:SS');
         f_info.fname = fname; % full name. 
         
+        if iSess == 2 && iTask ==2
+            continue
+        end
         
         %% run the screening script 
-        
-        % TODO help this function handle LT data as 1D. maybe as a cfg?
-        These_cells{iSess, iTask} = Spatial_screener(cfg, f_info); 
+        if contains(f_info.task, 'LT')
+            These_cells{iSess, iTask} = Spatial_screener_1D(cfg, f_info);
+        else
+            These_cells{iSess, iTask} = Spatial_screener(cfg, f_info);
+        end
         
         close all
     end % end tasks
