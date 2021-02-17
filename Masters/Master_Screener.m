@@ -112,12 +112,12 @@ for iSess = 1:length(d)
 end
 
 % loop across sessions.
-for iSess = 4:length(sess_list) % loop through sessions for this subject.
+for iSess = 1:length(sess_list) % loop through sessions for this subject.
     
     cd([parent_dir filesep sess_list{iSess}])
     
     % if there are multiple tasks in the day then loop through them.
-    if ~exist('ms.mat')
+    if ~exist('ms.mat', 'var')
         task_list = {};
         d = dir;
         d=d(~ismember({d.name},{'.','..', '._*'})); % get the folder names and exclude any dir that start with '.'.

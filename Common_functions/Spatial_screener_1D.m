@@ -93,8 +93,6 @@ accel_movement_idx = behav_aligned.speed(1:end-1) >cfg.s_bins(1); % same as abov
 % get the acceleration
 behav_aligned.accel = diff(smooth(behav_aligned.speed, 3*mode(diff(ms.time))));
 
-
-
 %% plot basics for each cell
 
 for iC = 1:size(ms.Binary,2) % loop through cells
