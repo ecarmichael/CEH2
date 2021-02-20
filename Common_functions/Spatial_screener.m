@@ -40,12 +40,12 @@ cfg_def.p_bin_size = 3 ; % in cm
 cfg_def.split_gaus_sd = 3; % sd for gaussian smoothing of place tuning for split session xcorr.
 
 % speed
-cfg_def.s_bin_size = 1.375;
-cfg_def.s_bins  =  2.5:cfg_def.s_bin_size:30; % between -2cm/s^2 and 2cm/s^s with 20 bins matches van de Veldt et al. 2020
+cfg_def.s_bin_size = 2.5;
+cfg_def.s_bins  =  2.5:cfg_def.s_bin_size:25; %
 cfg_def.s_bins(cfg_def.s_bins==0) = []; %remove 0 bin.
 
 % acceleration
-cfg_def.accel_bin_size = .2;
+cfg_def.accel_bin_size = .4;
 cfg_def.accel_bins  =  -2:cfg_def.accel_bin_size:2; % between -2cm/s^2 and 2cm/s^s with 20 bins matches van de Veldt et al. 2020
 cfg_def.accel_bins(cfg_def.accel_bins==0) = []; %remove 0 bin.
 
@@ -55,19 +55,24 @@ cfg = ProcessConfig(cfg_def, cfg_in);
 
 
 %% load data
-
-load('behav.mat')
-load('ms.mat')
+if exist('behav_DLC.mat')
+    load('behav_DLC.mat')
+else
+    load('behav.mat')
+end
+load('ms.mat')    
+    
+    
 ms = MS_msExtractBinary_detrendTraces(ms, cfg.binary_thresh);
 
 % cfg_rm.remove_idx = [17 26];
 % ms = MS_Remove_trace(cfg_rm, ms);
 
-figure(101)
+figure(11)
 % subplot(4,4,[5,6,7, 9,10,11, 13,14,15])
 cfg_plot = [];
 cfg_plot.view =[0 75];
-cfg_plot.plot_type = '2d';
+cfg_plot.plot_type = '3d';
 % cfg_plot.colors = parula(size(ms.Binary,2));
 MS_plot_ca(cfg_plot, ms)
 xlabel('time (s)')
@@ -78,7 +83,6 @@ title([f_info.subject ' ' f_info.date ' ' f_info.task])
 % check if the behav needs to be interpolated.
 if behav.time(end) ~= ms.time(end) || length(behav.time) ~= length(ms.time)
     fprintf('<strong> %s </strong>: behaviour and Ca are not the same length or end time.  attempting alignment \n', mfilename);
-    
     behav_aligned = MS_align_data(behav, ms);
 else 
     behav_aligned = behav; 
@@ -130,11 +134,11 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     %% get the place information and stats
     
-    X_bins = min(behav_aligned.position(:,1)):cfg.p_bin_size:max(behav_aligned.position(:,1));
+    X_bins = round(min(behav_aligned.position(:,1))):cfg.p_bin_size:ceil(max(behav_aligned.position(:,1)));
     X_bin_centers = X_bins +  cfg.p_bin_size/2;
     X_bin_centers = X_bin_centers(1:end-1);
     % same for Y bins
-    Y_bins = min(behav_aligned.position(:,2)):cfg.p_bin_size:max(behav_aligned.position(:,2));
+    Y_bins = round(min(behav_aligned.position(:,2))):cfg.p_bin_size:ceil(max(behav_aligned.position(:,2)));
     Y_bin_centers = Y_bins +  cfg.p_bin_size/2;
     Y_bin_centers = Y_bin_centers(1:end-1);
     
@@ -236,7 +240,7 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     Speed_bin_centers = Speed_bin_centers(1:end-1);
     
     %get the spatial info
-    [Speed_MI, ~, Speed_occupancy,Speed_p_active, Speed_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx,iC), behav_aligned.speed(movement_idx), cfg.s_bins);
+    [Speed_MI, ~, Speed_occupancy,~, Speed_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx,iC), behav_aligned.speed(movement_idx), cfg.s_bins);
     
     % get shuffle data
     Speed_shuff_tuning_curve = MS_split_shuff(ms.Binary(movement_idx,iC), behav_aligned.speed(movement_idx),movement_idx, cfg.nShuff, cfg.s_bins);
@@ -335,7 +339,7 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     %     ylabel('p active')
     
     % get acceleration information
-    [Acc_MI, ~, Acc_occupancy,Acc_p_active, Acc_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx(1:end-1),iC), behav_aligned.accel(movement_idx(1:end-1)), cfg.accel_bins);
+    [Acc_MI, ~, Acc_occupancy,~, Acc_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx(1:end-1),iC), behav_aligned.accel(movement_idx(1:end-1)), cfg.accel_bins);
     
     % get shuffle data
     Acc_shuff_tuning_curve = MS_split_shuff(ms.Binary(movement_idx(1:end-1),iC), behav_aligned.accel(movement_idx(1:end-1)),movement_idx(1:end-1), cfg.nShuff, cfg.accel_bins);
@@ -348,7 +352,7 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     Acc_Sig_map(Acc_Sig_TC < cfg.p_thres) = 0;
     
     % split session stats and info.
-    [Acc_S1_MI, ~, Acc_S1_occupancy,Acc_S1_p_active, Acc_S1_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx(1:end-1) & split_1(1:end-1),iC), behav_aligned.accel(movement_idx(1:end-1) & split_1(1:end-1)), cfg.accel_bins);
+    [Acc_S1_MI, ~, ~,~, Acc_S1_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx(1:end-1) & split_1(1:end-1),iC), behav_aligned.accel(movement_idx(1:end-1) & split_1(1:end-1)), cfg.accel_bins);
     Acc_S1_shuff_tuning_curve = MS_split_shuff(ms.Binary(movement_idx(1:end-1) & split_1(1:end-1),iC), behav_aligned.accel(movement_idx(1:end-1) & split_1(1:end-1)),movement_idx, cfg.nShuff,cfg.accel_bins);
     Acc_S1_Sig_TC = sum(Acc_S1_shuff_tuning_curve > Acc_S1_tuning_curve,3)/cfg.nShuff;
     
@@ -356,7 +360,7 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     Acc_S1_Sig_map(Acc_S1_Sig_TC < cfg.p_thres) = 0;
     
     
-    [Acc_S2_MI, ~, Acc_S2_occupancy,Acc_S2_p_active, Acc_S2_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx(1:end-1) & split_2(1:end-1),iC), behav_aligned.accel(movement_idx(1:end-1) & split_2(1:end-1)), cfg.accel_bins);
+    [Acc_S2_MI, ~, ~,~, Acc_S2_tuning_curve] = MS_get_spatial_information(ms.Binary(movement_idx(1:end-1) & split_2(1:end-1),iC), behav_aligned.accel(movement_idx(1:end-1) & split_2(1:end-1)), cfg.accel_bins);
     Acc_S2_shuff_tuning_curve = MS_split_shuff(ms.Binary(movement_idx(1:end-1) & split_2(1:end-1),iC), behav_aligned.accel(movement_idx(1:end-1) & split_2(1:end-1)),movement_idx, cfg.nShuff,cfg.accel_bins);
     Acc_S2_Sig_TC = sum(Acc_S2_shuff_tuning_curve > Acc_S2_tuning_curve,3)/cfg.nShuff;
     
@@ -620,9 +624,9 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     % 2nd half occupancy
     if contains(All_cells.fname{iC}.task, 'rec')
-        subplot(6,4,23);
+       s2og = subplot(6,4,23);
     else
-        subplot(6,4,[19 23]);
+        s2og = subplot(6,4,[19 23]);
     end
     imagesc(Y_bin_centers,X_bin_centers, Place_S2_occupancy);
     set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
@@ -636,24 +640,33 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     % overall tuning map
     if contains(All_cells.fname{iC}.task, 'rec')
-        subplot(6,4,24);
+       s2 =  subplot(6,4,24);
     else
-        subplot(6,4,[20 24]);
+       s2 =  subplot(6,4,[20 24]);
     end
     hold on
     imagesc(X_bin_centers, Y_bin_centers, Place_S2_tuning_curve);
     set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
     set(gca, 'xtick', [], 'ytick', []);
     axis off
-    x_lim = xlim;
-    y_lim = ylim;
-    plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-    plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-    text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
+%     x_lim = xlim;
+%     y_lim = ylim;
     
+%     set(gca, 'Clipping', 'off')
+%     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
+%     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
+%     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
+    
+%     % move unit line labels off 
+%     s1Pos = get(s2og, 'position');
+%         s2Pos = get(s2, 'position');
+%     s2Pos = [s2Pos(1)*.988 s2Pos(2) s1Pos(3:4)*1.4];
+%     set(s2, 'position', s2Pos); 
+%     set(gcf, 'position', [680   421   886   550])
+    mkdir([PARAMS.inter_dir 'Place_figs'])
     saveas(gcf, [PARAMS.inter_dir 'Place_figs' filesep f_info.subject '_' f_info.date '_' f_info.task '_Cell_' num2str(iC)], 'png')
     saveas(gcf, [PARAMS.inter_dir  'Place_figs' filesep f_info.subject '_' f_info.date '_' f_info.task '_Cell_' num2str(iC)], 'fig')
-    
+%     
     %% plot everything
     %     if ishandle(300)
     %         close(300)
@@ -855,6 +868,7 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     %     close(100)
     [full,this_dir]=fileparts(pwd);
     [~,this_parent] = fileparts(full);
+    
     mkdir([PARAMS.inter_dir filesep 'Summary' filesep this_parent filesep this_dir]);
     saveas(gcf, [PARAMS.inter_dir filesep 'Summary' filesep  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.fig'])
     saveas(gcf, [PARAMS.inter_dir filesep 'Summary' filesep  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.png'])
@@ -862,7 +876,8 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     %     close(300)
     fprintf('\n');
-    
+    close(iC)
+    close(100+iC)
 end % end cell loop.
 
 pause(1)

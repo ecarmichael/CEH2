@@ -49,7 +49,7 @@ cfg_def.saveas = []; % if empty don't save the images.  Can be '.fig' (matlab fi
 
 cfg = ProcessConfig(cfg_def, cfg_in);
 
-if n_cells < 20
+if n_cells < 30
     cfg.Ca_chan = 1:n_cells;
 end
 
@@ -83,6 +83,9 @@ switch cfg.plot_type
 end
 
 xlim([time_in2(1)*0.001 time_in2(end)*0.001]);
+y_lim = ylim;
+ylim([0 y_lim(2)]); 
+
 %         ax = [];
 if ~isempty(cfg.x_zoom)
     
