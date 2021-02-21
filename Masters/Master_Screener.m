@@ -81,6 +81,7 @@ beep off % I know when I mess up without that annoying beep, thanks.
 % configuration 
 %general
 cfg.binary_thresh = 2; % number of sd for binary thresholding of zscored Ca data. 
+cfg.split_method = 'time'; % method for splitting session in half.  Can also be 'nTrans' to use number of Ca transients instead. 
 
 % place
 cfg.p_thres = 0.05; % value for pvalue cut off;
