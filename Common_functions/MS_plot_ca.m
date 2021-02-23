@@ -49,7 +49,7 @@ cfg_def.saveas = []; % if empty don't save the images.  Can be '.fig' (matlab fi
 
 cfg = ProcessConfig(cfg_def, cfg_in);
 
-if n_cells < 20
+if n_cells < 30
     cfg.Ca_chan = 1:n_cells;
 end
 
@@ -70,8 +70,8 @@ switch cfg.plot_type
     case '2d'
         for iC = 1:length(cfg.Ca_chan)
             
-            plot(time_in2*0.001, ms_data_in.(cfg.Ca_type)(:,iC)+iC*0.5, 'color', c_ord(iC,:))
-            tick_val(iC) = median(ms_data_in.(cfg.Ca_type)(:,iC)+iC*0.5); 
+            plot(time_in2*0.001, ms_data_in.(cfg.Ca_type)(:,iC)+iC, 'color', c_ord(iC,:))
+            tick_val(iC) = median(ms_data_in.(cfg.Ca_type)(:,iC)+iC); 
             tick_label{iC} = num2str(iC); 
         end
         % 3d
@@ -83,6 +83,9 @@ switch cfg.plot_type
 end
 
 xlim([time_in2(1)*0.001 time_in2(end)*0.001]);
+y_lim = ylim;
+ylim([0 y_lim(2)]); 
+
 %         ax = [];
 if ~isempty(cfg.x_zoom)
     
@@ -91,7 +94,8 @@ end
 
 switch cfg.plot_type
     case '2d'
-        set(gca, 'ytick', tick_val, 'yticklabel', tick_label);
+        [~, sort_idx] = sort(tick_val); % get past cases where the signal is lower than the offset previous. 
+        set(gca, 'ytick', tick_val(sort_idx), 'yticklabel', tick_label(sort_idx));
         ylabel('cell id')
 end
 end % end function

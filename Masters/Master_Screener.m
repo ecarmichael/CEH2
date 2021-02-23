@@ -21,7 +21,10 @@ close all
 restoredefaultpath
 global PARAMS  % these are global parameters that can be called into any function.  I limit these to directories for storing, loading, and saving files and codebases.
 os = computer;
-
+parent_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06'; 
+% parent_dir = ('/mnt/Data/Behav test and scripts/ck-1361/2021_02_04'); 
+cd(parent_dir); 
+cd('BehavCam_1/')
 if ismac
     %     PARAMS.data_dir = '/Users/jericcarmichael/Documents/Williams_Lab/2019-12-04_11-10-01_537day0base1'; % where to find the raw data
     %     PARAMS.inter_dir = '/Users/jericcarmichael/Documents/Williams_Lab/Temp/'; % where to put intermediate files
@@ -78,11 +81,12 @@ beep off % I know when I mess up without that annoying beep, thanks.
 % configuration 
 %general
 cfg.binary_thresh = 2; % number of sd for binary thresholding of zscored Ca data. 
+cfg.split_method = 'time'; % method for splitting session in half.  Can also be 'nTrans' to use number of Ca transients instead. 
 
 % place
 cfg.p_thres = 0.05; % value for pvalue cut off;
 cfg.stability_thres = 0.5; % from van der Veldt 2020
-cfg.nShuff = 200;
+cfg.nShuff = 600;
 cfg.p_bin_size = 3 ; % in cm
 cfg.split_gaus_sd = 3; % sd for gaussian smoothing of place tuning for split session xcorr.
 
@@ -106,7 +110,7 @@ sess_list = {};
 d = dir;
 d=d(~ismember({d.name},{'.','..', '._*'})); % get the folder names and exclude any dir that start with '.'.
 for iSess = 1:length(d)
-    if ~strcmp(d(iSess).name(1:2), '._') % exclude any that are autosaves.
+    if ~strcmp(d(iSess).name(1:2), '._') && d(iSess).isdir % exclude any that are autosaves.
         sess_list{end+1} = d(iSess).name; % keep the good folder names.
     end
 end
@@ -117,7 +121,7 @@ for iSess = 1:length(sess_list) % loop through sessions for this subject.
     cd([parent_dir filesep sess_list{iSess}])
     
     % if there are multiple tasks in the day then loop through them.
-    if ~exist('ms.mat')
+    if ~exist('ms.mat', 'var')
         task_list = {};
         d = dir;
         d=d(~ismember({d.name},{'.','..', '._*'})); % get the folder names and exclude any dir that start with '.'.
@@ -147,13 +151,18 @@ for iSess = 1:length(sess_list) % loop through sessions for this subject.
         f_info.time = datestr([sess_parts{end-2}(2:end),':', sess_parts{end-1}(2:end),':',sess_parts{end}(2:end)],'HH:MM:SS');
         f_info.fname = fname; % full name. 
         
+        if iSess == 2 && iTask ==2
+            continue
+        end
         
         %% run the screening script 
+        if contains(f_info.task, 'LT')
+            These_cells{iSess, iTask} = Spatial_screener_1D(cfg, f_info);
+        else
+            These_cells{iSess, iTask} = Spatial_screener(cfg, f_info);
+        end
         
-        % TODO help this function handle LT data as 1D. maybe as a cfg?
-        These_cells = Spatial_screener(cfg, f_info); 
-        
-        
+        close all
     end % end tasks
     
 end %sessions

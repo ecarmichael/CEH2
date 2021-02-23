@@ -44,8 +44,8 @@ end
 p_active = sum(binary_in)./length(binary_in); % Expressed in probability of firing (<1)
 
 %% Compute joint probabilities (of cell being active while being in a state bin)
-likelihood = zeros(length(Y_bin_vec)-1,length(X_bin_vec)-1);
-occupancy_vector = zeros(length(Y_bin_vec)-1,length(X_bin_vec)-1);
+likelihood = zeros(length(X_bin_vec)-1,length(Y_bin_vec)-1);
+occupancy_vector = zeros(length(X_bin_vec)-1,length(Y_bin_vec)-1);
 MI = 0;
 
 for iY = 1:length(Y_bin_vec)-1

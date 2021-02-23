@@ -1,4 +1,4 @@
-function [MI, posterior, occupancy_vector, p_active, likelihood] = MS_get_spatial_information(binary_in,binary_tvec, position_in, bin_vec)
+function [MI, posterior, occupancy_vector, p_active, likelihood] = MS_get_spatial_information(binary_in, position_in, bin_vec)
 %% MS_get_spatial_information: extracts the spatial information for a given binary signal across positions. 
 %
 %  This script is based on the one by Guillaume Etter (2017-) 
@@ -31,13 +31,9 @@ function [MI, posterior, occupancy_vector, p_active, likelihood] = MS_get_spatia
 %
 %% initialize
 
-if nargin <4
-    error('requires binary_in, binary_tvec, position_in inputs')
+if nargin <3
+    error('requires binary_in, position_in inputs')
 end
-
-
-
-
 %% Create bin vectors
 p_active = sum(binary_in)./length(binary_in); % Expressed in probability of firing (<1)
 
