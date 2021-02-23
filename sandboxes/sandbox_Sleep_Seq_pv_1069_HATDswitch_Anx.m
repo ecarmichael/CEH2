@@ -772,7 +772,7 @@ for iSeq = 1:size(all_sweeps.(type){iL}.W(indSort,:,:),2)
     figure(1000+iSeq)
     subplot(5,4,1)
     text(.1,.8, {[type '-based']});
-     text(.1,.4, ['L: ' num2str(iL) 's'])
+     text(.1,.4, ['L: ' num2str(Ls(iL)) 's'])
           text(.1,0, ['Seq # ' num2str(iSeq)])
     axis off; 
     
