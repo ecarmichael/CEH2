@@ -100,6 +100,10 @@ cfg.accel_bin_size = .2;
 cfg.accel_bins  =  -2:cfg.accel_bin_size:2; % between -2cm/s^2 and 2cm/s^s with 20 bins matches van de Veldt et al. 2020
 cfg.accel_bins(cfg.accel_bins==0) = []; %remove 0 bin.
 
+% head-direction
+cfg.hd_bin_size = 360/15; 
+cfg.hd_bins = 0:cfg.hd_bin_size:360; 
+
 %% navigate the desired directory.
 % get all the sub folders in the dir. ex:  current dir 'ck2cre1'  contains
 % '8-24-20', '8-25-20','8-26-20',...

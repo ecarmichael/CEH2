@@ -1,29 +1,97 @@
-%% border score sandbox
+%% HD score sandbox
+
+
+cd('/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06')
+load('behav_DLC.mat', 'behav')
+load('ms.mat', 'ms')
+
+%% get ms binary
+
+ms = MS_msExtractBinary_detrendTraces(ms,2);
+
+%% exclude non-movement periods
+
+% check if the behav needs to be interpolated.
+if behav.time(end) ~= ms.time(end) || length(behav.time) ~= length(ms.time)
+    fprintf('<strong> %s </strong>: behaviour and Ca are not the same length or end time.  attempting alignment \n', mfilename);
+    behav_aligned = MS_align_data(behav, ms);
+else 
+    behav_aligned = behav; 
+end
+
+%smooth speed
+behav_aligned.speed = smooth(behav_aligned.speed, 3*mode(diff(ms.time)));
+
+movement_idx = behav_aligned.speed >2.5; % get times when the animal was moving.
+accel_movement_idx = behav_aligned.speed(1:end-1) >2.5; % same as above but correct for diff used in acceleration calculation.
+
+% get the acceleration
+behav_aligned.accel = diff(smooth(behav_aligned.speed, 3*mode(diff(ms.time))));
+
+
+%% compute event histogram
+evts_idx = ms.Binary(:,1) == 1;
+
+hold on
+h= polarhistogram(behav_aligned.HD(movement_idx), 15);
+h.DisplayStyle = 'stairs';
+h.EdgeColor = [.7 .7 .7]; 
+h.EdgeAlpha = .4; 
+
+h= polarhistogram(behav_aligned.HD(movement_idx & evts_idx), 15);
+h.DisplayStyle = 'stairs';
+h.EdgeColor = 'b'; 
+
+
+% try with histograms and polar plots
+figure(102)
+hold on
+
+[Occ, ~] = histcounts(behav_aligned.HD(movement_idx), -180:15:180); 
+Occ_norm = Occ/max(Occ); 
+bar(bin_r, Occ_norm)
+
+[Act, bins] = histcounts(behav_aligned.HD(movement_idx & evts_idx), -180:15:180); 
+Act_norm = Act/max(Act);  
+
+bin_c = bins(1:end-1)+15/2; 
+bin_r = deg2rad(bin_c);
+bar(bin_r, Act_norm)
+set(gca, 'xtick', [-pi:pi/2:pi], 'xticklabel', {'-pi', '-1/2pi', '0', '1/2pi', 'pi'})
+
+
+
+%% simple plot for a few cells
+figure(101)
+
+% subplot(3,2,1)
+h = polarplot(behav_aligned.HD(movement_idx),ms.Binary(movement_idx));
+% h.DisplayStyle = 'stairs'; 
 
 
 %% gen some fake cell
 
 
-b_cell = zeros(10, 10);
+HD_cell = zeros(1, 10);
 
 % b_cell(1,2:8) = [2:2:6, 8,9, 4:-2:2];
-b_cell(1,2:8) = [2:2:6, 8,9, 4:-2:2]*4;
-b_cell = b_cell./max(b_cell,[],'all'); % normalize activity. 
+HD_cell(1,2:8) = [2:2:6, 8,9, 4:-2:2]*4;
+HD_cell = HD_cell./max(HD_cell,[],'all'); % normalize activity. 
 % b_cell = imgaussfilt(b_cell, 1);
 
 figure(20)
 subplot(2,2,1)
-imagesc(b_cell)
+imagesc(HD_cell)
 
 
-kernel_size = [size(b_cell,1) size(b_cell,2)];
+kernel_size = [size(HD_cell,1) size(HD_cell,2)];
  occupancy_std = 1;
 [Xgrid,Ygrid]=meshgrid(-kernel_size(1)/2: kernel_size(1)/2, -kernel_size(2)/2:kernel_size(2)/2);
  Rgrid=sqrt((Xgrid.^2+Ygrid.^2));
  kernel = pdf('Normal', Rgrid, 0, occupancy_std);
  kernel = kernel./sum(sum(kernel));
   
- b_cell_s = conv2(b_cell, kernel, 'same');
+ b_cell_s = conv2(HD_cell, kernel, 'same');
  
   b_cell_s(b_cell_s < max(b_cell_s, [], 'all')*.3) = 0;
 
@@ -89,13 +157,13 @@ wall_id = {'N', 'E', 'S', 'W'};
    [cM, idx] = max(wall_score); 
    
    % get the distance from the wall 
-   act_bins = find((b_cell ~=0)'); 
-   [act_i, act_j] = find((b_cell ~=0)'); 
+   act_bins = find((HD_cell ~=0)'); 
+   [act_i, act_j] = find((HD_cell ~=0)'); 
    
-   range_mat = reshape(1:(size(b_cell,1) * size(b_cell,2)), size(b_cell))'; 
+   range_mat = reshape(1:(size(HD_cell,1) * size(HD_cell,2)), size(HD_cell))'; 
    
-   peak = max(b_cell,[], 'all'); 
-   [peak_idx_i, peak_idx_j] = find(b_cell == peak); 
+   peak = max(HD_cell,[], 'all'); 
+   [peak_idx_i, peak_idx_j] = find(HD_cell == peak); 
    
    dist = []; 
    for iB = length(act_bins):-1:1 % look across active pixels
@@ -129,8 +197,8 @@ wall_id = {'N', 'E', 'S', 'W'};
       
 figure(20)
 subplot(2,3,1)
-imagesc(b_cell)
-b_score = MS_border_score(b_cell);
+imagesc(HD_cell)
+b_score = MS_border_score(HD_cell);
 text(0, 0, ['Border score = ' num2str(b_score,2)])
     
 subplot(2,3,2)

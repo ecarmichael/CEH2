@@ -97,26 +97,6 @@ accel_movement_idx = behav_aligned.speed(1:end-1) >cfg.s_bins(1); % same as abov
 % get the acceleration
 behav_aligned.accel = diff(smooth(behav_aligned.speed, 3*mode(diff(ms.time))));
 
-    %% session splitting
-        split_1 = zeros(size(ms.Binary(:,1)));
-
-     if strcmp(cfg.split_method, 'ntran')
-    % number of transients
-    ca_evts = MS_get_binary_events(ms.Binary(:,iC));
-    
-     % split session stats and info.
-    
-    % split based on number of transients;
-    split_evt_idx = ca_evts(ceil(length(ca_evts)/2),1); % get the start of the middle event.
-    else
-       split_evt_idx = ceil(length(ms.Binary(:,1))/2); % hard split based on time.
-    end
-    
-    split_1(1:split_evt_idx) = 1;
-    
-    % make keep indices for split halves.
-    split_1 = logical(split_1);
-    split_2 = logical(~split_1);
 
     %% get the bins
       X_bins = 0:cfg.p_bin_size:ceil(max(behav_aligned.position(:,1)));
@@ -137,9 +117,29 @@ behav_aligned.accel = diff(smooth(behav_aligned.speed, 3*mode(diff(ms.time))));
     
 %% plot basics for each cell
 
-for iC = 1:120%size(ms.Binary,2) % loop through cells
+for iC = 138%size(ms.Binary,2) % loop through cells
     fprintf('\nProcessing cell %d...', iC);
     
+    %% session splitting
+        split_1 = zeros(size(ms.Binary(:,1)));
+        ca_evts = MS_get_binary_events(ms.Binary(:,iC));
+
+     if strcmp(cfg.split_method, 'ntran')
+    % number of transients
+    
+     % split session stats and info.
+    
+    % split based on number of transients;
+    split_evt_idx = ca_evts(ceil(length(ca_evts)/2),1); % get the start of the middle event.
+    else
+       split_evt_idx = ceil(length(ms.Binary(:,1))/2); % hard split based on time.
+    end
+    
+    split_1(1:split_evt_idx) = 1;
+    
+    % make keep indices for split halves.
+    split_1 = logical(split_1);
+    split_2 = logical(~split_1);
     %% get the place information and stats
 
     % get place information
@@ -424,436 +424,436 @@ for iC = 1:120%size(ms.Binary,2) % loop through cells
     %     if ishandle(200)
     %         close(200)
     %     end
-%     figure(iC)
+    figure(iC)
+    
+    subplot(6,4,[1 5])
+    axis off
+    text(0,1, ['Cell # ' num2str(iC)]);
+    text(0,.66,'Whole session')
+    text(0,.33,['MI: ' num2str(Place_MI,2)]);
+    text(0,0, ['Num trans: ' num2str(length(ca_evts))]);
+    colormap(gca, 'cool')
+    colorbar('location', 'southoutside', 'ticks', [0, 1], 'ticklabels', {'1^s^t', 'last'})
+    
+    
+    if contains(All_cells.fname{iC}.task, 'rec')
+        subplot(6,4,2)
+        axis off
+        title('Activity')
+        subplot(6,4,6)
+    else
+        subplot(6,4,[2 6])
+    end
+    t_binary = ms.Binary(:,iC) & movement_idx;
+    hold on
+    plot(behav_aligned.position(:,2), behav_aligned.position(:,1), 'color', PARAMS.L_grey)
+    %     xlim([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))])
+    %     ylim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]));
+    set(gca, 'xtick', [], 'ytick', []);
+    % put dots on positions when the cell was active.
+    MS_color_plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1), '.', cool(length(behav_aligned.position(t_binary,2))))
+    %     plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1),'.', 'color',  cool(length(behav_aligned.position(t_binary,2))))
+    %     xlim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]))
+    %     ylim(round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]))
+    axis off
+    %     x_lim = xlim;
+    %     y_lim = ylim;
+    %     hold on
+    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
+    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
+    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
+    
+    % overall occupancy map
+    if contains(All_cells.fname{iC}.task, 'rec')
+        subplot(6,4,3)
+        title('Occupancy')
+        axis off
+        subplot(6,4,7);
+    else
+        subplot(6,4,[3 7]);
+        title('Occupancy')
+    end
+    imagesc(Y_bin_centers, X_bin_centers,  Place_occupancy);
+    set(gca,'YDir','normal'); % fix the Y direction to match the activity plot.
+    set(gca, 'xtick', [], 'ytick', []);
+    axis off
+    %     ylim([min(Y_bin_centers) max(Y_bin_centers)])
+    %     x_lim = xlim;
+    %     y_lim = ylim;
+    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
+    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
+    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
+    
+    % overall tuning map
+    % overall occupancy map
+    if contains(All_cells.fname{iC}.task, 'rec')
+        subplot(6,4,4)
+        title(['Sig at p < ' num2str(cfg.p_thres)])
+        axis off
+        subplot(6,4,8);
+    else
+        subplot(6,4,[4 8]);
+        title(['Sig at p < ' num2str(cfg.p_thres)])
+    end
+    imagesc(Y_bin_centers,X_bin_centers, Place_Sig_map)
+    hold on
+    set(gca,'YDir','normal'); % fix the Y direction to match the activity plot.
+    set(gca, 'xtick', [], 'ytick', []);
+    axis off
+    %     x_lim = xlim;
+    %     y_lim = ylim;
+    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
+    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
+    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
+    
+    
+    % first half
+    
+    subplot(6,4,[9 13])
+    axis off
+    text(0,.8,'1^s^t half split')
+    text(0,.6,['MI: ' num2str(Place_S1_MI,2)]);
+    
+    
+    if contains(All_cells.fname{iC}.task, 'rec')
+        subplot(6,4,14)
+    else
+        subplot(6,4,[10 14])
+    end
+    t_binary = ms.Binary(:,iC) & movement_idx & split_1;
+    hold on
+    plot(behav_aligned.position(movement_idx & split_1,2), behav_aligned.position(movement_idx & split_1,1), 'color', PARAMS.L_grey)
+    %     xlim([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))])
+    %     ylim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]));
+    set(gca, 'xtick', [], 'ytick', []);
+    % put dots on positions when the cell was active.
+    plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red)
+    %     xlim(round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]))
+    %     ylim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]))
+    axis off
+    %     x_lim = xlim;
+    %     y_lim = ylim;
+    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
+    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
+    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
+    
+    % overall occupancy map
+    if contains(All_cells.fname{iC}.task, 'rec')
+        subplot(6,4,15);
+    else
+        subplot(6,4,[11 15]);
+    end
+    imagesc(Y_bin_centers, X_bin_centers,  Place_S1_occupancy);
+    set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
+    set(gca, 'xtick', [], 'ytick', []);
+    axis off
+    %     x_lim = xlim;
+    %     y_lim = ylim;
+    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
+    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
+    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
+    
+    % 1st half tuning map
+    if contains(All_cells.fname{iC}.task, 'rec')
+        subplot(6,4,16);
+    else
+        subplot(6,4,[12 16]);
+    end
+    imagesc(Y_bin_centers, X_bin_centers,  Place_S1_tuning_curve);
+    set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
+    set(gca, 'xtick', [], 'ytick', []);
+    axis off
+    %     x_lim = xlim;
+    %     y_lim = ylim;
+    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
+    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
+    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
+    
+    
+    % second half
+    
+    subplot(6,4,17)
+    axis off
+    text(0,.8,'2^n^d half split')
+    text(0,.4,['MI: ' num2str(Place_S2_MI,2)]);
+    text(0,.0,['split xcorr: ' num2str(Place_Stability_corr,2)]);
+    
+    if contains(All_cells.fname{iC}.task, 'rec')
+        subplot(6,4,22)
+    else
+        subplot(6,4,[18 22])
+    end
+    t_binary = ms.Binary(:,iC) & movement_idx & split_2;
+    hold on
+    plot(behav_aligned.position(movement_idx & split_2,2), behav_aligned.position(movement_idx & split_2,1), 'color', PARAMS.L_grey)
+    %     xlim([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))])
+    %     ylim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]));
+    set(gca, 'xtick', [], 'ytick', []);
+    % put dots on positions when the cell was active.
+    plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red)
+    %     xlim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]))
+    %     ylim(round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]))
+    axis off
+    %     x_lim = xlim;
+    %     y_lim = ylim;
+    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
+    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
+    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
+    
+    % 2nd half occupancy
+    if contains(All_cells.fname{iC}.task, 'rec')
+       s2og = subplot(6,4,23);
+    else
+        s2og = subplot(6,4,[19 23]);
+    end
+    imagesc(Y_bin_centers,X_bin_centers, Place_S2_occupancy);
+    set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
+    set(gca, 'xtick', [], 'ytick', []);
+    axis off
+    %     x_lim = xlim;
+    %     y_lim = ylim;
+    %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
+    %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
+    %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
+    
+    % overall tuning map
+    if contains(All_cells.fname{iC}.task, 'rec')
+       s2 =  subplot(6,4,24);
+    else
+       s2 =  subplot(6,4,[20 24]);
+    end
+    hold on
+    imagesc(X_bin_centers, Y_bin_centers, Place_S2_tuning_curve);
+    set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
+    set(gca, 'xtick', [], 'ytick', []);
+    axis off
+%     x_lim = xlim;
+%     y_lim = ylim;
+    
+%     set(gca, 'Clipping', 'off')
+%     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
+%     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
+%     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
+    
+%     % move unit line labels off 
+%     s1Pos = get(s2og, 'position');
+%         s2Pos = get(s2, 'position');
+%     s2Pos = [s2Pos(1)*.988 s2Pos(2) s1Pos(3:4)*1.4];
+%     set(s2, 'position', s2Pos); 
+%     set(gcf, 'position', [680   421   886   550])
+    mkdir([PARAMS.inter_dir 'Place_figs'])
+    saveas(gcf, [PARAMS.inter_dir 'Place_figs' filesep f_info.subject '_' f_info.date '_' f_info.task '_Cell_' num2str(iC)], 'png')
+    saveas(gcf, [PARAMS.inter_dir  'Place_figs' filesep f_info.subject '_' f_info.date '_' f_info.task '_Cell_' num2str(iC)], 'fig')
 %     
-%     subplot(6,4,[1 5])
-%     axis off
-%     text(0,1, ['Cell # ' num2str(iC)]);
-%     text(0,.66,'Whole session')
-%     text(0,.33,['MI: ' num2str(Place_MI,2)]);
-%     text(0,0, ['Num trans: ' num2str(length(ca_evts))]);
-%     colormap(gca, 'cool')
-%     colorbar('location', 'southoutside', 'ticks', [0, 1], 'ticklabels', {'1^s^t', 'last'})
-%     
-%     
-%     if contains(All_cells.fname{iC}.task, 'rec')
-%         subplot(6,4,2)
-%         axis off
-%         title('Activity')
-%         subplot(6,4,6)
-%     else
-%         subplot(6,4,[2 6])
-%     end
-%     t_binary = ms.Binary(:,iC) & movement_idx;
-%     hold on
-%     plot(behav_aligned.position(:,2), behav_aligned.position(:,1), 'color', PARAMS.L_grey)
-%     %     xlim([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))])
-%     %     ylim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]));
-%     set(gca, 'xtick', [], 'ytick', []);
-%     % put dots on positions when the cell was active.
-%     MS_color_plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1), '.', cool(length(behav_aligned.position(t_binary,2))))
-%     %     plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1),'.', 'color',  cool(length(behav_aligned.position(t_binary,2))))
-%     %     xlim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]))
-%     %     ylim(round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]))
-%     axis off
-%     %     x_lim = xlim;
-%     %     y_lim = ylim;
-%     %     hold on
-%     %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-%     %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-%     %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-%     
-%     % overall occupancy map
-%     if contains(All_cells.fname{iC}.task, 'rec')
-%         subplot(6,4,3)
-%         title('Occupancy')
-%         axis off
-%         subplot(6,4,7);
-%     else
-%         subplot(6,4,[3 7]);
-%         title('Occupancy')
-%     end
-%     imagesc(Y_bin_centers, X_bin_centers,  Place_occupancy);
-%     set(gca,'YDir','normal'); % fix the Y direction to match the activity plot.
-%     set(gca, 'xtick', [], 'ytick', []);
-%     axis off
-%     %     ylim([min(Y_bin_centers) max(Y_bin_centers)])
-%     %     x_lim = xlim;
-%     %     y_lim = ylim;
-%     %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-%     %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-%     %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-%     
-%     % overall tuning map
-%     % overall occupancy map
-%     if contains(All_cells.fname{iC}.task, 'rec')
-%         subplot(6,4,4)
-%         title(['Sig at p < ' num2str(cfg.p_thres)])
-%         axis off
-%         subplot(6,4,8);
-%     else
-%         subplot(6,4,[4 8]);
-%         title(['Sig at p < ' num2str(cfg.p_thres)])
-%     end
-%     imagesc(Y_bin_centers,X_bin_centers, Place_Sig_map)
-%     hold on
-%     set(gca,'YDir','normal'); % fix the Y direction to match the activity plot.
-%     set(gca, 'xtick', [], 'ytick', []);
-%     axis off
-%     %     x_lim = xlim;
-%     %     y_lim = ylim;
-%     %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-%     %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-%     %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-%     
-%     
-%     % first half
-%     
-%     subplot(6,4,[9 13])
-%     axis off
-%     text(0,.8,'1^s^t half split')
-%     text(0,.6,['MI: ' num2str(Place_S1_MI,2)]);
-%     
-%     
-%     if contains(All_cells.fname{iC}.task, 'rec')
-%         subplot(6,4,14)
-%     else
-%         subplot(6,4,[10 14])
-%     end
-%     t_binary = ms.Binary(:,iC) & movement_idx & split_1;
-%     hold on
-%     plot(behav_aligned.position(movement_idx & split_1,2), behav_aligned.position(movement_idx & split_1,1), 'color', PARAMS.L_grey)
-%     %     xlim([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))])
-%     %     ylim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]));
-%     set(gca, 'xtick', [], 'ytick', []);
-%     % put dots on positions when the cell was active.
-%     plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red)
-%     %     xlim(round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]))
-%     %     ylim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]))
-%     axis off
-%     %     x_lim = xlim;
-%     %     y_lim = ylim;
-%     %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-%     %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-%     %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-%     
-%     % overall occupancy map
-%     if contains(All_cells.fname{iC}.task, 'rec')
-%         subplot(6,4,15);
-%     else
-%         subplot(6,4,[11 15]);
-%     end
-%     imagesc(Y_bin_centers, X_bin_centers,  Place_S1_occupancy);
-%     set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
-%     set(gca, 'xtick', [], 'ytick', []);
-%     axis off
-%     %     x_lim = xlim;
-%     %     y_lim = ylim;
-%     %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-%     %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-%     %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-%     
-%     % 1st half tuning map
-%     if contains(All_cells.fname{iC}.task, 'rec')
-%         subplot(6,4,16);
-%     else
-%         subplot(6,4,[12 16]);
-%     end
-%     imagesc(Y_bin_centers, X_bin_centers,  Place_S1_tuning_curve);
-%     set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
-%     set(gca, 'xtick', [], 'ytick', []);
-%     axis off
-%     %     x_lim = xlim;
-%     %     y_lim = ylim;
-%     %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-%     %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-%     %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-%     
-%     
-%     % second half
-%     
-%     subplot(6,4,17)
-%     axis off
-%     text(0,.8,'2^n^d half split')
-%     text(0,.4,['MI: ' num2str(Place_S2_MI,2)]);
-%     text(0,.0,['split xcorr: ' num2str(Place_Stability_corr,2)]);
-%     
-%     if contains(All_cells.fname{iC}.task, 'rec')
-%         subplot(6,4,22)
-%     else
-%         subplot(6,4,[18 22])
-%     end
-%     t_binary = ms.Binary(:,iC) & movement_idx & split_2;
-%     hold on
-%     plot(behav_aligned.position(movement_idx & split_2,2), behav_aligned.position(movement_idx & split_2,1), 'color', PARAMS.L_grey)
-%     %     xlim([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))])
-%     %     ylim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]));
-%     set(gca, 'xtick', [], 'ytick', []);
-%     % put dots on positions when the cell was active.
-%     plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red)
-%     %     xlim(round([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]))
-%     %     ylim(round([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]))
-%     axis off
-%     %     x_lim = xlim;
-%     %     y_lim = ylim;
-%     %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-%     %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-%     %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-%     
-%     % 2nd half occupancy
-%     if contains(All_cells.fname{iC}.task, 'rec')
-%        s2og = subplot(6,4,23);
-%     else
-%         s2og = subplot(6,4,[19 23]);
-%     end
-%     imagesc(Y_bin_centers,X_bin_centers, Place_S2_occupancy);
-%     set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
-%     set(gca, 'xtick', [], 'ytick', []);
-%     axis off
-%     %     x_lim = xlim;
-%     %     y_lim = ylim;
-%     %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-%     %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-%     %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-%     
-%     % overall tuning map
-%     if contains(All_cells.fname{iC}.task, 'rec')
-%        s2 =  subplot(6,4,24);
-%     else
-%        s2 =  subplot(6,4,[20 24]);
-%     end
-%     hold on
-%     imagesc(X_bin_centers, Y_bin_centers, Place_S2_tuning_curve);
-%     set(gca,'YDir','normal'); % fix the Y direction to match the activity plot
-%     set(gca, 'xtick', [], 'ytick', []);
-%     axis off
-% %     x_lim = xlim;
-% %     y_lim = ylim;
-%     
-% %     set(gca, 'Clipping', 'off')
-% %     plot([x_lim(2)-8, x_lim(2)+2],[y_lim(1)-2, y_lim(1)-2], 'k', 'linewidth', 1)
-% %     plot([x_lim(2)+2, x_lim(2)+2],[y_lim(1)-2, y_lim(1)+8], 'k', 'linewidth', 1)
-% %     text(x_lim(2)-8, y_lim(1)-6, '10cm', 'fontsize', 6)
-%     
-% %     % move unit line labels off 
-% %     s1Pos = get(s2og, 'position');
-% %         s2Pos = get(s2, 'position');
-% %     s2Pos = [s2Pos(1)*.988 s2Pos(2) s1Pos(3:4)*1.4];
-% %     set(s2, 'position', s2Pos); 
-% %     set(gcf, 'position', [680   421   886   550])
-%     mkdir([PARAMS.inter_dir 'Place_figs'])
-%     saveas(gcf, [PARAMS.inter_dir 'Place_figs' filesep f_info.subject '_' f_info.date '_' f_info.task '_Cell_' num2str(iC)], 'png')
-%     saveas(gcf, [PARAMS.inter_dir  'Place_figs' filesep f_info.subject '_' f_info.date '_' f_info.task '_Cell_' num2str(iC)], 'fig')
-% %     
-%     %% plot everything
-%     %     if ishandle(300)
-%     %         close(300)
-%     %     end
-%     figure(100+iC)
-%     
-%     M = 4; % rows
-%     N = 5; % columns
-%     %   fig{iC} = figure('Visible', 'off'); % hack to stop figures from taking
-%     %   over the screen.  Good for batch processing in the background.
-%     
-%     %get binary 'event times' to be plotted as dots
-%     t_binary = ms.Binary(:,iC) & movement_idx;
-% %     accel_t_binary = find(ms.Binary(1:end-1,iC)==1);
-%         accel_t_binary = t_binary(1:end-1); 
-% 
-%     
-%     %%% title information
-%     subplot(M, N, 4:5) % title information. Top right corner,
-%     ylim([0 10])
-%     text(0,9,['Cell id: ' num2str(iC)], 'fontweight', 'bold')
-%     text(0,7,['Subject: ' f_info.subject]);
-%     text(0,5,['Session: ' f_info.task]);
-%     text(0,3,['Date: ' f_info.date]);
-%     text(0,1,['Binary thresh: ' num2str(ms.Binary_threshold) 'sd'  '    Num transients: ' num2str(length(ca_evts))])
-%     
-%     axis off
-%     
-%     
-%     %%% raw trace
-%     subplot(M, N, 1:2)
-%     plot(ms.time/1000, ms.RawTraces(:,iC), 'color', PARAMS.blue)
-%     xlim([ms.time(1)/1000 ms.time(end)/1000]);
-%     xlabel('time(s)');
-%     ylabel('dF/F');
-%     hline(mean(ms.RawTraces(:,iC))+2*std(ms.RawTraces(:,iC)));
-%     hold on
-%     plot(ms.time(t_binary)/1000, (ms.Binary(t_binary,iC)*0)+max(ms.RawTraces(:,iC)), '.', 'color', PARAMS.red)
-%     ylim([min(ylim), max(ylim)*1.2])
-%     
-%     
-%     %%% add the SPF for this cell.
-%     subplot(M, N, 3) % spf with centroid.
-%     Spr = winter(32);
-%     colormap([0 0 0 ; Spr(16:end,:)]);
-%     % c_lim = [0.2*max(max(ms.PeakToNoiseProj)), max(max(ms.PeakToNoiseProj))]; % helps clean up the projection by increasing the floor of the colormap to take in the lowest x% of the data
-%     % imagesc(ms.PeakToNoiseProj, c_lim)
-%     MS_plot_all_SFPs(flipdim(ms.SFPs,3)); % custom function to plot all the SFPs on top of each other.  Cleaner than ms.PeakToNoiseProj.
-%     hold on
-%     [max_I, max_J] = find(ms.SFPs(:,:,iC) == max(ms.SFPs(:,:,iC), [],[1,2]));
-%     text(max_J(1),max_I(1), '+', 'color', 'w',  'fontsize', 12, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle')
-%     % quiver(max_J(1)-22,max_I(1)-3, 22,3,-10,'color', 'w', 'linewidth', 2, 'MaxHeadSize', 5); % add an arrow pointing to the current cell.
-%     %     scatter(ms.Centroids(iC,2), ms.Centroids(iC,1),60,'w', 'o','LineWidth',.5); % put a circle around the current cell.
-%     
-%     
-%     %%% place info
-%     % X Y position
-%     subplot(M, N, N+1:N+2)
-%     hold on
-%     plot(behav_aligned.time/1000, behav_aligned.position(:,1), 'color', PARAMS.L_grey)
-%     plot(behav_aligned.time/1000, behav_aligned.position(:,2), 'color', PARAMS.D_grey)
-%     
-%     % update position in time with binary 'spikes'
-%     plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red);
-%     plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,2),'.', 'color', PARAMS.red);
-%     
-%     % plot(behav_aligned.time/1000, behav_aligned.position(:,2),'color', PARAMS.blue)
-%     ylabel('linear position')
-%     xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
-%     % legend({'x', 'y'})
-%     
-%     
-%     % plot the binary times on the position
-%     subplot(M, N, N+3) % N*4+4:N*4+6
-%     hold on
-%     plot(behav_aligned.position(:,2), behav_aligned.position(:,1), 'color', PARAMS.L_grey)
-%     set(gca, 'xtick', [], 'ytick', []);
-%     % put dots on positions when the cell was active.
-%     MS_color_plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1), '.', cool(length(behav_aligned.position(t_binary,2))))
-%     axis off
-%     tmp=get(gca,'position'); % scale size of plot to match the
-%     set(gca,'position',[tmp(1) tmp(2) tmp(3) (max(behav_aligned.position(:,1)) /max(behav_aligned.position(:,2)))*tmp(4)])
-%     
-%     
-%     % add in the 2D place/spatial information?
-%     subplot(M, N, N+4) % N*4+4:N*4+6
-%     imagesc(Y_bin_centers,X_bin_centers,Place_posterior);
-%     set(gca, 'YDir', 'normal');
-%     xlabel('position (cm)');
-%     ylabel('position (cm)');
-%     tmp=get(gca,'position');
-%     set(gca,'position',[tmp(1) tmp(2) tmp(3) (X_bin_centers(end) /Y_bin_centers(end))*tmp(4)])
-%     
-%     
-%     % plot the MI and p value for the cell.
-%     subplot(M, N, N+5)
-%     text(0, 1*max(ylim), 'Place', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
-%     text(0, .8*max(ylim), {'MI:'; num2str(All_cells.place.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
-%     text(0, .4*max(ylim), {'split corr:'; num2str(All_cells.place.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
-%     axis off
-%     
-%     
-%     
-%     %%% speed info
-%     subplot(M, N, N*2+1:N*2+2)
-%     hold on
-%     plot(behav_aligned.time/1000, behav_aligned.speed, 'color', PARAMS.L_grey)
-%     plot(behav_aligned.time(movement_idx)/1000, behav_aligned.speed(movement_idx),'.', 'color', PARAMS.gold, 'markersize', 1)
-%     % legend('Speed', 'box', 'off')
-%     
-%     xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
-%     ylabel('speed cm/s')
-%     xlabel('time (s)')
-%     
-%     % update speed in time with binary 'spikes'
-%     plot(behav_aligned.time(t_binary)/1000,behav_aligned.speed(t_binary,1),'.', 'color', PARAMS.red);
-%     
-%     % speed stats
-%     subplot(M, N, N*2+5)
-%     text(0, 1*max(ylim), 'Speed', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
-%     text(0, .8*max(ylim), {'MI:'; num2str(All_cells.speed.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
-%     %     text(0, .4*max(ylim), {'split corr:'; num2str(All_cells.speed.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
-%     axis off
-%     
-%     % p(active | speed)
-%     subplot(M, N, N*2+3:N*2+4)
-%     S_h = shadedErrorBar(Speed_bin_centers, All_cells.speed.stats{iC}.mean', [All_cells.speed.stats{iC}.upper_CI95'; All_cells.speed.stats{iC}.lower_CI95']);
-%     S_h.mainLine.Color = PARAMS.gold; S_h.mainLine.LineWidth = 2;
-%     
-%     S_h.patch.FaceAlpha = .6; % how transparent the shading will be.
-%     S_h.patch.FaceColor = PARAMS.L_grey;
-%     S_h.edge(1).Color = PARAMS.D_grey;
-%     S_h.edge(2).Color = PARAMS.D_grey;
-%     
-%     xlim([min(Speed_bin_centers) max(Speed_bin_centers)]);
-%     xlabel('speed (cm/s)');
-%     ylabel('P(act | speed)');
-%     
-%     %%% acceleration info
-%     subplot(M, N, N*3+1:N*3+2)
-%     hold on
-%     plot(behav_aligned.time(1:end-1)/1000, behav_aligned.accel, 'color', PARAMS.L_grey)
-%     plot(behav_aligned.time(accel_movement_idx)/1000, behav_aligned.accel(accel_movement_idx),'.', 'color', PARAMS.green, 'markersize', 1)
-%     
-%     xlim([behav_aligned.time(1)/1000 max(behav_aligned.time(1:end-1))/1000]);
-%     ylim([cfg.accel_bins(1) cfg.accel_bins(end)])
-%     ylabel('acceleration cm/s^2')
-%     xlabel('time (s)')
-%     
-%     %%% update accel in time with binary 'spikes'
-%     plot(behav_aligned.time(accel_t_binary)/1000,behav_aligned.accel(accel_t_binary,1),'.', 'color', PARAMS.red);
-%     
-%     % accel stats
-%     subplot(M, N, N*3+5)
-%     text(0, 1*max(ylim), 'Accel', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
-%     text(0, .6*max(ylim), {'MI:'; num2str(All_cells.accel.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
-%     %     text(0, .2*max(ylim), {'split corr:'; num2str(All_cells.accel.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
-%     axis off
-%     
-%     %plot the MI with CI
-%     subplot(M, N, N*3+3:N*3+4)
-%     A_h = shadedErrorBar(Acc_bin_centers, All_cells.accel.stats{iC}.mean', [All_cells.accel.stats{iC}.upper_CI95'; All_cells.accel.stats{iC}.lower_CI95']);
-%     A_h.mainLine.Color = PARAMS.green; A_h.mainLine.LineWidth = 2;
-%     
-%     A_h.patch.FaceAlpha = .6; % how transparent the shading will be.
-%     A_h.patch.FaceColor = PARAMS.L_grey;
-%     A_h.edge(1).Color = PARAMS.D_grey;
-%     A_h.edge(2).Color = PARAMS.D_grey;
-%     
-%     xlim([min(Acc_bin_centers) max(Acc_bin_centers)]);
-%     xlabel('acceleration (cm/s^2)');
-%     ylabel('P(act | acceleration)');
-%     
-%     % %%% orientation info
-%     % subplot(M, N, N*3+1:N*3+3)
-%     % plot(behav_aligned.time/1000,ones(size(behav_aligned.time)), 'color', 'w')
-%     % hold on
-%     % text(behav_aligned.time(floor(length(behav_aligned.time)/3))/1000, pi, 'HD placeholder')
-%     %     % ylabel('HD')
-%     % ylim([-pi pi])
-%     % set(gca, 'ytick', [-pi pi], 'yticklabel', {'-pi' 'pi'})
-%     
-%     
-%     
-%     % set(gca, 'yticklabel', num2str(roundn([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))],2)))
-%     % get the transient/position values
-%     % tran_x = interp1(behav_aligned.time(1:end-1),behav_aligned.position(1:end-1,1),ms.time(t_binary),'linear');
-%     % tran_y = interp1(behav_aligned.time(1:end-1),behav_aligned.position(1:end-1,2),ms.time(t_binary),'linear');
-%     %
-%     % plot(tran_x,tran_y,'.', 'color', PARAMS.red);
-%     
-%     % customize figure stuff
-%     
-%     pos = get(gcf, 'position');
-%     set(gcf, 'position', [pos(1)-pos(1)*.8 pos(2)-pos(2)*.8 pos(3)*2.7 pos(4) *1.8])
-%     tightfig
-%     
-%     % pause(3)
-%     %     close(100)
-%     [full,this_dir]=fileparts(pwd);
-%     [~,this_parent] = fileparts(full);
-%     
-%     mkdir([PARAMS.inter_dir filesep 'Summary' filesep this_parent filesep this_dir]);
-%     saveas(gcf, [PARAMS.inter_dir filesep 'Summary' filesep  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.fig'])
-%     saveas(gcf, [PARAMS.inter_dir filesep 'Summary' filesep  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.png'])
-%     %
-%     
-%     %     close(300)
-%     fprintf('\n');
+    %% plot everything
+    %     if ishandle(300)
+    %         close(300)
+    %     end
+    figure(100+iC)
+    
+    M = 4; % rows
+    N = 5; % columns
+    %   fig{iC} = figure('Visible', 'off'); % hack to stop figures from taking
+    %   over the screen.  Good for batch processing in the background.
+    
+    %get binary 'event times' to be plotted as dots
+    t_binary = ms.Binary(:,iC) & movement_idx;
+%     accel_t_binary = find(ms.Binary(1:end-1,iC)==1);
+        accel_t_binary = t_binary(1:end-1); 
+
+    
+    %%% title information
+    subplot(M, N, 4:5) % title information. Top right corner,
+    ylim([0 10])
+    text(0,9,['Cell id: ' num2str(iC)], 'fontweight', 'bold')
+    text(0,7,['Subject: ' f_info.subject]);
+    text(0,5,['Session: ' f_info.task]);
+    text(0,3,['Date: ' f_info.date]);
+    text(0,1,['Binary thresh: ' num2str(ms.Binary_threshold) 'sd'  '    Num transients: ' num2str(length(ca_evts))])
+    
+    axis off
+    
+    
+    %%% raw trace
+    subplot(M, N, 1:2)
+    plot(ms.time/1000, ms.RawTraces(:,iC), 'color', PARAMS.blue)
+    xlim([ms.time(1)/1000 ms.time(end)/1000]);
+    xlabel('time(s)');
+    ylabel('dF/F');
+    hline(mean(ms.RawTraces(:,iC))+2*std(ms.RawTraces(:,iC)));
+    hold on
+    plot(ms.time(t_binary)/1000, (ms.Binary(t_binary,iC)*0)+max(ms.RawTraces(:,iC)), '.', 'color', PARAMS.red)
+    ylim([min(ylim), max(ylim)*1.2])
+    
+    
+    %%% add the SPF for this cell.
+    subplot(M, N, 3) % spf with centroid.
+    Spr = winter(32);
+    colormap([0 0 0 ; Spr(16:end,:)]);
+    % c_lim = [0.2*max(max(ms.PeakToNoiseProj)), max(max(ms.PeakToNoiseProj))]; % helps clean up the projection by increasing the floor of the colormap to take in the lowest x% of the data
+    % imagesc(ms.PeakToNoiseProj, c_lim)
+    MS_plot_all_SFPs(flipdim(ms.SFPs,3)); % custom function to plot all the SFPs on top of each other.  Cleaner than ms.PeakToNoiseProj.
+    hold on
+    [max_I, max_J] = find(ms.SFPs(:,:,iC) == max(ms.SFPs(:,:,iC), [],[1,2]));
+    text(max_J(1),max_I(1), '+', 'color', 'w',  'fontsize', 12, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle')
+    % quiver(max_J(1)-22,max_I(1)-3, 22,3,-10,'color', 'w', 'linewidth', 2, 'MaxHeadSize', 5); % add an arrow pointing to the current cell.
+    %     scatter(ms.Centroids(iC,2), ms.Centroids(iC,1),60,'w', 'o','LineWidth',.5); % put a circle around the current cell.
+    
+    
+    %%% place info
+    % X Y position
+    subplot(M, N, N+1:N+2)
+    hold on
+    plot(behav_aligned.time/1000, behav_aligned.position(:,1), 'color', PARAMS.L_grey)
+    plot(behav_aligned.time/1000, behav_aligned.position(:,2), 'color', PARAMS.D_grey)
+    
+    % update position in time with binary 'spikes'
+    plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,1),'.', 'color', PARAMS.red);
+    plot(behav_aligned.time(t_binary)/1000,behav_aligned.position(t_binary,2),'.', 'color', PARAMS.red);
+    
+    % plot(behav_aligned.time/1000, behav_aligned.position(:,2),'color', PARAMS.blue)
+    ylabel('linear position')
+    xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
+    % legend({'x', 'y'})
+    
+    
+    % plot the binary times on the position
+    subplot(M, N, N+3) % N*4+4:N*4+6
+    hold on
+    plot(behav_aligned.position(:,2), behav_aligned.position(:,1), 'color', PARAMS.L_grey)
+    set(gca, 'xtick', [], 'ytick', []);
+    % put dots on positions when the cell was active.
+    MS_color_plot(behav_aligned.position(t_binary,2), behav_aligned.position(t_binary,1), '.', cool(length(behav_aligned.position(t_binary,2))))
+    axis off
+    tmp=get(gca,'position'); % scale size of plot to match the
+    set(gca,'position',[tmp(1) tmp(2) tmp(3) (max(behav_aligned.position(:,1)) /max(behav_aligned.position(:,2)))*tmp(4)])
+    
+    
+    % add in the 2D place/spatial information?
+    subplot(M, N, N+4) % N*4+4:N*4+6
+    imagesc(Y_bin_centers,X_bin_centers,Place_posterior);
+    set(gca, 'YDir', 'normal');
+    xlabel('position (cm)');
+    ylabel('position (cm)');
+    tmp=get(gca,'position');
+    set(gca,'position',[tmp(1) tmp(2) tmp(3) (X_bin_centers(end) /Y_bin_centers(end))*tmp(4)])
+    
+    
+    % plot the MI and p value for the cell.
+    subplot(M, N, N+5)
+    text(0, 1*max(ylim), 'Place', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
+    text(0, .8*max(ylim), {'MI:'; num2str(All_cells.place.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    text(0, .4*max(ylim), {'split corr:'; num2str(All_cells.place.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    axis off
+    
+    
+    
+    %%% speed info
+    subplot(M, N, N*2+1:N*2+2)
+    hold on
+    plot(behav_aligned.time/1000, behav_aligned.speed, 'color', PARAMS.L_grey)
+    plot(behav_aligned.time(movement_idx)/1000, behav_aligned.speed(movement_idx),'.', 'color', PARAMS.gold, 'markersize', 1)
+    % legend('Speed', 'box', 'off')
+    
+    xlim([behav_aligned.time(1)/1000 max(behav_aligned.time)/1000]);
+    ylabel('speed cm/s')
+    xlabel('time (s)')
+    
+    % update speed in time with binary 'spikes'
+    plot(behav_aligned.time(t_binary)/1000,behav_aligned.speed(t_binary,1),'.', 'color', PARAMS.red);
+    
+    % speed stats
+    subplot(M, N, N*2+5)
+    text(0, 1*max(ylim), 'Speed', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
+    text(0, .8*max(ylim), {'MI:'; num2str(All_cells.speed.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    %     text(0, .4*max(ylim), {'split corr:'; num2str(All_cells.speed.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    axis off
+    
+    % p(active | speed)
+    subplot(M, N, N*2+3:N*2+4)
+    S_h = shadedErrorBar(Speed_bin_centers, All_cells.speed.stats{iC}.mean', [All_cells.speed.stats{iC}.upper_CI95'; All_cells.speed.stats{iC}.lower_CI95']);
+    S_h.mainLine.Color = PARAMS.gold; S_h.mainLine.LineWidth = 2;
+    
+    S_h.patch.FaceAlpha = .6; % how transparent the shading will be.
+    S_h.patch.FaceColor = PARAMS.L_grey;
+    S_h.edge(1).Color = PARAMS.D_grey;
+    S_h.edge(2).Color = PARAMS.D_grey;
+    
+    xlim([min(Speed_bin_centers) max(Speed_bin_centers)]);
+    xlabel('speed (cm/s)');
+    ylabel('P(act | speed)');
+    
+    %%% acceleration info
+    subplot(M, N, N*3+1:N*3+2)
+    hold on
+    plot(behav_aligned.time(1:end-1)/1000, behav_aligned.accel, 'color', PARAMS.L_grey)
+    plot(behav_aligned.time(accel_movement_idx)/1000, behav_aligned.accel(accel_movement_idx),'.', 'color', PARAMS.green, 'markersize', 1)
+    
+    xlim([behav_aligned.time(1)/1000 max(behav_aligned.time(1:end-1))/1000]);
+    ylim([cfg.accel_bins(1) cfg.accel_bins(end)])
+    ylabel('acceleration cm/s^2')
+    xlabel('time (s)')
+    
+    %%% update accel in time with binary 'spikes'
+    plot(behav_aligned.time(accel_t_binary)/1000,behav_aligned.accel(accel_t_binary,1),'.', 'color', PARAMS.red);
+    
+    % accel stats
+    subplot(M, N, N*3+5)
+    text(0, 1*max(ylim), 'Accel', 'HorizontalAlignment', 'left', 'color', 'K', 'fontweight', 'bold')
+    text(0, .6*max(ylim), {'MI:'; num2str(All_cells.accel.MI(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    %     text(0, .2*max(ylim), {'split corr:'; num2str(All_cells.accel.split.Stability_corr(iC),3)}, 'HorizontalAlignment', 'left', 'color', 'K')
+    axis off
+    
+    %plot the MI with CI
+    subplot(M, N, N*3+3:N*3+4)
+    A_h = shadedErrorBar(Acc_bin_centers, All_cells.accel.stats{iC}.mean', [All_cells.accel.stats{iC}.upper_CI95'; All_cells.accel.stats{iC}.lower_CI95']);
+    A_h.mainLine.Color = PARAMS.green; A_h.mainLine.LineWidth = 2;
+    
+    A_h.patch.FaceAlpha = .6; % how transparent the shading will be.
+    A_h.patch.FaceColor = PARAMS.L_grey;
+    A_h.edge(1).Color = PARAMS.D_grey;
+    A_h.edge(2).Color = PARAMS.D_grey;
+    
+    xlim([min(Acc_bin_centers) max(Acc_bin_centers)]);
+    xlabel('acceleration (cm/s^2)');
+    ylabel('P(act | acceleration)');
+    
+    % %%% orientation info
+    % subplot(M, N, N*3+1:N*3+3)
+    % plot(behav_aligned.time/1000,ones(size(behav_aligned.time)), 'color', 'w')
+    % hold on
+    % text(behav_aligned.time(floor(length(behav_aligned.time)/3))/1000, pi, 'HD placeholder')
+    %     % ylabel('HD')
+    % ylim([-pi pi])
+    % set(gca, 'ytick', [-pi pi], 'yticklabel', {'-pi' 'pi'})
+    
+    
+    
+    % set(gca, 'yticklabel', num2str(roundn([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))],2)))
+    % get the transient/position values
+    % tran_x = interp1(behav_aligned.time(1:end-1),behav_aligned.position(1:end-1,1),ms.time(t_binary),'linear');
+    % tran_y = interp1(behav_aligned.time(1:end-1),behav_aligned.position(1:end-1,2),ms.time(t_binary),'linear');
+    %
+    % plot(tran_x,tran_y,'.', 'color', PARAMS.red);
+    
+    % customize figure stuff
+    
+    pos = get(gcf, 'position');
+    set(gcf, 'position', [pos(1)-pos(1)*.8 pos(2)-pos(2)*.8 pos(3)*2.7 pos(4) *1.8])
+    tightfig
+    
+    % pause(3)
+    %     close(100)
+    [full,this_dir]=fileparts(pwd);
+    [~,this_parent] = fileparts(full);
+    
+    mkdir([PARAMS.inter_dir filesep 'Summary' filesep this_parent filesep this_dir]);
+    saveas(gcf, [PARAMS.inter_dir filesep 'Summary' filesep  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.fig'])
+    saveas(gcf, [PARAMS.inter_dir filesep 'Summary' filesep  this_parent filesep this_dir filesep 'Cell_' num2str(iC) '_Spatial_info.png'])
+    %
+    
+    %     close(300)
+    fprintf('\n');
 %     close(iC)
 %     close(100+iC)
 end % end cell loop.
