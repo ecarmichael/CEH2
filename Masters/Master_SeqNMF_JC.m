@@ -24,10 +24,8 @@ elseif strcmp(os, 'GLNXA64')
     PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
     
 else
-    PARAMS.data_dir = 'D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\Processed place'; % where to find the raw data
-    PARAMS.raw_data_dir = 'D:\Dropbox (Williams Lab)\Jisoo\JisooProject2020\RawData\pv1060'; % raw data location.
-    PARAMS.inter_dir = 'D:\Dropbox (Williams Lab)\Jisoo\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter'; % where to put intermediate files
-    PARAMS.stats_dir = 'D:\Dropbox (Williams Lab)\Jisoo\Upload\pv1002\Inter\Stats'; % where to put the statistical output .txt
+    PARAMS.raw_data_dir = 'D:\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1060'; % raw data location.
+    PARAMS.inter_dir = 'D:\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\SeqNMF_EC'; % where to put intermediate files
     PARAMS.code_base_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; % where the codebase repo can be found
     PARAMS.code_CEH2_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2'; % where the multisite repo can be found
     PARAMS.code_seqnmf_dir = 'C:\Users\ecarm\Documents\GitHub\seqNMF'; % where the multisite repo can be found
@@ -56,20 +54,21 @@ cell_type = 'Anx';
 
 %% set up the directories to process
 
-session = {'D:\Dropbox (Williams Lab)\Jisoo\JisooProject2020\RawData\pv1069\10_22_2019_PV1069_HATSwitch\H13_M4_S44_HATD6',...
+session = {'D:\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_22_2019_PV1069_HATSwitch\H13_M4_S44_HATD6',...
+    'D:\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1060\11_26_2019_PV1060_HATSwitch\H13_M5_S15_HATSwitch', ...
+    'D:\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1060\7_15_2019_PV1060_LTD1\H13_M22_S5_LTD1',...
+    'D:\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1060\11_19_2019_PV1060_HATD1\H13_M20_S13_HATD1,'...
     }; 
 
-pro_main = 'D:\Dropbox (Williams Lab)\Jisoo\JisooProject2020\2020_Results_aftercutting\'; % where to find processed data
+pro_main = 'D:\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting'; % where to find processed data
 
-REM_main = 'D:\Dropbox (Williams Lab)\Jisoo\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter'; 
-
-
-MS_Run_REM_SeqNMF([], session{1}, pro_main, REM_main)
-
+REM_main = 'D:\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter'; 
 %% cycle through some sessions
 
-
-
+for iSess = 1:length(session)
+    MS_Run_REM_SeqNMF([], session{iSess}, pro_main, REM_main)
+    close all
+end
 
 %% load a nice session
 

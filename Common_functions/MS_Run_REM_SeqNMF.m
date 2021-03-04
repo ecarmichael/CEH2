@@ -370,8 +370,9 @@ if cfg.place
     colormap(ax2(1), 'parula');
     colormap(ax1(2), 'parula');
     
-    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'Raw_sorted' '_' type])
-    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'Raw_sorted' '_' type '.png'])
+    mkdir([PARAMS.inter_dir filesep subject filesep session ])
+    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session  filesep 'Raw_sorted' '_' type])
+    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session  filesep 'Raw_sorted' '_' type '.png'])
     
     %     cmap = linspecer(size(data_in, 1));
     % %         cmap(1,:) = 0;
@@ -382,8 +383,8 @@ if cfg.place
         xlim([ii-floor(max((1:size(data_in, 2))/Fs)/6) ii])
 
         
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'Raw_sorted_zoom' num2str(ii-floor(max((1:size(data_in, 2))/Fs)/6)) '_' type])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'Raw_sorted_zoom' num2str(ii-floor(max((1:size(data_in, 2))/Fs)/6)) '_' type '.png'])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'Raw_sorted_zoom' num2str(ii-floor(max((1:size(data_in, 2))/Fs)/6)) '_' type])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'Raw_sorted_zoom' num2str(ii-floor(max((1:size(data_in, 2))/Fs)/6)) '_' type '.png'])
         %
     end
     xlim([0 max((1:size(data_in, 2))/Fs)])
@@ -507,8 +508,8 @@ else
         0,trainPOS(:,floor(tstart*Fs/PosFs):end))
     title('Significant seqNMF factors, with raw data: Event-based')
     
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'Seq_fac_events' num2str(K) 'L' num2str(L) '_' type])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'Seq_fac_events' num2str(K) 'L' num2str(L) '_' type '.png'])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'Seq_fac_events' num2str(K) 'L' num2str(L) '_' type])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'Seq_fac_events' num2str(K) 'L' num2str(L) '_' type '.png'])
     
     figure;
     WHPlot(W_e(indSort,:,:),H_e(:,tstart:end), ...
@@ -516,8 +517,8 @@ else
         0,trainPOS(:,floor(tstart*Fs/PosFs):end))
     title('SeqNMF reconstruction: Event-based')
     
-     saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'Seq_recon_events' num2str(K) 'L' num2str(L) '_' type])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'Seq_recon_events' num2str(K) 'L' num2str(L) '_' type '.png'])
+     saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'Seq_recon_events' num2str(K) 'L' num2str(L) '_' type])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'Seq_recon_events' num2str(K) 'L' num2str(L) '_' type '.png'])
         
     addpath(genpath([PARAMS.code_seqnmf_dir filesep 'misc_elm']));
     figure; HTriggeredSpec(H_e,trainPOS,Fs,Fs,ceil(L*Fs));
@@ -586,8 +587,8 @@ else
         0,trainPOS(:,floor(tstart*Fs/PosFs):end))
     title('Significant seqNMF factors, with raw data: Parts-based')
     
-     saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'Seq_fac_parts' num2str(K) 'L' num2str(L) '_' type])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'Seq_fac_parts' num2str(K) 'L' num2str(L) '_' type '.png'])
+     saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'Seq_fac_parts' num2str(K) 'L' num2str(L) '_' type])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep filesep 'Seq_fac_parts' num2str(K) 'L' num2str(L) '_' type '.png'])
     
         figure(303);
     WHPlot(W_p(indSort,:,:),H_p(:,tstart:end), ...
@@ -595,8 +596,8 @@ else
         0,trainPOS(:,floor(tstart*Fs/PosFs):end))
     title('SeqNMF reconstruction: Parts-based')
     
-         saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'Seq_recon_parts' num2str(K) 'L' num2str(L) '_' type])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'Seq_recon_parts' num2str(K) 'L' num2str(L) '_' type '.png'])
+         saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'Seq_recon_parts' num2str(K) 'L' num2str(L) '_' type])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'Seq_recon_parts' num2str(K) 'L' num2str(L) '_' type '.png'])
     
     figure(304)
      addpath(genpath([PARAMS.code_seqnmf_dir filesep 'misc_elm']));
@@ -648,7 +649,7 @@ all_seq.(type).H = H_p;
 all_seq.(type).is_significant = is_significant;
 all_seq.(type).indSort = indSort; 
 
-save([PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'all_wake_seqs_' type], 'all_seq')
+save([PARAMS.inter_dir filesep subject filesep session filesep 'all_wake_seqs_' type], 'all_seq')
 
 % clear this_pos this_data train* pos*
 %% Get some REM data for this session
@@ -657,17 +658,19 @@ save([PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 
 cd([REM_dir filesep subject filesep session])
 
 % load the concatenated sleep data.
-load('all_binary_post_REM.mat');
-load('all_binary_post_SW.mat');
+load('all_binary_post_REM.mat', 'all_binary_post_REM');
+% load('all_binary_post_SW.mat');
 % restrict, transpose and rename the sleep types.
 REM_data = all_binary_post_REM(:,keep_idx)';
+
+split_idx = MS_get_sleep_idx('post', 'REM'); 
 
 if exist('idx', 'var')
     fprintf('Sorting data based on centroids in WAKE\n')
     REM_data = REM_data(idx,:);
 end
 
-SW_data = all_binary_post_SW(:,keep_idx)';
+% SW_data = all_binary_post_SW(:,keep_idx)';
 
 clear all_binary*
 
@@ -679,6 +682,7 @@ set(gca, 'Xticklabels', round(x_ticks/Fs))
 xlabel('time (s)')
 ylabel('cell id (unsorted)')
 title('REM activity')
+vline(split_idx, 'r');
 %% run Seq on REM and look for significant sequences using the same K and lambda from the task.
 
 % this_REM = circshift(REM_data, floor(length(REM_data)/2),2);
@@ -746,6 +750,7 @@ end
 
 for iL = 1:length(Ls)
     fprintf('Running seqNMF...K = %d  L = %d sec\n', best_k+1, Ls(iL))
+    tic
     [W, H, ~,loadings,~]= seqNMF(X,'K',best_k+1,'L',ceil(Ls(iL)*Fs),...
         'lambdaL1W', .1, 'lambda', lambda, 'maxiter', 100, 'showPlot', 0,...
         'lambdaOrthoH', lambdaOrthoH, 'lambdaOrthoW', lambdaOrthoW);
@@ -755,6 +760,9 @@ for iL = 1:length(Ls)
     
     disp('Testing significance of factors on held-out data')
     [pvals,is_significant] = test_significance(testNEURAL,W,p);
+    
+    [max_factor, L_sort, max_sort, hybrid] = helper.ClusterByFactor(W(:,:,:),1);
+    indSort = hybrid(:,3);
     
     W = W(:,is_significant,:);
     H = H(is_significant,:);
@@ -768,7 +776,7 @@ for iL = 1:length(Ls)
     all_sweeps_out{iL}.sig = is_significant;
     all_sweeps_out{iL}.Train = trainNEURAL;
     all_sweeps_out{iL}.Trest = testNEURAL;
-    
+    toc
 end
 
 
@@ -798,8 +806,8 @@ for iL = sig_Ls % pick an L to work with
             0)
         title(['REM Significant seqNMF factors, with raw data: ' type '-based L:' num2str(Ls(iL)) 's'])
         mkdir([PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF'])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'REM_Seq_factor_parts_K' num2str(K) 'L' num2str(Ls(iL))])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'REM_Seq_factor_parts_K' num2str(K) 'L' num2str(Ls(iL)) '.png'])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_factor_parts_K' num2str(K) 'L' num2str(Ls(iL))])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_factor_parts_K' num2str(K) 'L' num2str(Ls(iL)) '.png'])
         
         figure;
         WHPlot(all_sweeps.(type){iL}.W(indSort,:,:),all_sweeps.(type){iL}.H(:,tstart:end), ...
@@ -807,8 +815,8 @@ for iL = sig_Ls % pick an L to work with
             0)
         title(['REM SeqNMF reconstruction: ' type '-based L:' num2str(Ls(iL)) 's'])
         
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'REM_Seq_recon_parts_K' num2str(K) 'L' num2str(Ls(iL))])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'REM_Seq_recon_parts_K' num2str(K) 'L' num2str(Ls(iL)) '.png'])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_recon_parts_K' num2str(K) 'L' num2str(Ls(iL))])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_recon_parts_K' num2str(K) 'L' num2str(Ls(iL)) '.png'])
         
         % close all
     end
@@ -852,8 +860,8 @@ for iSeq = 1:size(all_sweeps.(type){iL}.W(indSort,:,:),2)
     colormap(ax1(2), 'parula');
     
 %        linkaxes(ax2, 'x')
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'REM_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'REM_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
 end
 
 
@@ -897,8 +905,8 @@ sort_REM = REM_data(all_seq.parts.indSort,:);
     colormap(ax1(2), 'parula');
     
 %        linkaxes(ax2, 'x')
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'REM_wake_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'REM_wake_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_wake_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_wake_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
 
 
 % factor plots Not sure if useful for REM and LFP power.
@@ -985,4 +993,4 @@ all_sweeps.(type){iL}.PAS = PAS;
 end
 %% save the output
 
-save([PARAMS.inter_dir filesep subject filesep session filesep 'SeqNMF' filesep 'all_REM_sweeps_' type ], 'all_sweeps')
+save([PARAMS.inter_dir filesep subject filesep session filesep 'all_REM_sweeps_' type ], 'all_sweeps')
