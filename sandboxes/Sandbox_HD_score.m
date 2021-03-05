@@ -1,7 +1,7 @@
 %% HD score sandbox
 
 
-cd('/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06')
+% cd('/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06')
 load('behav_DLC.mat', 'behav')
 load('ms.mat', 'ms')
 
@@ -20,44 +20,82 @@ else
 end
 
 %smooth speed
-behav_aligned.speed = smooth(behav_aligned.speed, 3*mode(diff(ms.time)));
+if exist('smooth', 'builtin')
+    behav_aligned.speed = smooth(behav_aligned.speed, 3*mode(diff(ms.time)));
+else
+  
+ behav_aligned.speed= conv2(behav_aligned.speed, gausswin(3*mode(diff(ms.time))), 'same');
+end
 
 movement_idx = behav_aligned.speed >2.5; % get times when the animal was moving.
 accel_movement_idx = behav_aligned.speed(1:end-1) >2.5; % same as above but correct for diff used in acceleration calculation.
 
 % get the acceleration
-behav_aligned.accel = diff(smooth(behav_aligned.speed, 3*mode(diff(ms.time))));
+behav_aligned.accel = diff(behav_aligned.speed);
 
 
-%% compute event histogram
+% compute event histogram
 evts_idx = ms.Binary(:,1) == 1;
 
-hold on
-h= polarhistogram(behav_aligned.HD(movement_idx), 15);
-h.DisplayStyle = 'stairs';
-h.EdgeColor = [.7 .7 .7]; 
-h.EdgeAlpha = .4; 
+%% unwrap and smooth data
 
-h= polarhistogram(behav_aligned.HD(movement_idx & evts_idx), 15);
-h.DisplayStyle = 'stairs';
-h.EdgeColor = 'b'; 
+
+
+%% check for sig using mean vector length vs shuffle
+nShuff = 10000;
+m_idx = find(movement_idx == 1);
+e_idx = find(evts_idx == 1);
+
+for iShuff = nShuff:-1:1
+    
+    shuff_idx = m_idx(randperm(length(m_idx),length(e_idx)));
+
+    shuf_r(iShuff) = circ_r(behav_aligned.HD(shuff_idx)); 
+    
+end
+
+p95_shuff_r = prctile(shuf_r, 95); 
+
+evt_r = circ_r(behav_aligned.HD(movement_idx & evts_idx)); 
+occ_r = circ_r(behav_aligned.HD(movement_idx)); 
+% 
+% hold on
+% h= polarhistogram(behav_aligned.HD(movement_idx), 15);
+% h.DisplayStyle = 'stairs';
+% h.EdgeColor = [.7 .7 .7]; 
+% h.EdgeAlpha = .4; 
+% 
+% h= polarhistogram(behav_aligned.HD(movement_idx & evts_idx), 15);
+% h.DisplayStyle = 'stairs';
+% h.EdgeColor = 'b'; 
 
 
 % try with histograms and polar plots
 figure(102)
+% subplot(1,2,1)
+% hold on
+% 
+% [Occ, bins] = histcounts(behav_aligned.HD(movement_idx), -180:15:180); 
+% bin_c = bins(1:end-1)+15/2; 
+% bin_r = deg2rad(bin_c);
+% 
+% Occ_norm = Occ/max(Occ); 
+% bar(bin_r, Occ_norm, 'facecolor', [.7 .7 .7], 'facealpha', .4)
+% 
+% [Act, ~] = histcounts(behav_aligned.HD(movement_idx & evts_idx), -180:15:180); 
+% Act_norm = Act/max(Act);  
+% 
+% 
+% bar(bin_r, Act_norm, 'r')
+% set(gca, 'xtick', [-pi:pi/2:pi], 'xticklabel', {'-pi', '-1/2pi', '0', '1/2pi', 'pi'})
+% 
+% subplot(1,2,2)
 hold on
 
-[Occ, ~] = histcounts(behav_aligned.HD(movement_idx), -180:15:180); 
-Occ_norm = Occ/max(Occ); 
-bar(bin_r, Occ_norm)
+polarhistogram(behav_aligned.HD(movement_idx), 15, 'Normalization','probability', 'DisplayStyle','stairs', 'edgecolor', [0.7 0.7 0.7], 'linewidth', 4)
+% text(gca,num2str(occ_r))
+polarhistogram(behav_aligned.HD(movement_idx & evts_idx), 15, 'Normalization','probability', 'DisplayStyle','stairs', 'edgecolor', 'b', 'linewidth', 4)
 
-[Act, bins] = histcounts(behav_aligned.HD(movement_idx & evts_idx), -180:15:180); 
-Act_norm = Act/max(Act);  
-
-bin_c = bins(1:end-1)+15/2; 
-bin_r = deg2rad(bin_c);
-bar(bin_r, Act_norm)
-set(gca, 'xtick', [-pi:pi/2:pi], 'xticklabel', {'-pi', '-1/2pi', '0', '1/2pi', 'pi'})
 
 
 
