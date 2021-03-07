@@ -27,11 +27,7 @@ function MS_Run_REM_SeqNMF(cfg_in, data_dir, pro_dir, REM_dir)
 %
 %% initialize
 
-
-
 global PARAMS
-
-
 
 % set up configuration
 cfg_def = [];
@@ -43,11 +39,8 @@ cfg_def.reverse = false; % reverse the data for reverse sequences.
 cfg_def.score = 0; % run the sequence scoring.  Warning very very slow
 cfg_def.score_nShuf = 500;
 
-
 % REM
 cfg_def.REM = 1; % run the REM data
-
-
 
 cfg = ProcessConfig2(cfg_def, cfg_in);
 
@@ -55,7 +48,6 @@ if nargin < 4
     fprintf('No REM data specified!  only analyzing wake data\n')
     cfg.REM = 0; % flag to skip REM later on.
 end
-
 
 if cfg.place && ~cfg.anx
     type = 'Place';
@@ -123,22 +115,22 @@ if contains(data_dir, 'HAT')
             fprintf('Anxiety cell idx (%i cells) found using AnxietyCell_day_%s\n', length(anx_idx), day_num{1})
         end
     end
+end
     % get place cells as well.
     if contains(task, 'HATD')% workaround for naming of HAT + D
         load([pro_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'])
         load([pro_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'SA.mat'])
     else
         load([pro_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'])
-        load([pro_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'SA.mat'])
+        if exist([pro_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'SA.mat'], 'file')
+            load([pro_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'SA.mat'])
+        else
+            load([pro_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis_classif.mat'])
+        end
     end
-    % else
-    %     load("spatial_analysis.mat")
-    %     load("spatial_analysis_classif.mat")
-    %     fprintf('Using Processed spatial info file ''spatial_analyses_classif.mat''\n')
-end
+    
+    place_cell_idx  = SA.WholePlaceCell;
 %% plug it into SeqNMF
-
-addpath(PARAMS.code_seqnmf_dir)
 Fs =mode(diff(ms.time));
 
 % data_in = ms.FiltTraces';
@@ -173,7 +165,6 @@ velocity = interp1(u_tvec, behav.speed(u_idx), ms.time);
 % end
 
 % limit to predefined anxiety cells.
-place_cell_idx  = SA.WholePlaceCell;
 
 % for labeling saved files later.
 if cfg.place
@@ -405,9 +396,15 @@ if cfg.place
     end
     xlim([0 max((1:size(data_in, 2))/Fs)])
 end
+if ~cfg.REM
+    return
+end
 %% %%%%%%%%%%%%%%%%%%%%%%%%%% SEQ NMF %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Fit with seqNMF: most of this is straight out of Mackevicius et al. 2019 
 % <https://elifesciences.org/articles/38471 https://elifesciences.org/articles/38471>
+
+addpath(PARAMS.code_seqnmf_dir)
+
 
 % this_data = data_in; % which data to use.
 % this_data = R_data;
@@ -703,8 +700,8 @@ clear temp*
 close all
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% REM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- Get some REM data for this session
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Get some REM data for this session
 cd([REM_dir filesep subject filesep session])
 
 % load the concatenated sleep data.
@@ -713,7 +710,7 @@ load('all_binary_post_REM.mat', 'all_binary_post_REM');
 % restrict, transpose and rename the sleep types.
 REM_data = all_binary_post_REM(:,keep_idx)';
 
-split_idx = MS_get_sleep_idx('post', 'REM');
+[split_idx, ~, REM_times] = MS_get_sleep_idx('post', 'REM');
 
 if exist('idx', 'var')
     fprintf('Sorting data based on centroids in WAKE\n')
@@ -828,6 +825,7 @@ for iL = length(Ls):-1:1
     all_sweeps_out{iL}.Train = trainNEURAL;
     all_sweeps_out{iL}.Trest = testNEURAL;
     all_sweeps_out{iL}.seg_idx = split_idx;
+    all_sweeps_out{iL}.rem_times = REM_times; 
     toc
 end
 
@@ -892,6 +890,7 @@ for iSeq = 1:size(all_sweeps.(type){iL}.W(indSort,:,:),2)
     text(.1,.8, {[type '-based']}, 'fontweight', 'bold');
     text(.1,.6, ['L: ' num2str(Ls(iL)) 's'], 'fontweight', 'bold')
     text(.1,0.4, ['REM Seq # ' num2str(iSeq)], 'fontweight', 'bold')
+    text(.1,0.2, 'Mins from end of task', 'fontweight', 'bold')
     axis off;
     
     ax1(1) =  subplot(10,4,2:4);
@@ -910,15 +909,17 @@ for iSeq = 1:size(all_sweeps.(type){iL}.W(indSort,:,:),2)
     imagesc((1:size(REM_data, 2))/Fs,1:size(REM_data, 1), REM_data(indSort,:).*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
     set(gca, 'ytick', []);
     xlabel('concatenated time (s)')
-    cfg_plot.ft_size = 12;
-    SetFigure(cfg_plot, gcf);
-    set(gcf, 'position', [680 500 1127 480])
+ 
     vline(split_idx(2:end)/Fs, 'r');
+    x_lim = xlim; 
     
     ax1(3) = subplot(10,4,6:8);
     hold on
     for iH = 1:5
         rectangle('position', [H_pks_idx_sort(iH)/Fs, 0, Ls(iL), 5], 'facecolor',[PARAMS.green H_top_rel(iH)], 'edgecolor', PARAMS.green);
+    end
+    for iT = 1:length(REM_times)
+        text(split_idx(iT)/Fs, 8, ['+' num2str(round(REM_times(iT),0))]); 
     end
     xlim(x_lim);
     ylim([0 10])
@@ -929,12 +930,16 @@ for iSeq = 1:size(all_sweeps.(type){iL}.W(indSort,:,:),2)
     colormap(ax2(1), 'parula');
     colormap(ax1(2), 'parula');
     
+       cfg_plot.ft_size = 12;
+    SetFigure(cfg_plot, gcf);
+    set(gcf, 'position', [680 500 1127 480])
+    
     if cfg.reverse
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type '.png'])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_fac' num2str(iSeq) 'K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_fac' num2str(iSeq) 'K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type '.png'])
     else
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_fac' num2str(iSeq) 'K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_fac' num2str(iSeq) 'K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
     end
     
     % zoom in on some sequences. 
@@ -1000,6 +1005,9 @@ hold on
 for iH = 1:5
     rectangle('position', [H_pks_idx_sort(iH)/Fs, 0, Ls(iL), 5], 'facecolor',[PARAMS.green H_top_rel(iH)], 'edgecolor', PARAMS.green);
 end
+    for iT = 1:length(REM_times)
+        text(split_idx(iT)/Fs, 8, ['+' num2str(round(REM_times(iT),0))]); 
+    end
 % legend('top H', 'Location','best')
 xlim(x_lim);
 ylim([0 10])

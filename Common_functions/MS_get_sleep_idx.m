@@ -1,4 +1,4 @@
-function [start_idx, end_idx] = MS_get_sleep_idx(pre_post, type); 
+function [start_idx, end_idx, times] = MS_get_sleep_idx(pre_post, type); 
 %% MS_get_sleep_idx: extract the indicies for sleep types in concatenated data.  This is a helper function for data that has already been processed as 'all_*_post*.mat' from MS_segment_raw.m
 %
 %
@@ -31,6 +31,7 @@ if nargin < 2
 end
 warning off
 load('ms_resize.mat', 'ms_seg_resize'); 
+load('ms_trk.mat', 'ms_trk');
 %% get all the start and stop indicies
 
    these_segs = find(contains(lower(ms_seg_resize.pre_post), lower(pre_post))); 
@@ -45,6 +46,7 @@ for iSeg = these_segs
         iCount = iCount+1; 
         end_idx(iCount) = size(ms_seg_resize.FiltTraces{iSeg},1); 
         blocks = [blocks;  ms_seg_resize.FiltTraces{iSeg}];
+        times(iCount) = ((24*60)*datenum(ms_seg_resize.time_labels{iSeg}, 'HH:MM:SS')) - ((24*60)*datenum(ms_trk.time_labels, 'HH:MM:SS')) - (ms_trk.time(end)/1000)/60;  
         fprintf([ms_seg_resize.hypno_label{iSeg} ' %i\n'], iSeg)
     end
 %     disp(ms_in.pre_post{iSeg})
