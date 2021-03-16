@@ -395,17 +395,26 @@ for iL = 2:2:16
     %% plot the raw data with a significant sequence
     
     if sum(is_significant,'all')
-        sig_iter = find(sum(is_significant,2));
+        if max(sum(is_significant,2)) > 1
+            [~,sig_iter] = max(sum(is_significant,2));
+        else
+            sig_iter = find(sum(is_significant,2));
+        end
         
         this_sig_iter = sig_iter(1);
-        
+        s_ord = linspecer(max(sum(is_significant,2))); 
         
         [max_factor, L_sort, max_sort, hybrid] = helper.ClusterByFactor(all_W{this_sig_iter}(:,:,:),1);
         indSort = hybrid(:,3);
         
         
         figure(110+iL)
-        subplot(5,5,[5, 10, 15, 20, 25])
+        subplot(5,6,1)
+        text(0, 0.75, ['L = ' num2str(iL)]);
+        text(0, 0.25, ['iter = ' num2str(this_sig_iter)]);
+        axis off
+        
+        subplot(5,6,[6, 12, 18, 24, 30])
         hold on
         plot(pos(:,1), pos(:,2), '.k')
         c_ord = linspecer(size(all_trial_idx,1));
@@ -416,20 +425,38 @@ for iL = 2:2:16
             %     vlines{iT} = 'w';
             
         end
-        legend(['' these_labels])
+%         legend(['' these_labels], 'location', 'southoutside', 'orientation', 'horizontal')
         
         axis off
         
-        ax(1) = subplot(5,5,2:4);
-        plot((0:size(all_H{this_sig_iter},2)-1)/Fs, all_H{this_sig_iter})
+        ax(1) = subplot(5,6,3:5);
+        for ii = 1:size(all_H{this_sig_iter},1) % loop sig factors
+        hold on
+        plot((0:size(all_H{this_sig_iter},2)-1)/Fs, all_H{this_sig_iter}(ii,:)+ii-1, 'color', s_ord(ii,:))
+        end
         box off
         
-        subplot(5,5,[6 11 16 21])
-        imagesc((0:size(all_W{this_sig_iter},3)-1)/Fs, 1:size(all_W{this_sig_iter},1), squeeze(all_W{this_sig_iter}(indSort,:,:)));
-        xlabel('time (s)')
+        if size(all_H{this_sig_iter},1) > 1 % only works for 2 factors b/c lazy.
+            for ii = 1:size(all_H{this_sig_iter},1)
+                if ii == 1
+                    subplot(5,6,[7 13 19 25])
+                else
+                    subplot(5,6,[8 14 20 26])
+                    ylabel([]); 
+                end
+                imagesc((0:size(all_W{this_sig_iter},3)-1)/Fs, 1:size(all_W{this_sig_iter},1), squeeze(all_W{this_sig_iter}(indSort,ii,:)));
+                xlabel('time (s)')
+                 if ii >1; set(gca, 'yticklabel', [], 'XColor', s_ord(2,:),'YColor', s_ord(2,:));  end
+            end
+        else
+            subplot(5,6,[7:8 13:14 19:20 25:26])
+            imagesc((0:size(all_W{this_sig_iter},3)-1)/Fs, 1:size(all_W{this_sig_iter},1), squeeze(all_W{this_sig_iter}(indSort,:,:)));
+            xlabel('time (s)')
+        end
         
         
-        ax(2) = subplot(5,5,[7:9 12:14 17:19, 22:24]);
+        
+        ax(2) = subplot(5,6,[9:11 15:17 21:23 27:29]);
         imagesc((0:size(seq_data_in,2)-1)/Fs, 1:size(seq_data_in,1),seq_data_in(indSort,:))
         for iT = 1:size(all_trial_idx,1)-1
                 rectangle('position', [pad_block(iT,1)/Fs, 0,(pad_block(iT,2)-pad_block(iT,1))/Fs , 2], 'facecolor', c_ord(iT+1,:))
@@ -463,10 +490,10 @@ for iL = 2:2:16
 end
 
 %%
-for iL = 2:2:8
-    if sum(Seq_out{iL}.is_significant, 'all')
-    fprintf('Sig factors (%i) found in L = %i\n', sum(Seq_out{iL}.is_significant, 'all'), iL)
-    end
+for iL = 2:2:16
+%     if sum(Seq_out{iL}.is_significant, 'all')
+    fprintf('Sig factors (%i/%i) found in L = %i\n', sum(Seq_out{iL}.is_significant, 'all'), iL, nIter)
+%     end
 end
 
 %% temp plotting stuff (remove)
