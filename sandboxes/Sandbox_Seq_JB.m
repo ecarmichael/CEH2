@@ -407,13 +407,15 @@ for iL = 2:2:16
         [max_factor, L_sort, max_sort, hybrid] = helper.ClusterByFactor(all_W{this_sig_iter}(:,:,:),1);
         indSort = hybrid(:,3);
         
-        
+        % make a figure
         figure(110+iL)
+        % info
         subplot(5,6,1)
         text(0, 0.75, ['L = ' num2str(iL)]);
         text(0, 0.25, ['iter = ' num2str(this_sig_iter)]);
         axis off
         
+        % plot the H values for all sig factors
         subplot(5,6,[6, 12, 18, 24, 30])
         hold on
         plot(pos(:,1), pos(:,2), '.k')
@@ -429,10 +431,11 @@ for iL = 2:2:16
         
         axis off
         
+        % plot the W factors
         ax(1) = subplot(5,6,3:5);
         for ii = 1:size(all_H{this_sig_iter},1) % loop sig factors
-        hold on
-        plot((0:size(all_H{this_sig_iter},2)-1)/Fs, all_H{this_sig_iter}(ii,:)+ii-1, 'color', s_ord(ii,:))
+            hold on
+            plot((0:size(all_H{this_sig_iter},2)-1)/Fs, all_H{this_sig_iter}(ii,:)+ii-1, 'color', s_ord(ii,:))
         end
         box off
         
@@ -446,16 +449,19 @@ for iL = 2:2:16
                 end
                 imagesc((0:size(all_W{this_sig_iter},3)-1)/Fs, 1:size(all_W{this_sig_iter},1), squeeze(all_W{this_sig_iter}(indSort,ii,:)));
                 xlabel('time (s)')
+                set(gca, 'XColor', s_ord(1,:),'YColor', s_ord(1,:));
                  if ii >1; set(gca, 'yticklabel', [], 'XColor', s_ord(2,:),'YColor', s_ord(2,:));  end
             end
         else
             subplot(5,6,[7:8 13:14 19:20 25:26])
             imagesc((0:size(all_W{this_sig_iter},3)-1)/Fs, 1:size(all_W{this_sig_iter},1), squeeze(all_W{this_sig_iter}(indSort,:,:)));
             xlabel('time (s)')
+            set(gca, 'XColor', s_ord(1,:),'YColor', s_ord(1,:))
         end
+        ylim([0 size(all_H{this_sig_iter},1)+1])
         
         
-        
+        % plot the raw data sorted based on these factors
         ax(2) = subplot(5,6,[9:11 15:17 21:23 27:29]);
         imagesc((0:size(seq_data_in,2)-1)/Fs, 1:size(seq_data_in,1),seq_data_in(indSort,:))
         for iT = 1:size(all_trial_idx,1)-1
