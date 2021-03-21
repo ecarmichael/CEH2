@@ -1,4 +1,4 @@
-function MS_Run_REM_SeqNMF(cfg_in, data_dir, pro_dir, REM_dir)
+function MS_Run_REM_SeqNMF_inter_EV(cfg_in, data_dir, pro_dir, REM_dir)
 %% MS_Run_SeqNMF: runs SeqNMF on a data session and the corresponding REM session.
 %
 %  INTENDED TO BE CALLED IN Master_SeqNMF_JC
@@ -42,6 +42,8 @@ cfg_def.score_nShuf = 500;
 % REM
 cfg_def.REM = 1; % run the REM data
 
+cfg_def.nIter = 20; % number of iterations to run on the REM sequences.
+cfg_def.iter_thresh = .5; 
 cfg = ProcessConfig2(cfg_def, cfg_in);
 
 if nargin < 4
@@ -66,11 +68,9 @@ end
 dir_parts = strsplit(data_dir, filesep);
 task = strsplit(dir_parts{end}, '_');
 task = task{end};
-if contains(task, 'HATD6')
-    task = 'HATDSwitch';
-end
-subject = dir_parts{end-2};
-session = dir_parts{end-1};
+
+subject = dir_parts{end-1};
+session = dir_parts{end};
 
 
 if cfg.REM
@@ -82,54 +82,34 @@ end
 cd(data_dir);
 
 warning off  % otherwise you get all the videoencoder warnings.
-load('ms.mat');
 % clearvars -except ms this_sess PARAMS  % some ms files saved all the other variables as well.  not sure why.
 load('behav.mat');
-if exist('AllSpatialFiringData.mat', 'file')
-    load('AllSpatialFiringData.mat')
-    fprintf('<strong>No AllSpatialFiringData.mat found.  Can''t distinguish place cells</strong>\n')
-end
+
+% use another place cell classification file
+cd('spatial_analysis')
+
+% get place cells as well.
+load('spatial_analysis.mat', 'spatial_analysis')
+load('spatial_analysis_classif.mat', 'SA')
+   
+    % need to confirm this is the best way to extract place cells. 
+place_cell_idx  = sort(unique([SA.classif_index{1}, SA.classif_index{2}', SA.classif_index{3}']));
+
+
+% get the cut track section from the cut data in the Inter folder. 
+cd([REM_dir filesep subject filesep session])
+
+ms = load('ms_trk.mat', 'ms_trk');
+ms = ms.ms_trk; 
+
+% reset the ms.time to start at zero
+ms.time = ms.time - ms.time(1); 
 
 if ~isfield(ms, 'Binary')
     fprintf('No binary field found in ms, extracting...\n')
     ms = MS_msExtractBinary_detrendTraces(ms, 2);
 end
 
-% use another place cell classification file
-cd(pro_dir)
-
-if contains(data_dir, 'HAT')
-    if cfg.anx
-        %         if exist([pro_dir  '3.Anxiety_SafetyCell' filesep subject filesep 'Anxiety_output' filesep 'STD1'], 'dir')
-        %             load([pro_dir '3.Anxiety_SafetyCell' filesep subject filesep 'Anxiety_output' filesep 'STD2' filesep 'Anxiety_Output_std2.mat'])
-        %         else
-        %             load([pro_dir  '3.Anxiety_SafetyCell' filesep subject filesep 'Anxiety_output'  filesep 'Anxiety_Output_std2.mat'])
-        %         end
-        load([pro_dir  '3.Anxiety_SafetyCell' filesep 'Anxiety_output_' subject(end-3:end) '.mat'], 'Anxiety_Output')
-        day_num = regexp(task,'\d*','Match');
-        if ~isempty(day_num)
-            anx_idx = Anxiety_Output.AnxietyCell_day_switch;
-            fprintf('Anxiety cell idx (%i) found using AnxietyCell_day_switch\n', length(anx_idx))
-        else
-            anx_idx = Anxiety_Output.(['AnxietyCell_day_' day_num{1}]);
-            fprintf('Anxiety cell idx (%i cells) found using AnxietyCell_day_%s\n', length(anx_idx), day_num{1})
-        end
-    end
-end
-    % get place cells as well.
-    if contains(task, 'HATD')% workaround for naming of HAT + D
-        load([pro_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'])
-        load([pro_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'SA.mat'])
-    else
-        load([pro_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'])
-        if exist([pro_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'SA.mat'], 'file')
-            load([pro_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'SA.mat'])
-        else
-            load([pro_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis_classif.mat'])
-        end
-    end
-    
-    place_cell_idx  = SA.WholePlaceCell;
 %% plug it into SeqNMF
 Fs =mode(diff(ms.time));
 
@@ -332,9 +312,11 @@ pos_mat= pos_mat';
 if cfg.place
     figure(10)
     subplot(5,4,1)
-    parts = strsplit(session, 'P');
-    text(0, .8, (strrep(parts{1}, '_', ' ')))
-    text(0, .4, ['P' (strrep(parts{2}, '_', ' '))])
+    parts = strsplit(session, {'_5', 'd'});
+    text(0, 1, (strrep(parts{1}, '_', '-')))
+    text(0, .5, ['5' (strrep(parts{2}, '_', ' '))])
+     text(0, 0, ['d' (strrep(parts{3}, '_', ' '))])
+
     axis off;
     
     ax1(1) =  subplot(5,4,2:4);
@@ -351,15 +333,15 @@ if cfg.place
     title('position')
     
     ax2(1) = subplot(5,4,[5 9 13 17]);
-    [~, idx] = sort(centroids);
-    this_seq = place_maps(idx,:);
+    [~, c_idx] = sort(centroids);
+    this_seq = place_maps(c_idx,:);
     this_seq(this_seq > 0) = 1;
     imagesc((1:size(this_seq, 2))/Fs,1:size(this_seq, 1), this_seq.*([1:size(this_seq,1)]+(floor(size(this_seq,1)/2)))');
     ylabel('cell ID (sorted)')
     xlabel('seq time (s)');
     
     ax1(2) = subplot(5,4,[6:8 10:12 14:16 18:20]);
-    imagesc((1:size(data_in, 2))/Fs,1:size(data_in, 1), data_in(idx,:).*([1:size(data_in,1)]+(floor(size(data_in,1)/2)))');
+    imagesc((1:size(data_in, 2))/Fs,1:size(data_in, 1), data_in(c_idx,:).*([1:size(data_in,1)]+(floor(size(data_in,1)/2)))');
     set(gca, 'ytick', []);
     xlabel('concatenated time (s)')
     cfg_plot.ft_size = 12;
@@ -493,9 +475,9 @@ if cfg.select_lambda
     
     % get the lambda point after the cross point.
     lambda_diff = Rs - Cs;
-    idx = find(lambda_diff < 0);
+    l_idx = find(lambda_diff < 0);
     
-    lambda = lambdas(idx(1));
+    lambda = lambdas(l_idx(1));
 end
 %% Events based version
 
@@ -714,7 +696,7 @@ REM_data = all_binary_post_REM(:,keep_idx)';
 
 if exist('idx', 'var')
     fprintf('Sorting data based on centroids in WAKE\n')
-    REM_data = REM_data(idx,:);
+    REM_data = REM_data(c_idx,:);
 end
 
 % SW_data = all_binary_post_SW(:,keep_idx)';
@@ -733,10 +715,14 @@ vline(split_idx, 'r');
 %% run Seq on REM and look for significant sequences using the same K and lambda from the task.
 
 % this_REM = circshift(REM_data, floor(length(REM_data)/2),2);
+if exist('LFP_mats', 'dir')
 load("LFP_mats\all_t_post_REM.mat", 'all_t_post_REM');
 all_t_post_REM = smooth(all_t_post_REM, Fs)';
 
 all_t_post_REM = [all_t_post_REM; all_t_post_REM]; % double for clear plotting.
+else
+    all_t_post_REM = nan(size(REM_data)); 
+end
 
 splitN = floor(size(REM_data,2)*.75);
 
@@ -789,38 +775,59 @@ type = 'parts';
 %%
 % Run seqNMF using the best K +1
 
-Ls = 2:2:16;
+Ls = 2:2:10;
 if ~exist("best_k", 'var')
-    best_k = 2;
+    best_k = 2;ya 
 end
-for iL = length(Ls):-1:1
+for iL = length(Ls)-1:-1:1
     fprintf('Running seqNMF...K = %d  L = %d sec\n', best_k+1, Ls(iL))
-    tic
-    [W, H, ~,loadings,~]= seqNMF(X,'K',best_k+1,'L',ceil(Ls(iL)*Fs),...
-        'lambdaL1W', .1, 'lambda', lambda, 'maxiter', 100, 'showPlot', 0,...
-        'lambdaOrthoH', lambdaOrthoH, 'lambdaOrthoW', lambdaOrthoW);
     
-    % test if any are significant
-    p = .05; % desired p value for factors
-    if sum(W(W~=0)) == 0
-        is_significant = false(1,K);
-    else
-        disp('Testing significance of factors on held-out data')
-        [~,is_significant] = test_significance(testNEURAL,W,p);
+    loadings = [];
+    pvals = [];
+    is_significant = [];
+    rng(235); 
+    all_W = []; 
+    all_H = []; 
+    % run multiple iterations to check consistency. 
+    for iteri = 1:cfg.nIter
+        tic
+        fprintf('Iteration %d/%d...', iteri, cfg.nIter)
+        [W, H, ~,loadings(iteri,:),power(iteri)]= seqNMF(X,'K',best_k+1,'L',ceil(Ls(iL)*Fs),...
+            'lambdaL1W', .1, 'lambda', lambda, 'maxiter', 100, 'showPlot', 0,...
+            'lambdaOrthoH', lambdaOrthoH, 'lambdaOrthoW', lambdaOrthoW);
+        toc
+        fprintf('n'); 
+        % test if any are significant
+        p = .05; % desired p value for factors
+        if sum(W(W~=0)) == 0
+            is_significant(iteri,:) = false(1,K);
+        else
+            fprintf('Testing significance of factors on held-out data... ')
+                [pvals(iteri,:),is_significant(iteri,:)] = test_significance(testNEURAL,W,p);
+                fprintf('Found %d/%d significant factors\n', sum(is_significant(iteri,:),2), size(is_significant,2))
+        end        
+        
+        W = W(:,is_significant(iteri,:)==1,:);
+        H = H(is_significant(iteri,:)==1,:);
+
+        all_W{iteri} = W;
+        all_H{iteri} = H;
+        
+        if isempty(W)
+            continue
+        end
+        
+        [~, ~, ~, hybrid] = helper.ClusterByFactor(W(:,:,:),1);
+        indSort(:,iteri) = hybrid(:,3);
     end
     
-    [~, ~, ~, hybrid] = helper.ClusterByFactor(W(:,:,:),1);
-    indSort = hybrid(:,3);
-    
-    W = W(:,is_significant,:);
-    H = H(is_significant,:);
-    fprintf('Found %d/%d significant factors\n', sum(is_significant), length(is_significant))
     all_sweeps_out{iL}.K = K;
     all_sweeps_out{iL}.L = Ls(iL);
-    all_sweeps_out{iL}.W = W;
-    all_sweeps_out{iL}.H = H;
+    all_sweeps_out{iL}.W = all_W;
+    all_sweeps_out{iL}.H = all_H;
     all_sweeps_out{iL}.indSort = indSort;
     all_sweeps_out{iL}.loadings = loadings;
+    all_sweeps_out{iL}.power = power; 
     all_sweeps_out{iL}.sig = is_significant;
     all_sweeps_out{iL}.Train = trainNEURAL;
     all_sweeps_out{iL}.Trest = testNEURAL;
@@ -835,10 +842,12 @@ clear all_sweeps_out
 % summarize sig factors. 
 sig_Ls = [];
 for iSeq = 1:length(all_sweeps.(type))
-    if sum(all_sweeps.(type){iSeq}.sig) >0
+%     if (sum((all_sweeps.(type){iSeq}.sig >0),'all') > floor(length(all_sweeps.(type){iSeq}.sig)/2)) > cfg.iter_thresh
         sig_Ls = [sig_Ls iSeq];
-        fprintf('Significant Seq (%d) found using k: %d L: %d\n', sum(all_sweeps.(type){iSeq}.sig), all_sweeps.(type){iSeq}.K, all_sweeps.(type){iSeq}.L)
-    end
+        fprintf('Significant Seqs %d/%d inters (K1: %d, K2: %d, K3: %d) found using k: %d L: %d\n',sum((all_sweeps.(type){iSeq}.sig >0),'all'), length(all_sweeps.(type){iSeq}.sig), ...
+            sum((all_sweeps.(type){iSeq}.sig ==1),'all'), sum((all_sweeps.(type){iSeq}.sig ==2),'all'), sum((all_sweeps.(type){iSeq}.sig ==3),'all'),...
+            all_sweeps.(type){iSeq}.K, all_sweeps.(type){iSeq}.L); 
+%     end
 end
 %%
 % Reconstruct a particular L sweep.
@@ -971,35 +980,58 @@ sort_REM = REM_data(all_seq.parts.indSort,:);
 
 wake_sort = all_seq.(type).indSort;
 
+% terrible method for finding the best significant iteration based on
+% power.
+sig_idx = 1:length(sum(all_sweeps.(type){iL}.sig,2)'); 
+sig_idx = sig_idx(logical(sum(all_sweeps.(type){iL}.sig,2))');
+[~, best_iter] = max(all_sweeps.(type){iL}.power(logical(sum(all_sweeps.(type){iL}.sig,2))')); 
+best_iter = sig_idx(best_iter); 
+
+
+    [H_pks, H_pks_idx] = findpeaks(all_sweeps.(type){iL}.H{best_iter}, 'MinPeakDistance', Ls(iL)*Fs);
+    [H_top, top_idx] = sort(H_pks, 'descend');
+    H_top_rel = H_top/max(H_top);
+    H_pks_idx_sort = H_pks_idx(top_idx);
+
 figure(2000)
-subplot(10,4,[1 5  ])
+subplot(10,6,[1 2 7 8  ])
 text(.1,.8, {[type '-based']}, 'fontweight', 'bold');
 text(.1,.6, ['L: ' num2str(Ls(iL)) 's'], 'fontweight', 'bold')
 text(.1,0.4, ['REM Seq # ' num2str(iSeq)], 'fontweight', 'bold')
-text(.1,0.2, 'Wake_Sort', 'fontweight', 'bold')
+% text(.1,0.4, 'Wake_Sort', 'fontweight', 'bold')
+text(.1, 0.2, ['Iter: ' num2str(best_iter)],'fontweight', 'bold')
 axis off;
 
-ax1(1) =  subplot(10,4,[2:4]);
+ax1(1) =  subplot(10,6,[3:6]);
 imagesc((1:size(sort_REM, 2))/Fs,1,all_t_post_REM(1,:))
 set(gca, 'xtick', [], 'ytick', []);
 title('Theta power')
 colormap('jet')
 
-ax2(1) = subplot(10,4,[9 13 17 21 25 29 33 37]);
-this_seq = squeeze(all_sweeps.(type){iL}.W(wake_sort,:,:));
+ax2(1) = subplot(10,6,[19 25 31 37 43 49 55]);
+this_seq = squeeze(all_sweeps.(type){iL}.W{best_iter}(wake_sort,:,:));
 this_seq(this_seq > 0.1) = 1;
 imagesc((1:size(this_seq, 2))/Fs,1:size(this_seq, 1), this_seq.*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
-ylabel('cell ID (sorted)')
+title('Wake sorted'); 
+ylabel('cell ID');
 xlabel('seq time (s)');
 
-ax1(2) = subplot(10,4,[10:12 14:16 18:20 22:24 26:28 30:32 34:36 38:40]);
-imagesc((1:size(REM_data, 2))/Fs,1:size(REM_data, 1), REM_data(indSort,:).*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
+ax2(2) = subplot(10,6,[20 26 32 38 44 50 56]);
+this_seq = squeeze(all_sweeps.(type){iL}.W{best_iter}(all_sweeps_out{iL}.indSort(:,best_iter),:,:));
+this_seq(this_seq > 0.1) = 1;
+imagesc((1:size(this_seq, 2))/Fs,1:size(this_seq, 1), this_seq.*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
+title('Seq fac sorted')
+xlabel('seq time (s)');
+set(gca, 'ytick', [])
+
+ax1(2) = subplot(10,6,[21:24, 27:30, 33:36, 39:42, 45:48, 51:54, 57:60]);
+imagesc((1:size(REM_data, 2))/Fs,1:size(REM_data, 1), REM_data(all_sweeps_out{iL}.indSort(:,best_iter),:).*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
 set(gca, 'ytick', []);
 x_lim = xlim;
 xlabel('concatenated time (s)')
 vline(split_idx(2:end)/Fs, 'r');
 
-subplot(10,4,6:8);
+ax1(3) = subplot(10,6,9:12);
 % title('REM Data sorted using wake seq')
 hold on
 for iH = 1:5
@@ -1018,6 +1050,7 @@ linkaxes(ax1, 'x')
 
 colormap('jet');
 colormap(ax2(1), 'parula');
+colormap(ax2(2), 'parula');
 colormap(ax1(2), 'parula');
 
 cfg_plot.ft_size = 12;
@@ -1026,12 +1059,28 @@ set(gcf, 'position', [680 500 1127 480])
 
 %        linkaxes(ax2, 'x')
 if cfg.reverse
-    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_wake_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type])
-    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_wake_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type '.png'])
+    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type])
+    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type '.png'])
 else
-    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_wake_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
-    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_wake_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
+    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
+    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
 end
+
+% couple zoom ins
+
+for iH = 1:5
+    xlim([(H_pks_idx_sort(iH)/Fs) - Ls(iL)/2 (H_pks_idx_sort(iH)/Fs) + Ls(iL) + (Ls(iL)/2)]);
+    
+    if cfg.reverse
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_zoom_' num2str(round(H_pks_idx_sort(iH)/Fs)) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_zoom_' num2str(round(H_pks_idx_sort(iH)/Fs)) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type '.png'])
+    else
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_zoom_' num2str(round(H_pks_idx_sort(iH)/Fs)) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
+        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_zoom_' num2str(round(H_pks_idx_sort(iH)/Fs)) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
+    end
+    pause(.2); 
+end
+    
 
 % factor plots Not sure if useful for REM and LFP power.
 % % Plot factor-triggered song examples and rastors
@@ -1117,7 +1166,7 @@ if cfg.score
 end
 %% save the output
 if cfg.reverse
-    save([PARAMS.inter_dir filesep subject filesep session filesep 'all_REM_sweeps_reverse_' type ], 'all_sweeps')
+    save([PARAMS.inter_dir filesep subject filesep session filesep 'all_REM_sweeps_inter_reverse_' type ], 'all_sweeps')
 else
-    save([PARAMS.inter_dir filesep subject filesep session filesep 'all_REM_sweeps_' type ], 'all_sweeps')
+    save([PARAMS.inter_dir filesep subject filesep session filesep 'all_REM_sweeps_inter_' type ], 'all_sweeps')
 end
