@@ -52,7 +52,12 @@ clear d os
 
 %% set up the directories to process
 
-session = {'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis\540\12_11_2019_540day1'}; 
+session = {'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis\540\12_11_2019_540day1',...
+    'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis\540\12_13_2019_540day3', ...
+    'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis\537\12_9_2019_537day5',...
+    'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis\540\12_15_2019_540day5',...
+    'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis\537\12_5_2019_537day1',...
+    'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis\537\12_7_2019_537day3'}; 
 
 
 % get the processed data from the saptial file. 
@@ -62,7 +67,7 @@ session = {'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\f
 REM_main = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\RAW Calcium\Inter';
 %% cycle through some sessions
 
-for iSess = 1:length(session)
+for iSess =4:length(session)
     cfg.place = 1;
     cfg.anx = 0;
     cfg.nIter = 20;

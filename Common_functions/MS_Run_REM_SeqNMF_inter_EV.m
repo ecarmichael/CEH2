@@ -504,6 +504,7 @@ fprintf('Events-based: Found %d/%d significant factors\n', sum(is_significant), 
 % Plot events-based results
 if isempty(H_e)
     fprintf('<strong>No significant sequences detected.  Skipping...</strong>\n')
+    indSort = []; 
 else
     [~, ~, ~, hybrid] = helper.ClusterByFactor(W_e(:,:,:),1);
     indSort = hybrid(:,3);
@@ -563,7 +564,7 @@ all_seq.(type).lambdaOrthoW = lambdaOrthoW;
 all_seq.(type).W = W_e;
 all_seq.(type).H = H_e;
 all_seq.(type).is_significant = is_significant;
-
+all_seq.(type).indSort = indSort;
 
 %% Parts based version
 fprintf('\n*************** Parts based ***************\n')
@@ -592,6 +593,7 @@ H_p = H_p(is_significant,:);
 fprintf('Found %d/%d significant factors\n', sum(is_significant), length(is_significant))
 % Plot the parts based results
 if isempty(H_p)
+    indSort = []; 
     fprintf('<strong>No significant sequences detected.  Skipping...</strong>\n')
 else
     figure(302);
@@ -777,9 +779,9 @@ type = 'parts';
 
 Ls = 2:2:10;
 if ~exist("best_k", 'var')
-    best_k = 2;ya 
+    best_k = 2;
 end
-for iL = length(Ls)-1:-1:1
+for iL = length(Ls):-1:1
     fprintf('Running seqNMF...K = %d  L = %d sec\n', best_k+1, Ls(iL))
     
     loadings = [];
@@ -842,137 +844,137 @@ clear all_sweeps_out
 % summarize sig factors. 
 sig_Ls = [];
 for iSeq = 1:length(all_sweeps.(type))
-%     if (sum((all_sweeps.(type){iSeq}.sig >0),'all') > floor(length(all_sweeps.(type){iSeq}.sig)/2)) > cfg.iter_thresh
+    if (sum((all_sweeps.(type){iSeq}.sig >0),'all') > floor(length(all_sweeps.(type){iSeq}.sig)/2)) > cfg.iter_thresh
         sig_Ls = [sig_Ls iSeq];
         fprintf('Significant Seqs %d/%d inters (K1: %d, K2: %d, K3: %d) found using k: %d L: %d\n',sum((all_sweeps.(type){iSeq}.sig >0),'all'), length(all_sweeps.(type){iSeq}.sig), ...
             sum((all_sweeps.(type){iSeq}.sig ==1),'all'), sum((all_sweeps.(type){iSeq}.sig ==2),'all'), sum((all_sweeps.(type){iSeq}.sig ==3),'all'),...
             all_sweeps.(type){iSeq}.K, all_sweeps.(type){iSeq}.L); 
-%     end
+    end
 end
 %%
-% Reconstruct a particular L sweep.
-
-for iL = sig_Ls % pick an L to work with
-    fprintf('<strong>Plotting %d/%d significant factors for K = %d L = %ds</strong>\n', sum(all_sweeps.(type){iL}.sig), length(all_sweeps.(type){iL}.sig),all_sweeps.(type){iL}.K, all_sweeps.(type){iL}.L )    
-    if sum(all_sweeps.(type){iL}.sig) >0
-
-        figure;
-        [~, ~, ~, hybrid] = helper.ClusterByFactor(all_sweeps.(type){iL}.W(:,:,:),1);
-        indSort = hybrid(:,3);
-        tstart = 1; % plot data starting at this timebin
-        WHPlot(all_sweeps.(type){iL}.W(indSort,:,:),all_sweeps.(type){iL}.H(:,tstart:end), all_sweeps.(type){iL}.Train(indSort,tstart:end), ...
-            0)
-        title(['REM Significant seqNMF factors, with raw data: ' type '-based L:' num2str(Ls(iL)) 's'])
-        if cfg.reverse
-            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_factor_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse'])
-            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_factor_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse.png'])
-        else
-            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_factor_parts_K' num2str(K) 'L' num2str(Ls(iL))])
-            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_factor_parts_K' num2str(K) 'L' num2str(Ls(iL)) '.png'])
-        end
-        
-        figure;
-        WHPlot(all_sweeps.(type){iL}.W(indSort,:,:),all_sweeps.(type){iL}.H(:,tstart:end), ...
-            helper.reconstruct(all_sweeps.(type){iL}.W(indSort,:,:),all_sweeps.(type){iL}.H(:,tstart:end)),...
-            0)
-        title(['REM SeqNMF reconstruction: ' type '-based L:' num2str(Ls(iL)) 's'])
-        if cfg.reverse
-            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_recon_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse'])
-            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_recon_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse.png'])
-        else
-            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_recon_parts_K' num2str(K) 'L' num2str(Ls(iL))])
-            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_recon_parts_K' num2str(K) 'L' num2str(Ls(iL)) '.png'])
-        end
-    end
-end
-
-% reconstruct the raw data using color coded cells
-for iSeq = 1:size(all_sweeps.(type){iL}.W(indSort,:,:),2)
-    %top H values
-    [H_pks, H_pks_idx] = findpeaks(all_sweeps.(type){iL}.H, 'MinPeakDistance', Ls(iL)*Fs);
-    [H_top, top_idx] = sort(H_pks, 'descend');
-    H_top_rel = H_top/max(H_top);
-    H_pks_idx_sort = H_pks_idx(top_idx);
-    
-    figure(1000+iSeq)
-    subplot(10,4,[1 5 ])
-    text(.1,.8, {[type '-based']}, 'fontweight', 'bold');
-    text(.1,.6, ['L: ' num2str(Ls(iL)) 's'], 'fontweight', 'bold')
-    text(.1,0.4, ['REM Seq # ' num2str(iSeq)], 'fontweight', 'bold')
-    text(.1,0.2, 'Mins from end of task', 'fontweight', 'bold')
-    axis off;
-    
-    ax1(1) =  subplot(10,4,2:4);
-    imagesc((1:size(REM_data, 2))/Fs,1,all_t_post_REM(1,:))
-    set(gca, 'xtick', [], 'ytick', []);
-    title('Theta power')
-    
-    ax2(1) = subplot(10,4,[9 13 17 21 25 29 33 37]);
-    this_seq = squeeze(all_sweeps.(type){iL}.W(indSort,iSeq,:));
-    this_seq(this_seq > 0.1) = 1;
-    imagesc((1:size(this_seq, 2))/Fs,1:size(this_seq, 1), this_seq.*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
-    ylabel('cell ID (sorted)')
-    xlabel('seq time (s)');
-    
-    ax1(2) = subplot(10,4,[10:12 14:16 18:20 22:24 26:28 30:32 34:36 38:40]);
-    imagesc((1:size(REM_data, 2))/Fs,1:size(REM_data, 1), REM_data(indSort,:).*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
-    set(gca, 'ytick', []);
-    xlabel('concatenated time (s)')
- 
-    vline(split_idx(2:end)/Fs, 'r');
-    x_lim = xlim; 
-    
-    ax1(3) = subplot(10,4,6:8);
-    hold on
-    for iH = 1:5
-        rectangle('position', [H_pks_idx_sort(iH)/Fs, 0, Ls(iL), 5], 'facecolor',[PARAMS.green H_top_rel(iH)], 'edgecolor', PARAMS.green);
-    end
-    for iT = 1:length(REM_times)
-        text(split_idx(iT)/Fs, 8, ['+' num2str(round(REM_times(iT),0))]); 
-    end
-    xlim(x_lim);
-    ylim([0 10])
-    axis off
-    
-    linkaxes(ax1, 'x')
-    colormap('jet');
-    colormap(ax2(1), 'parula');
-    colormap(ax1(2), 'parula');
-    
-       cfg_plot.ft_size = 12;
-    SetFigure(cfg_plot, gcf);
-    set(gcf, 'position', [680 500 1127 480])
-    
-    if cfg.reverse
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_fac' num2str(iSeq) 'K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_fac' num2str(iSeq) 'K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type '.png'])
-    else
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_fac' num2str(iSeq) 'K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_fac' num2str(iSeq) 'K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
-    end
-    
-    % zoom in on some sequences. 
-    for iH = 1:5
-        if (H_pks_idx_sort(iH)/Fs)-(Ls(iL)*2) <0
-            t_start = 0; t_end = (H_pks_idx_sort(iH)/Fs)+(Ls(iL)*2); 
-        elseif (H_pks_idx_sort(iH)/Fs)+(Ls(iL)*2) >x_lim(end)
-            t_start = (H_pks_idx_sort(iH)/Fs)-(Ls(iL)*2); t_end = x_lim(end); 
-        else
-            t_start = (H_pks_idx_sort(iH)/Fs)-(Ls(iL)*2); t_end = (H_pks_idx_sort(iH)/Fs)+(Ls(iL)*2);
-        end
-        xlim([t_start t_end]); 
-        
-        if cfg.reverse
-            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_zoom_' num2str(iH) '_' num2str(round(t_start,0)) '_reverse_' type])
-            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_zoom_' num2str(iH) '_' num2str(round(t_start,0)) '_reverse_' type '.png'])
-        else
-            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_zoom_' num2str(iH) '_' num2str(round(t_start,0)) '_' type])
-            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_zoom_' num2str(iH) '_' num2str(round(t_start,0)) '_' type '.png'])
-        end
-        pause(.2)% prevents writing errors
-    end
-    xlim([0 x_lim(end)])
-end
+% % Reconstruct a particular L sweep.
+% 
+% for iL = sig_Ls % pick an L to work with
+%     fprintf('<strong>Plotting %d/%d significant factors for K = %d L = %ds</strong>\n', sum(all_sweeps.(type){iL}.sig), length(all_sweeps.(type){iL}.sig),all_sweeps.(type){iL}.K, all_sweeps.(type){iL}.L )    
+%     if sum(all_sweeps.(type){iL}.sig) >0
+% 
+%         figure;
+%         [~, ~, ~, hybrid] = helper.ClusterByFactor(all_sweeps.(type){iL}.W(:,:,:),1);
+%         indSort = hybrid(:,3);
+%         tstart = 1; % plot data starting at this timebin
+%         WHPlot(all_sweeps.(type){iL}.W(indSort,:,:),all_sweeps.(type){iL}.H(:,tstart:end), all_sweeps.(type){iL}.Train(indSort,tstart:end), ...
+%             0)
+%         title(['REM Significant seqNMF factors, with raw data: ' type '-based L:' num2str(Ls(iL)) 's'])
+%         if cfg.reverse
+%             saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_factor_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse'])
+%             saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_factor_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse.png'])
+%         else
+%             saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_factor_parts_K' num2str(K) 'L' num2str(Ls(iL))])
+%             saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_factor_parts_K' num2str(K) 'L' num2str(Ls(iL)) '.png'])
+%         end
+%         
+%         figure;
+%         WHPlot(all_sweeps.(type){iL}.W(indSort,:,:),all_sweeps.(type){iL}.H(:,tstart:end), ...
+%             helper.reconstruct(all_sweeps.(type){iL}.W(indSort,:,:),all_sweeps.(type){iL}.H(:,tstart:end)),...
+%             0)
+%         title(['REM SeqNMF reconstruction: ' type '-based L:' num2str(Ls(iL)) 's'])
+%         if cfg.reverse
+%             saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_recon_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse'])
+%             saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_recon_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse.png'])
+%         else
+%             saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_recon_parts_K' num2str(K) 'L' num2str(Ls(iL))])
+%             saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_recon_parts_K' num2str(K) 'L' num2str(Ls(iL)) '.png'])
+%         end
+%     end
+% end
+% 
+% % reconstruct the raw data using color coded cells
+% for iSeq = 1:size(all_sweeps.(type){iL}.W(indSort,:,:),2)
+%     %top H values
+%     [H_pks, H_pks_idx] = findpeaks(all_sweeps.(type){iL}.H, 'MinPeakDistance', Ls(iL)*Fs);
+%     [H_top, top_idx] = sort(H_pks, 'descend');
+%     H_top_rel = H_top/max(H_top);
+%     H_pks_idx_sort = H_pks_idx(top_idx);
+%     
+%     figure(1000+iSeq)
+%     subplot(10,4,[1 5 ])
+%     text(.1,.8, {[type '-based']}, 'fontweight', 'bold');
+%     text(.1,.6, ['L: ' num2str(Ls(iL)) 's'], 'fontweight', 'bold')
+%     text(.1,0.4, ['REM Seq # ' num2str(iSeq)], 'fontweight', 'bold')
+%     text(.1,0.2, 'Mins from end of task', 'fontweight', 'bold')
+%     axis off;
+%     
+%     ax1(1) =  subplot(10,4,2:4);
+%     imagesc((1:size(REM_data, 2))/Fs,1,all_t_post_REM(1,:))
+%     set(gca, 'xtick', [], 'ytick', []);
+%     title('Theta power')
+%     
+%     ax2(1) = subplot(10,4,[9 13 17 21 25 29 33 37]);
+%     this_seq = squeeze(all_sweeps.(type){iL}.W(indSort,iSeq,:));
+%     this_seq(this_seq > 0.1) = 1;
+%     imagesc((1:size(this_seq, 2))/Fs,1:size(this_seq, 1), this_seq.*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
+%     ylabel('cell ID (sorted)')
+%     xlabel('seq time (s)');
+%     
+%     ax1(2) = subplot(10,4,[10:12 14:16 18:20 22:24 26:28 30:32 34:36 38:40]);
+%     imagesc((1:size(REM_data, 2))/Fs,1:size(REM_data, 1), REM_data(indSort,:).*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
+%     set(gca, 'ytick', []);
+%     xlabel('concatenated time (s)')
+%  
+%     vline(split_idx(2:end)/Fs, 'r');
+%     x_lim = xlim; 
+%     
+%     ax1(3) = subplot(10,4,6:8);
+%     hold on
+%     for iH = 1:5
+%         rectangle('position', [H_pks_idx_sort(iH)/Fs, 0, Ls(iL), 5], 'facecolor',[PARAMS.green H_top_rel(iH)], 'edgecolor', PARAMS.green);
+%     end
+%     for iT = 1:length(REM_times)
+%         text(split_idx(iT)/Fs, 8, ['+' num2str(round(REM_times(iT),0))]); 
+%     end
+%     xlim(x_lim);
+%     ylim([0 10])
+%     axis off
+%     
+%     linkaxes(ax1, 'x')
+%     colormap('jet');
+%     colormap(ax2(1), 'parula');
+%     colormap(ax1(2), 'parula');
+%     
+%        cfg_plot.ft_size = 12;
+%     SetFigure(cfg_plot, gcf);
+%     set(gcf, 'position', [680 500 1127 480])
+%     
+%     if cfg.reverse
+%         saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_fac' num2str(iSeq) 'K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type])
+%         saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_fac' num2str(iSeq) 'K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type '.png'])
+%     else
+%         saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_fac' num2str(iSeq) 'K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
+%         saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_fac' num2str(iSeq) 'K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
+%     end
+%     
+%     % zoom in on some sequences. 
+%     for iH = 1:5
+%         if (H_pks_idx_sort(iH)/Fs)-(Ls(iL)*2) <0
+%             t_start = 0; t_end = (H_pks_idx_sort(iH)/Fs)+(Ls(iL)*2); 
+%         elseif (H_pks_idx_sort(iH)/Fs)+(Ls(iL)*2) >x_lim(end)
+%             t_start = (H_pks_idx_sort(iH)/Fs)-(Ls(iL)*2); t_end = x_lim(end); 
+%         else
+%             t_start = (H_pks_idx_sort(iH)/Fs)-(Ls(iL)*2); t_end = (H_pks_idx_sort(iH)/Fs)+(Ls(iL)*2);
+%         end
+%         xlim([t_start t_end]); 
+%         
+%         if cfg.reverse
+%             saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_zoom_' num2str(iH) '_' num2str(round(t_start,0)) '_reverse_' type])
+%             saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_zoom_' num2str(iH) '_' num2str(round(t_start,0)) '_reverse_' type '.png'])
+%         else
+%             saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_zoom_' num2str(iH) '_' num2str(round(t_start,0)) '_' type])
+%             saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_Seq_raw_zoom_' num2str(iH) '_' num2str(round(t_start,0)) '_' type '.png'])
+%         end
+%         pause(.2)% prevents writing errors
+%     end
+%     xlim([0 x_lim(end)])
+% end
 
 %% same plot but ordered based on sequences in wake
 
@@ -980,108 +982,116 @@ sort_REM = REM_data(all_seq.parts.indSort,:);
 
 wake_sort = all_seq.(type).indSort;
 
-% terrible method for finding the best significant iteration based on
-% power.
-sig_idx = 1:length(sum(all_sweeps.(type){iL}.sig,2)'); 
-sig_idx = sig_idx(logical(sum(all_sweeps.(type){iL}.sig,2))');
-[~, best_iter] = max(all_sweeps.(type){iL}.power(logical(sum(all_sweeps.(type){iL}.sig,2))')); 
-best_iter = sig_idx(best_iter); 
-
-
-    [H_pks, H_pks_idx] = findpeaks(all_sweeps.(type){iL}.H{best_iter}, 'MinPeakDistance', Ls(iL)*Fs);
-    [H_top, top_idx] = sort(H_pks, 'descend');
-    H_top_rel = H_top/max(H_top);
-    H_pks_idx_sort = H_pks_idx(top_idx);
-
-figure(2000)
-subplot(10,6,[1 2 7 8  ])
-text(.1,.8, {[type '-based']}, 'fontweight', 'bold');
-text(.1,.6, ['L: ' num2str(Ls(iL)) 's'], 'fontweight', 'bold')
-text(.1,0.4, ['REM Seq # ' num2str(iSeq)], 'fontweight', 'bold')
-% text(.1,0.4, 'Wake_Sort', 'fontweight', 'bold')
-text(.1, 0.2, ['Iter: ' num2str(best_iter)],'fontweight', 'bold')
-axis off;
-
-ax1(1) =  subplot(10,6,[3:6]);
-imagesc((1:size(sort_REM, 2))/Fs,1,all_t_post_REM(1,:))
-set(gca, 'xtick', [], 'ytick', []);
-title('Theta power')
-colormap('jet')
-
-ax2(1) = subplot(10,6,[19 25 31 37 43 49 55]);
-this_seq = squeeze(all_sweeps.(type){iL}.W{best_iter}(wake_sort,:,:));
-this_seq(this_seq > 0.1) = 1;
-imagesc((1:size(this_seq, 2))/Fs,1:size(this_seq, 1), this_seq.*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
-title('Wake sorted'); 
-ylabel('cell ID');
-xlabel('seq time (s)');
-
-ax2(2) = subplot(10,6,[20 26 32 38 44 50 56]);
-this_seq = squeeze(all_sweeps.(type){iL}.W{best_iter}(all_sweeps_out{iL}.indSort(:,best_iter),:,:));
-this_seq(this_seq > 0.1) = 1;
-imagesc((1:size(this_seq, 2))/Fs,1:size(this_seq, 1), this_seq.*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
-title('Seq fac sorted')
-xlabel('seq time (s)');
-set(gca, 'ytick', [])
-
-ax1(2) = subplot(10,6,[21:24, 27:30, 33:36, 39:42, 45:48, 51:54, 57:60]);
-imagesc((1:size(REM_data, 2))/Fs,1:size(REM_data, 1), REM_data(all_sweeps_out{iL}.indSort(:,best_iter),:).*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
-set(gca, 'ytick', []);
-x_lim = xlim;
-xlabel('concatenated time (s)')
-vline(split_idx(2:end)/Fs, 'r');
-
-ax1(3) = subplot(10,6,9:12);
-% title('REM Data sorted using wake seq')
-hold on
-for iH = 1:5
-    rectangle('position', [H_pks_idx_sort(iH)/Fs, 0, Ls(iL), 5], 'facecolor',[PARAMS.green H_top_rel(iH)], 'edgecolor', PARAMS.green);
-end
-    for iT = 1:length(REM_times)
-        text(split_idx(iT)/Fs, 8, ['+' num2str(round(REM_times(iT),0))]); 
-    end
-% legend('top H', 'Location','best')
-xlim(x_lim);
-ylim([0 10])
-axis off
-
-% ylim([-5 size(REM_data,1)])
-linkaxes(ax1, 'x')
-
-colormap('jet');
-colormap(ax2(1), 'parula');
-colormap(ax2(2), 'parula');
-colormap(ax1(2), 'parula');
-
-cfg_plot.ft_size = 12;
-SetFigure(cfg_plot, gcf);
-set(gcf, 'position', [680 500 1127 480])
-
-%        linkaxes(ax2, 'x')
-if cfg.reverse
-    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type])
-    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type '.png'])
-else
-    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
-    saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
-end
-
-% couple zoom ins
-
-for iH = 1:5
-    xlim([(H_pks_idx_sort(iH)/Fs) - Ls(iL)/2 (H_pks_idx_sort(iH)/Fs) + Ls(iL) + (Ls(iL)/2)]);
+for iL = sig_Ls % pick an L to work with
     
-    if cfg.reverse
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_zoom_' num2str(round(H_pks_idx_sort(iH)/Fs)) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_zoom_' num2str(round(H_pks_idx_sort(iH)/Fs)) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type '.png'])
-    else
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_zoom_' num2str(round(H_pks_idx_sort(iH)/Fs)) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
-        saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_zoom_' num2str(round(H_pks_idx_sort(iH)/Fs)) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
-    end
-    pause(.2); 
-end
     
-
+    seq_ord = linspecer(size(all_sweeps.(type){iL}.W{best_iter},2));
+    
+    % terrible method for finding the best significant iteration based on
+    % power.
+    sig_idx = 1:length(sum(all_sweeps.(type){iL}.sig,2)');
+    sig_idx = sig_idx(logical(sum(all_sweeps.(type){iL}.sig,2))');
+    [~, best_iter] = max(all_sweeps.(type){iL}.power(logical(sum(all_sweeps.(type){iL}.sig,2))'));
+    best_iter = sig_idx(best_iter);
+    
+    
+    for iSeq = 1:size(all_sweeps.(type){iL}.W{best_iter},2)
+        
+        [H_pks, H_pks_idx] = findpeaks(all_sweeps.(type){iL}.H{best_iter}(iSeq,:), 'MinPeakDistance', Ls(iL)*Fs);
+        [H_top, top_idx] = sort(H_pks, 'descend');
+        H_top_rel = H_top/max(H_top);
+        H_pks_idx_sort = H_pks_idx(top_idx);
+        
+        figure(2000+ iSeq)
+        subplot(10,6,[1 2 7 8  ])
+        text(.1,.8, {[type '-based']}, 'fontweight', 'bold');
+        text(.1,.6, ['L: ' num2str(Ls(iL)) 's'], 'fontweight', 'bold')
+        text(.1,0.4, ['REM Seq # ' num2str(iSeq)], 'fontweight', 'bold')
+        % text(.1,0.4, ['factor #', 'fontweight', 'bold')
+        text(.1, 0.2, ['Iter: ' num2str(best_iter)],'fontweight', 'bold')
+        axis off;
+        
+        ax1(1) =  subplot(10,6,[3:6]);
+        imagesc((1:size(sort_REM, 2))/Fs,1,all_t_post_REM(1,:))
+        set(gca, 'xtick', [], 'ytick', []);
+        title('Theta power')
+        colormap('jet')
+        
+        ax2(1) = subplot(10,6,[19 25 31 37 43 49 55]);
+        this_seq = squeeze(all_sweeps.(type){iL}.W{best_iter}(wake_sort,iSeq,:));
+        this_seq(this_seq > 0.1) = 1;
+        imagesc((1:size(this_seq, 2))/Fs,1:size(this_seq, 1), this_seq.*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
+        title('Wake sorted');
+        ylabel('cell ID');
+        xlabel('seq time (s)');
+        
+        ax2(2) = subplot(10,6,[20 26 32 38 44 50 56]);
+        this_seq = squeeze(all_sweeps.(type){iL}.W{best_iter}(all_sweeps.(type){iL}.indSort(:,best_iter),iSeq,:));
+        this_seq(this_seq > 0.1) = 1;
+        imagesc((1:size(this_seq, 2))/Fs,1:size(this_seq, 1), this_seq.*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
+        title('Seq fac sorted')
+        xlabel('seq time (s)');
+        set(gca, 'ytick', [])
+        
+        ax1(2) = subplot(10,6,[21:24, 27:30, 33:36, 39:42, 45:48, 51:54, 57:60]);
+        imagesc((1:size(REM_data, 2))/Fs,1:size(REM_data, 1), REM_data(all_sweeps.(type){iL}.indSort(:,best_iter),:).*([1:size(REM_data,1)]+(floor(size(this_seq,1)/2)))');
+        set(gca, 'ytick', []);
+        x_lim = xlim;
+        xlabel('concatenated time (s)')
+        vline(split_idx(2:end)/Fs, 'r');
+        
+        ax1(3) = subplot(10,6,9:12);
+        % title('REM Data sorted using wake seq')
+        hold on
+        for iH = 1:5
+            rectangle('position', [H_pks_idx_sort(iH)/Fs, 0, Ls(iL), 5], 'facecolor',[seq_ord(iSeq,:) H_top_rel(iH)], 'edgecolor', PARAMS.green);
+        end
+        for iT = 1:length(REM_times)
+            text(split_idx(iT)/Fs, 8, ['+' num2str(round(REM_times(iT),0))]);
+        end
+        % legend('top H', 'Location','best')
+        xlim(x_lim);
+        ylim([0 10])
+        axis off
+        
+        % ylim([-5 size(REM_data,1)])
+        linkaxes(ax1, 'x')
+        
+        colormap('jet');
+        colormap(ax2(1), 'parula');
+        colormap(ax2(2), 'parula');
+        colormap(ax1(2), 'parula');
+        
+        cfg_plot.ft_size = 12;
+        SetFigure(cfg_plot, gcf);
+        set(gcf, 'position', [680 500 1127 480])
+        
+        %        linkaxes(ax2, 'x')
+        if cfg.reverse
+            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_fac_' num2str(iSeq) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type])
+            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_fac_' num2str(iSeq) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type '.png'])
+        else
+            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_fac_' num2str(iSeq) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
+            saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_fac_' num2str(iSeq) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
+        end
+        
+        % couple zoom ins
+        
+        for iH = 1:5
+            xlim([(H_pks_idx_sort(iH)/Fs) - Ls(iL)/2 (H_pks_idx_sort(iH)/Fs) + Ls(iL) + (Ls(iL)/2)]);
+            
+            if cfg.reverse
+                saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_fac_' num2str(iSeq) '_zoom_'   num2str(round(H_pks_idx_sort(iH)/Fs)) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type])
+                saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_fac_' num2str(iSeq) '_zoom_'  num2str(round(H_pks_idx_sort(iH)/Fs)) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_reverse_' type '.png'])
+            else
+                saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_fac_' num2str(iSeq) '_zoom_'  num2str(round(H_pks_idx_sort(iH)/Fs)) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type])
+                saveas(gcf, [PARAMS.inter_dir filesep subject filesep session filesep 'REM_sort_Seq_raw_fac_' num2str(iSeq) '_zoom_'  num2str(round(H_pks_idx_sort(iH)/Fs)) 'parts_K' num2str(K) 'L' num2str(Ls(iL)) '_' type '.png'])
+            end
+            pause(.2);
+        end
+    end
+    close(2000+iSeq)
+end
 % factor plots Not sure if useful for REM and LFP power.
 % % Plot factor-triggered song examples and rastors
 % figure(503)
