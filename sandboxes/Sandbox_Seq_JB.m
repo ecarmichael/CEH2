@@ -76,7 +76,7 @@ all_arms = logical(all_arms(:,1:length(SA_idx)));
 block_idx = diff(trial(SA_idx));
 block_idx = find(block_idx == 1);
 
-data_in = data_k1(SA_idx,:)';
+data_in = data_k2(SA_idx,:)';
 %% sanity plots
 % figure(100)
 % subplot(1,3,3)
@@ -222,8 +222,8 @@ title('testing')
 
 %% run SeqNMF across multiple time scales. 
 
-
-for iL = 2:2:16
+Ls = [2 10]; 
+for iL = Ls
     % Set some parameters
     rng(235); % fixed rng seed for reproduceability
     X = trainNEURAL;
@@ -496,9 +496,9 @@ for iL = 2:2:16
 end
 
 %%
-for iL = 2:2:16
+for iL = Ls
 %     if sum(Seq_out{iL}.is_significant, 'all')
-    fprintf('Sig factors (%i/%i) found in L = %i\n', sum(Seq_out{iL}.is_significant, 'all'), iL, nIter)
+    fprintf('Sig factors (%i/%i; 1 = %i, 2 = %i, 3 = %i) found in L = %i\n', sum(Seq_out{iL}.is_significant, 'all'),nIter, iL)
 %     end
 end
 
