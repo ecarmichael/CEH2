@@ -77,6 +77,7 @@ block_idx = diff(trial(SA_idx));
 block_idx = find(block_idx == 1);
 
 data_in = data_k2(SA_idx,:)';
+data_label = 'clust2'; 
 %% sanity plots
 % figure(100)
 % subplot(1,3,3)
@@ -410,13 +411,13 @@ for iL = Ls
         % make a figure
         figure(110+iL)
         % info
-        subplot(5,6,1)
+        subplot(5,8,1)
         text(0, 0.75, ['L = ' num2str(iL)]);
         text(0, 0.25, ['iter = ' num2str(this_sig_iter)]);
         axis off
         
         % plot the H values for all sig factors
-        subplot(5,6,[6, 12, 18, 24, 30])
+        subplot(5,8,[8, 16, 24, 32, 40])
         hold on
         plot(pos(:,1), pos(:,2), '.k')
         c_ord = linspecer(size(all_trial_idx,1));
@@ -425,32 +426,42 @@ for iL = Ls
             % %     pause(1)
             these_labels{iT} = num2str(iT);
             %     vlines{iT} = 'w';
-            
         end
 %         legend(['' these_labels], 'location', 'southoutside', 'orientation', 'horizontal')
-        
         axis off
         
         % plot the W factors
-        ax(1) = subplot(5,6,3:5);
+        if size(all_H{this_sig_iter},1) == 1
+            subplot(5,8,2:7);
+        elseif size(all_H{this_sig_iter},1) == 2
+            subplot(5,8,3:7);
+        elseif size(all_H{this_sig_iter},1) == 3
+            subplot(5,8,4:7);
+        end
         for ii = 1:size(all_H{this_sig_iter},1) % loop sig factors
             hold on
-            plot((0:size(all_H{this_sig_iter},2)-1)/Fs, all_H{this_sig_iter}(ii,:)+ii-1, 'color', s_ord(ii,:))
+            plot((0:size(all_H{this_sig_iter},2)-1)/Fs, all_H{this_sig_iter}(ii,:)+ii, 'color', s_ord(ii,:))
         end
-        box off
+                set(gca, 'ytick', 1:size(all_trial_idx,1))
+
         
+                % plot W factors
+                
         if size(all_H{this_sig_iter},1) > 1 % only works for 2 factors b/c lazy.
             for ii = 1:size(all_H{this_sig_iter},1)
                 if ii == 1
-                    subplot(5,6,[7 13 19 25])
-                else
-                    subplot(5,6,[8 14 20 26])
+                    subplot(5,8,[9 17 25 33])
+                elseif ii == 2 
+                    subplot(5,8,[10 18 26 34])
+                    ylabel([]); 
+                elseif ii == 3
+                    subplot(5,8,[11 19 27 35])
                     ylabel([]); 
                 end
                 imagesc((0:size(all_W{this_sig_iter},3)-1)/Fs, 1:size(all_W{this_sig_iter},1), squeeze(all_W{this_sig_iter}(indSort,ii,:)));
                 xlabel('time (s)')
                 set(gca, 'XColor', s_ord(1,:),'YColor', s_ord(1,:));
-                 if ii >1; set(gca, 'yticklabel', [], 'XColor', s_ord(2,:),'YColor', s_ord(2,:));  end
+                 if ii >1; set(gca, 'yticklabel', [], 'XColor', s_ord(ii,:),'YColor', s_ord(ii,:));  end
             end
         else
             subplot(5,6,[7:8 13:14 19:20 25:26])
@@ -458,11 +469,18 @@ for iL = Ls
             xlabel('time (s)')
             set(gca, 'XColor', s_ord(1,:),'YColor', s_ord(1,:))
         end
-        ylim([0 size(all_H{this_sig_iter},1)+1])
+%         ylim([0 size(all_H{this_sig_iter},1)+1])
         
         
-        % plot the raw data sorted based on these factors
-        ax(2) = subplot(5,6,[9:11 15:17 21:23 27:29]);
+        % plot the raw data sorted based on these factor
+        if size(all_H{this_sig_iter},1) == 1
+            ax(2) = subplot(5,8,[10:15 18:23 26:31 34:39]);
+        elseif size(all_H{this_sig_iter},1) == 2
+            ax(2) = subplot(5,8,[11:15 19:23 27:31 35:39]);
+        elseif size(all_H{this_sig_iter},1) == 3
+            ax(2) = subplot(5,8,[12:15 20:23 28:31 36:39]);
+        end
+        
         imagesc((0:size(seq_data_in,2)-1)/Fs, 1:size(seq_data_in,1),seq_data_in(indSort,:))
         for iT = 1:size(all_trial_idx,1)-1
                 rectangle('position', [pad_block(iT,1)/Fs, 0,(pad_block(iT,2)-pad_block(iT,1))/Fs , 2], 'facecolor', c_ord(iT+1,:))
@@ -474,8 +492,8 @@ for iL = Ls
         linkaxes(ax, 'x')
         
         set(gcf, 'position', [212 846 1400 550])
-        saveas(gcf, ['Seq_parts_K' num2str(K) '_L' num2str(iL) '.fig'])
-        saveas(gcf, ['Seq_parts_K' num2str(K) '_L' num2str(iL) '.png'])
+        saveas(gcf, [data_label '_Seq_parts_K' num2str(K) '_L' num2str(iL) '.fig'])
+        saveas(gcf, [data_label '_Seq_parts_K' num2str(K) '_L' num2str(iL) '.png'])
         close(110+iL)
         
     end
@@ -489,7 +507,7 @@ for iL = Ls
     Seq_out{iL}.lambda = lambda;
     Seq_out{iL}.lambdaOrthoH = lambdaOrthoH;
     Seq_out{iL}.lambdaOrthoW = lambdaOrthoW;
-    save('Seq_out_pad.mat', 'Seq_out'); 
+    save([ data_label '_Seq_out_pad.mat'], 'Seq_out'); 
     close all
     
     
@@ -498,7 +516,10 @@ end
 %%
 for iL = Ls
 %     if sum(Seq_out{iL}.is_significant, 'all')
-    fprintf('Sig factors (%i/%i; 1 = %i, 2 = %i, 3 = %i) found in L = %i\n', sum(Seq_out{iL}.is_significant, 'all'),nIter, iL)
+%     fprintf('Sig factors (%i/%i; 1 = %i, 2 = %i, 3 = %i) found in L = %i\n', sum(Seq_out{iL}.is_significant, 'all'),nIter, iL)
+    fprintf('Significant Seqs %d/%d inters (K1: %d, K2: %d, K3: %d) found using K: %d L: %ds\n',sum((sum(Seq_out{iL}.is_significant,2)~=0), 'all'),nIter, ...
+            sum((sum(Seq_out{iL}.is_significant,2)==1),'all'), sum((sum(Seq_out{iL}.is_significant,2)==2),'all'), sum((sum(Seq_out{iL}.is_significant,2)==3),'all'),...
+            K, iL); 
 %     end
 end
 
