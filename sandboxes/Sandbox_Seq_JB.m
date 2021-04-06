@@ -40,10 +40,21 @@ trial = seq_data.Beh.TrackData.Trial;
 % start arm indices
 SA_idx = ~ismissing(seq_data.Beh.TrackData.SA);
 
+%reward indicies
+R_idx = ~ismissing(seq_data.Beh.TrackData.EVENTS);
+
+% get trial info as arrays
+f_names = fieldnames(seq_data.Beh.GlobalActivity(1));
+for iT = length(seq_data.Beh.GlobalActivity):-1:1
+    for iF = 1:length(f_names)
+        trial_times.(f_names{iF})(iT) = seq_data.Beh.GlobalActivity(iT).(f_names{iF});
+    end
+end
+
 %  limit data to cluster groups
 
 data_k1 = data(:,cluster_id == 1);
-[~, s_idx] = sort(data_k1,1);
+% [~, s_idx] = sort(data_k1,1);
 
 data_k2 = data(:,cluster_id == 2);
 data_k3 = data(:,cluster_id == 3);
@@ -76,7 +87,7 @@ all_arms = logical(all_arms(:,1:length(SA_idx)));
 block_idx = diff(trial(SA_idx));
 block_idx = find(block_idx == 1);
 
-data_in = data_k2(SA_idx,:)';
+data_in = data_k1(SA_idx,:)';
 data_label = 'clust1';
 %% sanity plots
 % figure(100)
@@ -126,6 +137,8 @@ for iT = 1:size(all_trial_idx,1)-1
     h = vline(block_idx(iT), 'w', num2str(iT+1));
     h.Color  = c_ord(iT+1,:);
 end
+
+set(gcf, 'position', [212 846 1400 550])
 %% try Seq on the merged SA blocks
 % make a fake matrix of trial IDs for plotting.  This will be a matrix with
 % trial ids across rows:
@@ -223,7 +236,7 @@ title('testing')
 
 %% run SeqNMF across multiple time scales.
 
-Ls = 12;
+Ls = [2 10];
 for iL = Ls
     % Set some parameters
     rng(235); % fixed rng seed for reproduceability
@@ -386,12 +399,7 @@ for iL = Ls
         
         
     end
-    figure(200+iL); hold on
-    h = histogram(sum(is_significant,2), 'edgecolor', 'w', 'facecolor', .7*[1 1 1]);
-    h.BinCounts = h.BinCounts/sum(h.BinCounts)*100;
-    xlim([0 10]);
-    xlabel('# significant factors')
-    ylabel('% seqNMF runs')
+    
     
     %% saver evertyhing
     Seq_out{iL}.K = K;
@@ -407,6 +415,20 @@ for iL = Ls
     %% plot the raw data with a significant sequence
     
     if sum(Seq_out{iL}.is_significant,'all')
+        
+        % histogram
+        figure(200+iL); hold on
+        h = histogram(sum(Seq_out{iL}.is_significant,2), 'edgecolor', 'w', 'facecolor', .7*[1 1 1]);
+        h.BinCounts = h.BinCounts/sum(h.BinCounts)*100;
+        xlim([0 10]);
+        xlabel('# significant factors')
+        ylabel('% seqNMF runs')
+        set(gcf, 'position', [212 846 1400 550])
+        saveas(gcf, [data_label '_K_hist_' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.fig'])
+        saveas(gcf, [data_label '_K_hist_' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.png'])
+        close(200+iL)
+        
+        
         if max(sum(Seq_out{iL}.is_significant,2)) > 1
             [~,sig_iter] = max(sum(Seq_out{iL}.is_significant,2));
         else
@@ -416,7 +438,7 @@ for iL = Ls
         this_sig_iter = sig_iter(1);
         s_ord = linspecer(max(sum(Seq_out{iL}.is_significant,2)));
         
-        [max_factor, L_sort, max_sort, hybrid] = helper.ClusterByFactor(Seq_out{iL}.W{this_sig_iter}(:,:,:),1);
+        [~, ~, ~, hybrid] = helper.ClusterByFactor(Seq_out{iL}.W{this_sig_iter}(:,:,:),1);
         indSort = hybrid(:,3);
         
         % make a figure
@@ -472,13 +494,13 @@ for iL = Ls
                 this_seq(this_seq > max(this_seq)*0.75) = 1;
                 this_seq(this_seq ~=1) = 0;
                 MS_Ca_Raster(this_seq,(0:size(this_seq,2)-1)/Fs,2)
-%                 imagesc((0:size(this_seq,2)-1)/Fs, 1:size(this_seq,1), this_seq.*(1:size(this_seq,1))');
-                xlabel('time (s)'); 
-                title(['Factor ' num2str(ii) '(top 75%)']);
-%                 colormap(linspecer(size(this_seq,1)+1));
-%                 caxis([0 size(this_seq,1)]);
-%                 j_ord =jet(100); 
-%                 set(gca, 'color', j_ord(1,:)); 
+                %                 imagesc((0:size(this_seq,2)-1)/Fs, 1:size(this_seq,1), this_seq.*(1:size(this_seq,1))');
+                xlabel('time (s)');
+                title(['Factor ' num2str(ii) '(top 25%)']);
+                %                 colormap(linspecer(size(this_seq,1)+1));
+                %                 caxis([0 size(this_seq,1)]);
+                %                 j_ord =jet(100);
+                %                 set(gca, 'color', j_ord(1,:));
                 set(gca, 'XColor', s_ord(1,:),'YColor', s_ord(1,:));
                 if ii >1; set(gca, 'yticklabel', [], 'XColor', s_ord(ii,:),'YColor', s_ord(ii,:));  end
             end
@@ -514,15 +536,15 @@ for iL = Ls
         linkaxes([ax1 ax2], 'x')
         
         set(gcf, 'position', [212 846 1400 550])
-                saveas(gcf, [data_label '_Seq_parts_K' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.fig'])
-                saveas(gcf, [data_label '_Seq_parts_K' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.png'])
-                close(110+iL)
+        saveas(gcf, [data_label '_Seq_parts_K' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.fig'])
+        saveas(gcf, [data_label '_Seq_parts_K' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.png'])
+        close(110+iL)
         
     end
     
     
     
-    %     close all
+    close all
     
     
 end
@@ -533,7 +555,7 @@ for iL = Ls
     %     fprintf('Sig factors (%i/%i; 1 = %i, 2 = %i, 3 = %i) found in L = %i\n', sum(Seq_out{iL}.is_significant, 'all'),nIter, iL)
     fprintf('Significant Seqs %d/%d inters (K1: %d, K2: %d, K3: %d) found using K: %d L: %ds\n',sum((sum(Seq_out{iL}.is_significant,2)~=0), 'all'),nIter, ...
         sum((sum(Seq_out{iL}.is_significant,2)==1),'all'), sum((sum(Seq_out{iL}.is_significant,2)==2),'all'), sum((sum(Seq_out{iL}.is_significant,2)==3),'all'),...
-        K, iL);
+        Seq_out{iL}.K, iL);
     %     end
 end
 
@@ -549,3 +571,29 @@ for iT = 1:size(all_trial_idx,1)-1
     % h = vline(pad_block(iT)+(20*Fs)/Fs, 'w', num2str(iT));
     % h.Color  = c_ord(iT+1,:);
 end
+
+
+%% rank trials based on H values
+
+iL = 2;
+if max(sum(Seq_out{iL}.is_significant,2)) > 1
+    [~,sig_iter] = max(sum(Seq_out{iL}.is_significant,2));
+else
+    sig_iter = find(sum(Seq_out{iL}.is_significant,2));
+end
+
+this_sig_iter = sig_iter(1);
+
+H = Seq_out{iL}.H(this_sig_iter);
+
+s_ord = linspecer(max(sum(Seq_out{iL}.is_significant,2)));
+
+[max_factor, L_sort, max_sort, hybrid] = helper.ClusterByFactor(Seq_out{iL}.W{this_sig_iter}(:,:,:),1);
+indSort = hybrid(:,3);
+
+
+% split the H values into trials
+%         for iT = unique(trial_blocks)
+
+
+
