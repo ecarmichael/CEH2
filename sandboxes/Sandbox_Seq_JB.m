@@ -240,7 +240,11 @@ title('testing')
 
 %% run SeqNMF across multiple time scales.
 
+<<<<<<< HEAD
 Ls = 2:12;
+=======
+Ls = [ 10 12];
+>>>>>>> 11c75beae6dbed45d4345422b1b88a5f3b6f39d5
 for iL = Ls
     % Set some parameters
     rng(235); % fixed rng seed for reproduceability
@@ -401,7 +405,7 @@ for iL = Ls
         display(['Sig factors found: ' num2str(sum(is_significant(iteri,:)))])
         toc
         
-        
+            close all
     end
     
     
@@ -509,9 +513,9 @@ for iL = Ls
                 if ii >1; set(gca, 'yticklabel', [], 'XColor', s_ord(ii,:),'YColor', s_ord(ii,:));  end
             end
         else
-            subplot(5,6,[7:8 13:14 19:20 25:26])
+            subplot(5,8,[9 17 25 33])
             this_seq = squeeze(Seq_out{iL}.W{this_sig_iter}(indSort,:,:));
-            imagesc((0:size(this_seq,2)-1)/Fs, 1:size(this_seq,1), this_seq.*(1:size(this_seq,1)));
+            imagesc((0:size(this_seq,2)-1)/Fs, 1:size(this_seq,1), this_seq.*(1:size(this_seq,2)));
             xlabel('time (s)')
             set(gca, 'XColor', s_ord(1,:),'YColor', s_ord(1,:))
             colormap(jet);
