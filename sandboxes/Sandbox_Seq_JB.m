@@ -7,18 +7,22 @@
 %
 %
 %% get code and data paths
-
-addpath(genpath('/home/ecarmichael/Documents/GitHub/CEH2'))
-
-
-data_dir = '/mnt/Data/Seq_JB';
+if exist('/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/Seq_JB', 'dir')
+    addpath(genpath('/home/williamslab/Documents/Github/CEH2'))
+    data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/Seq_JB';
+    seq_dir = '/home/williamslab/Documents/Github/seqNMF'; 
+else
+    addpath(genpath('/home/ecarmichael/Documents/GitHub/CEH2'))
+    data_dir = '/mnt/Data/Seq_JB';
+    seq_dir = '/home/ecarmichael/Documents/GitHub/seqNMF';
+end
 cd(data_dir)
 
 seq_data = load('M1269DMS1seqNMF.mat', 'seqNMF');
 seq_data = seq_data.seqNMF;
 
 
-addpath('/home/ecarmichael/Documents/GitHub/seqNMF');
+addpath(seq_dir);
 
 %% prepare data
 place_cell_idx = seq_data.Place == 1;
@@ -87,8 +91,8 @@ all_arms = logical(all_arms(:,1:length(SA_idx)));
 block_idx = diff(trial(SA_idx));
 block_idx = find(block_idx == 1);
 
-data_in = data_k1(SA_idx,:)';
-data_label = 'clust1';
+data_in = data_k3(SA_idx,:)';
+data_label = 'clust3';
 %% sanity plots
 % figure(100)
 % subplot(1,3,3)
@@ -236,7 +240,7 @@ title('testing')
 
 %% run SeqNMF across multiple time scales.
 
-Ls = [2 10];
+Ls = 2:12;
 for iL = Ls
     % Set some parameters
     rng(235); % fixed rng seed for reproduceability
