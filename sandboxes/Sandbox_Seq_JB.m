@@ -28,6 +28,7 @@ cluster_id = seq_data.Kcluster;
 Fs = seq_data.Cal.Dt;
 
 data = seq_data.Cal.CellFreq';
+% data = seq_data.Cal.Cell_Denoised'; 
 
 movement_thresh = 2.5; % in cm/s
 movement_idx = seq_data.Beh.TrackData.Speed >movement_thresh; % get times when the animal was moving.
@@ -87,8 +88,8 @@ all_arms = logical(all_arms(:,1:length(SA_idx)));
 block_idx = diff(trial(SA_idx));
 block_idx = find(block_idx == 1);
 
-data_in = data_k1(SA_idx,:)';
-data_label = 'clust1';
+data_in = data_k4(SA_idx,:)';
+data_label = 'clust4';
 %% sanity plots
 % figure(100)
 % subplot(1,3,3)
@@ -132,7 +133,11 @@ axis off
 
 
 subplot(1,3,1:2)
-MS_Ca_Raster(data_in)
+if length(unique(data_in)) < 3  % is this binary data.  May not be in logical format. 
+    MS_Ca_Raster(data_in)
+else
+    MS_plot_ca_trace(data_in, [], 0.0001,1)
+end
 for iT = 1:size(all_trial_idx,1)-1
     h = vline(block_idx(iT), 'w', num2str(iT+1));
     h.Color  = c_ord(iT+1,:);
@@ -216,27 +221,43 @@ h = figure(10);
 h.Name = 'Seq input data splits';
 
 subplot(2,4,1:3)
-MS_Ca_Raster(trainPOS, [], 4)
+
+if length(unique(trainPOS)) < 3  % is this binary data.  May not be in logical format. 
+MS_Ca_Raster(trainPOS, [], 4);
+else
+    MS_plot_ca_trace(trainPOS, [], 0.0001,1)
+end
 title('trial/position data (training)')
 
 
 subplot(2,4,4)
-MS_Ca_Raster(testPOS, [], 4)
+if length(unique(testPOS)) < 3  % is this binary data.  May not be in logical format.
+    MS_Ca_Raster(testPOS, [], 4);
+else
+    MS_plot_ca_trace(testPOS, [], 0.0001,1)
+end
 title('testing')
 % axis off
 
 subplot(2,4,5:7)
-MS_Ca_Raster(trainNEURAL, [], 4)
+if length(unique(trainNEURAL)) < 3  % is this binary data.  May not be in logical format.
+    MS_Ca_Raster(trainNEURAL, [], 4);
+else
+    MS_plot_ca_trace(trainNEURAL, [], 0.0001,1)
+end
 title('neural data (training)')
 
 subplot(2,4,8)
-MS_Ca_Raster(testNEURAL, [], 4)
-% axis off
+if length(unique(testNEURAL)) < 3  % is this binary data.  May not be in logical format.
+    MS_Ca_Raster(testNEURAL, [], 4);
+else
+    MS_plot_ca_trace(testNEURAL, [], 0.0001,1)
+end% axis off
 title('testing')
 
 %% run SeqNMF across multiple time scales.
 
-Ls = [ 10 12];
+Ls = 2:2:10;
 for iL = Ls
     % Set some parameters
     rng(235); % fixed rng seed for reproduceability
@@ -524,7 +545,12 @@ for iL = Ls
             ax2 = subplot(5,8,[12:15 20:23 28:31 36:39]);
         end
         
-        MS_Ca_Raster(seq_data_in(indSort,:), (0:size(seq_data_in,2)-1)/Fs, 2)
+        
+        if length(unique(seq_data_in)) < 3  % is this binary data.  May not be in logical format. 
+            MS_Ca_Raster(seq_data_in(indSort,:), (0:size(seq_data_in,2)-1)/Fs, 2)
+        else
+            MS_plot_ca_trace(seq_data_in(indSort,:),(0:size(seq_data_in,2)-1)/Fs, 0.0001, 1); 
+        end
         %         imagesc((0:size(seq_data_in,2)-1)/Fs, 1:size(seq_data_in,1),seq_data_in(indSort,:))
         for iT = 1:size(all_trial_idx,1)-1
             rectangle('position', [pad_block(iT,1)/Fs, 0,(pad_block(iT,2)-pad_block(iT,1))/Fs , 2], 'facecolor', c_ord(iT+1,:))
