@@ -7,18 +7,22 @@
 %
 %
 %% get code and data paths
-
-addpath(genpath('/home/ecarmichael/Documents/GitHub/CEH2'))
-
-
-data_dir = '/mnt/Data/Seq_JB';
+if exist('/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/Seq_JB', 'dir')
+    addpath(genpath('/home/williamslab/Documents/Github/CEH2'))
+    data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/Seq_JB';
+    seq_dir = '/home/williamslab/Documents/Github/seqNMF'; 
+else
+    addpath(genpath('/home/ecarmichael/Documents/GitHub/CEH2'))
+    data_dir = '/mnt/Data/Seq_JB';
+    seq_dir = '/home/ecarmichael/Documents/GitHub/seqNMF';
+end
 cd(data_dir)
 
 seq_data = load('M1269DMS1seqNMF.mat', 'seqNMF');
 seq_data = seq_data.seqNMF;
 
 
-addpath('/home/ecarmichael/Documents/GitHub/seqNMF');
+addpath(seq_dir);
 
 %% prepare data
 place_cell_idx = seq_data.Place == 1;
@@ -28,6 +32,7 @@ cluster_id = seq_data.Kcluster;
 Fs = seq_data.Cal.Dt;
 
 data = seq_data.Cal.CellFreq';
+% data = seq_data.Cal.Cell_Denoised'; 
 
 movement_thresh = 2.5; % in cm/s
 movement_idx = seq_data.Beh.TrackData.Speed >movement_thresh; % get times when the animal was moving.
@@ -40,10 +45,21 @@ trial = seq_data.Beh.TrackData.Trial;
 % start arm indices
 SA_idx = ~ismissing(seq_data.Beh.TrackData.SA);
 
+%reward indicies
+R_idx = ~ismissing(seq_data.Beh.TrackData.EVENTS);
+
+% get trial info as arrays
+f_names = fieldnames(seq_data.Beh.GlobalActivity(1));
+for iT = length(seq_data.Beh.GlobalActivity):-1:1
+    for iF = 1:length(f_names)
+        trial_times.(f_names{iF})(iT) = seq_data.Beh.GlobalActivity(iT).(f_names{iF});
+    end
+end
+
 %  limit data to cluster groups
 
 data_k1 = data(:,cluster_id == 1);
-[~, s_idx] = sort(data_k1,1);
+% [~, s_idx] = sort(data_k1,1);
 
 data_k2 = data(:,cluster_id == 2);
 data_k3 = data(:,cluster_id == 3);
@@ -76,8 +92,10 @@ all_arms = logical(all_arms(:,1:length(SA_idx)));
 block_idx = diff(trial(SA_idx));
 block_idx = find(block_idx == 1);
 
-data_in = data_k2(SA_idx,:)';
-data_label = 'clust1';
+
+data_in = data_k3(SA_idx,:)';
+data_label = 'clust3';
+
 %% sanity plots
 % figure(100)
 % subplot(1,3,3)
@@ -121,11 +139,17 @@ axis off
 
 
 subplot(1,3,1:2)
-MS_Ca_Raster(data_in)
+if length(unique(data_in)) < 3  % is this binary data.  May not be in logical format. 
+    MS_Ca_Raster(data_in)
+else
+    MS_plot_ca_trace(data_in, [], 0.0001,1)
+end
 for iT = 1:size(all_trial_idx,1)-1
     h = vline(block_idx(iT), 'w', num2str(iT+1));
     h.Color  = c_ord(iT+1,:);
 end
+
+set(gcf, 'position', [212 846 1400 550])
 %% try Seq on the merged SA blocks
 % make a fake matrix of trial IDs for plotting.  This will be a matrix with
 % trial ids across rows:
@@ -203,27 +227,46 @@ h = figure(10);
 h.Name = 'Seq input data splits';
 
 subplot(2,4,1:3)
-MS_Ca_Raster(trainPOS, [], 4)
+
+if length(unique(trainPOS)) < 3  % is this binary data.  May not be in logical format. 
+MS_Ca_Raster(trainPOS, [], 4);
+else
+    MS_plot_ca_trace(trainPOS, [], 0.0001,1)
+end
 title('trial/position data (training)')
 
 
 subplot(2,4,4)
-MS_Ca_Raster(testPOS, [], 4)
+if length(unique(testPOS)) < 3  % is this binary data.  May not be in logical format.
+    MS_Ca_Raster(testPOS, [], 4);
+else
+    MS_plot_ca_trace(testPOS, [], 0.0001,1)
+end
 title('testing')
 % axis off
 
 subplot(2,4,5:7)
-MS_Ca_Raster(trainNEURAL, [], 4)
+if length(unique(trainNEURAL)) < 3  % is this binary data.  May not be in logical format.
+    MS_Ca_Raster(trainNEURAL, [], 4);
+else
+    MS_plot_ca_trace(trainNEURAL, [], 0.0001,1)
+end
 title('neural data (training)')
 
 subplot(2,4,8)
-MS_Ca_Raster(testNEURAL, [], 4)
-% axis off
+if length(unique(testNEURAL)) < 3  % is this binary data.  May not be in logical format.
+    MS_Ca_Raster(testNEURAL, [], 4);
+else
+    MS_plot_ca_trace(testNEURAL, [], 0.0001,1)
+end% axis off
 title('testing')
 
 %% run SeqNMF across multiple time scales.
 
-Ls = 12;
+
+Ls = 2:12;
+
+
 for iL = Ls
     % Set some parameters
     rng(235); % fixed rng seed for reproduceability
@@ -384,14 +427,9 @@ for iL = Ls
         display(['Sig factors found: ' num2str(sum(is_significant(iteri,:)))])
         toc
         
-        
+            close all
     end
-    figure(200+iL); hold on
-    h = histogram(sum(is_significant,2), 'edgecolor', 'w', 'facecolor', .7*[1 1 1]);
-    h.BinCounts = h.BinCounts/sum(h.BinCounts)*100;
-    xlim([0 10]);
-    xlabel('# significant factors')
-    ylabel('% seqNMF runs')
+    
     
     %% saver evertyhing
     Seq_out{iL}.K = K;
@@ -407,6 +445,20 @@ for iL = Ls
     %% plot the raw data with a significant sequence
     
     if sum(Seq_out{iL}.is_significant,'all')
+        
+        % histogram
+        figure(200+iL); hold on
+        h = histogram(sum(Seq_out{iL}.is_significant,2), 'edgecolor', 'w', 'facecolor', .7*[1 1 1]);
+        h.BinCounts = h.BinCounts/sum(h.BinCounts)*100;
+        xlim([0 10]);
+        xlabel('# significant factors')
+        ylabel('% seqNMF runs')
+        set(gcf, 'position', [212 846 1400 550])
+        saveas(gcf, [data_label '_K_hist_' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.fig'])
+        saveas(gcf, [data_label '_K_hist_' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.png'])
+        close(200+iL)
+        
+        
         if max(sum(Seq_out{iL}.is_significant,2)) > 1
             [~,sig_iter] = max(sum(Seq_out{iL}.is_significant,2));
         else
@@ -416,7 +468,7 @@ for iL = Ls
         this_sig_iter = sig_iter(1);
         s_ord = linspecer(max(sum(Seq_out{iL}.is_significant,2)));
         
-        [max_factor, L_sort, max_sort, hybrid] = helper.ClusterByFactor(Seq_out{iL}.W{this_sig_iter}(:,:,:),1);
+        [~, ~, ~, hybrid] = helper.ClusterByFactor(Seq_out{iL}.W{this_sig_iter}(:,:,:),1);
         indSort = hybrid(:,3);
         
         % make a figure
@@ -472,20 +524,20 @@ for iL = Ls
                 this_seq(this_seq > max(this_seq)*0.75) = 1;
                 this_seq(this_seq ~=1) = 0;
                 MS_Ca_Raster(this_seq,(0:size(this_seq,2)-1)/Fs,2)
-%                 imagesc((0:size(this_seq,2)-1)/Fs, 1:size(this_seq,1), this_seq.*(1:size(this_seq,1))');
-                xlabel('time (s)'); 
-                title(['Factor ' num2str(ii) '(top 75%)']);
-%                 colormap(linspecer(size(this_seq,1)+1));
-%                 caxis([0 size(this_seq,1)]);
-%                 j_ord =jet(100); 
-%                 set(gca, 'color', j_ord(1,:)); 
+                %                 imagesc((0:size(this_seq,2)-1)/Fs, 1:size(this_seq,1), this_seq.*(1:size(this_seq,1))');
+                xlabel('time (s)');
+                title(['Factor ' num2str(ii) '(top 25%)']);
+                %                 colormap(linspecer(size(this_seq,1)+1));
+                %                 caxis([0 size(this_seq,1)]);
+                %                 j_ord =jet(100);
+                %                 set(gca, 'color', j_ord(1,:));
                 set(gca, 'XColor', s_ord(1,:),'YColor', s_ord(1,:));
                 if ii >1; set(gca, 'yticklabel', [], 'XColor', s_ord(ii,:),'YColor', s_ord(ii,:));  end
             end
         else
-            subplot(5,6,[7:8 13:14 19:20 25:26])
+            subplot(5,8,[9 17 25 33])
             this_seq = squeeze(Seq_out{iL}.W{this_sig_iter}(indSort,:,:));
-            imagesc((0:size(this_seq,2)-1)/Fs, 1:size(this_seq,1), this_seq.*(1:size(this_seq,1)));
+            imagesc((0:size(this_seq,2)-1)/Fs, 1:size(this_seq,1), this_seq.*(1:size(this_seq,2)));
             xlabel('time (s)')
             set(gca, 'XColor', s_ord(1,:),'YColor', s_ord(1,:))
             colormap(jet);
@@ -502,7 +554,12 @@ for iL = Ls
             ax2 = subplot(5,8,[12:15 20:23 28:31 36:39]);
         end
         
-        MS_Ca_Raster(seq_data_in(indSort,:), (0:size(seq_data_in,2)-1)/Fs, 2)
+        
+        if length(unique(seq_data_in)) < 3  % is this binary data.  May not be in logical format. 
+            MS_Ca_Raster(seq_data_in(indSort,:), (0:size(seq_data_in,2)-1)/Fs, 2)
+        else
+            MS_plot_ca_trace(seq_data_in(indSort,:),(0:size(seq_data_in,2)-1)/Fs, 0.0001, 1); 
+        end
         %         imagesc((0:size(seq_data_in,2)-1)/Fs, 1:size(seq_data_in,1),seq_data_in(indSort,:))
         for iT = 1:size(all_trial_idx,1)-1
             rectangle('position', [pad_block(iT,1)/Fs, 0,(pad_block(iT,2)-pad_block(iT,1))/Fs , 2], 'facecolor', c_ord(iT+1,:))
@@ -514,15 +571,15 @@ for iL = Ls
         linkaxes([ax1 ax2], 'x')
         
         set(gcf, 'position', [212 846 1400 550])
-                saveas(gcf, [data_label '_Seq_parts_K' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.fig'])
-                saveas(gcf, [data_label '_Seq_parts_K' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.png'])
-                close(110+iL)
+        saveas(gcf, [data_label '_Seq_parts_K' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.fig'])
+        saveas(gcf, [data_label '_Seq_parts_K' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.png'])
+        close(110+iL)
         
     end
     
     
     
-    %     close all
+    close all
     
     
 end
@@ -533,7 +590,7 @@ for iL = Ls
     %     fprintf('Sig factors (%i/%i; 1 = %i, 2 = %i, 3 = %i) found in L = %i\n', sum(Seq_out{iL}.is_significant, 'all'),nIter, iL)
     fprintf('Significant Seqs %d/%d inters (K1: %d, K2: %d, K3: %d) found using K: %d L: %ds\n',sum((sum(Seq_out{iL}.is_significant,2)~=0), 'all'),nIter, ...
         sum((sum(Seq_out{iL}.is_significant,2)==1),'all'), sum((sum(Seq_out{iL}.is_significant,2)==2),'all'), sum((sum(Seq_out{iL}.is_significant,2)==3),'all'),...
-        K, iL);
+        Seq_out{iL}.K, iL);
     %     end
 end
 
@@ -549,3 +606,29 @@ for iT = 1:size(all_trial_idx,1)-1
     % h = vline(pad_block(iT)+(20*Fs)/Fs, 'w', num2str(iT));
     % h.Color  = c_ord(iT+1,:);
 end
+
+
+%% rank trials based on H values
+
+iL = 2;
+if max(sum(Seq_out{iL}.is_significant,2)) > 1
+    [~,sig_iter] = max(sum(Seq_out{iL}.is_significant,2));
+else
+    sig_iter = find(sum(Seq_out{iL}.is_significant,2));
+end
+
+this_sig_iter = sig_iter(1);
+
+H = Seq_out{iL}.H(this_sig_iter);
+
+s_ord = linspecer(max(sum(Seq_out{iL}.is_significant,2)));
+
+[max_factor, L_sort, max_sort, hybrid] = helper.ClusterByFactor(Seq_out{iL}.W{this_sig_iter}(:,:,:),1);
+indSort = hybrid(:,3);
+
+
+% split the H values into trials
+%         for iT = unique(trial_blocks)
+
+
+
