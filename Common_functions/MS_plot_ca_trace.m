@@ -43,7 +43,7 @@ j_ord = jet(100); % set the set
 
 
 % set a threshold for plotting.  for clearity. 
-data_in(data_in <= threshold) = NaN; 
+% data_in(data_in <= threshold) = NaN; 
 
 % figure
 hold on
@@ -53,16 +53,18 @@ ylim([1, nChan+1])
 
 for iC = nChan:-1:1
 %     keepIndex = ~isnan(data_in(iC,:)+iC);
+    this_chan = data_in(iC,:)./max(data_in(iC,:))+iC;
+    ax = patch([tvec , fliplr(tvec)], [this_chan,(iC-1)*ones(size(data_in(iC,:)))], c_ord(iC,:)); 
+    ax.EdgeColor = [0 0 0]; 
+    ax = area(data_in(iC,:)+iC, iC, 'ShowBaseLine', 'off'); 
+    ax.EdgeColor = c_ord(iC,:);
+    ax.FaceColor = c_ord(iC,:);
+    
+    area(tvec, this_chan, min(this_chan))
 
-%     ax = patch([tvec , fliplr(tvec)], [data_in(iC,:)+iC,(iC-1)*ones(size(data_in(iC,:)))], c_ord(iC,:)); 
-%     ax.EdgeColor = [0 0 0]; 
-%     ax = area(data_in(iC,:)+iC, iC, 'ShowBaseLine', 'off'); 
-%     ax.EdgeColor = c_ord(iC,:);
-%     ax.FaceColor = c_ord(iC,:);
-
-    plot(tvec, (data_in(iC,:)./max(data_in(iC,:)))+iC+2, 'color', c_ord(iC,:), 'LineWidth', linesize)
-    tick_val(iC) = nanmedian((data_in(iC,:)/max(data_in(iC,:)))+iC+1);
-    tick_label{iC} = num2str(iC);
+%     plot(tvec, (data_in(iC,:)./max(data_in(iC,:)))+iC+2, 'color', c_ord(iC,:), 'LineWidth', linesize)
+%     tick_val(iC) = nanmedian((data_in(iC,:)/max(data_in(iC,:)))+iC+1);
+%     tick_label{iC} = num2str(iC);
 end
 
     
