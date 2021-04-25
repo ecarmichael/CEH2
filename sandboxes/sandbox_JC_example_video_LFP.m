@@ -7,27 +7,28 @@ addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
 % oasis_setup;
 % disp('OASIS added for deconv');
 
-raw_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_18_2019_PV1069_HATD5\H13_M5_S42_HATD5';
+raw_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_18_2019_PV1069_HATD5\H10_M52_S0_REM86s';
 % ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_18_2019_PV1069_HATD5';
-ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_18_2019_PV1069_HATD5\H13_M5_S42_HATD5';
-
+ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_18_2019_PV1069_HATD5\H10_M52_S0_REM86s';
+lfp_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_18_2019_PV1069_HATD5'; 
 %%
-clearvars -except raw_dir ms_dir
+clearvars -except raw_dir ms_dir lfp_dir
 cd(raw_dir)
 
-vid_num = 3;
+vid_num = 1;
 
-b_obj = VideoReader(['behavCam' num2str(vid_num) '.avi']);
-for iF = b_obj.NumFrames:-1:1
-    b_f{iF} = read(b_obj, iF);
-    b_t(iF) = b_obj.CurrentTime;
-end
+% b_obj = VideoReader(['behavCam' num2str(vid_num) '.avi']);
+% for iF = b_obj.NumFrames:-1:1
+%     b_f{iF} = read(b_obj, iF);
+%     b_t(iF) = b_obj.CurrentTime;
+% end
 
 ca_obj = VideoReader(['msCam' num2str(vid_num) '.avi']);
 for iF = ca_obj.NumFrames:-1:1
     ca_f{iF} = read(ca_obj, iF);
     ca_t(iF) = ca_obj.CurrentTime;
 end
+
 
 %%
 cd(ms_dir)
@@ -44,6 +45,18 @@ else
     next_idx = vid_idx(vid_num+1);
 end
 
+
+%% get the LFP data from the cut MS (if it is unchanged.  this is true for PV_1069_HATD5 H10_M52_S0_REM86s)
+
+cd(lfp_dir);
+load('ms_resize.mat');
+this_seg = 4; 
+disp(ms_seg_resize.file_names{this_seg})
+
+csc = ms_seg_resize.NLX_csc{this_seg};
+csc.tvec = csc.tvec - csc.tvec(1); 
+
+csc_idx = nearest_idx(ms.time(this_idx:next_idx)/1000,csc.tvec); 
 %% deconv debugger.
 % % counter_init(size(ms.RawTraces,2),size(ms.RawTraces,2))
 % for iChan = 25:-1:1
@@ -108,6 +121,7 @@ end
 % end
 
 %% limited cell version
+parts = strsplit(raw_dir, filesep); 
 good_cells =20;
 % find x nice cells.
 if exist('SA.mat', 'file')
@@ -124,14 +138,20 @@ end
 d_max = []; 
 for iC = length(cells_to_use):-1:1
        this_data = zscore(ms.RawTraces(this_idx:next_idx,cells_to_use(iC)));
+       warning('OFF'); 
     pks = findpeaks(zscore(ms.RawTraces(this_idx:next_idx,cells_to_use(iC))),33,'MinPeakDistance',2, 'MinPeakHeight', 5);
         d_max(iC) = max(this_data);
     d_pks(iC) = length(pks);
 end
+
 [best_pks, best_cells] = sort(d_pks, 'descend');
 % [best_most_pks, best_most_cells] = sort(d_pks(best_cells(1:40)), 'descend');
+% if exist(['C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\SeqNMF_EC\' parts{end-2} filesep parts{end-1} filesep 'all_REM_sweeps_parts.mat'], 'file')
+%     load('all_REM_sweeps_parts.mat');
+%     cells = all_sweeps.parts{1}.indSort(1:good_cells); 
+% else
 cells = best_cells(1:good_cells);
-
+% end
 
 sub_mat = reshape(1:((4+length(cells))*4),4,4+length(cells))'; % matrix to pull subplot values from
 %%
@@ -140,9 +160,13 @@ if ishandle(108)
 end
 figure(108)
 subplot(4+length(cells),4,1:16)
-imagesc(b_f{1})
-title(sprintf('Time = %.3fs', ms.time(this_idx)/1000));
-set(gca, 'xtick', [], 'ytick', [])
+hold on
+plot(csc.tvec, csc.data(2,:), 'color', c_ord(3,:), 'LineWidth', 1);
+plot(csc.tvec, csc.data(4,:), 'color', c_ord(7,:), 'LineWidth', 1); % plot theta filder
+
+xlim([csc.tvec(1) csc.tvec(csc_idx(end))])
+% title(sprintf('Time = %.3fs', csc.tvec());
+set(gca, 'xtick', [], 'ytick', [], 'color', 'k')
 
 set(gcf, 'color', 'k')
 for iSub = 1:length(cells)
@@ -180,22 +204,24 @@ this_sub = sub_mat(5:end,3:4);
 subplot(4+length(cells),4,sort(this_sub(:)))
 imagesc(ca_f{1})
 colormap('gray')
+% xlim([0 700]); 
+ylim([100 size(ca_f{1},1)])
 set(gca, 'xtick', [], 'ytick', [])
 hold on
 for iC = length(cells):-1:1
     [x(iC),y(iC)]=find(ms.SFPs(:,:,cells(iC)) == max(ms.SFPs(:,:,cells(iC)),[],'all'));
 end
 
-scatter(y*ms.ds, x*ms.ds,100,c_ord,'LineWidth',1.5)
+scatter(y*ms.ds, x*ms.ds,125,c_ord,'LineWidth',1.5)
 
 %%
 set(gcf, 'position', [511  43 1242 935],'MenuBar','none','ToolBar','none')
 
 clear F
-for iF = Fs:4:size(b_t,2)-Fs
+for iF = Fs:4:size(ca_t,2)-Fs
     
     subplot(4+length(cells),4,1:16)
-    imagesc(b_f{iF})
+    xlim([csc.tvec(csc_idx(iF)) - 5 csc.tvec(csc_idx(iF))])
     title(sprintf('Time = %.3fs', ms.time(this_idx+iF)/1000));
     set(gca, 'xtick', [], 'ytick', [])
     
@@ -208,8 +234,9 @@ for iF = Fs:4:size(b_t,2)-Fs
     this_sub = sub_mat(5:end,3:4);
     subplot(4+length(cells),4,sort(this_sub(:)))
     imagesc(ca_f{iF})
+    ylim([100 size(ca_f{1},1)]);
     hold on
-    scatter(y*ms.ds, x*ms.ds,100,c_ord,'LineWidth',1.5);
+    scatter(y*ms.ds, x*ms.ds,125,c_ord,'LineWidth',1.5);
     set(gca, 'xtick', [], 'ytick', [])
     
     drawnow;
@@ -224,14 +251,14 @@ end
 %%
 parts = strsplit(cd, filesep);
 mkdir(['C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\JC_inter\' parts{end-1}])
-writerObj = VideoWriter(['C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\JC_inter\' parts{end-1} filesep 'Example_Ca_behav_place.avi']);
+writerObj = VideoWriter(['C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\JC_inter\' parts{end-1} filesep 'Example_Ca_REM_place.avi']);
 writerObj.FrameRate = Fs/4;
 writerObj.Quality = 100;
 % set the seconds per image
 % open the video writer
 open(writerObj);
 % write the frames to the video
-for iF = Fs:4:size(b_t,2)-Fs
+for iF = Fs:4:size(ca_t,2)-Fs
     % for ii =3962:2:5282
     
     % convert the image to a frame

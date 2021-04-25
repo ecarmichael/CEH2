@@ -53,7 +53,7 @@ figure(111)
 % plot(ms.denoise(:,iChan)-.2, 'r');
 % plot(((ms.deconv(:,iChan)./max(ms.deconv(:,iChan)))*.1) -.2, 'b');
 % plot((ms.Binary(:,iChan)*.1)+max(ms.RawTraces(:,iChan)), 'g'); 
-MS_plot_ca_trace(ms.FiltTraces(1:33*60,1:50)')
+% MS_plot_ca_trace(ms.FiltTraces(1:33*60,1:50)')
 
 %% plot stuff
 close all
@@ -64,7 +64,7 @@ title(sprintf('Behav Time = %.3fs | Ca Time = %.3fs', b_t(1), ca_t(1)));
 set(gca, 'xtick', [], 'ytick', [])
 
 subplot(3,4,[5 6 9 10])
-% MS_Ca_Raster(ms.Binary(1:ms.timestamps(2),:)'); %, ms.time(1:ms.timestamps(2))'/1000
+MS_Ca_Raster(ms.Binary(1:ms.timestamps(2),:)'); %, ms.time(1:ms.timestamps(2))'/1000
 set(gca, 'xtick', [])
 ylabel('cell number')
 
@@ -95,6 +95,31 @@ for iF = Fs:4:size(b_t,2)-Fs
     delete(h);
 
 end
+
+%% limited cell version
+
+cells = 1:8;
+sub_mat = reshape(1:((2+length(cells))*4),4,2+length(cells))'; % matrix to pull subplot values from
+
+figure(108)
+subplot(2+length(cells),4,1:8)
+imagesc(b_f{1})
+title(sprintf('Behav Time = %.3fs | Ca Time = %.3fs', b_t(1), ca_t(1)));
+set(gca, 'xtick', [], 'ytick', [])
+
+subplot(3,4,[5 6 9 10])
+% MS_Ca_Raster(ms.Binary(1:ms.timestamps(2),:)'); %, ms.time(1:ms.timestamps(2))'/1000
+set(gca, 'xtick', [])
+ylabel('cell number')
+
+
+subplot(2+length(cells),4,[ 7 8 11 12])
+imagesc(ca_f{1})
+colormap('gray')
+set(gca, 'xtick', [], 'ytick', [])
+
+set(gcf, 'position', [511  43 1242 935],'MenuBar','none','ToolBar','none')
+
 
 %%
 writerObj = VideoWriter(['C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\EV_inter' filesep 'Example_Ca_behav.avi']);
