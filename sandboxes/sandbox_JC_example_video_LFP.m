@@ -1,5 +1,5 @@
 addpath(genpath('/home/ecarmichael/Documents/GitHub/CEH2'));
-
+addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared')); 
 
 inter_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold';
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
@@ -7,9 +7,10 @@ addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
 % oasis_setup;
 % disp('OASIS added for deconv');
 
-raw_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_18_2019_PV1069_HATD5\H10_M52_S0_REM86s';
+% raw_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_18_2019_PV1069_HATD5\H10_M52_S0_REM86s';
+raw_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_18_2019_PV1069_HATD5\H10_M33_S12_SWS40s'; 
 % ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_18_2019_PV1069_HATD5';
-ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_18_2019_PV1069_HATD5\H10_M52_S0_REM86s';
+ms_dir = raw_dir;
 lfp_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_18_2019_PV1069_HATD5'; 
 %%
 clearvars -except raw_dir ms_dir lfp_dir
@@ -50,12 +51,25 @@ end
 
 cd(lfp_dir);
 load('ms_resize.mat');
-this_seg = 4; 
+this_seg = 2; 
 disp(ms_seg_resize.file_names{this_seg})
 
 csc = ms_seg_resize.NLX_csc{this_seg};
 csc.tvec = csc.tvec - csc.tvec(1); 
+if contains(ms_seg_resize.file_names{this_seg}, 'SW')
+    csc_raw = csc;
+csc_raw.data = csc.data(2,:); 
+csc_raw.label = csc.label{2}; 
+csc_raw.cfg.hdr = [];
+csc_raw.cfg.hdr{1} = csc.cfg.hdr{1}; 
 
+ cfg_filt_d = [];
+    cfg_filt_d.type = 'butter'; %Cheby1 is sharper than butter
+    cfg_filt_d.f  = [140 250]; % broad, could use 150-200?
+    cfg_filt_d.order = 4; %type filter order (fine for this f range)
+    cfg_filt_d.display_filter = 0; % use this to see the fvtool
+ripple = FilterLFP(cfg_filt_d, csc_raw);
+end
 csc_idx = nearest_idx(ms.time(this_idx:next_idx)/1000,csc.tvec); 
 %% deconv debugger.
 % % counter_init(size(ms.RawTraces,2),size(ms.RawTraces,2))
@@ -127,7 +141,7 @@ good_cells =20;
 if exist('SA.mat', 'file')
     load('SA.mat')
     cells_to_use = SA.WholePlaceCell; 
-    c_ord = linspecer(length(cells));
+    c_ord = linspecer(length(good_cells));
 % c_ord(((good_cells/2)-1):(good_cells/2)+4,:) = []; % remove yellows. They look terrible. 
 else
     cells_to_use = 1:size(ms.RawTraces,2); 
@@ -144,13 +158,13 @@ for iC = length(cells_to_use):-1:1
     d_pks(iC) = length(pks);
 end
 
-[best_pks, best_cells] = sort(d_pks, 'descend');
+[best_pks, best_cells] = sort(d_max, 'descend');
 % [best_most_pks, best_most_cells] = sort(d_pks(best_cells(1:40)), 'descend');
 % if exist(['C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\SeqNMF_EC\' parts{end-2} filesep parts{end-1} filesep 'all_REM_sweeps_parts.mat'], 'file')
 %     load('all_REM_sweeps_parts.mat');
 %     cells = all_sweeps.parts{1}.indSort(1:good_cells); 
 % else
-cells = best_cells(1:good_cells);
+cells = 1:good_cells;
 % end
 
 sub_mat = reshape(1:((4+length(cells))*4),4,4+length(cells))'; % matrix to pull subplot values from
@@ -162,8 +176,12 @@ figure(108)
 subplot(4+length(cells),4,1:16)
 hold on
 plot(csc.tvec, csc.data(2,:), 'color', c_ord(3,:), 'LineWidth', 1);
-plot(csc.tvec, csc.data(4,:), 'color', c_ord(7,:), 'LineWidth', 1); % plot theta filder
-
+if contains(ms_seg_resize.file_names{this_seg}, 'REM')
+    plot(csc.tvec, csc.data(4,:), 'color', c_ord(7,:), 'LineWidth', 1); % plot theta filder
+elseif contains(ms_seg_resize.file_names{this_seg}, 'SW')
+        plot(ripple.tvec, ripple.data, 'color', c_ord(7,:), 'LineWidth', 1); % plot theta filder
+end
+y_val = [min(csc.data(2,:)) max(csc.data(2,:))];
 xlim([csc.tvec(1) csc.tvec(csc_idx(end))])
 % title(sprintf('Time = %.3fs', csc.tvec());
 set(gca, 'xtick', [], 'ytick', [], 'color', 'k')
@@ -221,6 +239,7 @@ clear F
 for iF = Fs:4:size(ca_t,2)-Fs
     
     subplot(4+length(cells),4,1:16)
+    ylim(y_val); 
     xlim([csc.tvec(csc_idx(iF)) - 5 csc.tvec(csc_idx(iF))])
     title(sprintf('Time = %.3fs', ms.time(this_idx+iF)/1000));
     set(gca, 'xtick', [], 'ytick', [])
@@ -251,7 +270,7 @@ end
 %%
 parts = strsplit(cd, filesep);
 mkdir(['C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\JC_inter\' parts{end-1}])
-writerObj = VideoWriter(['C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\JC_inter\' parts{end-1} filesep 'Example_Ca_REM_place.avi']);
+writerObj = VideoWriter(['C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\JC_inter\' parts{end-1} filesep 'Example_Ca_' ms_seg_resize.file_names{this_seg} '.avi']);
 writerObj.FrameRate = Fs/4;
 writerObj.Quality = 100;
 % set the seconds per image

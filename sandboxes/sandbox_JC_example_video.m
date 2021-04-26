@@ -113,8 +113,7 @@ good_cells =20;
 if exist('SA.mat', 'file')
     load('SA.mat')
     cells_to_use = SA.WholePlaceCell; 
-    c_ord = linspecer(length(cells));
-% c_ord(((good_cells/2)-1):(good_cells/2)+4,:) = []; % remove yellows. They look terrible. 
+    c_ord = linspecer(good_cells);
 else
     cells_to_use = 1:size(ms.RawTraces,2); 
     c_ord = linspecer(good_cells+6);
@@ -130,8 +129,8 @@ for iC = length(cells_to_use):-1:1
 end
 [best_pks, best_cells] = sort(d_pks, 'descend');
 % [best_most_pks, best_most_cells] = sort(d_pks(best_cells(1:40)), 'descend');
-cells = best_cells(1:good_cells);
-
+% cells = best_cells(1:good_cells);
+cells = 1:good_cells;
 
 sub_mat = reshape(1:((4+length(cells))*4),4,4+length(cells))'; % matrix to pull subplot values from
 %%
@@ -224,7 +223,7 @@ end
 %%
 parts = strsplit(cd, filesep);
 mkdir(['C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\JC_inter\' parts{end-1}])
-writerObj = VideoWriter(['C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\JC_inter\' parts{end-1} filesep 'Example_Ca_behav_place.avi']);
+writerObj = VideoWriter(['C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\JC_inter\' parts{end-1} filesep 'Example_Ca_behav_best.avi']);
 writerObj.FrameRate = Fs/4;
 writerObj.Quality = 100;
 % set the seconds per image
