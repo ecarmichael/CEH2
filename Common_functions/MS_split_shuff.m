@@ -1,4 +1,4 @@
-function shuffled_TC = MS_split_shuff(data_in, pos_in, keep_idx, nShuff, bins1, bins2)
+function [shuff_MI, shuff_likelihood] = MS_split_shuff(data_in, pos_in, keep_idx, nShuff, bins1, bins2)
 %% MS_boot_shuff: run a bootstrap sampling for mean and CI of a data array.
 %    Inputs:
 %    - data_in: [1 x N array] data that will be bootstrapped to obtain mean
@@ -16,7 +16,9 @@ function shuffled_TC = MS_split_shuff(data_in, pos_in, keep_idx, nShuff, bins1, 
 %    - bins2: [vector]  vector of bins for dimension 2 [optional]
 %
 %    Outputs:
-%    - shuffled_TC [ n x nSamples]  shuffled tuning curve.  
+%    - shuff_MI [1 x nSamples] MI for shuffled data
+%
+%    - shuff_likelihood [ n x nSamples]  shuffled likelihood.  
 %
 %
 % EC 2020-12-11   initial version  
@@ -54,7 +56,7 @@ end
 for iShuff = nShuff:-1:1
     split_ts = ceil(MS_randn_range(1,1,1,length(data_in)));
     this_shuff = [data_in(end-split_ts+1:end); data_in(1:end-split_ts)]; % cut the data at a point and put the ends together.
-    this_shuff_samples = ones(1,length(this_shuff));  % as a surrogate for timestamps.
+%     this_shuff_samples = ones(1,length(this_shuff));  % as a surrogate for timestamps.
     
     
     % get a set of indicies to include for this shuffle
@@ -67,14 +69,13 @@ for iShuff = nShuff:-1:1
     bootstrap_ts = logical(bootstrap_ts);
     
     % Compute the actual tuning curve using a bootstrapped sample
-    
     if isempty(bins2) % 1d methods
         
-        [~,~,~,~, shuffled_TC(:,iShuff)]  = MS_get_spatial_information(data_in(bootstrap_ts), pos_in(bootstrap_ts,1), bins1);
+        [shuff_MI(iShuff),~,~,~, shuff_likelihood(:,iShuff)]  = MS_get_spatial_information(data_in(bootstrap_ts), pos_in(bootstrap_ts,1), bins1);
         
     else % 2d methods.
         
-        [~,~,~,~, shuffled_TC(:,:,iShuff)]  = MS_get_spatial_information_2D(this_shuff(bootstrap_ts),pos_in(bootstrap_ts,:), bins1,bins2);
+        [shuff_MI(iShuff),~,~,~, shuff_likelihood(:,:,iShuff)]  = MS_get_spatial_information_2D(this_shuff(bootstrap_ts),pos_in(bootstrap_ts,:), bins1,bins2);
         
     end
     

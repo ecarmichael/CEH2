@@ -21,10 +21,10 @@ close all
 restoredefaultpath
 global PARAMS  % these are global parameters that can be called into any function.  I limit these to directories for storing, loading, and saving files and codebases.
 os = computer;
-parent_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06'; 
+% parent_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06'; 
 % parent_dir = ('/mnt/Data/Behav test and scripts/ck-1361/2021_02_04'); 
-cd(parent_dir); 
-cd('BehavCam_1/')
+% cd(parent_dir); 
+% cd('BehavCam_1/')
 if ismac
     %     PARAMS.data_dir = '/Users/jericcarmichael/Documents/Williams_Lab/2019-12-04_11-10-01_537day0base1'; % where to find the raw data
     %     PARAMS.inter_dir = '/Users/jericcarmichael/Documents/Williams_Lab/Temp/'; % where to put intermediate files
@@ -42,6 +42,7 @@ elseif strcmp(os, 'GLNXA64')
     PARAMS.stats_dir = '/mnt/Data/Williams_Lab/II_classification/Inter/'; % where to put the statistical output .txt
     PARAMS.code_base_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
     PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
+    PARAMS.OASIS_dir = '/home/ecarmichael/Documents/GitHub/OASIS_matlab'; % contains the OASIS decon method: Friedrich et al. 2017: https://doi.org/10.1371/journal.pcbi.1005423
     %
 else
     PARAMS.data_dir = 'J:\Williams_Lab\II_classification'; % where to find the raw data
@@ -80,6 +81,7 @@ beep off % I know when I mess up without that annoying beep, thanks.
 
 % configuration 
 %general
+cfg.method = 'decon'; % can be binary (default) and 'decon'
 cfg.binary_thresh = 2; % number of sd for binary thresholding of zscored Ca data. 
 cfg.split_method = 'time'; % method for splitting session in half.  Can also be 'nTrans' to use number of Ca transients instead. 
 
@@ -96,8 +98,8 @@ cfg.s_bins  =  2.5:cfg.s_bin_size:30; % between -2cm/s^2 and 2cm/s^s with 20 bin
 cfg.s_bins(cfg.s_bins==0) = []; %remove 0 bin.
 
 % acceleration
-cfg.accel_bin_size = .2;
-cfg.accel_bins  =  -2:cfg.accel_bin_size:2; % between -2cm/s^2 and 2cm/s^s with 20 bins matches van de Veldt et al. 2020
+cfg.accel_bin_size = .1;
+cfg.accel_bins  =  -1:cfg.accel_bin_size:1; % between -2cm/s^2 and 2cm/s^s with 20 bins matches van de Veldt et al. 2020
 cfg.accel_bins(cfg.accel_bins==0) = []; %remove 0 bin.
 
 % head-direction
@@ -107,8 +109,10 @@ cfg.hd_bins = 0:cfg.hd_bin_size:360;
 %% navigate the desired directory.
 % get all the sub folders in the dir. ex:  current dir 'ck2cre1'  contains
 % '8-24-20', '8-25-20','8-26-20',...
+cd(PARAMS.data_dir) % move to the data folder
 
 parent_dir = cd; % keep the name of the main folder.
+
 
 sess_list = {};
 d = dir;
@@ -120,7 +124,7 @@ for iSess = 1:length(d)
 end
 
 % loop across sessions.
-for iSess = 1:length(sess_list) % loop through sessions for this subject.
+for iSess = 1%:length(sess_list) % loop through sessions for this subject.
     
     cd([parent_dir filesep sess_list{iSess}])
     
@@ -143,7 +147,7 @@ for iSess = 1:length(sess_list) % loop through sessions for this subject.
     % loop through tasks in a session (if any)
     for iTask = 1:length(task_list) % loop through tasks in a session.
         cd([parent_dir filesep sess_list{iSess} filesep task_list{iTask}])
-        %% get the file info
+        % get the file info
         parts = strsplit(cd, filesep);
         
         sess_parts = strsplit(strrep(parts{end}, '-', '_'), '_') ;
@@ -155,18 +159,29 @@ for iSess = 1:length(sess_list) % loop through sessions for this subject.
         f_info.time = datestr([sess_parts{end-2}(2:end),':', sess_parts{end-1}(2:end),':',sess_parts{end}(2:end)],'HH:MM:SS');
         f_info.fname = fname; % full name. 
         
-        if iSess == 2 && iTask ==2
+        if (iSess == 2 && iTask ==2) || (iSess == 1 && iTask ==1)
             continue
         end
         
-        %% run the screening script 
-        if contains(f_info.task, 'LT')
-            These_cells{iSess, iTask} = Spatial_screener_1D(cfg, f_info);
-        else
-            These_cells{iSess, iTask} = Spatial_screener(cfg, f_info);
+        %% run the screening script
+        These_cells{iSess, iTask} = Spatial_screener_info(cfg, f_info);
+        
+        %% check the sig for spatial metrics
+%         close all
+        fill_space = repmat(' ',1, 30 - length(f_info.fname));
+        fprintf(['<strong>%s</strong>:' fill_space '\n'], f_info.fname)
+        [~, sig_cells] = MS_get_sig_cells(These_cells{iSess, iTask}, 0.01);
+%         
+        place_sig = find(sig_cells(:,1)); 
+        if ~isempty(place_sig)
+            if strcmp(f_info.task, 'LT')
+                MS_plot_spatial_cell_1D(These_cells{iSess, iTask},place_sig')
+            else
+                MS_plot_spatial_cell(These_cells{iSess, iTask},place_sig')
+            end
         end
         
-        close all
+        
     end % end tasks
     
 end %sessions
