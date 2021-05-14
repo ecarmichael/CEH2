@@ -1,13 +1,15 @@
-function h = MS_plot_spatial_cell_1D(SI_in, cell_id)
-%% MS_plot_spatial_cell_1D: plot the spatial properities of a cell in 1D
+function h = MS_plot_movement_cell_1D(SI_in, cell_id, type)
+%% MS_plot_movement_cell_1D: plot the movement properities of a cell in 1D.  Can be 'speed' or 'acceleration'. 
 %
-%
-%
+
 %    Inputs:
 %    -SI_in: [struct]  output from Spatial_screener_info.m
 %
 %    - cell_id: [1 x N vector] the cell index to process. can be single or
 %    a vector.
+%
+%    - type: [string] can be either 'speed' or 'accel' should match the
+%    field in SI_in.  
 %
 %    Outputs:
 %    - h [handle]
@@ -39,7 +41,7 @@ for iC = cell_id
     c_num = c_num +2; % for plotting.
     
     % make a new figure if beyong 12.
-    if c_num > M
+    if c_num >= floor(M/2)
         c_num = 2;
         figure; % make a new figure;
         set(gcf, 'position', [232   110   1000   840]);
@@ -48,18 +50,15 @@ for iC = cell_id
     this_cell = SI_in(iC);
     
     
-    % add in the 2D place/spatial information?
+    % plot the 
     this_sub = sub_idx(c_num-1:c_num,1:3);
     subplot(M, N, this_sub(:)');
     imagesc(this_cell.cfg.X_bins,1,  this_cell.spatial.place.posterior');
     set(gca, 'YDir', 'normal', 'ytick', []);
     xlabel('position (cm)');
     colormap([0,0,0; parula(128)]);
-    text(-25, .75*max(ylim), {['Cell: ' num2str(iC)] ['MI: ' num2str(this_cell.spatial.place.MI,2)] ['split corr: ' num2str(this_cell.spatial.place.split.Stability_corr,2)]}, 'HorizontalAlignment', 'left', 'fontname', 'helvetica', 'color', 'K')
+    text(0, 1.2*max(ylim), ['Place | MI: ' num2str(this_cell.spatial.place.MI,2) ' | split corr: ' num2str(this_cell.spatial.place.split.Stability_corr,2)], 'HorizontalAlignment', 'left', 'fontweight', 'bold', 'color', 'K')
     colorbar;
-    if c_num ~= M % prevent it from printing axis labels over and over. 
-        axis off
-    end
     
     if c_num == 2
         text(-5*abs(min(xlim)),1.5*max(ylim),['Subject: ' this_cell.finfo.subject ' | Date: ' this_cell.finfo.date ' '  this_cell.finfo.task],...

@@ -46,7 +46,7 @@ for iF = 1:length(fnames)
     if ~strcmp(fnames{iF}, 'fname') && ~strcmp(fnames{iF}, 'events')
 
         for iC = length(All_cells):-1:1
-            if All_cells(iC).spatial.(fnames{iF}).MI_pval < threshold
+            if (All_cells(iC).spatial.(fnames{iF}).MI_pval < threshold) && ((All_cells(iC).spatial.(fnames{iF}).MI_pval) ~= 0)
                 sig_vec(iC,iF) = 1;
             end
         end

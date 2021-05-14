@@ -266,6 +266,7 @@ for iC = 1:size(ms.Binary,2) % loop through cells
     
     %% collect information from each cell.
     SI(iC).finfo= f_info;
+    SI(iC).finfo.dir = pwd; % get the data dir. 
     SI(iC).cfg = cfg; 
     % ca events
     SI(iC).events.n_evts = length(ca_evts);
@@ -320,6 +321,29 @@ for iC = 1:size(ms.Binary,2) % loop through cells
 end
 % save the output
 save('SI.mat', 'SI');
+mkdir([PARAMS.inter_dir f_info.subject filesep f_info.date filesep f_info.task]); 
+save([PARAMS.inter_dir f_info.subject filesep f_info.date filesep f_info.task filesep 'SI.mat'], 'SI'); % save it in the intermediate dir as well.  for 
+%% output the data itself. 
+
+% Keep the minimal ms fields
+Data.fname = f_info.fname; 
+Data.dir = pwd; 
+Data.time = ms.time; 
+Data.Binary = ms.Binary;
+Data.RawTraces = ms.RawTraces;
+Data.SFPs = ms.SFPs;
+Data.Centroids = ms.Centroids;
+Data.ds = ms.ds; 
+% keep the aligned behaviour. 
+Data.behav.position = behav_aligned.position;
+Data.behav.speed = behav_aligned.speed;
+Data.behav.accel = behav_aligned.accel;
+Data.behav.trackLength = behav_aligned.trackLength;
+Data.behav.dt = behav_aligned.dt;
+% save the simple output. 
+
+save([PARAMS.inter_dir f_info.subject filesep f_info.date filesep f_info.task 'Data.mat'], 'Data');
+
 
 %     
 %     

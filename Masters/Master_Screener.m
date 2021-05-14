@@ -172,6 +172,8 @@ for iSess = 1%:length(sess_list) % loop through sessions for this subject.
         fprintf(['<strong>%s</strong>:' fill_space '\n'], f_info.fname)
         [~, sig_cells] = MS_get_sig_cells(These_cells{iSess, iTask}, 0.01);
 %         
+
+% spatial/place plots
         place_sig = find(sig_cells(:,1)); 
         if ~isempty(place_sig)
             if strcmp(f_info.task, 'LT')
@@ -180,6 +182,22 @@ for iSess = 1%:length(sess_list) % loop through sessions for this subject.
                 MS_plot_spatial_cell(These_cells{iSess, iTask},place_sig')
             end
         end
+        
+        % cell summary
+%         MS_plot_cell(These_cells{iSess, iTask}, 
+        
+%         
+        % speed plots
+             speed_sig = find(sig_cells(:,2)); 
+        if ~isempty(speed_sig)
+                MS_plot_movement_cell_1D(These_cells{iSess, iTask},speed_sig', 'speed')
+        end
+%         
+%         % accel plots
+%              accel_sig = find(sig_cells(:,3)); 
+%         if ~isempty(accel_sig)
+%                 MS_plot_movement_cell_1D(These_cells{iSess, iTask},speed_sig', 'accel')
+%         end
         
         
     end % end tasks
