@@ -7,12 +7,12 @@
 %  written back to the data_dir.
 %
 %  % this uses PARAMS as a global parameter that can be called across
-%  functions.  It is mostly used for tracking directories and colours. 
+%  functions.  It is mostly used for tracking directories and colours.
 %
 % EC 2021-01-02   initial version for subiculum screening.
 %
 %  TODO:
-%   - make the initial data dir selection simple.  
+%   - make the initial data dir selection simple.
 %
 %% initialize
 
@@ -21,9 +21,9 @@ close all
 restoredefaultpath
 global PARAMS  % these are global parameters that can be called into any function.  I limit these to directories for storing, loading, and saving files and codebases.
 os = computer;
-% parent_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06'; 
-% parent_dir = ('/mnt/Data/Behav test and scripts/ck-1361/2021_02_04'); 
-% cd(parent_dir); 
+% parent_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06';
+% parent_dir = ('/mnt/Data/Behav test and scripts/ck-1361/2021_02_04');
+% cd(parent_dir);
 % cd('BehavCam_1/')
 if ismac
     %     PARAMS.data_dir = '/Users/jericcarmichael/Documents/Williams_Lab/2019-12-04_11-10-01_537day0base1'; % where to find the raw data
@@ -79,11 +79,11 @@ end
 clear d os
 beep off % I know when I mess up without that annoying beep, thanks.
 
-% configuration 
+% configuration
 %general
 cfg.method ='Binary';  %'decon'; % can be binary (default) and 'decon'
-cfg.binary_thresh = 2; % number of sd for binary thresholding of zscored Ca data. 
-cfg.split_method = 'time'; % method for splitting session in half.  Can also be 'nTrans' to use number of Ca transients instead. 
+cfg.binary_thresh = 2; % number of sd for binary thresholding of zscored Ca data.
+cfg.split_method = 'time'; % method for splitting session in half.  Can also be 'nTrans' to use number of Ca transients instead.
 
 % place
 cfg.p_thres = 0.05; % value for pvalue cut off;
@@ -103,8 +103,8 @@ cfg.accel_bins  =  -1:cfg.accel_bin_size:1; % between -2cm/s^2 and 2cm/s^s with 
 cfg.accel_bins(cfg.accel_bins==0) = []; %remove 0 bin.
 
 % head-direction
-cfg.hd_bin_size = 360/15; 
-cfg.hd_bins = 0:cfg.hd_bin_size:360; 
+cfg.hd_bin_size = 360/15;
+cfg.hd_bins = 0:cfg.hd_bin_size:360;
 
 %% navigate the desired directory.
 % get all the sub folders in the dir. ex:  current dir 'ck2cre1'  contains
@@ -157,7 +157,7 @@ for iSess = 1%:length(sess_list) % loop through sessions for this subject.
         f_info.date = datestr(parts{end-1}, 'yyyy-mm-dd');
         f_info.task = sess_parts{2};
         f_info.time = datestr([sess_parts{end-2}(2:end),':', sess_parts{end-1}(2:end),':',sess_parts{end}(2:end)],'HH:MM:SS');
-        f_info.fname = fname; % full name. 
+        f_info.fname = fname; % full name.
         
         if (iSess == 2 && iTask ==2) || (iSess == 1 && iTask ==1)
             continue
@@ -167,14 +167,14 @@ for iSess = 1%:length(sess_list) % loop through sessions for this subject.
         These_cells{iSess, iTask} = Spatial_screener_info(cfg, f_info);
         
         %% check the sig for spatial metrics
-%         close all
+        %         close all
         fill_space = repmat(' ',1, 30 - length(f_info.fname));
         fprintf(['<strong>%s</strong>:' fill_space '\n'], f_info.fname)
         [~, sig_cells] = MS_get_sig_cells(These_cells{iSess, iTask}, 0.01);
-%         
-
-% spatial/place plots
-        place_sig = find(sig_cells(:,1)); 
+        %
+        
+        % spatial/place plots
+        place_sig = find(sig_cells(:,1));
         if ~isempty(place_sig)
             if strcmp(f_info.task, 'LT')
                 MS_plot_spatial_cell_1D(These_cells{iSess, iTask},place_sig')
@@ -183,23 +183,56 @@ for iSess = 1%:length(sess_list) % loop through sessions for this subject.
             end
         end
         
-        % cell summary
-%         MS_plot_cell(These_cells{iSess, iTask}, 
         
-%         
         % speed plots
-             speed_sig = find(sig_cells(:,2)); 
+        speed_sig = find(sig_cells(:,2));
         if ~isempty(speed_sig)
-                MS_plot_movement_cell_1D(These_cells{iSess, iTask},speed_sig', 'speed')
+            MS_plot_movement_cell_1D(These_cells{iSess, iTask},speed_sig', 'speed')
         end
-%         
-%         % accel plots
-%              accel_sig = find(sig_cells(:,3)); 
-%         if ~isempty(accel_sig)
-%                 MS_plot_movement_cell_1D(These_cells{iSess, iTask},speed_sig', 'accel')
-%         end
+        
+        
+        % accel plots
+        accel_sig = find(sig_cells(:,3));
+        if ~isempty(accel_sig)
+            MS_plot_movement_cell_1D(These_cells{iSess, iTask},speed_sig', 'accel')
+        end
+        
+        % cell summary (everything)
+        %         MS_plot_cell(These_cells{iSess, iTask},
+        
+        
         
         
     end % end tasks
     
 end %sessions
+
+
+
+%% deconv sandbox
+ms = MS_msExtractBinary_detrendTraces(ms);
+
+if behav.time(end) ~= ms.time(end) || length(behav.time) ~= length(ms.time)
+    fprintf('<strong> %s </strong>: behaviour and Ca are not the same length or end time.  attempting alignment \n', mfilename);
+    behav_aligned = MS_align_data(behav, ms);
+else
+    behav_aligned = behav;
+end
+
+move_idx = behav_aligned.speed >2; % get times when the animal was moving.
+
+%% decon
+for iC = size(ms.RawTraces,2):-1:1
+        [denoise(:,iC),deconv(:,iC)] = deconvolveCa(ms.detrendRaw(:,iC), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
+
+        
+end
+
+%% generate a rate map
+for iC = 1:10
+[rate_map, occ_map] = MS_decon_rate_map(deconv(move_idx,iC), ms.time(move_idx), behav_aligned.position(move_idx,:), cfg.p_bin_size, 1, [4 4], 2);
+subplot(2,2,1)
+text(0, 1.1*max(ylim), ['Cell: ' num2str(iC)], 'fontweight', 'bold')
+pause(3)
+end
+
