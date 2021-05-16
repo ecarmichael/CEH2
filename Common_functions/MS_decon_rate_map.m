@@ -1,4 +1,4 @@
-function [rate_map, occ_mat] = MS_decon_rate_map(data,tvec,pos,bin_size, plot_flag, smooth_bin, smooth_SD)
+function [rate_map, occ_mat] = MS_decon_rate_map(data,tvec,pos,bin_size, plot_flag, smooth_SD)
 %% MS_decon_rate_map:  estimates the firing rate map form the deconvolved Ca signal. Requires the OASIS toolbox
 %
 %
@@ -14,8 +14,6 @@ function [rate_map, occ_mat] = MS_decon_rate_map(data,tvec,pos,bin_size, plot_fl
 %
 %    - plot_flag [binary]  if 1 plot the outputs.  default is 0. 
 %
-%    - smooth_bin [X x Y] number of bins for the guassian smoothing kernal
-%
 %    - smooth_SD  number of pixels for the SD.  typically 2
 %
 %
@@ -30,7 +28,7 @@ function [rate_map, occ_mat] = MS_decon_rate_map(data,tvec,pos,bin_size, plot_fl
 %
 %
 % EC 2021-05-14   initial version 
-%
+%   2021-05-15  - Switched to imgaussfilt instead of kernal + conv2
 %
 %
 %% initialize
@@ -47,7 +45,7 @@ elseif nargin < 5
 end
 
 if nargin <6
-      smooth_bin = [0, 0]; 
+%       smooth_bin = [0, 0]; 
       smooth_SD = 0; 
 end
 
@@ -63,7 +61,7 @@ Y_bin_centers = Y_bins +  bin_size/2;
 
 
 % add in some guassian smoothing. 
-kernel = gausskernel(smooth_bin,smooth_SD); % Gaussian kernel of 4x4 pixels, SD of 2 pixels (note this should sum to 1)
+% kernel = gausskernel(smooth_bin,smooth_SD); % Gaussian kernel of 4x4 pixels, SD of 2 pixels (note this should sum to 1)
 
 %% plot for sanity
 
@@ -105,8 +103,11 @@ for iY = 1:length(Y_bins)-1
 end
 
 % smooth if need (will use zeros if not specified on input)
-occ_mat = conv2(occ_mat, kernel, 'same'); 
-spk_mat = conv2(spk_mat, kernel, 'same'); 
+% occ_mat = conv2(occ_mat, kernel, 'same'); 
+% spk_mat = conv2(spk_mat, kernel, 'same');
+ 
+occ_mat = imgaussfilt(occ_mat, smooth_SD); 
+spk_mat = imgaussfilt(spk_mat, smooth_SD); 
         
 
 no_occ_idx = find(occ_mat == 0); 

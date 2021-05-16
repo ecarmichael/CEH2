@@ -207,32 +207,3 @@ for iSess = 1%:length(sess_list) % loop through sessions for this subject.
     
 end %sessions
 
-
-
-%% deconv sandbox
-ms = MS_msExtractBinary_detrendTraces(ms);
-
-if behav.time(end) ~= ms.time(end) || length(behav.time) ~= length(ms.time)
-    fprintf('<strong> %s </strong>: behaviour and Ca are not the same length or end time.  attempting alignment \n', mfilename);
-    behav_aligned = MS_align_data(behav, ms);
-else
-    behav_aligned = behav;
-end
-
-move_idx = behav_aligned.speed >2; % get times when the animal was moving.
-
-%% decon
-for iC = size(ms.RawTraces,2):-1:1
-        [denoise(:,iC),deconv(:,iC)] = deconvolveCa(ms.detrendRaw(:,iC), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
-
-        
-end
-
-%% generate a rate map
-for iC = 1:10
-[rate_map, occ_map] = MS_decon_rate_map(deconv(move_idx,iC), ms.time(move_idx), behav_aligned.position(move_idx,:), cfg.p_bin_size, 1, [4 4], 2);
-subplot(2,2,1)
-text(0, 1.1*max(ylim), ['Cell: ' num2str(iC)], 'fontweight', 'bold')
-pause(3)
-end
-

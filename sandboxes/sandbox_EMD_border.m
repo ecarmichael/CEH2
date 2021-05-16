@@ -1,17 +1,13 @@
 %% EMD border score sandbox
 
-
-cd('/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06')
-load('behav_DLC.mat', 'behav')
+addpath(genpath('/home/ecarmichael/Documents/GitHub/EMDeBruijn/FastEMD')); %Add the EMD repo
+% cd('/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06')
+% load('behav_DLC.mat', 'behav')
+cd('/mnt/Data/Williams_Lab/II_classification/msbehavplace/ck2cre1/8-24-20/ck2cre1_sqOF_H14_M53_S37');
+load('behav.mat');
 load('ms.mat', 'ms')
+%% align behav
 
-%% get ms binary
-
-ms = MS_msExtractBinary_detrendTraces(ms,2);
-
-%% exclude non-movement periods
-
-% check if the behav needs to be interpolated.
 if behav.time(end) ~= ms.time(end) || length(behav.time) ~= length(ms.time)
     fprintf('<strong> %s </strong>: behaviour and Ca are not the same length or end time.  attempting alignment \n', mfilename);
     behav_aligned = MS_align_data(behav, ms);
@@ -19,42 +15,89 @@ else
     behav_aligned = behav;
 end
 
-%smooth speed
-if exist('smooth', 'builtin')
-    behav_aligned.speed = smooth(behav_aligned.speed, 3*mode(diff(ms.time)));
-else
+move_idx = behav_aligned.speed >2; % get times when the animal was moving.
+
+%% decon
+
+ms = MS_msExtractBinary_detrendTraces(ms);
+
+for iC = size(ms.RawTraces,2):-1:1
+    ms.detrendRaw(:,iC) = detrend(ms.RawTraces(:,iC),2);
+    [denoise(:,iC),deconv(:,iC)] = deconvolveCa(ms.detrendRaw(:,iC), 'foopsi', 'ar2', 'smin', -3, 'optimize_pars', true, 'optimize_b', true);
     
-    behav_aligned.speed= conv2(behav_aligned.speed, gausswin(3*mode(diff(ms.time))), 'same');
 end
 
-movement_idx = behav_aligned.speed >2.5; % get times when the animal was moving.
-accel_movement_idx = behav_aligned.speed(1:end-1) >2.5; % same as above but correct for diff used in acceleration calculation.
+%% generate a rate map
+bin_size = 3;
+plot_flag = 1;
+smooth_sd = 2; %sd for smoothing
 
-% get the acceleration
-behav_aligned.accel = diff(behav_aligned.speed);
+for iC = size(ms.RawTraces,2):-1:1
+    [rate_map(:,:,iC), occ_map(:,:,iC)] = MS_decon_rate_map(deconv(move_idx,iC), ms.time(move_idx), behav_aligned.position(move_idx,:), bin_size, plot_flag, smooth_sd);
+    subplot(2,2,1)
+    text(0, 1.1*max(ylim), ['Cell: ' num2str(iC)], 'fontweight', 'bold')
+    if plot_flag; pause(1); end
+    
+    [rate_map_B(:,:,iC)] = MS_decon_rate_map(ms.Binary(move_idx,iC), ms.time(move_idx), behav_aligned.position(move_idx,:), bin_size,0,smooth_sd);
+    
+end
+
+%% look at a specific cell
 
 
-% compute event histogram
-evts_idx = ms.Binary(:,1) == 1;
+iC  =1;
+if ishandle(102)
+    close(102)
+end
+figure(102)
+set(gcf, 'position', [680 466 1085 505])
+subplot(2,8,1:8)
+hold on
+plot(ms.time, ms.detrendRaw(:,iC), 'k');
+plot(ms.time, deconv(:,iC) -.3,'color', [0.3467    0.5360    0.6907]);
+plot(ms.time, denoise(:,iC), 'color', [ 0.9153    0.2816    0.2878 ] )
+plot(ms.time, (ms.Binary(:,iC)*.1)-.41, 'color', [0.4416    0.7490    0.4322])
+legend('Raw', 'Decon', 'Denoised', 'Binary', 'Orientation', 'horizontal','Location','North');
 
 
+subplot(2,8, 9:10)
+hold on
+spk_idx = find(deconv(:,iC));
+b_idx = find(ms.Binary(:,iC));
+
+plot(behav_aligned.position(:,1), behav_aligned.position(:,2), 'color', [.8 .8 .8]);
+plot(behav_aligned.position(b_idx,1), behav_aligned.position(b_idx,2),'.','markersize',20, 'color', [0.4416    0.7490    0.4322]);
+plot(behav_aligned.position(spk_idx,1), behav_aligned.position(spk_idx,2),'.', 'color', [0.3467    0.5360    0.6907]);
+xlim([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]);
+ylim([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]);
+title(['Cell: ' num2str(iC)])
+
+x_tic = 0:3:size(occ_map,1)*3; x_tic = x_tic(1:end-1);
+y_tic = 0:3:size(occ_map,2)*3; y_tic = y_tic(1:end-1);
+
+subplot(2,8,[11 12])
+imagesc(x_tic, y_tic,occ_map(:,:,iC)')
+set(gca, 'YDir', 'normal');
+title('occupancy')
+
+subplot(2,8,[13 14 ])
+imagesc(x_tic, y_tic,rate_map(:,:,iC)')
+set(gca, 'YDir', 'normal');
+title('Decon rate')
+
+subplot(2,8,[15 16 ])
+imagesc(x_tic, y_tic,rate_map_B(:,:,iC)')
+set(gca, 'YDir', 'normal');
+title('Binary rate')
 %% build some bins
 
-cfg.p_thres = 0.05; % value for pvalue cut off;
-cfg.stability_thres = 0.5; % from van der Veldt 2020
-cfg.nShuff = 600;
-cfg.p_bin_size = 3 ; % in cm
-cfg.split_gaus_sd = 3; % sd for gaussian smoothing of place tuning for split session xcorr.
-cfg.gauss_sd = 1; 
-cfg.gauss_f_size = 3;
 
-
-X_bins = 0:cfg.p_bin_size:ceil(max(behav_aligned.position(:,1)));
-X_bin_centers = X_bins +  cfg.p_bin_size/2;
+X_bins = 0:bin_size:ceil(max(behav_aligned.position(:,1)));
+X_bin_centers = X_bins + bin_size/2;
 X_bin_centers = X_bin_centers(1:end-1);
 % same for Y bins
-Y_bins = 0:cfg.p_bin_size:ceil(max(behav_aligned.position(:,2)));
-Y_bin_centers = Y_bins +  cfg.p_bin_size/2;
+Y_bins = 0:bin_size:ceil(max(behav_aligned.position(:,2)));
+Y_bin_centers = Y_bins + bin_size/2;
 Y_bin_centers = Y_bin_centers(1:end-1);
 
 %% generate some templates
@@ -84,18 +127,20 @@ templates.W(1:end,1) = 1;
 temps = fieldnames(templates);
 
 
-% smooth the templates and plot them 
+% smooth the templates and plot them
 
 figure(401)
 set(gcf, 'position', [400  725 1100 160])
 for ii = 1:length(temps)
     
-%         2D guass filter.  No distoritions like kernal conv on E and S walls. 
-     templates.(temps{ii}) = imgaussfilt( templates.(temps{ii}),cfg.gauss_sd, 'FilterSize',cfg.gauss_f_size);
-
-
+    %         2D guass filter.  No distoritions like kernal conv on E and S walls.
+    templates.(temps{ii}) = imgaussfilt( templates.(temps{ii}),smooth_sd);
+    
+    % normalize
+    templates.(temps{ii}) = templates.(temps{ii})./max(templates.(temps{ii}),[], 'all');
+    
     subplot(1,length(temps),ii);
-       imagesc(templates.(temps{ii}))
+    imagesc(templates.(temps{ii}))
     xlabel(temps{ii})
 end
 
@@ -103,23 +148,69 @@ end
 % axesHandles = findobj(get(401,'Children'), 'flat','Type','axes');
 % % Set the axis property to square
 % axis(axesHandles,'square')
-%% plot an example
-iC  = 1;
-if ishandle(101)
-    close(101)
+%% try some methods on the elife data
+load('/home/ecarmichael/Downloads/data_share.mat')
+addpath('/home/ecarmichael/Downloads/EMD_Yilmaz')
+
+map_1 = squeeze(datamat.rat167.spatialMap(1,1,:,:)); 
+
+Temp_b = zeros(size(map_1)); 
+Temp_b(1:end,1) = 1; Temp_b(1:end,end) = 1;
+Temp_b(1,1:end) = 1; Temp_b(end,1:end) = 1;
+Temp_b = imgaussfilt(Temp_b,smooth_sd);
+
+% normalize
+Temp_b = Temp_b./max(Temp_b,[], 'all');
+
+EMD_score = datamat.rat167.scoreEMD(1); 
+%% try the Yilmaz method
+
+[~, fval] = test(mat2gray(map_1),mat2gray(Temp_b))
+
+%% try the EMD
+im1 = map_1; 
+im2
+
+R= size(im1,1);
+C= size(im1,2);
+if (~(size(im2,1)==R&&size(im2,2)==C))
+    error('Size of images should be the same');
 end
-figure(101)
-subplot(4,3,1:4)
-hold on
-plot(ms.time, ms.RawTraces(:,iC));
-plot(ms.time, ms.deconvolvedSig(:,iC));
-plot(ms.time, ms.denoisedCa(:,iC));
-plot(ms.time, ms.Binary(:,iC));
-legend('Raw', 'Decon', 'Denoised', 'Binary', 'Orientation', 'horizontal','Location','North');
-title(['Cell:' num2str(iC)])
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-% subplot(4,3,[5 6 9 10])
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% EMD input
+% Each unit of gray-level (between 0 and 255) is a unit of mass, and the
+% ground distance is a thresholded distance. This is similar to:
+%  A Unified Approach to the Change of Resolution: Space and Gray-Level
+%  S. Peleg and M. Werman and H. Rom
+%  PAMI 11, 739-742
+% The difference is that the images do not have the same total mass 
+% and we chose a thresholded ground distance
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+COST_MULT_FACTOR= 1000;
+THRESHOLD= 3*COST_MULT_FACTOR;
+D= zeros(R*C,R*C,'int32');
+j= 0;
+for c1=1:C
+    for r1=1:R
+        j= j+1;
+        i= 0;
+        for c2=1:C
+            for r2=1:R
+                i= i+1;
+                D(i,j)= min( [THRESHOLD (COST_MULT_FACTOR*sqrt((r1-r2)^2+(c1-c2)^2))] );
+            end
+        end
+    end
+end
+extra_mass_penalty= int32(-1);
+flowType= int32(3);
+
+P= int32(im1(:));
+Q= int32(im2(:));
+
 
 
 %% generate a post prob map as a proxy for a rate map.
