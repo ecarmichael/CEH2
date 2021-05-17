@@ -3,7 +3,12 @@
 addpath(genpath('/home/ecarmichael/Documents/GitHub/EMDeBruijn/FastEMD')); %Add the EMD repo
 % cd('/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06')
 % load('behav_DLC.mat', 'behav')
-cd('/mnt/Data/Williams_Lab/II_classification/msbehavplace/ck2cre1/8-24-20/ck2cre1_sqOF_H14_M53_S37');
+data_dir = '/mnt/Data/Williams_Lab/II_classification/msbehavplace/ck2cre1/8-24-20/ck2cre1_sqOF_H14_M53_S37';
+parts = strsplit(data_dir, filesep); 
+
+save_dir = ['/mnt/Data/Williams_Lab/II_classification/Inter' filesep parts{end-2} filesep datestr(parts{end-1}, 'yyyy-mm-dd') filesep parts{end}(9:10) filesep 'Border'];
+mkdir(save_dir);
+cd(data_dir) 
 load('behav.mat');
 load('ms.mat', 'ms')
 %% align behav
@@ -23,7 +28,7 @@ ms = MS_msExtractBinary_detrendTraces(ms);
 
 for iC = size(ms.RawTraces,2):-1:1
     ms.detrendRaw(:,iC) = detrend(ms.RawTraces(:,iC),2);
-    [denoise(:,iC),deconv(:,iC)] = deconvolveCa(ms.detrendRaw(:,iC), 'foopsi', 'ar2', 'smin', -3, 'optimize_pars', true, 'optimize_b', true);
+    [denoise(:,iC),deconv(:,iC)] = deconvolveCa(ms.detrendRaw(:,iC), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
     
 end
 
@@ -42,10 +47,29 @@ for iC = size(ms.RawTraces,2):-1:1
     
 end
 
+
+%% crate a shuffle set of maps for the null EMD distribution
+Fs = mode(diff(ms.time));
+nShuff  = 10000;
+for iS = nShuff:-1:1
+    
+    dis_cells(iS) = floor(MS_randn_range(1,1,1,size(deconv,2)));  % track the cell selection
+    dis_shuf(iS) = round(MS_randn_range(1,1, 4*Fs, length(deconv)+4*Fs)); % track the shift to ensure normal.
+    
+    this_shuff = circshift(deconv(:,dis_cells(iS)),dis_shuf(iS));  % shift the data, 4s minimum.
+    
+    [shuff_rate_map(:,:,iS)] = MS_decon_rate_map(this_shuff(move_idx), ms.time(move_idx), behav_aligned.position(move_idx,:), bin_size, 0, smooth_sd);
+    
+end
+
+% check of needed
+% hist(dis_shuf,100)
+% hist(dis_cells,100)
+
 %% look at a specific cell
 
 
-iC  =1;
+iC  =51;
 if ishandle(102)
     close(102)
 end
@@ -152,7 +176,6 @@ end
 load('/home/ecarmichael/Downloads/data_share.mat')
 addpath('/home/ecarmichael/Downloads/EMD_Yilmaz')
 
-map_1 = squeeze(datamat.rat167.spatialMap(1,1,:,:)); 
 
 Temp_b = zeros(size(map_1)); 
 Temp_b(1:end,1) = 1; Temp_b(1:end,end) = 1;
@@ -163,13 +186,147 @@ Temp_b = imgaussfilt(Temp_b,smooth_sd);
 Temp_b = Temp_b./max(Temp_b,[], 'all');
 
 EMD_score = datamat.rat167.scoreEMD(1); 
-%% try the Yilmaz method
 
-[~, fval] = test(mat2gray(map_1),mat2gray(Temp_b))
+%% Yilmaz method to get null distribution
+temp_b_gray = mat2gray(Temp_b); 
+
+for iS = nShuff:-1:1
+    
+    [~, null_fval(iS)] = test(mat2gray(shuff_rate_map(:,:,iS)),temp_b_gray);
+    
+end
+null_1prc = prctile(null_fval, 1);
+%% try the Yilmaz method
+for iC = size(deconv,2):-1:1
+%     map_1 = squeeze(datamat.rat167.spatialMap(ii,1,:,:)); 
+
+    
+[~, fval(iC)] = test(mat2gray(rate_map(:,:,iC)),mat2gray(Temp_b));
+
+% fprintf('cell: %d  |  fval = %0.2f  | emd = %0.2f',iC, fval, datamat.rat167.scoreEMD(1,ii))
+end
+
+% border cells by van Wijngaarden et al. 2020 method. 
+b_cells = find(fval < null_1prc); 
+non_b_cell =s_idx(s_idx ~= b_cells);
+non_b_fval = fval(non_b_cell);
+% ranked version
+[fval_s, s_idx] = sort(fval); 
+
+%% plot the EMD distributions
+% start with the null to get 1st percentile. 
+figure(301)
+subplot(3,5,6:10)
+histogram(null_fval,25, 'facecolor', [0.8 0.8 0.8])
+vline(null_1prc, '--k')
+x_range= xlim; 
+text(min(xlim), .8*max(ylim), ['1^s^t prc = ' num2str(null_1prc,3)])
+
+
+% then do real data
+[~, all_bins] = histcounts(fval, 25);
+[count] = histcounts(fval(non_b_cell), all_bins);
+
+subplot(3,5,1:5)
+histogram('BinEdges', bins,'BinCounts', count, 'facecolor', [0.3467 0.5360 0.6907], 'facealpha', .2)
+vline(null_1prc, '--k')
+wide_xlim = [min([x_range, xlim]), max([x_range, xlim])];
+xlim(wide_xlim)
+hold on
+
+subplot(3,5,1:5)
+[count, ~] = histcounts(fval(b_cells),all_bins);
+histogram('BinEdges', all_bins,'BinCounts', count, 'facecolor', [0.3467 0.5360 0.6907],'facealpha', 1)
+xlim(wide_xlim)
+text(.7*max(xlim), .8*max(ylim), [num2str(length(b_cells)) '/' num2str(length(fval)) 'Border cells'])
+
+% add in some example cells
+for iC = 1:length(b_cells)
+    if iC > 3 % plot a max of 3 examples. 
+        continue
+    end
+    subplot(3,5,10+iC)
+    imagesc(x_tic, y_tic,rate_map(:,:,s_idx(iC))')
+    set(gca, 'YDir', 'normal');
+    set(gca, 'xtick', [], 'ytick', [])
+    title({['Cell: ' num2str(s_idx(iC))], [' EMD = ' num2str(fval_s(iC),3)]}, 'color', [0.3467 0.5360 0.6907])
+
+end
+
+% plot a close non-border cell
+
+
+ subplot(3,5,14)
+ imagesc(x_tic, y_tic,rate_map(:,:,non_b_cell(1))')
+ set(gca, 'YDir', 'normal');
+ set(gca, 'xtick', [], 'ytick', [])
+ title({['Cell: ' num2str(non_b_cell(1))], [' EMD = ' num2str(non_b_fval(1),3)]}, 'color', [.6 .6 .6])
+
+ % and a middle of the pack non-border cell
+ subplot(3,5,15)
+ imagesc(x_tic, y_tic,rate_map(:,:,non_b_cell(floor(length(non_b_cell)/2)))')
+ set(gca, 'YDir', 'normal');
+ set(gca, 'xtick', [], 'ytick', [])
+ title({['Cell: ' num2str(non_b_cell(floor(length(non_b_cell)/2)))], [' EMD = ' num2str(non_b_fval(floor(length(non_b_cell)/2)),3)]}, 'color', [.8 .8 .8])
+
+if isfolder(save_dir)
+ saveas(gcf, 'Border_summary.fig'); 
+ saveas(gcf, 'Border_summary.png');
+end
+    
+
+%% plot some example cells that pass the 1st prc of null
+
+figure(333) % 
+for iC = 1:length(b_cells)
+    if iC > 3 % plot a max of 3 examples. 
+        continue
+    end
+   subplot(3,5,iC)
+   
+    imagesc(x_tic, y_tic,rate_map(:,:,b_cells(iC))')
+    set(gca, 'YDir', 'normal');
+    title(['EMD = ' num2str(fval(b_cells(iC)),3)])
+    
+    
+end
+
+%% plot all cells with EMD score. 
+%subplots
+N = 3; 
+M = 4;
+fig_range = 1:N*M:size(deconv,2)+1;
+
+this_sub = 0;
+
+
+
+for iC = 1:size(deconv,2) 
+    if ismember(iC, fig_range)
+        fig_n = find(iC == fig_range);
+        this_sub = 0;
+    end
+    this_sub = this_sub+1;
+    figure(350+fig_n)
+    
+    subplot(N,M,this_sub)
+    
+    imagesc(x_tic, y_tic,rate_map(:,:,s_idx(iC))')
+    set(gca, 'YDir', 'normal');
+    set(gca, 'xtick', [], 'ytick', [])
+    
+    if fval_s(iC) < null_1prc
+        set(gca, 'XColor', [0.3467 0.5360 0.6907],'YColor', [0.3467 0.5360 0.6907], 'linewidth', 3);
+        title({['Cell: ' num2str(s_idx(iC))], [' EMD = ' num2str(fval_s(iC),3)]}, 'color', [0.3467 0.5360 0.6907])
+    else
+        title({['Cell: ' num2str(s_idx(iC))] ,[' EMD = ' num2str(fval_s(iC),3)]},'color', [0.5 0.5 0.5])
+    end
+end
+
 
 %% try the EMD
 im1 = map_1; 
-im2
+im2 = Temp_b;
 
 R= size(im1,1);
 C= size(im1,2);
@@ -205,12 +362,13 @@ for c1=1:C
         end
     end
 end
-extra_mass_penalty= int32(-1);
+extra_mass_penalty= int32(0);
 flowType= int32(3);
 
 P= int32(im1(:));
 Q= int32(im2(:));
 
+[emd_hat_gd_metric_mex_val, score] = emd_hat_gd_metric_mex(P,Q,D,extra_mass_penalty);
 
 
 %% generate a post prob map as a proxy for a rate map.
