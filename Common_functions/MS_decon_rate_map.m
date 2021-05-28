@@ -1,4 +1,4 @@
-function [rate_map, occ_mat] = MS_decon_rate_map(data,tvec,pos,bin_size, plot_flag, smooth_SD)
+function [rate_map, occ_mat] = MS_decon_rate_map(data,tvec,pos,X_bins,Y_bins, plot_flag, smooth_SD)
 %% MS_decon_rate_map:  estimates the firing rate map form the deconvolved Ca signal. Requires the OASIS toolbox
 %
 %
@@ -37,26 +37,26 @@ if nargin <3
    error('Requires data, tvec and position data')
    
 elseif nargin < 4
-    bin_size = 3; % bin_size in cm
-    plot_flag = 0; 
-    
-elseif nargin < 5
-    plot_flag = 0; 
-end
-
-if nargin <6
-%       smooth_bin = [0, 0]; 
-      smooth_SD = 0; 
-end
-
-%% split position into bins
 X_bins = 0:bin_size:ceil(max(pos(:,1)));
-X_bin_centers = X_bins +  bin_size/2;
+% X_bin_centers = X_bins +  bin_size/2;
 % X_bin_centers = X_bin_centers(1:end-1);
 
 % same for Y bins
 Y_bins = 0:bin_size:ceil(max(pos(:,2)));
-Y_bin_centers = Y_bins +  bin_size/2;
+% Y_bin_centers = Y_bins +  bin_size/2;
+plot_flag = 0; 
+    
+elseif nargin < 6
+    plot_flag = 0; 
+end
+
+if nargin <7
+%       smooth_bin = [0, 0]; 
+      smooth_SD = 0; 
+end
+
+% %% split position into bins
+
 % Y_bin_centers = Y_bin_centers(1:end-1);
 
 

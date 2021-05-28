@@ -78,11 +78,11 @@ end
 
 
 figure(11)
-% subplot(4,4,[5,6,7, 9,10,11, 13,14,15])
 cfg_plot = [];
 cfg_plot.view =[0 75];
 cfg_plot.plot_type = '2d';
 % cfg_plot.colors = parula(size(ms.Binary,2));
+% cfg_plot.Ca_chan = 1:size(ms.RawTraces,2); % uncomment to plot all channels. 
 MS_plot_ca(cfg_plot, ms)
 xlabel('time (s)')
 title([f_info.subject ' ' f_info.date ' ' f_info.task])
@@ -97,6 +97,13 @@ else
     behav_aligned = behav;
 end
 
+if ~isfield(behav_aligned, 'speed')% uses same method as msExtractBehavior by GE; 
+    dt = nanmedian(diff(behav_aligned.time/1000));
+    dx = [0; diff(behav_aligned.position(:,1))]; % GE modified
+    dy = [0; diff(behav_aligned.position(:,2))]; % GE modified
+
+    behav_aligned.speed = sqrt((dx).^2+(dy).^2)/dt;
+end
 %smooth speed
 behav_aligned.speed = smooth(behav_aligned.speed, 3*mode(diff(ms.time)));
 

@@ -1,15 +1,24 @@
 %% EMD border score sandbox
-
-addpath(genpath('/home/ecarmichael/Documents/GitHub/EMDeBruijn/FastEMD')); %Add the EMD repo
+addpath(genpath('/home/ecarmichael/Documents/GitHub/CEH2')); 
+addpath('/home/ecarmichael/Documents/GitHub/OASIS_matlab');
+oasis_setup;
+% addpath(genpath('/home/ecarmichael/Documents/GitHub/EMDeBruijn/FastEMD')); %Add the EMD repo
 % cd('/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06')
 % load('behav_DLC.mat', 'behav')
-data_dir = '/mnt/Data/Williams_Lab/II_classification/msbehavplace/ck2cre1/8-24-20/ck2cre1_sqOF_H14_M53_S37';
+% data_dir = '/mnt/Data/Williams_Lab/II_classification/msbehavplace/ck2cre1/8-24-20/ck2cre1_sqOF_H14_M53_S37';
+% data_dir = '/mnt/Data/Williams_Lab/II_classification/msbehavplace/ck2cre1/8-26-20/ck2cre1_sqOF-H14_M20_S21';
+data_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06'; 
 parts = strsplit(data_dir, filesep); 
 
-save_dir = ['/mnt/Data/Williams_Lab/II_classification/Inter' filesep parts{end-2} filesep datestr(parts{end-1}, 'yyyy-mm-dd') filesep parts{end}(9:10) filesep 'Border'];
-mkdir(save_dir);
+% save_dir = ['/mnt/Data/Williams_Lab/II_classification/Inter' filesep parts{end-2} filesep datestr(parts{end-1}, 'yyyy-mm-dd') filesep parts{end}(9:10) filesep 'Border'];
+% mkdir(save_dir);
 cd(data_dir) 
+
+if exist('behav_DLC.mat','file')
+    load('behav_DLC.mat');
+else
 load('behav.mat');
+end
 load('ms.mat', 'ms')
 %% align behav
 
@@ -20,7 +29,10 @@ else
     behav_aligned = behav;
 end
 
+split_idx = ceil(length(behav_aligned.time)/2); 
 move_idx = behav_aligned.speed >2; % get times when the animal was moving.
+move_idx_1 = behav_aligned.speed(1:split_idx)>2;
+move_idx_2= behav_aligned.speed(split_idx:end)>2;
 
 %% decon
 
@@ -34,20 +46,100 @@ end
 
 %% generate a rate map
 bin_size = 3;
-plot_flag = 1;
+plot_flag = 0;
 smooth_sd = 2; %sd for smoothing
 
+X_bins = 0:bin_size:ceil(max(behav_aligned.position(:,1)));
+Y_bins = 0:bin_size:ceil(max(behav_aligned.position(:,2)));
+
+
 for iC = size(ms.RawTraces,2):-1:1
-    [rate_map(:,:,iC), occ_map(:,:,iC)] = MS_decon_rate_map(deconv(move_idx,iC), ms.time(move_idx), behav_aligned.position(move_idx,:), bin_size, plot_flag, smooth_sd);
-    subplot(2,2,1)
-    text(0, 1.1*max(ylim), ['Cell: ' num2str(iC)], 'fontweight', 'bold')
-    if plot_flag; pause(1); end
+    [rate_map(:,:,iC), occ_map(:,:,iC)] = MS_decon_rate_map(deconv(move_idx,iC), ms.time(move_idx), behav_aligned.position(move_idx,:), X_bins,Y_bins, plot_flag, smooth_sd);
     
-    [rate_map_B(:,:,iC)] = MS_decon_rate_map(ms.Binary(move_idx,iC), ms.time(move_idx), behav_aligned.position(move_idx,:), bin_size,0,smooth_sd);
+    if plot_flag
+        subplot(2,2,1)
+        text(0, 1.1*max(ylim), ['Cell: ' num2str(iC)], 'fontweight', 'bold');
+        pause(1);
+    end
+    
+    [rate_map_B(:,:,iC)] = MS_decon_rate_map(ms.Binary(move_idx,iC), ms.time(move_idx), behav_aligned.position(move_idx,:), X_bins,Y_bins,0,smooth_sd);
     
 end
 
+%% same thing but split the data and check the corr
 
+for iC = size(ms.RawTraces,2):-1:1
+    [rate_map_1(:,:,iC)] = MS_decon_rate_map(deconv(move_idx_1,iC), ms.time(move_idx_1), behav_aligned.position(move_idx_1,:), X_bins,Y_bins, 0, smooth_sd);
+    [rate_map_2(:,:,iC)] = MS_decon_rate_map(deconv(move_idx_2,iC), ms.time(move_idx_2), behav_aligned.position(move_idx_2,:), X_bins,Y_bins, 0, smooth_sd);
+
+    [rate_map_B_1(:,:,iC)] = MS_decon_rate_map(ms.Binary(move_idx_1,iC), ms.time(move_idx_1), behav_aligned.position(move_idx_1,:), X_bins,Y_bins,0,smooth_sd);
+    [rate_map_B_2(:,:,iC)] = MS_decon_rate_map(ms.Binary(move_idx_2,iC), ms.time(move_idx_2), behav_aligned.position(move_idx_2,:), X_bins,Y_bins,0,smooth_sd);
+
+    this_map_1 = rate_map_1(:,:,iC);
+    this_map_1(isnan(this_map_1)) = 0;
+    this_map_2 = rate_map_2(:,:,iC);
+    this_map_2(isnan(this_map_2)) = 0;
+        split_corr(iC) = corr2(this_map_1, this_map_2); 
+
+    this_map_1 = rate_map_B_1(:,:,iC);
+    this_map_1(isnan(this_map_1)) = 0;
+    this_map_2 = rate_map_B_2(:,:,iC);
+    this_map_2(isnan(this_map_2)) = 0;
+    
+    split_corr_B(iC) = corr2(this_map_1, this_map_2); 
+
+end
+
+
+%% plot all cells rate map
+% 
+% x_tic = 0:3:size(occ_map,1)*3; x_tic = x_tic(1:end-1);
+% y_tic = 0:3:size(occ_map,2)*3; y_tic = y_tic(1:end-1);
+% %subplots
+% N = 3; 
+% M = 4;
+% fig_range = 1:N*M:size(deconv,2)+1;
+% 
+% this_sub = 0;
+% 
+% for iC = 1:size(deconv,2) 
+%     if ismember(iC, fig_range)
+%         fig_n = find(iC == fig_range);
+%         this_sub = 0;
+%     end
+%     this_sub = this_sub+1;
+%     figure(350+fig_n)
+%     
+%     subplot(N,M,this_sub)
+%     
+%     imagesc(x_tic, y_tic,rate_map(:,:,iC)')
+%     set(gca, 'YDir', 'normal');
+%     set(gca, 'xtick', [], 'ytick', [])
+% 
+%         title({['Cell: ' num2str(iC)], ['corr: ' num2str(split_corr(iC),3)]},'color', [0.5 0.5 0.5])
+% end
+
+%% remove cells with less than .5 corr
+
+split_thresh = 0.5; 
+keep_idx = split_corr >split_thresh;
+cell_ids = 1:length(split_corr);
+
+fprintf('<strong>%d/%d</strong> cells passed the split half corr threshold (%0.2f)\n', length(keep_idx), length(split_corr), split_thresh)
+
+
+% remove deconv with no spks
+zero_keep_idx = zeros(1,size(rate_map,3));
+
+for iC = size(rate_map,3):-1:1
+    if sum(rate_map(:,:,iC),'all') ~=0
+        zero_keep_idx(iC) = 1; 
+    end
+end
+        cell_ids(~keep_idx | ~zero_keep_idx) = []; 
+
+        rate_map(:,:,~keep_idx | ~zero_keep_idx) = [];
+    
 %% crate a shuffle set of maps for the null EMD distribution
 Fs = mode(diff(ms.time));
 nShuff  = 10000;
@@ -58,9 +150,19 @@ for iS = nShuff:-1:1
     
     this_shuff = circshift(deconv(:,dis_cells(iS)),dis_shuf(iS));  % shift the data, 4s minimum.
     
-    [shuff_rate_map(:,:,iS)] = MS_decon_rate_map(this_shuff(move_idx), ms.time(move_idx), behav_aligned.position(move_idx,:), bin_size, 0, smooth_sd);
+    [shuff_rate_map(:,:,iS)] = MS_decon_rate_map(this_shuff(move_idx), ms.time(move_idx), behav_aligned.position(move_idx,:), X_bins, Y_bins, 0, smooth_sd);
     
 end
+
+zero_keep_idx = zeros(1,size(shuff_rate_map,3));
+
+for iC = size(shuff_rate_map,3):-1:1
+    if sum(shuff_rate_map(:,:,iC),'all') ~=0
+        zero_keep_idx(iC) = 1; 
+    end
+end
+
+shuff_rate_map(:,:,~zero_keep_idx) = [];
 
 % check of needed
 % hist(dis_shuf,100)
@@ -69,11 +171,11 @@ end
 %% look at a specific cell
 
 
-iC  =51;
+iC  =10;
 if ishandle(102)
     close(102)
 end
-figure(102)
+figure(iC)
 set(gcf, 'position', [680 466 1085 505])
 subplot(2,8,1:8)
 hold on
@@ -82,7 +184,7 @@ plot(ms.time, deconv(:,iC) -.3,'color', [0.3467    0.5360    0.6907]);
 plot(ms.time, denoise(:,iC), 'color', [ 0.9153    0.2816    0.2878 ] )
 plot(ms.time, (ms.Binary(:,iC)*.1)-.41, 'color', [0.4416    0.7490    0.4322])
 legend('Raw', 'Decon', 'Denoised', 'Binary', 'Orientation', 'horizontal','Location','North');
-
+xlim([ms.time(1) ms.time(end)])
 
 subplot(2,8, 9:10)
 hold on
@@ -94,7 +196,7 @@ plot(behav_aligned.position(b_idx,1), behav_aligned.position(b_idx,2),'.','marke
 plot(behav_aligned.position(spk_idx,1), behav_aligned.position(spk_idx,2),'.', 'color', [0.3467    0.5360    0.6907]);
 xlim([min(behav_aligned.position(:,1)) max(behav_aligned.position(:,1))]);
 ylim([min(behav_aligned.position(:,2)) max(behav_aligned.position(:,2))]);
-title(['Cell: ' num2str(iC)])
+title(['Cell: ' num2str(iC)  'Slit corr: ' num2str(split_corr(iC),2)])
 
 x_tic = 0:3:size(occ_map,1)*3; x_tic = x_tic(1:end-1);
 y_tic = 0:3:size(occ_map,2)*3; y_tic = y_tic(1:end-1);
@@ -113,16 +215,7 @@ subplot(2,8,[15 16 ])
 imagesc(x_tic, y_tic,rate_map_B(:,:,iC)')
 set(gca, 'YDir', 'normal');
 title('Binary rate')
-%% build some bins
 
-
-X_bins = 0:bin_size:ceil(max(behav_aligned.position(:,1)));
-X_bin_centers = X_bins + bin_size/2;
-X_bin_centers = X_bin_centers(1:end-1);
-% same for Y bins
-Y_bins = 0:bin_size:ceil(max(behav_aligned.position(:,2)));
-Y_bin_centers = Y_bins + bin_size/2;
-Y_bin_centers = Y_bin_centers(1:end-1);
 
 %% generate some templates
 z_temp = zeros(length(X_bins), length(Y_bins));
@@ -173,45 +266,48 @@ end
 % % Set the axis property to square
 % axis(axesHandles,'square')
 %% try some methods on the elife data
-load('/home/ecarmichael/Downloads/data_share.mat')
+% load('/home/ecarmichael/Downloads/data_share.mat')
 addpath('/home/ecarmichael/Downloads/EMD_Yilmaz')
 
 
-Temp_b = zeros(size(map_1)); 
-Temp_b(1:end,1) = 1; Temp_b(1:end,end) = 1;
-Temp_b(1,1:end) = 1; Temp_b(end,1:end) = 1;
+Temp_b = zeros(size(rate_map(:,:,1))); 
+Temp_b(1:end,1) = 1; Temp_b(1:end,end) = 0;
+Temp_b(1,1:end) = 0; Temp_b(end,1:end) = 0;
 Temp_b = imgaussfilt(Temp_b,smooth_sd);
 
 % normalize
 Temp_b = Temp_b./max(Temp_b,[], 'all');
 
-EMD_score = datamat.rat167.scoreEMD(1); 
+% EMD_score = datamat.rat167.scoreEMD(1); 
 
 %% Yilmaz method to get null distribution
 temp_b_gray = mat2gray(Temp_b); 
-
-for iS = nShuff:-1:1
+null_fval = [];
+for iS = size(shuff_rate_map,3):-1:1
     
-    [~, null_fval(iS)] = test(mat2gray(shuff_rate_map(:,:,iS)),temp_b_gray);
+    [~, null_fval(iS)] = test(mat2gray(shuff_rate_map(:,:,iS)./max(shuff_rate_map(:,:,iS),[],'all')),temp_b_gray);
     
 end
 null_1prc = prctile(null_fval, 1);
 %% try the Yilmaz method
-for iC = size(deconv,2):-1:1
+fval = [];
+for iC = size(rate_map,3):-1:1
 %     map_1 = squeeze(datamat.rat167.spatialMap(ii,1,:,:)); 
 
     
-[~, fval(iC)] = test(mat2gray(rate_map(:,:,iC)),mat2gray(Temp_b));
+[~, fval(iC)] = test(mat2gray(rate_map(:,:,iC)./ max(rate_map(:,:,iC),[],'all')),mat2gray(Temp_b));
 
 % fprintf('cell: %d  |  fval = %0.2f  | emd = %0.2f',iC, fval, datamat.rat167.scoreEMD(1,ii))
 end
 
-% border cells by van Wijngaarden et al. 2020 method. 
-b_cells = find(fval < null_1prc); 
-non_b_cell =s_idx(s_idx ~= b_cells);
-non_b_fval = fval(non_b_cell);
 % ranked version
 [fval_s, s_idx] = sort(fval); 
+
+
+% border cells by van Wijngaarden et al. 2020 method. 
+b_cells = find(fval < null_1prc); 
+non_b_cell =s_idx(~ismember(s_idx, b_cells));
+non_b_fval = fval(non_b_cell);
 
 %% plot the EMD distributions
 % start with the null to get 1st percentile. 
@@ -228,7 +324,7 @@ text(min(xlim), .8*max(ylim), ['1^s^t prc = ' num2str(null_1prc,3)])
 [count] = histcounts(fval(non_b_cell), all_bins);
 
 subplot(3,5,1:5)
-histogram('BinEdges', bins,'BinCounts', count, 'facecolor', [0.3467 0.5360 0.6907], 'facealpha', .2)
+histogram('BinEdges', all_bins,'BinCounts', count, 'facecolor', [0.3467 0.5360 0.6907], 'facealpha', .2)
 vline(null_1prc, '--k')
 wide_xlim = [min([x_range, xlim]), max([x_range, xlim])];
 xlim(wide_xlim)
@@ -238,14 +334,20 @@ subplot(3,5,1:5)
 [count, ~] = histcounts(fval(b_cells),all_bins);
 histogram('BinEdges', all_bins,'BinCounts', count, 'facecolor', [0.3467 0.5360 0.6907],'facealpha', 1)
 xlim(wide_xlim)
-text(.7*max(xlim), .8*max(ylim), [num2str(length(b_cells)) '/' num2str(length(fval)) 'Border cells'])
+text(min(xlim), .8*max(ylim), [num2str(length(b_cells)) '/' num2str(length(fval)) 'Border cells'])
+
+ subplot(3,5,11)
+    imagesc(x_tic, y_tic,Temp_b')
+    set(gca, 'YDir', 'normal');
+    set(gca, 'xtick', [], 'ytick', [])
+    title('Template', 'color', [0.3467 0.5360 0.6907])
 
 % add in some example cells
 for iC = 1:length(b_cells)
-    if iC > 3 % plot a max of 3 examples. 
+    if iC > 2 % plot a max of 3 examples. 
         continue
     end
-    subplot(3,5,10+iC)
+    subplot(3,5,11+iC)
     imagesc(x_tic, y_tic,rate_map(:,:,s_idx(iC))')
     set(gca, 'YDir', 'normal');
     set(gca, 'xtick', [], 'ytick', [])
