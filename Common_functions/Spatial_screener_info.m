@@ -103,6 +103,7 @@ if ~isfield(behav_aligned, 'speed')% uses same method as msExtractBehavior by GE
     dy = [0; diff(behav_aligned.position(:,2))]; % GE modified
 
     behav_aligned.speed = sqrt((dx).^2+(dy).^2)/dt;
+    behav_aligned.speed(1) = behav_aligned.speed(2); % fill in fist idx with second due to diff. 
 end
 %smooth speed
 behav_aligned.speed = smooth(behav_aligned.speed, 3*mode(diff(ms.time)));
