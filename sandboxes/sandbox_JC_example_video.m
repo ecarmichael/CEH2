@@ -3,9 +3,9 @@ addpath(genpath('/home/ecarmichael/Documents/GitHub/CEH2'));
 
 inter_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold';
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
-% addpath('C:\Users\ecarm\Documents\GitHub\OASIS_matlab')
-% oasis_setup;
-% disp('OASIS added for deconv');
+addpath('C:\Users\ecarm\Documents\GitHub\OASIS_matlab')
+oasis_setup;
+disp('OASIS added for deconv');
 
 raw_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_18_2019_PV1069_HATD5\H13_M5_S42_HATD5';
 % ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_18_2019_PV1069_HATD5';
@@ -46,25 +46,28 @@ end
 
 %% deconv debugger.
 % % counter_init(size(ms.RawTraces,2),size(ms.RawTraces,2))
-% for iChan = 25:-1:1
-%     counter(iChan, size(ms.RawTraces,2))
-%     [denoise,deconv] = deconvolveCa(ms.detrendRaw(:,iChan), 'foopsi', 'ar1', 'smin', -3, 'optimize_pars', true, 'optimize_b', true);
-%     ms.denoise(:,iChan) = denoise;
-%     ms.deconv(:,iChan) = deconv;
-% end
+for iChan = 1
+    %     counter(iChan, size(ms.RawTraces,2))
+    tic;
+    [denoise,deconv] = deconvolveCa(ms.detrendRaw(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
+    toc;
+    ms.denoise(:,iChan) = denoise;    ms.deconv(:,iChan) = deconv;
+end
 
 % debugging
-% if ishandle(111)
-%     close(111)
-% end
-% figure(111)
-% % iChan = 25;
-% % hold on
-% % plot(ms.detrendRaw(:,iChan), 'k');
-% % plot(ms.denoise(:,iChan)-.2, 'r');
-% % plot(((ms.deconv(:,iChan)./max(ms.deconv(:,iChan)))*.1) -.2, 'b');
-% % plot((ms.Binary(:,iChan)*.1)+max(ms.RawTraces(:,iChan)), 'g');
+% iChan = 900;
+if ishandle(iChan)
+    close(iChan)
+end
+
+figure(iChan+100)
+hold on
+plot(zscore(ms.detrendRaw(:,iChan))./max(zscore(ms.detrendRaw(:,iChan))), 'k');
+plot(ms.denoise(:,iChan)-.2, 'r');
+plot(((ms.deconv(:,iChan)./max(ms.deconv(:,iChan)))*.1) -.2, 'b');
+plot((ms.Binary(:,iChan)*.1)-.2, 'g');
 % MS_plot_ca_trace(ms.FiltTraces(1:33*60,1:50)')
+legend('Detrend', 'OASIS: Denoised', 'OASIS: deconv', 'Binary', 'orientation', 'horizontal', 'location', 'north')
 
 %% plot stuff
 % close all
