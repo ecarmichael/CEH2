@@ -240,11 +240,8 @@ title('testing')
 
 %% run SeqNMF across multiple time scales.
 
-<<<<<<< HEAD
-Ls = 2:12;
-=======
-Ls = [ 10 12];
->>>>>>> 11c75beae6dbed45d4345422b1b88a5f3b6f39d5
+Ls = 14:2:20;
+
 for iL = Ls
     % Set some parameters
     rng(235); % fixed rng seed for reproduceability
@@ -418,7 +415,7 @@ for iL = Ls
     Seq_out{iL}.lambda = lambda;
     Seq_out{iL}.lambdaOrthoH = lambdaOrthoH;
     Seq_out{iL}.lambdaOrthoW = lambdaOrthoW;
-    save([ data_label '_Seq_out_pad.mat'], 'Seq_out');
+    save([ data_dir filesep data_label '_Seq_out_pad.mat'], 'Seq_out');
     
     %% plot the raw data with a significant sequence
     
@@ -432,8 +429,8 @@ for iL = Ls
         xlabel('# significant factors')
         ylabel('% seqNMF runs')
         set(gcf, 'position', [212 846 1400 550])
-        saveas(gcf, [data_label '_K_hist_' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.fig'])
-        saveas(gcf, [data_label '_K_hist_' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.png'])
+        saveas(gcf, [data_dir filesep data_label '_K_hist_' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.fig'])
+        saveas(gcf, [data_dir filesep data_label '_K_hist_' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.png'])
         close(200+iL)
         
         
@@ -487,7 +484,7 @@ for iL = Ls
         
         
         % plot W factors
-        if size(Seq_out{iL}.H{this_sig_iter},1) > 1 % only works for 2 factors b/c lazy.
+%         if size(Seq_out{iL}.H{this_sig_iter},1) > 1 % only works for 2 factors b/c lazy.
             for ii = 1:size(Seq_out{iL}.H{this_sig_iter},1)
                 if ii == 1
                     subplot(5,8,[9 17 25 33])
@@ -512,14 +509,18 @@ for iL = Ls
                 set(gca, 'XColor', s_ord(1,:),'YColor', s_ord(1,:));
                 if ii >1; set(gca, 'yticklabel', [], 'XColor', s_ord(ii,:),'YColor', s_ord(ii,:));  end
             end
-        else
-            subplot(5,8,[9 17 25 33])
-            this_seq = squeeze(Seq_out{iL}.W{this_sig_iter}(indSort,:,:));
-            imagesc((0:size(this_seq,2)-1)/Fs, 1:size(this_seq,1), this_seq.*(1:size(this_seq,2)));
-            xlabel('time (s)')
-            set(gca, 'XColor', s_ord(1,:),'YColor', s_ord(1,:))
-            colormap(jet);
-        end
+%         else
+%             subplot(5,8,[9 17 25 33])
+%              this_seq = squeeze(Seq_out{iL}.W{this_sig_iter}(indSort,:,:));
+%                 this_seq(this_seq > max(this_seq)*0.75) = 1;
+%                 this_seq(this_seq ~=1) = 0;
+% %             this_seq = squeeze(Seq_out{iL}.W{this_sig_iter}(indSort,:,:));
+%                             MS_Ca_Raster(this_seq,(0:size(this_seq,2)-1)/Fs,2)
+% %             imagesc((0:size(this_seq,2)-1)/Fs, 1:size(this_seq,1), this_seq.*(1:size(this_seq,2)));
+%             xlabel('time (s)')
+%             set(gca, 'XColor', s_ord(1,:),'YColor', s_ord(1,:))
+% %             colormap(jet);
+%         end
         %         ylim([0 size(all_H{this_sig_iter},1)+1])
         
         
@@ -544,8 +545,8 @@ for iL = Ls
         linkaxes([ax1 ax2], 'x')
         
         set(gcf, 'position', [212 846 1400 550])
-        saveas(gcf, [data_label '_Seq_parts_K' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.fig'])
-        saveas(gcf, [data_label '_Seq_parts_K' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.png'])
+        saveas(gcf, [data_dir filesep data_label '_Seq_parts_K' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.fig'])
+        saveas(gcf, [data_dir filesep data_label '_Seq_parts_K' num2str(Seq_out{iL}.K) '_L' num2str(iL) '.png'])
         close(110+iL)
         
     end
