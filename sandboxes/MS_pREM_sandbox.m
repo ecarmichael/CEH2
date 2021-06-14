@@ -127,7 +127,7 @@ emg_f = FilterLFP(cfg_emg, CSC_emg);
  cfg_sleep.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 'numpad0',   'numpad1' 'backspace','backquote' }; % which key to press for each state_val
  
 
- score = MS_Sleep_score_UI(cfg_sleep, CSC.tvec,CSC.data(2,:), emg_h);
+ score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC.data(2,:), emg_h);
 
 
 
