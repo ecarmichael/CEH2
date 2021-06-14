@@ -70,10 +70,53 @@ end
 
 % load some data. 
 CSC = MS_LoadCSC(cfg_load); 
+EVT = LoadEvents([]); % load the events file. 
+
+
+%% prepare the data for scoring. 
+% since JC data has a gap in a single recording for the track, account for
+% that here.  
+S_rec_idx = find(contains(EVT.label, 'Starting Recording')); % get the index for the start recoding cell
+if length(EVT.t{S_rec_idx}) >1
+    fprintf('Multiple (%d) Recordings in one continuous CSC.  appending for sleep scoring spec\n', numel(EVT.t{S_rec_idx}))
+    
+    all_tvec = [];
+    for iCut = 2:numel(EVT.t{S_rec_idx})
+        if iCut == numel(EVT.t{S_rec_idx})
+            tvec_cut = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):end);
+        else
+            tvec_cut = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):iCut+1);
+        end
+        
+        tvec_cut = tvec_cut - tvec_cut(1);
+        all_tvec = [all_tvec, tvec_cut];
+    end
+    start_tvec = CSC.tvec(1:nearest_idx(EVT.t{S_rec_idx+1}(1),CSC.tvec));
+    all_tvec = [start_tvec; all_tvec+start_tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency)];
+    
+    % update CSC
+    CSC_cut = CSC;
+    CSC_cut.tvec = all_tvec;
+end
+
+% extract the EMG
+CSC_emg = CSC_cut;
+CSC_emg.data = CSC_emg.data(1,:);
+CSC_emg.cfg.hdr = [];
+CSC_emg.cfg.hdr{1} = CSC_cut.cfg.hdr{1}; 
+
+
+% filter the EMG 
+cfg_emg = [];
+cfg_emg.f = [15 300];
+cfg_emg.type = 'fdesign'; %the type of filter I want to use via filterlfp
+cfg_emg.order = 16; %type filter order
+emg_f = FilterLFP(cfg_emg, CSC_emg);
+
+ emg_h = abs(hilbert(emg_f.data)); % get the emg power for plotting.        
 
 
 %% score the sleep data
- emg_h = abs(hilbert(CSC.data(1,:))); % get the emg power for plotting.        
  
  cfg_sleep = [];
  cfg_sleep.tvec_range = [0 5];  % number of seconds per window.
