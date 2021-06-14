@@ -1,4 +1,4 @@
-function h = MS_Ca_Raster(data_in, tvec, linesize)
+function h = MS_Ca_Raster(data_in, tvec, linesize, color_in)
 %% MS_Ca_Raster:
 %
 %
@@ -26,8 +26,10 @@ if nargin < 2 || isempty(tvec)
     tvec = 1:size(data_in,2);
     fprintf('No tvec give, using data length (%i samples) as vector\n', size(data_in, 2))
     linesize = 2; 
+    color_in = []; 
 elseif nargin <3
     linesize = 2; 
+    color_in = [];
 end
 
 if size(tvec,2) ~= size(data_in, 2)
@@ -36,7 +38,11 @@ end
 %%
 nChan = size(data_in, 1); 
 % set colours
+if isempty(color_in)
 c_ord = linspecer(nChan+1); % add one more for background
+else
+    c_ord = repmat(color_in, nChan+1,1);
+end
 j_ord = jet(100); % set the set 
 
 hold on
@@ -51,7 +57,7 @@ for iChan = nChan:-1:1
     
     % plot the line using only the indices. 
     if ~isempty(idx)
-        line([tvec(idx); tvec(idx)], [iChan-1 iChan], 'color', c_ord(iChan+1,:), 'linewidth', linesize)
+        line([tvec(idx); tvec(idx)], [iChan-2 iChan+1], 'color', c_ord(iChan+1,:), 'linewidth', linesize)
     end
 end
 

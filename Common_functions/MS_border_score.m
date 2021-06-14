@@ -44,15 +44,17 @@ end
 % the script. 
 
 if smooth
-    kernel_size = [size(mat_in,1) size(mat_in,2)];
-    occupancy_std = smooth_sd;
-    [Xgrid,Ygrid]=meshgrid(-kernel_size(1)/2: kernel_size(1)/2, -kernel_size(2)/2:kernel_size(2)/2);
-    Rgrid=sqrt((Xgrid.^2+Ygrid.^2));
-    kernel = pdf('Normal', Rgrid, 0, occupancy_std);
-    kernel = kernel./sum(sum(kernel));
+%     kernel_size = [size(mat_in,1) size(mat_in,2)];
+%     occupancy_std = smooth_sd;
+%     [Xgrid,Ygrid]=meshgrid(-kernel_size(1)/2: kernel_size(1)/2, -kernel_size(2)/2:kernel_size(2)/2);
+%     Rgrid=sqrt((Xgrid.^2+Ygrid.^2));
+%     kernel = pdf('Normal', Rgrid, 0, occupancy_std);
+%     kernel = kernel./sum(sum(kernel));
+%     
+%     mat_in = conv2(mat_in, kernel, 'same');
     
-    mat_in = conv2(mat_in, kernel, 'same');
-    
+    mat_in = imgaussfilt(mat_in,smooth_sd);
+
     mat_in(mat_in < max(mat_in, [], 'all')*.3) = 0;
     
 end

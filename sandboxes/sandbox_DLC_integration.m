@@ -99,7 +99,7 @@ if sum(contains(lower(DLC_fields), 'nose'))==1 && sum(contains(lower(DLC_fields)
 %         text(0, 0, num2str(behav.HD(iF)));
 %         text(0, 5, num2str(behav.speed(iF))); 
 %         drawnow
-%         pause(0.0303/30)
+%         pause(0.0303/300)
 %                 cla(gca)
 %          end
 end
@@ -115,5 +115,9 @@ end
 % write back the file
 save([parent_dir filesep 'behav_DLC.mat'], 'behav')
 fprintf('Output saved as ''behav_DLC.mat'' in %s\n', parent_dir)
+
+
+%% play around with deconvolved trace and HD
+
 
 
