@@ -131,93 +131,127 @@ emg_f = FilterLFP(cfg_emg, CSC_emg);
 
 
 
-%% write the hypno back to the intermediate dir.  
+%% write the hypno back to the intermediate dir.
+Hypno = []; 
+Hypno.tvec = CSC_cut.tvec; 
+Hypno.data = score;
+Hypno.labels = cfg_sleep.state_name;
+Hypno.cfg.date = date; 
+Hypno.cfg.method = 'MS_Sleep_score_UI'; 
+Hypno.cfg.notes = 'pREM was not scored in mannual screening';
 
 
+save('Hypno.mat', 'Hypno', '-v7.3')
+%% filter raw data with the Mizuseki 2011 config. 
 
-%% grab the REM blocks and filter them with the Mizuseki 2011 config. 
-
-REM_idx = find(contains(ms_seg_resize.hypno_label, 'REM'));
 
 cfg_filt_t = [];
 cfg_filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
 cfg_filt_t.f  = [5 12]; % to match Mizuseki et al. 2011
 cfg_filt_t.order = 3; %type filter order
 % cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
-% reason.  .
+% reason.
 
-for iR = REM_idx
-    % extract raw LFP only.
-    this_csc = ms_seg_resize.NLX_csc{iR};
-    this_csc.data = this_csc.data(2,:);
-    this_csc.label = this_csc.label{2};
-    temp_hdr = this_csc.cfg.hdr{2};
-    this_csc.cfg.hdr = [];
-    this_csc.cfg.hdr{1} = temp_hdr;
-    
-    theta_csc{iR} = FilterLFP(cfg_filt_t, this_csc);
-    
+% extract raw LFP only.
+this_csc =CSC_cut;
+this_csc.data = this_csc.data(2,:);
+this_csc.label = this_csc.label{2};
+temp_hdr = this_csc.cfg.hdr{2};
+this_csc.cfg.hdr = [];
+this_csc.cfg.hdr{1} = temp_hdr;
+
+theta_csc = FilterLFP(cfg_filt_t, this_csc);
+
+theta_amp = abs(hilbert(theta_csc.data)); 
+theta_phi = angle(hilbert(theta_csc.data)); 
+%% get REM periods
+REM_label_idx = find(contains(Hypno.labels, 'REM')); 
+REM_idx = Hypno.data == REM_label_idx;
+REM_idx = sum(REM_idx,2); % if there are more than one REM label (ie REM & pREM) keep both. 
+REM_idx(REM_idx >0) = 1;  % in case there is any overlap. 
+REM_idx = logical(REM_idx); % make it a logical again.
+
+[REM_evts, REM_IV] = MS_get_events(REM_idx); % get the start and stop of each REM event using the REM label idx
+
+% convert idx in IV to times
+REM_IV.tstart = CSC_cut.tvec(REM_IV.tstart); 
+REM_IV.tend = CSC_cut.tvec(REM_IV.tend); 
+
+
+%% have a look at the REM events
+
+cfg_plot = [];
+cfg_plot.display = 'tsd';
+cfg_plot.target = 'CSC6.ncs'; 
+PlotTSDfromIV(cfg_plot, REM_IV, CSC_cut)
+
+%% convert REM to episode blocks
+
+for iB = length(REM_evts):-1:1
+   REM_blocks{iB} = theta_csc.data(REM_evts(iB,1):REM_evts(iB,2));
+   REM_tvecs{iB} = theta_csc.tvec(REM_evts(iB,1):REM_evts(iB,2));
+   REM_amp{iB} = theta_amp(REM_evts(iB,1):REM_evts(iB,2));
+   REM_phi{iB} = theta_phi(REM_evts(iB,1):REM_evts(iB,2));
+
 end
 
 %% extract the inter peak interval 
 
-for iR = REM_idx % loop over rem episodes. 
-
-
-% get the amplitude
-
-amp{iR} = abs(hilbert(theta_csc{iR}.data)); 
-
-Phi{iR} = angle(hilbert(theta_csc{iR}.data)); 
-
+for iB = length(REM_blocks):-1:1
 % get the negative to positive crossings in the phase (peaks and troughs
 % are all relative)
 peaks = []; 
-for ii = 1:length(Phi{iR})-1
-   if (Phi{iR}(ii)>0) && (Phi{iR}(ii+1)<=0)
+for ii = 1:length(REM_phi{iB})-1
+   if (REM_phi{iB}(ii)>0) && (REM_phi{iB}(ii+1)<=0)
     peaks = [peaks ii+1]; 
    end
 end
 
 % get the Inter Peak Interval
-IPI{iR} = diff(theta_csc{iR}.tvec(peaks));
+IPI{iB} = diff(REM_tvecs{iB}(peaks));
 
 % smooth with 11 sample rec window.  warning, gives much lower IPIs. Use
 % for distribution only. 
-IPI_smooth{iR} = conv2(IPI{iR},rectwin(11), 'same'); 
+IPI_smooth{iB} = conv2(IPI{iB},rectwin(11), 'same'); 
+
+
+% limit to REM times;
 
 
 
 % [TODO] fill in IPI values per cycle to match the actual data. 
 
 
-
-
-
-
 % make a sample plot if needed
-% figure(101)
-% ax(1) = subplot(3,1,1);
-% hold on
-% plot(theta_csc{iR}.tvec, ms_seg_resize.NLX_csc{iR}.data(2,:), 'k')
-% plot(theta_csc{iR}.tvec, theta_csc{iR}.data, 'b')
-% plot(theta_csc{iR}.tvec, amp{iR}, 'g')
-% plot(theta_csc{iR}.tvec(peaks), theta_csc{iR}.data(peaks), 'x', 'color', 'r')
-% 
-% 
-% ax(2) = subplot(3,1,2);
-% hold on
-% plot(theta_csc{iR}.tvec, Phi{iR}, 'r')
-% plot(theta_csc{iR}.tvec(2:end), diff(Phi{iR}), '--r')
-% plot(theta_csc{iR}.tvec(peaks), Phi(peaks), 'x', 'color', 'r')
-% 
-% linkaxes(ax, 'x')
-% 
-% subplot(3,1,3)
-% hold on
-% histogram(IPI,25)
-% histogram(IPI_smooth,25)
-% legend('IPI', 'IPI smoothed')
+figure(101)
+ax(1) = subplot(3,2,1:2);
+hold on
+plot(REM_tvecs{iB}, REM_blocks{iB}, 'k')
+plot(REM_tvecs{iB}, REM_amp{iB}, 'g')
+plot(REM_tvecs{iB}(peaks), REM_blocks{iB}(peaks), 'x', 'color', 'r')
+
+
+ax(2) = subplot(3,2,3:4);
+hold on
+plot(REM_tvecs{iB}, REM_phi{iB}, 'k')
+plot(REM_tvecs{iB}(2:end), diff(REM_phi{iB}), '--r')
+plot(REM_tvecs{iB}(peaks), REM_phi{iB}(peaks), 'x', 'color', 'r')
+
+linkaxes(ax, 'x')
+
+subplot(3,2,5)
+histogram(IPI{iB},25,'facecolor', c_ord(1,:));
+legend('IPI')
+x_label = get(gca, 'xtick');
+% set(gca, 'xticklabel', round((1./x_label)*100)/100)
+for ii = 1:length(x_label)
+    vline(x_label(ii), '--k', {num2str(round((1./x_label(ii))*100)/100)});
+end
+xlabel('IPI (s)')
+
+subplot(3,2,6)
+histogram(IPI_smooth{iB},25,'facecolor', c_ord(4,:));
+legend('IPI smoothed (s)')
 
 % figure(102)
 % ax(1) = subplot(2,2,1:2);
@@ -229,21 +263,21 @@ IPI_smooth{iR} = conv2(IPI{iR},rectwin(11), 'same');
 % plot(theta_csc{iR}.tvec(peaks(1:end-1)), IPI_smooth{iR}, 'color',  c_ord(4,:))
 % plot(theta_csc{iR}.tvec(peaks(1:end-1)), IPI{iR}, 'color', c_ord(1,:))
 % linkaxes(ax, 'x')
-% 
-% pause
-% close all
 
+pause(1)
+close all
 end
+
 %%  collect the IPIs to get a distribution
 all_IPI = []; all_IPI_smooth = []; % collect the ISI for crit 1
 all_amp = []; % collect the amplitude for crit 3
 
-for iR = REM_idx
-    all_IPI = [all_IPI; IPI{iR}]; 
+for iB = 1:length(REM_blocks)
+    all_IPI = [all_IPI; IPI{iB}]; 
     
-    all_IPI_smooth = [all_IPI_smooth; IPI_smooth{iR}]; 
+    all_IPI_smooth = [all_IPI_smooth; IPI_smooth{iB}]; 
     
-    all_amp = [all_amp, amp{iR}];
+    all_amp = [all_amp, REM_amp{iB}];
 end
 
 L10_prctile = prctile(all_IPI_smooth, 10); 
@@ -251,12 +285,18 @@ L5_prctile = prctile(all_IPI_smooth, 5);
 L50_prctile = prctile(all_IPI_smooth, 50);
 
 
-subplot(3,2,5)
+subplot(1,2,1)
 histogram(all_IPI,50, 'facecolor', c_ord(1,:));
+x_label = get(gca, 'xtick');
+% set(gca, 'xticklabel', round((1./x_label)*100)/100)
+for ii = 1:length(x_label)
+    vline(x_label(ii), '--k', {num2str(round((1./x_label(ii))*100)/100)});
+end
+xlabel('IPI (s)')
 xlabel('IPI')
 legend('IPI')
 
-subplot(3,2,6)
+subplot(1,2,2)
 histogram(all_IPI_smooth,50,'facecolor', c_ord(4,:));
 vline([L10_prctile,L5_prctile, L50_prctile], {'k', 'r', 'm'}, {'L10', 'L5', 'L50'}); 
 legend('IPI smoothed')
@@ -264,15 +304,155 @@ xlabel('IPI')
 
 
 %% Crit 1 find blocks with >900ms duration. 
+Fs = CSC_cut.cfg.hdr{1}.SamplingFrequency;
+dur_keep_idx = ((REM_evts(:,2) - REM_evts(:,1))./Fs) > .9; % only keep blocks longer than 900ms; 
 
+% recompute the all_rems without any removed blocks. 
+
+all_IPI = []; all_IPI_smooth = []; % collect the ISI for crit 1
+all_amp = []; % collect the amplitude for crit 3
+
+keep_blocks = find(dur_keep_idx); 
+
+for iB = 1:length(keep_blocks)
+    all_IPI = [all_IPI; IPI{keep_blocks(iB)}]; 
+    
+    all_IPI_smooth = [all_IPI_smooth; IPI_smooth{keep_blocks(iB)}]; 
+    
+    all_amp = [all_amp, REM_amp{keep_blocks(iB)}];
+end
 
 
 %% Crit 2 remove blocks without a min IPI smoothed < 5th percentile of all IPI smoothed
 
+% smooth out the IPI across each cycle. Figure this out. 
+
+% smooth_IPI_keep_idx  = 
+
+
 
 %% crit 3 Remove blocks with mean theta amp < mean theta amplitude for all REM. 
 
+mean_t = mean(all_amp); 
 
-mean_theta_amp = mean(all_amp); 
+t_amp_idx = all_amp > mean_t; 
+
+% make a plot to check this;
+figure(104)
+hold on
+temp_t = (0:length(all_amp)-1)./Fs;
+plot(temp_t, all_amp, 'k');
+plot(temp_t(t_amp_idx), all_amp(t_amp_idx),'.', 'color', c_ord(2,:));
+
+
+
+% mean_theta_amp = mean(all_amp); 
+
+%% %% REM BLOCK versionextract the inter peak interval 
+% 
+% for iR = REM_idx % loop over rem episodes. 
+% % get the amplitude
+% 
+% amp{iR} = abs(hilbert(theta_csc{iR}.data)); 
+% 
+% Phi{iR} = angle(hilbert(theta_csc{iR}.data)); 
+% 
+% % get the negative to positive crossings in the phase (peaks and troughs
+% % are all relative)
+% peaks = []; 
+% for ii = 1:length(Phi{iR})-1
+%    if (Phi{iR}(ii)>0) && (Phi{iR}(ii+1)<=0)
+%     peaks = [peaks ii+1]; 
+%    end
+% end
+% 
+% % get the Inter Peak Interval
+% IPI{iR} = diff(theta_csc{iR}.tvec(peaks));
+% 
+% % smooth with 11 sample rec window.  warning, gives much lower IPIs. Use
+% % for distribution only. 
+% IPI_smooth{iR} = conv2(IPI{iR},rectwin(11), 'same'); 
+% 
+% 
+% 
+% % [TODO] fill in IPI values per cycle to match the actual data. 
+% 
+% 
+% % make a sample plot if needed
+% % figure(101)
+% % ax(1) = subplot(3,1,1);
+% % hold on
+% % plot(theta_csc{iR}.tvec, ms_seg_resize.NLX_csc{iR}.data(2,:), 'k')
+% % plot(theta_csc{iR}.tvec, theta_csc{iR}.data, 'b')
+% % plot(theta_csc{iR}.tvec, amp{iR}, 'g')
+% % plot(theta_csc{iR}.tvec(peaks), theta_csc{iR}.data(peaks), 'x', 'color', 'r')
+% % 
+% % 
+% % ax(2) = subplot(3,1,2);
+% % hold on
+% % plot(theta_csc{iR}.tvec, Phi{iR}, 'r')
+% % plot(theta_csc{iR}.tvec(2:end), diff(Phi{iR}), '--r')
+% % plot(theta_csc{iR}.tvec(peaks), Phi(peaks), 'x', 'color', 'r')
+% % 
+% % linkaxes(ax, 'x')
+% % 
+% % subplot(3,1,3)
+% % hold on
+% % histogram(IPI,25)
+% % histogram(IPI_smooth,25)
+% % legend('IPI', 'IPI smoothed')
+% 
+% % figure(102)
+% % ax(1) = subplot(2,2,1:2);
+% % hold on
+% % plot(theta_csc{iR}.tvec, theta_csc{iR}.data,'color',  c_ord(1,:))
+% % plot(theta_csc{iR}.tvec, amp{iR}, 'color', c_ord(2,:))
+% % ax(2) = subplot(2,2,3:4);
+% % hold on
+% % plot(theta_csc{iR}.tvec(peaks(1:end-1)), IPI_smooth{iR}, 'color',  c_ord(4,:))
+% % plot(theta_csc{iR}.tvec(peaks(1:end-1)), IPI{iR}, 'color', c_ord(1,:))
+% % linkaxes(ax, 'x')
+% % 
+% % pause
+% % close all
+% 
+% end
+% %%  collect the IPIs to get a distribution
+% all_IPI = []; all_IPI_smooth = []; % collect the ISI for crit 1
+% all_amp = []; % collect the amplitude for crit 3
+% 
+% for iR = REM_idx
+%     all_IPI = [all_IPI; IPI{iR}]; 
+%     
+%     all_IPI_smooth = [all_IPI_smooth; IPI_smooth{iR}]; 
+%     
+%     all_amp = [all_amp, amp{iR}];
+% end
+% 
+% L10_prctile = prctile(all_IPI_smooth, 10); 
+% L5_prctile = prctile(all_IPI_smooth, 5); 
+% L50_prctile = prctile(all_IPI_smooth, 50);
+% 
+% 
+% subplot(3,2,5)
+% histogram(all_IPI,50, 'facecolor', c_ord(1,:));
+% xlabel('IPI')
+% legend('IPI')
+% 
+% subplot(3,2,6)
+% histogram(all_IPI_smooth,50,'facecolor', c_ord(4,:));
+% vline([L10_prctile,L5_prctile, L50_prctile], {'k', 'r', 'm'}, {'L10', 'L5', 'L50'}); 
+% legend('IPI smoothed')
+% xlabel('IPI')
+% 
+% 
+% %% Crit 1 find blocks with >900ms duration. 
+% 
+% 
+% 
+% %% Crit 2 remove blocks without a min IPI smoothed < 5th percentile of all IPI smoothed
+
+
+
 
 
