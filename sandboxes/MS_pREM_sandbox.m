@@ -73,6 +73,10 @@ CSC = MS_LoadCSC(cfg_load);
 EVT = LoadEvents([]); % load the events file. 
 
 
+%% plot a quick PSD check 
+
+% MS_Quick_psd()
+
 %% prepare the data for scoring. 
 % since JC data has a gap in a single recording for the track, account for
 % that here.  
@@ -179,9 +183,9 @@ REM_IV.tend = CSC_cut.tvec(REM_IV.tend);
 
 
 %% have a look at the REM events
-
+figure
 cfg_plot = [];
-cfg_plot.display = 'tsd';
+cfg_plot.display = 'iv';
 cfg_plot.target = 'CSC6.ncs'; 
 PlotTSDfromIV(cfg_plot, REM_IV, CSC_cut)
 
@@ -223,7 +227,7 @@ IPI_smooth{iB} = conv2(IPI{iB},rectwin(11), 'same');
 
 
 % make a sample plot if needed
-figure(101)
+figure(iB)
 ax(1) = subplot(3,2,1:2);
 hold on
 plot(REM_tvecs{iB}, REM_blocks{iB}, 'k')
@@ -265,7 +269,7 @@ legend('IPI smoothed (s)')
 % linkaxes(ax, 'x')
 
 pause(1)
-close all
+% close all
 end
 
 %%  collect the IPIs to get a distribution
@@ -284,7 +288,7 @@ L10_prctile = prctile(all_IPI_smooth, 10);
 L5_prctile = prctile(all_IPI_smooth, 5); 
 L50_prctile = prctile(all_IPI_smooth, 50);
 
-
+figure(101)
 subplot(1,2,1)
 histogram(all_IPI,50, 'facecolor', c_ord(1,:));
 x_label = get(gca, 'xtick');
@@ -347,6 +351,14 @@ plot(temp_t(t_amp_idx), all_amp(t_amp_idx),'.', 'color', c_ord(2,:));
 
 
 % mean_theta_amp = mean(all_amp); 
+
+
+
+%% EXTRA  find pREM episodes with muscle twitch
+
+
+
+
 
 %% %% REM BLOCK versionextract the inter peak interval 
 % 
