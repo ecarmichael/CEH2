@@ -51,7 +51,7 @@ if strcmp(type,'HATSwitch') && contains(subject, 'PV1069')
     type = 'HATD6_switch'; 
 end
 
-%%  manually score some data
+%%  prepare LFP data
 
 % get the LFP files
 cd(LFP_dir)
@@ -136,16 +136,22 @@ emg_f = FilterLFP(cfg_emg, CSC_emg);
 
 
 %% write the hypno back to the intermediate dir.
-Hypno = []; 
-Hypno.tvec = CSC_cut.tvec; 
-Hypno.data = score;
-Hypno.labels = cfg_sleep.state_name;
-Hypno.cfg.date = date; 
-Hypno.cfg.method = 'MS_Sleep_score_UI'; 
-Hypno.cfg.notes = 'pREM was not scored in mannual screening';
-
-
-save('Hypno.mat', 'Hypno', '-v7.3')
+if exist('score', 'var')
+    % put it in a nice format. 
+    Hypno = [];
+    Hypno.tvec = CSC_cut.tvec;
+    Hypno.data = score;
+    Hypno.labels = cfg_sleep.state_name;
+    Hypno.cfg.date = date;
+    Hypno.cfg.method = 'MS_Sleep_score_UI';
+    Hypno.cfg.notes = 'pREM was not scored in mannual screening';
+    
+    % save it. 
+    save('Hypno.mat', 'Hypno', '-v7.3')
+    
+else
+    fprintf('<strong>No Score var found. skipping saving</strong>\n')
+end
 %% filter raw data with the Mizuseki 2011 config. 
 
 
@@ -169,12 +175,24 @@ theta_csc = FilterLFP(cfg_filt_t, this_csc);
 theta_amp = abs(hilbert(theta_csc.data)); 
 theta_phi = angle(hilbert(theta_csc.data)); 
 %% get REM periods
+
+if ~exist('Hypno', 'var')
+    if exist([inter_dir filesep 'Hypno.mat'], 'file')
+        fprintf('<strong>Loading Hypno from </strong> %s\n', inter_dir);
+        load([inter_dir filesep 'Hypno.mat']);
+    end
+else
+    fprintf('Hypno present. Using var\n');
+end
+
 REM_label_idx = find(contains(Hypno.labels, 'REM')); 
 REM_idx = Hypno.data == REM_label_idx;
 REM_idx = sum(REM_idx,2); % if there are more than one REM label (ie REM & pREM) keep both. 
 REM_idx(REM_idx >0) = 1;  % in case there is any overlap. 
 REM_idx = logical(REM_idx); % make it a logical again.
 
+figure
+subplot(2,1,1)
 [REM_evts, REM_IV] = MS_get_events(REM_idx); % get the start and stop of each REM event using the REM label idx
 
 % convert idx in IV to times
@@ -183,11 +201,12 @@ REM_IV.tend = CSC_cut.tvec(REM_IV.tend);
 
 
 %% have a look at the REM events
-figure
+subplot(2,1,2)
 cfg_plot = [];
-cfg_plot.display = 'iv';
+cfg_plot.display = 'tsd';
 cfg_plot.target = 'CSC6.ncs'; 
 PlotTSDfromIV(cfg_plot, REM_IV, CSC_cut)
+xlim([CSC_cut.tvec(1) CSC_cut.tvec(end)])
 
 %% convert REM to episode blocks
 
@@ -196,7 +215,8 @@ for iB = length(REM_evts):-1:1
    REM_tvecs{iB} = theta_csc.tvec(REM_evts(iB,1):REM_evts(iB,2));
    REM_amp{iB} = theta_amp(REM_evts(iB,1):REM_evts(iB,2));
    REM_phi{iB} = theta_phi(REM_evts(iB,1):REM_evts(iB,2));
-
+   
+   REM_raw{iB} = this_csc.data(REM_evts(iB,1):REM_evts(iB,2)); 
 end
 
 %% extract the inter peak interval 
@@ -204,42 +224,58 @@ end
 for iB = length(REM_blocks):-1:1
 % get the negative to positive crossings in the phase (peaks and troughs
 % are all relative)
-peaks = []; 
+phi_peaks = []; 
 for ii = 1:length(REM_phi{iB})-1
    if (REM_phi{iB}(ii)>0) && (REM_phi{iB}(ii+1)<=0)
-    peaks = [peaks ii+1]; 
+    phi_peaks = [phi_peaks ii+1]; 
    end
 end
 
 % get the Inter Peak Interval
-IPI{iB} = diff(REM_tvecs{iB}(peaks));
+IPI{iB} = diff(REM_tvecs{iB}(phi_peaks));
 
 % smooth with 11 sample rec window.  warning, gives much lower IPIs. Use
 % for distribution only. 
 IPI_smooth{iB} = conv2(IPI{iB},rectwin(11), 'same'); 
 
-
-% limit to REM times;
-
-
-
 % [TODO] fill in IPI values per cycle to match the actual data. 
+IPI_vec{iB} = nan(size(REM_phi{iB}));
+
+for ii = 1:length(phi_peaks)
+    if ii == 1 % fill in the first data point to the first peak
+        IPI_vec{iB}(1:phi_peaks(ii+1)) = IPI_smooth{iB}(ii);
+    elseif ii == length(phi_peaks)
+        IPI_vec{iB}(phi_peaks(ii):end) = IPI_smooth{iB}(ii-1);
+    else
+        IPI_vec{iB}(phi_peaks(ii):phi_peaks(ii+1)) = IPI_smooth{iB}(ii);
+    end
+end
+
 
 
 % make a sample plot if needed
 figure(iB)
 ax(1) = subplot(3,2,1:2);
 hold on
+yyaxis left
 plot(REM_tvecs{iB}, REM_blocks{iB}, 'k')
-plot(REM_tvecs{iB}, REM_amp{iB}, 'g')
-plot(REM_tvecs{iB}(peaks), REM_blocks{iB}(peaks), 'x', 'color', 'r')
+plot(REM_tvecs{iB}, REM_amp{iB},'--', 'color', c_ord(3,:), 'linewidth', 2)
+plot(REM_tvecs{iB}(phi_peaks), REM_blocks{iB}(phi_peaks), 'x', 'color', c_ord(2,:))
+ylabel('voltage');
 
+yyaxis right
+plot(REM_tvecs{iB}, IPI_vec{iB}, 'color', c_ord(5,:), 'linewidth', 2);
+ylabel('Smoothed IPI');
+
+ayy = gca; 
+ayy.YAxis(1).Color = 'k';
+ayy.YAxis(2).Color = c_ord(5,:);
 
 ax(2) = subplot(3,2,3:4);
 hold on
 plot(REM_tvecs{iB}, REM_phi{iB}, 'k')
 plot(REM_tvecs{iB}(2:end), diff(REM_phi{iB}), '--r')
-plot(REM_tvecs{iB}(peaks), REM_phi{iB}(peaks), 'x', 'color', 'r')
+plot(REM_tvecs{iB}(phi_peaks), REM_phi{iB}(phi_peaks), 'x', 'color', 'r')
 
 linkaxes(ax, 'x')
 
@@ -264,14 +300,16 @@ legend('IPI smoothed (s)')
 % plot(theta_csc{iR}.tvec, amp{iR}, 'color', c_ord(2,:))
 % ax(2) = subplot(2,2,3:4);
 % hold on
-% plot(theta_csc{iR}.tvec(peaks(1:end-1)), IPI_smooth{iR}, 'color',  c_ord(4,:))
-% plot(theta_csc{iR}.tvec(peaks(1:end-1)), IPI{iR}, 'color', c_ord(1,:))
+% plot(theta_csc{iR}.tvec(phi_peaks(1:end-1)), IPI_smooth{iR}, 'color',  c_ord(4,:))
+% plot(theta_csc{iR}.tvec(phi_peaks(1:end-1)), IPI{iR}, 'color', c_ord(1,:))
 % linkaxes(ax, 'x')
 
-pause(1)
+pause(.25)
 % close all
 end
 
+
+ close all
 %%  collect the IPIs to get a distribution
 all_IPI = []; all_IPI_smooth = []; % collect the ISI for crit 1
 all_amp = []; % collect the amplitude for crit 3
@@ -307,54 +345,143 @@ legend('IPI smoothed')
 xlabel('IPI')
 
 
-%% Crit 1 find blocks with >900ms duration. 
-Fs = CSC_cut.cfg.hdr{1}.SamplingFrequency;
-dur_keep_idx = ((REM_evts(:,2) - REM_evts(:,1))./Fs) > .9; % only keep blocks longer than 900ms; 
+%% Crit 2 remove blocks without a min IPI smoothed < 5th percentile of all IPI smoothed
 
-% recompute the all_rems without any removed blocks. 
+min_len = .9; 
 
-all_IPI = []; all_IPI_smooth = []; % collect the ISI for crit 1
-all_amp = []; % collect the amplitude for crit 3
+for iB = length(IPI_vec):-1:1 % still working with blocks rather than concatenated values to avoid start/end overlap. 
 
-keep_blocks = find(dur_keep_idx); 
+IPI_idx = IPI_vec{iB} < L5_prctile; % crit 2 get blocks < 5th prctile of smoothed IPI
 
-for iB = 1:length(keep_blocks)
-    all_IPI = [all_IPI; IPI{keep_blocks(iB)}]; 
+% Crit 1: keep blocks that are longer than 900ms
+Phasic_blocks   = MS_get_events(IPI_idx);
+
+block_dur =(Phasic_blocks(:,2) - Phasic_blocks(:,1))/CSC_cut.cfg.hdr{1}.SamplingFrequency; % get block duration and convert to time in S. 
+
+keep_blocks = block_dur > min_len; % keep only blocks that are 
+
+Phasic_blocks(~keep_blocks,:) = [];
+
+if ~isempty(Phasic_blocks)
+    % Crit 3: theta amp in block must be great than mean of all theta
+    for ii = 1:size(Phasic_blocks,1)
+        if mean(REM_amp{iB}(Phasic_blocks(ii,1):Phasic_blocks(ii,2)))  > mean(theta_amp)
+            keep_t_amp(ii) = 1;
+        else
+            keep_t_amp(ii) = 0;
+        end
+    end
     
-    all_IPI_smooth = [all_IPI_smooth; IPI_smooth{keep_blocks(iB)}]; 
-    
-    all_amp = [all_amp, REM_amp{keep_blocks(iB)}];
+    Phasic_blocks(~keep_t_amp,:) = []; % remove low theta blocks.
+end
+
+%convert back to the time vector. 
+Phasic_times{iB} = REM_tvecs{iB}(Phasic_blocks); 
+
+Phasic_idx{iB} = Phasic_blocks; 
+
+end
+
+%% compile events and check with some plots
+pREM_times = []; pREM_idx = [];
+
+for iB = 1:length(Phasic_times)
+    if isempty(Phasic_times{iB})
+        continue
+    end
+    if size(Phasic_times{iB},2) > 1 % hack due to some dimension flipping taking place.  There is a simple one line solution that I am missing.
+        pREM_times = [pREM_times; Phasic_times{iB}];
+    else
+        pREM_times = [pREM_times; Phasic_times{iB}'];
+    end
 end
 
 
-%% Crit 2 remove blocks without a min IPI smoothed < 5th percentile of all IPI smoothed
+% convert to indexes 
+for ii  = 1:size(pREM_times,1)
+    pREM_idx(ii,1) = find(this_csc.tvec == pREM_times(ii,1));
+    pREM_idx(ii,2) = find(this_csc.tvec == pREM_times(ii,2));
+end
 
-% smooth out the IPI across each cycle. Figure this out. 
+    %% plot some segments. 
+    win_s = 2; % add some extra data
+    Fs = this_csc.cfg.hdr{1}.SamplingFrequency; % sampling freq
+    
+    for iR =1:size(pREM_idx,1)
+    
+        Phasic_data{iR} = this_csc.data((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs)); 
+        Phasic_EMG{iR} = emg_h((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs)); 
+        
+        cwt(Phasic_data{iR}, Fs);
+        x_lim = xlim; 
+        hold on
+        xline(win_s, '--k', 'start', 'linewidth', 2)
+        xline(x_lim(2) - win_s, '--k', 'start', 'linewidth', 2)
+        yline(10, '--w', '10hz', 'linewidth', 2)
+        AX = gca;
+        [minf,maxf] = cwtfreqbounds(numel(Phasic_data{iR}),Fs);
+        
+        freq = 2.^(round(log2(minf)):round(log2(maxf)));
+        AX.YTickLabelMode = 'auto';
+        AX.YTick = freq;
+        ylim([1 140])
+        
+        %add the LFP
+        temp_tvec =  this_csc.tvec((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
+        plot(temp_tvec - temp_tvec(1), (Phasic_data{iR}*1200)+4, 'w')
+        
+        plot(temp_tvec - temp_tvec(1), (Phasic_EMG{iR}*1200)+2, 'color', [.7 .7 .7])
 
-% smooth_IPI_keep_idx  = 
+        pause(1)
+        
+    end
+    
+    %% EXTRA  find pREM episodes with muscle twitch
+
+
+
+%% Crit 1 find blocks with >900ms duration. 
+% Fs = CSC_cut.cfg.hdr{1}.SamplingFrequency;
+% dur_keep_idx = ((REM_evts(:,2) - REM_evts(:,1))./Fs) > .9; % only keep blocks longer than 900ms; 
+% 
+% % recompute the all_rems without any removed blocks. 
+% 
+% all_IPI = []; all_IPI_smooth = []; % collect the ISI for crit 1
+% all_amp = []; % collect the amplitude for crit 3
+% 
+% keep_blocks = find(dur_keep_idx); 
+% 
+% for iB = 1:length(keep_blocks)
+%     all_IPI = [all_IPI; IPI{keep_blocks(iB)}]; 
+%     
+%     all_IPI_smooth = [all_IPI_smooth; IPI_smooth{keep_blocks(iB)}]; 
+%     
+%     all_amp = [all_amp, REM_amp{keep_blocks(iB)}];
+% end
+
+
 
 
 
 %% crit 3 Remove blocks with mean theta amp < mean theta amplitude for all REM. 
 
-mean_t = mean(all_amp); 
-
-t_amp_idx = all_amp > mean_t; 
-
-% make a plot to check this;
-figure(104)
-hold on
-temp_t = (0:length(all_amp)-1)./Fs;
-plot(temp_t, all_amp, 'k');
-plot(temp_t(t_amp_idx), all_amp(t_amp_idx),'.', 'color', c_ord(2,:));
-
-
+% mean_t = mean(all_amp); 
+% 
+% t_amp_idx = all_amp > mean_t; 
+% 
+% % make a plot to check this;
+% figure(104)
+% hold on
+% temp_t = (0:length(all_amp)-1)./Fs;
+% plot(temp_t, all_amp, 'k');
+% plot(temp_t(t_amp_idx), all_amp(t_amp_idx),'.', 'color', c_ord(2,:));
+% 
+% 
 
 % mean_theta_amp = mean(all_amp); 
 
 
 
-%% EXTRA  find pREM episodes with muscle twitch
 
 
 
