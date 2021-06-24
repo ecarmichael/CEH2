@@ -407,7 +407,7 @@ end
     win_s = 2; % add some extra data
     Fs = this_csc.cfg.hdr{1}.SamplingFrequency; % sampling freq
     
-    for iR =1:size(pREM_idx,1)
+    for iR =5%:size(pREM_idx,1)
     
         Phasic_data{iR} = this_csc.data((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs)); 
         Phasic_EMG{iR} = emg_h((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs)); 
@@ -418,6 +418,8 @@ end
         xline(win_s, '--k', 'start', 'linewidth', 2)
         xline(x_lim(2) - win_s, '--k', 'start', 'linewidth', 2)
         yline(10, '--w', '10hz', 'linewidth', 2)
+        
+        title(['REM event #' num2str(iR) ])
         AX = gca;
         [minf,maxf] = cwtfreqbounds(numel(Phasic_data{iR}),Fs);
         
@@ -435,6 +437,11 @@ end
         pause(1)
         
     end
+    
+    
+    %% export the intervals and times 
+    cd(inter_dir);
+    
     
     %% EXTRA  find pREM episodes with muscle twitch
 
