@@ -27,6 +27,9 @@ if nargin == 1
     plot_flag = 0; 
 end
 
+if size(binary_in,1) > size(binary_in,2)
+    binary_in = binary_in'; 
+end
 %% find the peaks
 
 [~,starts,~] = findpeaks(diff(binary_in), 'Threshold', .2); % get the start of the peak.  
