@@ -169,7 +169,13 @@ if exist('csc','var') && isstruct(csc)
     LG_amp = smooth(abs(hilbert(LG.data)), floor(Fs*0.1));
     HG_amp = smooth(abs(hilbert(HG.data)), floor(Fs*0.1));
     Rip_amp = smooth(abs(hilbert(Ripple.data)), floor(Fs*0.1));
-
+    
+    % get the frequency
+    D_freq = MS_estimate_freq(delta.tvec, delta.data);
+    T_freq = MS_estimate_freq(theta.tvec, theta.data);
+    LG_freq = MS_estimate_freq(LG.tvec, LG.data);
+    HG_freq = MS_estimate_freq(HG.tvec, HG.data);
+    Rip_freq = MS_estimate_freq(Ripple.tvec, Ripple.data);
 end
 
 %% recompute the all pre/post SW vs REM blocks.

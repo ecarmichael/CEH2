@@ -60,6 +60,6 @@ ylim([0 max(hypno)+1])
 
 %% get pREM
 REM_val = 3; % 
-[pREM_idx, pREM_IV] = MS_get_pREM(csc, hypno == REM_val); 
+[pREM_idx, pREM_times, pREM_IV] = MS_get_pREM(csc, hypno == REM_val, 0.7, [], 1); 
 
 

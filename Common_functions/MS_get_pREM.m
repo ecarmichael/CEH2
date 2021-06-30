@@ -1,27 +1,35 @@
-function [idx_out, IV_out] =  MS_get_pREM(raw_csc, idx_in, plot_flag)
-%% MS_get_pREM: isolates phasic REM events using the methods outlined in Mizuseki et al. 2011. 
+function [pREM_idx, pREM_times, pREM_IV] =  MS_get_pREM(raw_csc, idx_in, min_len, emg_in, plot_flag)
+%% MS_get_pREM: isolates phasic REM events using the methods outlined in Mizuseki et al. 2011.
 %
 %
 %
-%    Inputs: 
+%    Inputs:
 %    - raw_csc: [struct] the 'csc struct' from MS_load_CSC (vandermeerlab
 %    codebase + CEH2 function) which contains the tvec (time vector) as
 %    well as data vectors for each channel and NLX headers.  this format is
-%    required for filtering using FilterLFP (vandermeerlab function). 
+%    required for filtering using FilterLFP (vandermeerlab function).
 %
 %    - idx_in [1 x nSamples] binary array containing the REM samples (same
-%    length as raw_csc.tvec/data. 
+%    length as raw_csc.tvec/data.
 %
-%    - plot_flag [binary] set to 1 to plot checks, set to 0 to skip. 
+%    min_len [double]  value for the minimum length of a candidate event.
+%    Default is 0.9sec from Mizuseki
 %
-%    Outputs: 
-%    - idx_out: [2 x REM events] start and stop indices for the pREM
-%    blocks. 
+%    - emg_in [1 x nSamples] an EMG signal for plotting. power from abs of
+%    30-300Hz filtered EMG works well.
 %
-%    - IV_out   [struct]  IV (interval data) which can make use of
-%    vandermeerlab functions. 
+%    - plot_flag [binary] set to 1 to plot checks, set to 0 to skip.
 %
-% EC 2021-06-29   initial version 
+%    Outputs:
+%    - pREM_idx: [2 x nREM events] start and stop indices for the pREM
+%    blocks.
+%
+%    - pREM_times: [2 x nREM events] start and stop times
+%
+%    - pREM_IV   [struct]  IV (interval data) which can make use of
+%    vandermeerlab functions.
+%
+% EC 2021-06-29   initial version
 %
 % 'Detection of phasic REM. REM epochs were detected as described above.
 % To detect phasic REM epochs, we first band-pass filtered (5–12 Hz) LFP traces
@@ -47,24 +55,33 @@ function [idx_out, IV_out] =  MS_get_pREM(raw_csc, idx_in, plot_flag)
 %     2. epoch has min smoothed IPI < 5th percentile of all IPI_smoothed
 %     3. epoch theta amp > mean theta amp for all REM.
 %
-%% initialize 
+%% initialize
 
-if nargin < 3  
-    plot_flag = 0; % disable plots unless specified. 
+if nargin < 3
+    min_len = 0.9; % min duration of event
+    emg_in = []; %emg for plotting.
+    plot_flag = 0; % disable plots unless specified.
+elseif nargin <4
+    emg_in = []; %emg for plotting.
+elseif nargin < 5
+    plot_flag = 0; % disable plots unless specified.
 end
+
+c_ord = linspecer(5);
 %% filter raw data with the Mizuseki 2011 config.
+Fs = raw_csc.cfg.hdr{1}.SamplingFrequency; 
 
 % theta filter
 cfg_filt_t = [];
 cfg_filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
 cfg_filt_t.f  = [5 12]; % freq range to match Mizuseki et al. 2011
 cfg_filt_t.order = 3; %type filter order
-% cfg_filt_t.display_filter = 1; % use this to see the fvtool 
+% cfg_filt_t.display_filter = 1; % use this to see the fvtool
 
-theta_csc = FilterLFP(cfg_filt_t, raw_csc); % filter the raw LFP using 
+theta_csc = FilterLFP(cfg_filt_t, raw_csc); % filter the raw LFP using
 
 theta_amp = abs(hilbert(theta_csc.data)); % get the amplitude
-theta_phi = angle(hilbert(theta_csc.data)); % get the phase. 
+theta_phi = angle(hilbert(theta_csc.data)); % get the phase.
 %% get REM periods
 
 if plot_flag
@@ -96,7 +113,7 @@ for iB = length(REM_evts):-1:1
     REM_amp{iB} = theta_amp(REM_evts(iB,1):REM_evts(iB,2));
     REM_phi{iB} = theta_phi(REM_evts(iB,1):REM_evts(iB,2));
     
-    REM_raw{iB} = this_csc.data(REM_evts(iB,1):REM_evts(iB,2));
+    REM_raw{iB} = raw_csc.data(REM_evts(iB,1):REM_evts(iB,2));
 end
 
 %% extract the inter peak interval
@@ -227,8 +244,6 @@ xlabel('IPI')
 
 %% Crit 2 remove blocks without a min IPI smoothed < 5th percentile of all IPI smoothed
 
-min_len = .9;
-
 for iB = length(IPI_vec):-1:1 % still working with blocks rather than concatenated values to avoid start/end overlap.
     
     IPI_idx = IPI_vec{iB} < L5_prctile; % crit 2 get blocks < 5th prctile of smoothed IPI
@@ -236,7 +251,7 @@ for iB = length(IPI_vec):-1:1 % still working with blocks rather than concatenat
     % Crit 1: keep blocks that are longer than 900ms
     Phasic_blocks   = MS_get_events(IPI_idx);
     
-    block_dur =(Phasic_blocks(:,2) - Phasic_blocks(:,1))/CSC_cut.cfg.hdr{1}.SamplingFrequency; % get block duration and convert to time in S.
+    block_dur =(Phasic_blocks(:,2) - Phasic_blocks(:,1))/Fs; % get block duration and convert to time in S.
     
     keep_blocks = block_dur > min_len; % keep only blocks that are
     
@@ -278,46 +293,57 @@ end
 
 
 % convert to indexes
-for ii  = 1:size(pREM_times,1)
-    pREM_idx(ii,1) = find(this_csc.tvec == pREM_times(ii,1));
-    pREM_idx(ii,2) = find(this_csc.tvec == pREM_times(ii,2));
+for ii  = size(pREM_times,1):-1:1
+    pREM_idx(ii,1) = find(raw_csc.tvec == pREM_times(ii,1));
+    pREM_idx(ii,2) = find(raw_csc.tvec == pREM_times(ii,2));
 end
+
+% create an IV struct
+pREM_IV = iv([pREM_times(:,1), pREM_times(:,2)]);
 
 %% plot some segments.
-win_s = 2; % add some extra data
-Fs = this_csc.cfg.hdr{1}.SamplingFrequency; % sampling freq
-
-for iR =5%:size(pREM_idx,1)
+if plot_flag
+    win_s = 2; % add some extra data
     
-    Phasic_data{iR} = this_csc.data((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
-    Phasic_EMG{iR} = emg_h((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
-    
-    cwt(Phasic_data{iR}, Fs);
-    x_lim = xlim;
-    hold on
-    xline(win_s, '--k', 'start', 'linewidth', 2)
-    xline(x_lim(2) - win_s, '--k', 'start', 'linewidth', 2)
-    yline(10, '--w', '10hz', 'linewidth', 2)
-    
-    title(['REM event #' num2str(iR) ])
-    AX = gca;
-    [minf,maxf] = cwtfreqbounds(numel(Phasic_data{iR}),Fs);
-    
-    freq = 2.^(round(log2(minf)):round(log2(maxf)));
-    AX.YTickLabelMode = 'auto';
-    AX.YTick = freq;
-    ylim([1 140])
-    
-    %add the LFP
-    temp_tvec =  this_csc.tvec((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
-    plot(temp_tvec - temp_tvec(1), (Phasic_data{iR}*1200)+4, 'w')
-    
-    plot(temp_tvec - temp_tvec(1), (Phasic_EMG{iR}*1200)+2, 'color', [.7 .7 .7])
-    
-    pause(1)
-    
+    for iR =1:size(pREM_idx,1)
+        
+        Phasic_data{iR} = raw_csc.data((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
+        
+        if ~isempty(emg_in) % prep EMG if you have it.
+            Phasic_EMG{iR} = emg_in((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
+        end
+        
+        figure(iR)
+        cwt(Phasic_data{iR}, Fs);
+        x_lim = xlim;
+        hold on
+        xline(win_s, '--k', 'start', 'linewidth', 2)
+        xline(x_lim(2) - win_s, '--k', 'start', 'linewidth', 2)
+        yline(10, '--w', '10hz', 'linewidth', 2)
+        
+        title(['REM event #' num2str(iR) ])
+        AX = gca;
+        [minf,maxf] = cwtfreqbounds(numel(Phasic_data{iR}),Fs);
+        
+        freq = 2.^(round(log2(minf)):round(log2(maxf)));
+        AX.YTickLabelMode = 'auto';
+        AX.YTick = freq;
+        ylim([1 140])
+        
+        %add the LFP
+        temp_tvec =  raw_csc.tvec((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
+        plot(temp_tvec - temp_tvec(1), (Phasic_data{iR}*1200)+4, 'w')
+        
+        % add EMG if you have it.
+        if ~isempty(emg_in)
+            plot(temp_tvec - temp_tvec(1), (Phasic_EMG{iR}*1200)+2, 'color', [.7 .7 .7])
+        end
+        pause(1)
+        
+    end
 end
 
+%% print some basic stats
 
-%% export the intervals and times
-cd(inter_dir);
+fprintf('<strong>%s</strong>: pREM events detected totalling %d seconds (%.2f %% of REM)\n',...
+    mfilename, numel(Phasic_data), (sum(cellfun('length',Phasic_data))/sum(cellfun('length', REM_blocks)))*100)
