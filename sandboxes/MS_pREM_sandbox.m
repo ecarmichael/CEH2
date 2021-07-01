@@ -460,28 +460,168 @@ load('ms_resize.mat')
 
 
 %% align the CA and the NLX times. 
-all_aligned_tvec = []; 
+all_aligned_tvec_pre = []; 
+all_aligned_tvec_post = []; 
+all_evts = []; 
 
 for iSeg = 1:length(ms_seg_resize.time)
-  if length(ms_seg_resize.time{iSeg}) ~= length(ms_seg_resize.NLX_evt{iSeg}.t{end})
-        fprintf('Segment # %s, length of time %d and NLX_events  %d do not match. Using ms_seg.time to generate NLX TS\n',  num2str(iSeg),length(ms_seg_resize.time{iSeg}),length(ms_seg_resize.NLX_evt{iSeg}.t{end}))
-        c_ms_time = ((ms_seg_resize.time{iSeg}-ms_seg_resize.time{iSeg}(1))*0.001)';
-        %         c_nlx_time = ((ms_seg.NLX_evt.t{end}-ms_seg.NLX_evt.t{end}(1)))%-0.0077;
-        
-        %         NLX_ts = [c_nlx_time, c_ms_time(length(c_nlx_time)+1:end)]+ms_seg.NLX_evt.t{end}(1);
-        
-        NLX_ts = c_ms_time + ms_seg_resize.NLX_evt{iSeg}.t{end}(1);
-    else
+%   if length(ms_seg_resize.time{iSeg}) ~= length(ms_seg_resize.NLX_evt{iSeg}.t{end})
+%         fprintf('Segment # %s, length of time %d and NLX_events  %d do not match. Using ms_seg.time to generate NLX TS\n',  num2str(iSeg),length(ms_seg_resize.time{iSeg}),length(ms_seg_resize.NLX_evt{iSeg}.t{end}))
+%         c_ms_time = ((ms_seg_resize.time{iSeg}-ms_seg_resize.time{iSeg}(1))*0.001)';
+%         %         c_nlx_time = ((ms_seg.NLX_evt.t{end}-ms_seg.NLX_evt.t{end}(1)))%-0.0077;
+%         
+%         %         NLX_ts = [c_nlx_time, c_ms_time(length(c_nlx_time)+1:end)]+ms_seg.NLX_evt.t{end}(1);
+%         
+%         NLX_ts = c_ms_time + ms_seg_resize.NLX_evt{iSeg}.t{end}(1);
+%     else
         NLX_ts = ms_seg_resize.NLX_evt{iSeg}.t{end};
         
+%   end
+  
+  all_evts = [all_evts NLX_ts]; 
+  
+  if strcmpi(ms_seg_resize.pre_post{iSeg}, 'pre')
+    all_aligned_tvec_pre = [all_aligned_tvec_pre, NLX_ts];
+  elseif strcmpi(ms_seg_resize.pre_post{iSeg}, 'post')
+    all_aligned_tvec_post = [all_aligned_tvec_post, NLX_ts];
   end
-    
-  all_aligned_tvec = [all_aligned_tvec NLX_ts];
-%     these_idx = nearest_idx3(NLX_ts,csc.tvec');
 end
 
+% get the index for the concatenated Ca data which is split into pre and
+% post blocks (from MS_re_binarize_JC.m or MS_extract_AMP_Phi.m)
+
+all_pREM_Ca_idx = NaN(length(pREM_times),2); 
+% pREM_Ca_idx_post = NaN(length(pREM_times),2);
+for ii = 1:length(pREM_times)
+    if (pREM_times(ii,1) < all_aligned_tvec_post(1)) || (pREM_times(ii,2) < all_aligned_tvec_post(1))
+        
+        all_pREM_Ca_idx(ii,1) = nearest_idx3(pREM_times(ii,1), all_aligned_tvec_pre)';
+        all_pREM_Ca_idx(ii,2) = nearest_idx3(pREM_times(ii,2), all_aligned_tvec_pre)';
+        
+        % catch for pREM that fall outside of the Ca recording blocks.
+        if all_pREM_Ca_idx(ii,2) - all_pREM_Ca_idx(ii,1) <=0
+            all_pREM_Ca_idx(ii,:) = NaN;
+        end
+        pREM_block{ii} = 'pre';
+
+    else
+        all_pREM_Ca_idx(ii,1) = nearest_idx3(pREM_times(ii,1), all_aligned_tvec_post)';
+        all_pREM_Ca_idx(ii,2) = nearest_idx3(pREM_times(ii,2), all_aligned_tvec_post)';
+        
+        % catch for pREM that fall outside of the Ca recording blocks.
+        if all_pREM_Ca_idx(ii,2) - all_pREM_Ca_idx(ii,1) <=0
+            all_pREM_Ca_idx(ii,:) = NaN ;
+        end
+                pREM_block{ii} = 'post';
+    end
+
+end
+
+all_pREM_CA.idx = all_pREM_Ca_idx; 
+all_pREM_CA.label = pREM_block; 
 
 
+%% save and print number of pREM events that overlap with Ca recording. 
+save([inter_dir filesep 'pREM' filesep 'pREM_CA_idx.mat'], 'all_pREM_CA');
+
+fprintf('<strong>%s</strong>:  %d/%d pREM events occured during Miniscope recording. \n',...
+    mfilename, sum(~isnan(all_pREM_Ca_idx(:,1))), size(all_pREM_Ca_idx,1))
+
+% all_pREM_Ca_idx = [all_pREM_Ca_idx; pREM_Ca_idx_post];
+
+% % remove zero values (space holder for pREM's outside of Ca recordings. 
+% pREM_Ca_idx_pre = pREM_Ca_idx_pre(any(pREM_Ca_idx_pre,2),:); 
+% pREM_Ca_idx_post = pREM_Ca_idx_post(any(pREM_Ca_idx_post,2),:); 
+% 
+
+% % test plot
+% figure(101)
+% hold on
+% plot(diff(all_aligned_tvec_post));
+%  plot(pREM_Ca_idx_post(:,1)-1,50*ones(size(pREM_Ca_idx_post(:,1))), 'xr')
+%   plot(pREM_Ca_idx_post(:,2)-1,50*ones(size(pREM_Ca_idx_post(:,2))), 'xg')
+
+%% 
+% figure(1010)
+% hold on
+% plot(CSC_cut.tvec, CSC_cut.data(2,:))
+% for ii = 1:length(pREM_times)
+%     xline(CSC_cut.tvec(pREM_idx(ii,1)), 'b');
+%     xline(CSC_cut.tvec(pREM_idx(ii, 2)), 'r');
+% end
+% plot(all_evts, ones(size(all_evts))*median(CSC_cut.data(2,:)), 'o')
+
+
+%% make some plots with corresponding rasters
+
+for ii  = 1:length(all_pREM_Ca_idx)
+    close all
+
+    if ~isnan(all_pREM_Ca_idx(ii,1))
+
+%         Phasic_data{iR} = this_csc.data((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
+%         Phasic_EMG{iR} = emg_h((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
+        cwt(Phasic_data{ii}, Fs);
+        x_lim = xlim;
+        hold on
+        xline(win_s, '--k', 'start', 'linewidth', 2);
+        xline(x_lim(2) - win_s, '--k', 'end', 'linewidth', 2);
+        yline(10, '--w', '10hz', 'linewidth', 2);
+        
+        title(['REM event #' num2str(ii) ]);
+        AX = gca;
+        [minf,maxf] = cwtfreqbounds(numel(Phasic_data{ii}),Fs);
+        
+        freq = 2.^(round(log2(minf)):round(log2(maxf)));
+        AX.YTickLabelMode = 'auto';
+        AX.YTick = freq;
+        ylim([1 140]);
+        
+        %add the LFP
+        temp_tvec =  this_csc.tvec((pREM_idx(ii,1)- win_s*Fs):(pREM_idx(ii,2)+ win_s*Fs));
+        plot(temp_tvec - temp_tvec(1), (Phasic_data{ii}*1200)+4, 'w');
+        
+        plot(temp_tvec - temp_tvec(1), (Phasic_EMG{ii}*1200)+2, 'color', [.7 .7 .7]);
+        
+        
+        % make a raster
+        this_ca = all_binary_pre(all_pREM_Ca_idx(ii,1) - win_s*30:all_pREM_Ca_idx(ii,2) + win_s*30,:)';
+        this_tvec = (all_pREM_Ca_idx(ii,1) - win_s*30:all_pREM_Ca_idx(ii,2) + win_s*30);
+        this_tvec = (this_tvec - this_tvec(1))/30;
+        
+        figure(2);
+        MS_Ca_Raster(this_ca,this_tvec, 6);%repmat([1,1,1], size(this_ca,1),1)
+        xline(win_s, '--w', 'start', 'linewidth', 2);
+        x_lim = xlim;
+        xline(x_lim(2) - win_s, '--w', 'end', 'linewidth', 2);
+        set(gca, 'color', 'k'); %set background color. 
+
+        
+        % put the plots together
+%         axcp = copyobj(ax, fig2);
+%         set(axcp,'Position',get(ax1,'position'));
+%         delete(ax1);
+        figlist=get(groot,'Children');
+        
+        newfig=figure;
+        tcl=tiledlayout(2,1);
+        
+        for jj= 1:numel(figlist)
+            figure(figlist(jj));
+            ax=gca;
+            ax.Parent=tcl;
+            ax.Layout.Tile=jj;
+        end
+        close(1);
+        close(2);
+        set(gcf, 'position', [662 96 758 892])
+        set(gcf, 'InvertHardcopy', 'off')
+
+        %         pause(1)
+        
+        saveas(gcf,[inter_dir filesep 'pREM' filesep 'pREM_event_' num2str(ii) '_Raster.png'])
+    end
+end
 %% EXTRA  find pREM episodes with muscle twitch
 
 
