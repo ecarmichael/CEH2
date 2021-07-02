@@ -16,4 +16,14 @@ data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Er
 
 cd(data_dir); % go to the data folder specified above
 %% load dada
+cfg.getTTnumbers = 0;
+S = LoadSpikes(cfg);
+
+
+pos = LoadPos([]);
+
+%% plot the position
+
+figure(101)
+
 
