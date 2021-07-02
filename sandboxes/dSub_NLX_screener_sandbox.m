@@ -7,11 +7,11 @@
 
 %% add some code to the path
 
-% addpath(genpath('C:\Users\williamslab\Documents\github\vandermeerlab\code-matlab\shared'));
+ addpath(genpath('C:\Users\williamslab\Documents\github\vandermeerlab\code-matlab\shared'));
 
-% addpath(genpath('C:\Users\williamslab\Documents\github\CEH2')); 
+ addpath(genpath('C:\Users\williamslab\Documents\github\CEH2')); 
 
-% data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess\M23_2021-07-02_OF';
+ data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess\M23_2021-07-02_OF';
 
 
 cd(data_dir); % go to the data folder specified above
@@ -25,5 +25,5 @@ pos = LoadPos([]);
 %% plot the position
 
 figure(101)
-plot(pos.data(1,:), pos.data(2,:), '.')
+plot(pos.data(1,:), pos.data(2,:), '.','color',[0.8 0.8 0.8])
 
