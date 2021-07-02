@@ -1,10 +1,13 @@
-function [evts_out, IV_out] = MS_get_events(binary_in) 
+function [evts_out, IV_out] = MS_get_events(binary_in, plot_flag) 
 %% MS_get_events: identify all binary blocks 
 %
 %
 %
 %    Inputs: 
 %    - binary_in [1 x nSamples] binary.  
+%
+%    - plot_flag [1 or 0]   if 1 then plot. 
+%
 %
 %    Outputs: 
 %    - evts    [nEvents x 2]  start and stop indicies for each event
@@ -19,8 +22,14 @@ function [evts_out, IV_out] = MS_get_events(binary_in)
 %   based off of MS_get_ca_events.  This function is simplified. 
 %
 %
+%% initialize
+if nargin == 1
+    plot_flag = 0; 
+end
 
-
+if size(binary_in,1) > size(binary_in,2)
+    binary_in = binary_in'; 
+end
 %% find the peaks
 
 [~,starts,~] = findpeaks(diff(binary_in), 'Threshold', .2); % get the start of the peak.  
@@ -30,22 +39,17 @@ function [evts_out, IV_out] = MS_get_events(binary_in)
 
 % correct for diff. 
 
-if length(starts) < length(ends) 
-    starts = [1; starts+1];
-    start_flag = 1; 
-else
-    start_flag = 0; 
+if starts(1) > ends(1) % correct for data that starts in 'on'
+    starts = [1, starts];   
 end
 
-if length(starts) > length(ends) % correct for events at the end of the recording.  
-    ends = [ends; length(binary_in)];
-        endflag = 1; 
-else
-    endflag = 0; 
+if starts(end) > ends(end) % correct for data that starts in 'on'
+    ends = [ends, length(binary_in)];   
 end
+
 
 % put them together. 
-    evts_out = [starts, ends]; 
+    evts_out = [starts; ends]'; 
 
 
 IV_out.type = 'iv';
@@ -56,9 +60,9 @@ IV_out.usr = [];
 IV_out.cfg.history.mfun{1} = mfilename;
 IV_out.cfg.history.cfg{1} = [];
 %% plot for debugging
-
-figure
-hold on
-plot(binary_in)
-plot(evts_out(:,1), ones(1,length(evts_out))+.1, 'xr')
-plot(evts_out(:,2), ones(1,length(evts_out))+.1, 'ob')
+if plot_flag
+    hold on
+    plot(binary_in)
+    plot(evts_out(:,1), ones(1,length(evts_out))+.1, 'xr')
+    plot(evts_out(:,2), ones(1,length(evts_out))+.1, 'ob')
+end

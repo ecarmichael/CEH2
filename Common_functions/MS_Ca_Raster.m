@@ -30,6 +30,8 @@ if nargin < 2 || isempty(tvec)
 elseif nargin <3
     linesize = 2; 
     color_in = [];
+elseif nargin < 4
+    color_in = []; 
 end
 
 if size(tvec,2) ~= size(data_in, 2)
