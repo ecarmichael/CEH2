@@ -16,4 +16,14 @@
 
 cd(data_dir); % go to the data folder specified above
 %% load dada
+cfg.getTTnumbers = 0;
+S = LoadSpikes(cfg);
+
+
+pos = LoadPos([]);
+
+%% plot the position
+
+figure(101)
+plot(pos.data(1,:), pos.data(2,:), '.')
 
