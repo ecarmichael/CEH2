@@ -7,11 +7,11 @@
 
 %% add some code to the path
 
-addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
+% addpath(genpath('C:\Users\williamslab\Documents\github\vandermeerlab\code-matlab\shared'));
 
-addpath(genpath('/home/williamslab/Documents/Github/CEH2')); 
+% addpath(genpath('C:\Users\williamslab\Documents\github\CEH2')); 
 
-data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess/M23_2021-07-02_OF';
+% data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess\M23_2021-07-02_OF';
 
 
 cd(data_dir); % go to the data folder specified above
