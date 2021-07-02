@@ -39,3 +39,44 @@ S_idx = nearest_idx(pos.tvec, S.t{1});
 
 plot(spk_x,spk_y, '.r')
 axis off
+
+%% convert to heat map. 
+
+% set up bins
+SET_xBinSz = 10; SET_yBinSz = 10;
+ 
+x_edges = min(pos.data(1,:)):SET_xBinSz:min(pos.data(1,:));
+y_edges = min(pos.data(2,:)):SET_yBinSz:max(pos.data(2,:));
+ 
+
+
+% compute occupancy
+occ_hist = histcn(pos.data',y_edges,x_edges); % 2-D version of histc()
+ 
+no_occ_idx = find(occ_hist == 0); % NaN out bins never visited
+occ_hist(no_occ_idx) = NaN;
+ 
+occ_hist = occ_hist .* (1/30); % convert samples to seconds using video frame rate (30 Hz)
+ 
+subplot(2,2,1)
+pcolor(occ_hist); shading flat; axis off; colorbar
+title('occupancy');
+
+% get the spike map
+spk_hist = histcn([spk_x, spk_y],y_edges,x_edges);
+ 
+spk_hist(no_occ_idx) = NaN;
+ 
+subplot(222)
+pcolor(spk_hist); shading flat; axis off; colorbar
+title('spikes');
+
+% rate map
+tc = spk_hist./occ_hist;
+ 
+subplot(223)
+pcolor(tc); shading flat; axis off; colorbar
+title('rate map');
+
+
+
