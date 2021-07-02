@@ -25,5 +25,5 @@ pos = LoadPos([]);
 %% plot the position
 
 figure(101)
-
+plot(pos.data(1,:), pos.data(2,:), '.')
 
