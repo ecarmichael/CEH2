@@ -22,8 +22,20 @@ S = LoadSpikes(cfg);
 
 pos = LoadPos([]);
 
+% interpolate the spikes to match the time vector
+spk_x = interp1(pos.tvec,pos.data(1,:),S.t{1},'linear');
+spk_y = interp1(pos.tvec,pos.data(2,:),S.t{1},'linear');
+
 %% plot the position
 
 figure(101)
-plot(pos.data(1,:), pos.data(2,:), '.','color',[0.8 0.8 0.8])
 
+plot(pos.data(1,:), pos.data(2,:), '.', 'color', [0.8 0.8 0.8]);
+hold on
+
+
+S_idx = nearest_idx(pos.tvec, S.t{1}); 
+
+
+plot(spk_x,spk_y, '.r')
+axis off
