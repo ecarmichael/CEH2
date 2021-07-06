@@ -10,8 +10,12 @@
  addpath(genpath('C:\Users\williamslab\Documents\github\vandermeerlab\code-matlab\shared'));
 
  addpath(genpath('C:\Users\williamslab\Documents\github\CEH2')); 
+data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess\M23_2021-07-02_OF';
 
- data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess\M23_2021-07-02_OF';
+
+% addpath(genpath('/home/williamslab/Documents/Github/CEH2')); 
+% addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared');
+%  data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess/M23_2021-07-02_OF'; 
 
 
 cd(data_dir); % go to the data folder specified above
@@ -34,7 +38,7 @@ plot(pos.data(1,:), pos.data(2,:), '.', 'color', [0.8 0.8 0.8]);
 hold on
 
 
-S_idx = nearest_idx(pos.tvec, S.t{1}); data
+S_idx = nearest_idx(S.t{1}, pos.tvec);
 
 
 plot(spk_x,spk_y, '.r')
@@ -53,7 +57,7 @@ y_edges = SET_ymin:SET_yBinSz:SET_ymax;
 
 
 % compute occupancy
-occ_hist = histcn(pos.data',y_edges,x_edges); % 2-D version of histc()
+occ_hist = histcn(pos.data(1:2,:)',y_edges,x_edges); % 2-D version of histc()
  
 no_occ_idx = find(occ_hist == 0); % NaN out bins never visited
 occ_hist(no_occ_idx) = NaN;
@@ -84,12 +88,28 @@ title('rate map');
 %% New Cell (heading info) 
 
 hd_bin = 360/20;
-hd_vec = 0:hd_bin:360
+hd_vec = 0:hd_bin:360;
 
-keep_idx = pos.data(3,:)<=360
+keep_idx = pos.data(3,:)<=360;
 
+
+figure(100)
 subplot(2,1,1)
 histogram(pos.data(3,keep_idx), hd_vec)
 subplot(2,1,2)
 plot(pos.tvec(keep_idx),pos.data(3,keep_idx))
+hold on
+plot(pos.tvec(S_idx), pos.data(3,S_idx), '.')
+
+
+%% compute HD
+
+
+figure()
+polarhistogram(pos.data(3,S_idx),360/20, 'Normalization','probability', 'DisplayStyle','stairs', 'edgecolor', 'b', 'linewidth', 4);
+hold on
+
+polarhistogram(pos.data(3,:), 360/20, 'Normalization','probability', 'DisplayStyle','stairs', 'edgecolor', [0.7 0.7 0.7], 'linewidth', 4)
+
+legend({'Spikes', 'all'})
 
