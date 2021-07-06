@@ -83,7 +83,14 @@ for iF = 1:nFiles
     fname = fc{iF};
     
     % load raw data
+    try 
     [Timestamps, ~, SampleFrequencies, NumberOfValidSamples, Samples, Header] = Nlx2MatCSC(fname, [1 1 1 1 1], 1, 1, []);
+    
+    catch ME
+        fprintf('<strong>%s</strong>: skipping empty file %s...\n',mfilename, fname)
+        continue
+    
+    end
 %         [Timestamps, ~, SampleFrequencies, NumberOfValidSamples, Samples, Header] = Nlx2MatCSC_v3(fname, [1 1 1 1 1], 1, 1, []);
 
     % disabled channels cannot be loaded
@@ -192,7 +199,7 @@ for iF = 1:nFiles
     
         % check if the data is the same length for each channel. EC moved
         % this so that it can actually decimate. 
-    if iF >1 && length(data) ~= length(csc_tsd.data(iF-1,:))
+    if iF > 1 && length(data) ~= length(csc_tsd.data(end,:))
         message = 'Data lengths differ across channels.';
         error(message);
     end
@@ -268,7 +275,7 @@ for hline = 1:length(Header)
     a = regexp(line(2:end),'(?<key>^\S+)\s+(?<val>.*)|(?<key>\S+)','names');
     
     % deal with characters not allowed by MATLAB struct
-    if strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_µs')
+    if strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s')
         a.key = 'DspFilterDelay_us';
     end
     

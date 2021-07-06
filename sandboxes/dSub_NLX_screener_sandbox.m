@@ -20,7 +20,7 @@ cfg.getTTnumbers = 0;
 S = LoadSpikes(cfg);
 
 
-pos = LoadPos([]);
+pos = MS_LoadPos([]);
 
 % interpolate the spikes to match the time vector
 spk_x = interp1(pos.tvec,pos.data(1,:),S.t{1},'linear');
@@ -41,10 +41,12 @@ axis off
 %% convert to heat map. 
 
 % set up bins
-SET_xBinSz = 10; SET_yBinSz = 10;
+SET_xmin = 80; SET_ymin = 0; % set up bins
+SET_xmax = 660; SET_ymax = 520;
+SET_xBinSz = 20; SET_yBinSz = 20;
  
-x_edges = min(pos.data(1,:)):SET_xBinSz:min(pos.data(1,:));
-y_edges = min(pos.data(2,:)):SET_yBinSz:max(pos.data(2,:));
+x_edges = SET_xmin:SET_xBinSz:SET_xmax;
+y_edges = SET_ymin:SET_yBinSz:SET_ymax;
  
 
 
@@ -76,5 +78,9 @@ subplot(223)
 pcolor(tc); shading flat; axis off; colorbar
 title('rate map');
 
+
+%% LFP stuff
+
+% MS_LoadCSC(
 
 
