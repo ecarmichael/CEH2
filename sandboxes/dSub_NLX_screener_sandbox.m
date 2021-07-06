@@ -7,11 +7,11 @@
 
 %% add some code to the path
 
-addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
+ addpath(genpath('C:\Users\williamslab\Documents\github\vandermeerlab\code-matlab\shared'));
 
-addpath(genpath('/home/williamslab/Documents/Github/CEH2')); 
+ addpath(genpath('C:\Users\williamslab\Documents\github\CEH2')); 
 
-data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess/M23_2021-07-02_OF';
+ data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess\M23_2021-07-02_OF';
 
 
 cd(data_dir); % go to the data folder specified above
@@ -29,11 +29,13 @@ spk_y = interp1(pos.tvec,pos.data(2,:),S.t{1},'linear');
 %% plot the position
 
 figure(101)
+
 plot(pos.data(1,:), pos.data(2,:), '.', 'color', [0.8 0.8 0.8]);
 hold on
 
 
 S_idx = nearest_idx(pos.tvec, S.t{1}); 
+
 
 plot(spk_x,spk_y, '.r')
 axis off
@@ -79,8 +81,15 @@ pcolor(tc); shading flat; axis off; colorbar
 title('rate map');
 
 
-%% LFP stuff
+%% New Cell (heading info) 
 
-% MS_LoadCSC(
+hd_bin = 360/20;
+hd_vec = 0:hd_bin:360
 
+keep_idx = pos.data(3,:)<=360
+
+subplot(2,1,1)
+histogram(pos.data(3,keep_idx), hd_vec)
+subplot(2,1,2)
+plot(pos.tvec(keep_idx),pos.data(3,keep_idx))
 
