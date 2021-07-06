@@ -122,17 +122,17 @@ emg_h = abs(hilbert(emg_f.data)); % get the emg power for plotting.
 
 %% score the sleep data
 
-cfg_sleep = [];
-cfg_sleep.tvec_range = [0 5];  % number of seconds per window.
-cfg_sleep.emg_range = [min(emg_h) mean(emg_h) + std(emg_h)*5]; % default, should be based on real data.
-cfg_sleep.emg_chan = 1; % emg channel.  Can be empty.
-cfg_sleep.lfp_chans = 1; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data.
-cfg_sleep.state_name = {'Wake',       'SWS',       'REM',    'Quiescence','Transition','pREM',  'Redo',     'Exit'}; %
-cfg_sleep.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 'numpad0',   'numpad1' 'backspace','backquote' }; % which key to press for each state_val
-
-
-score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC.data(2,:), emg_h);
-
+% cfg_sleep = [];
+% cfg_sleep.tvec_range = [0 5];  % number of seconds per window.
+% cfg_sleep.emg_range = [min(emg_h) mean(emg_h) + std(emg_h)*5]; % default, should be based on real data.
+% cfg_sleep.emg_chan = 1; % emg channel.  Can be empty.
+% cfg_sleep.lfp_chans = 1; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data.
+% cfg_sleep.state_name = {'Wake',       'SWS',       'REM',    'Quiescence','Transition','pREM',  'Redo',     'Exit'}; %
+% cfg_sleep.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 'numpad0',   'numpad1' 'backspace','backquote' }; % which key to press for each state_val
+% 
+% 
+% score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC.data(2,:), emg_h);
+% 
 
 
 %% write the hypno back to the intermediate dir.
@@ -542,17 +542,20 @@ fprintf('<strong>%s</strong>:  %d/%d pREM events occured during Miniscope record
 %   plot(pREM_Ca_idx_post(:,2)-1,50*ones(size(pREM_Ca_idx_post(:,2))), 'xg')
 
 %% 
-% figure(1010)
-% hold on
-% plot(CSC_cut.tvec, CSC_cut.data(2,:))
-% for ii = 1:length(pREM_times)
-%     xline(CSC_cut.tvec(pREM_idx(ii,1)), 'b');
-%     xline(CSC_cut.tvec(pREM_idx(ii, 2)), 'r');
-% end
-% plot(all_evts, ones(size(all_evts))*median(CSC_cut.data(2,:)), 'o')
+figure(1010)
+hold on
+plot(CSC_cut.tvec, CSC_cut.data(2,:))
+for ii = 1:length(pREM_times)
+    xline(CSC_cut.tvec(pREM_idx(ii,1)), 'b');
+    xline(CSC_cut.tvec(pREM_idx(ii, 2)), 'r');
+end
+plot(all_evts, ones(size(all_evts))*median(CSC_cut.data(2,:)), 'o')
 
 
 %% make some plots with corresponding rasters
+
+load('all_binary_pre.mat');
+load('all_binary_post.mat'); 
 
 for ii  = 1:length(all_pREM_Ca_idx)
     close all
@@ -585,7 +588,11 @@ for ii  = 1:length(all_pREM_Ca_idx)
         
         
         % make a raster
-        this_ca = all_binary_pre(all_pREM_Ca_idx(ii,1) - win_s*30:all_pREM_Ca_idx(ii,2) + win_s*30,:)';
+        if strcmpi(all_pREM_CA.label(ii), 'pre')
+            this_ca = all_binary_pre(all_pREM_Ca_idx(ii,1) - win_s*30:all_pREM_Ca_idx(ii,2) + win_s*30,:)';
+        elseif strcmpi(all_pREM_CA.label(ii), 'post')
+            this_ca = all_binary_post(all_pREM_Ca_idx(ii,1) - win_s*30:all_pREM_Ca_idx(ii,2) + win_s*30,:)';
+        end
         this_tvec = (all_pREM_Ca_idx(ii,1) - win_s*30:all_pREM_Ca_idx(ii,2) + win_s*30);
         this_tvec = (this_tvec - this_tvec(1))/30;
         
@@ -619,7 +626,7 @@ for ii  = 1:length(all_pREM_Ca_idx)
 
         %         pause(1)
         
-        saveas(gcf,[inter_dir filesep 'pREM' filesep 'pREM_event_' num2str(ii) '_Raster.png'])
+        saveas(gcf,[inter_dir filesep 'pREM' filesep 'pREM_event_' num2str(ii) '_' all_pREM_CA.label{ii} '_Raster.png'])
     end
 end
 %% EXTRA  find pREM episodes with muscle twitch

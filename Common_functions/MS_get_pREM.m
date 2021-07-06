@@ -74,7 +74,7 @@ Fs = raw_csc.cfg.hdr{1}.SamplingFrequency;
 % theta filter
 cfg_filt_t = [];
 cfg_filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
-cfg_filt_t.f  = [5 12]; % freq range to match Mizuseki et al. 2011
+cfg_filt_t.f  = [5 11]; % freq range to match Mizuseki et al. 2011
 cfg_filt_t.order = 3; %type filter order
 % cfg_filt_t.display_filter = 1; % use this to see the fvtool
 

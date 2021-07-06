@@ -23,7 +23,7 @@ c_ord = linspecer(5); % gen some nice colours. 1)blue 2)red 3)green 4)orange 4)p
 
 %% prep some data
 cfg_load = [];
-cfg_load.desired_sampling_frequency  = 2000; % downsample to 2k for speed. 
+cfg_load.desired_sampling_frequency  = 1280; % closest to 1250 that FS of 32000 can get with whole decimation. 
 
 csc = MS_LoadCSC(cfg_load);
 Fs = csc.cfg.hdr{1}.SamplingFrequency; % get the sampling freq from nlx header. 
@@ -53,7 +53,8 @@ hypno(isnan(hypno)) = 5; % check for nans
 % check 
 figure(101)
 hold on
-plot(csc.tvec-csc.tvec(1), hypno, 'color', c_ord(1,:)); % plot the new hypno. 
+this_tvec = csc.tvec-csc.tvec(1);
+plot(this_tvec, hypno, 'color', c_ord(1,:)); % plot the new hypno. 
 plot(0:length(Hypnogram)-1, Hypnogram, '--', 'color', c_ord(2,:)); % plot the original. 
 xlim([0 length(Hypnogram)-1]); 
 ylim([0 max(hypno)+1])
@@ -62,4 +63,19 @@ ylim([0 max(hypno)+1])
 REM_val = 3; % 
 [pREM_idx, pREM_times, pREM_IV] = MS_get_pREM(csc, hypno == REM_val, 0.7, [], 1); 
 
+%% add in the pREM times to the hypnogram plot. 
+figure(500)
+hold on
+this_tvec = csc.tvec-csc.tvec(1);
+plot(this_tvec, hypno, 'color', c_ord(1,:)); % plot the new hypno. 
+plot(0:length(Hypnogram)-1, Hypnogram, '--', 'color', c_ord(2,:)); % plot the original. 
+plot(this_tvec, (csc.data*100)+3.5,'k')
 
+xlim([0 length(Hypnogram)-1]); 
+ylim([0 max(hypno)+1])
+for ii = 1:length(pREM_idx)
+    xline(this_tvec(pREM_idx(ii,1)), '--k', 'Start');
+    xline(this_tvec(pREM_idx(ii,2)), '--m', 'End');
+end
+    
+    

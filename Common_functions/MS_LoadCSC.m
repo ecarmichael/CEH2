@@ -185,8 +185,12 @@ for iF = 1:nFiles
     % decimate data if specified
     if ~isempty(cfg.desired_sampling_frequency) && isempty(cfg.decimateByFactor) && (hdr.SamplingFrequency~= cfg.desired_sampling_frequency) % make sure you are not trying to decimate and not also automating the downsampling.
         
+        if mod(hdr.SamplingFrequency, cfg.desired_sampling_frequency) ~=0
+            error('Current Sampling Frequency cannot be divided by desired Sampling Frequency')
+        end
+
         this_Fs = hdr.SamplingFrequency;
-        this_decimate = round(this_Fs / cfg.desired_sampling_frequency); % must be a whole number.
+        this_decimate = this_Fs / cfg.desired_sampling_frequency; % must be a whole number.
         fprintf('%s: Current Sampling Frequency: %dHz...\n',mfun,this_Fs);
         fprintf('%s: Decimating by factor %d to output data at desired Fs of %dHz \n',mfun,this_decimate, cfg.desired_sampling_frequency)
         
