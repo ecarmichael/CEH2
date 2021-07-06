@@ -36,7 +36,7 @@ cfg = ProcessConfig(cfg_def,cfg_in,mfun); % this takes fields from cfg_in and pu
 
 % check for an attempt to both automate and mannually decimate
 if ~isempty(cfg.decimateByFactor) && ~isempty(cfg.desired_sampling_frequency)
-    error('Looks like you are trying to decimate the data both mannually (cfg.decimateByFactor) and automatically (cfg.desired_sampling_frequency). Use one or the other. Leave the undesied method empty')
+    error('Looks like you are trying to decimate the data both mannually (cfg.decimateByFactor) and automatically (cfg.desired_sampling_frequency). Use one or the other. Leave the undesired method empty')
 end
 
 if isempty(cfg.fc) % no filelist provided, load everything

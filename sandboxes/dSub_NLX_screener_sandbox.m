@@ -46,10 +46,15 @@ axis off
 SET_xmin = 80; SET_ymin = 0; % set up bins
 SET_xmax = 660; SET_ymax = 520;
 SET_xBinSz = 20; SET_yBinSz = 20;
+<<<<<<< Updated upstream
  
 x_edges = SET_xmin:SET_xBinSz:SET_xmax;
 y_edges = SET_ymin:SET_yBinSz:SET_ymax;
+=======
+>>>>>>> Stashed changes
  
+x_edges = SET_xmin:SET_xBinSz:SET_xmax;
+y_edges = SET_ymin:SET_yBinSz:SET_ymax;
 
 
 % compute occupancy
