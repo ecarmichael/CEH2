@@ -33,7 +33,7 @@ plot(pos.data(1,:), pos.data(2,:), '.', 'color', [0.8 0.8 0.8]);
 hold on
 
 
-S_idx = nearest_idx(pos.tvec, S.t{1}); 
+S_idx = nearest_idx(pos.tvec, S.t{1}); data
 
 plot(spk_x,spk_y, '.r')
 axis off
