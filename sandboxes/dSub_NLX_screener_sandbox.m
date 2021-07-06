@@ -81,8 +81,15 @@ pcolor(tc); shading flat; axis off; colorbar
 title('rate map');
 
 
-%% LFP stuff
+%% New Cell (heading info) 
 
-% MS_LoadCSC(
+hd_bin = 360/20;
+hd_vec = 0:hd_bin:360
 
+keep_idx = pos.data(3,:)<=360
+
+subplot(2,1,1)
+histogram(pos.data(3,keep_idx), hd_vec)
+subplot(2,1,2)
+plot(pos.tvec(keep_idx),pos.data(3,keep_idx))
 
