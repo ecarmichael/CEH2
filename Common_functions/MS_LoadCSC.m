@@ -83,7 +83,14 @@ for iF = 1:nFiles
     fname = fc{iF};
     
     % load raw data
+    try 
     [Timestamps, ~, SampleFrequencies, NumberOfValidSamples, Samples, Header] = Nlx2MatCSC(fname, [1 1 1 1 1], 1, 1, []);
+    
+    catch ME
+        fprintf('<strong>%s</strong>: skipping empty file %s...\n',mfilename, fname)
+        continue
+    
+    end
 %         [Timestamps, ~, SampleFrequencies, NumberOfValidSamples, Samples, Header] = Nlx2MatCSC_v3(fname, [1 1 1 1 1], 1, 1, []);
 
     % disabled channels cannot be loaded
@@ -178,8 +185,12 @@ for iF = 1:nFiles
     % decimate data if specified
     if ~isempty(cfg.desired_sampling_frequency) && isempty(cfg.decimateByFactor) && (hdr.SamplingFrequency~= cfg.desired_sampling_frequency) % make sure you are not trying to decimate and not also automating the downsampling.
         
+        if mod(hdr.SamplingFrequency, cfg.desired_sampling_frequency) ~=0
+            error('Current Sampling Frequency cannot be divided by desired Sampling Frequency')
+        end
+
         this_Fs = hdr.SamplingFrequency;
-        this_decimate = round(this_Fs / cfg.desired_sampling_frequency); % must be a whole number.
+        this_decimate = this_Fs / cfg.desired_sampling_frequency; % must be a whole number.
         fprintf('%s: Current Sampling Frequency: %dHz...\n',mfun,this_Fs);
         fprintf('%s: Decimating by factor %d to output data at desired Fs of %dHz \n',mfun,this_decimate, cfg.desired_sampling_frequency)
         
@@ -192,7 +203,7 @@ for iF = 1:nFiles
     
         % check if the data is the same length for each channel. EC moved
         % this so that it can actually decimate. 
-    if iF >1 && length(data) ~= length(csc_tsd.data(iF-1,:))
+    if iF > 1 && length(data) ~= length(csc_tsd.data(end,:))
         message = 'Data lengths differ across channels.';
         error(message);
     end
@@ -268,7 +279,7 @@ for hline = 1:length(Header)
     a = regexp(line(2:end),'(?<key>^\S+)\s+(?<val>.*)|(?<key>\S+)','names');
     
     % deal with characters not allowed by MATLAB struct
-    if strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_µs')
+    if strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s')
         a.key = 'DspFilterDelay_us';
     end
     
