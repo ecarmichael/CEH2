@@ -46,12 +46,7 @@ axis off
 SET_xmin = 80; SET_ymin = 0; % set up bins
 SET_xmax = 660; SET_ymax = 520;
 SET_xBinSz = 20; SET_yBinSz = 20;
-<<<<<<< Updated upstream
- 
-x_edges = SET_xmin:SET_xBinSz:SET_xmax;
-y_edges = SET_ymin:SET_yBinSz:SET_ymax;
-=======
->>>>>>> Stashed changes
+
  
 x_edges = SET_xmin:SET_xBinSz:SET_xmax;
 y_edges = SET_ymin:SET_yBinSz:SET_ymax;
@@ -89,12 +84,20 @@ title('rate map');
 %% New Cell (heading info) 
 
 hd_bin = 360/20;
-hd_vec = 0:hd_bin:360
+hd_vec = 0:hd_bin:360;
 
-keep_idx = pos.data(3,:)<=360
+keep_idx = pos.data(3,:)<=360;
 
-subplot(2,1,1)
+subplot(2,2,1)
 histogram(pos.data(3,keep_idx), hd_vec)
-subplot(2,1,2)
+subplot(2,2,2)
 plot(pos.tvec(keep_idx),pos.data(3,keep_idx))
+
+mv= [csvread("TT3_AvgWaveforms.csv")]
+
+subplot (2,2,3)
+plot (mv(1,:),mv(2:end,:),"LineWidth",3)
+legend("Channel 1", "Channel 2","Channel 3","Channel 4")
+xlabel ("Time (ms)")
+title ("M23 Tetrode 3 July 2nd")
 
