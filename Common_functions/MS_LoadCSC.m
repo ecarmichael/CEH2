@@ -224,6 +224,14 @@ for iF = 1:nFiles
     
 end
 
+rm_idx = cellfun('isempty', csc_tsd.label); 
+csc_tsd.data(rm_idx,:) = [];
+csc_tsd.label(rm_idx) = [];
+csc_tsd.cfg.hdr(rm_idx) = [];  
+
+sample_count_tvec(rm_idx) = [];
+sample_count_data(rm_idx) = [];
+
 % check if anything unequal --> error
 if numel(unique(sample_count_data)) > 1
     error('Data sizes unequal.');
