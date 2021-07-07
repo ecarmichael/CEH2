@@ -97,19 +97,19 @@ figure(100)
 subplot(2,1,1)
 histogram(pos.data(3,keep_idx), hd_vec)
 subplot(2,1,2)
-plot(pos.tvec(keep_idx),pos.data(3,keep_idx))
+plot(pos.tvec(keep_idx),pos.data(3,keep_idx), 'k')
 hold on
-plot(pos.tvec(S_idx), pos.data(3,S_idx), '.')
+plot(pos.tvec(S_idx), pos.data(3,S_idx), '.r')
 
 
 %% compute HD
 
 
 figure()
-polarhistogram(pos.data(3,S_idx),360/20, 'Normalization','probability', 'DisplayStyle','stairs', 'edgecolor', 'b', 'linewidth', 4);
+polarhistogram(pos.data(3,S_idx),360/20, 'DisplayStyle','stairs', 'edgecolor', 'b', 'linewidth', 4);
 hold on
 
-polarhistogram(pos.data(3,:), 360/20, 'Normalization','probability', 'DisplayStyle','stairs', 'edgecolor', [0.7 0.7 0.7], 'linewidth', 4)
+polarhistogram(pos.data(3,:), 360/20,  'DisplayStyle','stairs', 'edgecolor', [0.7 0.7 0.7], 'linewidth', 4)
 
 legend({'Spikes', 'all'})
 
