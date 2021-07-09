@@ -7,24 +7,30 @@
 
 %% add some code to the path
 
- addpath(genpath('C:\Users\williamslab\Documents\github\vandermeerlab\code-matlab\shared'));
+warning off 
 
- addpath(genpath('C:\Users\williamslab\Documents\github\CEH2')); 
-data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess\M23_2021-07-02_OF';
+if ~isunix
+    addpath(genpath('C:\Users\williamslab\Documents\github\vandermeerlab\code-matlab\shared'));
+    
+    addpath(genpath('C:\Users\williamslab\Documents\github\CEH2'));
+    data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess\M23_2021-07-02_OF';
+    
+else
+    addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
+    addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
+    data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess/M23_2021-07-02_OF';
+end
 
-
-% addpath(genpath('/home/williamslab/Documents/Github/CEH2')); 
-% addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared');
-%  data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess/M23_2021-07-02_OF'; 
-
-
-cd(data_dir); % go to the data folder specified above
+warning on
 %% load dada
 cfg.getTTnumbers = 0;
 S = LoadSpikes(cfg);
 
-
+cfg_pos = [];
+cfg_pos.convFact = [8 8]; 
 pos = MS_LoadPos([]);
+
+spd = getLinSpd([], pos)
 
 % interpolate the spikes to match the time vector
 spk_x = interp1(pos.tvec,pos.data(1,:),S.t{1},'linear');

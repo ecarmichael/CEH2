@@ -70,7 +70,7 @@ pos_tsd.label{1} = 'x';
 pos_tsd.data(2,:) = Y;
 pos_tsd.label{2} = 'y';
 
-pos_tsd.data(3,:) = Angles; 
+pos_tsd.data(3,:) = Angles(1:length(X)); 
 pos_tsd.label{3} = 'Angle'; 
 
 % Convert data from pixels to cm
