@@ -48,12 +48,12 @@ for iC = 1:length(file_list)
     
     %Restrict to periods of movement 
     keep_idx = spd.data > 2;
-    cfg = []; cfg.method = 'raw'; cfg.operation = '>'; cfg.threshold = 2; % speed limit in cm/sec
+    cfg = []; cfg.method = 'raw'; cfg.operation = '>'; cfg.threshold = 5; % speed limit in cm/sec
     iv_fast = TSDtoIV(cfg,spd); % only keep intervals with speed above thresh
 
     pos = restrict(pos,iv_fast);
     S = restrict(S,iv_fast);
-    
+%     
     % prepare S for plots
     
     % interpolate the spikes to match the time vector
@@ -61,7 +61,7 @@ for iC = 1:length(file_list)
     spk_y = interp1(pos.tvec,pos.data(2,:),S.t{1},'linear');
     
     % plot
-    figure(101)
+%     figure(101)
     
     subplot(3,3,5)
     plot(pos.data(1,:), pos.data(2,:), '.', 'color', [0.8 0.8 0.8]);
@@ -76,9 +76,9 @@ for iC = 1:length(file_list)
     %% convert to heat map.
     
     % set up bins
-    SET_xmin = 80; SET_ymin = 0; % set up bins
-    SET_xmax = 660; SET_ymax = 520;
-    SET_xBinSz = 20; SET_yBinSz = 20;
+    SET_xmin = 0; SET_ymin = 10; % set up bins
+    SET_xmax = 50; SET_ymax = 60;
+    SET_xBinSz = 2; SET_yBinSz = 2;
     
     
     x_edges = SET_xmin:SET_xBinSz:SET_xmax;
@@ -94,7 +94,7 @@ for iC = 1:length(file_list)
     occ_hist = occ_hist .* (1/30); % convert samples to seconds using video frame rate (30 Hz)
     
     subplot(3,3,6)
-    pcolor(occ_hist); shading flat; axis off; colorbar
+    pcolor(occ_hist'); shading flat; axis off; colorbar
     title('occupancy');
     
     % get the spike map
@@ -103,14 +103,14 @@ for iC = 1:length(file_list)
     spk_hist(no_occ_idx) = NaN;
     
     subplot(3,3,8)
-    pcolor(spk_hist); shading flat; axis off; colorbar
+    pcolor(spk_hist'); shading flat; axis off; colorbar
     title('spikes');
     
     % rate map
     tc = spk_hist./occ_hist;
     
     subplot(3,3,9)
-    pcolor(tc); shading flat; axis off; colorbar
+    pcolor(tc'); shading flat; axis off; colorbar
     title('rate map');
     
     % Waveform
