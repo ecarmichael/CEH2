@@ -128,10 +128,10 @@ for iC = 1:length(file_list)
     %% Label
     subplot (3,3,1)
     plot(nan(1,10))
-    text(0,.8,["Cell:" strrep(S.label{1},"_"," ")],"fontsize",20)
+    text(0,.8,["Cell:" strrep(S.label{1},"_"," ")],"fontsize",15)
     
     %% Multiraster
-    cfg.openNewFig==0
+    
     subplot (3,3,2:3)
     MultiRaster([],S)
     
