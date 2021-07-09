@@ -36,7 +36,7 @@ cfg = ProcessConfig(cfg_def,cfg_in,mfun); % this takes fields from cfg_in and pu
 
 % check for an attempt to both automate and mannually decimate
 if ~isempty(cfg.decimateByFactor) && ~isempty(cfg.desired_sampling_frequency)
-    error('Looks like you are trying to decimate the data both mannually (cfg.decimateByFactor) and automatically (cfg.desired_sampling_frequency). Use one or the other. Leave the undesied method empty')
+    error('Looks like you are trying to decimate the data both mannually (cfg.decimateByFactor) and automatically (cfg.desired_sampling_frequency). Use one or the other. Leave the undesired method empty')
 end
 
 if isempty(cfg.fc) % no filelist provided, load everything
@@ -83,6 +83,9 @@ for iF = 1:nFiles
     fname = fc{iF};
     
     % load raw data
+    if ~isunix
+            [Timestamps, ~, SampleFrequencies, NumberOfValidSamples, Samples, Header] = Nlx2MatCSC(fname, [1 1 1 1 1], 1, 1, []);
+    else
     try 
     [Timestamps, ~, SampleFrequencies, NumberOfValidSamples, Samples, Header] = Nlx2MatCSC(fname, [1 1 1 1 1], 1, 1, []);
     
@@ -90,6 +93,7 @@ for iF = 1:nFiles
         fprintf('<strong>%s</strong>: skipping empty file %s...\n',mfilename, fname)
         continue
     
+    end
     end
 %         [Timestamps, ~, SampleFrequencies, NumberOfValidSamples, Samples, Header] = Nlx2MatCSC_v3(fname, [1 1 1 1 1], 1, 1, []);
 
@@ -287,7 +291,7 @@ for hline = 1:length(Header)
     a = regexp(line(2:end),'(?<key>^\S+)\s+(?<val>.*)|(?<key>\S+)','names');
     
     % deal with characters not allowed by MATLAB struct
-    if strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s')
+    if strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key, 'DspFilterDelay_µs')
         a.key = 'DspFilterDelay_us';
     end
     
