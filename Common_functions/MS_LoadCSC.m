@@ -83,6 +83,9 @@ for iF = 1:nFiles
     fname = fc{iF};
     
     % load raw data
+    if ~isunix
+            [Timestamps, ~, SampleFrequencies, NumberOfValidSamples, Samples, Header] = Nlx2MatCSC(fname, [1 1 1 1 1], 1, 1, []);
+    else
     try 
     [Timestamps, ~, SampleFrequencies, NumberOfValidSamples, Samples, Header] = Nlx2MatCSC(fname, [1 1 1 1 1], 1, 1, []);
     
@@ -90,6 +93,7 @@ for iF = 1:nFiles
         fprintf('<strong>%s</strong>: skipping empty file %s...\n',mfilename, fname)
         continue
     
+    end
     end
 %         [Timestamps, ~, SampleFrequencies, NumberOfValidSamples, Samples, Header] = Nlx2MatCSC_v3(fname, [1 1 1 1 1], 1, 1, []);
 
@@ -287,7 +291,7 @@ for hline = 1:length(Header)
     a = regexp(line(2:end),'(?<key>^\S+)\s+(?<val>.*)|(?<key>\S+)','names');
     
     % deal with characters not allowed by MATLAB struct
-    if strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s')
+    if strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key,'DspFilterDelay_ï¿½s') || strcmp(a.key, 'DspFilterDelay_µs')
         a.key = 'DspFilterDelay_us';
     end
     
