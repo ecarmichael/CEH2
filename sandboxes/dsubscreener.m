@@ -31,9 +31,12 @@ file_list = FindFiles('*.t');
    % get position
     cfg.getTTnumbers = 0;
     S = LoadSpikes(cfg);
-
-
-    pos = MS_LoadPos([]);
+    
+    cfg_pos = [];
+    cfg_pos.convFact = [8,8];
+    pos = MS_LoadPos(cfg_pos);
+    spd = getLinSpd([],pos);
+    keep_idx = spd.data > 
 
    % get events
     spk_x = interp1(pos.tvec,pos.data(1,:),S.t{1},'linear');
@@ -134,5 +137,7 @@ for iC = 1:length(file_list)
     
     subplot (3,3,2:3)
     MultiRaster([],S)
+    hold on
+    plot(spd.tvec,spd.data/1000)
     
 end % end of .t file list
