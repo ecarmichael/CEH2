@@ -29,19 +29,12 @@ end
 file_list = FindFiles('*.t');
 
    % get position
-    cfg.getTTnumbers = 0;
-    S = LoadSpikes(cfg);
     
     cfg_pos = [];
     cfg_pos.convFact = [8,8];
     pos = MS_LoadPos(cfg_pos);
     spd = getLinSpd([],pos);
-    keep_idx = spd.data > 
-
-   % get events
-    spk_x = interp1(pos.tvec,pos.data(1,:),S.t{1},'linear');
-    spk_y = interp1(pos.tvec,pos.data(2,:),S.t{1},'linear');
-   
+    
 
 
 for iC = 1:length(file_list)
@@ -53,6 +46,13 @@ for iC = 1:length(file_list)
     
     S = LoadSpikes(cfg);
     
+    %Restrict to periods of movement 
+    keep_idx = spd.data > 2;
+    cfg = []; cfg.method = 'raw'; cfg.operation = '>'; cfg.threshold = 2; % speed limit in cm/sec
+    iv_fast = TSDtoIV(cfg,spd); % only keep intervals with speed above thresh
+
+    pos = restrict(pos,iv_fast);
+    S = restrict(S,iv_fast);
     
     % prepare S for plots
     
