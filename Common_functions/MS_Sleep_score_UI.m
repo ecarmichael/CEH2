@@ -283,7 +283,7 @@ while ishandle(h)
         fprintf('%s ', cfg.state_name{iK})
         score(this_idx(1):this_idx(2)) = cfg.state_val(iK);
         x_lim = xlim;
-        disp(x_lim);
+        fprintf('     %d   %d    %0.2d%%', x_lim(1), x_lim(2), round(x_lim(2)/tvec(end),2))
         if done == 1 
             disp('Exiting')
             break

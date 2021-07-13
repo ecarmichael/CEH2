@@ -2,7 +2,7 @@
 
 %Follows the mizuseki et al. 2011 method:
 % 'Detection of phasic REM. REM epochs were detected as described above.
-% To detect phasic REM epochs, we first band-pass filtered (5–12 Hz) LFP traces
+% To detect phasic REM epochs, we first band-pass filtered (5ï¿½12 Hz) LFP traces
 % during REM epochs, yielding y(t). The amplitudes of theta oscillations were
 % derived from Hilbert transform of y(t), and peaks of theta oscillations were
 % detected as the positive-to-negative zero crossings of the derivative dy/dt.
@@ -25,13 +25,21 @@
 %     2. epoch has min smoothed IPI < 5th percentile of all IPI_smoothed
 %     3. epoch theta amp > mean theta amp for all REM.
 
+if isunix
+
+    addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
+    addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
+    data_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP/PV1060/11_26_2019_PV1060_HATSwitch';
+    LFP_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP'; 
+else
 
 LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo';
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
 cd('C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_22_2019_PV1069_HATSwitch')
+end
 
-
+cd(data_dir)
 c_ord = linspecer(5); % just some nicer colours.
 
 %% load some pre-cut data
@@ -57,6 +65,7 @@ end
 cd(LFP_dir)
 
 this_LFP_dir = MS_list_dir_names(cd, {subject, type});
+% this_LFP_dir{1} = '/home/williamslab/Desktop/Jisoo_sleep_LFP/2019-07-15_09-50-03_PV1060_LTD1';
 
 cd(this_LFP_dir{1});
 
@@ -122,17 +131,17 @@ emg_h = abs(hilbert(emg_f.data)); % get the emg power for plotting.
 
 %% score the sleep data
 
-% cfg_sleep = [];
-% cfg_sleep.tvec_range = [0 5];  % number of seconds per window.
-% cfg_sleep.emg_range = [min(emg_h) mean(emg_h) + std(emg_h)*5]; % default, should be based on real data.
-% cfg_sleep.emg_chan = 1; % emg channel.  Can be empty.
-% cfg_sleep.lfp_chans = 1; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data.
-% cfg_sleep.state_name = {'Wake',       'SWS',       'REM',    'Quiescence','Transition','pREM',  'Redo',     'Exit'}; %
-% cfg_sleep.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 'numpad0',   'numpad1' 'backspace','backquote' }; % which key to press for each state_val
-% 
-% 
-% score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC.data(2,:), emg_h);
-% 
+cfg_sleep = [];
+cfg_sleep.tvec_range = [0 5];  % number of seconds per window.
+cfg_sleep.emg_range = [min(emg_h) mean(emg_h) + std(emg_h)*5]; % default, should be based on real data.
+cfg_sleep.emg_chan = 1; % emg channel.  Can be empty.
+cfg_sleep.lfp_chans = 1; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data.
+cfg_sleep.state_name = {'Wake',       'SWS',       'REM',    'Quiescence','Transition','pREM',  'Redo',     'Exit'}; %
+cfg_sleep.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 't',   'numpad1' 'backspace','backquote' }; % which key to press for each state_val
+
+
+score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC.data(2,:), emg_h);
+
 
 
 %% write the hypno back to the intermediate dir.
