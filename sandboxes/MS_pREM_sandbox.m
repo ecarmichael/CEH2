@@ -26,17 +26,16 @@
 %     3. epoch theta amp > mean theta amp for all REM.
 
 if isunix
-
     addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
     addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
     data_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP/PV1060/11_26_2019_PV1060_HATSwitch';
-    LFP_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP'; 
+    LFP_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP';
 else
-
-LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo';
-addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
-addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
-cd('C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_22_2019_PV1069_HATSwitch')
+    
+    LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo';
+    addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
+    addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
+    data_dir ='C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_22_2019_PV1069_HATSwitch'; % change this to the data folder that you want.  LFP will update automatically. 
 end
 
 cd(data_dir)
@@ -568,7 +567,7 @@ load('all_binary_pre.mat');
 load('all_binary_post.mat'); 
 
 for ii  = 1:length(all_pREM_Ca_idx)
-    close all
+%     close all
 
     if ~isnan(all_pREM_Ca_idx(ii,1))
 
