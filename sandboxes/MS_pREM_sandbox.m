@@ -558,7 +558,7 @@ load('all_binary_pre.mat');
 load('all_binary_post.mat'); 
 
 for ii  = 1:length(all_pREM_Ca_idx)
-    close all
+%     close all
 
     if ~isnan(all_pREM_Ca_idx(ii,1))
 
