@@ -26,7 +26,7 @@ if nargin == 0
     type = 'long';
     save_dir = cd;
     disp('''Chan_to_use'' not specified.  Using all .ncs files')
-    disp('''type'' no specified, using ''long'' for all data. Use type = ''fast'' for only the first 1/4 of the data to save time')
+    disp('''type'' not specified, using ''long'' for all data. Use type = ''fast'' for only the first 1/4 of the data to save time')
 
 elseif nargin == 1
     type = 'long';
