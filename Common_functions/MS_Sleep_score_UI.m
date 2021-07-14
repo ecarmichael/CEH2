@@ -65,6 +65,7 @@ cfg_def.smooth_spec = 2;
 cfg_def.Fs = mode(diff(tvec)); % best guess of the sampling frequency.
 cfg_def.delta_f = [1 4];
 cfg_def.theta_f = [6 9];
+cfg_def.rms_win = round((1/cfg_def.Fs)/2); 
 
 
 cfg = ProcessConfig(cfg_def, cfg_in);
@@ -141,6 +142,10 @@ end
 % % reason.  .
 % theta_csc = FilterLFP(cfg_filt_t, lfp);
 
+
+%% get the moving root mean square of the emg. 
+emg_rms = sqrt(movmean(emg(cfg.emg_chan,:).^2, cfg.rms_win));                         % RMS Value Over ‘WinLen’ Samples
+
 %% create basic plot with channel(s) of interest + emg if available.
 hFig = figure;
 
@@ -189,7 +194,10 @@ text(tvec(1)- tvec(1), median(data(cfg.lfp_chans(iChan),:)), 'LFP')
 
 if ~isempty(emg)
     ax(999) = subplot(nSubplots, 1, nSubplots);
+    hold on
     plot(tvec- tvec(1), emg(cfg.emg_chan,:))
+    plot(tvec- tvec(1), emg_rms, '--r')
+
 %     ylim([min(emg(cfg.emg_chan,:)), max(emg(cfg.emg_chan,:))])
     ylim(cfg.emg_range)
     text(tvec(1)- tvec(1), cfg.emg_range(2)*.8, 'EMG')
@@ -246,6 +254,8 @@ drawnow;
 if ~isempty(emg)
     ax(999) = subplot(nSubplots, 1, nSubplots);
     plot(tvec(this_idx(1):this_idx(2)) - tvec(1), emg(cfg.emg_chan,this_idx(1):this_idx(2)))
+    plot(tvec(this_idx(1):this_idx(2)) - tvec(1), emg_rms(this_idx(1):this_idx(2)), '--r')
+
         ylim(cfg.emg_range)
 %     ylim([min(emg(cfg.emg_chan,:)), max(emg(cfg.emg_chan,:))])
 %     text(tvec(1)- tvec(1), cfg.emg_range(2)*.8, 'EMG')
@@ -344,7 +354,10 @@ drawnow;
 
 if ~isempty(emg)
     ax(999) = subplot(nSubplots, 1, nSubplots);
+    hold on
     plot(tvec(this_idx(1):this_idx(2)) - tvec(1), emg(cfg.emg_chan,this_idx(1):this_idx(2)))
+    plot(tvec(this_idx(1):this_idx(2)) - tvec(1), emg_rms(this_idx(1):this_idx(2)), '--r')
+    hold off
     ylim(cfg.emg_range)
     xlim([tvec(this_idx(1))- tvec(1), tvec(this_idx(2))- tvec(1)]);
 %     text(tvec(1)- tvec(1), cfg.emg_range(2)*.8, 'EMG')

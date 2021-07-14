@@ -127,6 +127,7 @@ emg_f = FilterLFP(cfg_emg, CSC_emg);
 
 emg_h = abs(hilbert(emg_f.data)); % get the emg power for plotting.
 
+emg_rms = sqrt(movmean(emg_f.data.^2, 1000));                         % RMS Value Over ‘WinLen’ Samples
 
 %% score the sleep data
 
