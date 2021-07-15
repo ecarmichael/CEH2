@@ -35,13 +35,11 @@ end
 
 %% get the basic information form the name
 
-
 fname = strsplit(cd, filesep);
 
 full_fname = fname{end};
 fname = strrep(fname{end}, '-', '_'); 
 fname = strsplit(fname, '_'); % split into date, time, and ids
-
 
 subject_id =  fname{1}(1:3);
 date_id = [fname{2} '-' fname{3} '-' fname{4}];
