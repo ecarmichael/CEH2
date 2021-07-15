@@ -156,6 +156,8 @@ if exist('score', 'var')
     Hypno.cfg.notes = 'pREM was not scored in mannual screening';
     
     % save it.
+    cd(inter_dir);
+    save([inter_dir filesep 'pREM' filesep 'Hypno.mat'], 'Hypno', '-v7.3')
     save('Hypno.mat', 'Hypno', '-v7.3')
     
 else
@@ -637,6 +639,7 @@ for ii  = 1:length(all_pREM_Ca_idx)
         
         saveas(gcf,[inter_dir filesep 'pREM' filesep 'pREM_event_' num2str(ii) '_' all_pREM_CA.label{ii} '_Raster.png'])
     end
+    close all
 end
 %% EXTRA  find pREM episodes with muscle twitch
 
