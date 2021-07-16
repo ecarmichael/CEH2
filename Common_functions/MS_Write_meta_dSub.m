@@ -11,7 +11,7 @@ function meta = MS_Write_meta_dSub(data_dir)
 %           example:
 %           MS_Write_Meta('/home/ecarmichael/Documents/Williams_Lab/2019-12-04_11-10-01_537day0base1')
 %
-%   Outputs"
+%   Outputs
 %       Note: If no outputs are called then the Meta.m will only be written
 %       to the directory but not to the workspace. 
 %       - Meta: [strcut]   strcuture containing experimental parameters such as
