@@ -35,9 +35,9 @@ end
 
 %% get the basic information form the name
 fname = strsplit(data_dir, filesep);
-dir_name = fname{end};
+dir_name = strrep(fname{end},'-','_');
 
-fname = fname{end};
+fname = strrep(fname{end},'-','_');
 fname = strsplit(fname, '_'); % split into date, time, and ids
 
 
