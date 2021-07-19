@@ -31,12 +31,14 @@ if ~exist(inter_dir, 'dir')
 end
 
 c_ord = linspecer(5); % nice colours.
-%% get all .t files
 
-file_list = FindFiles('*.t');
+%% get session wide variables
+
+% load the meta data
+Meta = MS_Load_meta; 
+
 
 % get position
-
 cfg_pos = [];
 cfg_pos.convFact = [8,8];
 pos = MS_LoadPos(cfg_pos);
@@ -45,11 +47,24 @@ spd = getLinSpd([],pos);
 % spd.data =  conv2(spd.data,gausswin(100),'same'); % smooth over 2 seconds
 spd.data = smooth(spd.data, 2*ceil(1/mode(diff(spd.tvec))))'; 
 
+% get LFP
+cfg_lfp = [];
+cfg_lfp.fc = {Meta.goodCSC};
+cfg_lfp.desired_sampling_frequency = 2000; 
+csc = MS_LoadCSC(cfg_lfp); 
+
 
 % get some file info. (can be done with Meta_keys later.
 % assumes code is saved as 'Subject_yyyy_mm_dd_task'
 fname = strsplit(data_dir, filesep);
 fname = strrep(fname{end}, '-', '_');
+
+%% get all .t files
+
+file_list = FindFiles('*.t');
+
+
+
 
 
 for iC = 1:length(file_list)
@@ -135,7 +150,7 @@ for iC = 1:length(file_list)
     hold on
     
     % add some spikes
-    S_idx = nearest_idx(S.t{1}, pos.tvec);
+%     S_idx = nearest_idx(S.t{1}, pos.tvec);
     
     plot(spk_x,spk_y, '.r', 'markersize', 12)
     axis off

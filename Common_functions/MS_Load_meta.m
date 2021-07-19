@@ -1,4 +1,4 @@
-function ExpKeys = MS_Load_meta(file_name)
+function Meta = MS_Load_meta(file_name)
 %% MS_Load_meta: loading function for the '*meta.m' files.  Meta files are 
 % used to track all experimental variables like subject, tragets, behaviour...
 % 
