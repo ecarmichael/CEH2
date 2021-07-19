@@ -53,6 +53,10 @@ cfg_lfp.fc = {Meta.goodCSC};
 cfg_lfp.desired_sampling_frequency = 2000; 
 csc = MS_LoadCSC(cfg_lfp); 
 
+% generate psd
+cfg_psd.hann_win = 2^11;
+[Px, Fx] = pwelch(csc.data, hanning(cfg_psd.hann_win), cfg_psd.hann_win/2, cfg_psd.hann_win*2 , csc.cfg.hdr{1}.SamplingFrequency);
+
 
 % get some file info. (can be done with Meta_keys later.
 % assumes code is saved as 'Subject_yyyy_mm_dd_task'
