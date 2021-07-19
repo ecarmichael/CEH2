@@ -216,6 +216,12 @@ for iC = 1:length(file_list)
     title('rate map');
     
     
+    %% get sta
+    cfg_sta = [];
+    [st_mat, t_win] = MS_get_sta(cfg_sta,csc,S);
+    subplot(3,4,11:12)
+    plot(t_win,nanmean(st_mat))
+    
     %% save the output
     SetFigure([], gcf);
     set(gcf, 'position', [81 -377  1760  880])
