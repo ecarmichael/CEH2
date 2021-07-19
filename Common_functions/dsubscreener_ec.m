@@ -37,7 +37,6 @@ c_ord = linspecer(5); % nice colours.
 % load the meta data
 Meta = MS_Load_meta; 
 
-
 % get position
 cfg_pos = [];
 cfg_pos.convFact = [8,8];
@@ -52,10 +51,6 @@ cfg_lfp = [];
 cfg_lfp.fc = {Meta.goodCSC};
 cfg_lfp.desired_sampling_frequency = 2000; 
 csc = MS_LoadCSC(cfg_lfp); 
-
-% generate psd
-cfg_psd.hann_win = 2^11;
-[Px, Fx] = pwelch(csc.data, hanning(cfg_psd.hann_win), cfg_psd.hann_win/2, cfg_psd.hann_win*2 , csc.cfg.hdr{1}.SamplingFrequency);
 
 
 % get some file info. (can be done with Meta_keys later.
@@ -79,14 +74,25 @@ for iC = 1:length(file_list)
     
     S = LoadSpikes(cfg);
     
-    
+    % generate psd
+    cfg_psd.hann_win = 2^11;
+    [Px, Fx] = pwelch(csc.data, hanning(cfg_psd.hann_win), cfg_psd.hann_win/2, cfg_psd.hann_win*2 , csc.cfg.hdr{1}.SamplingFrequency);
+
     figure(101)
-    
+    subplot(3,4,9:10)
+    hold on
+    plot(Fx, 10*log10(Px))
+    xlim([0 150])
+    set(gca,'XTick',0:10:150)
+    xlabel("Frequency")
+    hold off
+
+
     % Waveform
     try % see if the waveform file exists and works. 
         mv= csvread([S.label{1}(1:3) '_AvgWaveforms.csv']);
         
-        subplot (2,4,1)
+        subplot (3,4,1)
         hold on
         for ii  = 1:4
             plot (mv(1,:)+ii*2,mv(ii+1,:),"LineWidth",3, 'color', c_ord(ii,:));
@@ -96,13 +102,13 @@ for iC = 1:length(file_list)
         axis off
         title ({strrep(fname, '_', ' ') ;  strrep(S.label{1}, '_', ' ')})
     catch 
-                subplot (2,4,1)
+                subplot (3,4,1)
     text(0, .5, {'waveform file does not exist' ; 'or is corrupeted'});
     axis off 
     end
     
     % ISI
-    subplot(2,4,2)
+    subplot(3,4,2)
     histogram(diff(S.t{1})*1000,0:20:1000)
     xlabel('ISI (ms)')
     ylabel('spike count')
@@ -110,7 +116,7 @@ for iC = 1:length(file_list)
     
     % Multiraster
     
-    subplot (2,4,3:4)
+    subplot (3,4,3:4)
     cfg_rast = [];
     cfg_rast.openNewFig = 0;
     yyaxis left
@@ -145,7 +151,7 @@ for iC = 1:length(file_list)
     figure(101)
     % basic position plot.
     tvec_cord = winter(length(pos.data(1,:)));% repmat(0.2, length(pos.data(1,:)),1)];
-    ax1 = subplot(2,4,5);
+    ax1 = subplot(3,4,5);
     scatter(pos.data(1,:), pos.data(2,:), 55, tvec_cord, '.','MarkerFaceAlpha',.2,'MarkerEdgeAlpha',.2);
     
     colormap(ax1, 'winter');
@@ -185,7 +191,7 @@ for iC = 1:length(file_list)
     
     occ_hist = occ_hist .* (1/30); % convert samples to seconds using video frame rate (30 Hz)
     
-    subplot(2,4,6)
+    subplot(3,4,6)
     pcolor(occ_hist'); shading flat; axis off; colorbar
     title('occupancy');
     
@@ -198,14 +204,14 @@ for iC = 1:length(file_list)
     
     spk_hist(no_occ_idx) = NaN;
     
-    subplot(2,4,7)
+    subplot(3,4,7)
     pcolor(spk_hist'); shading flat; axis off; colorbar
     title('spikes');
     
     % rate map
     tc = spk_hist./occ_hist;
     
-    subplot(2,4,8)
+    subplot(3,4,8)
     pcolor(tc'); shading flat; axis off; colorbar
     title('rate map');
     
