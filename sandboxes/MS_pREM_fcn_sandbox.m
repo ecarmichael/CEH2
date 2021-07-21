@@ -15,7 +15,9 @@
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
 
-data_dir = 'J:\Scored_NSC_Data_files\Mouse 220\Experiment 1 (AC)';
+% data_dir = 'J:\Scored_NSC_Data_files\Mouse 220\Experiment 1 (AC)';
+data_dir = 'J:\Scored_NSC_Data_files\Mouse 220\Experiment 2 (A)';
+
 cd(data_dir)
 % LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo'; 
 

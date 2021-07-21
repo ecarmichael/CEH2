@@ -35,7 +35,7 @@ else
     LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo';
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
-    data_dir ='C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1060\11_26_2019_PV1060_HATSwitch'; % change this to the data folder that you want.  LFP will update automatically. 
+    data_dir ='J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\PV1060\11_23_2019_PV1060_HATD5'; % change this to the data folder that you want.  LFP will update automatically. 
 end
 
 cd(data_dir)
@@ -145,6 +145,10 @@ score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC.data(2,:), emg_h);
 
 
 %% write the hypno back to the intermediate dir.
+
+cd(inter_dir); % commented by jisoo maybe add creating folder here?
+mkdir('pREM')
+
 if exist('score', 'var')
     % put it in a nice format.
     Hypno = [];
