@@ -72,10 +72,25 @@ wave_tvec = wave(1,:);
 best_wave = wave(best_wave_idx+1, :); 
 [p_max, p_idx] = max(best_wave); 
 [t_max, t_idx] = min(best_wave);
-pt_ratio = p_max/t_max
-width = (wave.tvec(p_max) - wave.tvec(t_max))
 
-if wave.tvec(p.max) < wave.tvec(t.max)
-    width= -(width)
-
+if abs(t_max)> abs(p_max)
+    best_wave = -best_wave
 end
+
+pt_ratio = abs(p_max/t_max)
+width = (wave_tvec(t_idx) - wave_tvec(p_idx))
+figure(901)
+plot(wave_tvec,best_wave)
+
+width_arrow = annotation('doublearrow');
+width_arrow.Parent = width_arrow.CurrentAxes;  % associate annotation with current axes
+% now you can use data units
+width_arrow.X = [p_idx p_max];
+width_arrow.Y = [t_idx p_max];
+
+%hold on
+%x=[p_idx,p_max];
+%y=[t_idx,p_max];
+%annotation('doublearrow',x,y,'String','Width')
+%hold off
+
