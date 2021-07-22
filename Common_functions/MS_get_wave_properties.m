@@ -26,3 +26,6 @@ function [wave_prop] = MS_get_wave_properties(S, wave, plot_flag)
 %
 %
 %% initialize
+if nargin < 3
+    plot_flag = 0;
+end
