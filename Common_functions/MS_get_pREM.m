@@ -69,7 +69,7 @@ end
 
 c_ord = linspecer(5);
 %% filter raw data with the Mizuseki 2011 config.
-Fs = raw_csc.cfg.hdr{1}.SamplingFrequency; 
+Fs = raw_csc.cfg.hdr{1}.SamplingFrequency;
 
 % theta filter
 cfg_filt_t = [];
@@ -298,6 +298,13 @@ for ii  = size(pREM_times,1):-1:1
     pREM_idx(ii,2) = find(raw_csc.tvec == pREM_times(ii,2));
 end
 
+if isempty(pREM_times)
+    fprintf('<strong>%s:  No pREM events detected</strong>\n', mfilename)
+    save(['No pREM events detected ' date '.txt']);
+    pREM_idx = []; pREM_IV = [];
+    
+    return
+end
 % create an IV struct
 pREM_IV = iv([pREM_times(:,1), pREM_times(:,2)]);
 

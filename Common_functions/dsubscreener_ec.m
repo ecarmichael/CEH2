@@ -81,10 +81,22 @@ for iC = 1:length(file_list)
     figure(101)
     subplot(3,4,9:10)
     hold on
-    plot(Fx, 10*log10(Px))
+    plot(Fx, 10*log10(Px), 'color', [244,93,1]/255)
     xlim([0 150])
     set(gca,'XTick',0:10:150)
-    xlabel("Frequency")
+    xlabel("Frequency (Hz)")
+    
+    % add rectangles marking gamma and theta ranges
+    color.blue = double([158,202,225])/255;
+    color.green = double([168,221,181])/255;
+    color.red = [0.9    0.3    0.3]; 
+
+    y_val = ylim;
+   
+    % colour bars for specific frequencies of interest. 
+    rectangle('position', [6, y_val(1), 6, y_val(2) - y_val(1)],  'facecolor', [color.blue 0.3], 'edgecolor', [color.blue 0.3])
+    rectangle('position', [30, y_val(1), 20, y_val(2) - y_val(1)],  'facecolor', [color.green 0.3], 'edgecolor', [color.green 0.3])
+    rectangle('position', [70, y_val(1), 20, y_val(2) - y_val(1)],  'facecolor', [color.red 0.2], 'edgecolor', [color.red 0.2])
     hold off
 
 
@@ -216,6 +228,12 @@ for iC = 1:length(file_list)
     title('rate map');
     
     
+    %% get sta
+    cfg_sta = [];
+    [st_mat, t_win] = MS_get_sta(cfg_sta,csc,S);
+    subplot(3,4,11:12)
+    plot(t_win,nanmean(st_mat))
+    
     %% save the output
     SetFigure([], gcf);
     set(gcf, 'position', [81 -377  1760  880])
@@ -225,5 +243,5 @@ for iC = 1:length(file_list)
 
     
     pause(1)
-    close all
+    %close all
 end % end of .t file list
