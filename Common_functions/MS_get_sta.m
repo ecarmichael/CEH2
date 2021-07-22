@@ -37,26 +37,32 @@ cfg = ProcessConfig(cfg_def, cfg_in);
 
 %% detrend the data if chronux is present
 if exist('locdetrend', 'file')
-
-csc.data(csc.chan,:) = locdetrend(csc.data(cfg.csc_chan,:), csc.cfg.hdr{1}.SamplingFrequency, [1 0.5]); 
+    
+    csc.data(csc.chan,:) = locdetrend(csc.data(cfg.csc_chan,:), csc.cfg.hdr{1}.SamplingFrequency, [1 0.5]);
+else
+%     [bFilt,aFilt] = butter(2,  2/(csc.cfg.hdr{1}.SamplingFrequency), 'low');
+%     fvtool(bFilt, aFilt); 
+%     csc.data(csc.chan,:) = filtfilt(bFilt, aFilt, csc.data(cfg.csc_chan,:));
+csc.data(cfg.csc_chan,:) = detrend(csc.data(cfg.csc_chan,:));
 end
 
 %% generate a time window
-t_win = cfg.t_win(1):1./csc.cfg.hdr{1}.SamplingFrequency: cfg.t_win(2);
+t_win = cfg.t_win(1):1/csc.cfg.hdr{1}.SamplingFrequency: cfg.t_win(2);
 
 S_t = S.t{cfg.S_chan};
 
 h = waitbar(0,sprintf('Cell %d/%d...',cfg.S_chan,length(S_t)));
 
-st_mat = [];
+st_mat = [];tic
 for iS = length(S_t):-1:1
     
     sta_t = S_t(iS)+t_win(1);
-    if ~isunix
+%     if ~isunix
+%     NOTE if you do not have a compiled mex file 
         sta_idx = nearest_idx3(csc.tvec,sta_t); % find index of leading window edge
-    else
-        sta_idx = nearest_idx(sta_t, csc.tvec); % find index of leading window edge
-    end
+%     else
+%         sta_idx = nearest_idx(sta_t, csc.tvec); % find index of leading window edge
+%     end
     if sta_idx+length(t_win)-1 > length(csc.data(cfg.csc_chan,:)) % spike spikes where the post-spike window exceeds the csc length
         continue
     else
@@ -66,5 +72,6 @@ for iS = length(S_t):-1:1
    waitbar(iS/length(S_t));
 
 end
+toc
 close(h) % close the waitbar
 
