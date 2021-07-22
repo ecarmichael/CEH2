@@ -121,7 +121,7 @@ for iC = 1:length(file_list)
     
     % get the wave properties
     if exist('mv', 'var')
-       wave_prop = MS_get_wave_properties(S, mv, 1);  
+       wave_prop = MS_get_wave_properties(S, mv,pos.tvec,  1);  
         
     end
     
