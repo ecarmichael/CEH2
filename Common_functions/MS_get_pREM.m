@@ -32,7 +32,7 @@ function [pREM_idx, pREM_times, pREM_IV] =  MS_get_pREM(raw_csc, idx_in, min_len
 % EC 2021-06-29   initial version
 %
 % 'Detection of phasic REM. REM epochs were detected as described above.
-% To detect phasic REM epochs, we first band-pass filtered (5–12 Hz) LFP traces
+% To detect phasic REM epochs, we first band-pass filtered (5ï¿½12 Hz) LFP traces
 % during REM epochs, yielding y(t). The amplitudes of theta oscillations were
 % derived from Hilbert transform of y(t), and peaks of theta oscillations were
 % detected as the positive-to-negative zero crossings of the derivative dy/dt.
@@ -325,7 +325,7 @@ if plot_flag
         x_lim = xlim;
         hold on
         xline(win_s, '--k', 'start', 'linewidth', 2)
-        xline(x_lim(2) - win_s, '--k', 'start', 'linewidth', 2)
+        xline(x_lim(2) - win_s, '--k', 'end', 'linewidth', 2)
         yline(10, '--w', '10hz', 'linewidth', 2)
         
         title(['REM event #' num2str(iR) ])
