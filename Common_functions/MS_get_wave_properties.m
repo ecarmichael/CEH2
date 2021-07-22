@@ -34,6 +34,7 @@ end
 
 spike_rate = length(S.t{1})./(tvec(end) - tvec(1)); 
 
+log_isi = log(diff(S.t{1})); 
 
 %% get the autocorrelation (from vandermeerlab.org wiki: https://rcweb.dartmouth.edu/~mvdm/wiki/doku.php?id=analysis:nsb2016:week9)
 xbin_centers = -.025-0.001:0.001:0.025+0.001; % first and last bins are to be deleted later
@@ -61,4 +62,11 @@ xlabel('Lag (ms)');
 
 bin_idx_2_6 = zero_idx +2: zero_idx+6; 
 bin_idx_2_20 = zero_idx +2: zero_idx+20; 
+
+%% get spike waveform measures
+
+
+
+
+
 
