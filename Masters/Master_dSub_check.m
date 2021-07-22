@@ -10,9 +10,11 @@
 addpath(genpath('/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'))
 addpath(genpath('/home/ecarmichael/Documents/GitHub/CEH2'))
 
-inter_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % where to save the outputs
+% inter_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % where to save the outputs
+% data_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % where to get the data
 
-data_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % where to get the data
+data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % office unix
+inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % office unix
 
 
 %% cycle through mice and sessions
@@ -36,7 +38,7 @@ for iSub = 1:length(subjects)
     end
     sessions(cellfun('isempty', sessions)) = []; 
     
-    for iS = 2:-1:1%length(sessions):-1:1
+    for iS = length(sessions):-1:1
         close all
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])

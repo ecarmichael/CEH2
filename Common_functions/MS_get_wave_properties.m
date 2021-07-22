@@ -26,3 +26,4 @@ function [wave_prop] = MS_get_wave_properties(S, wave, plot_flag)
 %
 %
 %% initialize
+disp('hi')
