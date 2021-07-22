@@ -1,4 +1,4 @@
-function [wave_prop] = MS_get_wave_properties(S, plot_flag)
+function [wave_prop] = MS_get_wave_properties(S, wave, plot_flag)
 %% MS_get_wave_properties:
 %
 %
@@ -6,6 +6,8 @@ function [wave_prop] = MS_get_wave_properties(S, plot_flag)
 %    Inputs: 
 %    - S [struct]   Spike 'S' structure from LoadSpikes
 %
+%    - wave  [5 x nSamples]  waveform array. 
+%  
 %    - plot_flag: [logical]  0 = no plots, 1 = plots. 
 %
 %    Outputs: 
