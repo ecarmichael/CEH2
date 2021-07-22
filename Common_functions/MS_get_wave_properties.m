@@ -65,13 +65,17 @@ bin_idx_2_20 = zero_idx +2: zero_idx+20;
 
 %% get spike waveform measures
 
-
 wave_tvec = wave(1,:); 
 
 [~, best_wave_idx] = max((mean(abs(wave(2:end,:)),2))); 
 
 best_wave = wave(best_wave_idx+1, :); 
-
-
 [p_max, p_idx] = max(best_wave); 
+[t_max, t_idx] = min(best_wave);
+pt_ratio = p_max/t_max
+width = (wave.tvec(p_max) - wave.tvec(t_max))
 
+if wave.tvec(p.max) < wave.tvec(t.max)
+    width= -(width)
+
+end

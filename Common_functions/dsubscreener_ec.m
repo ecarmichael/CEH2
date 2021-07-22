@@ -151,7 +151,6 @@ for iC = 1:length(file_list)
     
     
     
-    
     %Restrict to periods of movement
     cfg = []; cfg.method = 'raw'; cfg.operation = '>'; cfg.threshold = 5; % speed limit in cm/sec
     iv_fast = TSDtoIV(cfg,spd); % only keep intervals with speed above thresh
