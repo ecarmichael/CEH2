@@ -35,7 +35,12 @@ else
     LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo';
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
-    data_dir ='J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\PV1060\11_23_2019_PV1060_HATD5'; % change this to the data folder that you want.  LFP will update automatically. 
+   data_dir ='J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\PV1069\10_18_2019_PV1069_HATD5'; % change this to the data folder that you want.  LFP will update automatically.
+   cell_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\4.PlaceCell'; % where to find place cell classification and centroids. 
+   
+   % data_dir = 'C:\Users\ecarm\Dropbox (Williams
+   % Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_22_2019_PV1069_HATSwitch';
+   % my drop box doesn't work here and whole data is in J
 end
 
 cd(data_dir)
@@ -376,7 +381,7 @@ for iB = length(IPI_vec):-1:1 % still working with blocks rather than concatenat
     keep_blocks = block_dur > min_len; % keep only blocks that are
     
     Phasic_blocks(~keep_blocks,:) = [];
-    
+    keep_t_amp = []; 
     if ~isempty(Phasic_blocks)
         % Crit 3: theta amp in block must be great than mean of all theta
         for ii = 1:size(Phasic_blocks,1)
@@ -565,12 +570,39 @@ for ii = 1:length(pREM_times)
     xline(CSC_cut.tvec(pREM_idx(ii, 2)), 'r');
 end
 plot(all_evts, ones(size(all_evts))*median(CSC_cut.data(2,:)), 'o')
-
+vline(EVT.t{1}(2), '--r', '--> post')
 
 %% make some plots with corresponding rasters
 
+% get the binarized pre and post sleep data
 load('all_binary_pre.mat');
 load('all_binary_post.mat'); 
+
+
+
+% get the cell centroids for coloring.  (if they exist)
+if exist([cell_dir filesep lower(subject) filesep type filesep 'SA.mat'], 'file')
+    load([cell_dir filesep lower(subject) filesep type filesep 'spatial_analysis.mat']);
+    
+    place_idx = zeros(length(spatial_analysis.raw),1); % allocate the index array
+    centroids = nan(size(place_idx));
+    
+    for iC = length(spatial_analysis.raw):-1:1
+        if spatial_analysis.raw{iC,3}.IsPlaceCell
+            place_idx(iC) = 1;
+            centroids(iC) = spatial_analysis.raw{iC,3}.PlaceFieldCentroid{1}(1);
+        end
+    end
+    
+   [~, cent_sort] = sort(centroids); 
+   place_idx = place_idx(cent_sort); 
+
+else
+    cent_sort = 1:size(all_binary_post,2); % just use default sort. 
+    place_idx = ones(size(cent_sort)); 
+end
+
+
 
 for ii  = 1:length(all_pREM_Ca_idx)
 %     close all
@@ -612,12 +644,16 @@ for ii  = 1:length(all_pREM_Ca_idx)
         this_tvec = (this_tvec - this_tvec(1))/30;
         
         figure(2);
-        MS_Ca_Raster(this_ca,this_tvec, 6);%repmat([1,1,1], size(this_ca,1),1)
+        c_mat = [linspecer(sum(place_idx));  repmat([1 1 1], sum(~place_idx),1)]; % make colors depending on the 
+        MS_Ca_Raster(this_ca(cent_sort,:),this_tvec, 6, c_mat);%repmat([1,1,1], size(this_ca,1),1)
         xline(win_s, '--w', 'start', 'linewidth', 2);
         x_lim = xlim;
         xline(x_lim(2) - win_s, '--w', 'end', 'linewidth', 2);
         set(gca, 'color', 'k'); %set background color. 
-
+        colormap([linspecer(sum(place_idx));  repmat([1 1 1], 1,1)]); 
+        cx = colorbar; 
+        cx.TickLabels = cx.Ticks * max(centroids); 
+        cx.Label.String = 'place cell centroid'; 
         
         % put the plots together
 %         axcp = copyobj(ax, fig2);
