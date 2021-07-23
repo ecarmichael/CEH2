@@ -681,9 +681,23 @@ for ii  = 1:length(all_pREM_Ca_idx)
     end
     close all
 end
-%% EXTRA  find pREM episodes with muscle twitch
+%% Get the Sleep state stats
+
+fprintf('<strong>%s</strong>: pREM events detected totalling %d seconds (%.2f %% of REM)\n',...
+    mfilename, numel(Phasic_data), (sum(cellfun('length',Phasic_data))/sum(cellfun('length', REM_blocks)))*100)
+
+pre_idx = contains(pREM_block, 'pre'); 
+post_idx = ~pre_idx; 
 
 
+all_REM_tvec = cell2mat(REM_tvecs'); 
+post_tvec_idx = nearest_idx(EVT.t{1}(2),all_REM_tvec); 
+
+pREM_dur.all = (sum(cellfun('length',Phasic_data))/length(all_REM_tvec))*100; 
+pREM_dur.pre = (sum(cellfun('length',Phasic_data(pre_idx)))/length(all_REM_tvec(1:post_tvec_idx-1)))*100;
+pREM_dur.post = (sum(cellfun('length',Phasic_data(post_idx)))/length(all_REM_tvec(post_tvec_idx:end)))*100;
+
+% get mean duration of the events
 
 %% Crit 1 find blocks with >900ms duration.
 % Fs = CSC_cut.cfg.hdr{1}.SamplingFrequency;
