@@ -119,6 +119,12 @@ for iC = 1:length(file_list)
     axis off 
     end
     
+    % get the wave properties
+    if exist('mv', 'var')
+       wave_prop = MS_get_wave_properties(S, mv,pos.tvec,  1);  
+        
+    end
+    
     % ISI
     subplot(3,4,2)
     histogram(diff(S.t{1})*1000,0:20:1000)
@@ -141,7 +147,6 @@ for iC = 1:length(file_list)
     ylim([0 80])
     ylabel('speed (cm/s)');
     legend({'spikes', 'speed'}, 'Orientation', 'horizontal', 'Location', 'northoutside'); legend boxoff;
-    
     
     
     
