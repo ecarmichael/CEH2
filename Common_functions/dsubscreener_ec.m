@@ -115,7 +115,7 @@ for iC = 1:length(file_list)
         title ({strrep(fname, '_', ' ') ;  strrep(S.label{1}, '_', ' ')})
     catch 
                 subplot (3,4,1)
-    text(0, .5, {'waveform file does not exist' ; 'or is corrupeted'});
+    text(0, .5, {'waveform file does not exist' ; 'or is corrupted'});
     axis off 
     end
     
