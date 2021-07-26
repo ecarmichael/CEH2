@@ -574,7 +574,7 @@ vline(EVT.t{1}(2), '--r', '--> post')
 
 %% make some plots with corresponding rasters
 
-% get the binarized pre and post sleep data
+% get the binarized pre and post sleep data 
 load('all_binary_pre.mat');
 load('all_binary_post.mat'); 
 
