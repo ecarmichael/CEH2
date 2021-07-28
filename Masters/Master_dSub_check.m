@@ -13,9 +13,10 @@ addpath(genpath('/home/ecarmichael/Documents/GitHub/CEH2'))
 % inter_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % where to save the outputs
 % data_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % where to get the data
 
-data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % office unix
-inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % office unix
-
+% data_dir = %'/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % office unix
+% inter_dir = %'/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % office unix
+data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess'
+inter_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inter'
 
 %% cycle through mice and sessions
 sub_list = dir(data_dir);
@@ -46,3 +47,32 @@ for iSub = 1:length(subjects)
         
     end
 end
+
+%% Process all cells
+
+file_list = dir([inter_dir filesep 'All_cells']);
+
+for filename = length(file_list):-1:1
+    if contains(file_list(filename).name(1),"M"); 
+    names{filename} = file_list(filename).name;
+    else
+        names{filename}= [];
+    end
+end
+names(cellfun('isempty', names)) = []; 
+
+for iN = length(names):-1:1
+    load([inter_dir filesep 'All_cells' filesep names{iN}]);
+    pt_ratio(iN)= This_Cell.wave.pt_ratio;
+    width(iN)= This_Cell.wave.spike_width;
+    fr(iN) = This_Cell.wave.firing_rate;
+    This_Cell = [];
+end
+
+figure(4000)
+scatter3(width, pt_ratio,fr,'MarkerEdgeColor','k','MarkerFaceColor',[0 .75 .75])
+xlim([0.1 0.6])
+ylim([1 2.5])
+xlabel("Width (ms)")
+ylabel("Peak/Trough")
+zlabel("Firing Rate spikes/s")
