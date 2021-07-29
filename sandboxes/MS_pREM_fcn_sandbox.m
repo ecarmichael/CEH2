@@ -61,7 +61,18 @@ plot(this_tvec, hypno, 'color', c_ord(1,:)); % plot the new hypno.
 plot(0:length(Hypnogram)-1, Hypnogram, '--', 'color', c_ord(2,:)); % plot the original. 
 xlim([0 length(Hypnogram)-1]); 
 ylim([0 max(hypno)+1])
+legend({'infered hypnogram', 'scored data'})
 
+%% load any spike files
+if ~isempty(dir('*.t'))
+    
+    cfg = [];
+    cfg.getTTnumbers = 0; % disable number loading.
+    
+    S  =  LoadSpikes(cfg);
+else
+    S = [];
+end
 %% get pREM
 REM_val = 3; % 
 
@@ -73,20 +84,19 @@ for iC = 1:length(csc.label)
     this_csc.cfg.hdr = [];
     this_csc.cfg.hdr{1} = csc.cfg.hdr{iC}; 
     
-    [pREM_idx{iC}, pREM_times{iC}, pREM_IV{iC}] = MS_get_pREM(this_csc, hypno == REM_val, 0.7, [], 1);
+    [pREM_idx{iC}, pREM_times{iC}, pREM_IV{iC}] = MS_get_pREM(this_csc, hypno == REM_val, 0.7, [], 1, S);
     
     h =  findobj('type','figure');
     
     for ih = 1:length(h)
-        if ih == 1
-            saveas(h(ih), ['ISI_histogram_' this_csc.label '.png']);
+        if h(ih).Number == 999 % fig number for the IPI plot. 
+            saveas(h(ih), ['IPI_histogram_' this_csc.label '.png']);
         else
-            saveas(h(ih), ['pREM_event_' num2str(ih-1) '_' this_csc.label '.png']);
+            saveas(h(ih), ['pREM_event_' num2str(h(ih).Number/1000) '_' this_csc.label(1:end-4) '.png']);
         end
     end
     close all
 
-   fprintf('<strong>%d pREM candidates detected on %s. Mean duration: %0.2f seconds</strong>\n', length(pREM_times{iC}),csc.label{iC}, mean(pREM_times{iC}(:,2) - pREM_times{iC}(:,1)))
     %% add in the pREM times to the hypnogram plot.
 %     figure(500+iC)
 %     hold on
@@ -101,5 +111,22 @@ for iC = 1:length(csc.label)
 %         xline(this_tvec(pREM_idx{iC}(ii,1)), '--k', 'Start');
 %         xline(this_tvec(pREM_idx{iC}(ii,2)), '--m', 'End');
 %     end
-    
 end
+
+for iC = 1:length(csc.label)
+       fprintf('<strong>%d pREM candidates detected on %s. Mean duration: %0.2f seconds</strong>\n', size(pREM_times{iC},1),csc.label{iC}, mean(pREM_times{iC}(:,2) - pREM_times{iC}(:,1)))
+end
+
+
+% pick a channel and add in a raster to 
+[~, best_chan] = max(cellfun('length', pREM_idx)); % use the csc with the most events. 
+
+
+
+
+
+
+
+
+
+
