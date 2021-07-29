@@ -191,7 +191,7 @@ for iSub = Subjects
     % move to dir and get all sessions.  Can specify a specific string to
     % find in the dir. ex: MS_list_dir_names(this_sub_dir, 'LTD')
     cd(this_sub_dir)
-    sess_list = MS_list_dir_names(this_sub_dir, 'LTD'); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
+    sess_list = MS_list_dir_names(this_sub_dir, 'pv'); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
 %     sess_list = MS_list_dir_names(this_sub_dir); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
 
     for iSess = sess_list
@@ -202,7 +202,7 @@ for iSub = Subjects
 %         end
         
         % crazy line to convert between time formats. 
-        ms_date = datestr(datenum(strrep(iSess(1:(strfind(iSess, '2019')+3)),'_', '/'), 'MM/dd/yyyy'), 'yyyy-MM-dd');
+        ms_date = datestr(datenum(strrep(iSess(1:(strfind(iSess, '20')+5)),'_', '/'), 'MM/dd/yyyy'), 'yyyy-MM-dd');
        
         % TODO add in double check using subject and LTD/HAT
         [csc_dir, csc_dir_fold] = MS_list_dir_names(PARAMS.csc_data_dir, ms_date);
