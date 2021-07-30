@@ -121,11 +121,12 @@ for iC = 1:length(file_list)
     
     % get the wave properties
     if exist('mv', 'var')
-       wave_prop = MS_get_wave_properties(S, mv,pos.tvec,  1);  
+       wave_prop = MS_get_wave_properties(S, mv,pos.tvec,  0);  
         
     end
     
     % ISI
+    figure(101)
     subplot(3,4,2)
     histogram(diff(S.t{1})*1000,0:20:1000)
     xlabel('ISI (ms)')
@@ -133,7 +134,7 @@ for iC = 1:length(file_list)
     xlim([0 1000]); 
     
     % Multiraster
-    
+        figure(101)
     subplot (3,4,3:4)
     cfg_rast = [];
     cfg_rast.openNewFig = 0;
@@ -233,11 +234,19 @@ for iC = 1:length(file_list)
     title('rate map');
     
     
+    %% plot the autocorrelation if there is one
+    if exist('wave_prop', 'var')
+        subplot(3,4,11)
+        bar(wave_prop.auto_corr.xbin*1000, wave_prop.auto_corr.ac)
+        xlabel('Lag (ms)');
+    end
+    
     %% get sta
     cfg_sta = [];
     [st_mat, t_win] = MS_get_sta(cfg_sta,csc,S);
-    subplot(3,4,11:12)
+    subplot(3,4,12)
     plot(t_win,nanmean(st_mat))
+    
     
     %% save the output
     SetFigure([], gcf);
@@ -249,4 +258,28 @@ for iC = 1:length(file_list)
     
     pause(1)
     %close all
+    
+    %% export intermediate file
+    This_Cell = [];
+    This_Cell.Meta = Meta; 
+    This_Cell.ID = S.label{1}; 
+    This_Cell.fname = fname; 
+    This_Cell.S = S;
+    if exist('wave_prop', 'var')
+        This_Cell.wave = wave_prop;
+    else
+        This_Cell.wave = [];
+    end
+    This_Cell.pos = pos;
+    This_Cell.csc = csc;
+    This_Cell.psd.Px = Px;
+    This_Cell.psd.Fx = Fx;
+    This_Cell.sta.mat = st_mat;
+    This_Cell.sta.tvec = t_win;
+    This_Cell.spatial.tc = tc;
+    This_Cell.spatial.spk_hist = spk_hist;
+    This_Cell.spatial.occ_hist = occ_hist;
+
+    mkdir([inter_dir filesep 'All_cells']); 
+    save([inter_dir filesep 'All_cells' filesep fname '_' S.label{1}(1:end-2) '.mat'],'This_Cell','-v7.3')
 end % end of .t file list

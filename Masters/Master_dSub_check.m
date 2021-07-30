@@ -38,7 +38,7 @@ for iSub = 1:length(subjects)
     end
     sessions(cellfun('isempty', sessions)) = []; 
     
-    for iS = length(sessions):-1:1
+    for iS =length(sessions):-1:1
         close all
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])

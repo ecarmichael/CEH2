@@ -54,11 +54,11 @@ ac = ac(2:end-1);
 ac(zero_idx) = 0;
 
 % ac = ac./max(ac); % normalize
-
-figure(900)
-bar(xbin*1000, ac)
-xlabel('Lag (ms)');
-
+if plot_flag
+    figure(900)
+    bar(xbin*1000, ac)
+    xlabel('Lag (ms)');
+end
 
 bin_idx_2_6 = zero_idx +2: zero_idx+6;
 bin_idx_2_20 = zero_idx +2: zero_idx+20;
@@ -108,9 +108,12 @@ end
 %annotation('doublearrow',x,y,'String','Width')
 %hold off
 
-
+wave_prop.firing_rate = spike_rate;
+wave_prop.ISI = diff(S.t{1}); 
 wave_prop.burstingidx = [];
 wave_prop.spike_width = width;
 wave_prop.peak_val = p_max;
 wave_prop.trough_val = t_max;
 wave_prop.pt_ratio = pt_ratio;
+wave_prop.auto_corr.ac = ac; 
+wave_prop.auto_corr.xbin = xbin; 
