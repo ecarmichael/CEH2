@@ -7,19 +7,35 @@
 
 %% initialize some things
 
-addpath(genpath('/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'))
-addpath(genpath('/home/ecarmichael/Documents/GitHub/CEH2'))
+% office linux
+mvdm_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared';
+CEH2_dir = '/home/williamslab/Documents/Github/CEH2'; 
+ft_dir = '/home/williamslab/Documents/Github/fieldtrip'; 
+
+data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % office unix
+inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % office unix
+
+%% home linux. 
+
+mvdm_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared';
+CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; 
 
 inter_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % where to save the outputs
 data_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % where to get the data
 
-% data_dir = %'/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % office unix
-% inter_dir = %'/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % office unix
-
+%% Erin's PC
 % data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team
 % Folder\Eric\dSubiculum\inProcess';
 % inter_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab
 % Team Folder\Eric\dSubiculum\inter';
+
+
+%% setup
+
+addpath(genpath(mvdm_dir))
+addpath(genpath(CEH2_dir))
+
+cd(data_dir)
 
 %% cycle through mice and sessions
 sub_list = dir(data_dir);
@@ -82,9 +98,8 @@ zlabel("Firing Rate spikes/s")
 
 
 %% Run PPC across cells
-addpath('/home/ecarmichael/Documents/GitHub/fieldtrip')
+addpath(ft_dir)
 ft_defaults;
-addpath('/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared/ft')
 
 sub_list = dir(data_dir);
 sub_list(1:2) = [];
@@ -113,22 +128,23 @@ for iSub = 1:length(subjects)
         
         Meta = MS_Load_meta();
         % convert csc to ft format
-        data_all = ft_read_neuralynx_interp({Meta.goodCSC});
-        
-        s_files = dir('*.t'); 
+%         data_all = ft_read_neuralynx_interp({Meta.goodCSC});
+                data_all = ft_read_neuralynx_interp({'R042-2013-08-18-CSC03a.ncs'});
+
+%         s_files = dir('*cut_*'); 
         for iT = length(s_files):-1:1
-           spike_ntt = ft_read_spike([s_files(iT).name(1:3) '.ntt']); 
+           spike_ntt = ft_read_spike([s_files(iT).name]); % be sure to update the ft read header. 
             
-           spike = ft_read_spike(s_files(iT).name);
+%            spike = ft_read_spike(s_files(iT).name);
            
-           spike.hdr = spike_ntt.hdr; 
-           spike.unit{1} = ones(size(spike.timestamp{1}));
+%            spike.hdr = spike_ntt.hdr; 
+%            spike.unit{1} = ones(size(spike.timestamp{1}));
            
            data_all = ft_appendspike([], data_all, spike); 
-           clear spike spike_ntt
+           clear spike_ntt
         end
         
-        
+        cfg_ppc = []; 
         MS_get_PPC(cfg_ppc, data_all)
         
     end
