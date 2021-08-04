@@ -155,7 +155,7 @@ emg_f = FilterLFP(cfg_emg, CSC_emg);
 
 emg_h = abs(hilbert(emg_f.data)); % get the emg power for plotting.
 
-emg_rms = sqrt(movmean(emg_f.data.^2, 1000));                         % RMS Value Over ‘WinLen’ Samples
+emg_rms = sqrt(movmean(emg_f.data.^2, 1000));                         % RMS Value Over Samples
 
 %% score the sleep data
 
@@ -166,7 +166,7 @@ cfg_sleep.emg_chan = 1; % emg channel.  Can be empty.
 cfg_sleep.lfp_chans = 1; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data.
 cfg_sleep.state_name = {'Wake',       'SWS',       'REM',    'Quiescence','Transition','pREM',  'Redo',     'Exit'}; %
 cfg_sleep.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 't',   'numpad1' 'backspace','backquote' }; % which key to press for each state_val
-
+cfg_sleep.method = 'spec'; 
 
 score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC_cut.data(2,:), emg_h);
 
