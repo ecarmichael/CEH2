@@ -28,8 +28,9 @@
 if isunix
     addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
     addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
-    data_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP/PV1060/11_26_2019_PV1060_HATSwitch';
+    data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1060/7_19_2019_PV1060_LTD5';
     LFP_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP';
+     cell_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/4.PlaceCell'; 
 else
     
     LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo';
@@ -57,6 +58,9 @@ parts = strsplit(cd,  filesep);
 session = parts{end};
 subject = parts{end-1};
 date = parts{end}(1:10);
+if strcmp(date(end), '_')
+    date = date(1:end-1);
+end
 type = strsplit(parts{end}, '_');
 type = type{end};
 if strcmp(type,'HATSwitch') && contains(subject, 'PV1069')
@@ -94,31 +98,50 @@ EVT = LoadEvents([]); % load the events file.
 % since JC data has a gap in a single recording for the track, account for
 % that here.
 S_rec_idx = find(contains(EVT.label, 'Starting Recording')); % get the index for the start recoding cell
+Stop_rec_idx = find(contains(EVT.label, 'Stopping Recording')); % get the index for the start recoding cell
+
 if length(EVT.t{S_rec_idx}) >1
     fprintf('Multiple (%d) Recordings in one continuous CSC.  appending for sleep scoring spec\n', numel(EVT.t{S_rec_idx}))
     
-    all_tvec = [];
+    all_tvec = []; all_data = []; 
     for iCut = 2:numel(EVT.t{S_rec_idx})
         if iCut == numel(EVT.t{S_rec_idx})
             tvec_cut = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):end);
+%             data_cut = CSC.data(1:2,nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):end);
         else
             tvec_cut = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):iCut+1);
+%             data_cut = CSC.data(1:2,nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):iCut+1);
+
         end
         
         tvec_cut = tvec_cut - tvec_cut(1);
         all_tvec = [all_tvec, tvec_cut];
+%         all_data = [all_data, data_cut]; 
     end
-    start_tvec = CSC.tvec(1:nearest_idx(EVT.t{S_rec_idx+1}(1),CSC.tvec));
-    all_tvec = [start_tvec; all_tvec+start_tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency)];
+    start_tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
+    all_tvec = [start_tvec; all_tvec + start_tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency)];
+    
+%     start_data = CSC.data(1:2,1:nearest_idx(EVT.t{S_rec_idx+1}(1),CSC.tvec));
+%     all_data = [start_data, all_data + start_data(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency)];
+    
     
     % update CSC
     CSC_cut = CSC;
     CSC_cut.tvec = all_tvec;
+%     CSC_cut.data = all_data;
 end
+
+% 1043_LTD1  ONLY
+if strcmp(session, '6_11_2019_PV1043_LTD1')
+    CSC_cut.tvec = CSC_cut.tvec(1:length(CSC_cut.data(1,:)));
+end
+
+
 
 % extract the EMG
 CSC_emg = CSC_cut;
 CSC_emg.data = CSC_emg.data(1,:);
+CSC_emg.label = {CSC_emg.label{1}}; 
 CSC_emg.cfg.hdr = [];
 CSC_emg.cfg.hdr{1} = CSC_cut.cfg.hdr{1};
 
@@ -145,7 +168,7 @@ cfg_sleep.state_name = {'Wake',       'SWS',       'REM',    'Quiescence','Trans
 cfg_sleep.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 't',   'numpad1' 'backspace','backquote' }; % which key to press for each state_val
 
 
-score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC.data(2,:), emg_h);
+score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC_cut.data(2,:), emg_h);
 
 
 
@@ -328,8 +351,34 @@ for iB = length(REM_blocks):-1:1
     % close all
 end
 
-
 close all
+
+%% save REM phase, amplitude, and duration. 
+
+% 
+REM = [];
+REM.tvec = REM_tvecs;
+REM.data = REM_raw;
+REM.theta = REM_amp{iB};
+for ii = length(IPI):-1:1
+    REM.theta_mean(ii) = nanmean(REM_amp{ii});
+end
+REM.theta_unit = theta_csc.units; 
+REM.phi = REM_phi{iB};
+REM.IPI = IPI;
+for ii = length(IPI):-1:1
+    REM.IPI_mean{ii} =  1/mean(IPI{ii});
+    if REM_tvecs{ii} < EVT.t{Stop_rec_idx}(1)
+        REM.labels{ii} = 'pre';
+    else
+        REM.labels{ii} = 'post';
+    end
+end
+
+cd(inter_dir)
+mkdir('REM')
+save([inter_dir filesep 'REM' filesep 'REM.mat'], 'REM');2
+
 %%  collect the IPIs to get a distribution
 all_IPI = []; all_IPI_smooth = []; % collect the ISI for crit 1
 all_amp = []; % collect the amplitude for crit 3
@@ -386,6 +435,7 @@ for iB = length(IPI_vec):-1:1 % still working with blocks rather than concatenat
         % Crit 3: theta amp in block must be great than mean of all theta
         for ii = 1:size(Phasic_blocks,1)
             if mean(REM_amp{iB}(Phasic_blocks(ii,1):Phasic_blocks(ii,2)))  > mean(theta_amp)
+                pREM_theta_amp{ii} = mean(REM_amp{iB}(Phasic_blocks(ii,1):Phasic_blocks(ii,2))) ; 
                 keep_t_amp(ii) = 1;
             else
                 keep_t_amp(ii) = 0;
@@ -397,7 +447,6 @@ for iB = length(IPI_vec):-1:1 % still working with blocks rather than concatenat
     
     %convert back to the time vector.
     Phasic_times{iB} = REM_tvecs{iB}(Phasic_blocks);
-    
     Phasic_idx{iB} = Phasic_blocks;
     
 end
@@ -470,6 +519,10 @@ end
 
 save([inter_dir filesep 'pREM' filesep 'pREM_idx.mat'], 'pREM_idx');
 save([inter_dir filesep 'pREM' filesep 'pREM_times.mat'], 'pREM_times');
+pREM_evts.times = pREM_times;
+pREM_evts.labels = pREM_block; 
+save([inter_dir filesep 'pREM' filesep 'pREM_evts.mat'], 'pREM_evts');
+
 
 fprintf('<strong>%s</strong>: pREM events detected totalling %d seconds (%.2f %% of REM)\n',...
     mfilename, numel(Phasic_data), (sum(cellfun('length',Phasic_data))/sum(cellfun('length', REM_blocks)))*100)
@@ -581,7 +634,7 @@ load('all_binary_post.mat');
 
 
 % get the cell centroids for coloring.  (if they exist)
-if exist([cell_dir filesep lower(subject) filesep type filesep 'SA.mat'], 'file')
+if exist([cell_dir filesep lower(subject) filesep type filesep 'spatial_analysis.mat'], 'file')
     load([cell_dir filesep lower(subject) filesep type filesep 'spatial_analysis.mat']);
     
     place_idx = zeros(length(spatial_analysis.raw),1); % allocate the index array
@@ -693,11 +746,55 @@ post_idx = ~pre_idx;
 all_REM_tvec = cell2mat(REM_tvecs'); 
 post_tvec_idx = nearest_idx(EVT.t{1}(2),all_REM_tvec); 
 
-pREM_dur.all = (sum(cellfun('length',Phasic_data))/length(all_REM_tvec))*100; 
-pREM_dur.pre = (sum(cellfun('length',Phasic_data(pre_idx)))/length(all_REM_tvec(1:post_tvec_idx-1)))*100;
-pREM_dur.post = (sum(cellfun('length',Phasic_data(post_idx)))/length(all_REM_tvec(post_tvec_idx:end)))*100;
+pREM_dur = [];
+pREM_dur.all = pREM_times(:,2) - pREM_times(:,1); 
+for ii = length(pREM_times):-1:1
+    if REM_tvecs{ii} < EVT.t{Stop_rec_idx}(1)
+        pREM_dur.pre(ii) = pREM_times(ii,2) - pREM_times(ii,1);
+        pREM_dur.post(ii) = NaN; 
+        pREM_dur.labels{ii} = 'pre';
+    else
+        pREM_dur.labels{ii} = 'post';
+        pREM_dur.pre(ii) = NaN; 
+        pREM_dur.post(ii) = pREM_times(ii,2) - pREM_times(ii,1);
+    end
+end
 
-% get mean duration of the events
+pREM_dur.mean_REM_prct_all = (sum(cellfun('length',Phasic_data))/length(all_REM_tvec))*100; 
+pREM_dur.mean_REM_prct_pre = (sum(cellfun('length',Phasic_data(pre_idx)))/length(all_REM_tvec(1:post_tvec_idx-1)))*100;
+pREM_dur.mean_REM_prct_post = (sum(cellfun('length',Phasic_data(post_idx)))/length(all_REM_tvec(post_tvec_idx:end)))*100;
+
+save([inter_dir filesep 'pREM' filesep 'pREM_dur.mat'], 'pREM_dur');
+
+
+% get mean duration of the events _added by Jisoo
+
+% F=@(Phasic_data) %function to check the diff of first and end of the cell
+% dur.all=cellfun(F,Phasic_data);
+% dur.pre=cellfun(F,Phasic_data(pre_idx));
+% dur.post=cellfun(F,Phasic_data(post_idx));
+% 
+% 
+% dur.average_all=cellfun(@mean,dur.all);
+% dur.average_pre=cellfun(@mean,dur.pre);
+% dur.average_post=cellfun(@mean,dur.post);
+% 
+% % save the pREM_dur
+% 
+% save([inter_dir filesep 'pREM' filesep 'pREM_CA_idx.mat'], 'duration_pREM');
+
+
+
+%% general sleep analysis_added by jisoo
+
+%1. Proportion of SWS, Wake , REM for each pre REM, post REM 
+%2. Average of theta amplitude during preREM vs postREM
+%3. Average of theta frequency during preREM vs postREM
+
+
+
+% save the variable
+
 
 %% Crit 1 find blocks with >900ms duration.
 % Fs = CSC_cut.cfg.hdr{1}.SamplingFrequency;
