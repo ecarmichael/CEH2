@@ -1,4 +1,4 @@
-function MS_get_PPC(cfg_in, data_in)
+function MS_get_PPC(cfg_in, spike_fname, lfp_fname)
 %% MS_get_PPC: wrapper function to compute Pair-wise Phase Consistency using the FieldTrip toolbox.  Will also run shuffle comparison.
 %
 %
@@ -6,7 +6,7 @@ function MS_get_PPC(cfg_in, data_in)
 %    Inputs:
 %    - cfg_in: [struct] configurations
 %
-%    - S_data [struct]  contains spike times in the ft format.
+%    - spike_fname name of the spike file to process
 %
 %    - csc [struct] contains LFP data
 %
@@ -24,30 +24,42 @@ function MS_get_PPC(cfg_in, data_in)
 %% initialize
 cfg_def = [];
 cfg_def.plot = 0;
+cfg_def.shuffle = 1000;
 
 cfg = ProcessConfig(cfg_def, cfg_in);
 
 %%
+
+spike = ft_read_spike(spike_fname); % needs fixed read_mclust_t.m
+fc = lfp_fname;
+data = ft_read_neuralynx_interp(fc);
+data_all = ft_appendspike([],data, spike);
+
+
+
 cfg_trl = [];
 cfg_trl.begsample = 1;
-cfg_trl.endsample = length(data_in.time{1});
-data_trl = ft_redefinetrial(cfg_trl, data_in);
+cfg_trl.endsample = length(data_all.time{1});
+data_trl = ft_redefinetrial(cfg_trl, data_all);
 
 if isfield(cfg, 'plot')
     figure(99)
-    plot(data_trl.time{1}(1:2000), data_trl.trial{1}(1,1:2000))
+    plot(data_trl.time{1}(1:200000), data_trl.trial{1}(1,1:200000))
+    hold on
+    plot(data_trl.time{1}(1:200000), data_trl.trial{1}(2,1:200000)*500)
+
 end
 
 %%
-S_list = data_in.label(2:end);
+S_list = spike.label;
 for iS = 1:length(S_list)
     spk_chan = S_list{iS};
-    lfp_chan = data_in.label{1};
+    lfp_chan = fc{1}(1:end-4);
     
     cfg_i              = [];
     cfg_i.timwin       = [-0.002 0.006]; % remove 4 ms around every spike
     cfg_i.spikechannel = spk_chan;
-    cfg_i.channel      = lfp_chan(1:end-4);
+    cfg_i.channel      = lfp_chan;
     cfg_i.method       = 'linear'; % remove the replaced segment with interpolation
     
     data_i        = ft_spiketriggeredinterpolation(cfg_i, data_trl);
@@ -75,7 +87,7 @@ for iS = 1:length(S_list)
     cfg_ppc.t_ftimwin = 5./cfg_ppc.foi; % cycles per frequency
     cfg_ppc.taper     = 'hanning';
     cfg_ppc.spikechannel = spk_chan;
-    cfg_ppc.channel      = lfp_chan(1:end-4);
+    cfg_ppc.channel      = lfp_chan;
     stsConvol     = ft_spiketriggeredspectrum(cfg_ppc, data_i); % note, use raw or interpolated version
     
     % plot
@@ -87,7 +99,7 @@ for iS = 1:length(S_list)
     cfg_ppc                = [];
     cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
     cfg_ppc.spikechannel = spk_chan;
-    cfg_ppc.channel      = lfp_chan(1:end-4);
+    cfg_ppc.channel      = lfp_chan;
     %cfg.dojack = 1;
     cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
     cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
@@ -121,6 +133,8 @@ for iS = 1:length(S_list)
     end
     
     id = strrep(spk_chan, '-', '_');
+    
+    z_ppc = (obs_ppc - nanmean(shuf_ppc,1)) / nanstd(shuf_ppc,1);
     
     %% plot
     close all
@@ -190,7 +204,7 @@ cfg_ppc.foi       = 1:1:100;
 cfg_ppc.t_ftimwin = 5./cfg_ppc.foi; % cycles per frequency
 cfg_ppc.taper     = 'hanning';
 cfg_ppc.spikechannel = 'temp_shuf';
-cfg_ppc.channel      = lfp_chan(1:end-4);
+cfg_ppc.channel      = lfp_chan;
 stsConvol     = ft_spiketriggeredspectrum(cfg_ppc , data_i); % note, use raw or interpolated version
 
 % plot
@@ -200,7 +214,7 @@ stsConvol     = ft_spiketriggeredspectrum(cfg_ppc , data_i); % note, use raw or 
 cfg_ppc               = [];
 cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
 cfg_ppc.spikechannel = 'temp_shuf';
-cfg_ppc.channel      = lfp_chan(1:end-4);
+cfg_ppc.channel      = lfp_chan;
 %cfg.dojack = 1;
 cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
 cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
