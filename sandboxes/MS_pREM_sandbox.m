@@ -28,7 +28,7 @@
 if isunix
     addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
     addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
-    data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1060/7_19_2019_PV1060_LTD5';
+    data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1069/10_18_2019_PV1069_HATD5';
     LFP_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP';
      cell_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/4.PlaceCell'; 
 else
@@ -520,7 +520,7 @@ end
 save([inter_dir filesep 'pREM' filesep 'pREM_idx.mat'], 'pREM_idx');
 save([inter_dir filesep 'pREM' filesep 'pREM_times.mat'], 'pREM_times');
 pREM_evts.times = pREM_times;
-pREM_evts.labels = pREM_block; 
+%pREM_evts.labels = pREM_block; % Unrecognized function or variable 'pREM_block'.
 save([inter_dir filesep 'pREM' filesep 'pREM_evts.mat'], 'pREM_evts');
 
 
@@ -637,13 +637,13 @@ load('all_binary_post.mat');
 if exist([cell_dir filesep lower(subject) filesep type filesep 'spatial_analysis.mat'], 'file')
     load([cell_dir filesep lower(subject) filesep type filesep 'spatial_analysis.mat']);
     
-    place_idx = zeros(length(spatial_analysis.raw),1); % allocate the index array
+    place_idx = zeros(length(spatial_analysis.bin),1); % allocate the index array
     centroids = nan(size(place_idx));
     
     for iC = length(spatial_analysis.raw):-1:1
-        if spatial_analysis.raw{iC,3}.IsPlaceCell
+        if spatial_analysis.bin{iC,3}.IsPlaceCell
             place_idx(iC) = 1;
-            centroids(iC) = spatial_analysis.raw{iC,3}.PlaceFieldCentroid{1}(1);
+            centroids(iC) = spatial_analysis.bin{iC,3}.PlaceFieldCentroid{1}(1);
         end
     end
     
