@@ -16,7 +16,8 @@ addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
 
 % data_dir = 'J:\Scored_NSC_Data_files\Mouse 220\Experiment 1 (AC)';
-data_dir = 'J:\Scored_NSC_Data_files\Mouse 220\Experiment 2 (A)';
+% data_dir = 'J:\Scored_NSC_Data_files\Mouse 220\Experiment 2 (A)';
+data_dir = 'J:\Williams_Lab\RB_data\220 AC'; 
 
 cd(data_dir)
 % LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo'; 
@@ -60,24 +61,72 @@ plot(this_tvec, hypno, 'color', c_ord(1,:)); % plot the new hypno.
 plot(0:length(Hypnogram)-1, Hypnogram, '--', 'color', c_ord(2,:)); % plot the original. 
 xlim([0 length(Hypnogram)-1]); 
 ylim([0 max(hypno)+1])
+legend({'infered hypnogram', 'scored data'})
 
+%% load any spike files
+if ~isempty(dir('*.t'))
+    
+    cfg = [];
+    cfg.getTTnumbers = 0; % disable number loading.
+    
+    S  =  LoadSpikes(cfg);
+else
+    S = [];
+end
 %% get pREM
 REM_val = 3; % 
-[pREM_idx, pREM_times, pREM_IV] = MS_get_pREM(csc, hypno == REM_val, 0.7, [], 1); 
 
-%% add in the pREM times to the hypnogram plot. 
-figure(500)
-hold on
-this_tvec = csc.tvec-csc.tvec(1);
-plot(this_tvec, hypno, 'color', c_ord(1,:)); % plot the new hypno. 
-plot(0:length(Hypnogram)-1, Hypnogram, '--', 'color', c_ord(2,:)); % plot the original. 
-plot(this_tvec, (csc.data*100)+3.5,'k')
+for iC = 1:length(csc.label)
+    
+    this_csc = csc;
+    this_csc.data = csc.data(iC,:); 
+    this_csc.label = csc.label{iC}; 
+    this_csc.cfg.hdr = [];
+    this_csc.cfg.hdr{1} = csc.cfg.hdr{iC}; 
+    
+    [pREM_idx{iC}, pREM_times{iC}, pREM_IV{iC}] = MS_get_pREM(this_csc, hypno == REM_val, 0.7, [], 1, S);
+    
+    h =  findobj('type','figure');
+    
+    for ih = 1:length(h)
+        if h(ih).Number == 999 % fig number for the IPI plot. 
+            saveas(h(ih), ['IPI_histogram_' this_csc.label '.png']);
+        else
+            saveas(h(ih), ['pREM_event_' num2str(h(ih).Number/1000) '_' this_csc.label(1:end-4) '.png']);
+        end
+    end
+    close all
 
-xlim([0 length(Hypnogram)-1]); 
-ylim([0 max(hypno)+1])
-for ii = 1:length(pREM_idx)
-    xline(this_tvec(pREM_idx(ii,1)), '--k', 'Start');
-    xline(this_tvec(pREM_idx(ii,2)), '--m', 'End');
+    %% add in the pREM times to the hypnogram plot.
+%     figure(500+iC)
+%     hold on
+%     this_tvec = csc.tvec-csc.tvec(1);
+%     plot(this_tvec, hypno, 'color', c_ord(1,:)); % plot the new hypno.
+%     plot(0:length(Hypnogram)-1, Hypnogram, '--', 'color', c_ord(2,:)); % plot the original.
+%     plot(this_tvec, (this_csc.data*100)+3.5,'k')
+%     
+%     xlim([0 length(Hypnogram)-1]);
+%     ylim([0 max(hypno)+1])
+%     for ii = 1:size(pREM_idx{iC},1)
+%         xline(this_tvec(pREM_idx{iC}(ii,1)), '--k', 'Start');
+%         xline(this_tvec(pREM_idx{iC}(ii,2)), '--m', 'End');
+%     end
 end
-    
-    
+
+for iC = 1:length(csc.label)
+       fprintf('<strong>%d pREM candidates detected on %s. Mean duration: %0.2f seconds</strong>\n', size(pREM_times{iC},1),csc.label{iC}, mean(pREM_times{iC}(:,2) - pREM_times{iC}(:,1)))
+end
+
+
+% pick a channel and add in a raster to 
+[~, best_chan] = max(cellfun('length', pREM_idx)); % use the csc with the most events. 
+
+
+
+
+
+
+
+
+
+
