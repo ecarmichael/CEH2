@@ -28,7 +28,7 @@
 if isunix
     addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
     addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
-    data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1069/10_18_2019_PV1069_HATD5';
+    data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1043/6_11_2019_PV1043_LTD1';
     LFP_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP';
      cell_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/4.PlaceCell'; 
 else
@@ -85,6 +85,11 @@ for iC = 1:length(ms_seg_resize.NLX_csc{1}.cfg.hdr) % loop over channels.
     cfg_load.desired_sampling_frequency = ms_seg_resize.NLX_csc{1}.cfg.hdr{iC}.SamplingFrequency;
 end
 
+% hard code LFP channel 
+if strcmp(subject, 'PV1043') && strcmp(type, 'LTD5')
+    cfg_load.fc{2} = 'CSC5.ncs';
+end
+
 % load some data.
 CSC = MS_LoadCSC(cfg_load);
 EVT = LoadEvents([]); % load the events file.
@@ -94,56 +99,14 @@ EVT = LoadEvents([]); % load the events file.
 
 % MS_Quick_psd()
 
-%% prepare the data for scoring.
-% since JC data has a gap in a single recording for the track, account for
-% that here.
-S_rec_idx = find(contains(EVT.label, 'Starting Recording')); % get the index for the start recoding cell
-Stop_rec_idx = find(contains(EVT.label, 'Stopping Recording')); % get the index for the start recoding cell
 
-if length(EVT.t{S_rec_idx}) >1
-    fprintf('Multiple (%d) Recordings in one continuous CSC.  appending for sleep scoring spec\n', numel(EVT.t{S_rec_idx}))
-    
-    all_tvec = []; all_data = []; 
-    for iCut = 2:numel(EVT.t{S_rec_idx})
-        if iCut == numel(EVT.t{S_rec_idx})
-            tvec_cut = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):end);
-%             data_cut = CSC.data(1:2,nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):end);
-        else
-            tvec_cut = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):iCut+1);
-%             data_cut = CSC.data(1:2,nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):iCut+1);
-
-        end
-        
-        tvec_cut = tvec_cut - tvec_cut(1);
-        all_tvec = [all_tvec, tvec_cut];
-%         all_data = [all_data, data_cut]; 
-    end
-    start_tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
-    all_tvec = [start_tvec; all_tvec + start_tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency)];
-    
-%     start_data = CSC.data(1:2,1:nearest_idx(EVT.t{S_rec_idx+1}(1),CSC.tvec));
-%     all_data = [start_data, all_data + start_data(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency)];
-    
-    
-    % update CSC
-    CSC_cut = CSC;
-    CSC_cut.tvec = all_tvec;
-%     CSC_cut.data = all_data;
-end
-
-% 1043_LTD1  ONLY
-if strcmp(session, '6_11_2019_PV1043_LTD1')
-    CSC_cut.tvec = CSC_cut.tvec(1:length(CSC_cut.data(1,:)));
-end
-
-
-
+%% prepare the EMG
 % extract the EMG
-CSC_emg = CSC_cut;
+CSC_emg = CSC;
 CSC_emg.data = CSC_emg.data(1,:);
 CSC_emg.label = {CSC_emg.label{1}}; 
 CSC_emg.cfg.hdr = [];
-CSC_emg.cfg.hdr{1} = CSC_cut.cfg.hdr{1};
+CSC_emg.cfg.hdr{1} = CSC.cfg.hdr{1};
 
 
 % filter the EMG
@@ -157,18 +120,53 @@ emg_h = abs(hilbert(emg_f.data)); % get the emg power for plotting.
 
 emg_rms = sqrt(movmean(emg_f.data.^2, 1000));                         % RMS Value Over Samples
 
+%% prepare the data for scoring.
+% since JC data has a gap in a single recording for the track, account for
+% that here.
+S_rec_idx = find(contains(EVT.label, 'Starting Recording')); % get the index for the start recoding cell
+Stop_rec_idx = find(contains(EVT.label, 'Stopping Recording')); % get the index for the start recoding cell
+
+
+% split the pre and post recordings.  
+
+if length(EVT.t{S_rec_idx}) ~= 2
+    warning('more than two recordings detected.  Fix this later.')
+else
+    
+    CSC_pre = CSC; 
+    CSC_pre.tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
+    CSC_pre.data = CSC.data(:,1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec)); 
+%     CSC_pre.data = CSC_pre.data - mean(CSC_pre.data); 
+    emg_h_pre = emg_h(1:find((CSC.tvec == EVT.t{Stop_rec_idx}(1)))); 
+
+    
+    CSC_post= CSC;
+    CSC_post.tvec = CSC.tvec(find((CSC.tvec == EVT.t{S_rec_idx}(2))):end);
+    CSC_post.data = CSC.data(:,find((CSC.tvec == EVT.t{S_rec_idx}(2))):end);
+%     CSC_post.data = CSC_post.data - mean(CSC_post.data);
+    emg_h_post = emg_h(find((CSC.tvec == EVT.t{S_rec_idx}(2))):end);
+end
+
+
+
+CSC_cut = CSC;
+CSC_cut.tvec = [CSC_pre.tvec; (CSC_post.tvec - CSC_post.tvec(1))+(CSC_pre.tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency))];
+CSC_cut.data = [CSC_pre.data, CSC_post.data];
+
+emg_h_cut = [emg_h_pre, emg_h_post];
+
 %% score the sleep data
 
 cfg_sleep = [];
 cfg_sleep.tvec_range = [0 5];  % number of seconds per window.
-cfg_sleep.emg_range = [min(emg_h) mean(emg_h) + std(emg_h)*5]; % default, should be based on real data.
+cfg_sleep.emg_range = [min(emg_h_cut) mean(emg_h_cut) + std(emg_h_cut)*5]; % default, should be based on real data.
 cfg_sleep.emg_chan = 1; % emg channel.  Can be empty.
 cfg_sleep.lfp_chans = 1; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data.
 cfg_sleep.state_name = {'Wake',       'SWS',       'REM',    'Quiescence','Transition','pREM',  'Redo',     'Exit'}; %
 cfg_sleep.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 't',   'numpad1' 'backspace','backquote' }; % which key to press for each state_val
 cfg_sleep.method = 'spec'; 
 
-score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC_cut.data(2,:), emg_h);
+score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC_cut.data(2,:), emg_h_cut);
 
 
 
@@ -189,6 +187,7 @@ if exist('score', 'var')
     
     % save it.
     cd(inter_dir);
+    save([inter_dir filesep 'pREM' filesep 'Cut_CSC.mat'], 'CSC_cut', '-v7.3'); 
     save([inter_dir filesep 'pREM' filesep 'Hypno.mat'], 'Hypno', '-v7.3')
     save('Hypno.mat', 'Hypno', '-v7.3')
     
@@ -617,12 +616,12 @@ fprintf('<strong>%s</strong>:  %d/%d pREM events occured during Miniscope record
 %% 
 figure(1010)
 hold on
-plot(CSC_cut.tvec, CSC_cut.data(2,:))
+plot(CSC.tvec, CSC.data(2,:))
 for ii = 1:length(pREM_times)
-    xline(CSC_cut.tvec(pREM_idx(ii,1)), 'b');
-    xline(CSC_cut.tvec(pREM_idx(ii, 2)), 'r');
+    xline(CSC.tvec(pREM_idx(ii,1)), 'b');
+    xline(CSC.tvec(pREM_idx(ii, 2)), 'r');
 end
-plot(all_evts, ones(size(all_evts))*median(CSC_cut.data(2,:)), 'o')
+plot(all_evts, ones(size(all_evts))*median(CSC.data(2,:)), 'o')
 vline(EVT.t{1}(2), '--r', '--> post')
 
 %% make some plots with corresponding rasters
@@ -946,6 +945,48 @@ save([inter_dir filesep 'pREM' filesep 'pREM_dur.mat'], 'pREM_dur');
 %
 %
 % %% Crit 2 remove blocks without a min IPI smoothed < 5th percentile of all IPI smoothed
+
+
+
+
+
+
+% 
+% if length(EVT.t{S_rec_idx}) >1
+%     fprintf('Multiple (%d) Recordings in one continuous CSC.  appending for sleep scoring spec\n', numel(EVT.t{S_rec_idx}))
+%     
+%     all_tvec = []; all_data = []; 
+%     for iCut = 2:numel(EVT.t{S_rec_idx})
+%         if iCut == numel(EVT.t{S_rec_idx})
+%             tvec_cut = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):end);
+% %             data_cut = CSC.data(1:2,nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):end);
+%         else
+%             tvec_cut = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):iCut+1);
+% %             data_cut = CSC.data(1:2,nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):iCut+1);
+% 
+%         end
+%         
+%         tvec_cut = tvec_cut - tvec_cut(1);
+%         all_tvec = [all_tvec, tvec_cut];
+% %         all_data = [all_data, data_cut]; 
+%     end
+%     start_tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
+%     all_tvec = [start_tvec; all_tvec + start_tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency)];
+%     
+% %     start_data = CSC.data(1:2,1:nearest_idx(EVT.t{S_rec_idx+1}(1),CSC.tvec));
+% %     all_data = [start_data, all_data + start_data(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency)];
+%     
+%     
+%     % update CSC
+%     CSC_cut = CSC;
+%     CSC_cut.tvec = all_tvec;
+% %     CSC_cut.data = all_data;
+% end
+
+% % 1043_LTD1  ONLY
+% if strcmp(session, '6_11_2019_PV1043_LTD1')
+%     CSC_cut.tvec = CSC_cut.tvec(1:length(CSC_cut.data(1,:)));
+% end
 
 
 

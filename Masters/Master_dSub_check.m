@@ -12,7 +12,7 @@ mvdm_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'
 CEH2_dir = '/home/williamslab/Documents/Github/CEH2';
 ft_dir = '/home/williamslab/Documents/Github/fieldtrip';
 
-data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % office unix
+data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/Incoming'; % office unix
 inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % office unix
 
 %% home linux.
@@ -62,7 +62,9 @@ for iSub = 1:length(subjects)
         close all
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
-        dsubscreener_ec(cd, inter_dir);
+%         dsubscreener_ec(cd, inter_dir);
+        MS_Write_meta_dSub;
+          
         
     end
 end
@@ -103,6 +105,7 @@ ft_defaults;
 
 sub_list = dir(data_dir);
 sub_list(1:2) = [];
+subjects = [];
 for iSub = length(sub_list):-1:1
     subjects{iSub} = sub_list(iSub).name;
 end
@@ -111,13 +114,14 @@ end
 for iSub = 1:length(subjects)
     
     % get a list of the good sessions.
+    
     sess_list = dir([data_dir filesep subjects{iSub}]);
     sess_list(1:2) = [];
     sessions = [];
     for iS = length(sess_list):-1:1
-        if contains(sess_list(iS).name, 'OF')
+%         if contains(sess_list(iS).name, 'OF')
             sessions{iS} = sess_list(iS).name;
-        end
+%         end
     end
     sessions(cellfun('isempty', sessions)) = [];
     
@@ -128,12 +132,12 @@ for iSub = 1:length(subjects)
         
         Meta = MS_Load_meta();
         % convert csc to ft format
-        data_all = ft_read_neuralynx_interp({Meta.goodCSC});
+%         data_all = ft_read_neuralynx_interp({Meta.goodCSC});
         %                 data_all = ft_read_neuralynx_interp({'R042-2013-08-18-CSC03a.ncs'});
         
         %         s_files = dir('*cut_*');
-        d = dir('*.NTT');
-        match = find(cell2mat(regexpi({d.name}, '\w*cut*')));  % [EDITED] strcmp*i*
+        d = dir('*.t');
+        match = find(cell2mat(regexpi({d.name}, 'TT')));  % [EDITED] strcmp*i*
         s_files = {d(match).name};
         
 %         s_files = dir('*.t');
@@ -151,7 +155,10 @@ for iSub = 1:length(subjects)
 %         end
         
         cfg_ppc = [];
-        MS_get_PPC(cfg_ppc, s_files{3}, {Meta.goodCSC})
+        for iT = length(s_files):-1:1
+            
+            MS_get_PPC(cfg_ppc, s_files{iT}, {Meta.goodCSC});
+        end
         
     end
 end
