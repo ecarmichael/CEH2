@@ -1,0 +1,70 @@
+Picked up JAVA_TOOL_OPTIONS: -Xmx2g
+Opening log file:  /tmp/java.log.47988
+[Warning: Function plot has the same name as a MATLAB builtin. We suggest you
+rename the function to avoid a potential name conflict.] 
+[> In path (line 109)
+  In addpath (line 86)
+  In Beluga_PPC_setup (line 4)] 
+[Warning: could not send tracker information for "startup"] 
+ In '/home/ecar/Github/fieldtrip/utilities/ft_trackusage.m' at line 155
+ In '/home/ecar/Github/fieldtrip/ft_defaults.m' at line 340
+
+Codebases loaded
+
+<strong>MS_Load_meta</strong>: M23_2021_08_05_D10_meta.m loaded.
+
+[Warning: discontinuous recording, predicted number of timestamps and observed
+number of timestamps differ by 108293781.00
+Please consult http://www.fieldtriptoolbox.org/faq/discontinuous_neuralynx] 
+[Warning: discontinuous recording, predicted number of timestamps and observed
+number of timestamps differ by 108293781.00
+Please consult http://www.fieldtriptoolbox.org/faq/discontinuous_neuralynx] 
+[Warning: discontinuous recording, predicted number of timestamps and observed
+number of timestamps differ by 108293781.00
+Please consult http://www.fieldtriptoolbox.org/faq/discontinuous_neuralynx] 
+[Warning: discontinuous recording, predicted number of timestamps and observed
+number of timestamps differ by 108293781.00
+Please consult http://www.fieldtriptoolbox.org/faq/discontinuous_neuralynx] 
+processing channel { 'CSC5' }
+reading and preprocessing
+[Warning: discontinuous recording, predicted number of timestamps and observed
+number of timestamps differ by 108293781.00
+Please consult http://www.fieldtriptoolbox.org/faq/discontinuous_neuralynx] 
+reading and preprocessing trial 1 from 1
+the call to "ft_preprocessing" took 2 seconds and required the additional allocation of an estimated 554 MB
+[Warning: discontinuous recording, predicted number of timestamps and observed
+number of timestamps differ by 108293781.00
+Please consult http://www.fieldtriptoolbox.org/faq/discontinuous_neuralynx] 
+[Warning: discontinuous recording, predicted number of timestamps and observed
+number of timestamps differ by 108293781.00
+Please consult http://www.fieldtriptoolbox.org/faq/discontinuous_neuralynx] 
+the call to "ft_appendspike" took 0 seconds and required the additional allocation of an estimated 2 MB
+adding spike channel TT4_03_4
+adding spike channel TT4_03_4, trial 1 contains 30236 spikes
+the call to "ft_appendspike" took 1 seconds and required the additional allocation of an estimated 514 MB
+the input is raw data with 2 channels and 1 trials
+the call to "ft_redefinetrial" took 2 seconds and required the additional allocation of an estimated 772 MB
+the input is raw data with 2 channels and 4 trials
+Spike Triggered Interpolation: processing trial 1 of 4 (4517 spikes)
+Spike Triggered Interpolation: processing trial 2 of 4 (2449 spikes)
+Spike Triggered Interpolation: processing trial 3 of 4 (1527 spikes)
+Spike Triggered Interpolation: processing trial 4 of 4 (21741 spikes)
+the call to "ft_spiketriggeredinterpolation" took 4 seconds and required the additional allocation of an estimated 508 MB
+the input is raw data with 2 channels and 4 trials
+selecting 1 trials
+the call to "ft_selectdata" took 0 seconds and required the additional allocation of an estimated 2 MB
+the call to "ft_redefinetrial" took 0 seconds and required the additional allocation of an estimated 5 MB
+the input is raw data with 2 channels and 1 trials
+[Warning: The field cfg.trackmeminfo is not allowed
+] 
+the call to "ft_selectdata" took 0 seconds and required the additional allocation of an estimated 0 MB
+processing trial 1 of 1 (4517 spikes)
+the call to "ft_spiketriggeredaverage" took 1 seconds and required the additional allocation of an estimated 29 MB
+the input is raw data with 2 channels and 1 trials
+[Warning: The field cfg.trackmeminfo is not allowed
+] 
+the call to "ft_selectdata" took 0 seconds and required the additional allocation of an estimated 111 MB
+the call to "ft_selectdata" took 0 seconds and required the additional allocation of an estimated 110 MB
+converting raw data into spike data
+Please wait...
+Processing frequency 1 from 50Processing frequency 2 from 50Processing frequency 3 from 50Processing frequency 4 from 50Processing frequency 5 from 50Processing frequency 6 from 50Processing frequency 7 from 50Processing frequency 8 from 50Processing frequency 9 from 50Processing frequency 10 from 50Processing frequency 11 from 50Processing frequency 12 from 50Processing frequency 13 from 50Processing frequency 14 from 50Processing frequency 15 from 50Processing frequency 16 from 50Processing frequency 17 from 50Processing frequency 18 from 50Processing frequency 19 from 50Processing frequency 20 from 50Processing frequency 21 from 50Processing frequency 22 from 50Processing frequency 23 from 50Processing frequency 24 from 50Processing frequency 25 from 50

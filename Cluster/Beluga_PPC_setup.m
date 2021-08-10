@@ -24,7 +24,7 @@ s_files = dir('*.t');
 for iS = length(s_files):-1:1
     if str2double(s_files(iS).name(end-2)) < 5 || contains(s_files(iS).name(end-2), {'A', 'B', 'C', 'D'})
 
-       MS_get_PPC([], s_files(iS).name, Meta.goodCSC); 
+       MS_get_PPC([], s_files(iS).name, {Meta.goodCSC}); 
         
     end
 end
