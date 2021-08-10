@@ -49,9 +49,9 @@ if  ~isempty(str_to_find)
     % cycle through strings to find.
     for iStr = 1:length(str_to_find)
         for iF = 1:length(this_dir)
-            if strcmp(this_dir(iF).name, '.') || strcmp(this_dir(iF).name, '..')
+            if strcmpi(this_dir(iF).name, '.') || strcmpi(this_dir(iF).name, '..')
                 continue
-            elseif contains(this_dir(iF).name, str_to_find{iStr})
+            elseif contains(lower(this_dir(iF).name), lower(str_to_find{iStr}))
                 this_f_names{iStr}{iF} = this_dir(iF).name;
                 this_f_fold{iStr}{iF} = this_dir(iF).folder;
             else

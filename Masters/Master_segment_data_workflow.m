@@ -86,9 +86,9 @@ elseif strcmp(os, 'GLNXA64')
     %     PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/2019-12-04_11-10-01_537day0base1'; % where to find the raw data
 %     PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/JC/7_12_2019_PV1069_LTD5'; % where to find the raw data
     %     PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/EV/';
-    PARAMS.raw_data_dir = '/home/williamslab/Documents/2_23_2021_PV1192_LTD1'; % raw data location.
-    PARAMS.inter_dir = '/home/ecarmichael/Documents/Williams_Lab/Temp/'; % where to put intermediate files
-        PARAMS.csc_data_dir = '/home/williamslab/Documents/2021-02-23_09-21-01_1192_LTD1'; % where are the LFP files. If blank will look in the same folder as raw_data.
+    PARAMS.raw_data_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData'; % raw data location.
+    PARAMS.inter_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter'; % where to put intermediate files
+        PARAMS.csc_data_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo'; % where are the LFP files. If blank will look in the same folder as raw_data.
 %     PARAMS.stats_dir = '/home/ecarmichael/Documents/Williams_Lab/Stats/'; % where to put the statistical output .txt
     PARAMS.code_base_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
     PARAMS.code_CEH2_dir = '/home/williamslab/Documents/Github/CEH2'; % where the multisite repo can be found
@@ -191,7 +191,7 @@ for iSub = Subjects
     % move to dir and get all sessions.  Can specify a specific string to
     % find in the dir. ex: MS_list_dir_names(this_sub_dir, 'LTD')
     cd(this_sub_dir)
-    sess_list = MS_list_dir_names(this_sub_dir, 'pv'); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
+    sess_list = MS_list_dir_names(this_sub_dir, 'PV'); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
 %     sess_list = MS_list_dir_names(this_sub_dir); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
 
     for iSess = sess_list
@@ -236,7 +236,7 @@ for iSub = Subjects
         if isempty(dir([csc_dir filesep 'PSD_check*'])) %~exist([csc_dir filesep 'PSD_check.png'], 'file')
             fprintf('<strong>MS_segment_data_workflow_sandbox</strong>: no PSD_check file found.  Running MS_Quick_psd...\n');
             cd(csc_dir)
-            MS_Quick_psd
+            MS_Quick_psd([], 'fast')
             pos = get(gcf, 'position');
             set(gcf, 'position', [0, 0, pos(3), pos(4)]);
             pause(5)
@@ -280,11 +280,13 @@ for iSub = Subjects
         if strcmpi(iSub, 'PV1060')
             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         elseif strcmpi(iSub, 'PV1069')
-            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; 
         elseif strcmpi(iSub, 'PV1043')
-            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'};
+        elseif strcmpi(iSub, 'PV1191')
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; 
         else
-            cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         end
         cfg_seg.csc.label = {'EMG', 'LFP'}; % custom naming for each channel.
         cfg_seg.csc.desired_sampling_frequency = 2000;
