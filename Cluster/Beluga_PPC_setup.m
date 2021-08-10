@@ -6,7 +6,7 @@ addpath('/home/ecar/Github/fieldtrip')
 ft_defaults
 
 
-disp('codebases loaded')
+disp('Codebases loaded')
 
 data_dir = '/lustre04/scratch/ecar';
 
