@@ -65,14 +65,7 @@ else
     Blocks = {'whole session'};
 end
 
-if isfield(cfg, 'plot')
-    h = figure;
-    subplot(221)
-    plot(data_trl.time{1}(1:200000), data_trl.trial{1}(1,1:200000))
-    hold on
-    plot(data_trl.time{1}(1:200000), data_trl.trial{1}(2,1:200000)*500)
-    xlabel('Sample data from 0-100s');
-end
+
 
 %%
 
@@ -89,12 +82,22 @@ data_i        = ft_spiketriggeredinterpolation(cfg_i, data_trl);
 
 %%
 for iB = 1:length(Blocks)
-    
+    close all
     cfg_this_trl = [];
     cfg_this_trl.trials = iB;
     
     data_this_trl = ft_redefinetrial(cfg_this_trl, data_i);
     
+    
+    if isfield(cfg, 'plot')
+    figure(iB);
+    subplot(221)
+    plot(data_this_trl.time{1}(1:200000), data_this_trl.trial{1}(1,1:200000))
+    hold on
+    plot(data_this_trl.time{1}(1:200000), data_this_trl.trial{1}(2,1:200000)*500)
+    xlabel('Sample data from 0-100s');
+    end
+
     %% STA
     cfg_sta              = [];
     cfg_sta.timwin       = [-0.5 0.5]; %
@@ -106,10 +109,10 @@ for iB = 1:length(Blocks)
     % plot
     if isfield(cfg, 'plot')
         
-        figure(h)        
+        figure(iB)        
         subplot(223)
         plot(PPC.(Blocks{iB}).staAll.time, PPC.(Blocks{iB}).staAll.avg(:,:)');
-        legend(cfg_i.channel ); ha = title(cfg_sta.spikechannel); set(ha,'Interpreter','none');
+%         ha = title(cfg_sta.spikechannel); set(ha,'Interpreter','none');
         set(gca,'FontSize',10,'XLim',cfg_sta.timwin,'XTick',cfg_sta.timwin(1):0.25:cfg_sta.timwin(2));
         xlabel('time (s)'); grid on;
     end
@@ -145,7 +148,7 @@ for iB = 1:length(Blocks)
     % plot the results
     if isfield(cfg, 'plot')
         
-        figure(h);
+        figure(iB)        
         subplot(222)
         plot(PPC.(Blocks{iB}).statSts.freq,PPC.(Blocks{iB}).statSts.ppc0')
         set(0,'DefaultTextInterpreter','none');
@@ -169,7 +172,7 @@ for iB = 1:length(Blocks)
     t_idx = strfind(data_this_trl.label, spk_chan);
     spk_idx = find(not(cellfun('isempty', t_idx)));
     shuf_ppc = zeros(nShuf,length(obs_freq));
-    parfor iShuf = 1:nShuf
+    for iShuf = 1:nShuf
         fprintf('Shuffle %d...\n',iShuf);
         shuf_ppc(iShuf,:) =  Shuffle_PPC(cfg_ppc,cfg_ppc_stat, data_this_trl, spk_idx, lfp_chan, iChan);
     end
@@ -179,9 +182,8 @@ for iB = 1:length(Blocks)
     z_ppc = (obs_ppc - nanmean(shuf_ppc,1)) / nanstd(shuf_ppc,1);
     
     %% plot
-    close all
     if isfield(cfg, 'plot')
-        figure(h)
+        figure(iB)        
         subplot(222)
         hold on;
         hx(1) = plot(obs_freq,obs_ppc,'k','LineWidth',2);
@@ -191,32 +193,33 @@ for iB = 1:length(Blocks)
         
         set(0,'DefaultTextInterpreter','none');
         legend(hx,{'observed','shuffled'},'Location','Northeast'); legend boxoff;
-        set(gca,'FontSize',18);
+        set(gca,'FontSize',10);
         xlabel('frequency')
         ylabel('PPC')
         title([spk_chan '_' lfp_chan]);
+        SetFigure([], gcf)
         
         %             mkdir(cfg.inter_dir, 'PPC')
-        if isunix
-            sess_id = strsplit(pwd, '/');
-        else
-            sess_id = strsplit(pwd, '\');
-        end
+            sess_id = strsplit(pwd, filesep);
+
         sess_id = strrep(sess_id{end}, '-', '_');
 
-        saveas(gcf, [cfg.inter_dir filesep sess_id '_' id '_' lfp_chan(1:end-4)], 'fig');
-        saveas(gcf, [cfg.inter_dir filesep  sess_id '_' id '_' lfp_chan(1:end-4)], 'png');
-        saveas_eps([ sess_id '_' id '_' lfp_chan(1:end-4)], cfg.inter_dir)
+        saveas(gcf, [cfg.inter_dir filesep sess_id '_' id '_' lfp_chan '_' Blocks{iB}], 'fig');
+        saveas(gcf, [cfg.inter_dir filesep  sess_id '_' id '_' lfp_chan '_' Blocks{iB}], 'png');
 
     end
     %% collect variables for export
-    PPC.(Blocks{iB}).lfp_label = lfp_chan(1:end-4);
-    PPC.(Blocks{iB}).spk_label = strrep(spk_chan, '-', '_');
+    PPC.lfp_label = lfp_chan;
+    PPC.spk_label = strrep(spk_chan, '-', '_');
+    PPC.cfg_ppc = cfg_ppc;
+    PPC.cfg_ppc_stat = cfg_ppc_stat; 
+    PPC.cfg_sta = cfg_sta; 
     PPC.(Blocks{iB}).obs_freq = obs_freq;
     PPC.(Blocks{iB}).obs_ppc = obs_ppc;
     PPC.(Blocks{iB}).shuf_ppc = shuf_ppc;
     PPC.(Blocks{iB}).z_ppc = z_ppc;
     
+    save([cfg.inter_dir  filesep 'PPC' sess_id '_' id '_' lfp_chan '.mat'], 'PPC', '-v7.3')
 end
 
 
