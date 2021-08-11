@@ -1,0 +1,21 @@
+Picked up JAVA_TOOL_OPTIONS: -Xmx2g
+Opening log file:  /tmp/java.log.40249
+[Warning: Function plot has the same name as a MATLAB builtin. We suggest you
+rename the function to avoid a potential name conflict.] 
+[> In path (line 109)
+  In addpath (line 86)
+  In Beluga_PPC_setup (line 4)] 
+[Warning: enabling online tracking of FieldTrip usage, see
+http://www.fieldtriptoolbox.org/faq/tracking] 
+ In '/home/ecar/Github/fieldtrip/utilities/ft_trackusage.m' at line 97
+ In '/home/ecar/Github/fieldtrip/ft_defaults.m' at line 340
+
+[Warning: could not send tracker information for "startup"] 
+Codebases loaded
+{Error using cd
+Cannot CD to /lustre04/scratch/ecar/ho/home/ecar/scratch/M23/M23_2021-08-05_D10
+(Name is nonexistent or not a directory).
+
+Error in Beluga_PPC_setup (line 13)
+cd([data_dir filesep sess_dir(1:3) filesep sess_dir])
+} 
