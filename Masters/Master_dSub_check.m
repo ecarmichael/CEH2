@@ -19,6 +19,7 @@ inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/E
 
 mvdm_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared';
 CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2';
+ft_dir = '/home/ecarmichael/Documents/GitHub/fieldtrip'; 
 
 inter_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % where to save the outputs
 data_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % where to get the data
@@ -130,7 +131,8 @@ for iSub = 1:length(subjects)
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
         
-        if ~exist('*meta.m')
+
+        if isempty(dir('*meta.m'))
             MS_Write_meta_dSub;
         end
         Meta = MS_Load_meta();
@@ -158,9 +160,11 @@ for iSub = 1:length(subjects)
 %         end
         
         cfg_ppc = [];
+        cfg_ppc.continue = 1; 
         for iT = length(s_files):-1:1
-            
-            MS_get_PPC(cfg_ppc, s_files{iT}, {Meta.goodCSC});
+            if str2double(s_files{iT}(end-2)) < 5 || contains(s_files{iT}(end-2), {'A', 'B', 'C', 'D'})
+                MS_get_PPC(cfg_ppc, s_files{iT}, {Meta.goodCSC});
+            end
         end
         
     end

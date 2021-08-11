@@ -1,4 +1,4 @@
-function Beluga_PPC_setup(sess_dir)
+function Beluga_PPC(sess_dir, t_name)
 
 addpath(genpath('/home/ecar/Github/CEH2'));
 addpath(genpath('/home/ecar/Github/vandermeerlab')); 
@@ -19,15 +19,7 @@ end
 Meta = MS_Load_meta;
 %% get the list of good cells
 
-s_files = dir('*.t');
-
-for iS = length(s_files):-1:1
-    if str2double(s_files(iS).name(end-2)) < 5 || contains(s_files(iS).name(end-2), {'A', 'B', 'C', 'D'})
-
-       MS_get_PPC([], s_files(iS).name, Meta.goodCSC); 
+   MS_get_PPC([],t_name, {Meta.goodCSC}); 
+       
+       disp('Complete')
         
-    end
-end
-
-
-
