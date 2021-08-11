@@ -159,9 +159,11 @@ for iSub = 1:length(subjects)
 %         end
         
         cfg_ppc = [];
+        cfg_ppc.continue = 1; 
         for iT = length(s_files):-1:1
             if str2double(s_files{iT}(end-2)) < 5 || contains(s_files{iT}(end-2), {'A', 'B', 'C', 'D'})
-            MS_get_PPC(cfg_ppc, s_files{iT}, {Meta.goodCSC});
+                MS_get_PPC(cfg_ppc, s_files{iT}, {Meta.goodCSC});
+            end
         end
         
     end

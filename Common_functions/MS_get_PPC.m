@@ -27,14 +27,16 @@ cfg_def.plot = 0;
 cfg_def.shuffle = 100;
 cfg_def.inter_dir = [cd filesep 'PPC'];
 
+cfg_def.continue = 0; % can be used to load and run a specific block. 
+
 cfg = ProcessConfig(cfg_def, cfg_in);
 
 
 if ~exist(cfg.inter_dir)
     mkdir(cfg.inter_dir)
 end
-%%
 
+%% load the spike and lfp data
 spike = ft_read_spike(spike_fname); % needs fixed read_mclust_t.m
 if isempty(spike.unit)
     spike.unit{1} = ones(1,length(spike.timestamp{1}));
@@ -80,8 +82,27 @@ cfg_i.method       = 'linear'; % remove the replaced segment with interpolation
 
 data_i        = ft_spiketriggeredinterpolation(cfg_i, data_trl);
 
+%% labels
+sess_id = strsplit(pwd, filesep);
+
+sess_id = strrep(sess_id{end}, '-', '_');
+
+id = strrep(spk_chan, '-', '_');
+
+%% 
+
+
+if cfg.continue && exist([cfg.inter_dir  filesep 'PPC' sess_id '_' id '_' lfp_chan '.mat'], 'file')
+    load([cfg.inter_dir  filesep 'PPC' sess_id '_' id '_' lfp_chan '.mat'], 'PPC')
+
+    ppc_fields = fieldnames(PPC);
+    
+        
+    Block_num = find(~contains(Blocks, ppc_fields))
+    
+    for iB = 
 %%
-for iB = 1:length(Blocks)
+for iB = Block_num
     close all
     cfg_this_trl = [];
     cfg_this_trl.trials = iB;
@@ -177,7 +198,6 @@ for iB = 1:length(Blocks)
         shuf_ppc(iShuf,:) =  Shuffle_PPC(cfg_ppc,cfg_ppc_stat, data_this_trl, spk_idx, lfp_chan, iChan);
     end
     
-    id = strrep(spk_chan, '-', '_');
     
     z_ppc = (obs_ppc - nanmean(shuf_ppc,1)) / nanstd(shuf_ppc,1);
     
@@ -200,9 +220,7 @@ for iB = 1:length(Blocks)
         SetFigure([], gcf)
         
         %             mkdir(cfg.inter_dir, 'PPC')
-            sess_id = strsplit(pwd, filesep);
 
-        sess_id = strrep(sess_id{end}, '-', '_');
 
         saveas(gcf, [cfg.inter_dir filesep sess_id '_' id '_' lfp_chan '_' Blocks{iB}], 'fig');
         saveas(gcf, [cfg.inter_dir filesep  sess_id '_' id '_' lfp_chan '_' Blocks{iB}], 'png');
