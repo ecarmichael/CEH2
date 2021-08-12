@@ -58,9 +58,8 @@ for iP = length(ppc_files):-1:1
 end
 
 %% make a few plots
-
-
-figure(101)
+close all
+figure('PaperPositionMode', 'auto')
 for iB =1:length(Blocks)
    subplot(1,4,iB)
    imagesc(z_mat.obs_freq, 1:length(z_mat.cell),  z_mat.(Blocks{iB}));
@@ -85,14 +84,23 @@ end
 cb=colorbar;
 cb.Position(1) = cb.Position(1) + .08; 
 cb.Position(3) = cb.Position(3) * 2;
-cb.Label.String = 'zscore';
-colormap([0,0,0; parula(512)]);
+cb.Label.String = 'z-score';
+colormap([0.2,0.2,0.2; parula(512)]);
 SetFigure([], gcf)
 set(gcf, 'position', [70 247 1748 638]);
 
-saveas(gcf, 'PPC_summary', 'png')
+print('PPC_summary', '-dpng', '-r300')
 saveas(gcf, 'PPC_summary', 'fig')
 print('PPC_summary', '-dsvg'); 
+
+set(gcf,'Units','inches');
+screenposition = get(gcf,'Position');
+set(gcf,...
+    'PaperPosition',[0 0 screenposition(3:4)],...
+    'PaperSize',[screenposition(3:4)]);
+print -dpdf -painters PPC_summary.pdf
+
+% print(gcf, '-dpdf', 'PPC_summary.pdf');
 % saveas(gcf, 'PPC_summary', 'svg')
 
 % 
