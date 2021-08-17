@@ -9,10 +9,14 @@ Blocks = {'Pre_sleep', 'W_maze', 'OF', 'Post_sleep'};
 
 
 fnames = dir('*.mat');
-
+ppc_files = [];
 for ii =  1:length(fnames)
     if strcmp(fnames(ii).name(1:3), 'PPC')
+        if strcmp(fnames(ii).name, 'PPCM21_2021_08_04_D9_TT4_03_3_CSC8.mat')
+            continue
+        else
         ppc_files{ii} = fnames(ii).name;
+        end
     end
 end
 
@@ -39,6 +43,8 @@ ppc_files(~keep_idx) = [];
 
 z_mat = [];
 for iP = length(ppc_files):-1:1
+    
+    
     load(ppc_files{iP}, 'PPC');
 
     % collect the names and z_ppc
@@ -57,6 +63,24 @@ for iP = length(ppc_files):-1:1
     
 end
 
+
+%% sort based on the peak frequency in Pre_sleep
+
+    [~, peak_idx] = max(z_mat.Pre_sleep,[],2);
+    [~, sort_idx] = sort(peak_idx); 
+    
+    
+    for iB =1:length(Blocks)
+       z_mat.(Blocks{iB})= z_mat.(Blocks{iB})(sort_idx,:);
+    end
+    
+    
+    z_mat.label = z_mat.label(sort_idx);
+    
+    z_mat.cell = z_mat.cell(sort_idx);
+    z_mat.subject = z_mat.subject(sort_idx);
+    z_mat.date = z_mat.date(sort_idx);
+    z_mat.day = z_mat.day(sort_idx);
 %% make a few plots
 close all
 figure('PaperPositionMode', 'auto')
@@ -73,12 +97,12 @@ for iB =1:length(Blocks)
    caxis([1.98 8])
    set(gca, 'ytick', 1:length(z_mat.cell));
    set(gca, 'Box', 'off')
-   ylim([.25 length(z_mat.cell)])
-   rectangle('position',[1, .25, 3, .25], 'facecolor', c_ord(5,:), 'edgecolor', [0 0 0 0])
-   rectangle('position',[6, .25, 6, .25], 'facecolor', c_ord(2,:), 'edgecolor', [0 0 0 0])
+   ylim([-.5 length(z_mat.cell)])
+   rectangle('position',[1, -.5, 3, 1], 'facecolor', c_ord(5,:), 'edgecolor', [0 0 0 0])
+   rectangle('position',[6, -.5, 6, 1], 'facecolor', c_ord(2,:), 'edgecolor', [0 0 0 0])
 %    rectangle('position',[6, .25, 6, .25], 'facecolor', c_ord(5,:), 'edgecolor', [0 0 0 0])
-   rectangle('position',[40, .25, 40, .25], 'facecolor', c_ord(1,:), 'edgecolor', [0 0 0 0])
-   rectangle('position',[80, .25, 21, .25], 'facecolor', c_ord(3,:), 'edgecolor', [0 0 0 0])
+   rectangle('position',[40, -.5, 40, 1], 'facecolor', c_ord(1,:), 'edgecolor', [0 0 0 0])
+   rectangle('position',[80, -.5, 21, 1], 'facecolor', c_ord(3,:), 'edgecolor', [0 0 0 0])
 
 end
 cb=colorbar;

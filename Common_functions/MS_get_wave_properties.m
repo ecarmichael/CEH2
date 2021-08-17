@@ -107,7 +107,7 @@ end
 %y=[t_idx,p_max];
 %annotation('doublearrow',x,y,'String','Width')
 %hold off
-
+wave_prop.wave = wave;
 wave_prop.firing_rate = spike_rate;
 wave_prop.ISI = diff(S.t{1}); 
 wave_prop.burstingidx = [];
