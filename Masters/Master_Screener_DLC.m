@@ -116,7 +116,6 @@ cd([PARAMS.data_dir filesep PARAMS.ms_dir]) % move to the data folder
 
 
 % get the list of subjects
-
 sub_list = {};
 d = dir;
 d=d(~ismember({d.name},{'.','..', '._*'})); % get the folder names and exclude any dir that start with '.'.
@@ -140,7 +139,7 @@ for iSub = 1:length(sub_list)
     end
     
     % loop across sessions.
-    for iSess = 1%:length(sess_list) % loop through sessions for this subject.
+    for iSess = 1:length(sess_list) % loop through sessions for this subject.
         
     cd([PARAMS.data_dir filesep PARAMS.ms_dir filesep sub_list{iSub} filesep sess_list{iSess}])
         
@@ -165,6 +164,17 @@ for iSub = 1:length(sub_list)
             cd([PARAMS.data_dir filesep PARAMS.ms_dir filesep sub_list{iSub} filesep sess_list{iSess} filesep task_list{iTask}])
                 
             
+            if ~exist('metaData.json')
+                fprintf('<strong>%s No metaData.json found</strong>\n', [sub_list{iSub} ,' ', sess_list{iSess},' ',  task_list{iTask}] )
+                continue
+            elseif ~exist([PARAMS.data_dir filesep PARAMS.ms_dir filesep sub_list{iSub} filesep sess_list{iSess} filesep task_list{iTask} filesep 'Miniscope/ms.mat'], 'file')
+                  fprintf('<strong>%s No ms.mat found</strong>\n', [sub_list{iSub} ,' ', sess_list{iSess},' ',  task_list{iTask}] )
+                continue
+            elseif ~exist([PARAMS.data_dir filesep PARAMS.behav_dir filesep sub_list{iSub} filesep sess_list{iSess} filesep task_list{iTask} filesep 'results' filesep 'behav.mat'], 'file')
+                   fprintf('<strong>%s No behav.mat found</strong>\n', [sub_list{iSub} ,' ', sess_list{iSess},' ',  task_list{iTask}] )
+                continue
+            end
+            
             meta = getJSON('metaData.json'); 
             
             
@@ -174,6 +184,7 @@ for iSub = 1:length(sub_list)
             sess_parts = strsplit(strrep(parts{end-2}, '-', '_'), '_') ;
             
             fname = parts{end-2};
+            f_info = []; 
             f_info.subject = sess_parts{2};
             f_info.genotype = sess_parts{1}; 
             f_info.date = datestr(parts{end-1}, 'yyyy-mm-dd');
@@ -184,53 +195,98 @@ for iSub = 1:length(sub_list)
             f_info.metaData = meta; 
             
             
+            % load the ms file and get all the useful bits 
+            cd('Miniscope/')
+            fprintf('<strong>%s</strong>: loading ms from %s %s %s %s...\n', mfilename, f_info.fname, f_info.date, f_info.time, f_info.task)
+            warning off; load('ms.mat', 'ms'); warning on;
+            
+%             field_names = fieldnames(ms);
+%             for ii = 1:length(field_names)
+%                 temp = ms.(field_names{ii}); 
+%                 w = whos('temp');
+%                 if ~isempty(w)
+%                 fprintf('%s             %d\n', field_names{ii}, w.bytes)
+%                 end
+%             end
+            
+            ms_temp = [];
+            ms_temp.dirName = ms.dirName;
+            ms_temp.time = ms.time;
+            ms_temp.FiltTraces = ms.FiltTraces;
+            ms_temp.RawTraces = ms.RawTraces;
+            ms_temp.Centroids = ms.Centroids;
+            ms_temp.denoisedCa = ms.denoisedCa;
+            ms_temp.deconvolvedSig  = ms.deconvolvedSig;
+                        
+            
+            % get the position info from the DLC output file. 
+            cd([PARAMS.data_dir filesep PARAMS.behav_dir filesep sub_list{iSub} filesep sess_list{iSess} filesep task_list{iTask} filesep 'results'])
+            load('behav.mat')
+            
+            
+            
+            % preprocess the sessions
+            data = MS_Sub_preprocess(cfg, ms_temp, behav, f_info);
+            
+            
+            clear ms ms_temp behav 
+            
+            
+            % save the output file back to the intermediate dir. 
+            save([PARAMS.inter_dir filesep strrep([f_info.fname '_' f_info.date '_' strrep(f_info.time, ':','-') '_' strrep(f_info.task, ' ', '_')], '-','_')], 'data', '-v7.3')
+            close all
+            clear data
+        end
+    end
+end
+            
 %             if (iSess == 2 && iTask ==2) || (iSess == 1 && iTask ==1)
 %                 continue
 %             end
 %             
-            %% run the screening script
-            These_cells{iSess, iTask} = Spatial_screener_info(cfg, f_info);
+%             %% run the screening script
+%             These_cells{iSess, iTask} = Spatial_screener_info(cfg, f_info);
+%             
+%             %% check the sig for spatial metrics
+%             %         close all
+%             fill_space = repmat(' ',1, 30 - length(f_info.fname));
+%             fprintf(['<strong>%s</strong>:' fill_space '\n'], f_info.fname)
+%             [~, sig_cells] = MS_get_sig_cells(These_cells{iSess, iTask}, 0.01);
+%             %
+%             
+%             % spatial/place plots
+%             place_sig = find(sig_cells(:,1));
+%             if ~isempty(place_sig)
+%                 if strcmp(f_info.task, 'LT')
+%                     MS_plot_spatial_cell_1D(These_cells{iSess, iTask},place_sig')
+%                 else
+%                     MS_plot_spatial_cell(These_cells{iSess, iTask},place_sig')
+%                 end
+%             end
+%             
+%             
+%             % speed plots
+%             speed_sig = find(sig_cells(:,2));
+%             if ~isempty(speed_sig)
+%                 MS_plot_movement_cell_1D(These_cells{iSess, iTask},speed_sig', 'speed')
+%             end
+%             
+%             
+%             % accel plots
+%             accel_sig = find(sig_cells(:,3));
+%             if ~isempty(accel_sig)
+%                 MS_plot_movement_cell_1D(These_cells{iSess, iTask},speed_sig', 'accel')
+%             end
+%             
+%             % cell summary (everything)
+%             %         MS_plot_cell(These_cells{iSess, iTask},
+%             
+%             
             
-            %% check the sig for spatial metrics
-            %         close all
-            fill_space = repmat(' ',1, 30 - length(f_info.fname));
-            fprintf(['<strong>%s</strong>:' fill_space '\n'], f_info.fname)
-            [~, sig_cells] = MS_get_sig_cells(These_cells{iSess, iTask}, 0.01);
-            %
             
-            % spatial/place plots
-            place_sig = find(sig_cells(:,1));
-            if ~isempty(place_sig)
-                if strcmp(f_info.task, 'LT')
-                    MS_plot_spatial_cell_1D(These_cells{iSess, iTask},place_sig')
-                else
-                    MS_plot_spatial_cell(These_cells{iSess, iTask},place_sig')
-                end
-            end
-            
-            
-            % speed plots
-            speed_sig = find(sig_cells(:,2));
-            if ~isempty(speed_sig)
-                MS_plot_movement_cell_1D(These_cells{iSess, iTask},speed_sig', 'speed')
-            end
-            
-            
-            % accel plots
-            accel_sig = find(sig_cells(:,3));
-            if ~isempty(accel_sig)
-                MS_plot_movement_cell_1D(These_cells{iSess, iTask},speed_sig', 'accel')
-            end
-            
-            % cell summary (everything)
-            %         MS_plot_cell(These_cells{iSess, iTask},
-            
-            
-            
-            
-        end % end tasks
-        
-    end %sessions
-    
-end% subjects
+%         end % end tasks
+%         
+%     end %sessions
+%     
+% end% subjects
 
