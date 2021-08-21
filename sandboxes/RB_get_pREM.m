@@ -1,36 +1,26 @@
-%% pREM setup sandbox
-% just a sandbox for testing the MS_get_pREM.m function. 
-
-
-% RB data notes: Sample data for 1 mouse (220).
-% Within the main folder are 2 experiment-specific subfolders (each mouse underwent testing under at least 2 different conditions (sometimes 3).
-%AC is control data for mouse 220 (no MS GABAergic inhibition at any point of experiment), A is test group (MS GABAergic inhibition selectively during REMs).
-% Within each experiment-specific subfolder is the nsc file from the best (largest, most stable recording) and the corresponding hypnogram. 
-%(Each datapoint is 1 s, data was scored with 5 s resolution (non-overlapping windows); 
-%1 = wake, 2 = NREMs, 3 = REMs, 4 = wake + MS GABAergic inhhibition, 5 = NREMs + MS GABAergic inhibition, 6 = REMs + MS GABAergic inhibition).
-
-
-%% add codebases
-
-addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
-addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
-
-% data_dir = 'J:\Scored_NSC_Data_files\Mouse 220\Experiment 1 (AC)';
-% data_dir = 'J:\Scored_NSC_Data_files\Mouse 220\Experiment 2 (A)';
-data_dir = 'J:\Williams_Lab\RB_data\220 AC'; 
-
-cd(data_dir)
-% LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo'; 
+function pREM_data = RB_get_pREM()
+%% prep some data
 
 c_ord = linspecer(5); % gen some nice colours. 1)blue 2)red 3)green 4)orange 4)purple
 
-%% prep some data
 cfg_load = [];
+lfp_chans = dir('*.ncs');
+
+for ii = 1:length(lfp_chans)
+    if strcmpi(lfp_chans(ii).name, 'CSC1.ncs')
+       cfg_load.fc{ii} = []; 
+    else
+       cfg_load.fc{ii} = lfp_chans(ii).name; 
+    end
+end
+cfg_load.fc(cellfun('isempty', cfg_load.fc)) = [];
+
 cfg_load.desired_sampling_frequency  = 1280; % closest to 1250 that FS of 32000 can get with whole decimation. 
 
 csc = MS_LoadCSC(cfg_load);
 Fs = csc.cfg.hdr{1}.SamplingFrequency; % get the sampling freq from nlx header. 
 load('Hypnogram.mat')
+
 
 
 %% fill in hypno to match csc length; hacky but works. FIX LATER
@@ -74,17 +64,22 @@ else
     S = [];
 end
 %% get pREM
-REM_val = 3; % 
 
 for iC = 1:length(csc.label)
-    
+   
     this_csc = csc;
     this_csc.data = csc.data(iC,:); 
     this_csc.label = csc.label{iC}; 
     this_csc.cfg.hdr = [];
     this_csc.cfg.hdr{1} = csc.cfg.hdr{iC}; 
     
-    [pREM_idx{iC}, pREM_times{iC}, pREM_IV{iC}] = MS_get_pREM(this_csc, hypno == REM_val, 0.7, [], 1, S);
+    % congifuration
+    cfg_pREM = [];
+    cfg_pREM.min_len = 0.7;
+    cfg_pREM.plot_flag = 1;
+    cfg_pREM.REM_val = 3; 
+    
+    [pREM_idx{iC}, pREM_times{iC}, pREM_IV{iC}] = MS_get_pREM(this_csc, hypno == cfg_pREM.REM_val, cfg_pREM.min_len, [], cfg_pREM.plot_flag, S);
     
     h =  findobj('type','figure');
     
@@ -114,7 +109,11 @@ for iC = 1:length(csc.label)
 end
 
 for iC = 1:length(csc.label)
+    if isempty(pREM_times{iC})
+        fprintf('<strong>0 pREM candidates detected on %s</strong>\n', csc.label{iC})
+    else
        fprintf('<strong>%d pREM candidates detected on %s. Mean duration: %0.2f seconds</strong>\n', size(pREM_times{iC},1),csc.label{iC}, mean(pREM_times{iC}(:,2) - pREM_times{iC}(:,1)))
+    end
 end
 
 
@@ -122,6 +121,22 @@ end
 [~, best_chan] = max(cellfun('length', pREM_idx)); % use the csc with the most events. 
 
 
+% collect the data for the output.  
+parts = strsplit(cd, filesep);
+
+pREM_data = [];
+pREM_data.fname = parts{end}; 
+pREM_data.csc = csc;
+pREM_data.S = S;
+pREM_data.hypno = hypno;
+pREM_data.cfg = cfg_pREM; 
+pREM_data.pREM.pREM_idx = pREM_idx;
+pREM_data.pREM.pREM_times = pREM_times;
+pREM_data.pREM.pREM_IV = pREM_IV;
+pREM_data.best_chan = best_chan; 
+
+save('pREM_data.mat', 'pREM_data', '-v7.3');
+close all
 
 
 

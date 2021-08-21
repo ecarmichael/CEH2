@@ -266,6 +266,7 @@ for iB = length(IPI_vec):-1:1 % still working with blocks rather than concatenat
     if ~isempty(Phasic_blocks)
         % Crit 3: theta amp in block must be great than mean of all theta
         for ii = 1:size(Phasic_blocks,1)
+            keep_t_amp = [];
             if mean(REM_amp{iB}(Phasic_blocks(ii,1):Phasic_blocks(ii,2)))  > mean(theta_amp)
                 keep_t_amp(ii) = 1;
             else
@@ -273,7 +274,7 @@ for iB = length(IPI_vec):-1:1 % still working with blocks rather than concatenat
             end
         end
         
-        Phasic_blocks(~keep_t_amp,:) = []; % remove low theta blocks.
+        Phasic_blocks(~keep_t_amp',:) = []; % remove low theta blocks.
     end
     
     %convert back to the time vector.
@@ -306,7 +307,7 @@ end
 
 if isempty(pREM_times)
     fprintf('<strong>%s:  No pREM events detected</strong>\n', mfilename)
-    save(['No pREM events detected ' date '.txt']);
+%     save(['No pREM events detected ' date '.txt']);
     pREM_idx = []; pREM_IV = [];
     
     return
@@ -319,7 +320,11 @@ if plot_flag
     win_s = 2; % add some extra data
     
     for iR =1:size(pREM_idx,1)
-        
+        figure(iR*10)
+        figure(iR*100);
+        close(iR*10);
+        close(iR*100);
+                
         Phasic_data{iR} = raw_csc.data((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
         
         if ~isempty(emg_in) % prep EMG if you have it.
@@ -352,7 +357,7 @@ if plot_flag
             plot(temp_tvec - temp_tvec(1), (Phasic_EMG{iR}*1200)+2, 'color', [.7 .7 .7])
         end
         
-        pause(1); % 
+%         pause(2); % 
         
         % add in raster plot.  
         figure(iR*100);
@@ -378,6 +383,8 @@ if plot_flag
         %         cx.TickLabels = cx.Ticks * max(centroids);
         %         cx.Label.String = 'place cell centroid';
         
+        
+%         pause(1)
         % move both plots to new plot.
         figlist=get(groot,'Children');
         
@@ -398,11 +405,11 @@ if plot_flag
         set(gcf, 'position', [662 96 758 892])
         set(gcf, 'InvertHardcopy', 'off')
         
-        pause(.5)
+        pause(1)
     end
 end
 
 %% print some basic stats
 
-fprintf('<strong>%s</strong>: pREM events detected totalling %d seconds (%.2f %% of REM)\n',...
-    mfilename, numel(Phasic_data), (sum(cellfun('length',Phasic_data))/sum(cellfun('length', REM_blocks)))*100)
+fprintf('<strong>%s</strong>: %d pREM event(s) detected totalling %.2f seconds (%.2f %% of REM)\n',...
+    mfilename, size(pREM_idx,1),sum(pREM_times(:,2) - pREM_times(:,1)), (sum(pREM_idx(:,2) - pREM_idx(:,1))/sum(cellfun('length', REM_blocks)))*100)
