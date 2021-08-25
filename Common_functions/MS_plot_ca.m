@@ -72,7 +72,7 @@ switch cfg.plot_type
             
             plot(time_in2*0.001, ms_data_in.(cfg.Ca_type)(:,iC)+iC, 'color', c_ord(iC,:))
             tick_val(iC) = median(ms_data_in.(cfg.Ca_type)(:,iC)+iC); 
-            tick_label{iC} = num2str(iC); 
+            tick_label{iC} = cfg.Ca_chan(iC); 
         end
         % 3d
     case '3d'

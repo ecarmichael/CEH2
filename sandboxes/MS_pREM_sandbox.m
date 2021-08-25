@@ -87,7 +87,7 @@ end
 
 % hard code LFP channel 
 if strcmp(subject, 'PV1043') && strcmp(type, 'LTD5')
-    cfg_load.fc{2} = 'CSC5.ncs';
+    cfg_load.fc{2} = 'CSC6.ncs';
 end
 
 % load some data.
@@ -137,14 +137,14 @@ else
     CSC_pre.tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
     CSC_pre.data = CSC.data(:,1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec)); 
 %     CSC_pre.data = CSC_pre.data - mean(CSC_pre.data); 
-    emg_h_pre = emg_h(1:find((CSC.tvec == EVT.t{Stop_rec_idx}(1)))); 
+    emg_h_pre = emg_h(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec)); 
 
     
     CSC_post= CSC;
-    CSC_post.tvec = CSC.tvec(find((CSC.tvec == EVT.t{S_rec_idx}(2))):end);
-    CSC_post.data = CSC.data(:,find((CSC.tvec == EVT.t{S_rec_idx}(2))):end);
+    CSC_post.tvec = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(2), CSC.tvec):end);
+    CSC_post.data = CSC.data(:,nearest_idx(EVT.t{S_rec_idx}(2), CSC.tvec):end);
 %     CSC_post.data = CSC_post.data - mean(CSC_post.data);
-    emg_h_post = emg_h(find((CSC.tvec == EVT.t{S_rec_idx}(2))):end);
+    emg_h_post = emg_h((nearest_idx(EVT.t{S_rec_idx}(2), CSC.tvec):end));
 end
 
 

@@ -131,6 +131,7 @@ for iSub = 1:length(subjects)
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
         
+
         if isempty(dir('*meta.m'))
             MS_Write_meta_dSub;
         end
