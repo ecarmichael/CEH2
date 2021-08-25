@@ -112,6 +112,8 @@ for iC = 1:length(file_list)
         
         
         if iB == 2
+            
+            trials = dSub_wmaze_trialfun([], this_pos)
             arms = {'l', 'c', 'r'}; maze.arms = arms; 
             for ii = 1:3
             if sum(strcmp(this_evt.label, arms{ii})) > 0
@@ -161,7 +163,7 @@ for iC = 1:length(file_list)
             for ii  = 1:4
                 plot (xrange(:,ii),mWV(:,ii),"LineWidth",3, 'color', c_ord(ii,:));
             end
-            legend("Ch 1", "Ch 2","Ch 3","Ch 4", 'fontsize', 8); legend boxoff
+            legend("Ch 1", "Ch 2","Ch 3","Ch 4", 'fontsize', 8, 'location', 'south', 'orientation', 'horizontal' ); legend boxoff
             xlabel ("Time (ms)")
             axis off
             title ({strrep(fname, '_', ' ') ;  strrep(this_S.label{1}, '_', ' '); Blocks{iB}})
@@ -250,7 +252,7 @@ for iC = 1:length(file_list)
             % set up bins
             if iB == 2
             SET_xmin = 10; SET_ymin = 0; % set up bins
-            SET_xmax = 82; SET_ymax = 50;
+            SET_xmax = 82; SET_ymax = 60;
             
             elseif iB == 3
             SET_xmin = 0; SET_ymin = 0; % set up bins
