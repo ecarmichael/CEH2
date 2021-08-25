@@ -154,7 +154,7 @@ for iC = 1:length(file_list)
         
         % Waveform
         try % see if the waveform file exists and works.
-            load([this_S.label{1}(1:end-4) '-wv.mat'], 'mWV', 'xrange')
+            load([this_S.label{1}(1:end-2) '-wv.mat'], 'mWV', 'xrange')
             
             subplot (3,4,1)
             hold on
