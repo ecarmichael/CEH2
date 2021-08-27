@@ -46,14 +46,14 @@ for iSub = length(sub_list):-1:1
 end
 
 % loop subjects
-for iSub = 1:length(subjects)
+for iSub = 2%1:length(subjects)
     
     % get a list of the good sessions.
     sess_list = dir([data_dir filesep subjects{iSub}]);
     sess_list(1:2) = [];
     sessions = [];
     for iS = length(sess_list):-1:1
-        if contains(sess_list(iS).name, 'OF')
+        if contains(sess_list(iS).name, 'D')
             sessions{iS} = sess_list(iS).name;
         end
     end
@@ -64,9 +64,9 @@ for iSub = 1:length(subjects)
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
 %         dsubscreener_ec(cd, inter_dir);
-%         dsubscreener_ec_W_maze(cd, inter_dir);
+        dsubscreener_ec_W_maze(cd, inter_dir);
 
-        MS_Write_meta_dSub;
+%         MS_Write_meta_dSub;
           
         
     end
