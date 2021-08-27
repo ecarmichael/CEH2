@@ -309,8 +309,8 @@ for iC = 1:length(file_list)
             
             
             % plot the heading by speed heatmap
-            cfg_speed = []; 
-            vector_mat = MS_speed_HD(cfg_speed, this_pos, this_S);
+%             cfg_speed = []; 
+%             vector_mat = MS_speed_HD(cfg_speed, this_pos, this_S);
             
         end
         
