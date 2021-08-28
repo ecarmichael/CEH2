@@ -79,6 +79,7 @@ if length(evt.t{start_idx}) > 1
     Blocks = {'Pre_sleep', 'W_maze', 'OF', 'Post_sleep'};
     for iB = 1:length(Blocks)
         block_idx.(Blocks{iB}) = [evt.t{start_idx}(iB) evt.t{end_idx}(iB)];
+        fprintf('Block: %s duration = %.0fmins\n', Blocks{iB}, (block_idx.(Blocks{iB})(2) -block_idx.(Blocks{iB})(1))/60); 
     end
     
     
@@ -110,7 +111,9 @@ for iC = 1:length(file_list)
         this_spd = restrict(spd, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(2));
         this_evt = restrict(evt, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(2)); 
         
-        
+        if isempty(this_S.t{1})
+            continue
+        end
         if iB == 2
             
 %             trials = dSub_wmaze_trialfun([], this_pos)

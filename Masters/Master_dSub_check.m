@@ -60,6 +60,9 @@ for iSub = 2%1:length(subjects)
     sessions(cellfun('isempty', sessions)) = [];
     
     for iS =length(sessions):-1:1
+        if strcmpi(sessions{iS}, 'M23_2021-08-13_D18')
+            continue
+        end
         close all
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
