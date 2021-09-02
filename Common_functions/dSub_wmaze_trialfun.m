@@ -27,13 +27,16 @@ cfg = ProcessConfig(cfg_def, cfg_in);
 
 states = NaN(size(pos.tvec)); 
 
-segments = {'R_Box_xy', 'L_Box_xy', 'R_Arm_xy', 'L_Arm_xy', 'C_Arm_xy', 'CL_Inner_Arm_xy', 'CR_Inner_Arm_xy',...
-    'CL_Outer_Arm_xy', 'CR_Outer_Arm_xy', 'R_Port_xy', 'L_Port_xy', 'R_Box_ITI_xy', 'L_Box_ITI_xy'}; 
+segments = {'R_Box_xy', 'L_Box_xy','R_Box_ITI_xy',  'L_Box_ITI_xy', 'R_Arm_xy', 'L_Arm_xy', 'CR_Inner_Arm_xy', 'CL_Inner_Arm_xy',...
+    'CR_Outer_Arm_xy', 'CL_Outer_Arm_xy', 'R_Port_xy', 'L_Port_xy','C_Arm_xy'}; 
 
 figure(1)
 hold on
 scatter(pos.data(1,:), pos.data(2,:), 55, 'k')
-c_ord = linspecer(length(segments)); 
+c_list = linspecer(length(segments)); 
+c_ord(1:2:13,:) = fliplr(c_list(1:7,:));
+c_ord(2:2:13,:) = fliplr(c_list(8:end,:));
+
 for iS = 1:length(segments)
 seg_idx.(segments{iS}) = (pos.data(1,:) >=cfg.(segments{iS})(1)) & (pos.data(2,:) >=cfg.(segments{iS})(2)) & (pos.data(1,:) <cfg.(segments{iS})(3)) & (pos.data(2,:) <cfg.(segments{iS})(4)); 
 
@@ -52,6 +55,12 @@ end
 
 states_fill = fillmissing(states, 'previous');
 
+% smooth over 1s window 
+states_smooth = smooth(states_fill, round(1/mode(diff(pos.tvec))));
+
+% make it whole to get the sates back to whole numbers.
+states_smooth = round(states_smooth);
+
 % plot again
 
 figure(2)
@@ -68,6 +77,19 @@ end
 legend(strrep(segments, '_', ' '),'Orientation', 'vertical', 'Location', 'eastoutside')
 pause(1);
 
+
+%% get transitions between states
+
+[trans_val,trans_idx] = findpeaks(abs(diff(states_fill)));%,'MinPeakDistance', round(1/mode(diff(pos.tvec)))); 
+
+states_jitter = states_fill;
+
+for iT = 1:length(trans_idx)
+    
+%    states_fill(states_fill == find(contains(segments, 'R_Port_xy')))
+    
+    states_jitter(trans_idx(iT)+1:trans_idx(iT)+30) = states_jitter(trans_idx(iT)+1); 
+end
 
 
 

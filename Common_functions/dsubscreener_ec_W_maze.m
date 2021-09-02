@@ -79,6 +79,7 @@ if length(evt.t{start_idx}) > 1
     Blocks = {'Pre_sleep', 'W_maze', 'OF', 'Post_sleep'};
     for iB = 1:length(Blocks)
         block_idx.(Blocks{iB}) = [evt.t{start_idx}(iB) evt.t{end_idx}(iB)];
+        fprintf('Block: %s duration = %.0fmins\n', Blocks{iB}, (block_idx.(Blocks{iB})(2) -block_idx.(Blocks{iB})(1))/60); 
     end
     
     
@@ -110,14 +111,18 @@ for iC = 1:length(file_list)
         this_spd = restrict(spd, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(2));
         this_evt = restrict(evt, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(2)); 
         
-        
+        if isempty(this_S.t{1})
+            continue
+        end
         if iB == 2
             
-            trials = dSub_wmaze_trialfun([], this_pos)
+%             trials = dSub_wmaze_trialfun([], this_pos)
             arms = {'l', 'c', 'r'}; maze.arms = arms; 
             for ii = 1:3
             if sum(strcmp(this_evt.label, arms{ii})) > 0
                 maze.(arms{ii}) = this_evt.t{strcmp(this_evt.label, arms{ii})};
+            else
+                maze.(arms{ii}) = []; 
             end
             end
             fprintf('Left: %d   |  Center: %d   | Right: %d\n', length(maze.l), length(maze.c), length(maze.r))
@@ -156,7 +161,7 @@ for iC = 1:length(file_list)
         
         % Waveform
         try % see if the waveform file exists and works.
-            load([this_S.label{1}(1:end-2) '-wv.mat'], 'mWV', 'xrange')
+            load([this_S.label{1}(1:6) '-wv.mat'], 'mWV', 'xrange')
             
             subplot (3,4,1)
             hold on
@@ -303,6 +308,13 @@ for iC = 1:length(file_list)
             subplot(3,4,8)
             pcolor(tc'); shading flat; axis off; cb=colorbar; cb.Position(1) = cb.Position(1) + .03; cb.Label.String = 'rate (Hz)'; cb.Ticks = [0 cb.Ticks(end)];
             title('rate map');
+            
+            
+            
+            % plot the heading by speed heatmap
+%             cfg_speed = []; 
+%             vector_mat = MS_speed_HD(cfg_speed, this_pos, this_S);
+            
         end
         
         % plot the autocorrelation if there is one
@@ -348,7 +360,9 @@ for iC = 1:length(file_list)
         
         This_Cell.(Blocks{iB}).psd.Px = Px;
         This_Cell.(Blocks{iB}).psd.Fx = Fx;
-        This_Cell.(Blocks{iB}).wave = wave_prop; 
+        if exist('wave_prop')
+            This_Cell.(Blocks{iB}).wave = wave_prop;
+        end
         if exist('st_mat', 'var')
             This_Cell.(Blocks{iB}).sta.mat = st_mat;
             This_Cell.(Blocks{iB}).sta.tvec = t_win;
