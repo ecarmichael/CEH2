@@ -28,21 +28,21 @@ os = computer;
 if strcmp(os, 'GLNXA64')
     
     %% Home
-    %     PARAMS.data_dir = '/mnt/Data/Williams_Lab/II_classification/msbehavplace/ck2cre1'; % where to find the raw data
-    %     PARAMS.inter_dir = '/mnt/Data/Williams_Lab/II_classification/Inter/'; % where to put intermediate files
-    %     PARAMS.stats_dir = '/mnt/Data/Williams_Lab/II_classification/Inter/'; % where to put the statistical output .txt
-    %     PARAMS.code_base_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
-    %     PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
-    %     PARAMS.OASIS_dir = '/home/ecarmichael/Documents/GitHub/OASIS_matlab'; % contains the OASIS decon method: Friedrich et al. 2017: https://doi.org/10.1371/journal.pcbi.1005423
-    %     %
+        PARAMS.data_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid'; % where to find the raw data
+        PARAMS.inter_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/II_inter'; % where to put intermediate files
+        PARAMS.stats_dir = '/mnt/Data/Williams_Lab/II_classification/Inter/'; % where to put the statistical output .txt
+        PARAMS.code_base_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
+        PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
+        PARAMS.OASIS_dir = '/home/ecarmichael/Documents/GitHub/OASIS_matlab'; % contains the OASIS decon method: Friedrich et al. 2017: https://doi.org/10.1371/journal.pcbi.1005423
+        %
     %% Office
-    PARAMS.data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid'; % where to find the raw data
-    PARAMS.inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/II_inter'; % where to put intermediate files
-    PARAMS.stats_dir = PARAMS.inter_dir; % where to put the statistical output .txt
-    PARAMS.code_base_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
-    PARAMS.code_CEH2_dir = '/home/williamslab/Documents/Github/CEH2'; % where the multisite repo can be found
-    PARAMS.OASIS_dir = '/home/williamslab/Documents/Github/OASIS_matlab'; % contains the OASIS decon method: Friedrich et al. 2017: https://doi.org/10.1371/journal.pcbi.1005423
-    
+%     PARAMS.data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid'; % where to find the raw data
+%     PARAMS.inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/II_inter'; % where to put intermediate files
+%     PARAMS.stats_dir = PARAMS.inter_dir; % where to put the statistical output .txt
+%     PARAMS.code_base_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
+%     PARAMS.code_CEH2_dir = '/home/williamslab/Documents/Github/CEH2'; % where the multisite repo can be found
+%     PARAMS.OASIS_dir = '/home/williamslab/Documents/Github/OASIS_matlab'; % contains the OASIS decon method: Friedrich et al. 2017: https://doi.org/10.1371/journal.pcbi.1005423
+%     
     PARAMS.behav_dir = 'Behav_DLC';
     PARAMS.ms_dir = 'Ingrid (Results_Calcium data 2020)';
     
@@ -239,6 +239,93 @@ for iSub = 1:length(sub_list)
         end
     end
 end
+
+
+%% collect the processed data and summarize
+cd(PARAMS.inter_dir)
+
+sess_list = dir('*.mat');
+all_P_sigs = [];
+all_S_sigs = [];
+all_fname = []; 
+
+for iSess =  1: 8%length(sess_list)
+    
+    load(sess_list(iSess).name, 'data'); 
+    
+    P_sig = []; S_sig = [];
+    
+    for iC = length(data.SI):-1:1
+        
+       P_sig(iC) = data.SI(iC).spatial.place.MI_pval; 
+       
+       S_sig(iC) = data.SI(iC).spatial.speed.MI_pval; 
+
+%        A_sig(iC) = data.SI(iC).spatial.accel.MI_pval; 
+
+    end
+    
+    fprintf('<strong>%s  |  Place Sig =  %.2f%%  |  Speed Sig =  %.2f%% </strong>\n', [data.f_info.fname ' ' data.f_info.date ' ' data.f_info.time ' ' data.f_info.task]  , (sum(P_sig < 0.05)/length(P_sig))*100, (sum(S_sig < 0.05)/length(S_sig))*100)
+    
+    
+    all_P_sigs(iSess) = (sum(P_sig < 0.05)/length(P_sig))*100; 
+    all_S_sigs(iSess) = (sum(S_sig < 0.05)/length(S_sig))*100;
+    
+    if data.behav.width <35 && data.behav.height < 35
+        fprintf('Small OF  Width: %.0fcm  x  Height: %.0fcm\n', data.behav.width, data.behav.height)
+        all_fname{iSess} = [data.f_info.date ' S OF']; 
+    else
+        fprintf('Large OF  Width: %.0fcm  x  Height: %.0fcm\n', data.behav.width, data.behav.height)
+        all_fname{iSess} = [data.f_info.date ' L OF']; 
+    end
+        
+    
+end
+
+%%
+figure(1010)
+subplot(6,4,[1:3 5:7 9:11 13:15 17:19])
+c_ord = linspecer(2); 
+bh = bar([all_P_sigs ; all_S_sigs]');
+
+bh(1).FaceColor = c_ord(1,:);
+bh(2).FaceColor = c_ord(2,:);
+
+ylabel('% of sig modulated cells')
+set(gca, 'XTickLabel', all_fname)
+xtickangle(45)
+y_lim = ylim;
+
+legend({'Place', 'Speed'})
+
+subplot(6,4,[4 8 12 16 20])
+
+% [~,eh] = errorbar_groups([mean(all_P_sigs) ; mean(all_S_sigs)]', err_bars','bar_colors', c_ord, 'bar_width',0.75,'errorbar_width',0.5, 'bar_names',{'Place', 'Speed'});
+
+err_bars = [std(all_P_sigs) / sqrt( length(all_P_sigs)) ; std(all_S_sigs) / sqrt( length(all_S_sigs))]; 
+
+yyaxis right
+bh2 = bar(1 ,[mean(all_P_sigs) ; mean(all_S_sigs)]');
+bh2(1).FaceColor = c_ord(1,:);
+bh2(2).FaceColor = c_ord(2,:);
+
+hold on
+eh  = errorbar([.85 1.15],[mean(all_P_sigs) ; mean(all_S_sigs)]', err_bars','color', 'k', 'LineStyle',  'none');
+% eh.LineStyle
+
+ylim(y_lim)
+ylabel('% of sig modulated cells')
+% set(gca, 'XTickLabel', all_fname)
+set(gca, 'YColor', 'k','xticklabel', 'Mean')
+
+legend({'Place', 'Speed'})
+yyaxis left
+set(gca, 'ytick', [])
+
+
+
+
+%%
             
 %             if (iSess == 2 && iTask ==2) || (iSess == 1 && iTask ==1)
 %                 continue
