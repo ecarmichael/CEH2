@@ -245,31 +245,41 @@ end
 cd(PARAMS.inter_dir)
 
 sess_list = dir('*.mat');
-all_P_sigs = [];
-all_S_sigs = [];
+all_P_sigs = []; all_P_MI = []; all_sess_P_sigs = []; all_P_xcor = [];
+all_S_sigs = []; all_S_MI = []; all_sess_S_sigs = [];
 all_fname = []; 
 
-for iSess =  1: 8%length(sess_list)
+for iSess =  1: length(sess_list)
     
     load(sess_list(iSess).name, 'data'); 
     
     P_sig = []; S_sig = [];
-    
+    P_MI = [];  S_MI = [];
+    P_xcor = [];
     for iC = length(data.SI):-1:1
-        
        P_sig(iC) = data.SI(iC).spatial.place.MI_pval; 
-       
+       P_MI(iC) = data.SI(iC).spatial.place.MI; 
+%                fprintf('Cell %0.0f: MI = %0.3f   pval = %0.3f\n', iC, P_MI(iC), P_sig(iC))
+
        S_sig(iC) = data.SI(iC).spatial.speed.MI_pval; 
+       S_MI(iC) = data.SI(iC).spatial.speed.MI; 
 
-%        A_sig(iC) = data.SI(iC).spatial.accel.MI_pval; 
-
+       P_xcor(iC) = data.SI(iC).spatial.place.split.Stability_corr; 
     end
+    all_P_sigs = [all_P_sigs, P_sig]; 
+    all_P_MI = [all_P_MI, P_MI];
+    all_P_xcor = [all_P_xcor, P_xcor]; 
     
+    all_S_sigs = [all_S_sigs, S_sig];
+    all_S_MI = [all_S_MI, S_MI];
+
     fprintf('<strong>%s  |  Place Sig =  %.2f%%  |  Speed Sig =  %.2f%% </strong>\n', [data.f_info.fname ' ' data.f_info.date ' ' data.f_info.time ' ' data.f_info.task]  , (sum(P_sig < 0.05)/length(P_sig))*100, (sum(S_sig < 0.05)/length(S_sig))*100)
     
     
-    all_P_sigs(iSess) = (sum(P_sig < 0.05)/length(P_sig))*100; 
-    all_S_sigs(iSess) = (sum(S_sig < 0.05)/length(S_sig))*100;
+    all_sess_P_sigs(iSess) = (sum(P_sig < 0.05)/length(P_sig))*100; 
+    all_sess_P_sigs_split(iSess) = (sum(((P_sig < 0.05) & (P_xcor >= .5)))/length(P_sig))*100;
+
+    all_sess_S_sigs(iSess) = (sum(S_sig < 0.05)/length(S_sig))*100;
     
     if data.behav.width <35 && data.behav.height < 35
         fprintf('Small OF  Width: %.0fcm  x  Height: %.0fcm\n', data.behav.width, data.behav.height)
@@ -281,18 +291,42 @@ for iSess =  1: 8%length(sess_list)
         
     
 end
+%% Scatter MIs and MI p vals
+% remove zero pvals
+zero_idx = all_P_sigs == 0;
+sig_idx = all_P_sigs < 0.05  & ~zero_idx;
+xcor_idx = all_P_xcor >= .5; 
 
+
+figure(1000)
+subplot(1,2,1)
+hold on
+scatter(all_P_MI(~zero_idx), all_P_sigs(~zero_idx),36, [.8 .8 .8]);
+scatter(all_P_MI(sig_idx & xcor_idx), all_P_sigs(sig_idx & xcor_idx), 36, c_ord(1,:), 'filled');
+
+yline(0.05)
+
+xlabel('MI')
+ylabel('MI pval')
+
+subplot(1,2,2)
+hold on
+scatter(all_P_MI(sig_idx), all_P_sigs(sig_idx), 36, [.8 .8 .8])
+scatter(all_P_MI(sig_idx & xcor_idx), all_P_sigs(sig_idx & xcor_idx), 36, c_ord(1,:), 'filled')
+
+xlabel('MI')
+ylabel('MI pval')
 %%
 figure(1010)
 subplot(6,4,[1:3 5:7 9:11 13:15 17:19])
 c_ord = linspecer(2); 
-bh = bar([all_P_sigs ; all_S_sigs]');
+bh = bar([all_sess_P_sigs ; all_sess_S_sigs]');
 
 bh(1).FaceColor = c_ord(1,:);
 bh(2).FaceColor = c_ord(2,:);
 
 ylabel('% of sig modulated cells')
-set(gca, 'XTickLabel', all_fname)
+set(gca,'xtick', 1:length(all_fname), 'XTickLabel', all_fname, 'fontsize', 12)
 xtickangle(45)
 y_lim = ylim;
 
@@ -302,15 +336,15 @@ subplot(6,4,[4 8 12 16 20])
 
 % [~,eh] = errorbar_groups([mean(all_P_sigs) ; mean(all_S_sigs)]', err_bars','bar_colors', c_ord, 'bar_width',0.75,'errorbar_width',0.5, 'bar_names',{'Place', 'Speed'});
 
-err_bars = [std(all_P_sigs) / sqrt( length(all_P_sigs)) ; std(all_S_sigs) / sqrt( length(all_S_sigs))]; 
+err_bars = [std(all_sess_P_sigs) / sqrt( length(all_sess_P_sigs)) ; std(all_sess_S_sigs) / sqrt( length(all_sess_S_sigs))]; 
 
 yyaxis right
-bh2 = bar(1 ,[mean(all_P_sigs) ; mean(all_S_sigs)]');
+bh2 = bar(1 ,[mean(all_sess_P_sigs) ; mean(all_sess_S_sigs)]');
 bh2(1).FaceColor = c_ord(1,:);
 bh2(2).FaceColor = c_ord(2,:);
 
 hold on
-eh  = errorbar([.85 1.15],[mean(all_P_sigs) ; mean(all_S_sigs)]', err_bars','color', 'k', 'LineStyle',  'none');
+eh  = errorbar([.85 1.15],[mean(all_sess_P_sigs) ; mean(all_sess_S_sigs)]', err_bars','color', 'k', 'LineStyle',  'none');
 % eh.LineStyle
 
 ylim(y_lim)
