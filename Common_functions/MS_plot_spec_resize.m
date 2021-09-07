@@ -26,6 +26,7 @@ cut_vals = NaN(2,length(data_in.time)); % fill in the cutoff values.
 remove_flag = zeros(1,length(data_in.time));
 
 cfg_def = [];
+cfg_def.method = 'wavelet'; % could also be 'spec' for a spectrogram but this lacks temporal resolution. 
 cfg_def.segments = 1:length(data_in.time); % which segments to process
 cfg_def.fnames = data_in.file_names; % names of the segments. 
 cfg_def.emg_range = [-0.001 0.001]; % default, should be based on real data.
@@ -36,7 +37,7 @@ cfg_def.remove_key = 'backspace'; % which key to flag the current segment for re
 cfg_def.unclear_key = 'u'; % which key will classify the block as unclear. 
 cfg_def.spec.win_s = 2^10; % spectrogram window size.
 cfg_def.spec.onverlap = cfg_def.spec.win_s / 2; % overlap
-cfg_def.spec.freq = 10.5:0.1:80; % frequency range for spectrogram.
+cfg_def.spec.freq = 10.5:0.1:40; % frequency range for spectrogram.
 cfg_def.spec.lfp_chan = 2; % which channel to use for the spectrogram.  
 cfg_def.saveas = [];
 
@@ -62,21 +63,34 @@ switch data_type
             this_tvec = [];
             this_tvec = data_in.NLX_csc{iBlock}.tvec-data_in.NLX_csc{iBlock}.tvec(1);
             
-            [~,F,T,P] = spectrogram(data_in.NLX_csc{iBlock}.data(cfg.spec.lfp_chan,:), rectwin(cfg.spec.win_s), cfg.spec.onverlap,cfg.spec.freq, data_in.NLX_csc{iBlock}.cfg.hdr{1}.SamplingFrequency);
-            
             figure(iBlock+200)
             ax_spec(1) = subplot(7,1,1:3);
-            ax1 = imagesc(T,F,10*log10(P));
-            set(ax1, 'AlphaData', ~isinf(10*log10(P)))
-            set(gca,'FontSize',10, 'xtick', []);
-            axis xy; ylabel('Frequency (Hz)');
-            ax = gca;
-            % ax.YTickLabels = {0 [], [], 60, [], [], 80}; % set
-            set(gca, 'tickdir', 'out');
-            xlim([T(1) T(end)])
-
-            title([cfg.fnames{iBlock}]);
             
+            if strcmpi(cfg.method, 'wavelet')
+                [wt1,f1] = cwt(data_in.NLX_csc{iBlock}.data(cfg.spec.lfp_chan,:),'bump',data_in.NLX_csc{iBlock}.cfg.hdr{1}.SamplingFrequency, 'FrequencyLimits',[2 32]);
+                pcolor(data_in.NLX_csc{iBlock}.tvec(:) - data_in.NLX_csc{iBlock}.tvec(1),f1,abs(wt1)); shading interp;
+                set(gca,'ytick',[2 4:4:16 24 32],  'YScale', 'log', 'xtick', [] );
+                ylabel('freq (Hz)')
+                xlim([min(data_in.NLX_csc{iBlock}.tvec - data_in.NLX_csc{iBlock}.tvec(1)), max(data_in.NLX_csc{iBlock}.tvec - data_in.NLX_csc{iBlock}.tvec(1))])
+                
+            else
+                [~,F,T,P] = spectrogram(data_in.NLX_csc{iBlock}.data(cfg.spec.lfp_chan,:), rectwin(cfg.spec.win_s), cfg.spec.onverlap,cfg.spec.freq, data_in.NLX_csc{iBlock}.cfg.hdr{1}.SamplingFrequency);
+                ax1 = imagesc(T,F,10*log10(P));
+                set(ax1, 'AlphaData', ~isinf(10*log10(P)))
+                set(gca,'FontSize',10, 'xtick', []);
+                axis xy; ylabel('Frequency (Hz)');
+                ax = gca;
+                % ax.YTickLabels = {0 [], [], 60, [], [], 80}; % set
+                set(gca, 'tickdir', 'out');
+                xlim([T(1) T(end)])
+                
+                
+            end
+            text_y = ylim; 
+            
+            title([cfg.fnames{iBlock}]);
+
+
             ax_spec(2) = subplot(7,1,4:6);
             hold on
             for iChan = length(data_in.NLX_csc{iBlock}.label):-1:1
@@ -109,7 +123,8 @@ switch data_type
             y_label{ceil(end/2), :} = 'EMG';
             y_label{1} = num2str(ax_spec(3).YAxis.TickValues(1));
             y_label{end} = num2str(ax_spec(3).YAxis.TickValues(end));
-            set(gca, 'yticklabel', y_label)
+            set(gca, 'yticklabel', y_label); 
+            ylim(cfg.emg_range); 
             xlim([this_tvec(1) this_tvec(end)])
             xlabel('Time (s)')
             
@@ -133,9 +148,9 @@ switch data_type
                      [cut_x,~] = ginput(2);
                     hold on
                     v_ax(1) = vline(cut_x(1), 'r');
-                    t_ax(1) = text(cut_x(1), F(1), 'Cutoff start', 'color', 'r','FontSize',14 );
+                    t_ax(1) = text(cut_x(1), text_y(1), 'Cutoff start', 'color', 'r','FontSize',14 );
                     v_ax(2) = vline(cut_x(2), 'r');
-                    t_ax(2) = text(cut_x(2), F(1), 'Cutoff end', 'color', 'r','FontSize',14 );
+                    t_ax(2) = text(cut_x(2),text_y(1), 'Cutoff end', 'color', 'r','FontSize',14 );
 
                     was_a_key = waitforbuttonpress;
                     key_hit = get(gcf, 'CurrentKey');
