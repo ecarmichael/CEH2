@@ -257,20 +257,19 @@ for iSub = Subjects
         
         %% hardcode dir
         
-        %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\11_26_2019_PV1060_HATSwitch'; %needs recutting
+        ms_dir = 'J:\4_17_2021_PV1192_HATD1';
+        csc_dir = 'J:\2021-04-17_10-06-00_PV1192_HATD1'; 
         %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1069\10_18_2019_PV1069_HATD5';
-        ms_dir = '/home/ecarmichael/Dropbox (Williams Lab)/4_17_2021_PV1192_HATD1';
-        
-        csc_dir = '/mnt/Data/2021-04-17_10-06-00_PV1192_HATD1';
+%         ms_dir = '/home/ecarmichael/Dropbox (Williams Lab)/4_17_2021_PV1192_HATD1';
+%         csc_dir = '/mnt/Data/2021-04-17_10-06-00_PV1192_HATD1';
         %         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-10-18_10-02-44_PV1069_HATD5';
         
         iSess = '4_17_2021_PV1192_HATD1';
         
         iSub='PV1192';
         
-        ms_resize_dir = ['J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\' iSub filesep  '11_15_2019_PV1060_Homecage_Sleep'];
+        ms_resize_dir = [PARAMS.inter_dir filesep iSub filesep iSess];  %just save the ms_resize struct back into the same place as the ms.mat file.
         mkdir(ms_resize_dir);
-        
         
         %% Segment and select the data
         
@@ -364,7 +363,7 @@ for iSub = Subjects
         cfg_seg.resize.spec.onverlap = cfg_seg.resize.spec.win_s / 2; % overlap
         cfg_seg.resize.spec.freq = 0.5:0.1:80; % frequency range for spectrogram.
         cfg_seg.resize.spec.lfp_chan = 2; % which channel to use for the spectrogram.
-        
+        cfg_seg.resize.method = 'wavelet'; 
         %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',parts{end});
         
         % run the actual segmentation workflow

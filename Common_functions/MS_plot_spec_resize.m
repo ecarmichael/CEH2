@@ -135,7 +135,8 @@ switch data_type
             xlim([this_tvec(1) this_tvec(end)])
             
             linkaxes(ax_spec, 'x');
-            SetFigure([], gcf);
+            cfg_set.fontsize = 6; 
+            SetFigure(cfg_set, gcf);
 %             Resize_figure
             
             
@@ -201,7 +202,7 @@ switch data_type
                 cut_vals(:,iBlock) = cut_x;
                 
             else
-                pause(2)
+                pause(1)
             end
             
             if ~isempty(cfg.saveas)

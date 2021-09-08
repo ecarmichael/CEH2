@@ -405,7 +405,7 @@ for iT = 1:length(TS)
         %         pause(1)
         
         %save values for resizing the ms struct data fields.
-        cut_offs(:,iT) = [2;length(TS{iT}.system_clock{1})];
+        cut_offs(:,iT) = [1;length(TS{iT}.system_clock{1})-1];
         % keep the nlx segment
         res_csc{iT} = restrict(csc, evt_blocks{iT}.t{cfg.evt.t_chan}(1), evt_blocks{iT}.t{cfg.evt.t_chan}(end));
         res_evt{iT} = restrict(nlx_evts, evt_blocks{iT}.t{cfg.evt.t_chan}(1), evt_blocks{iT}.t{cfg.evt.t_chan}(end));
@@ -419,8 +419,8 @@ for iT = 1:length(TS)
         %save values for resizing the ms struct data fields.
         cut_offs(:,iT) = [1;length(TS{iT}.system_clock{1})];
         % keep the nlx segment
-        res_csc{iT} = restrict(csc, evt_blocks{iT}.t{cfg.evt.t_chan}(1) - csc.cfg.hdr{1}.SamplingFrequency, evt_blocks{iT}.t{cfg.evt.t_chan}(end));
-        res_evt{iT} = restrict(nlx_evts, evt_blocks{iT}.t{cfg.evt.t_chan}(1)- csc.cfg.hdr{1}.SamplingFrequency, evt_blocks{iT}.t{cfg.evt.t_chan}(end));
+        res_csc{iT} = restrict(csc, evt_blocks{iT}.t{cfg.evt.t_chan}(1) , evt_blocks{iT}.t{cfg.evt.t_chan}(end)- (1/csc.cfg.hdr{1}.SamplingFrequency));
+        res_evt{iT} = restrict(nlx_evts, evt_blocks{iT}.t{cfg.evt.t_chan}(1), evt_blocks{iT}.t{cfg.evt.t_chan}(end)- (1/csc.cfg.hdr{1}.SamplingFrequency));
         
     else
         warning('TS do not match nlx .nev data. TS# %s  %s samples  - NLX: %s events',...
@@ -483,6 +483,17 @@ fprintf('\n<strong>MS_Segment_raw</strong>: NLX_csc appended\n');
 % clear large variables from workspace for memory.
 % clear ms res_csc res_evt flag
 
+%% display all MS and NLX blocks
+
+for ii = 1:length(ms_seg.RawTraces)
+    if length(ms_seg.time{ii}) ~=  length(ms_seg.NLX_evt{ii}.t{cfg.evt.t_chan})
+        fprintf('<strong>Event %.0f: MS %.0f samples %.2fs  | NLX %.0f samples %.2fs</strong>\n', ii, length(ms_seg.time{ii}), (ms_seg.time{ii}(end) - ms_seg.time{ii}(1))/1000, length(ms_seg.NLX_evt{ii}.t{cfg.evt.t_chan}), ms_seg.NLX_csc{ii}.tvec(end) - ms_seg.NLX_csc{ii}.tvec(1))
+        
+    else
+        
+        fprintf('Event %.0f: MS %.0f samples %.2fs  | NLX %.0f samples %.2fs\n', ii, length(ms_seg.time{ii}), (ms_seg.time{ii}(end) - ms_seg.time{ii}(1))/1000, length(ms_seg.NLX_evt{ii}.t{cfg.evt.t_chan}), ms_seg.NLX_csc{ii}.tvec(end) - ms_seg.NLX_csc{ii}.tvec(1))
+    end
+end
 
 %% remove known bad blocks
 % rm_idx = find(ismember(ms_seg.file_names, cfg.bad_block_name));
@@ -497,7 +508,7 @@ fprintf('\n<strong>MS_Segment_raw</strong>: NLX_csc appended\n');
 %% get some emg stats for scaling
 emg_chan  = find(ismember(cfg.csc.label, 'EMG')); % used to get the emg range.
 % get the min and max emg range for the first 5mins of the recording. used for consistency.
-cfg.resize = []; cfg.resize.emg_range = [min(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency))), max(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency)))]; % get the min and max emg range for the first 10s of the recording. used for consistency.
+cfg.resize.emg_range = []; cfg.resize.emg_range = [min(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency))), max(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency)))]; % get the min and max emg range for the first 10s of the recording. used for consistency.
 
 %% spectrogram of an episode w/ability to resize using gui
 
