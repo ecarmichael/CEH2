@@ -223,6 +223,13 @@ for iSub = 1:length(sub_list)
             cd([PARAMS.data_dir filesep PARAMS.behav_dir filesep sub_list{iSub} filesep sess_list{iSess} filesep task_list{iTask} filesep 'results'])
             load('behav.mat')
             
+            if length(behav.time) ~= length(behav.position)
+                fprintf('<strong>%s</strong>: Behav file does not align.  Skipping and making note\n', strrep([f_info.fname '_' f_info.date '_' strrep(f_info.time, ':','-') '_' strrep(f_info.task, ' ', '_')], '-','_'))
+                fileID = fopen([PARAMS.inter_dir filesep 'FAIL_' strrep([f_info.fname '_' f_info.date '_' strrep(f_info.time, ':','-') '_' strrep(f_info.task, ' ', '_')], '-','_') '.txt'],'w');
+                fprintf(fileID,'Behav file does not align.  Skipping and making note\n');
+                fclose(fileID);
+                continue
+            end
             
             
             % preprocess the sessions
