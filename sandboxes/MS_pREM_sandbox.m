@@ -48,9 +48,10 @@ cd(data_dir)
 c_ord = linspecer(5); % just some nicer colours.
 
 %% load some pre-cut data
-
+warning off
 load('ms_resize.mat');
-
+warning on
+disp('MS loaded')
 inter_dir = cd; % where to write back the sleep scored data.
 %% get the session name
 parts = strsplit(cd,  filesep);

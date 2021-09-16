@@ -28,6 +28,7 @@ os = computer;
 if strcmp(os, 'GLNXA64')
     
     %% Home
+      if strcmpi(getenv('USERNAME'), 'ecarmichael')
         PARAMS.data_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid'; % where to find the raw data
         PARAMS.inter_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/II_inter'; % where to put intermediate files
         PARAMS.stats_dir = '/mnt/Data/Williams_Lab/II_classification/Inter/'; % where to put the statistical output .txt
@@ -36,6 +37,7 @@ if strcmp(os, 'GLNXA64')
         PARAMS.OASIS_dir = '/home/ecarmichael/Documents/GitHub/OASIS_matlab'; % contains the OASIS decon method: Friedrich et al. 2017: https://doi.org/10.1371/journal.pcbi.1005423
         %
     %% Office
+      elseif strcmpi(getenv('USERNAME'), 'williamslab')
 %     PARAMS.data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid'; % where to find the raw data
 %     PARAMS.inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/II_inter'; % where to put intermediate files
 %     PARAMS.stats_dir = PARAMS.inter_dir; % where to put the statistical output .txt
@@ -43,6 +45,7 @@ if strcmp(os, 'GLNXA64')
 %     PARAMS.code_CEH2_dir = '/home/williamslab/Documents/Github/CEH2'; % where the multisite repo can be found
 %     PARAMS.OASIS_dir = '/home/williamslab/Documents/Github/OASIS_matlab'; % contains the OASIS decon method: Friedrich et al. 2017: https://doi.org/10.1371/journal.pcbi.1005423
 %     
+      end
     PARAMS.behav_dir = 'Behav_DLC';
     PARAMS.ms_dir = 'Ingrid (Results_Calcium data 2020)';
     
