@@ -84,14 +84,26 @@ if ismac
 elseif strcmp(os, 'GLNXA64')
     
     %     PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/2019-12-04_11-10-01_537day0base1'; % where to find the raw data
-%     PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/JC/7_12_2019_PV1069_LTD5'; % where to find the raw data
+    %     PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/JC/7_12_2019_PV1069_LTD5'; % where to find the raw data
     %     PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/EV/';
-    PARAMS.raw_data_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData'; % raw data location.
-    PARAMS.inter_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter'; % where to put intermediate files
+    
+    if strcmpi(getenv('USERNAME'), 'williamslab')
+        PARAMS.raw_data_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData'; % raw data location.
+        PARAMS.inter_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter'; % where to put intermediate files
         PARAMS.csc_data_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo'; % where are the LFP files. If blank will look in the same folder as raw_data.
-%     PARAMS.stats_dir = '/home/ecarmichael/Documents/Williams_Lab/Stats/'; % where to put the statistical output .txt
-    PARAMS.code_base_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
-    PARAMS.code_CEH2_dir = '/home/williamslab/Documents/Github/CEH2'; % where the multisite repo can be found
+        PARAMS.stats_dir = [PARAMS.inter_dir '/Stats/']; % where to put the statistical output .txt
+        PARAMS.code_base_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
+        PARAMS.code_CEH2_dir = '/home/williamslab/Documents/Github/CEH2'; % where the multisite repo can be found
+        
+    elseif strcmpi(getenv('USERNAME'), 'ecarmichael')
+        
+        PARAMS.raw_data_dir = '/home/ecarmichael/Dropbox (Williams Lab)'; % raw data location.
+        PARAMS.inter_dir     = '/home/ecarmichael/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter'; % where to put intermediate files
+        PARAMS.csc_data_dir  = '/mnt/Data'; % where are the LFP files. If blank will look in the same folder as raw_data.
+        PARAMS.stats_dir     = [PARAMS.inter_dir '/Stats/']; % where to put the statistical output .txt
+        PARAMS.code_base_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
+        PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
+    end
     
 else
     PARAMS.data_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData'; % where to find the raw data
@@ -114,12 +126,12 @@ cd(PARAMS.raw_data_dir) % move to the data folder
 
 % try the newer NLX loaders for UNIX
 [~, d] = version;
-if str2double(d(end-3:end)) >2014 && strcmp(os, 'GLNXA64')
-    rmpath('/Users/jericcarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared/io/neuralynx')
-    addpath(genpath('/Users/jericcarmichael/Documents/NLX_loaders_UNIX_2015'))
-    disp('Version is greater than 2014b on UNIX so use updated loaders found here:')
-    which Nlx2MatCSC
-end
+% if str2double(d(end-3:end)) >2014 && strcmp(os, 'GLNXA64')
+%     rmpath('/Users/jericcarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared/io/neuralynx')
+%     addpath(genpath('/Users/jericcarmichael/Documents/NLX_loaders_UNIX_2015'))
+%     disp('Version is greater than 2014b on UNIX so use updated loaders found here:')
+%     which Nlx2MatCSC
+% end
 
 clear d os
 
@@ -192,18 +204,18 @@ for iSub = Subjects
     % find in the dir. ex: MS_list_dir_names(this_sub_dir, 'LTD')
     cd(this_sub_dir)
     sess_list = MS_list_dir_names(this_sub_dir, 'PV'); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
-%     sess_list = MS_list_dir_names(this_sub_dir); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
-
+    %     sess_list = MS_list_dir_names(this_sub_dir); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
+    
     for iSess = sess_list
         ms_dir = [PARAMS.raw_data_dir filesep iSub filesep iSess];
         
-%         if isempty(PARAMS.csc_data_dir)
-%             csc_dir = ms_dir;
-%         end
+        %         if isempty(PARAMS.csc_data_dir)
+        %             csc_dir = ms_dir;
+        %         end
         
-        % crazy line to convert between time formats. 
+        % crazy line to convert between time formats.
         ms_date = datestr(datenum(strrep(iSess(1:(strfind(iSess, '20')+5)),'_', '/'), 'MM/dd/yyyy'), 'yyyy-MM-dd');
-       
+        
         % TODO add in double check using subject and LTD/HAT
         [csc_dir, csc_dir_fold] = MS_list_dir_names(PARAMS.csc_data_dir, ms_date);
         if ~isempty(csc_dir) && length(csc_dir) ==1
@@ -218,12 +230,12 @@ for iSub = Subjects
             error('No csc folder found.','MS_segment_data_workflow_sandbox');
         end
         % find the csc files
-        % find the matching folder. 
+        % find the matching folder.
         
         
         
-%         TS_files = dir(fullfile(, '**', '*.ncs'));
-%         csc_dir = TS_files(1).folder;
+        %         TS_files = dir(fullfile(, '**', '*.ncs'));
+        %         csc_dir = TS_files(1).folder;
         
         % ms_dir = 'J:\Williams_Lab\JC_Sleep\11_23_2019_PV1060_HATD5';
         % csc_dir = 'J:\Williams_Lab\JC_Sleep\11_23_2019_PV1060_HATD5\2019-11-23_10-10-12_PV1060_HATD5';
@@ -244,34 +256,33 @@ for iSub = Subjects
         end
         
         %% hardcode dir
-
-%         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\11_26_2019_PV1060_HATSwitch'; %needs recutting
-%         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1069\10_18_2019_PV1069_HATD5';
-        ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1060\11_15_2019_PV1060_Homecage_Sleep';
-
-         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-11-15_10-12-49_PV1060_Homecagerecording'; 
-%         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-10-18_10-02-44_PV1069_HATD5';
         
-        iSess = '11_15_2019_PV1060_Homecage_Sleep';
-       
-        iSub='PV1060';
-       
-        ms_resize_dir = ['J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\' iSub filesep  '11_15_2019_PV1060_Homecage_Sleep'];
+        ms_dir = 'J:\4_17_2021_PV1192_HATD1';
+        csc_dir = 'J:\2021-04-17_10-06-00_PV1192_HATD1'; 
+        %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1069\10_18_2019_PV1069_HATD5';
+%         ms_dir = '/home/ecarmichael/Dropbox (Williams Lab)/4_17_2021_PV1192_HATD1';
+%         csc_dir = '/mnt/Data/2021-04-17_10-06-00_PV1192_HATD1';
+        %         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-10-18_10-02-44_PV1069_HATD5';
+        
+        iSess = '4_17_2021_PV1192_HATD1';
+        
+        iSub='PV1192';
+        
+        ms_resize_dir = [PARAMS.inter_dir filesep iSub filesep iSess];  %just save the ms_resize struct back into the same place as the ms.mat file.
         mkdir(ms_resize_dir);
-        
         
         %% Segment and select the data
         
-%         % get the session info.
-%         parts = strsplit(ms_dir,filesep);
-%         parts = strsplit(parts{end}, '_');
-% %         id_idx = strfind(parts, 'PV');
-% %         id_idx = find(~cellfun('isempty', id_idx));
-% %         
-% %         this_subject = parts{id_idx};
-%         
-%         parts = strsplit(ms_dir,  filesep);
-%         this_sess = parts{end};
+        %         % get the session info.
+        %         parts = strsplit(ms_dir,filesep);
+        %         parts = strsplit(parts{end}, '_');
+        % %         id_idx = strfind(parts, 'PV');
+        % %         id_idx = find(~cellfun('isempty', id_idx));
+        % %
+        % %         this_subject = parts{id_idx};
+        %
+        %         parts = strsplit(ms_dir,  filesep);
+        %         this_sess = parts{end};
         
         
         cd(ms_dir)
@@ -280,11 +291,11 @@ for iSub = Subjects
         if strcmpi(iSub, 'PV1060')
             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         elseif strcmpi(iSub, 'PV1069')
-            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; 
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'};
         elseif strcmpi(iSub, 'PV1043')
             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'};
         elseif strcmpi(iSub, 'PV1191')
-            cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; 
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'};
         else
             cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         end
@@ -293,7 +304,7 @@ for iSub = Subjects
         
         % flag known bad recording blocks.  [EC ToDo: make another variable
         % that will remove specific TS or Evt blocks when there is a known
-        % discrepency between the MS files and the .nev stamps. 
+        % discrepency between the MS files and the .nev stamps.
         if strcmp(iSess, '10_18_2019_PV1069_HATD5')
             cfg_seg.bad_block = 19;% This index is based on the number of recording blocks in the NLX evt file.
             cfg_seg.bad_block_name = {'H15_M37_S21_REmove_withoutLFP'};% what is the name of the unwanted recording block folder.
@@ -304,13 +315,13 @@ for iSub = Subjects
             cfg_seg.bad_block_name = {'H14_M15_S22_remove', 'H14_M54_S54_remove'};% what is the name of the unwanted recording block folder.
         elseif strcmp(iSess, '6_13_2019_PV1043_LTD3')
             cfg_seg.remove_ts = [];
-            cfg_seg.remove_nlx_evt = [1]; 
+            cfg_seg.remove_nlx_evt = [1];
         elseif strcmp(iSess, '7_17_2019_PV1060_LTD3')
             cfg_seg.remove_ts = [5];
-            cfg_seg.remove_nlx_evt = [5,6]; 
+            cfg_seg.remove_nlx_evt = [5,6];
         elseif strcmp(iSess, '7_10_2019_PV1069_LTD3') %added by Jisoo
             cfg_seg.remove_ts = [];
-            cfg_seg.remove_nlx_evt = [1]; 
+            cfg_seg.remove_nlx_evt = [1];
         elseif strcmp(iSess, '7_15_2019_PV1060_LTD1') %added by Jisoo
             cfg_seg.remove_ts = [1,2,3,4,5,6,7,8,9]; %Event was not recorded at the beginning of the presleep
             cfg_seg.remove_nlx_evt = [];
@@ -322,7 +333,7 @@ for iSub = Subjects
             cfg_seg.bad_block_name = {};
             cfg_seg.remove_ts=[]; % added by Jisoo
             cfg_seg.remove_nlx_evt=[]; % added by Jisoo
-             
+            
         end
         
         % filters
@@ -352,7 +363,7 @@ for iSub = Subjects
         cfg_seg.resize.spec.onverlap = cfg_seg.resize.spec.win_s / 2; % overlap
         cfg_seg.resize.spec.freq = 0.5:0.1:80; % frequency range for spectrogram.
         cfg_seg.resize.spec.lfp_chan = 2; % which channel to use for the spectrogram.
-        
+        cfg_seg.resize.method = 'wavelet'; 
         %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',parts{end});
         
         % run the actual segmentation workflow
@@ -361,4 +372,4 @@ for iSub = Subjects
         %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> complete.\n',parts{end});
         
     end % session
-end % subject
+end % subjecti

@@ -62,6 +62,9 @@ cfg_def.filt_d.order = 8; %type filter order
 cfg_def.filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
 cfg_def.filt_t.f  = [6 11];
 cfg_def.filt_t.order = 3; %type filter order
+% emg notch
+cfg_def.filt_e.notch = 1; % use notch filter on EMG. 
+cfg_def.filt_e.bw = 20; % factor for notch attenation. 
 
 % matching and resizing
 cfg_def.TS_nlx_match = 1; % use this if the TS file is off by one sample. It will trim the ms data to fit the nlx data. [only a bandaid solution until segmentation can be verified with ground truth]
@@ -77,8 +80,9 @@ cfg = ProcessConfig(cfg_def, cfg_in);
 cd(ms_dir)
 
 %load the ms.mat file.
+warning off
 load('ms.mat')
-
+warning on
 
 % check for Binary subfield in loaded data. 
 if isfield(ms, 'Binary')
@@ -169,9 +173,31 @@ nlx_evts = LoadEvents([]); % get '.nev' file in this dir.
 
 csc = MS_LoadCSC(cfg.csc); % need to comment out ExpKeys lines in LoadCSC
 
+% notch filter emg. 
+if cfg.filt_e.notch
+    fprintf('<strong>%s</strong>: Applying Notch filter to EMG...\n', mfilename); 
+    wo = 60/(csc.cfg.hdr{1}.SamplingFrequency/2);  
+    bw = wo/cfg.filt_e.bw; 
+    [b,a] = iirnotch(wo,bw);
+    
+    temp_sig = csc.data(1,:);
+     nan_idx = find(isnan(temp_sig));
+    
+    if ~isempty(nan_idx)
+        fprintf('WARNING: FilterLFP.m: signal %d contains NaNs (%d).\n',iS,length(nan_idx));
+        temp_sig(nan_idx) = 0;
+    end
+    
+    % filter
+    temp_sig = filtfilt(b,a,csc.data(1,:));
+    
+    % reinstate NaNs and put signal back into tsd
+    temp_sig(nan_idx) = NaN;
+    csc.data(1,:) = temp_sig;
+end
+
 
 % extract NLX event epochs
-
 nlx_evts.t{end+1} = sort([nlx_evts.t{end-1}, nlx_evts.t{end}]);
 nlx_evts.label{end+1} = ['merge TTls at ' num2str(length(nlx_evts)-1) ' and ' num2str(length(nlx_evts))];
 
@@ -318,8 +344,8 @@ if length(evt_blocks) < length(TS)
     
     ms_trk = msExtractBinary_detrendTraces(ms_trk);
     
-    save([ms_resize_dir filesep 'ms_trk.mat'], 'ms_trk', '-v7.3')
-    clear 'ms_trk';
+%     save([ms_resize_dir filesep 'ms_trk.mat'], 'ms_trk', '-v7.3')
+%     clear 'ms_trk';
     
     % remove from main ms struct
     cfg_rem = [];
@@ -379,10 +405,22 @@ for iT = 1:length(TS)
         %         pause(1)
         
         %save values for resizing the ms struct data fields.
-        cut_offs(:,iT) = [2;length(TS{iT}.system_clock{1})];
+        cut_offs(:,iT) = [1;length(TS{iT}.system_clock{1})-1];
         % keep the nlx segment
         res_csc{iT} = restrict(csc, evt_blocks{iT}.t{cfg.evt.t_chan}(1), evt_blocks{iT}.t{cfg.evt.t_chan}(end));
         res_evt{iT} = restrict(nlx_evts, evt_blocks{iT}.t{cfg.evt.t_chan}(1), evt_blocks{iT}.t{cfg.evt.t_chan}(end));
+        
+        
+    elseif length(TS{iT}.system_clock{1}) - length(evt_blocks{iT}.t{cfg.evt.t_chan}) == -cfg.TS_nlx_match && cfg.TS_nlx_match ~= 0
+        warning('TS do not match nlx .nev data. TS# %s  %s samples  - NLX: %s events',...
+            num2str(iT), num2str(length(TS{iT}.system_clock{1})), num2str(length(evt_blocks{iT}.t{cfg.evt.t_chan})))
+        fprintf('Times differ by %d sample(s). cfg.TS_nlx_match evoked, correcting NLX...\n',abs(length(TS{iT}.system_clock{1}) - length(evt_blocks{iT}.t{cfg.evt.t_chan})))
+        
+        %save values for resizing the ms struct data fields.
+        cut_offs(:,iT) = [1;length(TS{iT}.system_clock{1})];
+        % keep the nlx segment
+        res_csc{iT} = restrict(csc, evt_blocks{iT}.t{cfg.evt.t_chan}(1) , evt_blocks{iT}.t{cfg.evt.t_chan}(end)- (1/csc.cfg.hdr{1}.SamplingFrequency));
+        res_evt{iT} = restrict(nlx_evts, evt_blocks{iT}.t{cfg.evt.t_chan}(1), evt_blocks{iT}.t{cfg.evt.t_chan}(end)- (1/csc.cfg.hdr{1}.SamplingFrequency));
         
     else
         warning('TS do not match nlx .nev data. TS# %s  %s samples  - NLX: %s events',...
@@ -445,6 +483,17 @@ fprintf('\n<strong>MS_Segment_raw</strong>: NLX_csc appended\n');
 % clear large variables from workspace for memory.
 % clear ms res_csc res_evt flag
 
+%% display all MS and NLX blocks
+
+for ii = 1:length(ms_seg.RawTraces)
+    if length(ms_seg.time{ii}) ~=  length(ms_seg.NLX_evt{ii}.t{cfg.evt.t_chan})
+        fprintf('<strong>Event %.0f: MS %.0f samples %.2fs  | NLX %.0f samples %.2fs</strong>\n', ii, length(ms_seg.time{ii}), (ms_seg.time{ii}(end) - ms_seg.time{ii}(1))/1000, length(ms_seg.NLX_evt{ii}.t{cfg.evt.t_chan}), ms_seg.NLX_csc{ii}.tvec(end) - ms_seg.NLX_csc{ii}.tvec(1))
+        
+    else
+        
+        fprintf('Event %.0f: MS %.0f samples %.2fs  | NLX %.0f samples %.2fs\n', ii, length(ms_seg.time{ii}), (ms_seg.time{ii}(end) - ms_seg.time{ii}(1))/1000, length(ms_seg.NLX_evt{ii}.t{cfg.evt.t_chan}), ms_seg.NLX_csc{ii}.tvec(end) - ms_seg.NLX_csc{ii}.tvec(1))
+    end
+end
 
 %% remove known bad blocks
 % rm_idx = find(ismember(ms_seg.file_names, cfg.bad_block_name));
@@ -459,7 +508,7 @@ fprintf('\n<strong>MS_Segment_raw</strong>: NLX_csc appended\n');
 %% get some emg stats for scaling
 emg_chan  = find(ismember(cfg.csc.label, 'EMG')); % used to get the emg range.
 % get the min and max emg range for the first 5mins of the recording. used for consistency.
-cfg.resize = []; cfg.resize.emg_range = [min(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency))), max(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency)))]; % get the min and max emg range for the first 10s of the recording. used for consistency.
+cfg.resize.emg_range = []; cfg.resize.emg_range = [min(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency))), max(csc.data(emg_chan,1:(300*csc.cfg.hdr{1}.SamplingFrequency)))]; % get the min and max emg range for the first 10s of the recording. used for consistency.
 
 %% spectrogram of an episode w/ability to resize using gui
 

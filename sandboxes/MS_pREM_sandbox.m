@@ -36,7 +36,7 @@ else
     LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo';
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
-   data_dir ='J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\PV1069\10_18_2019_PV1069_HATD5'; % change this to the data folder that you want.  LFP will update automatically.
+   data_dir ='J:\Williams_Lab\Jisoo\Jisoo_Project\Inter\PV1060\11_23_2019_PV1060_HATD5'; % change this to the data folder that you want.  LFP will update automatically.
    cell_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\4.PlaceCell'; % where to find place cell classification and centroids. 
    
    % data_dir = 'C:\Users\ecarm\Dropbox (Williams
