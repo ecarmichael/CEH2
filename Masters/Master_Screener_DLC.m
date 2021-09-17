@@ -38,13 +38,13 @@ if strcmp(os, 'GLNXA64')
         %
     %% Office
       elseif strcmpi(getenv('USERNAME'), 'williamslab')
-%     PARAMS.data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid'; % where to find the raw data
-%     PARAMS.inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/II_inter'; % where to put intermediate files
-%     PARAMS.stats_dir = PARAMS.inter_dir; % where to put the statistical output .txt
-%     PARAMS.code_base_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
-%     PARAMS.code_CEH2_dir = '/home/williamslab/Documents/Github/CEH2'; % where the multisite repo can be found
-%     PARAMS.OASIS_dir = '/home/williamslab/Documents/Github/OASIS_matlab'; % contains the OASIS decon method: Friedrich et al. 2017: https://doi.org/10.1371/journal.pcbi.1005423
-%     
+    PARAMS.data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid'; % where to find the raw data
+    PARAMS.inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/II_inter'; % where to put intermediate files
+    PARAMS.stats_dir = PARAMS.inter_dir; % where to put the statistical output .txt
+    PARAMS.code_base_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
+    PARAMS.code_CEH2_dir = '/home/williamslab/Documents/Github/CEH2'; % where the multisite repo can be found
+    PARAMS.OASIS_dir = '/home/williamslab/Documents/Github/OASIS_matlab'; % contains the OASIS decon method: Friedrich et al. 2017: https://doi.org/10.1371/journal.pcbi.1005423
+    
       end
     PARAMS.behav_dir = 'Behav_DLC';
     PARAMS.ms_dir = 'Ingrid (Results_Calcium data 2020)';
@@ -128,7 +128,7 @@ for iSess = 1:length(d)
     end
 end
 
-for iSub = 1:length(sub_list)
+for iSub = 1:length(sub_list) % comment length out and just do iSub = X session. 
     
     cd([PARAMS.data_dir filesep PARAMS.ms_dir filesep sub_list{iSub}])
     
@@ -161,6 +161,8 @@ for iSub = 1:length(sub_list)
             task_list{1} = sess_list{iSess}; % if this is the data folder (only one task that day, then just go here;
             
         end
+        
+        % if length(task_list) > 1 the second one is with boundry. 
         
         % loop through tasks in a session (if any)
         for iTask = 1:length(task_list) % loop through tasks in a session.
@@ -246,9 +248,9 @@ for iSub = 1:length(sub_list)
             save([PARAMS.inter_dir filesep strrep([f_info.fname '_' f_info.date '_' strrep(f_info.time, ':','-') '_' strrep(f_info.task, ' ', '_')], '-','_')], 'data', '-v7.3')
             close all
             clear data
-        end
-    end
-end
+        end % end task
+    end % end sess
+end % end sub
 
 
 %% collect the processed data and summarize
@@ -301,31 +303,7 @@ for iSess =  1: length(sess_list)
         
     
 end
-%% Scatter MIs and MI p vals
-% remove zero pvals
-zero_idx = all_P_sigs == 0;
-sig_idx = all_P_sigs < 0.05  & ~zero_idx;
-xcor_idx = all_P_xcor >= .5; 
 
-
-figure(1000)
-subplot(1,2,1)
-hold on
-scatter(all_P_MI(~zero_idx), all_P_sigs(~zero_idx),36, [.8 .8 .8]);
-scatter(all_P_MI(sig_idx & xcor_idx), all_P_sigs(sig_idx & xcor_idx), 36, c_ord(1,:), 'filled');
-
-yline(0.05)
-
-xlabel('MI')
-ylabel('MI pval')
-
-subplot(1,2,2)
-hold on
-scatter(all_P_MI(sig_idx), all_P_sigs(sig_idx), 36, [.8 .8 .8])
-scatter(all_P_MI(sig_idx & xcor_idx), all_P_sigs(sig_idx & xcor_idx), 36, c_ord(1,:), 'filled')
-
-xlabel('MI')
-ylabel('MI pval')
 %%
 figure(1010)
 subplot(6,4,[1:3 5:7 9:11 13:15 17:19])
@@ -366,6 +344,34 @@ legend({'Place', 'Speed'})
 yyaxis left
 set(gca, 'ytick', [])
 
+
+%% Scatter MIs and MI p vals
+% remove zero pvals
+c_ord = linspecer(2); 
+
+zero_idx = all_P_sigs == 0;
+sig_idx = all_P_sigs < 0.05  & ~zero_idx;
+xcor_idx = all_P_xcor >= .5; 
+
+
+figure(1000)
+subplot(1,2,1)
+hold on
+scatter(all_P_MI(~zero_idx), all_P_sigs(~zero_idx),36, [.8 .8 .8]);
+scatter(all_P_MI(sig_idx & xcor_idx), all_P_sigs(sig_idx & xcor_idx), 36, c_ord(1,:), 'filled');
+
+yline(0.05)
+
+xlabel('MI')
+ylabel('MI pval')
+
+subplot(1,2,2)
+hold on
+scatter(all_P_MI(sig_idx), all_P_sigs(sig_idx), 36, [.8 .8 .8])
+scatter(all_P_MI(sig_idx & xcor_idx), all_P_sigs(sig_idx & xcor_idx), 36, c_ord(1,:), 'filled')
+
+xlabel('MI')
+ylabel('MI pval')
 
 
 
