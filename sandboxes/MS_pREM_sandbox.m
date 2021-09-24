@@ -25,14 +25,19 @@
 %     2. epoch has min smoothed IPI < 5th percentile of all IPI_smoothed
 %     3. epoch theta amp > mean theta amp for all REM.
 
-if isunix
-    addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
-    addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
-    data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1043/6_11_2019_PV1043_LTD1';
-    LFP_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP';
-     cell_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/4.PlaceCell'; 
-else
+if strcmp(computer, 'GLNXA64')
     
+    %% Home
+    if strcmpi(getenv('USERNAME'), 'ecarmichael')
+        error('FILL IN THE PATH!')
+    elseif strcmpi(getenv('USERNAME'), 'williamslab')
+        addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
+        addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
+        data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1069/10_18_2019_PV1069_HATD5';
+        LFP_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP';
+        cell_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/4.PlaceCell';
+    end
+else
     LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo';
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
@@ -105,7 +110,7 @@ EVT = LoadEvents([]); % load the events file.
 % extract the EMG
 CSC_emg = CSC;
 CSC_emg.data = CSC_emg.data(1,:);
-CSC_emg.label = {CSC_emg.label{1}}; 
+CSC_emg.label = CSC_emg.label(1); 
 CSC_emg.cfg.hdr = [];
 CSC_emg.cfg.hdr{1} = CSC.cfg.hdr{1};
 
@@ -199,10 +204,10 @@ end
 
 
 cfg_filt_t = [];
-cfg_filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
+% cfg_filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
 cfg_filt_t.f  = [5 12]; % to match Mizuseki et al. 2011
 cfg_filt_t.order = 3; %type filter order
-% cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
+cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
 % reason.
 
 % extract raw LFP only.
@@ -377,7 +382,7 @@ end
 
 cd(inter_dir)
 mkdir('REM')
-save([inter_dir filesep 'REM' filesep 'REM.mat'], 'REM');2
+save([inter_dir filesep 'REM' filesep 'REM.mat'], 'REM');
 
 %%  collect the IPIs to get a distribution
 all_IPI = []; all_IPI_smooth = []; % collect the ISI for crit 1
@@ -471,8 +476,6 @@ for ii  = 1:size(pREM_times,1)
     pREM_idx(ii,1) = find(this_csc.tvec == pREM_times(ii,1));
     pREM_idx(ii,2) = find(this_csc.tvec == pREM_times(ii,2));
 end
-
-
 
 %% plot some segments.
 win_s = 2; % add some extra data
@@ -568,8 +571,8 @@ all_pREM_Ca_idx = NaN(length(pREM_times),2);
 for ii = 1:length(pREM_times)
     if (pREM_times(ii,1) < all_aligned_tvec_post(1)) || (pREM_times(ii,2) < all_aligned_tvec_post(1))
         
-        all_pREM_Ca_idx(ii,1) = nearest_idx3(pREM_times(ii,1), all_aligned_tvec_pre)';
-        all_pREM_Ca_idx(ii,2) = nearest_idx3(pREM_times(ii,2), all_aligned_tvec_pre)';
+        all_pREM_Ca_idx(ii,1) = nearest_idx3(CSC.tvec(pREM_idx(ii,1)), all_aligned_tvec_pre)';
+        all_pREM_Ca_idx(ii,2) = nearest_idx3(CSC.tvec(pREM_idx(ii,2)), all_aligned_tvec_pre)';
         
         % catch for pREM that fall outside of the Ca recording blocks.
         if all_pREM_Ca_idx(ii,2) - all_pREM_Ca_idx(ii,1) <=0
@@ -578,14 +581,14 @@ for ii = 1:length(pREM_times)
         pREM_block{ii} = 'pre';
 
     else
-        all_pREM_Ca_idx(ii,1) = nearest_idx3(pREM_times(ii,1), all_aligned_tvec_post)';
-        all_pREM_Ca_idx(ii,2) = nearest_idx3(pREM_times(ii,2), all_aligned_tvec_post)';
+        all_pREM_Ca_idx(ii,1) = nearest_idx3(CSC.tvec(pREM_idx(ii,1)), all_aligned_tvec_post)';
+        all_pREM_Ca_idx(ii,2) = nearest_idx3(CSC.tvec(pREM_idx(ii,2)), all_aligned_tvec_post)';
         
         % catch for pREM that fall outside of the Ca recording blocks.
         if all_pREM_Ca_idx(ii,2) - all_pREM_Ca_idx(ii,1) <=0
             all_pREM_Ca_idx(ii,:) = NaN ;
         end
-                pREM_block{ii} = 'post';
+        pREM_block{ii} = 'post';
     end
 
 end
@@ -617,7 +620,7 @@ fprintf('<strong>%s</strong>:  %d/%d pREM events occured during Miniscope record
 %% 
 figure(1010)
 hold on
-plot(CSC.tvec, CSC.data(2,:))
+plot(CSC.tvec, CSC.data(2,:)*10000000)
 for ii = 1:length(pREM_times)
     xline(CSC.tvec(pREM_idx(ii,1)), 'b');
     xline(CSC.tvec(pREM_idx(ii, 2)), 'r');
@@ -713,7 +716,7 @@ for ii  = 1:length(all_pREM_Ca_idx)
 %         set(axcp,'Position',get(ax1,'position'));
 %         delete(ax1);
         figlist=get(groot,'Children');
-        
+        pause(2)
         newfig=figure;
         tcl=tiledlayout(2,1);
         
@@ -749,7 +752,7 @@ post_tvec_idx = nearest_idx(EVT.t{1}(2),all_REM_tvec);
 pREM_dur = [];
 pREM_dur.all = pREM_times(:,2) - pREM_times(:,1); 
 for ii = length(pREM_times):-1:1
-    if REM_tvecs{ii} < EVT.t{Stop_rec_idx}(1)
+    if pREM_times(ii,2) < EVT.t{Stop_rec_idx}(1)
         pREM_dur.pre(ii) = pREM_times(ii,2) - pREM_times(ii,1);
         pREM_dur.post(ii) = NaN; 
         pREM_dur.labels{ii} = 'pre';
@@ -763,6 +766,12 @@ end
 pREM_dur.mean_REM_prct_all = (sum(cellfun('length',Phasic_data))/length(all_REM_tvec))*100; 
 pREM_dur.mean_REM_prct_pre = (sum(cellfun('length',Phasic_data(pre_idx)))/length(all_REM_tvec(1:post_tvec_idx-1)))*100;
 pREM_dur.mean_REM_prct_post = (sum(cellfun('length',Phasic_data(post_idx)))/length(all_REM_tvec(post_tvec_idx:end)))*100;
+
+% display the durations in terminal
+fprintf('<strong>Mean REM percentage Whole session:  %0.2f%%</strong>\n', pREM_dur.mean_REM_prct_all);
+fprintf('<strong>Mean REM percentage Pre session:    %0.2f%%</strong>\n', pREM_dur.mean_REM_prct_pre);
+fprintf('<strong>Mean REM percentage Post session:   %0.2f%%</strong>\n', pREM_dur.mean_REM_prct_post);
+
 
 save([inter_dir filesep 'pREM' filesep 'pREM_dur.mat'], 'pREM_dur');
 
