@@ -11,11 +11,27 @@ decode_dir = '/home/williamslab/Dropbox (Williams Lab)/10.Manifold/pv1060/LTD5';
 ms_dir = '/home/williamslab/Dropbox (Williams Lab)/Inter/pv1060/LTD5';
 
 core_colors = linspecer(3); 
-%%
+%% get the decoder files
+
+cd(decode_dir)
+load('decoding.mat')
+if ~isfield(decoding, 'WAKE_decoded_position')
+    decoding.WAKE_decoded_position = [];
+    [max_prob, pos_idx] = max(decoding.WAKE_decoded_probabilities,[], 1);
+    for ii = length(pos_idx):-1:1
+        if isnan(max_prob(ii))
+            decoding.WAKE_decoded_position(ii) = NaN;
+        else
+            decoding.WAKE_decoded_position(ii) = decoding.bin_centers_vector(pos_idx(ii));
+        end
+    end
+end
+
+%%  Get the raw videos
 % clearvars -except raw_dir ms_dir
 cd(raw_dir)
 
-vid_num = 3;
+vid_num = 6;
 
 b_obj = VideoReader(['behavCam' num2str(vid_num) '.avi']);
 for iF = b_obj.NumFrames:-1:1
@@ -31,7 +47,7 @@ end
 
 %%
 % cd(ms_dir)
-load('ms.mat')
+warning off; load('ms.mat'); warning on; 
 ms = msExtractBinary_detrendTraces(ms);
 % frame_offset = ms.timestamps(1);
 Fs = mode(diff(ms.time));
@@ -44,83 +60,27 @@ else
     next_idx = vid_idx(vid_num+1);
 end
 
-%% deconv debugger.
-% % counter_init(size(ms.RawTraces,2),size(ms.RawTraces,2))
-% for iChan = 1
-%     %     counter(iChan, size(ms.RawTraces,2))
-%     tic;
-%     [denoise,deconv] = deconvolveCa(ms.detrendRaw(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
-%     toc;
-%     ms.denoise(:,iChan) = denoise;    ms.deconv(:,iChan) = deconv;
-% end
-% 
-% % debugging
-% % iChan = 900;
-% if ishandle(iChan)
-%     close(iChan)
-% end
-% 
-% figure(iChan+100)
-% hold on
-% plot(zscore(ms.detrendRaw(:,iChan))./max(zscore(ms.detrendRaw(:,iChan))), 'k');
-% plot(ms.denoise(:,iChan)-.2, 'r');
-% plot(((ms.deconv(:,iChan)./max(ms.deconv(:,iChan)))*.1) -.2, 'b');
-% plot((ms.Binary(:,iChan)*.1)-.2, 'g');
-% % MS_plot_ca_trace(ms.FiltTraces(1:33*60,1:50)')
-% legend('Detrend', 'OASIS: Denoised', 'OASIS: deconv', 'Binary', 'orientation', 'horizontal', 'location', 'north')
-
-%% plot stuff
-% close all
-% figure(101)
-% subplot(3,4,1:4)
-% imagesc(b_f{1})
-% title(sprintf('Behav Time = %.3fs | Ca Time = %.3fs', b_t(1), ca_t(1)));
-% set(gca, 'xtick', [], 'ytick', [])
-% 
-% subplot(3,4,[5 6 9 10])
-% % MS_Ca_Raster(ms.Binary(1:ms.timestamps(2),:)'); %, ms.time(1:ms.timestamps(2))'/1000
-% set(gca, 'xtick', [])
-% ylabel('cell number')
-% 
-% 
-% subplot(3,4,[ 7 8 11 12])
-% imagesc(ca_f{1})
-% colormap('gray')
-% set(gca, 'xtick', [], 'ytick', [])
-% 
-% set(gcf, 'position', [511  43 1242 935],'MenuBar','none','ToolBar','none')
-% 
-% clear F
-% for iF = Fs:4:size(b_t,2)-Fs
-%     
-%     subplot(3,4,1:4)
-%     imagesc(b_f{iF})
-%     title(sprintf('Behav Time = %.3fs | Ca Time = %.3fs', b_t(iF), ca_t(iF)));
-%     
-%     subplot(3,4,[5 6 9 10])
-%     xlim([ms.timestamps(1)-Fs + iF  ms.timestamps(1)+Fs + iF])
-%     h = vline(median([ms.timestamps(1)-Fs + iF  ms.timestamps(1)+Fs + iF]));
-%     
-%     subplot(3,4,[ 7 8 11 12])
-%     imagesc(ca_f{iF})
-%     
-%     drawnow;
-%     F(iF) = getframe(gcf) ;
-%     delete(h);
-%     
-% end
-
 %% limited cell version
 good_cells =20;
 % find x nice cells.
 if exist('SA.mat', 'file')
     load('SA.mat')
-    cells_to_use = SA.WholePlaceCell; 
+    cells_to_use = SA.WholePlaceCell;
     c_ord = linspecer(good_cells);
-else
-    cells_to_use = 1:size(ms.RawTraces,2); 
+elseif exist('with modfied eva/NonPlaceCell.mat', 'file')
+    load('with modfied eva/NonPlaceCell.mat')
+    %     for iS = length(spatial_analysis.bin):-1:1
+    %        cells_to_use(iS) = spatial_analysis.bin{iS, 3}.IsPlaceCell;
+    %     end
+    cells_to_use = ones(size(ms.RawTraces,2),1);
+    cells_to_use(NonPlaceCell.CellID) = 0;
+    cells_to_use = find(logical(cells_to_use));
     c_ord = linspecer(good_cells+6);
-c_ord(((good_cells/2)-1):(good_cells/2)+4,:) = []; % remove yellows. They look terrible. 
+    c_ord(((good_cells/2)-1):(good_cells/2)+4,:) = []; % remove yellows. They look terrible.
+else
+    cells_to_use = 1:size(ms.RawTraces,2);
+    c_ord = linspecer(good_cells+6);
+    c_ord(((good_cells/2)-1):(good_cells/2)+4,:) = []; % remove yellows. They look terrible.
 end
 
 d_max = []; 
@@ -135,21 +95,33 @@ end
 cells = best_cells(1:good_cells);
 % cells = 1:good_cells;
 
-sub_mat = reshape(1:((4+length(cells))*4),4,4+length(cells))'; % matrix to pull subplot values from
+sub_mat = reshape(1:((6+length(cells))*4),4,6+length(cells))'; % matrix to pull subplot values from
 %%
 if ishandle(108)
     close(108)
 end
 figure(108)
-subplot(4+length(cells),4,1:16)
+subplot(6+length(cells),4,[1:12])
+    set(gca, 'color', 'k'); axis off; box on;
+hold on
 imagesc(b_f{1})
-title(sprintf('Time = %.3fs', ms.time(this_idx)/1000));
+if contains(raw_dir, 'HAT')
+    rectangle('position', [0 0 50 1], 'facecolor', [core_colors(2,:) .4], 'EdgeColor', [core_colors(3,:), 0]);
+    rectangle('position', [50 0 50 1], 'facecolor', [core_colors(3,:) .4], 'EdgeColor', [core_colors(3,:), 0])
+end
+title(sprintf('Time = %.2fs', ms.time(1)/1000));
 set(gca, 'xtick', [], 'ytick', [])
+
+% plot the decoder
+ax(100) = subplot(6+length(cells),4,[13 14 17 18 21 22]);
+imagesc(ms.time/1000, 1:size(decoding.WAKE_decoded_probabilities,1), decoding.WAKE_decoded_probabilities)
+% caxis([0 max(decoding.REM_decoded_probabilities(3:end-3,:), [], 'all')])
+
 
 set(gcf, 'color', 'k')
 for iSub = 1:length(cells)
-    this_sub = sub_mat(iSub+4,1:2);
-    ax(iSub)= subplot(4+length(cells),4,sort(this_sub(:)));
+    this_sub = sub_mat(iSub+6,1:2);
+    ax(iSub)= subplot(6+length(cells),4,sort(this_sub(:)));
     %
     this_data = zscore(ms.RawTraces(this_idx:next_idx,cells(iSub)));
     hold on
@@ -179,7 +151,7 @@ end
 linkaxes(ax, 'x');
 
 this_sub = sub_mat(5:end,3:4);
-subplot(4+length(cells),4,sort(this_sub(:)))
+subplot(6+length(cells),4,sort(this_sub(:)))
 imagesc(ca_f{1})
 colormap('gray')
 set(gca, 'xtick', [], 'ytick', [])
@@ -192,23 +164,32 @@ scatter(y*ms.ds, x*ms.ds,100,c_ord,'LineWidth',1.5)
 
 %%
 set(gcf, 'position', [511  43 1242 935],'MenuBar','none','ToolBar','none')
+max_pos = max(decoding.WAKE_decoded_position); 
+max_deco_prob = max(decoding.WAKE_decoded_probabilities,[], 'all');
 
 clear F
 for iF = Fs:4:size(b_t,2)-Fs
     
-    subplot(4+length(cells),4,1:16)
-    imagesc(b_f{iF})
+    subplot(6+length(cells),4,1:16)
+    hh = imagesc(b_f{iF});
     title(sprintf('Time = %.3fs', ms.time(this_idx+iF)/1000));
     set(gca, 'xtick', [], 'ytick', [])
-    
+    hold on
+    if isnan(decoding.WAKE_decoded_position(iF))
+         h = [];
+    else
+        h = scatter((decoding.WAKE_decoded_position(iF)/max_pos)*(size(b_f{iF},2)), size(b_f{iF},1)/2, 800, 'LineWidth', 5);
+        h.MarkerEdgeColor = core_colors(2,:);
+%         h.MarkerEdgeAlpha  =max(decoding.WAKE_decoded_probabilities(:,iF))/max_deco_prob;
+    end
     %     title(sprintf('Behav Time = %.3fs | Ca Time = %.3fs', b_t(iF), ms.frameNum(this_idx+iF)*Fs));
     this_sub = sub_mat(iSub+4,1:2);
-    subplot(4+length(cells),4,sort(this_sub(:)))
-    xlim([ms.time(this_idx+iF)/1000 - 5 ms.time(this_idx+iF)/1000])
-    %     h = vline(median([ms.timestamps(1)-Fs + iF  ms.timestamps(1)+Fs + iF]));
+    subplot(6+length(cells),4,sort(this_sub(:)))
+    xlim([ms.time(this_idx+iF)/1000 - 2.5 ms.time(this_idx+iF)/1000 + 2.5])
+%         hl = vline(median([ms.time(this_idx+iF)/1000 - 2.5 ms.time(this_idx+iF)/1000 + 2.5]));
     
     this_sub = sub_mat(5:end,3:4);
-    subplot(4+length(cells),4,sort(this_sub(:)))
+    subplot(6+length(cells),4,sort(this_sub(:)))
     imagesc(ca_f{iF})
     hold on
     scatter(y*ms.ds, x*ms.ds,100,c_ord,'LineWidth',1.5);
@@ -216,7 +197,7 @@ for iF = Fs:4:size(b_t,2)-Fs
     
     drawnow;
     F(iF) = getframe(gcf) ;
-    delete(h);
+    delete(hh);
     
 end
 

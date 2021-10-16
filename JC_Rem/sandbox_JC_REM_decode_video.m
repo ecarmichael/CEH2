@@ -156,7 +156,7 @@ set(gcf, 'position', [511  43 1242 935],'MenuBar','none','ToolBar','none')
 Fs = mode(diff(all_tvec));
 clear F
 max_deco_prob = max(decoding.REM_decoded_probabilities,[], 'all');
-for iF = Fs:1:size(ca_t,2)-Fs
+for iF = Fs:4:size(ca_t,2)-Fs
     
     % plot the decoded position
     subplot(4+length(cells),4,[3 4 7 8 11 12 15 16])
