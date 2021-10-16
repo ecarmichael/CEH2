@@ -375,8 +375,11 @@ if length(evt_blocks) < length(TS)
     fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: #%d : <strong>%s</strong> was flagged for removal\n', odd_idx, ms_seg.removed{end});
     
 end
-
-
+%% check the diffs between TS and NLX
+for iT = 1:length(TS)
+disp(['TS' num2str(iT) '-' TS_name{iT} ': ' num2str(length(TS{iT}.system_clock{1}))   'samples, '  num2str(length(TS{iT}.system_clock{1}) / TS{iT}.cfg.Fs{1},3) 'sec at ' num2str(TS{iT}.cfg.Fs{1},3) 'Hz'...
+            '  |  NLX: ' num2str(length(evt_blocks{iT}.t{cfg.evt.t_chan})) ' samples,' num2str(evt_duration(iT),3) 'at ' num2str(1/mode(diff(evt_blocks{iT}.t{cfg.evt.t_chan})),3) 'Hz'])
+end
 
 %% append the NLX data to the ms structure (be saure to use the same channel as the one used for extraction (cfg_evt_blocks.t_chan).
 flag = [];
@@ -392,9 +395,9 @@ for iT = 1:length(TS)
         res_evt{iT} = restrict(nlx_evts, evt_blocks{iT}.t{cfg.evt.t_chan}(1), evt_blocks{iT}.t{cfg.evt.t_chan}(end));
         
     elseif length(TS{iT}.system_clock{1}) - length(evt_blocks{iT}.t{cfg.evt.t_chan}) ==cfg.TS_nlx_match && cfg.TS_nlx_match ~= 0
-        warning('TS do not match nlx .nev data. TS# %s  %s samples  - NLX: %s events',...
-            num2str(iT), num2str(length(TS{iT}.system_clock{1})), num2str(length(evt_blocks{iT}.t{cfg.evt.t_chan})))
-        fprintf('Times differ by %d sample(s). cfg.TS_nlx_match evoked, correcting TS...\n',abs(length(TS{iT}.system_clock{1}) - length(evt_blocks{iT}.t{cfg.evt.t_chan})))
+        fprintf('<strong>TS%s-%s: TS do not match nlx .nev data. TS# %s %s samples - NLX: %s events ... </strong>',...
+           num2str(iT), TS_name{iT}, num2str(iT), num2str(length(TS{iT}.system_clock{1})), num2str(length(evt_blocks{iT}.t{cfg.evt.t_chan})))
+        fprintf('<strong>cfg.TS_nlx_match evoked, correcting TS by %d</strong>\n',abs(length(TS{iT}.system_clock{1}) - length(evt_blocks{iT}.t{cfg.evt.t_chan})))
         %         figure(121)
         %         subplot(2,1,1)
         %         plot(diff(TS{iT}.system_clock{1}))
@@ -412,9 +415,9 @@ for iT = 1:length(TS)
         
         
     elseif length(TS{iT}.system_clock{1}) - length(evt_blocks{iT}.t{cfg.evt.t_chan}) == -cfg.TS_nlx_match && cfg.TS_nlx_match ~= 0
-        warning('TS do not match nlx .nev data. TS# %s  %s samples  - NLX: %s events',...
-            num2str(iT), num2str(length(TS{iT}.system_clock{1})), num2str(length(evt_blocks{iT}.t{cfg.evt.t_chan})))
-        fprintf('Times differ by %d sample(s). cfg.TS_nlx_match evoked, correcting NLX...\n',abs(length(TS{iT}.system_clock{1}) - length(evt_blocks{iT}.t{cfg.evt.t_chan})))
+        fprintf('<strong>TS%s-%s: TS do not match nlx .nev data. TS# %s %s samples - NLX: %s events...</strong>',...
+            num2str(iT), TS_name{iT}, num2str(iT), num2str(length(TS{iT}.system_clock{1})), num2str(length(evt_blocks{iT}.t{cfg.evt.t_chan})))
+        fprintf('<strong>cfg.TS_nlx_match evoked, correcting NLX by %d...</strong>\n',abs(length(TS{iT}.system_clock{1}) - length(evt_blocks{iT}.t{cfg.evt.t_chan})))
         
         %save values for resizing the ms struct data fields.
         cut_offs(:,iT) = [1;length(TS{iT}.system_clock{1})];
@@ -423,8 +426,8 @@ for iT = 1:length(TS)
         res_evt{iT} = restrict(nlx_evts, evt_blocks{iT}.t{cfg.evt.t_chan}(1), evt_blocks{iT}.t{cfg.evt.t_chan}(end)- (1/csc.cfg.hdr{1}.SamplingFrequency));
         
     else
-        warning('TS do not match nlx .nev data. TS# %s  %s samples  - NLX: %s events',...
-            num2str(iT), num2str(length(TS{iT}.system_clock{1})), num2str(length(evt_blocks{iT}.t{cfg.evt.t_chan})))
+        fprintf(2,'<strong>%s: TS do not match nlx .nev data. TS# %s  %s samples  - NLX: %s events</strong>\n',...
+            TS_name{iT}, num2str(iT), num2str(length(TS{iT}.system_clock{1})), num2str(length(evt_blocks{iT}.t{cfg.evt.t_chan})))
         flag = [flag, iT];
         res_csc{iT} = [];
         res_evt{iT} = [];
@@ -457,7 +460,7 @@ if cfg.TS_nlx_match ==1
         
     end
     
-    fprintf(' that were 1 sample longer than the NLX seg.\n');
+    fprintf(' that were 1 sample off.\n');
     
 end
 
@@ -490,7 +493,6 @@ for ii = 1:length(ms_seg.RawTraces)
         fprintf('<strong>Event %.0f: MS %.0f samples %.2fs  | NLX %.0f samples %.2fs</strong>\n', ii, length(ms_seg.time{ii}), (ms_seg.time{ii}(end) - ms_seg.time{ii}(1))/1000, length(ms_seg.NLX_evt{ii}.t{cfg.evt.t_chan}), ms_seg.NLX_csc{ii}.tvec(end) - ms_seg.NLX_csc{ii}.tvec(1))
         
     else
-        
         fprintf('Event %.0f: MS %.0f samples %.2fs  | NLX %.0f samples %.2fs\n', ii, length(ms_seg.time{ii}), (ms_seg.time{ii}(end) - ms_seg.time{ii}(1))/1000, length(ms_seg.NLX_evt{ii}.t{cfg.evt.t_chan}), ms_seg.NLX_csc{ii}.tvec(end) - ms_seg.NLX_csc{ii}.tvec(1))
     end
 end

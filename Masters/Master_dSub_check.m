@@ -67,8 +67,8 @@ for iSub = 2%1:length(subjects)
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
 %         dsubscreener_ec(cd, inter_dir);
-        dsubscreener_ec_W_maze(cd, inter_dir);
-
+%         dsubscreener_ec_W_maze(cd, inter_dir);
+          M23_Clust_batch
 %         MS_Write_meta_dSub;
           
         

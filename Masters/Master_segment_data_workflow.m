@@ -255,18 +255,50 @@ for iSub = Subjects
             close; clear pos;
         end
         
-        %% hardcode dir
+        %% hardcode dir  JISOO USE THIS! 
         
-        ms_dir = 'J:\4_17_2021_PV1192_HATD1';
-        csc_dir = 'J:\2021-04-17_10-06-00_PV1192_HATD1'; 
-        %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1069\10_18_2019_PV1069_HATD5';
-%         ms_dir = '/home/ecarmichael/Dropbox (Williams Lab)/4_17_2021_PV1192_HATD1';
-%         csc_dir = '/mnt/Data/2021-04-17_10-06-00_PV1192_HATD1';
-        %         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-10-18_10-02-44_PV1069_HATD5';
+          %%%% 1191
+% % %         ms_dir = 'K:\Jisoo_Project\RawData\pv1191\5_19_2021_PV1191_HATD1';
+% % %         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-05-19_09-22-27_pv1191_HATD1';
+% % %         iSess = '5_19_2021_PV1191_HATD1';
+% % %         iSub = 'PV1191';
         
-        iSess = '4_17_2021_PV1192_HATD1';
+%         ms_dir = 'K:\Jisoo_Project\RawData\pv1191\5_23_2021_PV1191_HATD5';
+%         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-05-23_09-26-10_pv1191_HATD5';
+%         iSess = '5_23_2021_PV1191_HATD5';
+%         iSub = 'PV1191';
+
+         %Missing ms.mat file.  Probably needs to be CNMFe'd
+        ms_dir = 'K:\Jisoo_Project\RawData\pv1191\5_25_2021_PV1191_HATDS';
+        csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-05-25_10-11-48_PV1191_HATDSwitch';
+        iSess = '5_25_2021_PV1191_HATDS';
+        iSub = 'PV1191';
         
-        iSub='PV1192';
+          %%%% 1192
+% % %         ms_dir = 'J:\4_17_2021_PV1192_HATD1';
+% % %         csc_dir = 'J:\2021-04-17_10-06-00_PV1192_HATD1'; 
+% % %         iSess = '4_17_2021_PV1192_HATD1';
+% % %         iSub = 'PV1192';      
+
+%         ms_dir = 'K:\Jisoo_Project\RawData\pv1192\4_21_2021_PV1192_HATD5';
+%         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-04-21_09-35-07_PV1192_HATD5';
+%         iSess = '4_21_2021_PV1192_HATD5';
+%         iSub = 'PV1192';
+
+%         ms_dir = 'K:\Jisoo_Project\RawData\pv1192\4_23_2021_PV1192_HATDSwitch'; 
+%         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-04-23_09-46-23_PV1192_HATDSwitch';
+%         iSess = '4_23_2021_PV1192_HATDSwitch';
+%         iSub = 'PV1192';
+
+
+        
+% % %         ms_dir = 'K:\Jisoo_Project\RawData\pv1060\11_19_2019_PV1060_HATD1';
+% % %         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-11-19_09-59-43_PV1060_HATD1';
+% % %         iSess = '11_19_2019_PV1060_HATD1';
+% % %         iSub = 'PV1060';
+
+      
+        
         
         ms_resize_dir = [PARAMS.inter_dir filesep iSub filesep iSess];  %just save the ms_resize struct back into the same place as the ms.mat file.
         mkdir(ms_resize_dir);
@@ -325,6 +357,12 @@ for iSub = Subjects
         elseif strcmp(iSess, '7_15_2019_PV1060_LTD1') %added by Jisoo
             cfg_seg.remove_ts = [1,2,3,4,5,6,7,8,9]; %Event was not recorded at the beginning of the presleep
             cfg_seg.remove_nlx_evt = [];
+        elseif strcmp(iSess, '11_19_2019_PV1060_HATD1') %added by EC.  There is an 'H13_M2_S1' that is long in here.  
+            cfg_seg.remove_ts = [9]; %Event was not recorded at the beginning of the presleep
+            cfg_seg.remove_nlx_evt = [];
+        elseif strcmp(iSess, '5_19_2021_PV1191_HATD1') %added by Jisoo
+            cfg_seg.remove_ts = []; %Event was not recorded at the beginning of the presleep
+            cfg_seg.remove_nlx_evt = [1,2];
         elseif strcmp(iSess, '11_15_2019_PV1060_Homecage_Sleep') %added by Jisoo
             cfg_seg.remove_ts = [1,2,3,4,5]; %Event was not recorded at the beginning of the presleep
             cfg_seg.remove_nlx_evt = [];

@@ -70,7 +70,13 @@ end_idx = find(contains(evt.label, 'Stopping Recording'));
 
 
 if length(evt.t{start_idx}) ~= 4
-    error('too many start and stop times. should be 4.  Figure this out')
+    rec_len = evt.t{end_idx} - evt.t{start_idx};
+    [~, idx] = sort(rec_len, 'descend'); 
+    keep_idx = sort(idx(1:4)); 
+    
+%     error('too many start and stop times. should be 4.  Figure this out')
+else
+    keep_idx = 1:4; 
 end
 
 block_idx = [];
@@ -78,20 +84,18 @@ if length(evt.t{start_idx}) > 1
     disp('splitting into blocks')
     Blocks = {'Pre_sleep', 'W_maze', 'OF', 'Post_sleep'};
     for iB = 1:length(Blocks)
-        block_idx.(Blocks{iB}) = [evt.t{start_idx}(iB) evt.t{end_idx}(iB)];
+        if strcmp(Blocks{iB}, 'Pre_sleep')  || strcmp(Blocks{iB}, 'Post_sleep') % trim sleep blocks. 
+            block_idx.(Blocks{iB}) = [evt.t{start_idx}(keep_idx(iB)) evt.t{start_idx}(keep_idx(iB))+120*60];
+        else
+        block_idx.(Blocks{iB}) = [evt.t{start_idx}(keep_idx(iB)) evt.t{end_idx}(keep_idx(iB))];
+        end
         fprintf('Block: %s duration = %.0fmins\n', Blocks{iB}, (block_idx.(Blocks{iB})(2) -block_idx.(Blocks{iB})(1))/60); 
     end
-    
-    
 end
 
 %% get all .t files
 
 file_list = FindFiles('*.t');
-
-
-
-
 
 for iC = 1:length(file_list)
     
@@ -100,7 +104,6 @@ for iC = 1:length(file_list)
     cfg.getTTnumbers = 0;
     
     S = LoadSpikes(cfg);
-    
     
     % split into recording blocks.
     
@@ -249,7 +252,7 @@ for iC = 1:length(file_list)
             % add some spikes
             %     S_idx = nearest_idx(S.t{1}, pos.tvec);
             
-            plot(spk_x,spk_y, '.r', 'markersize', 6)
+            plot(spk_x(this_spd.data < 2),spk_y(this_spd.data < 2), '.r', 'markersize', 6)
             axis off
             %% convert to heat map.
             
@@ -271,14 +274,14 @@ for iC = 1:length(file_list)
             y_edges = SET_ymin:SET_yBinSz:SET_ymax;
             
             % set up gaussian
-            kernel = gausskernel([SET_xBinSz/2 SET_yBinSz/2],SET_xBinSz/2); % 2d gaussian in bins
+            kernel = gausskernel([SET_xBinSz SET_yBinSz],SET_xBinSz/2); % 2d gaussian in bins
             
             
             % compute occupancy
             occ_hist = hist3(this_pos.data(1:2,:)', 'edges', {x_edges y_edges});
             %     occ_hist = histcn(pos.data(1:2,:)',y_edges,x_edges); % 2-D version of histc()
             
-            occ_hist = conv2(occ_hist,kernel,'same');
+%             occ_hist = conv2(occ_hist,kernel,'same');
             
             no_occ_idx = find(occ_hist == 0); % NaN out bins never visited
             occ_hist(no_occ_idx) = NaN;

@@ -88,7 +88,7 @@ switch data_type
             end
             text_y = ylim; 
             
-            title([cfg.fnames{iBlock}]);
+            title([strrep(cfg.fnames{iBlock}, '_', ' ')]);
 
 
             ax_spec(2) = subplot(7,1,4:6);
