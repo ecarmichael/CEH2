@@ -53,6 +53,7 @@ if cfg.removeZeros
 
     X = X(keep_idx);
     Y = Y(keep_idx);
+    Angles = Angles(keep_idx); 
     Timestamps = Timestamps(keep_idx);
     
 end
