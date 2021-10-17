@@ -176,7 +176,8 @@ for iC = 1:length(file_list)
 %             legend("Ch 1", "Ch 2","Ch 3","Ch 4", 'fontsize', 8, 'location', 'north', 'orientation', 'horizontal' ); legend boxoff
             xlabel ("Time (ms)")
             axis off
-            title ({strrep(fname, '_', ' ') ;  strrep(this_S.label{1}, '_', ' '); Blocks{iB}})
+            title ({strrep(fname, '_', ' ') ;  strrep(this_S.label{1}, '_', ' '); ['grade: ' this_S.label{1}(end-2)] ; Blocks{iB}})
+            xlim([min(xrange,[], 'all') max(xrange,[], 'all')])
         catch
             subplot (3,4,1)
             text(0, .5, {'waveform file does not exist' ; 'or is corrupted'});
@@ -313,9 +314,9 @@ for iC = 1:length(file_list)
             title('rate map');
             
             %% plot the heading by speed heatmap
-            cfg_speed = []; 
-            vector_mat = MS_speed_HD(cfg_speed,this_S, this_pos, this_spd);
-            
+%             cfg_speed = []; 
+%             vector_mat = MS_speed_HD(cfg_speed,this_S, this_pos, this_spd);
+%             
             
             %% split half
             Split.S{1} = restrict(S, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2);
@@ -350,7 +351,7 @@ for iC = 1:length(file_list)
             Split.tc{ii} = spk_hist./occ_hist;
 
                 
-            subplot(3,4,10+ii)
+            subplot(3,4,9+ii)
             pcolor(Split.tc{ii}'); shading flat; axis off; cb=colorbar; cb.Position(1) = cb.Position(1) + .03; cb.Label.String = 'rate (Hz)'; cb.Ticks = [0 cb.Ticks(end)];
             title(['TC half ' num2str(ii) ]);
             
@@ -366,7 +367,7 @@ for iC = 1:length(file_list)
         
         % plot the autocorrelation if there is one
         if exist('wave_prop', 'var')
-            subplot(3,4,11)
+            subplot(3,4,10)
             bar(wave_prop.auto_corr.xbin*1000, wave_prop.auto_corr.ac)
             xlabel('Lag (ms)');
         end
@@ -418,6 +419,7 @@ for iC = 1:length(file_list)
             This_Cell.(Blocks{iB}).spatial.tc = tc;
             This_Cell.(Blocks{iB}).spatial.spk_hist = spk_hist;
             This_Cell.(Blocks{iB}).spatial.occ_hist = occ_hist;
+            This_Cell.(Blocks{iB}).spatial.split_xcor = split_xcor;
         end
 
     end % end of the block
