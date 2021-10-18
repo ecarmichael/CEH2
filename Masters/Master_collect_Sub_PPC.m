@@ -81,10 +81,17 @@ end
     z_mat.subject = z_mat.subject(sort_idx);
     z_mat.date = z_mat.date(sort_idx);
     z_mat.day = z_mat.day(sort_idx);
+    
+    %% remove ones with very high delta
+    rem_idx = [26 27 29];
+    
+        z_mat.cell(rem_idx) = [];
+z_mat.label(rem_idx) = [];
 %% make a few plots
 close all
 figure('PaperPositionMode', 'auto')
 for iB =1:length(Blocks)
+    z_mat.(Blocks{iB})(rem_idx,:) = []; 
    subplot(1,4,iB)
    imagesc(z_mat.obs_freq, 1:length(z_mat.cell),  z_mat.(Blocks{iB}));
    xlabel('frequency (hz)')

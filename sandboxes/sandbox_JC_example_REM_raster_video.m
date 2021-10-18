@@ -57,7 +57,7 @@ all_tvec = [all_tvec ; ms_seg_resize.time{iB}];
 %     ca_mat = cell2mat(ca_f); 
 %     ca_mat = ca_mat - mean(ca_mat, 3);
     
-    all_ca_f = cat(3,all_ca_f, diff(ca_mat,3)) ;
+    all_ca_f = cat(3,all_ca_f, ca_mat) ;
     clear ca_mat ca_f ca_t
     
 %     ca_mov{iB}.ca_f = ca_f;
@@ -151,8 +151,10 @@ for iF = end_idx:-1:start_idx
     else
         h = scatter((decoding.REM_decoded_position(iF)/max_pos)*(size(track_image,2)), size(track_image,1)/2, 800, 'LineWidth', 5);
 %         h = scatter(decoding.REM_decoded_position(iF), 1, 800, 'LineWidth', 5);
-        if ismember(iF, replay_win)
+        if ismember(iF, replay_win) && iF < 1001
            h.MarkerEdgeColor = core_colors(1,:);
+        elseif ismember(iF, replay_win) && iF >1000
+            h.MarkerEdgeColor = core_colors(3,:);
         else
            h.MarkerEdgeColor = core_colors(2,:);
         end
@@ -184,7 +186,7 @@ rate = 1;
 
 parts = strsplit([raw_dir filesep ms_seg_resize.file_names{iB}], filesep);
 mkdir(['/home/williamslab/Dropbox (Williams Lab)/Decoding_data/Videos/' parts{end-1}])
-writerObj = VideoWriter(['/home/williamslab/Dropbox (Williams Lab)/Decoding_data/Videos/' parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_full_' num2str(rate) 'x_evt' num2str(replay_evt) '.avi']);
+writerObj = VideoWriter(['/home/williamslab/Dropbox (Williams Lab)/Decoding_data/Videos/' parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_full_' num2str(rate) 'x_evt' num2str(replay_evt) '_fix.avi']);
 fprintf(['Writing: /home/williamslab/Dropbox (Williams Lab)/Decoding_data/Videos/' parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_full_' num2str(rate) 'x.avi\n'])
 writerObj.FrameRate = (Fs/rate)/4;
 writerObj.Quality = 100;

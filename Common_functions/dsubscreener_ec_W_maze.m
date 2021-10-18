@@ -131,6 +131,12 @@ for iC = 1:length(file_list)
             end
             end
             fprintf('Left: %d   |  Center: %d   | Right: %d\n', length(maze.l), length(maze.c), length(maze.r))
+            
+        elseif iB == 3
+                this_pos.data(1,:) = this_pos.data(1,:)/2;
+                this_pos.data(2,:) = this_pos.data(2,:)/2;
+                this_spd.data(1,:) = this_spd.data(1,:)*2;
+
         end
         
         % generate psd
@@ -258,6 +264,9 @@ for iC = 1:length(file_list)
             
             plot(spk_x,spk_y, '.r', 'markersize', 6)
             axis off
+            if iB == 3
+                xlim([12 50]);
+            end
             %% convert to heat map.
             
             
@@ -265,13 +274,21 @@ for iC = 1:length(file_list)
             if iB == 2
             SET_xmin = 10; SET_ymin = 0; % set up bins
             SET_xmax = 82; SET_ymax = 60;
+            SET_xBinSz = 2; SET_yBinSz =2;
+
+            NaN_map = zeros(length(SET_xmin:SET_xBinSz:SET_xmax), length(SET_ymin:SET_yBinSz:SET_ymax));
+            NaN_map(1:5,25:end) = NaN;
+            NaN_map(30:end,25:end) = NaN;
+            NaN_map(:,29:end) = NaN;
+            
+            nan_idx = isnan(NaN_map); 
             
             elseif iB == 3
-            SET_xmin = 0; SET_ymin = 0; % set up bins
-            SET_xmax = 90; SET_ymax = 66;
-                
+
+            SET_xmin = 15; SET_ymin = 0; % set up bins
+            SET_xmax = 45; SET_ymax = 30;
+            SET_xBinSz = 1; SET_yBinSz =1;
             end
-            SET_xBinSz = 2; SET_yBinSz =2;
             
             
             x_edges = SET_xmin:SET_xBinSz:SET_xmax;
@@ -285,9 +302,10 @@ for iC = 1:length(file_list)
             occ_hist = hist3(this_pos.data(1:2,move_idx)', 'edges', {x_edges y_edges});
             %     occ_hist = histcn(pos.data(1:2,:)',y_edges,x_edges); % 2-D version of histc()
             
-            no_occ_idx = find(occ_hist == 0); % NaN out bins never visited
+            no_occ_idx = find(occ_hist < 1); % NaN out bins never visited
             occ_hist = conv2(occ_hist,kernel,'same');
             occ_hist(no_occ_idx) = NaN;
+            if iB == 2; occ_hist(nan_idx) = NaN; end
             
             occ_hist = occ_hist .* mode(diff(this_pos.tvec)); % convert samples to seconds using video frame rate (30 Hz)
             
@@ -322,11 +340,11 @@ for iC = 1:length(file_list)
             Split.S{1} = restrict(S, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2);
             Split.S{2} = restrict(S, block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2,block_idx.(Blocks{iB})(2));
             
-            Split.pos{1} = restrict(pos, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2);
-            Split.pos{2} = restrict(pos, block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2,block_idx.(Blocks{iB})(2));
+            Split.pos{1} = restrict(this_pos, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2);
+            Split.pos{2} = restrict(this_pos, block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2,block_idx.(Blocks{iB})(2));
             
-            Split.spd{1} = restrict(spd, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2);
-            Split.spd{2} = restrict(spd, block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2,block_idx.(Blocks{iB})(2));
+            Split.spd{1} = restrict(this_spd, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2);
+            Split.spd{2} = restrict(this_spd, block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2,block_idx.(Blocks{iB})(2));
 
             for ii = 1:2 
             Split.move_idx{ii} =  (.5 < Split.spd{ii}.data) & (Split.spd{ii}.data < 6); 
@@ -340,7 +358,8 @@ for iC = 1:length(file_list)
             no_occ_idx = find(occ_hist == 0); % NaN out bins never visited
             occ_hist = conv2(occ_hist,kernel,'same');
             occ_hist(no_occ_idx) = NaN;
-            
+            if iB == 2; occ_hist(nan_idx) = NaN; end
+
             occ_hist = occ_hist .* mode(diff(this_pos.tvec));
             
             spk_hist = hist3([Split.spk_x{ii}, Split.spk_y{ii}], 'edges', {x_edges y_edges});
@@ -351,7 +370,7 @@ for iC = 1:length(file_list)
             Split.tc{ii} = spk_hist./occ_hist;
 
                 
-            subplot(3,4,9+ii)
+            subplot(3,4,10+ii)
             pcolor(Split.tc{ii}'); shading flat; axis off; cb=colorbar; cb.Position(1) = cb.Position(1) + .03; cb.Label.String = 'rate (Hz)'; cb.Ticks = [0 cb.Ticks(end)];
             title(['TC half ' num2str(ii) ]);
             
