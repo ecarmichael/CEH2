@@ -287,7 +287,7 @@ for iC = 1:length(file_list)
 
             SET_xmin = 15; SET_ymin = 0; % set up bins
             SET_xmax = 45; SET_ymax = 30;
-            SET_xBinSz = 1; SET_yBinSz =1;
+            SET_xBinSz = 2; SET_yBinSz =2;
             end
             
             
@@ -381,6 +381,11 @@ for iC = 1:length(file_list)
             idx = ~isnan(Split.tc{1}) & ~isnan(Split.tc{2});
             split_xcor = corr2(Split.tc{1}(idx), Split.tc{2}(idx));
 
+                    % get the hd x speed vector map
+        cfg_vec = [];
+        cfg_vec.jump_thresh = 20;
+        cfg_vec.interp = 1; 
+        vec_map = MS_speed_HD(cfg_vec, this_S, this_pos, this_spd);
             
         end
         
@@ -390,6 +395,25 @@ for iC = 1:length(file_list)
             bar(wave_prop.auto_corr.xbin*1000, wave_prop.auto_corr.ac)
             xlabel('Lag (ms)');
         end
+        
+
+
+        
+%         figure(1010)
+%         ax(1) = subplot(2,1,1);
+%         plot(this_pos.tvec(keep_idx), this_pos.data(3,keep_idx), '.k')
+%         hold on
+%         plot(this_pos.tvec, out, '*r')
+%         ax(2) = subplot(2,1,2);
+%         plot(this_pos.tvec(1:end-1),diff([0 rad2deg(circ_dist(deg2rad(this_pos.data(3,1:end-1)), deg2rad(this_pos.data(3,2:end))))]), '.k')
+%         linkaxes(ax, 'x')
+        
+%         out(out>180)=out(out>180)-360;
+        
+        
+        
+        
+        
         
         % get sta
 %         cfg_sta = [];

@@ -83,7 +83,7 @@ end
     z_mat.day = z_mat.day(sort_idx);
     
     %% remove ones with very high delta
-    rem_idx = [26 27 29];
+    rem_idx = [];
     
         z_mat.cell(rem_idx) = [];
 z_mat.label(rem_idx) = [];
