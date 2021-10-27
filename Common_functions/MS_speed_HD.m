@@ -1,4 +1,4 @@
-function tc = MS_speed_HD(cfg_in, S, pos,spd)
+function [vec_tc, hd_tc, hd_bins] = MS_speed_HD(cfg_in, S, pos,spd)
 %% MS_speed_HD:
 %
 %
@@ -25,6 +25,10 @@ cfg_def.spd_bins = .15;
 cfg_def.hd_bins = 20;
 cfg_def.interp = 1; % use interpolation
 cfg_def.jump_thresh = 20; % how big a jump in the HD do you toleratore before removal. 
+cfg_def.smooth = 1;  % apply 2d guassian smoothing?
+cfg_def.smooth_sd = .2; % small smoothing 
+
+
 cfg = ProcessConfig2(cfg_def, cfg_in);
 
 %%         
@@ -51,7 +55,7 @@ spk_vec = nan(size(vec_occ));
 
 spk_ang = interp1(pos.tvec,pos.data(3,:),S.t{1},'linear');
 
-
+% get the hd x speed vector matrix
 for ihd = 1:length(hd_bins)-1
 
     if ihd == 1
@@ -88,31 +92,38 @@ if cfg.smooth
     
 end
 
+% get the pure HD signal
+[occ_h, hd_edges] = histcounts(pos.data(3,:),360/cfg.hd_bins);
+spk_h = histcounts(spk_ang,360/cfg.hd_bins);
+hd_tc = spk_h./ occ_h .* mode(diff(spd.tvec));
+
+% get the speed profile
+
+
+
+
 %% compute the mean vector length vs shuffle
 
-occ_h = histcounts(pos.data(3,:),360/cfg.hd_bins);
-spk_h = histcounts(spk_ang,360/cfg.hd_bins);
-tc_h = spk_h./ occ_h .* mode(diff(spd.tvec));
 
 
-circ_r(tc_h)
+% circ_r(tc_h)
 
 %% test figure
 
 figure
 subplot(2,3,1)
 title('Occ')
-polarplot(deg2rad(hd_bins),occ_h);
+h= polarplot(deg2rad(hd_edges(1:end-1)),occ_h);
 
 
 subplot(2,3,2)
 title('spk')
-polarplot(deg2rad(hd_bins),spk_h);
+polarplot(deg2rad(hd_edges(1:end-1)),spk_h);
 
 subplot(2,3,3)
 title('tc')
 
-polarplot(deg2rad(hd_bins),(tc_h));
+polarplot(deg2rad(hd_edges(1:end-1)),(hd_tc));
 
 
 subplot(2,3,4)
@@ -142,4 +153,10 @@ ylabel('velocity (cm/s)'); xlabel('HD (deg)');
 axis xy
 colormap([0,0,0; parula])
 caxis([0 max(tc, [], 'all')/2])
+
+
+
+%% play with kalman filters
+
+addpath(genpath('/home/williamslab/Documents/KalmanAll'))
 
