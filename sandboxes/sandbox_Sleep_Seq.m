@@ -13,15 +13,19 @@ if ismac
     PARAMS.code_CEH2_dir = '/Users/jericcarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
     
 elseif strcmp(os, 'GLNXA64')
-    
-    %     PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/2019-12-04_11-10-01_537day0base1'; % where to find the raw data
-    PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/JC/7_12_2019_PV1069_LTD5'; % where to find the raw data
-    %     PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/EV/';
-    PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/JC/'; % raw data location.
-    PARAMS.inter_dir = '/home/ecarmichael/Documents/Williams_Lab/Temp/'; % where to put intermediate files
-    PARAMS.stats_dir = '/home/ecarmichael/Documents/Williams_Lab/Stats/'; % where to put the statistical output .txt
-    PARAMS.code_base_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
-    PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
+    if strcmpi(getenv('USERNAME'), 'ecarmichael')
+        PARAMS.data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/JC/7_12_2019_PV1069_LTD5'; % where to find the raw data
+        PARAMS.raw_data_dir = '/home/ecarmichael/Documents/Williams_Lab/Raw_data/JC/'; % raw data location.
+        PARAMS.inter_dir = '/home/ecarmichael/Documents/Williams_Lab/Temp/'; % where to put intermediate files
+        PARAMS.stats_dir = '/home/ecarmichael/Documents/Williams_Lab/Stats/'; % where to put the statistical output .txt
+        PARAMS.code_base_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
+        PARAMS.code_CEH2_dir = '/home/ecarmichael/Documents/GitHub/CEH2'; % where the multisite repo can be found
+    elseif strcmpi(getenv('USERNAME'), 'williamslab')
+        PARAMS.data_dir = '/home/williamslab/Desktop/HATD5'; % where to find the raw data
+        PARAMS.code_base_dir = '/home/ecarmichael/Documents/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
+        PARAMS.code_CEH2_dir = '/home/williamslab/Documents/Github/CEH2'; % where the multisite repo can be found
+        PARAMS.code_seqNMF = '/home/williamslab/Documents/Github/seqNMF'; 
+    end
     
 else
     PARAMS.data_dir = 'D:\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\Processed place'; % where to find the raw data
@@ -39,16 +43,16 @@ rng(11,'twister') % for reproducibility
 % add the required code
 addpath(genpath(PARAMS.code_base_dir));
 addpath(genpath(PARAMS.code_CEH2_dir));
-cd(PARAMS.raw_data_dir) % move to the data folder
+% cd(PARAMS.raw_data_dir) % move to the data folder
 
 clear d os
 
 %% load a nice session
-this_sess = 'D:\Dropbox (Williams Lab)\Jisoo\Upload\pv1002\3_24_2019';
+this_sess = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1069/10_18_2019_PV1069_HATD5';
 cd(this_sess);
-load('ms.mat');
-load('behav.mat');
-load('AllSpatialFiringData.mat')
+load('ms_resize.mat');
+% load('behav.mat');
+% load('AllSpatialFiringData.mat')
 
 
 

@@ -344,7 +344,7 @@ if length(evt_blocks) < length(TS)
     
     ms_trk = msExtractBinary_detrendTraces(ms_trk);
     
-%     save([ms_resize_dir filesep 'ms_trk.mat'], 'ms_trk', '-v7.3')
+    save([ms_resize_dir filesep 'ms_trk.mat'], 'ms_trk', '-v7.3')
 %     clear 'ms_trk';
     
     % remove from main ms struct
