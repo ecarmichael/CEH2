@@ -41,6 +41,8 @@ cfg_def =[];
 cfg_def.Ca_type = 'RawTraces'; % can be either 'RawTraces' or FiltTraces' (maybe others?)
 cfg_def.Ca_chan = 1:floor(n_cells/20):n_cells; % get a subset of cells.
 cfg_def.plot_type = '3d'; % '2d' or '3d'
+cfg_def.offset = 1; 
+cfg_def.width = 1.5; 
 cfg_def.x_zoom = []; % where to zoom in on the x_axis for each plot.
 cfg_def.view = [0 45]; 
 cfg_def.colors = []; % can be used to pass a colour set. 
@@ -70,14 +72,14 @@ switch cfg.plot_type
     case '2d'
         for iC = 1:length(cfg.Ca_chan)
             
-            plot(time_in2*0.001, ms_data_in.(cfg.Ca_type)(:,iC)+iC, 'color', c_ord(iC,:))
-            tick_val(iC) = median(ms_data_in.(cfg.Ca_type)(:,iC)+iC); 
+            plot(time_in2*0.001, ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC))+iC*cfg.offset, 'color', c_ord(iC,:), 'linewidth', cfg.width)
+            tick_val(iC) = median(ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC))+iC*cfg.offset); 
             tick_label{iC} = cfg.Ca_chan(iC); 
         end
         % 3d
     case '3d'
         for iC = 1:length(cfg.Ca_chan)
-            plot3(time_in2*0.001, repmat(iC,size(ms_data_in.(cfg.Ca_type),1),1), ms_data_in.(cfg.Ca_type)(:,iC), 'color', c_ord(iC,:))
+            plot3(time_in2*0.001, repmat(iC,size(ms_data_in.(cfg.Ca_type),1),1), ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC)), 'color', c_ord(iC,:), 'linewidth', cfg.width)
         end
         view(cfg.view)
 end

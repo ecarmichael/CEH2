@@ -104,6 +104,34 @@ sess_list = MS_list_dir_names_any(this_sub_dir, {'HATD1', 'HATD3','HATD5','HATSw
         if ~exist(ms_inter_dir, 'dir') 
             mkdir(ms_inter_dir); % make the inter folder if it does not already exist. 
         end
+        
+        %% hardcode sessions to process
+        % change this for each session to recompute. 
+%         ms_dir = 'K:\Jisoo_Project\Inter\PV1192\4_17_2021_PV1192_HATD5';
+%         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-04-17_10-06-00_PV1192_HATD5'; 
+        
+%ms_dir = 'K:\Jisoo_Project\Inter\PV1192\4_21_2021_PV1192_HATD5'; 
+%csc_dir ='K:\Jisoo_Project\LFP data\Jisoo\2021-04-21_09-35-07_PV1192_HATD5'; 
+
+%ms_dir = 'K:\Jisoo_Project\Inter\PV1192\4_23_2021_PV1192_HATDSwitch'
+%csc_dir ='K:\Jisoo_Project\LFP data\Jisoo\2021-04-23_09-46-23_PV1192_HATDSwitch'; 
+
+%ms_dir='K:\Jisoo_Project\Inter\PV1191\5_19_2021_PV1191_HATD1';
+%csc_dir='K:\Jisoo_Project\LFP data\Jisoo\2021-05-19_09-22-27_pv1191_HATD1';
+
+ms_dir='K:\Jisoo_Project\Inter\PV1060\11_19_2019_PV1060_HATD1';
+csc_dir='K:\Jisoo_Project\LFP data\Jisoo\2019-11-19_09-59-43_PV1060_HATD1';
+
+
+        % leave this part, 
+        parts = strsplit(ms_dir, filesep); 
+        iSub = 1;
+        Subjects{iSub} = parts{end-1}; 
+        ms_inter_dir = [ms_dir filesep 'Recompute'];  %just save the ms_resize struct back into the same place as the ms.mat file.
+        if ~exist(ms_inter_dir, 'dir') 
+            mkdir(ms_inter_dir); % make the inter folder if it does not already exist. 
+        end
+        
         %% Select the CSC data to be loaded
         if strcmpi(Subjects{iSub}, 'PV1060')
             cfg_load.fc = {'CSC8.ncs'}; % use csc files from Keys if you have them. Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
@@ -123,6 +151,7 @@ sess_list = MS_list_dir_names_any(this_sub_dir, {'HATD1', 'HATD3','HATD5','HATSw
 %         
         cd(csc_dir)
         csc = MS_LoadCSC(cfg_load);
+<<<<<<< HEAD
         
         cd(ms_inter_dir) % assumes this directory has the pre process/segmented data here.
         if exist([ms_inter_dir filesep 'ms_resize.mat'], 'file')
@@ -132,6 +161,17 @@ sess_list = MS_list_dir_names_any(this_sub_dir, {'HATD1', 'HATD3','HATD5','HATSw
             warning(sprintf('No ms_resize.mat file can be found in inter dir: <strong>%s</strong>', ms_inter_dir))
         end
         clear csc csc_dir
+=======
+%         
+        cd(ms_inter_dir) % assumes this directory has the pre process/segmented data here.
+%         if exist([ms_inter_dir filesep 'ms_resize.mat'], 'file')
+            MS_re_binarize_JC(2, ms_dir, ms_inter_dir, 'ms_resize', 'ms_resize', csc);
+%         else
+%             continue
+%             warning(sprintf('No ms_resize.mat file can be found in inter dir: <strong>%s</strong>', ms_inter_dir))
+%         end
+%         clear csc csc_dir
+>>>>>>> b6c3b75db3f352c6a35d68d4df14a6aaea64e83b
 %         
         
         %% extract the means for all the measures realtive to track time.
