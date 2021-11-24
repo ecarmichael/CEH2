@@ -89,6 +89,7 @@ elseif nargin == 4
 end
 
 %% load data
+cd(ms_load_dir)
 if exist([ms_fname_load '.mat'], 'file')
     load(ms_fname_load);
     
@@ -229,9 +230,9 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
     ms_seg = MS_de_cell(ms_seg);
     
     % binarize the trace
-    
-    ms_seg = MS_msExtractBinary_detrendTraces(ms_seg, z_threshold);
-    
+    if ~isempty(z_threshold)
+     ms_seg = MS_msExtractBinary_detrendTraces(ms_seg, z_threshold);
+    end
     
     %     if length(ms_seg.time) ~= length(ms_seg.NLX_evt.t{end})
     %         warning(['Segment # ' num2str(iSeg) ', length of time and NLX_events do not match. Skipping...'])

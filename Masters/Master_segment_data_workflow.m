@@ -269,16 +269,16 @@ for iSub = Subjects
 %         iSub = 'PV1191';
 
          %Missing ms.mat file.  Probably needs to be CNMFe'd
-        ms_dir = 'K:\Jisoo_Project\RawData\pv1191\5_25_2021_PV1191_HATDS';
-        csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-05-25_10-11-48_PV1191_HATDSwitch';
-        iSess = '5_25_2021_PV1191_HATDS';
-        iSub = 'PV1191';
+%         ms_dir = 'K:\Jisoo_Project\RawData\pv1191\5_25_2021_PV1191_HATDS';
+%         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-05-25_10-11-48_PV1191_HATDSwitch';
+%         iSess = '5_25_2021_PV1191_HATDS';
+%         iSub = 'PV1191';
         
           %%%% 1192
-% % %         ms_dir = 'J:\4_17_2021_PV1192_HATD1';
-% % %         csc_dir = 'J:\2021-04-17_10-06-00_PV1192_HATD1'; 
-% % %         iSess = '4_17_2021_PV1192_HATD1';
-% % %         iSub = 'PV1192';      
+        ms_dir = 'J:\4_17_2021_PV1192_HATD1';
+        csc_dir = 'J:\2021-04-17_10-06-00_PV1192_HATD1'; 
+        iSess = '4_17_2021_PV1192_HATD1';
+        iSub = 'PV1192';      
 
 %         ms_dir = 'K:\Jisoo_Project\RawData\pv1192\4_21_2021_PV1192_HATD5';
 %         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-04-21_09-35-07_PV1192_HATD5';
