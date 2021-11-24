@@ -34,8 +34,8 @@ elseif nargin < 4
     color_in = []; 
 end
 
-if size(tvec,2) ~= size(data_in, 2)
-    error('data_in and tvec differ in size')
+if size(tvec,2) ~= size(data_in, 1)
+%     error('data_in and tvec differ in size')
 end
 %%
 nChan = size(data_in, 1); 
@@ -48,9 +48,8 @@ end
 j_ord = jet(100); % set the set 
 
 hold on
-set(gca, 'YDir','reverse'); % flip y axis order
-xlim([tvec(1) tvec(end)]);
-ylim([1, nChan])
+% set(gca, 'YDir','reverse'); % flip y axis order
+
 
 for iChan = nChan:-1:1
 
@@ -59,8 +58,10 @@ for iChan = nChan:-1:1
     
     % plot the line using only the indices. 
     if ~isempty(idx)
-        line([tvec(idx); tvec(idx)], [iChan-2 iChan+1], 'color', c_ord(iChan+1,:), 'linewidth', linesize)
+        line([tvec(idx), tvec(idx)]', [(ones(1,length(idx))*iChan)-2; (ones(1,length(idx))*iChan)+1], 'color', c_ord(iChan+1,:), 'linewidth', linesize)
     end
 end
 
 set(gca, 'color', j_ord(1,:)); %set background color. 
+xlim([tvec(1) tvec(end)]);
+ylim([1, nChan])

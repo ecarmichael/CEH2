@@ -48,6 +48,7 @@ spd = getLinSpd([],pos);
 % spd_gk = gausskernel(ceil(1/mode(diff(spd.tvec))),ceil(1/mode(diff(spd.tvec)))*.2);
 % spd.data =  conv2(spd.data,gausswin(100),'same'); % smooth over 2 seconds
 spd.data = smooth(spd.data, 2*ceil(1/mode(diff(spd.tvec))))';
+spd.data(1) = spd.data(2); % correct for jump in first sample 
 
 % get LFP
 cfg_lfp = [];
@@ -112,6 +113,7 @@ for iC = 1:length(file_list)
         this_S = restrict(S, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(2));
         this_pos = restrict(pos, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(2));
         this_spd = restrict(spd, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(2));
+%         this_spd.data(1) = this_spd.data(2); 
         this_evt = restrict(evt, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(2)); 
         
         if isempty(this_S.t{1})
@@ -129,6 +131,12 @@ for iC = 1:length(file_list)
             end
             end
             fprintf('Left: %d   |  Center: %d   | Right: %d\n', length(maze.l), length(maze.c), length(maze.r))
+            
+        elseif iB == 3
+                this_pos.data(1,:) = this_pos.data(1,:)/2;
+                this_pos.data(2,:) = this_pos.data(2,:)/2;
+                this_spd.data(1,:) = this_spd.data(1,:)*2;
+
         end
         
         % generate psd
@@ -141,7 +149,7 @@ for iC = 1:length(file_list)
         figure((100*iC) + iB)
            SetFigure([], gcf);
         set(gcf, 'position', [81 -377  1760  880])
-        subplot(3,4,9:10)
+        subplot(3,4,9)
         hold on
         plot(Fx, 10*log10(Px), 'color', [244,93,1]/255, 'linewidth',2)
         xlim([0 150])
@@ -171,10 +179,11 @@ for iC = 1:length(file_list)
             for ii  = 1:4
                 plot (xrange(:,ii),mWV(:,ii),"LineWidth",3, 'color', c_ord(ii,:));
             end
-            legend("Ch 1", "Ch 2","Ch 3","Ch 4", 'fontsize', 8, 'location', 'south', 'orientation', 'horizontal' ); legend boxoff
+%             legend("Ch 1", "Ch 2","Ch 3","Ch 4", 'fontsize', 8, 'location', 'north', 'orientation', 'horizontal' ); legend boxoff
             xlabel ("Time (ms)")
             axis off
-            title ({strrep(fname, '_', ' ') ;  strrep(this_S.label{1}, '_', ' '); Blocks{iB}})
+            title ({strrep(fname, '_', ' ') ;  strrep(this_S.label{1}, '_', ' '); ['grade: ' this_S.label{1}(end-2)] ; Blocks{iB}})
+            xlim([min(xrange,[], 'all') max(xrange,[], 'all')])
         catch
             subplot (3,4,1)
             text(0, .5, {'waveform file does not exist' ; 'or is corrupted'});
@@ -209,7 +218,7 @@ for iC = 1:length(file_list)
         if iB == 2 || iB == 3
             yyaxis right
             plot(this_spd.tvec,this_spd.data)
-            ylim([0 80])
+            ylim([0 16])
             ylabel('speed (cm/s)');
 %             legend({'spikes', 'speed'}, 'Orientation', 'horizontal', 'Location', 'northoutside'); legend boxoff;
         else
@@ -233,8 +242,9 @@ for iC = 1:length(file_list)
         if iB == 2 || iB == 3
             
             % interpolate the spikes to match the time vector
-            spk_x = interp1(this_pos.tvec,this_pos.data(1,:),this_S.t{1},'linear');
-            spk_y = interp1(this_pos.tvec,this_pos.data(2,:),this_S.t{1},'linear');
+            move_idx =  (.5 < this_spd.data) & (this_spd.data < 6); 
+            spk_x = interp1(this_pos.tvec(move_idx),this_pos.data(1,move_idx),this_S.t{1},'linear');
+            spk_y = interp1(this_pos.tvec(move_idx),this_pos.data(2,move_idx),this_S.t{1},'linear');
             
             % plot
 %             figure(101)
@@ -252,8 +262,11 @@ for iC = 1:length(file_list)
             % add some spikes
             %     S_idx = nearest_idx(S.t{1}, pos.tvec);
             
-            plot(spk_x(this_spd.data < 2),spk_y(this_spd.data < 2), '.r', 'markersize', 6)
+            plot(spk_x,spk_y, '.r', 'markersize', 6)
             axis off
+            if iB == 3
+                xlim([12 50]);
+            end
             %% convert to heat map.
             
             
@@ -261,13 +274,21 @@ for iC = 1:length(file_list)
             if iB == 2
             SET_xmin = 10; SET_ymin = 0; % set up bins
             SET_xmax = 82; SET_ymax = 60;
+            SET_xBinSz = 2; SET_yBinSz =2;
+
+            NaN_map = zeros(length(SET_xmin:SET_xBinSz:SET_xmax), length(SET_ymin:SET_yBinSz:SET_ymax));
+            NaN_map(1:5,25:end) = NaN;
+            NaN_map(30:end,25:end) = NaN;
+            NaN_map(:,29:end) = NaN;
+            
+            nan_idx = isnan(NaN_map); 
             
             elseif iB == 3
-            SET_xmin = 0; SET_ymin = 0; % set up bins
-            SET_xmax = 90; SET_ymax = 66;
-                
+
+            SET_xmin = 15; SET_ymin = 0; % set up bins
+            SET_xmax = 45; SET_ymax = 30;
+            SET_xBinSz = 2; SET_yBinSz =2;
             end
-            SET_xBinSz = 2; SET_yBinSz = 2;
             
             
             x_edges = SET_xmin:SET_xBinSz:SET_xmax;
@@ -278,15 +299,15 @@ for iC = 1:length(file_list)
             
             
             % compute occupancy
-            occ_hist = hist3(this_pos.data(1:2,:)', 'edges', {x_edges y_edges});
+            occ_hist = hist3(this_pos.data(1:2,move_idx)', 'edges', {x_edges y_edges});
             %     occ_hist = histcn(pos.data(1:2,:)',y_edges,x_edges); % 2-D version of histc()
             
-%             occ_hist = conv2(occ_hist,kernel,'same');
-            
-            no_occ_idx = find(occ_hist == 0); % NaN out bins never visited
+            no_occ_idx = find(occ_hist < 1); % NaN out bins never visited
+            occ_hist = conv2(occ_hist,kernel,'same');
             occ_hist(no_occ_idx) = NaN;
+            if iB == 2; occ_hist(nan_idx) = NaN; end
             
-            occ_hist = occ_hist .* (1/30); % convert samples to seconds using video frame rate (30 Hz)
+            occ_hist = occ_hist .* mode(diff(this_pos.tvec)); % convert samples to seconds using video frame rate (30 Hz)
             
             subplot(3,4,6)
             pcolor(occ_hist'); shading flat; axis off; cb=colorbar; cb.Position(1) = cb.Position(1) + .03; cb.Label.String = 'secs'; cb.Ticks = [0 cb.Ticks(end)];
@@ -297,8 +318,6 @@ for iC = 1:length(file_list)
             %     spk_hist = histcn([spk_x, spk_y],y_edges,x_edges);
             
             spk_hist = conv2(spk_hist,kernel,'same');
-            
-            
             spk_hist(no_occ_idx) = NaN;
             
             subplot(3,4,7)
@@ -312,20 +331,89 @@ for iC = 1:length(file_list)
             pcolor(tc'); shading flat; axis off; cb=colorbar; cb.Position(1) = cb.Position(1) + .03; cb.Label.String = 'rate (Hz)'; cb.Ticks = [0 cb.Ticks(end)];
             title('rate map');
             
-            
-            
-            % plot the heading by speed heatmap
+            %% plot the heading by speed heatmap
 %             cfg_speed = []; 
-%             vector_mat = MS_speed_HD(cfg_speed, this_pos, this_S);
+%             vector_mat = MS_speed_HD(cfg_speed,this_S, this_pos, this_spd);
+%             
+            
+            %% split half
+            Split.S{1} = restrict(S, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2);
+            Split.S{2} = restrict(S, block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2,block_idx.(Blocks{iB})(2));
+            
+            Split.pos{1} = restrict(this_pos, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2);
+            Split.pos{2} = restrict(this_pos, block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2,block_idx.(Blocks{iB})(2));
+            
+            Split.spd{1} = restrict(this_spd, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2);
+            Split.spd{2} = restrict(this_spd, block_idx.(Blocks{iB})(1)+(block_idx.(Blocks{iB})(2) - block_idx.(Blocks{iB})(1))/2,block_idx.(Blocks{iB})(2));
+
+            for ii = 1:2 
+            Split.move_idx{ii} =  (.5 < Split.spd{ii}.data) & (Split.spd{ii}.data < 6); 
+
+            Split.spk_x{ii} = interp1(Split.pos{ii}.tvec(Split.move_idx{ii}),Split.pos{ii}.data(1,Split.move_idx{ii}),Split.S{ii}.t{1},'linear');
+            Split.spk_y{ii} = interp1(Split.pos{ii}.tvec(Split.move_idx{ii}),Split.pos{ii}.data(2,Split.move_idx{ii}),Split.S{ii}.t{1},'linear');
+            
+            occ_hist = hist3(Split.pos{ii}.data(1:2,Split.move_idx{ii})', 'edges', {x_edges y_edges});
+            %     occ_hist = histcn(pos.data(1:2,:)',y_edges,x_edges); % 2-D version of histc()
+            
+            no_occ_idx = find(occ_hist == 0); % NaN out bins never visited
+            occ_hist = conv2(occ_hist,kernel,'same');
+            occ_hist(no_occ_idx) = NaN;
+            if iB == 2; occ_hist(nan_idx) = NaN; end
+
+            occ_hist = occ_hist .* mode(diff(this_pos.tvec));
+            
+            spk_hist = hist3([Split.spk_x{ii}, Split.spk_y{ii}], 'edges', {x_edges y_edges});
+            
+            spk_hist = conv2(spk_hist,kernel,'same');
+            spk_hist(no_occ_idx) = NaN;
+            
+            Split.tc{ii} = spk_hist./occ_hist;
+
+                
+            subplot(3,4,10+ii)
+            pcolor(Split.tc{ii}'); shading flat; axis off; cb=colorbar; cb.Position(1) = cb.Position(1) + .03; cb.Label.String = 'rate (Hz)'; cb.Ticks = [0 cb.Ticks(end)];
+            title(['TC half ' num2str(ii) ]);
+            
+            Split.occ_hist{ii} = occ_hist;
+            Split.spk_hist{ii} = spk_hist;
+            
+            end
+            idx = ~isnan(Split.tc{1}) & ~isnan(Split.tc{2});
+            split_xcor = corr2(Split.tc{1}(idx), Split.tc{2}(idx));
+
+                    % get the hd x speed vector map
+        cfg_vec = [];
+        cfg_vec.jump_thresh = 20;
+        cfg_vec.interp = 1; 
+        vec_map = MS_speed_HD(cfg_vec, this_S, this_pos, this_spd);
             
         end
         
         % plot the autocorrelation if there is one
         if exist('wave_prop', 'var')
-            subplot(3,4,11)
+            subplot(3,4,10)
             bar(wave_prop.auto_corr.xbin*1000, wave_prop.auto_corr.ac)
             xlabel('Lag (ms)');
         end
+        
+
+
+        
+%         figure(1010)
+%         ax(1) = subplot(2,1,1);
+%         plot(this_pos.tvec(keep_idx), this_pos.data(3,keep_idx), '.k')
+%         hold on
+%         plot(this_pos.tvec, out, '*r')
+%         ax(2) = subplot(2,1,2);
+%         plot(this_pos.tvec(1:end-1),diff([0 rad2deg(circ_dist(deg2rad(this_pos.data(3,1:end-1)), deg2rad(this_pos.data(3,2:end))))]), '.k')
+%         linkaxes(ax, 'x')
+        
+%         out(out>180)=out(out>180)-360;
+        
+        
+        
+        
+        
         
         % get sta
 %         cfg_sta = [];
@@ -374,6 +462,7 @@ for iC = 1:length(file_list)
             This_Cell.(Blocks{iB}).spatial.tc = tc;
             This_Cell.(Blocks{iB}).spatial.spk_hist = spk_hist;
             This_Cell.(Blocks{iB}).spatial.occ_hist = occ_hist;
+            This_Cell.(Blocks{iB}).spatial.split_xcor = split_xcor;
         end
 
     end % end of the block
