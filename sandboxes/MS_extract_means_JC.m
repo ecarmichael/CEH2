@@ -49,7 +49,7 @@ data_out_REM = [];
 data_out_SWS = [];
 for iF = 1:length(this_dir)
     cd(this_dir(iF).name)
-    f_load = FindFile_str(cd, 'ms_resize');
+    f_load = FindFile_str(cd, 'resize');
     if isempty(f_load) % if there is no ms_resize file skip this folder. 
         continue
     end

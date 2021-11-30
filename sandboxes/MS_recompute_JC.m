@@ -73,7 +73,7 @@ for iSub = 1:length(Subjects)
     cd(this_sub_dir)
 %     sess_list = MS_list_dir_names(this_sub_dir, {'LTD', 'HAT'}); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
 %sess_list = MS_list_dir_names_any(this_sub_dir, {'LTD', 'HAT'}); % could use MS_list_dir_names(PARAMS.raw_data_dir, {'string'}) to find specific files by replacing 'string' with a thing to find like 'HAT'
-sess_list = MS_list_dir_names_any(this_sub_dir, {'HATD3','HATD5','HATSwitch'});
+sess_list = MS_list_dir_names_any(this_sub_dir, {'HATD1', 'HATD3','HATD5','HATSwitch'});
 
     for iSess = 1:length(sess_list)
         ms_dir = [PARAMS.raw_data_dir filesep Subjects{iSub} filesep sess_list{iSess}];
@@ -151,6 +151,17 @@ csc_dir='K:\Jisoo_Project\LFP data\Jisoo\2019-11-19_09-59-43_PV1060_HATD1';
 %         
         cd(csc_dir)
         csc = MS_LoadCSC(cfg_load);
+<<<<<<< HEAD
+        
+        cd(ms_inter_dir) % assumes this directory has the pre process/segmented data here.
+        if exist([ms_inter_dir filesep 'ms_resize.mat'], 'file')
+            MS_re_binarize_JC(2, ms_inter_dir, ms_inter_dir, 'ms_resize', 'ms_resize', csc);
+        else
+            continue
+            warning(sprintf('No ms_resize.mat file can be found in inter dir: <strong>%s</strong>', ms_inter_dir))
+        end
+        clear csc csc_dir
+=======
 %         
         cd(ms_inter_dir) % assumes this directory has the pre process/segmented data here.
 %         if exist([ms_inter_dir filesep 'ms_resize.mat'], 'file')
@@ -160,6 +171,7 @@ csc_dir='K:\Jisoo_Project\LFP data\Jisoo\2019-11-19_09-59-43_PV1060_HATD1';
 %             warning(sprintf('No ms_resize.mat file can be found in inter dir: <strong>%s</strong>', ms_inter_dir))
 %         end
 %         clear csc csc_dir
+>>>>>>> b6c3b75db3f352c6a35d68d4df14a6aaea64e83b
 %         
         
         %% extract the means for all the measures realtive to track time.
