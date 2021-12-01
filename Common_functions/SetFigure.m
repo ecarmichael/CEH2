@@ -14,13 +14,13 @@ function h = SetFigure(cfg_in, h)
 % EC - 2016-10-05
 
 %% defaults
-cfg_def.ft_size = 18;
-cfg_def.font = 'helvetica';
+cfg.ft_size = 18;
+cfg.font = 'helvetica';
 % cfg_def.fontweight = 'normal';
-cfg_def.grid = 'off';
-cfg_def.resize = 1;
+cfg.grid = 'off';
+cfg.resize = 1;
 
-cfg = ProcessConfig2(cfg_def, cfg_in);
+% cfg = ProcessConfig2(cfg_def, cfg_in);
 
 
 figure(h)
@@ -35,7 +35,7 @@ end
 H = findobj(gcf,'type','axes','-not','Tag','legend','-not','Tag','Colorbar');
 
 for iH = 1:length(H)
-    set(H(iH), 'fontsize', cfg.ft_size, 'fontname', cfg_def.font, 'TickDir', 'out', 'fontweight', 'normal')
+    set(H(iH), 'fontsize', cfg.ft_size, 'fontname', cfg.font, 'TickDir', 'out', 'fontweight', 'normal')
 end
 box off
 g = get(gca, 'XLabel');

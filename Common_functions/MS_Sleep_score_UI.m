@@ -56,15 +56,16 @@ cfg_def.resize = 1; % use the gui to select the data for resizing.
 cfg_def.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 'numpad0', 'backspace','backquote' }; % which key to press for each state_val
 cfg_def.state_name = {'Wake', 'SWS', 'REM', 'Quiescence', 'Transition', 'Redo', 'Exit'}; %
 cfg_def.state_val = 1:length(cfg_def.state_name); % what numerical value for each state.
-cfg_def.spec.win_s = 2^11; % spectrogram window size.
+cfg_def.spec.win_s = 2^9; % spectrogram window size.
 cfg_def.spec.onverlap = pow2(floor(log2(cfg_def.spec.win_s/4)));%cfg_def.spec.win_s /8 ; % overlap
 cfg_def.spec.freq_low = .5:0.25:14; % frequency range for spectrogram for delta/theta
-cfg_def.spec.freq_high = 125:2:250; % frequency range for spectrogram in the SWR range
+cfg_def.spec.freq_high = 30:5:250; % frequency range for spectrogram in the SWR range
 cfg_def.spec.lfp_chan = 1; % which channel to use for the spectrogram
 cfg_def.smooth_spec = 2; 
 cfg_def.Fs = mode(diff(tvec)); % best guess of the sampling frequency.
 cfg_def.delta_f = [1 4];
 cfg_def.theta_f = [6 9];
+cfg_def.rms_win = round((1/cfg_def.Fs)/2); 
 
 
 cfg = ProcessConfig(cfg_def, cfg_in);
@@ -141,6 +142,10 @@ end
 % % reason.  .
 % theta_csc = FilterLFP(cfg_filt_t, lfp);
 
+
+%% get the moving root mean square of the emg. 
+emg_rms = sqrt(movmean(emg(cfg.emg_chan,:).^2, cfg.rms_win));                         % RMS Value Over ‘WinLen’ Samples
+
 %% create basic plot with channel(s) of interest + emg if available.
 hFig = figure;
 
@@ -189,7 +194,10 @@ text(tvec(1)- tvec(1), median(data(cfg.lfp_chans(iChan),:)), 'LFP')
 
 if ~isempty(emg)
     ax(999) = subplot(nSubplots, 1, nSubplots);
+    hold on
     plot(tvec- tvec(1), emg(cfg.emg_chan,:))
+    plot(tvec- tvec(1), emg_rms, '--r')
+
 %     ylim([min(emg(cfg.emg_chan,:)), max(emg(cfg.emg_chan,:))])
     ylim(cfg.emg_range)
     text(tvec(1)- tvec(1), cfg.emg_range(2)*.8, 'EMG')
@@ -246,6 +254,8 @@ drawnow;
 if ~isempty(emg)
     ax(999) = subplot(nSubplots, 1, nSubplots);
     plot(tvec(this_idx(1):this_idx(2)) - tvec(1), emg(cfg.emg_chan,this_idx(1):this_idx(2)))
+    plot(tvec(this_idx(1):this_idx(2)) - tvec(1), emg_rms(this_idx(1):this_idx(2)), '--r')
+
         ylim(cfg.emg_range)
 %     ylim([min(emg(cfg.emg_chan,:)), max(emg(cfg.emg_chan,:))])
 %     text(tvec(1)- tvec(1), cfg.emg_range(2)*.8, 'EMG')
@@ -283,7 +293,7 @@ while ishandle(h)
         fprintf('%s ', cfg.state_name{iK})
         score(this_idx(1):this_idx(2)) = cfg.state_val(iK);
         x_lim = xlim;
-        disp(x_lim);
+        fprintf('     %.0f   %.0f    %0.2f%%\n', x_lim(1), x_lim(2), round(x_lim(2)/(tvec(end)-tvec(1)),2)*100)
         if done == 1 
             disp('Exiting')
             break
@@ -344,7 +354,10 @@ drawnow;
 
 if ~isempty(emg)
     ax(999) = subplot(nSubplots, 1, nSubplots);
+    hold on
     plot(tvec(this_idx(1):this_idx(2)) - tvec(1), emg(cfg.emg_chan,this_idx(1):this_idx(2)))
+    plot(tvec(this_idx(1):this_idx(2)) - tvec(1), emg_rms(this_idx(1):this_idx(2)), '--r')
+    hold off
     ylim(cfg.emg_range)
     xlim([tvec(this_idx(1))- tvec(1), tvec(this_idx(2))- tvec(1)]);
 %     text(tvec(1)- tvec(1), cfg.emg_range(2)*.8, 'EMG')

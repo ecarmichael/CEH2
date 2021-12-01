@@ -1,7 +1,7 @@
 %% HD score sandbox
 
 
-% cd('/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06')
+cd('/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06')
 load('behav_DLC.mat', 'behav')
 load('ms.mat', 'ms')
 
@@ -36,6 +36,17 @@ behav_aligned.accel = diff(behav_aligned.speed);
 
 % compute event histogram
 evts_idx = ms.Binary(:,1) == 1;
+
+%% plot an example
+iC  = 1
+figure(101)
+hold on
+plot(ms.time, ms.RawTraces(:,iC));
+plot(ms.time, ms.deconvolvedSig(:,iC));
+plot(ms.time, ms.denoisedCa(:,iC));
+plot(ms.time, ms.Binary(:,iC));
+legend({'Raw'; 'Decon', 'Denoised', 'Binary'});
+title(['Cell:' num2str(iC)])
 
 %% unwrap and smooth data
 

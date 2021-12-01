@@ -50,41 +50,28 @@ cd(PARAMS.raw_data_dir) % move to the data folder
 clear d os
 % define the type of cells to use
 
-cell_type = 'Anx';
-
 %% set up the directories to process
 
-session = {'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_18_2019_PV1069_HATD5\H13_M5_S42_HATD5',...
-    'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_22_2019_PV1069_HATSwitch\H13_M4_S44_HATD6'}; 
+session = {'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis\540\12_11_2019_540day1',...
+    'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis\540\12_13_2019_540day3', ...
+    'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis\537\12_9_2019_537day5',...
+    'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis\540\12_15_2019_540day5',...
+    'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis\537\12_5_2019_537day1',...
+    'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis\537\12_7_2019_537day3'}; 
 
-% don't work ATM
-% {'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_14_2019_PV1069_HATD1',...
-%     'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1060\11_19_2019_PV1060_HATD1',...
-%     'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1060\11_21_2019_PV1060_HATD3'}
-    
 
-% 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_18_2019_PV1069_HATD5\H13_M5_S42_HATD5',...
+% get the processed data from the saptial file. 
 
-% 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_22_2019_PV1069_HATSwitch\H13_M4_S44_HATD6',...
-% 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1060\11_26_2019_PV1060_HATSwitch\H13_M5_S15_HATSwitch',...
-% 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\7_12_2019_PV1069_LTD5\H12_M41_S29_LTD5', ...
-% 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\7_8_2019_PV1069_LTD1\H12_M36_S0_LTD1',...
-% 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1060\7_15_2019_PV1060_LTD1\H13_M22_S5_LTD1',...
+% pro_main = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting'; % where to find processed data
 
-% 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1060\11_19_2019_PV1060_HATD1',...
-% 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1060\11_21_2019_PV1060_HATD3'};
-%'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1060\7_15_2019_PV1060_LTD1\H13_M22_S5_LTD1'};
-
-pro_main = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting'; % where to find processed data
-
-REM_main = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter';
+REM_main = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\RAW Calcium\Inter';
 %% cycle through some sessions
 
-for iSess = 2:length(session)
+for iSess =4:length(session)
     cfg.place = 1;
     cfg.anx = 0;
     cfg.nIter = 20;
-    MS_Run_REM_SeqNMF(cfg, session{iSess}, pro_main, REM_main)
+    MS_Run_REM_SeqNMF_inter_EV(cfg, session{iSess}, session{iSess}, REM_main)
     close all
     
 %     if contains(session{iSess}, 'HAT')

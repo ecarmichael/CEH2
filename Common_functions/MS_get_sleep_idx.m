@@ -36,7 +36,7 @@ load('ms_trk.mat', 'ms_trk');
 
    these_segs = find(contains(lower(ms_seg_resize.pre_post), lower(pre_post))); 
     
-
+times= []; 
 iCount = 0; 
 blocks = []; 
 start_idx = []; 
@@ -46,7 +46,9 @@ for iSeg = these_segs
         iCount = iCount+1; 
         end_idx(iCount) = size(ms_seg_resize.FiltTraces{iSeg},1); 
         blocks = [blocks;  ms_seg_resize.FiltTraces{iSeg}];
+        if isfield('ms_seg_resize', 'time_labels')
         times(iCount) = ((24*60)*datenum(ms_seg_resize.time_labels{iSeg}, 'HH:MM:SS')) - ((24*60)*datenum(ms_trk.time_labels, 'HH:MM:SS')) - (ms_trk.time(end)/1000)/60;  
+        end
         fprintf([ms_seg_resize.hypno_label{iSeg} ' %i\n'], iSeg)
     end
 %     disp(ms_in.pre_post{iSeg})

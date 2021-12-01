@@ -42,6 +42,7 @@ cfg_def.score_nShuf = 500;
 % REM
 cfg_def.REM = 1; % run the REM data
 
+cfg_def.nIter = 20; % number of iterations to run on the REM sequences. 
 cfg = ProcessConfig2(cfg_def, cfg_in);
 
 if nargin < 4
@@ -789,38 +790,56 @@ type = 'parts';
 %%
 % Run seqNMF using the best K +1
 
-Ls = 2:2:16;
+Ls = 2:2:10;
 if ~exist("best_k", 'var')
     best_k = 2;
 end
 for iL = length(Ls):-1:1
     fprintf('Running seqNMF...K = %d  L = %d sec\n', best_k+1, Ls(iL))
-    tic
-    [W, H, ~,loadings,~]= seqNMF(X,'K',best_k+1,'L',ceil(Ls(iL)*Fs),...
-        'lambdaL1W', .1, 'lambda', lambda, 'maxiter', 100, 'showPlot', 0,...
-        'lambdaOrthoH', lambdaOrthoH, 'lambdaOrthoW', lambdaOrthoW);
     
-    % test if any are significant
-    p = .05; % desired p value for factors
-    if sum(W(W~=0)) == 0
-        is_significant = false(1,K);
-    else
-        disp('Testing significance of factors on held-out data')
-        [~,is_significant] = test_significance(testNEURAL,W,p);
+    loadings = [];
+    pvals = [];
+    is_significant = [];
+    rng(235); 
+    
+    % run multiple iterations to check consistency. 
+    for iteri = 1:cfg.nIter
+        tic
+        fprintf('Iteration %d/%d...', iteri, cfg.nIter)
+        [W, H, ~,loadings(iteri,:),power(iteri)]= seqNMF(X,'K',best_k+1,'L',ceil(Ls(iL)*Fs),...
+            'lambdaL1W', .1, 'lambda', lambda, 'maxiter', 100, 'showPlot', 0,...
+            'lambdaOrthoH', lambdaOrthoH, 'lambdaOrthoW', lambdaOrthoW);
+        toc
+        fprintf('n'); 
+        % test if any are significant
+        p = .05; % desired p value for factors
+        if sum(W(W~=0)) == 0
+            is_significant(iteri,:) = false(1,K);
+        else
+            fprintf('Testing significance of factors on held-out data... ')
+                [pvals(iteri,:),is_significant(iteri,:)] = test_significance(testNEURAL,W,p);
+                fprintf('Found %d/%d significant factors\n', sum(is_significant(iteri,:),2), size(is_significant,2))
+        end        
+        
+        W = W(:,is_significant(iteri,:)==1,:);
+        H = H(is_significant(iteri,:)==1,:);
+        if isempty(W)
+            continue
+        end
+        all_W{iteri} = W;
+        all_H{iteri} = H;
+        
+        [~, ~, ~, hybrid] = helper.ClusterByFactor(W(:,:,:),1);
+        indSort(:,iteri) = hybrid(:,3);
     end
     
-    [~, ~, ~, hybrid] = helper.ClusterByFactor(W(:,:,:),1);
-    indSort = hybrid(:,3);
-    
-    W = W(:,is_significant,:);
-    H = H(is_significant,:);
-    fprintf('Found %d/%d significant factors\n', sum(is_significant), length(is_significant))
     all_sweeps_out{iL}.K = K;
     all_sweeps_out{iL}.L = Ls(iL);
-    all_sweeps_out{iL}.W = W;
-    all_sweeps_out{iL}.H = H;
+    all_sweeps_out{iL}.W = all_W;
+    all_sweeps_out{iL}.H = all_H;
     all_sweeps_out{iL}.indSort = indSort;
     all_sweeps_out{iL}.loadings = loadings;
+    all_sweeps_out{iL}.power = power; 
     all_sweeps_out{iL}.sig = is_significant;
     all_sweeps_out{iL}.Train = trainNEURAL;
     all_sweeps_out{iL}.Trest = testNEURAL;
@@ -835,9 +854,11 @@ clear all_sweeps_out
 % summarize sig factors. 
 sig_Ls = [];
 for iSeq = 1:length(all_sweeps.(type))
-    if sum(all_sweeps.(type){iSeq}.sig) >0
+    if (sum((all_sweeps.(type){iSeq}.sig >0),'all') > floor(length(all_sweeps.(type){iSeq}.sig)/2)) > cfg.iter_thresh
         sig_Ls = [sig_Ls iSeq];
-        fprintf('Significant Seq (%d) found using k: %d L: %d\n', sum(all_sweeps.(type){iSeq}.sig), all_sweeps.(type){iSeq}.K, all_sweeps.(type){iSeq}.L)
+        fprintf('Significant Seqs %d/%d inters (K1: %d, K2: %d, K3: %d) found using k: %d L: %d\n',sum((all_sweeps.(type){iSeq}.sig >0),'all'), length(all_sweeps.(type){iSeq}.sig), ...
+            sum((all_sweeps.(type){iSeq}.sig ==1),'all'), sum((all_sweeps.(type){iSeq}.sig ==2),'all'), sum((all_sweeps.(type){iSeq}.sig ==3),'all'),...
+            all_sweeps.(type){iSeq}.K, all_sweeps.(type){iSeq}.L); 
     end
 end
 %%
@@ -1117,7 +1138,7 @@ if cfg.score
 end
 %% save the output
 if cfg.reverse
-    save([PARAMS.inter_dir filesep subject filesep session filesep 'all_REM_sweeps_reverse_' type ], 'all_sweeps')
+    save([PARAMS.inter_dir filesep subject filesep session filesep 'all_REM_sweeps_inter_reverse_' type ], 'all_sweeps')
 else
-    save([PARAMS.inter_dir filesep subject filesep session filesep 'all_REM_sweeps_' type ], 'all_sweeps')
+    save([PARAMS.inter_dir filesep subject filesep session filesep 'all_REM_sweeps_inter' type ], 'all_sweeps')
 end

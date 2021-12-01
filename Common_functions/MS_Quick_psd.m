@@ -26,7 +26,7 @@ if nargin == 0
     type = 'long';
     save_dir = cd;
     disp('''Chan_to_use'' not specified.  Using all .ncs files')
-    disp('''type'' no specified, using ''long'' for all data. Use type = ''fast'' for only the first 1/4 of the data to save time')
+    disp('''type'' not specified, using ''long'' for all data. Use type = ''fast'' for only the first 1/4 of the data to save time')
 
 elseif nargin == 1
     type = 'long';
@@ -56,7 +56,8 @@ switch type
         %     only takes in half the data.
         for iSite = 1:length(csc.label)
             [psd.(csc.label{iSite}(1:end-4)).pxx, psd.(csc.label{iSite}(1:end-4)).f] = pwelch(csc.data(iSite,1:cut), hanning(cfg_psd.hann_win), cfg_psd.hann_win/2, cfg_psd.hann_win*2 , csc.cfg.hdr{1}.SamplingFrequency);
-        end
+            
+         end
         
     case 'long'
         for iSite = 1:length(csc.label)
@@ -194,5 +195,5 @@ set(gcf, 'position', [pos(1) pos(2) pos(3)*1.5 pos(4)*2])
 % xlim([0 120])
 % ylim([0 1])
 % legend(pair_labels)%, 'location', 'EastOutside', 'orientation', 'vertical')
-% maximize
+% maximizesfn 2019sfn 2019
 saveas(gcf,[save_dir filesep 'PSD_check.png'])
