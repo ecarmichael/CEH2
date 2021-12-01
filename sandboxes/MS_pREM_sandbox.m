@@ -24,38 +24,54 @@
 %     1. >900ms duration
 %     2. epoch has min smoothed IPI < 5th percentile of all IPI_smoothed
 %     3. epoch theta amp > mean theta amp for all REM.
-
-if isunix
-    addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
-    addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
-    data_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP/PV1060/11_26_2019_PV1060_HATSwitch';
-    LFP_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP';
-else
+% clear all ;close all;
+if strcmp(computer, 'GLNXA64')
     
+    % Home
+    if strcmpi(getenv('USERNAME'), 'ecarmichael')
+        elseif strcmpi(getenv('USERNAME'), 'williamslab')
+        addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
+        addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
+        data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1043\LTD1';
+        LFP_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP';
+        cell_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/4.PlaceCell';
+    end
+else
     LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo';
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
-    data_dir ='C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1060\11_26_2019_PV1060_HATSwitch'; % change this to the data folder that you want.  LFP will update automatically. 
+   data_dir ='C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\LTD1'; % change this to the data folder that you want.  LFP will update automatically.
+   cell_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\4.PlaceCell'; % where to find place cell classification and centroids. 
+   
+   % data_dir = 'C:\Users\ecarm\Dropbox (Williams
+   % Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_22_2019_PV1069_HATSwitch';
+   % my drop box doesn't work here and whole data is in J
 end
 
 cd(data_dir)
 c_ord = linspecer(5); % just some nicer colours.
 
 %% load some pre-cut data
-
+warning off
 load('ms_resize.mat');
-
+warning on
+disp('MS loaded')
 inter_dir = cd; % where to write back the sleep scored data.
 %% get the session name
 parts = strsplit(cd,  filesep);
 
 session = parts{end};
 subject = parts{end-1};
-date = parts{end}(1:10);
+date = parts{end};%(1:10);
+if strcmp(date(end), '_')
+    date = date(1:end-1);
+end
 type = strsplit(parts{end}, '_');
 type = type{end};
-if strcmp(type,'HATSwitch') && contains(subject, 'PV1069')
+if strcmp(type,'HATSwitch') && contains(subject, '1069')
     type = 'HATD6_switch';
+elseif strcmp(type,'HATDSwitch') && contains(subject, '1060')
+        type = 'HATSwitch';
 end
 
 %%  prepare LFP data
@@ -76,6 +92,11 @@ for iC = 1:length(ms_seg_resize.NLX_csc{1}.cfg.hdr) % loop over channels.
     cfg_load.desired_sampling_frequency = ms_seg_resize.NLX_csc{1}.cfg.hdr{iC}.SamplingFrequency;
 end
 
+% hard code LFP channel 
+if strcmp(subject, 'PV1043') && strcmp(type, 'LTD5')
+    cfg_load.fc{2} = 'CSC6.ncs';
+end
+
 % load some data.
 CSC = MS_LoadCSC(cfg_load);
 EVT = LoadEvents([]); % load the events file.
@@ -85,37 +106,14 @@ EVT = LoadEvents([]); % load the events file.
 
 % MS_Quick_psd()
 
-%% prepare the data for scoring.
-% since JC data has a gap in a single recording for the track, account for
-% that here.
-S_rec_idx = find(contains(EVT.label, 'Starting Recording')); % get the index for the start recoding cell
-if length(EVT.t{S_rec_idx}) >1
-    fprintf('Multiple (%d) Recordings in one continuous CSC.  appending for sleep scoring spec\n', numel(EVT.t{S_rec_idx}))
-    
-    all_tvec = [];
-    for iCut = 2:numel(EVT.t{S_rec_idx})
-        if iCut == numel(EVT.t{S_rec_idx})
-            tvec_cut = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):end);
-        else
-            tvec_cut = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):iCut+1);
-        end
-        
-        tvec_cut = tvec_cut - tvec_cut(1);
-        all_tvec = [all_tvec, tvec_cut];
-    end
-    start_tvec = CSC.tvec(1:nearest_idx(EVT.t{S_rec_idx+1}(1),CSC.tvec));
-    all_tvec = [start_tvec; all_tvec+start_tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency)];
-    
-    % update CSC
-    CSC_cut = CSC;
-    CSC_cut.tvec = all_tvec;
-end
 
+%% prepare the EMG
 % extract the EMG
-CSC_emg = CSC_cut;
+CSC_emg = CSC;
 CSC_emg.data = CSC_emg.data(1,:);
+CSC_emg.label = CSC_emg.label(1); 
 CSC_emg.cfg.hdr = [];
-CSC_emg.cfg.hdr{1} = CSC_cut.cfg.hdr{1};
+CSC_emg.cfg.hdr{1} = CSC.cfg.hdr{1};
 
 
 % filter the EMG
@@ -127,25 +125,77 @@ emg_f = FilterLFP(cfg_emg, CSC_emg);
 
 emg_h = abs(hilbert(emg_f.data)); % get the emg power for plotting.
 
-emg_rms = sqrt(movmean(emg_f.data.^2, 1000));                         % RMS Value Over ‘WinLen’ Samples
+emg_rms = sqrt(movmean(emg_f.data.^2, 1000));                         % RMS Value Over Samples
+
+%% prepare the data for scoring.
+% since JC data has a gap in a single recording for the track, account for
+% that here.
+S_rec_idx = find(contains(EVT.label, 'Starting Recording')); % get the index for the start recoding cell
+Stop_rec_idx = find(contains(EVT.label, 'Stopping Recording')); % get the index for the start recoding cell
+
+
+% split the pre and post recordings.  
+
+if length(EVT.t{S_rec_idx}) ~= 2
+    warning('more than two recordings detected.  Fix this later.')
+else
+    
+    CSC_pre = CSC; 
+    CSC_pre.tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
+    CSC_pre.data = CSC.data(:,1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec)); 
+%     CSC_pre.data = CSC_pre.data - mean(CSC_pre.data); 
+    emg_h_pre = emg_h(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec)); 
+
+    
+    CSC_post= CSC;
+    CSC_post.tvec = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(2), CSC.tvec):end);
+    CSC_post.data = CSC.data(:,nearest_idx(EVT.t{S_rec_idx}(2), CSC.tvec):end);
+%     CSC_post.data = CSC_post.data - mean(CSC_post.data);
+    emg_h_post = emg_h((nearest_idx(EVT.t{S_rec_idx}(2), CSC.tvec):end));
+end
+
+
+
+CSC_cut = CSC;
+CSC_cut.tvec = [CSC_pre.tvec; (CSC_post.tvec - CSC_post.tvec(1))+(CSC_pre.tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency))];
+CSC_cut.data = [CSC_pre.data, CSC_post.data];
+
+emg_h_cut = [emg_h_pre, emg_h_post];
 
 %% score the sleep data
-
+if ~exist('Score.mat', 'file') && ~exist([data_dir filesep 'pREM' filesep 'Hypno.mat'], 'file')
 cfg_sleep = [];
 cfg_sleep.tvec_range = [0 5];  % number of seconds per window.
-cfg_sleep.emg_range = [min(emg_h) mean(emg_h) + std(emg_h)*5]; % default, should be based on real data.
+cfg_sleep.emg_range = [min(emg_h_cut) mean(emg_h_cut) + std(emg_h_cut)*5]; % default, should be based on real data.
 cfg_sleep.emg_chan = 1; % emg channel.  Can be empty.
 cfg_sleep.lfp_chans = 1; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data.
 cfg_sleep.state_name = {'Wake',       'SWS',       'REM',    'Quiescence','Transition','pREM',  'Redo',     'Exit'}; %
 cfg_sleep.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 't',   'numpad1' 'backspace','backquote' }; % which key to press for each state_val
+cfg_sleep.method = 'spec'; 
 
+score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC_cut.data(2,:), emg_h_cut);
 
-score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC.data(2,:), emg_h);
-
-
+elseif exist('Score.mat', 'file')
+    fprintf('Score file detected\n')
+    load('Score.mat')
+end
 
 %% write the hypno back to the intermediate dir.
-if exist('score', 'var')
+
+
+cd(inter_dir); % commented by jisoo maybe add creating folder here?
+mkdir('pREM')
+
+if ~exist('Hypno', 'var')
+    if exist([data_dir filesep 'pREM' filesep 'Hypno.mat'], 'file')
+        fprintf('<strong>Loading Hypno from </strong> %s\n', inter_dir);
+        load([data_dir filesep 'pREM' filesep 'Hypno.mat']);
+    end
+else
+    fprintf('Hypno present. Using var\n');
+end
+
+if exist('score', 'var')&& ~exist('Hypno', 'var')
     % put it in a nice format.
     Hypno = [];
     Hypno.tvec = CSC_cut.tvec;
@@ -157,9 +207,9 @@ if exist('score', 'var')
     
     % save it.
     cd(inter_dir);
+    save([inter_dir filesep 'pREM' filesep 'Cut_CSC.mat'], 'CSC_cut', '-v7.3'); 
     save([inter_dir filesep 'pREM' filesep 'Hypno.mat'], 'Hypno', '-v7.3')
     save('Hypno.mat', 'Hypno', '-v7.3')
-    
 else
     fprintf('<strong>No Score var found. skipping saving</strong>\n')
 end
@@ -167,10 +217,10 @@ end
 
 
 cfg_filt_t = [];
-cfg_filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
+% cfg_filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
 cfg_filt_t.f  = [5 12]; % to match Mizuseki et al. 2011
 cfg_filt_t.order = 3; %type filter order
-% cfg_filt_t.display_filter = 1; % use this to see the fvtool (but very slow with ord = 3 for some
+cfg_filt_t.display_filter = 0; % use this to see the fvtool (but very slow with ord = 3 for some
 % reason.
 
 % extract raw LFP only.
@@ -187,15 +237,6 @@ theta_amp = abs(hilbert(theta_csc.data));
 theta_phi = angle(hilbert(theta_csc.data));
 %% get REM periods
 
-if ~exist('Hypno', 'var')
-    if exist([inter_dir filesep 'Hypno.mat'], 'file')
-        fprintf('<strong>Loading Hypno from </strong> %s\n', inter_dir);
-        load([inter_dir filesep 'Hypno.mat']);
-    end
-else
-    fprintf('Hypno present. Using var\n');
-end
-
 REM_label_idx = find(contains(Hypno.labels, 'REM'));
 REM_idx = Hypno.data == REM_label_idx;
 REM_idx = sum(REM_idx,2); % if there are more than one REM label (ie REM & pREM) keep both.
@@ -205,6 +246,8 @@ REM_idx = logical(REM_idx); % make it a logical again.
 figure
 subplot(2,1,1)
 [REM_evts, REM_IV] = MS_get_events(REM_idx', 1); % get the start and stop of each REM event using the REM label idx
+xlim([0 length(REM_idx)])
+vline(length(CSC_pre.tvec))
 
 % convert idx in IV to times
 REM_IV.tstart = CSC_cut.tvec(REM_IV.tstart);
@@ -218,7 +261,7 @@ cfg_plot.display = 'tsd';
 cfg_plot.target = 'CSC6.ncs';
 PlotTSDfromIV(cfg_plot, REM_IV, CSC_cut)
 xlim([CSC_cut.tvec(1) CSC_cut.tvec(end)])
-
+vline(CSC_pre.tvec(end))
 %% convert REM to episode blocks
 
 for iB = length(REM_evts):-1:1
@@ -319,8 +362,34 @@ for iB = length(REM_blocks):-1:1
     % close all
 end
 
-
 close all
+
+%% save REM phase, amplitude, and duration. 
+
+% 
+REM = [];
+REM.tvec = REM_tvecs;
+REM.data = REM_raw;
+REM.theta = REM_amp{iB};
+for ii = length(IPI):-1:1
+    REM.theta_mean(ii) = nanmean(REM_amp{ii});
+end
+REM.theta_unit = theta_csc.units; 
+REM.phi = REM_phi{iB};
+REM.IPI = IPI;
+for ii = length(IPI):-1:1
+    REM.IPI_mean{ii} =  1/mean(IPI{ii});
+    if REM_tvecs{ii} < EVT.t{Stop_rec_idx}(1)
+        REM.labels{ii} = 'pre';
+    else
+        REM.labels{ii} = 'post';
+    end
+end
+
+cd(inter_dir)
+mkdir('REM')
+save([inter_dir filesep 'REM' filesep 'REM.mat'], 'REM');
+
 %%  collect the IPIs to get a distribution
 all_IPI = []; all_IPI_smooth = []; % collect the ISI for crit 1
 all_amp = []; % collect the amplitude for crit 3
@@ -372,11 +441,12 @@ for iB = length(IPI_vec):-1:1 % still working with blocks rather than concatenat
     keep_blocks = block_dur > min_len; % keep only blocks that are
     
     Phasic_blocks(~keep_blocks,:) = [];
-    
+    keep_t_amp = []; 
     if ~isempty(Phasic_blocks)
         % Crit 3: theta amp in block must be great than mean of all theta
         for ii = 1:size(Phasic_blocks,1)
             if mean(REM_amp{iB}(Phasic_blocks(ii,1):Phasic_blocks(ii,2)))  > mean(theta_amp)
+                pREM_theta_amp{ii} = mean(REM_amp{iB}(Phasic_blocks(ii,1):Phasic_blocks(ii,2))) ; 
                 keep_t_amp(ii) = 1;
             else
                 keep_t_amp(ii) = 0;
@@ -388,7 +458,6 @@ for iB = length(IPI_vec):-1:1 % still working with blocks rather than concatenat
     
     %convert back to the time vector.
     Phasic_times{iB} = REM_tvecs{iB}(Phasic_blocks);
-    
     Phasic_idx{iB} = Phasic_blocks;
     
 end
@@ -413,8 +482,6 @@ for ii  = 1:size(pREM_times,1)
     pREM_idx(ii,1) = find(this_csc.tvec == pREM_times(ii,1));
     pREM_idx(ii,2) = find(this_csc.tvec == pREM_times(ii,2));
 end
-
-
 
 %% plot some segments.
 win_s = 2; % add some extra data
@@ -461,6 +528,10 @@ end
 
 save([inter_dir filesep 'pREM' filesep 'pREM_idx.mat'], 'pREM_idx');
 save([inter_dir filesep 'pREM' filesep 'pREM_times.mat'], 'pREM_times');
+pREM_evts.times = pREM_times;
+%pREM_evts.labels = pREM_block; % Unrecognized function or variable 'pREM_block'.
+save([inter_dir filesep 'pREM' filesep 'pREM_evts.mat'], 'pREM_evts');
+
 
 fprintf('<strong>%s</strong>: pREM events detected totalling %d seconds (%.2f %% of REM)\n',...
     mfilename, numel(Phasic_data), (sum(cellfun('length',Phasic_data))/sum(cellfun('length', REM_blocks)))*100)
@@ -504,10 +575,10 @@ end
 all_pREM_Ca_idx = NaN(length(pREM_times),2); 
 % pREM_Ca_idx_post = NaN(length(pREM_times),2);
 for ii = 1:length(pREM_times)
-    if (pREM_times(ii,1) < all_aligned_tvec_post(1)) || (pREM_times(ii,2) < all_aligned_tvec_post(1))
+    if  (pREM_times(ii,2) < all_aligned_tvec_post(1)) %
         
-        all_pREM_Ca_idx(ii,1) = nearest_idx3(pREM_times(ii,1), all_aligned_tvec_pre)';
-        all_pREM_Ca_idx(ii,2) = nearest_idx3(pREM_times(ii,2), all_aligned_tvec_pre)';
+        all_pREM_Ca_idx(ii,1) = nearest_idx3(CSC.tvec(pREM_idx(ii,1)), all_aligned_tvec_pre)';
+        all_pREM_Ca_idx(ii,2) = nearest_idx3(CSC.tvec(pREM_idx(ii,2)), all_aligned_tvec_pre)';
         
         % catch for pREM that fall outside of the Ca recording blocks.
         if all_pREM_Ca_idx(ii,2) - all_pREM_Ca_idx(ii,1) <=0
@@ -516,14 +587,14 @@ for ii = 1:length(pREM_times)
         pREM_block{ii} = 'pre';
 
     else
-        all_pREM_Ca_idx(ii,1) = nearest_idx3(pREM_times(ii,1), all_aligned_tvec_post)';
-        all_pREM_Ca_idx(ii,2) = nearest_idx3(pREM_times(ii,2), all_aligned_tvec_post)';
+        all_pREM_Ca_idx(ii,1) = nearest_idx3(CSC.tvec(pREM_idx(ii,1)), all_aligned_tvec_post)';
+        all_pREM_Ca_idx(ii,2) = nearest_idx3(CSC.tvec(pREM_idx(ii,2)), all_aligned_tvec_post)';
         
         % catch for pREM that fall outside of the Ca recording blocks.
         if all_pREM_Ca_idx(ii,2) - all_pREM_Ca_idx(ii,1) <=0
             all_pREM_Ca_idx(ii,:) = NaN ;
         end
-                pREM_block{ii} = 'post';
+        pREM_block{ii} = 'post';
     end
 
 end
@@ -555,18 +626,48 @@ fprintf('<strong>%s</strong>:  %d/%d pREM events occured during Miniscope record
 %% 
 figure(1010)
 hold on
-plot(CSC_cut.tvec, CSC_cut.data(2,:))
+plot(CSC.tvec, CSC.data(2,:)*10000000)
 for ii = 1:length(pREM_times)
-    xline(CSC_cut.tvec(pREM_idx(ii,1)), 'b');
-    xline(CSC_cut.tvec(pREM_idx(ii, 2)), 'r');
+    xline(CSC.tvec(pREM_idx(ii,1)), 'b');
+    xline(CSC.tvec(pREM_idx(ii, 2)), 'r');
 end
-plot(all_evts, ones(size(all_evts))*median(CSC_cut.data(2,:)), 'o')
-
+plot(all_evts, ones(size(all_evts))*median(CSC.data(2,:)), 'o')
+vline(EVT.t{1}(2), '--r', '--> post')
 
 %% make some plots with corresponding rasters
 
+% get the binarized pre and post sleep data 
 load('all_binary_pre.mat');
 load('all_binary_post.mat'); 
+
+
+
+% get the cell centroids for coloring.  (if they exist)
+if exist([cell_dir filesep lower(subject) filesep type filesep 'spatial_analysis.mat'], 'file')
+    load([cell_dir filesep lower(subject) filesep type filesep 'spatial_analysis.mat']);
+elseif exist([cell_dir filesep lower(subject) filesep strrep(type, 'TS', 'TDS') filesep 'spatial_analysis.mat'], 'file')
+        load([cell_dir filesep lower(subject) filesep strrep(type, 'TS', 'TDS') filesep 'spatial_analysis.mat']);
+end
+if exist('spatial_analysis', 'var')
+    place_idx = zeros(length(spatial_analysis.bin),1); % allocate the index array
+    centroids = nan(size(place_idx));
+    
+    for iC = length(spatial_analysis.raw):-1:1
+        if spatial_analysis.bin{iC,3}.IsPlaceCell
+            place_idx(iC) = 1;
+            centroids(iC) = spatial_analysis.bin{iC,3}.PlaceFieldCentroid{1}(1);
+        end
+    end
+    
+   [~, cent_sort] = sort(centroids); 
+   place_idx = place_idx(cent_sort); 
+
+else
+    cent_sort = 1:size(all_binary_post,2); % just use default sort. 
+    place_idx = ones(size(cent_sort)); 
+end
+
+
 
 for ii  = 1:length(all_pREM_Ca_idx)
 %     close all
@@ -608,19 +709,25 @@ for ii  = 1:length(all_pREM_Ca_idx)
         this_tvec = (this_tvec - this_tvec(1))/30;
         
         figure(2);
-        MS_Ca_Raster(this_ca,this_tvec, 6);%repmat([1,1,1], size(this_ca,1),1)
+        c_mat = [linspecer(sum(place_idx));  repmat([1 1 1], sum(~place_idx),1)]; % make colors depending on the 
+        MS_Ca_Raster(this_ca(cent_sort,:),this_tvec, 6, c_mat);%repmat([1,1,1], size(this_ca,1),1)
         xline(win_s, '--w', 'start', 'linewidth', 2);
         x_lim = xlim;
         xline(x_lim(2) - win_s, '--w', 'end', 'linewidth', 2);
         set(gca, 'color', 'k'); %set background color. 
-
+        colormap([linspecer(sum(place_idx));  repmat([1 1 1], 1,1)]); 
+        cx = colorbar; 
+        if exist('centroids', 'var')
+        cx.TickLabels = cx.Ticks * max(centroids); 
+        cx.Label.String = 'place cell centroid'; 
+        end
         
         % put the plots together
 %         axcp = copyobj(ax, fig2);
 %         set(axcp,'Position',get(ax1,'position'));
 %         delete(ax1);
         figlist=get(groot,'Children');
-        
+        pause(2)
         newfig=figure;
         tcl=tiledlayout(2,1);
         
@@ -641,8 +748,78 @@ for ii  = 1:length(all_pREM_Ca_idx)
     end
     close all
 end
-%% EXTRA  find pREM episodes with muscle twitch
 
+%
+%% Get the Sleep state stats
+
+fprintf('<strong>%s</strong>: pREM events detected totalling %d seconds (%.2f %% of REM)\n',...
+    mfilename, numel(Phasic_data), (sum(cellfun('length',Phasic_data))/sum(cellfun('length', REM_blocks)))*100)
+
+pre_idx = contains(pREM_block, 'pre'); 
+post_idx = ~pre_idx; 
+
+
+all_REM_tvec = cell2mat(REM_tvecs'); 
+post_tvec_idx = nearest_idx(EVT.t{1}(2),all_REM_tvec); 
+
+pREM_dur = [];
+pREM_dur.all = pREM_times(:,2) - pREM_times(:,1); 
+for ii = length(pREM_times):-1:1
+    if pREM_times(ii,2) < all_aligned_tvec_post
+        pREM_dur.pre(ii) = pREM_times(ii,2) - pREM_times(ii,1);
+        pREM_dur.post(ii) = NaN; 
+        pREM_dur.labels{ii} = 'pre';
+    else
+        pREM_dur.labels{ii} = 'post';
+        pREM_dur.pre(ii) = NaN; 
+        pREM_dur.post(ii) = pREM_times(ii,2) - pREM_times(ii,1);
+    end
+end
+
+if sum(ismember(pREM_dur.labels, all_pREM_CA.label))~= length(pREM_dur.labels);
+    fprintf('<strong>%s</strong>\n', 'LABELS DO NOT MATCH!!')
+end
+
+pREM_dur.mean_REM_prct_all = (sum(cellfun('length',Phasic_data))/length(all_REM_tvec))*100; 
+pREM_dur.mean_REM_prct_pre = (sum(cellfun('length',Phasic_data(pre_idx)))/length(all_REM_tvec(1:post_tvec_idx-1)))*100;
+pREM_dur.mean_REM_prct_post = (sum(cellfun('length',Phasic_data(post_idx)))/length(all_REM_tvec(post_tvec_idx:end)))*100;
+
+% display the durations in terminal
+fprintf('<strong>Mean REM percentage Whole session:  %0.2f%%</strong>\n', pREM_dur.mean_REM_prct_all);
+fprintf('<strong>Mean REM percentage Pre session:    %0.2f%%</strong>\n', pREM_dur.mean_REM_prct_pre);
+fprintf('<strong>Mean REM percentage Post session:   %0.2f%%</strong>\n', pREM_dur.mean_REM_prct_post);
+
+
+save([inter_dir filesep 'pREM' filesep 'pREM_dur.mat'], 'pREM_dur');
+
+
+% get mean duration of the events _added by Jisoo
+
+% F=@(Phasic_data) %function to check the diff of first and end of the cell
+% dur.all=cellfun(F,Phasic_data);
+% dur.pre=cellfun(F,Phasic_data(pre_idx));
+% dur.post=cellfun(F,Phasic_data(post_idx));
+% 
+% 
+% dur.average_all=cellfun(@mean,dur.all);
+% dur.average_pre=cellfun(@mean,dur.pre);
+% dur.average_post=cellfun(@mean,dur.post);
+% 
+% % save the pREM_dur
+% 
+% save([inter_dir filesep 'pREM' filesep 'pREM_CA_idx.mat'], 'duration_pREM');
+
+
+
+%% general sleep analysis_added by jisoo
+
+%1. Proportion of SWS, Wake , REM for each pre REM, post REM 
+%2. Average of theta amplitude during preREM vs postREM
+%3. Average of theta frequency during preREM vs postREM
+
+
+
+% save the variable
 
 
 %% Crit 1 find blocks with >900ms duration.
@@ -795,6 +972,48 @@ end
 %
 %
 % %% Crit 2 remove blocks without a min IPI smoothed < 5th percentile of all IPI smoothed
+
+
+
+
+
+
+% 
+% if length(EVT.t{S_rec_idx}) >1
+%     fprintf('Multiple (%d) Recordings in one continuous CSC.  appending for sleep scoring spec\n', numel(EVT.t{S_rec_idx}))
+%     
+%     all_tvec = []; all_data = []; 
+%     for iCut = 2:numel(EVT.t{S_rec_idx})
+%         if iCut == numel(EVT.t{S_rec_idx})
+%             tvec_cut = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):end);
+% %             data_cut = CSC.data(1:2,nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):end);
+%         else
+%             tvec_cut = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):iCut+1);
+% %             data_cut = CSC.data(1:2,nearest_idx(EVT.t{S_rec_idx}(iCut), CSC.tvec):iCut+1);
+% 
+%         end
+%         
+%         tvec_cut = tvec_cut - tvec_cut(1);
+%         all_tvec = [all_tvec, tvec_cut];
+% %         all_data = [all_data, data_cut]; 
+%     end
+%     start_tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
+%     all_tvec = [start_tvec; all_tvec + start_tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency)];
+%     
+% %     start_data = CSC.data(1:2,1:nearest_idx(EVT.t{S_rec_idx+1}(1),CSC.tvec));
+% %     all_data = [start_data, all_data + start_data(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency)];
+%     
+%     
+%     % update CSC
+%     CSC_cut = CSC;
+%     CSC_cut.tvec = all_tvec;
+% %     CSC_cut.data = all_data;
+% end
+
+% % 1043_LTD1  ONLY
+% if strcmp(session, '6_11_2019_PV1043_LTD1')
+%     CSC_cut.tvec = CSC_cut.tvec(1:length(CSC_cut.data(1,:)));
+% end
 
 
 

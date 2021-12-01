@@ -1,4 +1,4 @@
-function [pREM_idx, pREM_times, pREM_IV] =  MS_get_pREM(raw_csc, idx_in, min_len, emg_in, plot_flag)
+function [pREM_idx, pREM_times, pREM_IV] =  MS_get_pREM(raw_csc, idx_in, min_len, emg_in, plot_flag, S)
 %% MS_get_pREM: isolates phasic REM events using the methods outlined in Mizuseki et al. 2011.
 %
 %
@@ -20,6 +20,8 @@ function [pREM_idx, pREM_times, pREM_IV] =  MS_get_pREM(raw_csc, idx_in, min_len
 %
 %    - plot_flag [binary] set to 1 to plot checks, set to 0 to skip.
 %
+%    - S [struct]  Spike structure for plotting. 
+%
 %    Outputs:
 %    - pREM_idx: [2 x nREM events] start and stop indices for the pREM
 %    blocks.
@@ -32,7 +34,7 @@ function [pREM_idx, pREM_times, pREM_IV] =  MS_get_pREM(raw_csc, idx_in, min_len
 % EC 2021-06-29   initial version
 %
 % 'Detection of phasic REM. REM epochs were detected as described above.
-% To detect phasic REM epochs, we first band-pass filtered (5–12 Hz) LFP traces
+% To detect phasic REM epochs, we first band-pass filtered (5ï¿½12 Hz) LFP traces
 % during REM epochs, yielding y(t). The amplitudes of theta oscillations were
 % derived from Hilbert transform of y(t), and peaks of theta oscillations were
 % detected as the positive-to-negative zero crossings of the derivative dy/dt.
@@ -63,13 +65,17 @@ if nargin < 3
     plot_flag = 0; % disable plots unless specified.
 elseif nargin <4
     emg_in = []; %emg for plotting.
+    plot_flag = 0; 
 elseif nargin < 5
     plot_flag = 0; % disable plots unless specified.
+    S = []; 
+elseif nargin <6
+    S = []; 
 end
 
 c_ord = linspecer(5);
 %% filter raw data with the Mizuseki 2011 config.
-Fs = raw_csc.cfg.hdr{1}.SamplingFrequency; 
+Fs = raw_csc.cfg.hdr{1}.SamplingFrequency;
 
 % theta filter
 cfg_filt_t = [];
@@ -223,7 +229,7 @@ L10_prctile = prctile(all_IPI_smooth, 10);
 L5_prctile = prctile(all_IPI_smooth, 5);
 L50_prctile = prctile(all_IPI_smooth, 50);
 
-figure(101)
+figure(999)
 subplot(1,2,1)
 histogram(all_IPI,50, 'facecolor', c_ord(1,:));
 x_label = get(gca, 'xtick');
@@ -260,6 +266,7 @@ for iB = length(IPI_vec):-1:1 % still working with blocks rather than concatenat
     if ~isempty(Phasic_blocks)
         % Crit 3: theta amp in block must be great than mean of all theta
         for ii = 1:size(Phasic_blocks,1)
+            keep_t_amp = [];
             if mean(REM_amp{iB}(Phasic_blocks(ii,1):Phasic_blocks(ii,2)))  > mean(theta_amp)
                 keep_t_amp(ii) = 1;
             else
@@ -267,7 +274,7 @@ for iB = length(IPI_vec):-1:1 % still working with blocks rather than concatenat
             end
         end
         
-        Phasic_blocks(~keep_t_amp,:) = []; % remove low theta blocks.
+        Phasic_blocks(~keep_t_amp',:) = []; % remove low theta blocks.
     end
     
     %convert back to the time vector.
@@ -298,6 +305,13 @@ for ii  = size(pREM_times,1):-1:1
     pREM_idx(ii,2) = find(raw_csc.tvec == pREM_times(ii,2));
 end
 
+if isempty(pREM_times)
+    fprintf('<strong>%s:  No pREM events detected</strong>\n', mfilename)
+%     save(['No pREM events detected ' date '.txt']);
+    pREM_idx = []; pREM_IV = [];
+    
+    return
+end
 % create an IV struct
 pREM_IV = iv([pREM_times(:,1), pREM_times(:,2)]);
 
@@ -306,19 +320,23 @@ if plot_flag
     win_s = 2; % add some extra data
     
     for iR =1:size(pREM_idx,1)
-        
+        figure(iR*10)
+        figure(iR*100);
+        close(iR*10);
+        close(iR*100);
+                
         Phasic_data{iR} = raw_csc.data((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
         
         if ~isempty(emg_in) % prep EMG if you have it.
             Phasic_EMG{iR} = emg_in((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
         end
         
-        figure(iR)
+        figure(iR*10)
         cwt(Phasic_data{iR}, Fs);
         x_lim = xlim;
         hold on
         xline(win_s, '--k', 'start', 'linewidth', 2)
-        xline(x_lim(2) - win_s, '--k', 'start', 'linewidth', 2)
+        xline(x_lim(2) - win_s, '--k', 'end', 'linewidth', 2)
         yline(10, '--w', '10hz', 'linewidth', 2)
         
         title(['REM event #' num2str(iR) ])
@@ -338,12 +356,60 @@ if plot_flag
         if ~isempty(emg_in)
             plot(temp_tvec - temp_tvec(1), (Phasic_EMG{iR}*1200)+2, 'color', [.7 .7 .7])
         end
-        pause(1)
         
+%         pause(2); % 
+        
+        % add in raster plot.  
+        figure(iR*100);
+        % restrict the spike times to this event.
+        S_r = restrict(S, pREM_IV.tstart(iR)-win_s, pREM_IV.tend(iR)+win_s);
+        for iS = 1:length(S_r.t)
+            S_r.t{iS} = S_r.t{iS} - (pREM_IV.tstart(iR)-win_s); % offset for plotting.
+        end
+        
+        % make a raster.
+        cfg_ras = [];
+        cfg_ras.LineWidth = 1;
+        cfg_ras.spkColor = 'linspecer';
+        cfg_ras.openNewFig = 0;
+        MultiRaster(cfg_ras, S_r)
+        %        c_mat = [linspecer(sum(place_idx));  repmat([1 1 1],sum(~place_idx),1)]; % make colors depending on thecentroid
+        xline(win_s, '--w', 'start', 'linewidth', 2);
+        x_lim = xlim;
+        xline(x_lim(2) - win_s, '--w', 'end', 'linewidth', 2);
+        set(gca, 'color', 'k'); %set background color.
+        %         colormap([linspecer(sum(place_idx));  repmat([1 1 1],1,1)]); % used for centroids
+        %         cx = colorbar;
+        %         cx.TickLabels = cx.Ticks * max(centroids);
+        %         cx.Label.String = 'place cell centroid';
+        
+        
+%         pause(1)
+        % move both plots to new plot.
+        figlist=get(groot,'Children');
+        
+        newfig=figure(iR*1000);
+        tcl=tiledlayout(2,1);
+        
+        for jj= 1:numel(figlist)
+            if (figlist(jj).Number ~= iR*10) && (figlist(jj).Number ~= iR*100)
+                continue
+            end
+            figure(figlist(jj));
+            ax=gca;
+            ax.Parent=tcl;
+            ax.Layout.Tile=jj;
+        end
+        close(iR*10);
+        close(iR*100);
+        set(gcf, 'position', [662 96 758 892])
+        set(gcf, 'InvertHardcopy', 'off')
+        
+        pause(1)
     end
 end
 
 %% print some basic stats
 
-fprintf('<strong>%s</strong>: pREM events detected totalling %d seconds (%.2f %% of REM)\n',...
-    mfilename, numel(Phasic_data), (sum(cellfun('length',Phasic_data))/sum(cellfun('length', REM_blocks)))*100)
+fprintf('<strong>%s</strong>: %d pREM event(s) detected totalling %.2f seconds (%.2f %% of REM)\n',...
+    mfilename, size(pREM_idx,1),sum(pREM_times(:,2) - pREM_times(:,1)), (sum(pREM_idx(:,2) - pREM_idx(:,1))/sum(cellfun('length', REM_blocks)))*100)

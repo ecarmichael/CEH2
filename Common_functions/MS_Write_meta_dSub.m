@@ -84,7 +84,7 @@ fprintf(fid, 'Meta.LFP_hemisphere = ''R'';\n');
 %same for CSC
 
 % fprintf(fid, ['Meta.tetrodeDepths = ' num2str(depth) ';\n']);
-fprintf(fid, 'Meta.EMG = ''CSC1.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+fprintf(fid, 'Meta.EMG = ''CSC16.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
 
 
 if strcmp(subject_id, 'M21') 

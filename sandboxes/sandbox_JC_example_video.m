@@ -1,18 +1,18 @@
-addpath(genpath('/home/ecarmichael/Documents/GitHub/CEH2'));
+addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
 
 
 inter_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold';
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
-addpath('C:\Users\ecarm\Documents\GitHub\OASIS_matlab')
-oasis_setup;
-disp('OASIS added for deconv');
 
-raw_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_18_2019_PV1069_HATD5\H13_M5_S42_HATD5';
+
+raw_dir = '/home/williamslab/Desktop/7_19_2019_PV1060_LTD5/H13_M18_S32_LTD5';
+decode_dir = '/home/williamslab/Dropbox (Williams Lab)/10.Manifold/pv1060/LTD5';
 % ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_18_2019_PV1069_HATD5';
-ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\RawData\pv1069\10_18_2019_PV1069_HATD5\H13_M5_S42_HATD5';
+ms_dir = '/home/williamslab/Dropbox (Williams Lab)/Inter/pv1060/LTD5';
 
+core_colors = linspecer(3); 
 %%
-clearvars -except raw_dir ms_dir
+% clearvars -except raw_dir ms_dir
 cd(raw_dir)
 
 vid_num = 3;
@@ -30,7 +30,7 @@ for iF = ca_obj.NumFrames:-1:1
 end
 
 %%
-cd(ms_dir)
+% cd(ms_dir)
 load('ms.mat')
 ms = msExtractBinary_detrendTraces(ms);
 % frame_offset = ms.timestamps(1);
@@ -46,28 +46,28 @@ end
 
 %% deconv debugger.
 % % counter_init(size(ms.RawTraces,2),size(ms.RawTraces,2))
-for iChan = 1
-    %     counter(iChan, size(ms.RawTraces,2))
-    tic;
-    [denoise,deconv] = deconvolveCa(ms.detrendRaw(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
-    toc;
-    ms.denoise(:,iChan) = denoise;    ms.deconv(:,iChan) = deconv;
-end
-
-% debugging
-% iChan = 900;
-if ishandle(iChan)
-    close(iChan)
-end
-
-figure(iChan+100)
-hold on
-plot(zscore(ms.detrendRaw(:,iChan))./max(zscore(ms.detrendRaw(:,iChan))), 'k');
-plot(ms.denoise(:,iChan)-.2, 'r');
-plot(((ms.deconv(:,iChan)./max(ms.deconv(:,iChan)))*.1) -.2, 'b');
-plot((ms.Binary(:,iChan)*.1)-.2, 'g');
-% MS_plot_ca_trace(ms.FiltTraces(1:33*60,1:50)')
-legend('Detrend', 'OASIS: Denoised', 'OASIS: deconv', 'Binary', 'orientation', 'horizontal', 'location', 'north')
+% for iChan = 1
+%     %     counter(iChan, size(ms.RawTraces,2))
+%     tic;
+%     [denoise,deconv] = deconvolveCa(ms.detrendRaw(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
+%     toc;
+%     ms.denoise(:,iChan) = denoise;    ms.deconv(:,iChan) = deconv;
+% end
+% 
+% % debugging
+% % iChan = 900;
+% if ishandle(iChan)
+%     close(iChan)
+% end
+% 
+% figure(iChan+100)
+% hold on
+% plot(zscore(ms.detrendRaw(:,iChan))./max(zscore(ms.detrendRaw(:,iChan))), 'k');
+% plot(ms.denoise(:,iChan)-.2, 'r');
+% plot(((ms.deconv(:,iChan)./max(ms.deconv(:,iChan)))*.1) -.2, 'b');
+% plot((ms.Binary(:,iChan)*.1)-.2, 'g');
+% % MS_plot_ca_trace(ms.FiltTraces(1:33*60,1:50)')
+% legend('Detrend', 'OASIS: Denoised', 'OASIS: deconv', 'Binary', 'orientation', 'horizontal', 'location', 'north')
 
 %% plot stuff
 % close all
@@ -131,9 +131,9 @@ for iC = length(cells_to_use):-1:1
     d_pks(iC) = length(pks);
 end
 [best_pks, best_cells] = sort(d_pks, 'descend');
-% [best_most_pks, best_most_cells] = sort(d_pks(best_cells(1:40)), 'descend');
-% cells = best_cells(1:good_cells);
-cells = 1:good_cells;
+[best_most_pks, best_most_cells] = sort(d_pks(best_cells(1:40)), 'descend');
+cells = best_cells(1:good_cells);
+% cells = 1:good_cells;
 
 sub_mat = reshape(1:((4+length(cells))*4),4,4+length(cells))'; % matrix to pull subplot values from
 %%
