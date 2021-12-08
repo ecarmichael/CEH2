@@ -37,6 +37,10 @@ end
 if size(tvec,2) ~= size(data_in, 1)
 %     error('data_in and tvec differ in size')
 end
+
+if size(tvec,1) == 1;
+    tvec = tvec';
+end
 %%
 nChan = size(data_in, 1); 
 % set colours
