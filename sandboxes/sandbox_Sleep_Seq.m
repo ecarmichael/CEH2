@@ -48,13 +48,15 @@ addpath(genpath(PARAMS.code_CEH2_dir));
 clear d os
 
 %% load a nice session
-this_sess = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1069/10_18_2019_PV1069_HATD5';
+% load('/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1069/10_18_2019_PV1069_HATD5/ms_resize.mat');
+this_sess = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/RawData/pv1069/10_18_2019_PV1069_HATD5/H13_M5_S42_HATD5';
 cd(this_sess);
-load('ms_resize.mat');
-% load('behav.mat');
-% load('AllSpatialFiringData.mat')
+load('ms.mat');
+load('behav.mat');
+load('spatial_analysis.mat')
 
-
+% ms = ms_seg_resize; 
+% clear ms_seg_resize
 
 %% plug it into SeqNMF
 % addpath(PARAMS.code_seqnmf_dir)
@@ -62,11 +64,12 @@ load('ms_resize.mat');
 Fs =mode(diff(ms.time));
 
 % data_in = ms.FiltTraces';
+ms = msExtractBinary_detrendTraces(ms);
 data_in = ms.Binary';
-
-pos(:,1) = interp1(behav.time,behav.position(:,1),ms.time);
-pos(:,2) = interp1(behav.time,behav.position(:,2),ms.time);
-velocity = interp1(behav.time, behav.speed, ms.time); 
+[~, uIdx] = unique(behav.time); 
+pos(:,1) = interp1(behav.time(uIdx),behav.position(uIdx,1),ms.time);
+pos(:,2) = interp1(behav.time(uIdx),behav.position(uIdx,2),ms.time);
+velocity = interp1(behav.time(uIdx), behav.speed(uIdx), ms.time); 
 
 
 % remove inactive cells
