@@ -66,7 +66,9 @@ for iF = 1:length(this_dir)
         data_out_REM(iF,3) = mean(ms_seg.d_amp);
         data_out_REM(iF,4) = mean(ms_seg.t_amp);
         data_out_REM(iF,5) = mean(ms_seg.LG_amp);
-        data_out_REM(iF,6) = mean(ms_seg.HG_amp);
+        data_out_REM(iF,6) = mean(ms_seg.MG_amp);
+        data_out_REM(iF,7) = mean(ms_seg.HG_amp);
+        data_out_REM(iF,8) = mean(ms_seg.UHG_amp);
     elseif contains(this_dir(iF).name, 'SWS') % maybe 'SW' just in case when i forgot to type SWS?
         this_state = 0;
         data_out_SWS(iF,1) = ms_seg.time2trk;
@@ -74,16 +76,20 @@ for iF = 1:length(this_dir)
         data_out_SWS(iF,3) = mean(ms_seg.d_amp);
         data_out_SWS(iF,4) = mean(ms_seg.t_amp);
         data_out_SWS(iF,5) = mean(ms_seg.LG_amp);
-        data_out_SWS(iF,6) = mean(ms_seg.HG_amp);
+        data_out_SWS(iF,6) = mean(ms_seg.MG_amp);
+        data_out_SWS(iF,7) = mean(ms_seg.HG_amp);
+        data_out_SWS(iF,8) = mean(ms_seg.UHG_amp);
     end
     data_out(iF,1) = ms_seg.time2trk;
     data_out(iF,2) = mean(sum(ms_seg.Binary(:,cell_idx))/(length(ms_seg.Binary)/Fs));
     data_out(iF,3) = mean(ms_seg.d_amp);
     data_out(iF,4) = mean(ms_seg.t_amp);
     data_out(iF,5) = mean(ms_seg.LG_amp);
-    data_out(iF,6) = mean(ms_seg.HG_amp);
+    data_out(iF,6) = mean(ms_seg.MG_amp);
+    data_out(iF,7) = mean(ms_seg.HG_amp);
+    data_out(iF,8) = mean(ms_seg.UHG_amp);
     % save the REM or SWS state. REM == 1 SWS ==0;
-    data_out(iF,7) = this_state;
+    data_out(iF,9) = this_state;
     
     %% Added by Jisoo
     
@@ -94,44 +100,59 @@ for iF = 1:length(this_dir)
 end
 
 %% make a summary plot
-REM_idx = find(data_out(:,7) == 1); % get REM indicies
-SWS_idx = find(data_out(:,7)==0);
+REM_idx = find(data_out(:,9) == 1); % get REM indicies
+SWS_idx = find(data_out(:,9)==0);
 c_ord = linspecer(2); % set nice colours.
 
 H=figure;
-subplot(5,1,1)
+subplot(7,1,1)
 hold on
 plot(data_out(REM_idx,1), data_out(REM_idx, 2), '--*', 'color', c_ord(2,:))
 plot(data_out(SWS_idx,1), data_out(SWS_idx, 2), '--*', 'color', c_ord(1,:))
 legend('REM', 'SWS')
 ylabel('Mean FR')
 
-subplot(5,1,2)
+subplot(7,1,2)
 hold on
 plot(data_out(REM_idx,1), data_out(REM_idx, 3), '--*', 'color', c_ord(2,:))
 plot(data_out(SWS_idx,1), data_out(SWS_idx, 3), '--*', 'color', c_ord(1,:))
 legend('REM', 'SWS')
 ylabel('Mean D')
 
-subplot(5,1,3)
+subplot(7,1,3)
 hold on
 plot(data_out(REM_idx,1), data_out(REM_idx, 4), '--*', 'color', c_ord(2,:))
 plot(data_out(SWS_idx,1), data_out(SWS_idx, 4), '--*', 'color', c_ord(1,:))
 legend('REM', 'SWS')
 ylabel('Mean T')
 
-subplot(5,1,4)
+subplot(7,1,4)
 hold on
 plot(data_out(REM_idx,1), data_out(REM_idx, 5), '--*', 'color', c_ord(2,:))
 plot(data_out(SWS_idx,1), data_out(SWS_idx, 5), '--*', 'color', c_ord(1,:))
 legend('REM', 'SWS')
 ylabel('Mean LG')
 
-subplot(5,1,5)
+subplot(7,1,5)
 hold on
 plot(data_out(REM_idx,1), data_out(REM_idx, 6), '--*', 'color', c_ord(2,:))
 plot(data_out(SWS_idx,1), data_out(SWS_idx, 6), '--*', 'color', c_ord(1,:))
 legend('REM', 'SWS')
-ylabel('Mean HG')
+ylabel('Mean MG')
+
+subplot(7,1,6)
+hold on
+plot(data_out(REM_idx,1), data_out(REM_idx, 7), '--*', 'color', c_ord(2,:))
+plot(data_out(SWS_idx,1), data_out(SWS_idx, 7), '--*', 'color', c_ord(1,:))
+legend('REM', 'SWS')
+ylabel('Mean UG')
+
+subplot(7,1,7)
+hold on
+plot(data_out(REM_idx,1), data_out(REM_idx, 8), '--*', 'color', c_ord(2,:))
+plot(data_out(SWS_idx,1), data_out(SWS_idx, 8), '--*', 'color', c_ord(1,:))
+legend('REM', 'SWS')
+ylabel('Mean UHG')
+
 saveas(H,'Dynamics_across_episodes.png') %added by jisoo
 

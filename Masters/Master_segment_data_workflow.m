@@ -417,6 +417,7 @@ for iSub = Subjects
         % run the actual segmentation workflow
         MS_Segment_raw(cfg_seg, csc_dir, ms_dir, ms_resize_dir);
         
+        
         %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> complete.\n',parts{end});
         
     end % session
