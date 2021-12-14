@@ -645,7 +645,9 @@ if exist('csc', 'var')
     cfgs.filters.d = cfg_d;
     cfgs.filters.t = cfg_t;
     cfgs.filters.LG = cfg_lg;
+    cfgs.filters.MG = cfg_mg;
     cfgs.filters.HG = cfg_hg;
+    cfgs.filters.UHG = cfg_uhg;
     cfgs.filters.Rip = cfg_rip;
 end
 save([ms_save_dir filesep 'cfgs_z_' strrep(num2str(z_threshold), '.','p') '_on_' cfgs.date   '.mat'], 'cfgs', '-v7.3')

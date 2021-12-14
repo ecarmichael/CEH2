@@ -29,12 +29,12 @@ if strcmp(computer, 'GLNXA64')
     
     % Home
     if strcmpi(getenv('USERNAME'), 'ecarmichael')
-        elseif strcmpi(getenv('USERNAME'), 'williamslab')
+    elseif strcmpi(getenv('USERNAME'), 'williamslab')
         addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
         addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
-        data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1043\LTD1';
-        LFP_dir = '/home/williamslab/Desktop/Jisoo_sleep_LFP';
-        cell_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/4.PlaceCell';
+        data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1254/11_13_2021_pv1254_LTD1';
+        LFP_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo';
+%         cell_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/4.PlaceCell';
     end
 else
     LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo';

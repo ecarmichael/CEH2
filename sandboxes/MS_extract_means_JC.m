@@ -1,4 +1,4 @@
-function [data_out, data_out_REM, data_out_SWS,Threshold] = MS_extract_means_JC(cell_idx)
+function [data_out, data_out_REM, data_out_SWS,Threshold,labels] = MS_extract_means_JC(cell_idx)
 %% MS_extract_means_JC: used for pulling out the mean values for several measures and the time of the recording relative to the track experiment.
 % The function will loop through all the session folders in the processed
 % ms data and loads the ms_seg*.mat file.
@@ -47,6 +47,8 @@ this_dir.name;
 % loop over each folder and get mean firing rate and mean amplitude
 data_out_REM = [];
 data_out_SWS = [];
+
+labels = {'time2trk', 'binary', 'delta', 'theta', 'low gamma', 'mid gamma', 'high gamma', 'ultra high gamma', 'REM =1 SWS = 0'};
 for iF = 1:length(this_dir)
     cd(this_dir(iF).name)
     f_load = FindFile_str(cd, 'resize');
@@ -61,7 +63,7 @@ for iF = 1:length(this_dir)
     
     if contains(this_dir(iF).name, 'REM')
         this_state = 1;
-        data_out_REM(iF,1) =  ms_seg.time2trk;
+        data_out_REM(iF,1) = ms_seg.time2trk;
         data_out_REM(iF,2) = mean(sum(ms_seg.Binary(:,cell_idx))/(length(ms_seg.Binary)/Fs));
         data_out_REM(iF,3) = mean(ms_seg.d_amp);
         data_out_REM(iF,4) = mean(ms_seg.t_amp);

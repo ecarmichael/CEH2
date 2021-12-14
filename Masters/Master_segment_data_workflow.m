@@ -315,13 +315,131 @@ for iSub = Subjects
 % iSess = '11_13_2021_pv1254_LTD1';
 % iSub = 'PV1254';
 
+%for LTD3
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_15_2021_pv1254_LTD3';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-15_09-22-38_pv1254_LTD3'; 
+% 
+% 
+% iSess = '11_15_2021_pv1254_LTD3';
+% iSub = 'PV1254';
+
 %for LTD5
-ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_17_2021_pv1254_LTD5';
-csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-17_09-37-11_pv1254_LTD5'; 
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_17_2021_pv1254_LTD5';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-17_09-37-11_pv1254_LTD5'; 
+% 
+% 
+% iSess = '11_17_2021_pv1254_LTD5';
+% iSub = 'PV1254';
+
+%for HATD1
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_19_2021_pv1254_HATD1';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-19_09-45-12_pv1254_HATD1'; 
+% 
+% 
+% iSess = '11_19_2021_pv1254_HATD1';
+% iSub = 'PV1254';
+
+%for HATD3
+ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_21_2021_pv1254_HATD3';
+csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-21_09-33-39_pv1254_HATD3'; 
 
 
-iSess = '11_17_2021_pv1254_LTD5';
+iSess = '11_21_2021_pv1254_HATD3';
 iSub = 'PV1254';
+
+%Error ; 
+% Index exceeds the number of array elements (19).
+% 
+% Error in MS_extract_NLX_blocks_sandbox (line 219)
+%                     idx_low =find(diff(temp_evt.t{cfg.t_chan}(1:20)) > mode(diff(temp_evt.t{cfg.t_chan}))*cfg.gitter_threshol);
+% 
+% Error in MS_Segment_raw (line 208)
+% [evt_blocks, ~, evt_duration] = MS_extract_NLX_blocks_sandbox(cfg.evt, nlx_evts);
+% 
+% Error in Master_segment_data_workflow (line 544)
+%         MS_Segment_raw(cfg_seg, csc_dir, ms_dir, ms_resize_dir);
+
+%for HATD5
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_23_2021_pv1254_HATD5';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-23_09-26-07_pv1254_HATD5'; 
+% 
+% 
+% iSess = '11_23_2021_pv1254_HATD5';
+% iSub = 'PV1254';
+
+%for HATD5
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_23_2021_pv1254_HATD5';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-23_09-26-07_pv1254_HATD5'; 
+% 
+% 
+% iSess = '11_23_2021_pv1254_HATD5';
+% iSub = 'PV1254';
+
+%for HATDSwitch
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_25_2021_pv1254_HATDSwitch';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-25_09-21-54_pv1254_HATDSwitch'; 
+% 
+% 
+% iSess = '11_25_2021_pv1254_HATDSwitch';
+% iSub = 'PV1254';
+
+%for LTD1- pv1252 - csc1 error?
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_12_2021_pv1252_LTD1';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-12_09-17-50_pv1252_LTD1'; 
+% 
+% 
+% iSess = '11_12_2021_pv1252_LTD1';
+% iSub = 'PV1252';
+
+
+%for LTD5
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_16_2021_pv1252_LTD5';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-16_09-20-53_pv1252_LTD5'; 
+% 
+% 
+% iSess = '11_16_2021_pv1252_LTD5';
+% iSub = 'PV1252';
+
+%for HATD1
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_18_2021_pv1252_HATD1';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-18_09-29-54_pv1252_HATD1'; 
+% 
+% 
+% iSess = '11_18_2021_pv1252_HATD1';
+% iSub = 'PV1252';
+
+%for HATD5
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_22_2021_pv1252_HATD5';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-22_09-58-41_pv1252_HATD5'; 
+% 
+% 
+% iSess = '11_22_2021_pv1252_HATD5';
+% iSub = 'PV1252';
+
+%for HATDSwitch
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_24_2021_pv1252_HATDSwitch';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-24_09-36-57_pv1252_HATDSwitch'; 
+% 
+% 
+% iSess = '11_24_2021_pv1252_HATDSwitch';
+% iSub = 'PV1252';
+
+%for LTD3
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_14_2021_pv1252_LTD3';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-14_09-14-49_pv1252_LTD3'; 
+% 
+% 
+% iSess = '11_14_2021_pv1252_LTD3';
+% iSub = 'PV1252';
+
+%for HATD3
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_20_2021_pv1252_HATD3';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-20_09-31-09_pv1252_HATD3'; 
+% 
+% 
+% iSess = '11_20_2021_pv1252_HATD3';
+% iSub = 'PV1252';
+
 
 % Jisoo, run this section and then run the next section (control + return)
 
@@ -442,17 +560,19 @@ iSub = 'PV1254';
         cd(csc_dir)
         csc = MS_LoadCSC(cfg_csc);
         cd(ms_resize_dir)
-        MS_re_binarize_JC(2, ms_resize_dir, [ms_resize_dir filesep 'Recompute'], 'ms_resize', 'ms_resize', csc);
-        cd([ms_resize_dir filesep 'Recompute']); 
-        [data_out_all, data_out_REM_all, data_out_SWS_all,Threshold] = MS_extract_means_JC(); %Modified by Jisoo
+        MS_re_binarize_JC(2, ms_resize_dir, ms_resize_dir, 'ms_resize', 'ms_resize', csc);
+        cd(ms_resize_dir); 
+        [data_out_all, data_out_REM_all, data_out_SWS_all,Threshold, labels] = MS_extract_means_JC(); %Modified by Jisoo
         % save the within session LFP means. 
         mkdir('AcrossEpisodes');
         Out_all.data_out_all=data_out_all;
         Out_all.data_out_REM_all=data_out_REM_all;
         Out_all.data_out_SWS_all=data_out_SWS_all;
         Out_all.Threshold=Threshold;
+        Out_all.labels = labels; 
         save([pwd,'/AcrossEpisodes/Out_all_',num2str(Threshold),'.mat'], 'Out_all')
         
+        clear csc cfg_csc data_out_all data_out_REM_all data_out_SWS_all Out_all Threshold labels
         %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> complete.\n',parts{end});
         
     end % session
