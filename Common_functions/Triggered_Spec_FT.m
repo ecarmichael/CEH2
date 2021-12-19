@@ -33,7 +33,7 @@ data_ft = MS_TSDtoFT([], csc); % convert to ft format.
 cfg_trl = [];
 cfg_trl.t = cat(1,events);
 cfg_trl.t = cfg_trl.t - data_ft.hdr.FirstTimeStamp;
-cfg_trl.twin = [-3 5];
+cfg_trl.twin = [-5 5];
 cfg_trl.hdr = data_ft.hdr;
 
 trl = ft_maketrl(cfg_trl);
@@ -48,26 +48,26 @@ data_trl = ft_redefinetrial(cfg,data_ft);
 cfg              = []; % start with empty cfg
 cfg.output       = 'pow';
 cfg.channel      = data_ft.label{1};
-cfg.method       = 'mtmconvol';
+cfg.method       = 'wavelet';
 cfg.taper        = 'hanning';
-cfg.foi          = 20:.2:80; % frequencies of interest
-cfg.t_ftimwin    = ones(length(cfg.foi),1).*0.5;%20./cfg.foi;  % window size: fixed at 0.5s
-cfg.toi          = -2.5:0.05:4.5; % times of interest
-%cfg.pad          = 'nextpow2'; % recommened by FT to make FFT more efficient.
+cfg.foi          = 2:.5:120; % frequencies of interest
+% cfg.t_ftimwin    = ones(length(cfg.foi),1).*0.5;%20./cfg.foi;  % window size: fixed at 0.5s
+cfg.toi          = -3:((1/data_trl.fsample)*10):2; % times of interest
+cfg.pad          = 'nextpow2'; % recommened by FT to make FFT more efficient.
 
 TFR = ft_freqanalysis(cfg, data_trl);
 
 %% track config for plotting.
-fprintf('Spec using %0.0d swrs. Method: %s, Taper: %s', length(trl),cfg.method, cfg.taper);
+fprintf('Spec using %0.0d events. Method: %s', length(trl),cfg.method);
 if ~isempty(label)
 freq_params_str = sprintf(label);
 else
-    freq_params_str = sprintf('Spec using %0.0d swrs. Method: %s, Taper: %s', length(trl),cfg.method, cfg.taper);
+    freq_params_str = sprintf('Spec using %0.0d swrs. Method: %s', length(trl),cfg.method);
 end
 cfg = [];
 cfg.channel      = data_ft.label{1};
-cfg.baseline     = [-2 -.01];
-cfg.baselinetype = 'relative';
+cfg.baseline     = [-3 -.25];
+cfg.baselinetype = 'zscore';
 cfg.title = freq_params_str;
 ft_singleplotTFR(cfg, TFR);
 

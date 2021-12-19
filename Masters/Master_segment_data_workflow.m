@@ -255,18 +255,196 @@ for iSub = Subjects
             close; clear pos;
         end
         
-        %% hardcode dir
+        %% hardcode dir  JISOO USE THIS! 
         
-        ms_dir = 'J:\4_17_2021_PV1192_HATD1';
-        csc_dir = 'J:\2021-04-17_10-06-00_PV1192_HATD1'; 
-        %         ms_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData\pv1069\10_18_2019_PV1069_HATD5';
-%         ms_dir = '/home/ecarmichael/Dropbox (Williams Lab)/4_17_2021_PV1192_HATD1';
-%         csc_dir = '/mnt/Data/2021-04-17_10-06-00_PV1192_HATD1';
-        %         csc_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo\2019-10-18_10-02-44_PV1069_HATD5';
+          %%%% 1191
+%         ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1191/5_19_2021_PV1191_HATD1';
+%         csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-05-19_09-22-27_pv1191_HATD1';
+%         iSess = '5_19_2021_PV1191_HATD1';
+%         iSub = 'PV1191';
         
-        iSess = '4_17_2021_PV1192_HATD1';
+%         ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1191/5_23_2021_PV1191_HATD5';
+%         csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-05-23_09-26-10_pv1191_HATD5';
+%         iSess = '5_23_2021_PV1191_HATD5';
+%         iSub = 'PV1191';
+
+%          %Missing ms.mat file.  Probably needs to be CNMFe'd
+%         ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1191/5_25_2021_PV1191_HATDS';
+%         csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-05-25_10-11-48_PV1191_HATDSwitch';
+
+         %Missing ms.mat file.  Probably needs to be CNMFe'd
+%         ms_dir = 'K:\Jisoo_Project\RawData\pv1191\5_25_2021_PV1191_HATDS';
+%         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-05-25_10-11-48_PV1191_HATDSwitch';
+%         iSess = '5_25_2021_PV1191_HATDS';
+%         iSub = 'PV1191';
         
-        iSub='PV1192';
+          %%%% 1192
+%         ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1192/4_17_2021_PV1192_HATD1';
+%         csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-04-17_10-06-00_PV1192_HATD1'; 
+%         ms_dir = 'J:\4_17_2021_PV1192_HATD1';
+%         csc_dir = 'J:\2021-04-17_10-06-00_PV1192_HATD1'; 
+%         iSess = '4_17_2021_PV1192_HATD1';
+%         iSub = 'PV1192';      
+
+%         ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1192/4_21_2021_PV1192_HATD5';
+%         csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-04-21_09-35-07_PV1192_HATD5';
+%         iSess = '4_21_2021_PV1192_HATD5';
+%         iSub = 'PV1192';
+
+%         ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1192/4_23_2021_PV1192_HATDSwitch'; 
+%         csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-04-23_09-46-23_PV1192_HATDSwitch';
+%         iSess = '4_23_2021_PV1192_HATDSwitch';
+%         iSub = 'PV1192';
+
+
+        
+%         ms_dir = 'K:\Jisoo_Project\RawData\pv1060\11_19_2019_PV1060_HATD1';
+%         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-11-19_09-59-43_PV1060_HATD1';
+% %         ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1060/11_19_2019_PV1060_HATD1';
+% %         csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2019-11-19_09-59-43_PV1060_HATD1';
+%         iSess = '11_19_2019_PV1060_HATD1';
+%         iSub = 'PV1060';
+        
+
+% 1254
+%for LTD1
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_13_2021_pv1254_LTD1';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-13_09-21-27_pv1254_LTD1'; 
+% 
+% 
+% iSess = '11_13_2021_pv1254_LTD1';
+% iSub = 'PV1254';
+
+%for LTD3
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_15_2021_pv1254_LTD3';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-15_09-22-38_pv1254_LTD3'; 
+% 
+% 
+% iSess = '11_15_2021_pv1254_LTD3';
+% iSub = 'PV1254';
+
+%for LTD5
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_17_2021_pv1254_LTD5';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-17_09-37-11_pv1254_LTD5'; 
+% 
+% 
+% iSess = '11_17_2021_pv1254_LTD5';
+% iSub = 'PV1254';
+
+%for HATD1
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_19_2021_pv1254_HATD1';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-19_09-45-12_pv1254_HATD1'; 
+% 
+% 
+% iSess = '11_19_2021_pv1254_HATD1';
+% iSub = 'PV1254';
+
+%for HATD3
+ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_21_2021_pv1254_HATD3';
+csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-21_09-33-39_pv1254_HATD3'; 
+
+
+iSess = '11_21_2021_pv1254_HATD3';
+iSub = 'PV1254';
+
+%Error ; 
+% Index exceeds the number of array elements (19).
+% 
+% Error in MS_extract_NLX_blocks_sandbox (line 219)
+%                     idx_low =find(diff(temp_evt.t{cfg.t_chan}(1:20)) > mode(diff(temp_evt.t{cfg.t_chan}))*cfg.gitter_threshol);
+% 
+% Error in MS_Segment_raw (line 208)
+% [evt_blocks, ~, evt_duration] = MS_extract_NLX_blocks_sandbox(cfg.evt, nlx_evts);
+% 
+% Error in Master_segment_data_workflow (line 544)
+%         MS_Segment_raw(cfg_seg, csc_dir, ms_dir, ms_resize_dir);
+
+%for HATD5
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_23_2021_pv1254_HATD5';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-23_09-26-07_pv1254_HATD5'; 
+% 
+% 
+% iSess = '11_23_2021_pv1254_HATD5';
+% iSub = 'PV1254';
+
+%for HATD5
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_23_2021_pv1254_HATD5';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-23_09-26-07_pv1254_HATD5'; 
+% 
+% 
+% iSess = '11_23_2021_pv1254_HATD5';
+% iSub = 'PV1254';
+
+%for HATDSwitch
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_25_2021_pv1254_HATDSwitch';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-25_09-21-54_pv1254_HATDSwitch'; 
+% 
+% 
+% iSess = '11_25_2021_pv1254_HATDSwitch';
+% iSub = 'PV1254';
+
+%for LTD1- pv1252 - csc1 error?
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_12_2021_pv1252_LTD1';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-12_09-17-50_pv1252_LTD1'; 
+% 
+% 
+% iSess = '11_12_2021_pv1252_LTD1';
+% iSub = 'PV1252';
+
+
+%for LTD5
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_16_2021_pv1252_LTD5';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-16_09-20-53_pv1252_LTD5'; 
+% 
+% 
+% iSess = '11_16_2021_pv1252_LTD5';
+% iSub = 'PV1252';
+
+%for HATD1
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_18_2021_pv1252_HATD1';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-18_09-29-54_pv1252_HATD1'; 
+% 
+% 
+% iSess = '11_18_2021_pv1252_HATD1';
+% iSub = 'PV1252';
+
+%for HATD5
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_22_2021_pv1252_HATD5';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-22_09-58-41_pv1252_HATD5'; 
+% 
+% 
+% iSess = '11_22_2021_pv1252_HATD5';
+% iSub = 'PV1252';
+
+%for HATDSwitch
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_24_2021_pv1252_HATDSwitch';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-24_09-36-57_pv1252_HATDSwitch'; 
+% 
+% 
+% iSess = '11_24_2021_pv1252_HATDSwitch';
+% iSub = 'PV1252';
+
+%for LTD3
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_14_2021_pv1252_LTD3';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-14_09-14-49_pv1252_LTD3'; 
+% 
+% 
+% iSess = '11_14_2021_pv1252_LTD3';
+% iSub = 'PV1252';
+
+%for HATD3
+% ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1252/11_20_2021_pv1252_HATD3';
+% csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-20_09-31-09_pv1252_HATD3'; 
+% 
+% 
+% iSess = '11_20_2021_pv1252_HATD3';
+% iSub = 'PV1252';
+
+
+% Jisoo, run this section and then run the next section (control + return)
+
+      
+        
         
         ms_resize_dir = [PARAMS.inter_dir filesep iSub filesep iSess];  %just save the ms_resize struct back into the same place as the ms.mat file.
         mkdir(ms_resize_dir);
@@ -296,6 +474,8 @@ for iSub = Subjects
             cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'};
         elseif strcmpi(iSub, 'PV1191')
             cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'};
+        elseif strcmpi(iSub, 'PV1254')
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % 7 has higher theta but no gamma/SWR
         else
             cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         end
@@ -325,6 +505,12 @@ for iSub = Subjects
         elseif strcmp(iSess, '7_15_2019_PV1060_LTD1') %added by Jisoo
             cfg_seg.remove_ts = [1,2,3,4,5,6,7,8,9]; %Event was not recorded at the beginning of the presleep
             cfg_seg.remove_nlx_evt = [];
+        elseif strcmp(iSess, '11_19_2019_PV1060_HATD1') %added by EC.  There is an 'H13_M2_S1' that is long in here.  
+            cfg_seg.remove_ts = [9]; %Event was not recorded at the beginning of the presleep
+            cfg_seg.remove_nlx_evt = [];
+        elseif strcmp(iSess, '5_19_2021_PV1191_HATD1') %added by Jisoo
+            cfg_seg.remove_ts = []; %Event was not recorded at the beginning of the presleep
+            cfg_seg.remove_nlx_evt = [1,2];
         elseif strcmp(iSess, '11_15_2019_PV1060_Homecage_Sleep') %added by Jisoo
             cfg_seg.remove_ts = [1,2,3,4,5]; %Event was not recorded at the beginning of the presleep
             cfg_seg.remove_nlx_evt = [];
@@ -369,6 +555,24 @@ for iSub = Subjects
         % run the actual segmentation workflow
         MS_Segment_raw(cfg_seg, csc_dir, ms_dir, ms_resize_dir);
         
+        cfg_csc.fc{1} = cfg_seg.csc.fc{2};
+        cfg_csc.desired_sampling_frequency = 2000;
+        cd(csc_dir)
+        csc = MS_LoadCSC(cfg_csc);
+        cd(ms_resize_dir)
+        MS_re_binarize_JC(2, ms_resize_dir, ms_resize_dir, 'ms_resize', 'ms_resize', csc);
+        cd(ms_resize_dir); 
+        [data_out_all, data_out_REM_all, data_out_SWS_all,Threshold, labels] = MS_extract_means_JC(); %Modified by Jisoo
+        % save the within session LFP means. 
+        mkdir('AcrossEpisodes');
+        Out_all.data_out_all=data_out_all;
+        Out_all.data_out_REM_all=data_out_REM_all;
+        Out_all.data_out_SWS_all=data_out_SWS_all;
+        Out_all.Threshold=Threshold;
+        Out_all.labels = labels; 
+        save([pwd,'/AcrossEpisodes/Out_all_',num2str(Threshold),'.mat'], 'Out_all')
+        
+        clear csc cfg_csc data_out_all data_out_REM_all data_out_SWS_all Out_all Threshold labels
         %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> complete.\n',parts{end});
         
     end % session

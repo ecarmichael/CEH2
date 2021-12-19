@@ -12,7 +12,7 @@ mvdm_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'
 CEH2_dir = '/home/williamslab/Documents/Github/CEH2';
 ft_dir = '/home/williamslab/Documents/Github/fieldtrip';
 
-data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/Incoming'; % office unix
+data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % office unix
 inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % office unix
 
 %% home linux.
@@ -46,7 +46,8 @@ for iSub = length(sub_list):-1:1
 end
 
 % loop subjects
-for iSub = 3%1:length(subjects)
+
+for iSub =1:length(subjects)
     
     % get a list of the good sessions.
     sess_list = dir([data_dir filesep subjects{iSub}]);
@@ -57,9 +58,13 @@ for iSub = 3%1:length(subjects)
             sessions{iS} = sess_list(iS).name;
         end
     end
+    if isempty(sessions)
+        continue
+    end
     sessions(cellfun('isempty', sessions)) = [];
     
-    for iS =length(sessions)-2:-1:1
+
+    for iS = length(sessions):-1:1 %length(sessions)
         if strcmpi(sessions{iS}, 'M23_2021-08-13_D18')
             continue
         end
@@ -68,7 +73,9 @@ for iSub = 3%1:length(subjects)
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
 %         dsubscreener_ec(cd, inter_dir);
 %         dsubscreener_ec_W_maze(cd, inter_dir);
-            M26_Clust_batch
+
+        dsubscreener_ec_W_maze(cd, inter_dir);
+%           M23_Clust_batch
 %         MS_Write_meta_dSub;
           
         

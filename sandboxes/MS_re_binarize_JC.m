@@ -89,6 +89,7 @@ elseif nargin == 4
 end
 
 %% load data
+cd(ms_load_dir)
 if exist([ms_fname_load '.mat'], 'file')
     load(ms_fname_load);
     
@@ -140,18 +141,34 @@ if exist('csc','var') && isstruct(csc)
     cfg_lg = [];
     % filters
     cfg_lg.type = 'cheby1'; %Cheby1 is sharper than butter
-    cfg_lg.f  = [30 55]; % "mouse  low gamma'
+    cfg_lg.f  = [30 50]; % "mouse  low gamma'
     cfg_lg.order = 5; %type filter order (fine for this f range)
     cfg_lg.display_filter =0; % use this to see the fvtool
     LG = FilterLFP(cfg_lg, csc);
     
+    cfg_mg = [];
+    % filters
+    cfg_mg.type = 'cheby1'; %Cheby1 is sharper than butter
+    cfg_mg.f  = [50 90]; % "mouse  low gamma'
+    cfg_mg.order = 5; %type filter order (fine for this f range)
+    cfg_mg.display_filter =0; % use this to see the fvtool
+    MG = FilterLFP(cfg_mg, csc);
+    
     cfg_hg = [];
     % filters
     cfg_hg.type = 'cheby1'; %Cheby1 is sharper than butter
-    cfg_hg.f  = [70 90]; %
+    cfg_hg.f  = [110 160]; %
     cfg_hg.order = 5; %type filter order (fine for this f range)
     cfg_hg.display_filter =0; % use this to see the fvtool
     HG = FilterLFP(cfg_hg, csc);
+    
+    cfg_uhg = [];
+    % filters
+    cfg_uhg.type = 'cheby1'; %Cheby1 is sharper than butter
+    cfg_uhg.f  = [160 250]; %
+    cfg_uhg.order = 5; %type filter order (fine for this f range)
+    cfg_uhg.display_filter =0; % use this to see the fvtool
+    UHG = FilterLFP(cfg_uhg, csc);
     
     cfg_rip = [];
     % filters
@@ -167,14 +184,18 @@ if exist('csc','var') && isstruct(csc)
     D_amp = smooth(abs(hilbert(delta.data)), floor(Fs*0.1));
     T_amp = smooth(abs(hilbert(theta.data)), floor(Fs*0.1));
     LG_amp = smooth(abs(hilbert(LG.data)), floor(Fs*0.1));
+    MG_amp = smooth(abs(hilbert(MG.data)), floor(Fs*0.1));
     HG_amp = smooth(abs(hilbert(HG.data)), floor(Fs*0.1));
+    UHG_amp = smooth(abs(hilbert(UHG.data)), floor(Fs*0.1));
     Rip_amp = smooth(abs(hilbert(Ripple.data)), floor(Fs*0.1));
     
     % get the frequency
     D_freq = MS_estimate_freq(delta.tvec, delta.data);
     T_freq = MS_estimate_freq(theta.tvec, theta.data);
     LG_freq = MS_estimate_freq(LG.tvec, LG.data);
-    HG_freq = MS_estimate_freq(HG.tvec, HG.data);
+    LG_freq = MS_estimate_freq(MG.tvec, MG.data);
+    MG_freq = MS_estimate_freq(HG.tvec, HG.data);
+    UHG_freq = MS_estimate_freq(UHG.tvec, UHG.data);
     Rip_freq = MS_estimate_freq(Ripple.tvec, Ripple.data);
 end
 
@@ -198,21 +219,27 @@ if exist('csc', 'var')
     all_d_pre = []; all_d_post = [];
     all_t_pre = []; all_t_post = [];
     all_LG_pre = []; all_LG_post = [];
+    all_MG_pre = []; all_MG_post = [];
     all_HG_pre = []; all_HG_post = [];
+    all_UHG_pre = []; all_UHG_post = [];
     all_Rip_pre = []; all_Rip_post = [];
     
     %     REM
     all_d_pre_REM = []; all_d_post_REM = [];
     all_t_pre_REM = []; all_t_post_REM = [];
     all_LG_pre_REM = []; all_LG_post_REM = [];
+    all_MG_pre_REM = []; all_MG_post_REM = [];
     all_HG_pre_REM = []; all_HG_post_REM = [];
+    all_UHG_pre_REM = []; all_UHG_post_REM = [];
     all_Rip_pre_REM = []; all_Rip_post_REM = [];
     
     % SWS
     all_d_pre_SW = []; all_d_post_SW = [];
     all_t_pre_SW = []; all_t_post_SW = [];
     all_LG_pre_SW = []; all_LG_post_SW = [];
+    all_MG_pre_SW = []; all_MG_post_SW = [];
     all_HG_pre_SW = []; all_HG_post_SW = [];
+    all_UHG_pre_SW = []; all_UHG_post_SW = [];
     all_Rip_pre_SW = []; all_Rip_post_SW = [];
 end
 
@@ -229,9 +256,9 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
     ms_seg = MS_de_cell(ms_seg);
     
     % binarize the trace
-    
-    ms_seg = MS_msExtractBinary_detrendTraces(ms_seg, z_threshold);
-    
+    if ~isempty(z_threshold)
+     ms_seg = MS_msExtractBinary_detrendTraces(ms_seg, z_threshold);
+    end
     
     %     if length(ms_seg.time) ~= length(ms_seg.NLX_evt.t{end})
     %         warning(['Segment # ' num2str(iSeg) ', length of time and NLX_events do not match. Skipping...'])
@@ -392,7 +419,9 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
     ms_seg.d_amp = D_amp(these_idx);
     ms_seg.t_amp = T_amp(these_idx);
     ms_seg.LG_amp = LG_amp(these_idx);
+    ms_seg.MG_amp = MG_amp(these_idx);
     ms_seg.HG_amp = HG_amp(these_idx);
+    ms_seg.UHG_amp = UHG_amp(these_idx);
     ms_seg.Rip_amp = Rip_amp(these_idx);
     
     
@@ -450,7 +479,9 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
             all_d_pre = [all_d_pre, ms_seg.d_amp'];
             all_t_pre = [all_t_pre, ms_seg.t_amp'];
             all_LG_pre = [all_LG_pre, ms_seg.LG_amp'];
+            all_MG_pre = [all_MG_pre, ms_seg.MG_amp'];
             all_HG_pre = [all_HG_pre, ms_seg.HG_amp'];
+            all_UHG_pre = [all_UHG_pre, ms_seg.UHG_amp'];
             all_Rip_pre = [all_Rip_pre, ms_seg.Rip_amp'];
         end
         
@@ -465,7 +496,9 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
                 all_d_pre_REM = [all_d_pre_REM, ms_seg.d_amp'];
                 all_t_pre_REM = [all_t_pre_REM, ms_seg.t_amp'];
                 all_LG_pre_REM = [all_LG_pre_REM, ms_seg.LG_amp'];
+                all_MG_pre_REM = [all_MG_pre_REM, ms_seg.MG_amp'];
                 all_HG_pre_REM = [all_HG_pre_REM, ms_seg.HG_amp'];
+                all_UHG_pre_REM = [all_UHG_pre_REM, ms_seg.UHG_amp'];
                 all_Rip_pre_REM = [all_Rip_pre, ms_seg.Rip_amp'];
             end
         elseif strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
@@ -478,7 +511,9 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
                 all_d_pre_SW = [all_d_pre_SW, ms_seg.d_amp'];
                 all_t_pre_SW = [all_t_pre_SW, ms_seg.t_amp'];
                 all_LG_pre_SW = [all_LG_pre_SW, ms_seg.LG_amp'];
+                all_MG_pre_SW = [all_MG_pre_SW, ms_seg.MG_amp'];
                 all_HG_pre_SW = [all_HG_pre_SW, ms_seg.HG_amp'];
+                all_UHG_pre_SW = [all_UHG_pre_SW, ms_seg.UHG_amp'];
                 all_Rip_pre_SW = [all_Rip_pre_SW, ms_seg.Rip_amp'];
             end
         end
@@ -491,7 +526,9 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
             all_d_post = [all_d_post, ms_seg.d_amp'];
             all_t_post = [all_t_post, ms_seg.t_amp'];
             all_LG_post = [all_LG_post, ms_seg.LG_amp'];
+            all_MG_post = [all_MG_post, ms_seg.MG_amp'];    
             all_HG_post = [all_HG_post, ms_seg.HG_amp'];
+            all_UHG_post = [all_UHG_post, ms_seg.UHG_amp'];
             all_Rip_post = [all_Rip_post, ms_seg.Rip_amp'];
         end
         % break out REM and SW
@@ -504,7 +541,9 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
                 all_d_post_REM = [all_d_post_REM, ms_seg.d_amp'];
                 all_t_post_REM = [all_t_post_REM, ms_seg.t_amp'];
                 all_LG_post_REM = [all_LG_post_REM, ms_seg.LG_amp'];
+                all_MG_post_REM = [all_MG_post_REM, ms_seg.MG_amp'];
                 all_HG_post_REM = [all_HG_post_REM, ms_seg.HG_amp'];
+                all_UHG_post_REM = [all_UHG_post_REM, ms_seg.UHG_amp'];
                 all_Rip_post_REM = [all_Rip_post_REM, ms_seg.Rip_amp'];
             end
         elseif strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
@@ -516,7 +555,9 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
                 all_d_post_SW = [all_d_post_SW, ms_seg.d_amp'];
                 all_t_post_SW = [all_t_post_SW, ms_seg.t_amp'];
                 all_LG_post_SW = [all_LG_post_SW, ms_seg.LG_amp'];
+                all_MG_post_SW = [all_MG_post_SW, ms_seg.MG_amp'];
                 all_HG_post_SW = [all_HG_post_SW, ms_seg.HG_amp'];
+                all_UHG_post_SW = [all_UHG_post_SW, ms_seg.UHG_amp'];
                 all_Rip_post_SW = [all_Rip_post_SW, ms_seg.Rip_amp'];
             end
         end
@@ -570,7 +611,7 @@ save([ms_save_dir filesep 'all_detrendRaw_post_SW.mat'], 'all_detrendRaw_post_SW
 if exist('csc', 'var')
     lfp_mat_dir = [ms_save_dir filesep 'LFP_mats'];
     mkdir(lfp_mat_dir)
-    f_list = {'d', 't', 'LG', 'HG', 'Rip'};
+    f_list = {'d', 't', 'LG','MG','HG', 'UHG', 'Rip'};
     
     for iF = 1:length(f_list)
         % pre
@@ -604,7 +645,9 @@ if exist('csc', 'var')
     cfgs.filters.d = cfg_d;
     cfgs.filters.t = cfg_t;
     cfgs.filters.LG = cfg_lg;
+    cfgs.filters.MG = cfg_mg;
     cfgs.filters.HG = cfg_hg;
+    cfgs.filters.UHG = cfg_uhg;
     cfgs.filters.Rip = cfg_rip;
 end
 save([ms_save_dir filesep 'cfgs_z_' strrep(num2str(z_threshold), '.','p') '_on_' cfgs.date   '.mat'], 'cfgs', '-v7.3')
