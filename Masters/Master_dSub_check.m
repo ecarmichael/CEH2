@@ -46,7 +46,7 @@ for iSub = length(sub_list):-1:1
 end
 
 % loop subjects
-for iSub = 2%1:length(subjects)
+for iSub = 3%1:length(subjects)
     
     % get a list of the good sessions.
     sess_list = dir([data_dir filesep subjects{iSub}]);
@@ -59,7 +59,7 @@ for iSub = 2%1:length(subjects)
     end
     sessions(cellfun('isempty', sessions)) = [];
     
-    for iS =length(sessions):-1:1
+    for iS =length(sessions)-2:-1:1
         if strcmpi(sessions{iS}, 'M23_2021-08-13_D18')
             continue
         end
@@ -67,8 +67,8 @@ for iSub = 2%1:length(subjects)
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
 %         dsubscreener_ec(cd, inter_dir);
-        dsubscreener_ec_W_maze(cd, inter_dir);
-
+%         dsubscreener_ec_W_maze(cd, inter_dir);
+            M26_Clust_batch
 %         MS_Write_meta_dSub;
           
         
