@@ -13,7 +13,7 @@ inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/E
 
 inter_cells = dir('M*'); 
 
-for iCell = 1:length(inter_cells) % loop over all available cells. 
+for iCell = 1%:length(inter_cells) % loop over all available cells. 
     
     fprintf('Loading cell: %s...\n', inter_cells(iCell).name); % print the name of the session being loaded (optional)
     
@@ -56,7 +56,7 @@ for iCell = 1:length(inter_cells) % loop over all available cells.
    end
    
       % get the valley. 
-      [val_val, val_idx]= min(waves(max_idx:end, best_chan)); % find the lowest point after the peak. 
+      [~, val_idx]= min(waves(max_idx:end, best_chan)); % find the lowest point after the peak. 
 
       val_idx = val_idx + max_idx -1; % adjust for peak index. 
       
@@ -72,7 +72,7 @@ for iCell = 1:length(inter_cells) % loop over all available cells.
    %% compute the time differences between the peak and the valley.  
    
    % get the peak to valley ratio
-   
+   pvr = max_val / waves(val_idx, best_chan)
    
    % get the peak to valley time
    
@@ -86,3 +86,32 @@ end
 
 
 %% try some population level plotting and maybe a classification method. 
+
+
+
+for iCell = 1:length(inter_cells) % loop over all available cells. 
+    
+    fprintf('Loading cell: %s...\n', inter_cells(iCell).name); % print the name of the session being loaded (optional)
+    
+    load(inter_cells(iCell).name); % laod the intermediate file containing the spiking and waveform data. 
+    
+start_t = This_Cell.csc.tvec(find(diff(This_Cell.csc.tvec) > 1)+2); 
+end_t = This_Cell.csc.tvec(find(diff(This_Cell.csc.tvec) > 1)); 
+
+
+r_S = restrict(This_Cell.S, start_t(1),end_t(2)); 
+
+    spike_stats.p_t(iCell) = This_Cell.wave.pt_ratio; 
+    spike_stats.ISI(iCell) = mode(diff(r_S.t{1}))*1000;
+    spike_stats.rate(iCell) = length(r_S.t{1}) / (end_t(2) - start_t(1)); 
+    spike_stats.peak_val(iCell) = This_Cell.wave.peak_val; 
+    spike_stats.spike(iCell) = This_Cell.wave.spike_width; 
+
+    
+end
+
+%% plot a 3d scatter of the spike properties
+
+
+figure(1010)
+scatter(spike_stats.rate, spike_stats.ISI)

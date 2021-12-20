@@ -32,7 +32,9 @@ if strcmp(computer, 'GLNXA64')
     elseif strcmpi(getenv('USERNAME'), 'williamslab')
         addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
         addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
-        data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1254/11_13_2021_pv1254_LTD1';
+        data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1252/11_22_2021_pv1252_HATD5';
+        
+                        
         LFP_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo';
 %         cell_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/4.PlaceCell';
     end
@@ -427,7 +429,7 @@ xlabel('IPI')
 
 %% Crit 2 remove blocks without a min IPI smoothed < 5th percentile of all IPI smoothed
 
-min_len = .7;
+min_len = .9;
 
 for iB = length(IPI_vec):-1:1 % still working with blocks rather than concatenated values to avoid start/end overlap.
     
