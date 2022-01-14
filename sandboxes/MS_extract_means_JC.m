@@ -1,4 +1,4 @@
-function [data_out, data_out_REM, data_out_SWS,Threshold,labels] = MS_extract_means_JC(cell_idx)
+function [data_out, data_out_REM, data_out_SWS,Threshold,labels] = MS_extract_means_JC(cell_idx, omit_files)
 %% MS_extract_means_JC: used for pulling out the mean values for several measures and the time of the recording relative to the track experiment.
 % The function will loop through all the session folders in the processed
 % ms data and loads the ms_seg*.mat file.
@@ -24,7 +24,17 @@ function [data_out, data_out_REM, data_out_SWS,Threshold,labels] = MS_extract_me
 % EC 2020-08-19   initial version
 %
 %
-%
+%% initialize
+
+if nargin == 0
+    cell_idx = []; 
+    omit_files = []; 
+elseif nargin == 1
+    omit_files = [];
+end
+
+
+
 %% get the names of the folders in this dir and sort them based on date created.
 this_dir = dir;
 dirFlags = [this_dir.isdir];
@@ -50,13 +60,23 @@ data_out_SWS = [];
 
 labels = {'time2trk', 'binary', 'delta', 'theta', 'low gamma', 'mid gamma', 'high gamma', 'ultra high gamma', 'REM =1 SWS = 0'};
 for iF = 1:length(this_dir)
+   
+    if sum(contains(omit_files, this_dir(iF).name)) > 0
+        data_out(iF,:) = NaN; 
+        continue
+    end
+    
     cd(this_dir(iF).name)
     f_load = FindFile_str(cd, 'resize');
-    if isempty(f_load) % if there is no ms_resize file skip this folder. 
+    if isempty(f_load) % if there is no ms_resize file skip this folder.
+        data_out(iF,:) = NaN;
         continue
     end
     load(f_load{1})
-    if nargin == 0
+    
+%     if 
+    
+    if isempty(cell_idx)
         cell_idx = 1:size(ms_seg.Binary,2);
     end
     Fs = mode(diff(ms_seg.time));
@@ -100,6 +120,10 @@ for iF = 1:length(this_dir)
     %% 
     cd(this_dir(iF).folder)
 end
+
+%% correct for omitted files. 
+data_out(isnan(data_out(:,1)),:) = []; 
+
 
 %% make a summary plot
 REM_idx = find(data_out(:,9) == 1); % get REM indicies
