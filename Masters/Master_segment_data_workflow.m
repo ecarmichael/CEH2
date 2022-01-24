@@ -352,7 +352,19 @@ for iSub = Subjects
 %         csc_dir = 'K:\Jisoo_Project\LFP data\2021-04-17_10-06-00_PV1192_HATD1'; 
 %         iSess = '4_17_2021_PV1192_HATD1';
 %         iSub = 'PV1192';      
+% HATD5
+% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1192\HATD5';
+% csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-04-21_09-35-07_PV1192_HATD5';
+% iSess = 'HATD5';
+% iSub = 'PV1192';
 
+
+% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1192\HATDSwitch';
+% csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-04-23_09-46-23_PV1192_HATDSwitch';
+% iSess = 'HATDSwitch';
+% iSub = 'PV1192';
+% 
+% ms_resize_dir = ms_dir; 
 %         ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1192/4_21_2021_PV1192_HATD5';
 %         csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-04-21_09-35-07_PV1192_HATD5';
 %         iSess = '4_21_2021_PV1192_HATD5';
@@ -381,6 +393,15 @@ csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-11-13_09-21-27_pv1254_LTD1';
 
 iSess = 'LTD1';
 iSub = 'PV1254';
+
+
+% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1254\LTD5';
+% csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-11-17_09-37-11_pv1254_LTD5'; 
+% 
+% iSess = 'LTD5' 
+% iSub = 'PV1254';
+
+ms_resize_dir = ms_dir;
 
 %for LTD3
 % ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_15_2021_pv1254_LTD3';
@@ -629,6 +650,8 @@ iSub = 'PV1254';
         warning off;
         cd(ms_resize_dir)
         MS_re_binarize_JC(2, ms_resize_dir, ms_resize_dir, 'ms_resize', 'ms_resize', csc);
+        % zscore the LFP amp and freq. 
+        MS_zscore_LFP_JC('K:\Jisoo_Project\LFP data\Jisoo');
         cd(ms_resize_dir); 
          load('ms_resize.mat'); warning on; 
         [data_out_all, data_out_REM_all, data_out_SWS_all,Threshold, labels] = MS_extract_means_JC([],ms_seg_resize.removed ); %Modified by Jisoo
