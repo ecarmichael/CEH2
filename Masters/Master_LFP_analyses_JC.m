@@ -2,7 +2,8 @@
 
 
 % get the files to process
-f_names  = {  'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\LTD1', 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\LTD5', ...
+f_names  = { 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1043\LTD1', 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1043\LTD5',... 
+    'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\LTD1', 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\LTD5', ...
     'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\HATD1', 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\HATD5','C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\HATDSwitch',...
     'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\LTD1', 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\LTD5', ...
     'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\HATD5','C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\HATDSwitch',...
@@ -20,13 +21,13 @@ LFP_dir = 'K:\Jisoo_Project\LFP data\Jisoo';
 
 %%  loop over and extract LFP Amp and Freq.
 
-for iF =9:length(f_names)
+for iF =1:length(f_names)
     
     % load the ms_seg file to get the LFP filenames and the remove
     ms_resize_dir = f_names{iF};
-    fprintf('<strong>%s</strong>: loading ms_resize from <strong>%s</strong>\n', mfilename, f_names{iF});
     
-     cd(ms_resize_dir); 
+    cd(ms_resize_dir);
+    
     % get the session info
     parts = strsplit(cd,  filesep);
     session = parts{end};
@@ -43,7 +44,14 @@ for iF =9:length(f_names)
         type = 'HATSwitch';
     end
     
-   % see if the hypno and ms_seg files exist
+    
+    if exist('LFP_mats_z', 'dir')
+        fprintf('<strong>%s</strong>: LFP mats Z found skipping <strong>%s</strong>\n', mfilename, f_names{iF});
+        
+        log_file.([subject '_' session]) = 'LFP mats z detected skipping';
+        continue
+    end
+    % see if the hypno and ms_seg files exist
     if ~exist([ms_resize_dir filesep 'ms_resize.mat'], 'file')
         warning('No ms_resize.mat found.  Skipping...')
         log_file.([subject '_' session]) = 'No ms_resize.mat found';
@@ -53,10 +61,10 @@ for iF =9:length(f_names)
         log_file.([subject '_' session]) = 'No Hypno.mat found';
         continue
     end
-    
+    fprintf('<strong>%s</strong>: loading ms_resize from <strong>%s</strong>\n', mfilename, f_names{iF});
     warning off; load('ms_resize.mat'); warning on;
     
-   
+    
     
     % find the right csc folder
     cd(LFP_dir)
@@ -80,11 +88,18 @@ for iF =9:length(f_names)
     
     % load some data.
     fprintf('<strong>%s</strong>: loading csc from <strong>%s</strong>\n', mfilename, cfg_load.fc{1});
+    
     csc = MS_LoadCSC(cfg_load);
     
     cd(ms_resize_dir)
     
     MS_re_binarize_JC(2, ms_resize_dir, ms_resize_dir, 'ms_resize', 'ms_resize', csc);
+    
+    if exist(['pREM' filesep 'Cut_CSC.mat'], 'file')
+        fprintf('<strong>%s</strong>: loading CSC_cut <strong>%s</strong>\n', mfilename, cfg_load.fc{1});
+        load(['pREM' filesep 'Cut_CSC.mat']);
+        csc = CSC_cut;
+    end
     
     % zscore the LFP amp and freq.
     MS_zscore_LFP_JC('K:\Jisoo_Project\LFP data\Jisoo', csc);
@@ -104,9 +119,50 @@ for iF =9:length(f_names)
     save([pwd,'/AcrossEpisodes/Out_all_',num2str(Threshold),'.mat'], 'Out_all')
     
     clear date
-    log_file.([subject '_' session]) = ['Completed ' date]; 
+    log_file.([subject '_' session]) = ['Completed ' date];
     
-   
+    
     clearvars -except f_names LFP_dir iF log_file
     close all
+end
+
+%% get the REM times; 
+
+subjects = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252', 'pv1254'};
+sessions = {'LTD1', 'LTD5', 'HATD1', 'HATD5', 'HATDSwitch'}; 
+
+all_REM = nan(length(subjects), length(sessions)); 
+all_SWS = all_REM;
+for iF =1:length(f_names)
+    
+    % load the ms_seg file to get the LFP filenames and the remove
+    ms_resize_dir = f_names{iF};
+    
+    fprintf('<strong>%s</strong>: loading ms_resize from <strong>%s</strong>\n', mfilename, f_names{iF});
+    
+    cd(ms_resize_dir);
+    
+    parts = strsplit(cd,  filesep);
+    session = parts{end};
+    subject = parts{end-1};
+    date = parts{end};%(1:10);
+    if strcmp(date(end), '_')
+        date = date(1:end-1);
+    end
+    type = strsplit(parts{end}, '_');
+    type = type{end};
+    if strcmp(type,'HATSwitch') && contains(subject, '1069')
+        type = 'HATD6_switch';
+    elseif strcmp(type,'HATDSwitch') && contains(subject, '1060')
+        type = 'HATSwitch';
+    end
+    
+    load(['pREM' filesep 'Hypno.mat']);
+    
+    [REM_stats, SWS_stats] = MS_compute_REM_prct_JC(Hypno); 
+    
+    all_REM(find(contains(subjects, subject)), find(contains(sessions, type))) = REM_stats.percent_sleep; 
+    all_SWS(find(contains(subjects, subject)), find(contains(sessions, type))) = SWS_stats.percent_sleep; 
+
+    
 end

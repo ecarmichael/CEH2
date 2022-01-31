@@ -196,9 +196,18 @@ if cfg.filt_e.notch
     csc.data(1,:) = temp_sig;
 end
 
+% find the TTL nlx event channels 
+for iEvt = length(nlx_evts.t):-1:1
+    if contains(nlx_evts.label(iEvt), 'TTL Input on AcqSystem1_0 board 0 port 3 value')
+        keep_idx(iEvt) = 1; 
+    else
+        keep_idx(iEvt) = 0;
+    end
+end
+TTL_chan = find(keep_idx); 
 
 % extract NLX event epochs
-nlx_evts.t{end+1} = sort([nlx_evts.t{end-1}, nlx_evts.t{end}]);
+nlx_evts.t{end+1} = sort([nlx_evts.t{TTL_chan(2)}, nlx_evts.t{TTL_chan(1)}]);
 nlx_evts.label{end+1} = ['merge TTls at ' num2str(length(nlx_evts)-1) ' and ' num2str(length(nlx_evts))];
 
 cfg.evt.t_chan = length(nlx_evts.t); 
@@ -301,8 +310,7 @@ if ~isempty(cfg.remove_nlx_evt)
     end 
 end
 
-
-%% need to add a piece that will identify periods where the MS was recording but the NLX was not (example: when the mouse is on the track)
+%%  identify MS recordings without NLX which should be the track section. 
 if length(evt_blocks) < length(TS)
     fprintf('Length of TS (%d) and evt_blocks (%d) are not equal. Checking for odd MS timestamp lengths out...\n',length(TS), length(evt_blocks));
     
@@ -375,6 +383,7 @@ if length(evt_blocks) < length(TS)
     fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: #%d : <strong>%s</strong> was flagged for removal\n', odd_idx, ms_seg.removed{end});
     
 end
+
 %% check the diffs between TS and NLX
 for iT = 1:length(TS)
 disp(['TS' num2str(iT) '-' TS_name{iT} ': ' num2str(length(TS{iT}.system_clock{1}))   'samples, '  num2str(length(TS{iT}.system_clock{1}) / TS{iT}.cfg.Fs{1},3) 'sec at ' num2str(TS{iT}.cfg.Fs{1},3) 'Hz'...

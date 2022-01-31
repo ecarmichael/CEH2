@@ -54,82 +54,90 @@ this_LFP_dir = MS_list_dir_names(cd, {subject, type});
 
 cd(this_LFP_dir{1});
 
-% if no CSC then load it using the same channel as the ms_seg. 
-if isempty(CSC)
-% load the MS_resize_seg to get tge the csc file
-load([data_dir filesep 'ms_resize.mat']);
-
-% get the channels to load from the pre-cut data. First channel should be
-% EMG and second is the best LFP.
-cfg_load = [];
-for iC = length(ms_seg_resize.NLX_csc{1}.cfg.hdr) % loop over channels.
-    cfg_load.fc{iC} = [ms_seg_resize.NLX_csc{1}.cfg.hdr{iC}.AcqEntName '.ncs'];
-    cfg_load.desired_sampling_frequency = ms_seg_resize.NLX_csc{1}.cfg.hdr{iC}.SamplingFrequency;
-end
-cfg_load.fc(1) = []; 
-
-% hard code LFP channel 
-if strcmp(subject, 'PV1043') && strcmp(type, 'LTD5')
-    cfg_load.fc{2} = 'CSC6.ncs';
-end
-
-% load some data.
-CSC = MS_LoadCSC(cfg_load);
-
-    Fs = floor(1/(0.001*(mode(diff((ms_seg_resize.time{1}))))));
-
-else
-    Fs = 30; % assume sampling rate for Ca data is 30fps. 
-    
-end
 EVT = LoadEvents([]); % load the events file.
-
-% clear ms_seg_resize
-
-%% prepare the data for scoring.
-% since JC data has a gap in a single recording for the track, account for
-% that here.
 S_rec_idx = find(contains(EVT.label, 'Starting Recording')); % get the index for the start recoding cell
 Stop_rec_idx = find(contains(EVT.label, 'Stopping Recording')); % get the index for the start recoding cell
 
-% split the pre and post recordings.  
 
-if length(EVT.t{S_rec_idx}) ~= 2
-    warning('more than two recordings detected.  Fix this later.')
+% if no CSC then load it using the same channel as the ms_seg. 
+if isempty(CSC)
+    % load the MS_resize_seg to get tge the csc file
+    load([data_dir filesep 'ms_resize.mat']);
     
-    for iR = length(EVT.t{S_rec_idx}):-1:1
-        rec_dur(iR) = EVT.t{Stop_rec_idx}(iR) - EVT.t{S_rec_idx}(iR);
+    % get the channels to load from the pre-cut data. First channel should be
+    % EMG and second is the best LFP.
+    cfg_load = [];
+    for iC = length(ms_seg_resize.NLX_csc{1}.cfg.hdr) % loop over channels.
+        cfg_load.fc{iC} = [ms_seg_resize.NLX_csc{1}.cfg.hdr{iC}.AcqEntName '.ncs'];
+        cfg_load.desired_sampling_frequency = ms_seg_resize.NLX_csc{1}.cfg.hdr{iC}.SamplingFrequency;
+    end
+    cfg_load.fc(1) = [];
+    
+    % hard code LFP channel
+    if strcmp(subject, 'PV1043') && strcmp(type, 'LTD5')
+        cfg_load.fc{2} = 'CSC6.ncs';
     end
     
-    keep_rec = find((rec_dur/60/60) > 1.5);
-    if length(keep_rec) ~= 2
-        error('Something is wrong with the CSC. Expected 2 recordings but found %.0f',length(keep_rec)); 
+    % load some data.
+    CSC = MS_LoadCSC(cfg_load);
+    
+    Fs = floor(1/(0.001*(mode(diff((ms_seg_resize.time{1}))))));
+    
+    if length(EVT.t{S_rec_idx}) ~= 2
+        warning('more than two recordings detected.  Fix this later.')
+        
+        for iR = length(EVT.t{S_rec_idx}):-1:1
+            rec_dur(iR) = EVT.t{Stop_rec_idx}(iR) - EVT.t{S_rec_idx}(iR);
+        end
+        
+        keep_rec = find((rec_dur/60/60) > 1.5);
+        if length(keep_rec) ~= 2
+            error('Something is wrong with the CSC. Expected 2 recordings but found %.0f',length(keep_rec));
+        end
+        pre_S_rec_idx = keep_rec(1);
+        post_S_rec_idx = keep_rec(2);
+        
+    else
+        
+        pre_S_rec_idx = 1;
+        post_S_rec_idx = 2;
+        
+        
     end
-    pre_S_rec_idx = keep_rec(1); 
-    post_S_rec_idx = keep_rec(2); 
     
-else
-    
-    pre_S_rec_idx = 1;
-    post_S_rec_idx = 2;
-    
-
-end
-
- CSC_pre = CSC; 
+    CSC_pre = CSC;
     CSC_pre.tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(pre_S_rec_idx),CSC.tvec));
-    CSC_pre.data = CSC.data(:,1:nearest_idx(EVT.t{Stop_rec_idx}(pre_S_rec_idx),CSC.tvec)); 
-%     CSC_pre.data = CSC_pre.data - mean(CSC_pre.data); 
-
+    CSC_pre.data = CSC.data(:,1:nearest_idx(EVT.t{Stop_rec_idx}(pre_S_rec_idx),CSC.tvec));
+    %     CSC_pre.data = CSC_pre.data - mean(CSC_pre.data);
+    
     
     CSC_post= CSC;
     CSC_post.tvec = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(post_S_rec_idx), CSC.tvec):end);
     CSC_post.data = CSC.data(:,nearest_idx(EVT.t{S_rec_idx}(post_S_rec_idx), CSC.tvec):end);
-%     CSC_post.data = CSC_post.data - mean(CSC_post.data);
+    %     CSC_post.data = CSC_post.data - mean(CSC_post.data);
+    
+    CSC_cut = CSC;
+    CSC_cut.tvec = [CSC_pre.tvec; (CSC_post.tvec - CSC_post.tvec(1))+(CSC_pre.tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency))];
+    CSC_cut.data = [CSC_pre.data, CSC_post.data];
+    temp_hdr = CSC_cut.cfg.hdr{2};
+    CSC_cut.cfg.hdr = [];
+    CSC_cut.cfg.hdr{1} = temp_hdr; 
+    
+    
+else
+    CSC_cut = CSC; 
+    Fs = 30; % assume sampling rate for Ca data is 30fps.
+    if length(CSC_cut.cfg.hdr) >1
+        CSC_cut.data = CSC.data(2,:); 
+        CSC_cut.label = {CSC.label{2}}; 
+        temp_hdr = CSC_cut.cfg.hdr{2};
+        CSC_cut.cfg.hdr = [];
+        CSC_cut.cfg.hdr{1} = temp_hdr;
+    end
+    
+end
 
-CSC_cut = CSC;
-CSC_cut.tvec = [CSC_pre.tvec; (CSC_post.tvec - CSC_post.tvec(1))+(CSC_pre.tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency))];
-CSC_cut.data = [CSC_pre.data, CSC_post.data];
+% clear ms_seg_resize
 
 %% filter the CSC
 
