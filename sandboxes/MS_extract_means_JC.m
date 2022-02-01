@@ -24,25 +24,37 @@ function [data_out, data_out_REM, data_out_SWS,Threshold,labels] = MS_extract_me
 % EC 2020-08-19   initial version
 %
 %
-%
-%% get the names of the folders in this dir and sort them based on date created.
-this_dir = dir;
-dirFlags = [this_dir.isdir];
-
-this_dir = this_dir(dirFlags);
-[~,idx] = sort([this_dir.datenum]);
-this_dir = this_dir(idx);
-keep_idx = zeros(1, length(this_dir));
-
-for iD = 1:length(this_dir)
-    if contains(this_dir(iD).name, '_M')
-        keep_idx(iD) = 1;
-    end
+%% load trk and update and extract time values.
+if exist(['ms_trk.mat'], 'file')
+    load('ms_trk.mat');
+    
+else
+    error('no ms_trk.mat found')
 end
 
-this_dir = this_dir(logical(keep_idx));
+% get time
+time_str = regexp(ms_trk.file_names,'\d*','Match');
+ms_trk.time_labels = datestr(datestr([time_str{1} ':' time_str{2} ':' time_str{3}]), 'HH:MM:SS');
+temp_time = datetime(ms_trk.time_labels);
+temp_time.Format = 'HH:mm:ss';
+temp_time = temp_time+seconds((ms_trk.time(end)- ms_trk.time(1))/1000);
 
-this_dir.name;
+trk_time = datevec(ms_trk.time_labels);
+trk_end_time = datevec(datestr(temp_time, 'HH:MM:SS'));
+
+%% get the names of the folders in this dir and sort them based on date created.
+this_dir = dir('*_M*');
+
+% hack to sort based on recording time not file datenum.  
+for iD = length(this_dir):-1:1
+    fname_parts = strsplit(this_dir(iD).name, '_');
+    temp_time = datetime([fname_parts{1}(2:end) ':' fname_parts{2}(2:end) ':' fname_parts{3}(2:end)]);
+    temp_time.Format = 'HH:mm:ss'; 
+    rec_time(iD) = temp_time; 
+end
+[~, rec_order_idx] = sort(rec_time, 'ascend'); 
+
+this_dir = this_dir(rec_order_idx); 
 
 % loop over each folder and get mean firing rate and mean amplitude
 data_out_REM = [];
@@ -52,7 +64,8 @@ labels = {'time2trk', 'binary', 'delta', 'theta', 'low gamma', 'mid gamma', 'hig
 for iF = 1:length(this_dir)
     cd(this_dir(iF).name)
     f_load = FindFile_str(cd, 'resize');
-    if isempty(f_load) % if there is no ms_resize file skip this folder. 
+    if isempty(f_load) || contains(this_dir(iF).name, 'remove') % if there is no ms_resize file skip this folder. 
+        cd(this_dir(iF).folder)
         continue
     end
     load(f_load{1})
@@ -61,6 +74,17 @@ for iF = 1:length(this_dir)
     end
     Fs = mode(diff(ms_seg.time));
     
+    % check for time2trk
+    if ~isfield(ms_seg, 'time2trk')
+        seg_time = datevec(ms_seg.time_labels);
+        % add time vector
+        if strcmp(ms_seg.pre_post, 'pre')
+            ms_seg.time2trk = etime(seg_time, trk_time)/60;
+        elseif strcmp(ms_seg.pre_post, 'post')
+            ms_seg.time2trk = etime(seg_time,trk_end_time)/60;
+        end
+    end
+
     if contains(this_dir(iF).name, 'REM')
         this_state = 1;
         data_out_REM(iF,1) = ms_seg.time2trk;

@@ -32,7 +32,8 @@ if strcmp(computer, 'GLNXA64')
     elseif strcmpi(getenv('USERNAME'), 'williamslab')
         addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
         addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
-        data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1252/11_22_2021_pv1252_HATD5';
+        data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1254/11_19_2021_pv1254_HATD1';
+%         data_dir='/media/williamslab/Seagate Expansion Drive/Jisoo_Project/Across_episodes_Scoring/pv1252/11_24_2021_pv1252_HATDSwitch';
         
                         
         LFP_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo';
@@ -97,6 +98,8 @@ end
 % hard code LFP channel 
 if strcmp(subject, 'PV1043') && strcmp(type, 'LTD5')
     cfg_load.fc{2} = 'CSC6.ncs';
+elseif strcmp(subject, 'PV1254') 
+    cfg_load.fc{2} = 'CSC8.ncs';
 end
 
 % load some data.
@@ -139,22 +142,33 @@ Stop_rec_idx = find(contains(EVT.label, 'Stopping Recording')); % get the index 
 % split the pre and post recordings.  
 
 if length(EVT.t{S_rec_idx}) ~= 2
-    warning('more than two recordings detected.  Fix this later.')
+    warning('more than two recordings detected.  Apply longest block detection. ')
+    
+    % hack to get the two longest recording blocks from the evt file
+    d_t = EVT.t{Stop_rec_idx} - EVT.t{S_rec_idx}; 
+    [~, idx] = sort(d_t, 'descend'); 
+    [sort_rec_idx] = sort(idx); 
+    pre_idx = idx(sort_rec_idx(1)); 
+    post_idx = idx(sort_rec_idx(2)); 
 else
+    pre_idx = 1;
+    post_idx = 2; 
+    
+end
     
     CSC_pre = CSC; 
-    CSC_pre.tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
-    CSC_pre.data = CSC.data(:,1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec)); 
+    CSC_pre.tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(pre_idx),CSC.tvec));
+    CSC_pre.data = CSC.data(:,1:nearest_idx(EVT.t{Stop_rec_idx}(pre_idx),CSC.tvec)); 
 %     CSC_pre.data = CSC_pre.data - mean(CSC_pre.data); 
-    emg_h_pre = emg_h(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec)); 
+    emg_h_pre = emg_h(1:nearest_idx(EVT.t{Stop_rec_idx}(pre_idx),CSC.tvec)); 
 
     
     CSC_post= CSC;
-    CSC_post.tvec = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(2), CSC.tvec):end);
-    CSC_post.data = CSC.data(:,nearest_idx(EVT.t{S_rec_idx}(2), CSC.tvec):end);
+    CSC_post.tvec = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(post_idx), CSC.tvec):end);
+    CSC_post.data = CSC.data(:,nearest_idx(EVT.t{S_rec_idx}(post_idx), CSC.tvec):end);
 %     CSC_post.data = CSC_post.data - mean(CSC_post.data);
-    emg_h_post = emg_h((nearest_idx(EVT.t{S_rec_idx}(2), CSC.tvec):end));
-end
+    emg_h_post = emg_h((nearest_idx(EVT.t{S_rec_idx}(post_idx), CSC.tvec):end));
+
 
 
 
@@ -260,7 +274,7 @@ REM_IV.tend = CSC_cut.tvec(REM_IV.tend);
 subplot(2,1,2)
 cfg_plot = [];
 cfg_plot.display = 'tsd';
-cfg_plot.target = 'CSC6.ncs';
+cfg_plot.target = CSC_cut.label{2};
 PlotTSDfromIV(cfg_plot, REM_IV, CSC_cut)
 xlim([CSC_cut.tvec(1) CSC_cut.tvec(end)])
 vline(CSC_pre.tvec(end))
@@ -381,7 +395,7 @@ REM.phi = REM_phi{iB};
 REM.IPI = IPI;
 for ii = length(IPI):-1:1
     REM.IPI_mean{ii} =  1/mean(IPI{ii});
-    if REM_tvecs{ii} < EVT.t{Stop_rec_idx}(1)
+    if REM_tvecs{ii} < EVT.t{Stop_rec_idx}(pre_idx)
         REM.labels{ii} = 'pre';
     else
         REM.labels{ii} = 'post';
@@ -647,10 +661,12 @@ load('all_binary_post.mat');
 
 
 % get the cell centroids for coloring.  (if they exist)
+if exist('cell_dir', 'var')
 if exist([cell_dir filesep lower(subject) filesep type filesep 'spatial_analysis.mat'], 'file')
     load([cell_dir filesep lower(subject) filesep type filesep 'spatial_analysis.mat']);
 elseif exist([cell_dir filesep lower(subject) filesep strrep(type, 'TS', 'TDS') filesep 'spatial_analysis.mat'], 'file')
         load([cell_dir filesep lower(subject) filesep strrep(type, 'TS', 'TDS') filesep 'spatial_analysis.mat']);
+end
 end
 if exist('spatial_analysis', 'var')
     place_idx = zeros(length(spatial_analysis.bin),1); % allocate the index array
@@ -1001,7 +1017,7 @@ save([inter_dir filesep 'pREM_' num2str(min_len*1000) 'ms' filesep 'pREM_dur.mat
 %         all_tvec = [all_tvec, tvec_cut];
 % %         all_data = [all_data, data_cut]; 
 %     end
-%     start_tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
+%     start_tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(pre_idx),CSC.tvec));
 %     all_tvec = [start_tvec; all_tvec + start_tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency)];
 %     
 % %     start_data = CSC.data(1:2,1:nearest_idx(EVT.t{S_rec_idx+1}(1),CSC.tvec));
