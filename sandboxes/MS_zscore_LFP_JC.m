@@ -128,8 +128,10 @@ else
     CSC_cut = CSC; 
     Fs = 30; % assume sampling rate for Ca data is 30fps.
     if length(CSC_cut.cfg.hdr) >1
+        if size(CSC.data,1) >1 
         CSC_cut.data = CSC.data(2,:); 
         CSC_cut.label = {CSC.label{2}}; 
+        end
         temp_hdr = CSC_cut.cfg.hdr{2};
         CSC_cut.cfg.hdr = [];
         CSC_cut.cfg.hdr{1} = temp_hdr;

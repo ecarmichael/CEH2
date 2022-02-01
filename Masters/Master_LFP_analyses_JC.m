@@ -21,7 +21,7 @@ LFP_dir = 'K:\Jisoo_Project\LFP data\Jisoo';
 
 %%  loop over and extract LFP Amp and Freq.
 
-for iF =1:length(f_names)
+for iF =10%:length(f_names)
     
     % load the ms_seg file to get the LFP filenames and the remove
     ms_resize_dir = f_names{iF};
@@ -138,7 +138,7 @@ for iF =1:length(f_names)
     % load the ms_seg file to get the LFP filenames and the remove
     ms_resize_dir = f_names{iF};
     
-    fprintf('<strong>%s</strong>: loading ms_resize from <strong>%s</strong>\n', mfilename, f_names{iF});
+    fprintf('<strong>%s</strong>: recomputing REM %% from <strong>%s</strong>\n', mfilename, f_names{iF});
     
     cd(ms_resize_dir);
     
@@ -151,14 +151,51 @@ for iF =1:length(f_names)
     end
     type = strsplit(parts{end}, '_');
     type = type{end};
-    if strcmp(type,'HATSwitch') && contains(subject, '1069')
-        type = 'HATD6_switch';
-    elseif strcmp(type,'HATDSwitch') && contains(subject, '1060')
-        type = 'HATSwitch';
+    if strcmp(type,'HATDSwitch') && contains(subject, '1060')
+        type = 'HATDSwitch';
+        csc_type = 'HATSwitch';
+    else
+        csc_type = type; 
     end
     
     load(['pREM' filesep 'Hypno.mat']);
     
+    
+    % find the right csc folder and grab the events file
+    cd(LFP_dir)
+    
+    this_LFP_dir = MS_list_dir_names(cd, {subject, csc_type});
+    
+    cd(this_LFP_dir{1});
+    
+    EVT = LoadEvents([]);
+    S_rec_idx = find(contains(EVT.label, 'Starting Recording')); % get the index for the start recoding cell
+    Stop_rec_idx = find(contains(EVT.label, 'Stopping Recording')); % get the index for the start recoding cell
+    
+    if strcmpi(subject, 'pv1060') && strcmpi(type, 'LTD1')
+            pre_S_rec_idx = 2;
+        post_S_rec_idx = 3;
+    elseif length(EVT.t{S_rec_idx}) ~= 2
+        warning('more than two recordings detected.  Fix this later.')
+        for iR = length(EVT.t{S_rec_idx}):-1:1
+            rec_dur(iR) = EVT.t{Stop_rec_idx}(iR) - EVT.t{S_rec_idx}(iR);
+        end
+        keep_rec = find((rec_dur/60/60) > 1.5);
+        if length(keep_rec) ~= 2
+            error('Something is wrong with the CSC. Expected 2 recordings but found %.0f',length(keep_rec));
+        end
+        pre_S_rec_idx = keep_rec(1);
+        post_S_rec_idx = keep_rec(2);       
+    else
+        pre_S_rec_idx = 1;
+        post_S_rec_idx = 2;
+    end
+    % split for pre-post
+    cut_idx = nearest_idx3(EVT.t{S_rec_idx}(post_S_rec_idx),Hypno.tvec);
+    Hypno.tvec = Hypno.tvec(cut_idx:end); 
+    Hypno.data = Hypno.data(cut_idx:end);
+
+    % get the REM stats. 
     [REM_stats, SWS_stats] = MS_compute_REM_prct_JC(Hypno); 
     
     all_REM(find(contains(subjects, subject)), find(contains(sessions, type))) = REM_stats.percent_sleep; 
@@ -166,3 +203,4 @@ for iF =1:length(f_names)
 
     
 end
+REM_table = array2table(round(all_REM, 2), 'VariableNames', sessions, 'RowNames', subjects)
