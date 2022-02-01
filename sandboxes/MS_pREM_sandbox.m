@@ -40,13 +40,12 @@ if strcmp(computer, 'GLNXA64')
 %         cell_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/4.PlaceCell';
     end
 else
-    LFP_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo';
+    LFP_dir = 'K:\Jisoo_Project\LFP data\Jisoo';
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
    data_dir ='C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\HATD5'; % change this to the data folder that you want.  LFP will update automatically.
    cell_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\4.PlaceCell'; % where to find place cell classification and centroids. 
    
-   % data_dir = 'C:\Users\ecarm\Dropbox (Williams
    % Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_22_2019_PV1069_HATSwitch';
    % my drop box doesn't work here and whole data is in J
 end
@@ -132,70 +131,130 @@ emg_h = abs(hilbert(emg_f.data)); % get the emg power for plotting.
 
 emg_rms = sqrt(movmean(emg_f.data.^2, 1000));                         % RMS Value Over Samples
 
+% Remove the EMG from the CSC; 
+
+CSC.data = CSC.data(2,:); 
+CSC.cfg.hdr{1} = CSC.cfg.hdr{2}; 
+CSC.label = {CSC.label{2}}; 
+
 %% prepare the data for scoring.
 % since JC data has a gap in a single recording for the track, account for
 % that here.
 S_rec_idx = find(contains(EVT.label, 'Starting Recording')); % get the index for the start recoding cell
 Stop_rec_idx = find(contains(EVT.label, 'Stopping Recording')); % get the index for the start recoding cell
 
-
-% split the pre and post recordings.  
-
-if length(EVT.t{S_rec_idx}) ~= 2
-    warning('more than two recordings detected.  Apply longest block detection. ')
+% hardcode odd session with three 
+if strcmpi(subject, 'pv1060') && strcmpi(type, 'LTD1')
     
-    % hack to get the two longest recording blocks from the evt file
-    d_t = EVT.t{Stop_rec_idx} - EVT.t{S_rec_idx}; 
-    [~, idx] = sort(d_t, 'descend'); 
-    [sort_rec_idx] = sort(idx); 
-    pre_idx = idx(sort_rec_idx(1)); 
-    post_idx = idx(sort_rec_idx(2)); 
-else
-    pre_idx = 1;
-    post_idx = 2; 
-    
-end
-    
-    CSC_pre = CSC; 
-    CSC_pre.tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(pre_idx),CSC.tvec));
-    CSC_pre.data = CSC.data(:,1:nearest_idx(EVT.t{Stop_rec_idx}(pre_idx),CSC.tvec)); 
-%     CSC_pre.data = CSC_pre.data - mean(CSC_pre.data); 
-    emg_h_pre = emg_h(1:nearest_idx(EVT.t{Stop_rec_idx}(pre_idx),CSC.tvec)); 
+           pre_S_rec_idx = 2;
+        post_S_rec_idx = 3;
 
+    CSC_pre1 = CSC;
+    CSC_pre1.tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
+    CSC_pre1.data = CSC.data(:,1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
+    emg_h_pre1 = emg_h(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
+    
+    CSC_pre = CSC;
+    CSC_pre.tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(2),CSC.tvec));
+    CSC_pre.data = CSC.data(:,1:nearest_idx(EVT.t{Stop_rec_idx}(2),CSC.tvec));
+    emg_h_pre = emg_h(1:nearest_idx(EVT.t{Stop_rec_idx}(2),CSC.tvec));
     
     CSC_post= CSC;
-    CSC_post.tvec = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(post_idx), CSC.tvec):end);
-    CSC_post.data = CSC.data(:,nearest_idx(EVT.t{S_rec_idx}(post_idx), CSC.tvec):end);
-%     CSC_post.data = CSC_post.data - mean(CSC_post.data);
-    emg_h_post = emg_h((nearest_idx(EVT.t{S_rec_idx}(post_idx), CSC.tvec):end));
+    CSC_post.tvec = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(3), CSC.tvec):end);
+    CSC_post.data = CSC.data(:,nearest_idx(EVT.t{S_rec_idx}(3), CSC.tvec):end);
+    emg_h_post = emg_h((nearest_idx(EVT.t{S_rec_idx}(3), CSC.tvec):end));
+    
+    CSC_cut = CSC;
+    CSC_cut.tvec = [CSC_pre1.tvec; (CSC_pre.tvec - CSC_pre.tvec(1))+(CSC_pre1.tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency))];
+    CSC_cut.tvec = [CSC_cut.tvec; (CSC_post.tvec - CSC_post.tvec(1))+(CSC_cut.tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency))];
+    CSC_cut.data = [CSC_pre1.data,CSC_pre.data CSC_post.data];
+    
+    emg_h_cut = [emg_h_pre1,emg_h_pre, emg_h_post];
+    
+    clear CSC_pre1 emg_h_pre1
+else
+    if length(EVT.t{S_rec_idx}) ~= 2
+        warning('more than two recordings detected. Detecting two longest blocks.')
+        
+        for iR = length(EVT.t{S_rec_idx}):-1:1
+            rec_dur(iR) = EVT.t{Stop_rec_idx}(iR) - EVT.t{S_rec_idx}(iR);
+        end
+        
+        keep_rec = find((rec_dur/60/60) > 1.5);
+        if length(keep_rec) ~= 2
+            error('Something is wrong with the CSC. Expected 2 recordings but found %.0f',length(keep_rec));
+        end
+        pre_S_rec_idx = keep_rec(1);
+        post_S_rec_idx = keep_rec(2);
+        
+        
+    else
+        pre_S_rec_idx = 1;
+        post_S_rec_idx = 2;
+    end
+    
+    CSC_pre = CSC;
+    CSC_pre.tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(pre_S_rec_idx),CSC.tvec));
+    CSC_pre.data = CSC.data(:,1:nearest_idx(EVT.t{Stop_rec_idx}(pre_S_rec_idx),CSC.tvec));
+    emg_h_pre = emg_h(1:nearest_idx(EVT.t{Stop_rec_idx}(pre_S_rec_idx),CSC.tvec));
+    
+    CSC_post= CSC;
+    CSC_post.tvec = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(post_S_rec_idx), CSC.tvec):end);
+    CSC_post.data = CSC.data(:,nearest_idx(EVT.t{S_rec_idx}(post_S_rec_idx), CSC.tvec):end);
+    emg_h_post = emg_h((nearest_idx(EVT.t{S_rec_idx}(post_S_rec_idx), CSC.tvec):end));
+    
+    CSC_cut = CSC;
+    CSC_cut.tvec = [CSC_pre.tvec; (CSC_post.tvec - CSC_post.tvec(1))+(CSC_pre.tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency))];
+    CSC_cut.data = [CSC_pre.data, CSC_post.data];
+    
+    emg_h_cut = [emg_h_pre, emg_h_post];
+end
 
+mkdir([inter_dir filesep 'pREM']); 
+save([inter_dir filesep 'pREM' filesep 'Cut_CSC.mat'], 'CSC_cut', '-v7.3');
 
+% deal with gaps in the data. 
+if sum(diff(CSC_cut.tvec) > 2*mode(diff(CSC_cut.tvec))) == 1
+    fprintf('<strong>%s</strong>: Tvec contains missing data. replacing with linspeced time for scoring only.\n', mfilename);
+    
+    brk_idx =  find(diff(CSC_cut.tvec) > 2*mode(diff(CSC_cut.tvec)));
+    gap = diff(CSC_cut.tvec(brk_idx:brk_idx+1));
+    temp_tvec = linspace(CSC_cut.tvec(1), CSC_cut.tvec(end) - gap, length(CSC_cut.tvec));
+    
+    og_tvec = CSC_cut.tvec; % hold the original tvec.
+    
+    CSC_cut.tvec = temp_tvec';
+    
+end
 
-
-CSC_cut = CSC;
-CSC_cut.tvec = [CSC_pre.tvec; (CSC_post.tvec - CSC_post.tvec(1))+(CSC_pre.tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency))];
-CSC_cut.data = [CSC_pre.data, CSC_post.data];
-
-emg_h_cut = [emg_h_pre, emg_h_post];
-
+clear emg_h_pre emg_h_post
 %% score the sleep data
 if ~exist('Score.mat', 'file') && ~exist([data_dir filesep 'pREM' filesep 'Hypno.mat'], 'file')
-cfg_sleep = [];
-cfg_sleep.tvec_range = [0 5];  % number of seconds per window.
-cfg_sleep.emg_range = [min(emg_h_cut) mean(emg_h_cut) + std(emg_h_cut)*5]; % default, should be based on real data.
-cfg_sleep.emg_chan = 1; % emg channel.  Can be empty.
-cfg_sleep.lfp_chans = 1; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data.
-cfg_sleep.state_name = {'Wake',       'SWS',       'REM',    'Quiescence','Transition','pREM',  'Redo',     'Exit'}; %
-cfg_sleep.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 't',   'numpad1' 'backspace','backquote' }; % which key to press for each state_val
-cfg_sleep.method = 'spec'; 
-
-score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC_cut.data(2,:), emg_h_cut);
-
+    cfg_sleep = [];
+    cfg_sleep.tvec_range = [0 5];  % number of seconds per window.
+    cfg_sleep.emg_range = [min(emg_h_cut) mean(emg_h_cut) + std(emg_h_cut)*5]; % default, should be based on real data.
+    cfg_sleep.emg_chan = 1; % emg channel.  Can be empty.
+    cfg_sleep.lfp_chans = 1; % lfp channels to be plotted can be empty. Can be 1 or more, but best to keep it less than 3. should be rows in csc.data.
+    cfg_sleep.state_name = {'Wake',       'SWS',       'REM',    'Quiescence','Transition','pREM',  'Redo',     'Exit'}; %
+    cfg_sleep.state_keys = {'rightarrow','uparrow', 'downarrow', 'leftarrow', 't',   'numpad1' 'backspace','backquote' }; % which key to press for each state_val
+    cfg_sleep.method = 'spec';
+    
+    score = MS_Sleep_score_UI(cfg_sleep, CSC_cut.tvec,CSC_cut.data(1,:), emg_h_cut);
+    
 elseif exist('Score.mat', 'file')
     fprintf('Score file detected\n')
     load('Score.mat')
+    
+elseif exist([data_dir filesep 'pREM' filesep 'Hypno.mat'], 'file')
+    fprintf('Hypno.mat file found\n')
+    
 end
 
+if (sum(diff(CSC_cut.tvec) > 2*mode(diff(CSC_cut.tvec))) == 1)
+    fprintf('<strong>%s</strong>: Putting the original tvec back!\n', mfilename);
+    CSC_cut.tvec = og_tvec;
+    clear og_tvec temp_tvec gap
+end
 %% write the hypno back to the intermediate dir.
 
 
@@ -223,7 +282,6 @@ if exist('score', 'var')&& ~exist('Hypno', 'var')
     
     % save it.
     cd(inter_dir);
-    save([inter_dir filesep 'pREM' filesep 'Cut_CSC.mat'], 'CSC_cut', '-v7.3'); 
     save([inter_dir filesep 'pREM' filesep 'Hypno.mat'], 'Hypno', '-v7.3')
     save('Hypno.mat', 'Hypno', '-v7.3')
 else
@@ -241,8 +299,8 @@ cfg_filt_t.display_filter = 0; % use this to see the fvtool (but very slow with 
 
 % extract raw LFP only.
 this_csc =CSC_cut;
-this_csc.data = this_csc.data(2,:);
-this_csc.label = this_csc.label{2};
+this_csc.data = this_csc.data(1,:);
+this_csc.label = this_csc.label{1};
 temp_hdr = this_csc.cfg.hdr{2};
 this_csc.cfg.hdr = [];
 this_csc.cfg.hdr{1} = temp_hdr;
@@ -254,10 +312,10 @@ theta_phi = angle(hilbert(theta_csc.data));
 %% get REM periods
 
 REM_label_idx = find(contains(Hypno.labels, 'REM'));
-REM_idx = Hypno.data == REM_label_idx;
-REM_idx = sum(REM_idx,2); % if there are more than one REM label (ie REM & pREM) keep both.
-REM_idx(REM_idx >0) = 1;  % in case there is any overlap.
-REM_idx = logical(REM_idx); % make it a logical again.
+REM_idx = ismember(Hypno.data,REM_label_idx);
+% REM_idx = sum(REM_idx,2); % if there are more than one REM label (ie REM & pREM) keep both.
+% REM_idx(REM_idx >0) = 1;  % in case there is any overlap.
+% REM_idx = logical(REM_idx); % make it a logical again.
 
 figure
 subplot(2,1,1)
@@ -274,7 +332,7 @@ REM_IV.tend = CSC_cut.tvec(REM_IV.tend);
 subplot(2,1,2)
 cfg_plot = [];
 cfg_plot.display = 'tsd';
-cfg_plot.target = CSC_cut.label{2};
+cfg_plot.target = CSC_cut.label{1};
 PlotTSDfromIV(cfg_plot, REM_IV, CSC_cut)
 xlim([CSC_cut.tvec(1) CSC_cut.tvec(end)])
 vline(CSC_pre.tvec(end))
@@ -392,15 +450,16 @@ for ii = length(IPI):-1:1
 end
 REM.theta_unit = theta_csc.units; 
 REM.phi = REM_phi{iB};
-REM.IPI = IPI;
+REM.IPI = IPI;REM.IPI = IPI;
 for ii = length(IPI):-1:1
     REM.IPI_mean{ii} =  1/mean(IPI{ii});
-    if REM_tvecs{ii} < EVT.t{Stop_rec_idx}(pre_idx)
+    if REM_tvecs{ii} < EVT.t{Stop_rec_idx}(pre_S_rec_idx)
         REM.labels{ii} = 'pre';
     else
         REM.labels{ii} = 'post';
     end
 end
+
 
 cd(inter_dir)
 mkdir('REM')
@@ -555,8 +614,8 @@ fprintf('<strong>%s</strong>: pREM events detected totalling %d seconds (%.2f %%
     mfilename, numel(Phasic_data), (sum(cellfun('length',Phasic_data))/sum(cellfun('length', REM_blocks)))*100)
 
 
-%% get the Ca time and convert the pREM episodes to that time. 
-load('ms_resize.mat')
+% %% get the Ca time and convert the pREM episodes to that time. 
+% warning off; load('ms_resize.mat'); warning on; 
 
 
 %% align the CA and the NLX times. 
@@ -644,13 +703,13 @@ fprintf('<strong>%s</strong>:  %d/%d pREM events occured during Miniscope record
 %% 
 figure(1010)
 hold on
-plot(CSC.tvec, CSC.data(2,:)*10000000)
+plot(CSC.tvec, CSC.data(1,:)*10000000)
 for ii = 1:length(pREM_times)
     xline(CSC.tvec(pREM_idx(ii,1)), 'b');
     xline(CSC.tvec(pREM_idx(ii, 2)), 'r');
 end
-plot(all_evts, ones(size(all_evts))*median(CSC.data(2,:)), 'o')
-vline(EVT.t{1}(2), '--r', '--> post')
+plot(all_evts, ones(size(all_evts))*median(CSC.data(1,:)), 'o')
+vline(EVT.t{S_rec_idx}(post_S_rec_idx), '--r', '--> post')
 
 %% make some plots with corresponding rasters
 
@@ -780,7 +839,7 @@ post_idx = ~pre_idx;
 
 
 all_REM_tvec = cell2mat(REM_tvecs'); 
-post_tvec_idx = nearest_idx(EVT.t{1}(2),all_REM_tvec); 
+post_tvec_idx = nearest_idx(EVT.t{1}(post_S_rec_idx),all_REM_tvec); 
 
 pREM_dur = [];
 pREM_dur.all = pREM_times(:,2) - pREM_times(:,1); 
@@ -796,7 +855,7 @@ for ii = length(pREM_times):-1:1
     end
 end
 
-if sum(ismember(pREM_dur.labels, all_pREM_CA.label))~= length(pREM_dur.labels);
+if sum(ismember(pREM_dur.labels, all_pREM_CA.label))~= length(pREM_dur.labels)
     fprintf('<strong>%s</strong>\n', 'LABELS DO NOT MATCH!!')
 end
 

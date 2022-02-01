@@ -38,10 +38,21 @@ ts_out = [];
 TS_files = dir(fullfile(dir_name, '**', 'timestamp*.dat'));  
     
 
-%% sort based on the date of the folder. 
-[~, idx] = sort([TS_files.datenum]);              % sort the file names based on number values
-TS_files  = TS_files(idx);
+%% sort based on the date of the folder.
+f_time = [];
+for iF = length(TS_files):-1:1
+    parts = strsplit(TS_files(iF).folder, filesep);
+    
+    Ts = strsplit(parts{end}, '_'); 
 
+    f_time{iF} = datestr([Ts{1}(2:end) ':' Ts{2}(2:end) ':' Ts{3}(2:end)], 'hh:MM:ss');
+
+    fprintf('%s  - %s\n', parts{end}, f_time{iF} )
+end
+
+% [~, idx] = sort([TS_files.datenum]);              % sort the file names based on number values
+[~, idx] = sort([f_time]);              % sort the file names based on 
+TS_files  = TS_files(idx);
 
 %% extract the values.
 this_dir = pwd;

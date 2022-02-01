@@ -110,7 +110,6 @@ else
     PARAMS.raw_data_dir = 'J:\Williams_Lab\Jisoo\Jisoo_Project\RawData'; % raw data location.
     PARAMS.csc_data_dir = 'J:\Williams_Lab\Jisoo\LFP data\Jisoo'; % where are the LFP files. If blank will look in the same folder as raw_data.
     PARAMS.inter_dir = 'J:\Williams_Lab\JC_Sleep_inter'; % where to put intermediate files
-    PARAMS.stats_dir = 'J:\Williams_Lab\JC_Sleep_inter\Stats'; % where to put the statistical output .txt
     PARAMS.code_base_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; % where the codebase repo can be found
     PARAMS.code_CEH2_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2'; % where the multisite repo can be found
 end
@@ -257,9 +256,76 @@ for iSub = Subjects
         
         %% hardcode dir  JISOO USE THIS! 
         
+        
+        % 1043
+%         ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1043\LTD1'; 
+%         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-06-11_09-02-07_pv1043_LTD1'; 
+%         iSess = 'LTD1';
+%         iSub = '1043'; 
+%         
+        % LTD5
+%          ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1043\LTD5'; 
+%         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-06-15_10-14-07_PV1043_LTD5'; 
+%         iSess = 'LTD1';
+%         iSub = '1043'; 
+%         
+        
+%1060
+%         ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\LTD1';
+%         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-07-15_09-50-03_PV1060_LTD1';
+%         iSess = 'LTD1';
+
+% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\LTD5';
+% csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-07-19_10-27-46_PV1060_LTD5';
+% iSess = 'LTD5';
+%
+%         ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\HATD1';
+%         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-11-19_09-59-43_PV1060_HATD1';
+%         iSess = 'HATD1';
+%
+%         ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\HATD5';
+%         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-11-23_10-10-12_PV1060_HATD5';
+%         iSess = 'HATD5';
+%
+% 
+%         ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\HATDSwitch';
+%         csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-11-26_09-59-11_PV1060_HATSwitch';
+%         iSess = 'HATDSwitch';
+%         iSub = '1060';
+%                 
+%                 % 1069
+% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\LTD1';
+% csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-07-08_09-03-55_PV1069_LTD1';
+% iSess = 'LTD1'; 
+
+% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\LTD5';
+% csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-07-12_09-24-26_PV1069_LTD5';
+% iSess = 'LTD5'; 
+
+
+% % % % % ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\HATD1';
+% % % % % csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-10-14_09-37-25_PV1069_HATD1';
+% % % % % iSess = 'HATD1'; 
+
+
+% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\HATD5';
+% csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-10-18_10-02-44_PV1069_HATD5';
+% iSess = 'HATD5'; 
+
+
+% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\HATDSwitch';
+% csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2019-10-22_09-35-31_PV1069_HATD6_switch';
+% iSess = 'HATD6_switch'; 
+% 
+%         iSub = 'PV1069'; 
+%         ms_resize_dir = ms_dir;
+
+
+                
+
           %%%% 1191
-%         ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1191/5_19_2021_PV1191_HATD1';
-%         csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-05-19_09-22-27_pv1191_HATD1';
+%         ms_dir = 'K:\Jisoo_Project\RawData\pv1191\5_19_2021_PV1191_HATD1';
+%         csc_dir = 'K:\Jisoo_Project\RawData\LFP data\Jisoo\2021-05-19_09-22-27_pv1191_HATD1';
 %         iSess = '5_19_2021_PV1191_HATD1';
 %         iSub = 'PV1191';
         
@@ -279,13 +345,25 @@ for iSub = Subjects
 %         iSub = 'PV1191';
         
           %%%% 1192
-%         ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1192/4_17_2021_PV1192_HATD1';
-%         csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-04-17_10-06-00_PV1192_HATD1'; 
-%         ms_dir = 'J:\4_17_2021_PV1192_HATD1';
-%         csc_dir = 'J:\2021-04-17_10-06-00_PV1192_HATD1'; 
+% %         ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1192/4_17_2021_PV1192_HATD1';
+% %         csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-04-17_10-06-00_PV1192_HATD1'; 
+%         ms_dir = 'K:\Jisoo_Project\RawData\pv1192\4_17_2021_PV1192_HATD1';
+%         csc_dir = 'K:\Jisoo_Project\LFP data\2021-04-17_10-06-00_PV1192_HATD1'; 
 %         iSess = '4_17_2021_PV1192_HATD1';
 %         iSub = 'PV1192';      
+% HATD5
+% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1192\HATD5';
+% csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-04-21_09-35-07_PV1192_HATD5';
+% iSess = 'HATD5';
+% iSub = 'PV1192';
 
+
+% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1192\HATDSwitch';
+% csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-04-23_09-46-23_PV1192_HATDSwitch';
+% iSess = 'HATDSwitch';
+% iSub = 'PV1192';
+% 
+% ms_resize_dir = ms_dir; 
 %         ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1192/4_21_2021_PV1192_HATD5';
 %         csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-04-21_09-35-07_PV1192_HATD5';
 %         iSess = '4_21_2021_PV1192_HATD5';
@@ -308,12 +386,22 @@ for iSub = Subjects
 
 % 1254
 %for LTD1
-ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_13_2021_pv1254_LTD1';
-csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-13_09-21-27_pv1254_LTD1'; 
+
+ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1254\LTD1';
+csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-11-13_09-21-27_pv1254_LTD1'; 
 
 
-iSess = '11_13_2021_pv1254_LTD1';
+iSess = 'LTD1';
 iSub = 'PV1254';
+
+
+% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1254\LTD5';
+% csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-11-17_09-37-11_pv1254_LTD5'; 
+% 
+% iSess = 'LTD5' 
+% iSub = 'PV1254';
+
+ms_resize_dir = ms_dir;
 
 %for LTD3
 % ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_15_2021_pv1254_LTD3';
@@ -342,8 +430,6 @@ iSub = 'PV1254';
 %for HATD3
 % ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_21_2021_pv1254_HATD3';
 % csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-21_09-33-39_pv1254_HATD3'; 
-
-
 % iSess = '11_21_2021_pv1254_HATD3';
 % iSub = 'PV1254';
 
@@ -446,8 +532,8 @@ iSub = 'PV1254';
       
         
         
-        ms_resize_dir = [PARAMS.inter_dir filesep iSub filesep iSess];  %just save the ms_resize struct back into the same place as the ms.mat file.
-        mkdir(ms_resize_dir);
+%         ms_resize_dir = [PARAMS.inter_dir filesep iSub filesep iSess];  %just save the ms_resize struct back into the same place as the ms.mat file.
+%         mkdir(ms_resize_dir);
         
         %% Segment and select the data
         
@@ -553,16 +639,20 @@ iSub = 'PV1254';
         %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',parts{end});
         
         % run the actual segmentation workflow
-        MS_Segment_raw(cfg_seg, csc_dir, ms_dir, ms_resize_dir);
+%         MS_Segment_raw(cfg_seg, csc_dir, ms_dir, ms_resize_dir);
         
         cfg_csc.fc{1} = cfg_seg.csc.fc{2};
         cfg_csc.desired_sampling_frequency = 2000;
         cd(csc_dir)
         csc = MS_LoadCSC(cfg_csc);
+        warning off;
         cd(ms_resize_dir)
         MS_re_binarize_JC(2, ms_resize_dir, ms_resize_dir, 'ms_resize', 'ms_resize', csc);
+        % zscore the LFP amp and freq. 
+        MS_zscore_LFP_JC('K:\Jisoo_Project\LFP data\Jisoo');
         cd(ms_resize_dir); 
-        [data_out_all, data_out_REM_all, data_out_SWS_all,Threshold, labels] = MS_extract_means_JC(); %Modified by Jisoo
+         load('ms_resize.mat'); warning on; 
+        [data_out_all, data_out_REM_all, data_out_SWS_all,Threshold, labels] = MS_extract_means_JC([],ms_seg_resize.removed ); %Modified by Jisoo
         % save the within session LFP means. 
         mkdir('AcrossEpisodes');
         Out_all.data_out_all=data_out_all;
@@ -572,7 +662,8 @@ iSub = 'PV1254';
         Out_all.labels = labels; 
         save([pwd,'/AcrossEpisodes/Out_all_',num2str(Threshold),'.mat'], 'Out_all')
         
-        clear csc cfg_csc data_out_all data_out_REM_all data_out_SWS_all Out_all Threshold labels
+        clearvars -except PARAMS
+%         clear csc cfg_csc data_out_all data_out_REM_all data_out_SWS_all Out_all Threshold labels
         %     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> complete.\n',parts{end});
         
     end % session

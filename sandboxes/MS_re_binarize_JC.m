@@ -193,8 +193,8 @@ if exist('csc','var') && isstruct(csc)
     D_freq = MS_estimate_freq(delta.tvec, delta.data);
     T_freq = MS_estimate_freq(theta.tvec, theta.data);
     LG_freq = MS_estimate_freq(LG.tvec, LG.data);
-    LG_freq = MS_estimate_freq(MG.tvec, MG.data);
-    MG_freq = MS_estimate_freq(HG.tvec, HG.data);
+    MG_freq = MS_estimate_freq(MG.tvec, MG.data);
+    HG_freq = MS_estimate_freq(HG.tvec, HG.data);
     UHG_freq = MS_estimate_freq(UHG.tvec, UHG.data);
     Rip_freq = MS_estimate_freq(Ripple.tvec, Ripple.data);
 end
@@ -216,6 +216,8 @@ all_detrendRaw_pre_SW = []; all_detrendRaw_post_SW = [];
 pre_SW_idx = []; post_SW_idx = [];
 
 if exist('csc', 'var')
+    
+    % AMPLITUDE
     all_d_pre = []; all_d_post = [];
     all_t_pre = []; all_t_post = [];
     all_LG_pre = []; all_LG_post = [];
@@ -241,6 +243,35 @@ if exist('csc', 'var')
     all_HG_pre_SW = []; all_HG_post_SW = [];
     all_UHG_pre_SW = []; all_UHG_post_SW = [];
     all_Rip_pre_SW = []; all_Rip_post_SW = [];
+    
+    
+    
+    %%% FREQUENCY
+    all_d_freq_pre = []; all_d_freq_post = [];
+    all_t_freq_pre = []; all_t_freq_post = [];
+    all_LG_freq_pre = []; all_LG_freq_post = [];
+    all_MG_freq_pre = []; all_MG_freq_post = [];
+    all_HG_freq_pre = []; all_HG_freq_post = [];
+    all_UHG_freq_pre = []; all_UHG_freq_post = [];
+    all_Rip_freq_pre = []; all_Rip_freq_post = [];
+    
+    %     REM
+    all_d_freq_pre_REM = []; all_d_freq_post_REM = [];
+    all_t_freq_pre_REM = []; all_t_freq_post_REM = [];
+    all_LG_freq_pre_REM = []; all_LG_freq_post_REM = [];
+    all_MG_freq_pre_REM = []; all_MG_freq_post_REM = [];
+    all_HG_freq_pre_REM = []; all_HG_freq_post_REM = [];
+    all_UHG_freq_pre_REM = []; all_UHG_freq_post_REM = [];
+    all_Rip_freq_pre_REM = []; all_Rip_freq_post_REM = [];
+    
+    % SWS
+    all_d_freq_pre_SW = []; all_d_freq_post_SW = [];
+    all_t_freq_pre_SW = []; all_t_freq_post_SW = [];
+    all_LG_freq_pre_SW = []; all_LG_freq_post_SW = [];
+    all_MG_freq_pre_SW = []; all_MG_freq_post_SW = [];
+    all_HG_freq_pre_SW = []; all_HG_freq_post_SW = [];
+    all_UHG_freq_pre_SW = []; all_UHG_freq_post_SW = [];
+    all_Rip_freq_pre_SW = []; all_Rip_freq_post_SW = [];
 end
 
 
@@ -260,7 +291,325 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
      ms_seg = MS_msExtractBinary_detrendTraces(ms_seg, z_threshold);
     end
     
-    %     if length(ms_seg.time) ~= length(ms_seg.NLX_evt.t{end})
+   
+    
+    if length(ms_seg.time) ~= length(ms_seg.NLX_evt.t{end})
+        fprintf('Segment # %s, length of time %d and NLX_events  %d do not match. Using ms_seg.time to generate NLX TS\n',  num2str(iSeg),length(ms_seg.time),length(ms_seg.NLX_evt.t{end}) )
+        c_ms_time = ((ms_seg.time-ms_seg.time(1))*0.001)';
+        %         c_nlx_time = ((ms_seg.NLX_evt.t{end}-ms_seg.NLX_evt.t{end}(1)))%-0.0077;
+        
+        %         NLX_ts = [c_nlx_time, c_ms_time(length(c_nlx_time)+1:end)]+ms_seg.NLX_evt.t{end}(1);
+        
+        NLX_ts = c_ms_time + ms_seg.NLX_evt.t{end}(1);
+    else
+        NLX_ts = ms_seg.NLX_evt.t{end};
+        
+    end
+    these_idx = nearest_idx3(NLX_ts,csc.tvec');
+    
+    ms_seg.d_amp = D_amp(these_idx);
+    ms_seg.t_amp = T_amp(these_idx);
+    ms_seg.LG_amp = LG_amp(these_idx);
+    ms_seg.MG_amp = MG_amp(these_idx);
+    ms_seg.HG_amp = HG_amp(these_idx);
+    ms_seg.UHG_amp = UHG_amp(these_idx);
+    ms_seg.Rip_amp = Rip_amp(these_idx);
+    
+    % frequency
+    ms_seg.d_freq = D_freq(these_idx);
+    ms_seg.t_freq = T_freq(these_idx);
+    ms_seg.LG_freq = LG_freq(these_idx);
+    ms_seg.MG_freq = MG_freq(these_idx);
+    ms_seg.HG_freq = HG_freq(these_idx);
+    ms_seg.UHG_freq = UHG_freq(these_idx);
+    ms_seg.Rip_freq = Rip_freq(these_idx);
+    
+    
+    %     end
+    
+    %% to do add in thing that pulls out power for theta/lowG/highG/ripple?
+    
+    
+    % add the spiking probability for different cell types.
+    %     ms_seg.place_firing =
+    
+    % start of trk  =  trk_time; end of track = trk_end_time;
+    % get the time vector for current segment.
+    seg_time = datevec(ms_seg.time_labels);
+    % add time vector
+    if strcmp(ms_seg.pre_post, 'pre')
+        ms_seg.time2trk = etime(seg_time, trk_time)/60;
+    elseif strcmp(ms_seg.pre_post, 'post')
+        ms_seg.time2trk = etime(seg_time,trk_end_time)/60;
+    end
+    
+    cfg_SFP = [];
+    cfg_SFP.fnc = '==';
+    cfg_SFP.remove_val = 0;
+    ms_seg = MS_update_SFP(cfg_SFP, ms_seg);
+    
+    this_dir = [];
+    this_dir = [ms_save_dir filesep ms_seg_resize.file_names{iSeg}];
+    fprintf('<strong>%s</strong>: saving resized ms struct back to %s...\n', mfilename, this_dir)
+    if exist(this_dir, 'dir') % if the dir already exists, delete it and all the subfiles/dir and make a new one.  Avoids problems with multiple ms_resize.mat files in one dir.
+        rmdir(this_dir, 's')
+    end
+    mkdir(this_dir)
+    if  strcmp(ms_seg_resize.pre_post{iSeg}, 'post') && exist([this_dir filesep 'ms_seg_resize_' 'pre' '_' ms_seg_resize.hypno_label{iSeg} '.mat'])
+        delete([this_dir filesep ms_fname_save '_' 'pre' '_' ms_seg_resize.hypno_label{iSeg} '.mat'])
+    end
+    % if this is a homecage do not use the 'pre' or post' lab.
+    save([this_dir filesep ms_fname_save '_' ms_seg_resize.pre_post{iSeg} '_' ms_seg_resize.hypno_label{iSeg}],'ms_seg', '-v7.3');
+    
+    
+    
+    %% keep the index for the segment.
+    if isempty(all_seg_idx)
+        all_seg_idx(iSeg) = length(ms_seg.RawTraces);
+    else
+        all_seg_idx(iSeg) = length(ms_seg.RawTraces) + all_seg_idx(iSeg -1);
+    end
+    % cat the binary traces for pre V post, and REM v SW
+    if strcmp(ms_seg_resize.pre_post{iSeg}, 'pre')
+        all_binary_pre = [all_binary_pre; ms_seg.Binary];
+        all_RawTraces_pre = [all_RawTraces_pre; ms_seg.RawTraces];
+        all_detrendRaw_pre = [all_detrendRaw_pre; ms_seg.detrendRaw];
+        
+        if exist('csc', 'var')
+            all_d_pre = [all_d_pre, ms_seg.d_amp'];
+            all_t_pre = [all_t_pre, ms_seg.t_amp'];
+            all_LG_pre = [all_LG_pre, ms_seg.LG_amp'];
+            all_MG_pre = [all_MG_pre, ms_seg.MG_amp'];
+            all_HG_pre = [all_HG_pre, ms_seg.HG_amp'];
+            all_UHG_pre = [all_UHG_pre, ms_seg.UHG_amp'];
+            all_Rip_pre = [all_Rip_pre, ms_seg.Rip_amp'];
+            
+            all_d_freq_pre = [all_d_freq_pre, ms_seg.d_freq];
+            all_t_freq_pre = [all_t_freq_pre, ms_seg.t_freq];
+            all_LG_freq_pre = [all_LG_freq_pre, ms_seg.LG_freq];
+            all_MG_freq_pre = [all_MG_freq_pre, ms_seg.MG_freq];
+            all_HG_freq_pre = [all_HG_freq_pre, ms_seg.HG_freq];
+            all_UHG_freq_pre = [all_UHG_freq_pre, ms_seg.UHG_freq];
+            all_Rip_freq_pre = [all_Rip_freq_pre, ms_seg.Rip_freq];
+        end
+        
+        % break out REM and SW
+        if strcmp(ms_seg_resize.hypno_label{iSeg}, 'REM')
+            all_binary_pre_REM = [all_binary_pre_REM; ms_seg.Binary];
+            all_RawTraces_pre_REM = [all_RawTraces_pre_REM; ms_seg.RawTraces];
+            all_detrendRaw_pre_REM = [all_detrendRaw_pre_REM; ms_seg.detrendRaw];
+            pre_REM_idx = [pre_REM_idx, iSeg];
+            
+            if exist('csc', 'var')
+                all_d_pre_REM = [all_d_pre_REM, ms_seg.d_amp'];
+                all_t_pre_REM = [all_t_pre_REM, ms_seg.t_amp'];
+                all_LG_pre_REM = [all_LG_pre_REM, ms_seg.LG_amp'];
+                all_MG_pre_REM = [all_MG_pre_REM, ms_seg.MG_amp'];
+                all_HG_pre_REM = [all_HG_pre_REM, ms_seg.HG_amp'];
+                all_UHG_pre_REM = [all_UHG_pre_REM, ms_seg.UHG_amp'];
+                all_Rip_pre_REM = [all_Rip_pre, ms_seg.Rip_amp'];
+                
+                all_d_freq_pre_REM = [all_d_freq_pre_REM, ms_seg.d_freq];
+                all_t_freq_pre_REM = [all_t_freq_pre_REM, ms_seg.t_freq];
+                all_LG_freq_pre_REM = [all_LG_freq_pre_REM, ms_seg.LG_freq];
+                all_MG_freq_pre_REM = [all_MG_freq_pre_REM, ms_seg.MG_freq];
+                all_HG_freq_pre_REM = [all_HG_freq_pre_REM, ms_seg.HG_freq];
+                all_UHG_freq_pre_REM = [all_UHG_freq_pre_REM, ms_seg.UHG_freq];
+                all_Rip_freq_pre_REM = [all_Rip_freq_pre, ms_seg.Rip_freq];
+            end
+        elseif strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
+            all_binary_pre_SW = [all_binary_pre_SW; ms_seg.Binary];
+            all_RawTraces_pre_SW = [all_RawTraces_pre_SW; ms_seg.RawTraces];
+            all_detrendRaw_pre_SW = [all_detrendRaw_pre_SW; ms_seg.detrendRaw];
+            pre_SW_idx = [pre_SW_idx, iSeg];
+            if exist('csc', 'var')
+                
+                all_d_pre_SW = [all_d_pre_SW, ms_seg.d_amp'];
+                all_t_pre_SW = [all_t_pre_SW, ms_seg.t_amp'];
+                all_LG_pre_SW = [all_LG_pre_SW, ms_seg.LG_amp'];
+                all_MG_pre_SW = [all_MG_pre_SW, ms_seg.MG_amp'];
+                all_HG_pre_SW = [all_HG_pre_SW, ms_seg.HG_amp'];
+                all_UHG_pre_SW = [all_UHG_pre_SW, ms_seg.UHG_amp'];
+                all_Rip_pre_SW = [all_Rip_pre_SW, ms_seg.Rip_amp'];
+                
+                all_d_freq_pre_SW = [all_d_freq_pre_SW, ms_seg.d_freq];
+                all_t_freq_pre_SW = [all_t_freq_pre_SW, ms_seg.t_freq];
+                all_LG_freq_pre_SW = [all_LG_freq_pre_SW, ms_seg.LG_freq];
+                all_MG_freq_pre_SW = [all_MG_freq_pre_SW, ms_seg.MG_freq];
+                all_HG_freq_pre_SW = [all_HG_freq_pre_SW, ms_seg.HG_freq];
+                all_UHG_freq_pre_SW = [all_UHG_freq_pre_SW, ms_seg.UHG_freq];
+                all_Rip_freq_pre_SW = [all_Rip_freq_pre_SW, ms_seg.Rip_freq];
+            end
+        end
+        
+    elseif strcmp(ms_seg_resize.pre_post{iSeg}, 'post')
+        all_binary_post = [all_binary_post; ms_seg.Binary];
+        all_RawTraces_post = [all_RawTraces_post; ms_seg.RawTraces];
+        all_detrendRaw_post = [all_detrendRaw_post; ms_seg.detrendRaw];
+        if exist('csc', 'var')
+            all_d_post = [all_d_post, ms_seg.d_amp'];
+            all_t_post = [all_t_post, ms_seg.t_amp'];
+            all_LG_post = [all_LG_post, ms_seg.LG_amp'];
+            all_MG_post = [all_MG_post, ms_seg.MG_amp'];    
+            all_HG_post = [all_HG_post, ms_seg.HG_amp'];
+            all_UHG_post = [all_UHG_post, ms_seg.UHG_amp'];
+            all_Rip_post = [all_Rip_post, ms_seg.Rip_amp'];
+            
+            all_d_freq_post = [all_d_freq_post, ms_seg.d_freq];
+            all_t_freq_post = [all_t_freq_post, ms_seg.t_freq];
+            all_LG_freq_post = [all_LG_freq_post, ms_seg.LG_freq];
+            all_MG_freq_post = [all_MG_freq_post, ms_seg.MG_freq];    
+            all_HG_freq_post = [all_HG_freq_post, ms_seg.HG_freq];
+            all_UHG_freq_post = [all_UHG_freq_post, ms_seg.UHG_freq];
+            all_Rip_freq_post = [all_Rip_freq_post, ms_seg.Rip_freq];
+        end
+        % break out REM and SW
+        if strcmp(ms_seg_resize.hypno_label{iSeg}, 'REM')
+            all_binary_post_REM = [all_binary_post_REM; ms_seg.Binary];
+            all_RawTraces_post_REM = [all_RawTraces_post_REM; ms_seg.RawTraces];
+            all_detrendRaw_post_REM = [all_detrendRaw_post_REM; ms_seg.detrendRaw];
+            post_REM_idx = [post_REM_idx, iSeg];
+            if exist('csc', 'var')
+                all_d_post_REM = [all_d_post_REM, ms_seg.d_amp'];
+                all_t_post_REM = [all_t_post_REM, ms_seg.t_amp'];
+                all_LG_post_REM = [all_LG_post_REM, ms_seg.LG_amp'];
+                all_MG_post_REM = [all_MG_post_REM, ms_seg.MG_amp'];
+                all_HG_post_REM = [all_HG_post_REM, ms_seg.HG_amp'];
+                all_UHG_post_REM = [all_UHG_post_REM, ms_seg.UHG_amp'];
+                all_Rip_post_REM = [all_Rip_post_REM, ms_seg.Rip_amp'];
+                
+                all_d_freq_post_REM = [all_d_freq_post_REM, ms_seg.d_freq];
+                all_t_freq_post_REM = [all_t_freq_post_REM, ms_seg.t_freq];
+                all_LG_freq_post_REM = [all_LG_freq_post_REM, ms_seg.LG_freq];
+                all_MG_freq_post_REM = [all_MG_freq_post_REM, ms_seg.MG_freq];
+                all_HG_freq_post_REM = [all_HG_freq_post_REM, ms_seg.HG_freq];
+                all_UHG_freq_post_REM = [all_UHG_freq_post_REM, ms_seg.UHG_freq];
+                all_Rip_freq_post_REM = [all_Rip_freq_post_REM, ms_seg.Rip_freq];
+            end
+        elseif strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
+            all_binary_post_SW = [all_binary_post_SW; ms_seg.Binary];
+            all_RawTraces_post_SW = [all_RawTraces_post_SW; ms_seg.RawTraces];
+            all_detrendRaw_post_SW = [all_detrendRaw_post_SW; ms_seg.detrendRaw];
+            post_SW_idx = [post_SW_idx, iSeg];
+            if exist('csc', 'var')
+                all_d_post_SW = [all_d_post_SW, ms_seg.d_amp'];
+                all_t_post_SW = [all_t_post_SW, ms_seg.t_amp'];
+                all_LG_post_SW = [all_LG_post_SW, ms_seg.LG_amp'];
+                all_MG_post_SW = [all_MG_post_SW, ms_seg.MG_amp'];
+                all_HG_post_SW = [all_HG_post_SW, ms_seg.HG_amp'];
+                all_UHG_post_SW = [all_UHG_post_SW, ms_seg.UHG_amp'];
+                all_Rip_post_SW = [all_Rip_post_SW, ms_seg.Rip_amp'];
+                
+                all_d_freq_post_SW = [all_d_freq_post_SW, ms_seg.d_freq];
+                all_t_freq_post_SW = [all_t_freq_post_SW, ms_seg.t_freq];
+                all_LG_freq_post_SW = [all_LG_freq_post_SW, ms_seg.LG_freq];
+                all_MG_freq_post_SW = [all_MG_freq_post_SW, ms_seg.MG_freq];
+                all_HG_freq_post_SW = [all_HG_freq_post_SW, ms_seg.HG_freq];
+                all_UHG_freq_post_SW = [all_UHG_freq_post_SW, ms_seg.UHG_freq];
+                all_Rip_freq_post_SW = [all_Rip_freq_post_SW, ms_seg.Rip_freq];
+            end
+        end
+    end
+end
+all_seg_idx = [0 all_seg_idx];
+
+
+%% save the files.
+fprintf('<strong>%s</strong>: saving concatinating Binary, RawTraces, detrendRaw, and indicies\n', mfilename);
+
+
+% save everything
+save([ms_save_dir filesep 'all_seg_idx.mat'], 'all_seg_idx', '-v7.3');
+
+% pre only
+save([ms_save_dir filesep 'all_binary_pre.mat'], 'all_binary_pre', '-v7.3');
+save([ms_save_dir filesep 'all_RawTraces_pre.mat'], 'all_RawTraces_pre', '-v7.3');
+save([ms_save_dir filesep 'all_detrendRaw_pre.mat'], 'all_detrendRaw_pre', '-v7.3');
+
+% post only
+save([ms_save_dir filesep 'all_binary_post.mat' ], 'all_binary_post', '-v7.3');
+save([ms_save_dir filesep 'all_RawTraces_post.mat'], 'all_RawTraces_post', '-v7.3');
+save([ms_save_dir filesep 'all_detrendRaw_post.mat'], 'all_detrendRaw_post', '-v7.3');
+
+
+% pre REM only
+save([ms_save_dir filesep 'all_binary_pre_REM.mat'], 'all_binary_pre_REM', '-v7.3');
+save([ms_save_dir filesep 'all_RawTraces_pre_REM.mat'], 'all_RawTraces_pre_REM', '-v7.3');
+save([ms_save_dir filesep 'all_detrendRaw_pre_REM.mat'], 'all_detrendRaw_pre_REM', '-v7.3');
+
+% post SW only
+save([ms_save_dir filesep 'all_binary_post_REM.mat' ], 'all_binary_post_REM', '-v7.3');
+save([ms_save_dir filesep 'all_RawTraces_post_REM.mat'], 'all_RawTraces_post_REM', '-v7.3');
+save([ms_save_dir filesep 'all_detrendRaw_post_REM.mat'], 'all_detrendRaw_post_REM', '-v7.3');
+
+% pre REM only
+save([ms_save_dir filesep 'all_binary_pre_SW.mat'], 'all_binary_pre_SW', '-v7.3');
+save([ms_save_dir filesep 'all_RawTraces_pre_SW.mat'], 'all_RawTraces_pre_SW', '-v7.3');
+save([ms_save_dir filesep 'all_detrendRaw_pre_SW.mat'], 'all_detrendRaw_pre_SW', '-v7.3');
+
+% post SW only
+save([ms_save_dir filesep 'all_binary_post_SW.mat' ], 'all_binary_post_SW', '-v7.3');
+save([ms_save_dir filesep 'all_RawTraces_post_SW.mat'], 'all_RawTraces_post_SW', '-v7.3');
+save([ms_save_dir filesep 'all_detrendRaw_post_SW.mat'], 'all_detrendRaw_post_SW', '-v7.3');
+
+
+%% save the LFP arrays if needed
+
+
+if exist('csc', 'var')
+    lfp_mat_dir = [ms_save_dir filesep 'LFP_mats'];
+    mkdir(lfp_mat_dir)
+    f_list = {'d', 't', 'LG','MG','HG', 'UHG', 'Rip'};
+    
+    for iF = 1:length(f_list)
+        % pre
+        save([lfp_mat_dir filesep 'all_' f_list{iF} '_pre.mat'], ['all_' f_list{iF} '_pre'], '-v7.3');
+        save([lfp_mat_dir filesep 'all_' f_list{iF} '_freq_pre.mat'], ['all_' f_list{iF} '_freq_pre'], '-v7.3');
+
+        % pre REM
+        save([lfp_mat_dir filesep 'all_' f_list{iF} '_pre_REM.mat'], ['all_' f_list{iF} '_pre_REM'], '-v7.3');
+        save([lfp_mat_dir filesep 'all_' f_list{iF} '_freq_pre_REM.mat'], ['all_' f_list{iF} '_freq_pre_REM'], '-v7.3');
+
+        % pre SW
+        save([lfp_mat_dir filesep 'all_' f_list{iF} '_pre_SW.mat'], ['all_' f_list{iF} '_pre_SW'], '-v7.3');
+        save([lfp_mat_dir filesep 'all_' f_list{iF} '_freq_pre_SW.mat'], ['all_' f_list{iF} '_freq_pre_SW'], '-v7.3');
+
+        
+        %post
+        save([lfp_mat_dir filesep 'all_' f_list{iF} '_post.mat'], ['all_' f_list{iF} '_post'], '-v7.3');
+        save([lfp_mat_dir filesep 'all_' f_list{iF} '_freq_post.mat'], ['all_' f_list{iF} '_freq_post'], '-v7.3');
+        
+        % post REM
+        save([lfp_mat_dir filesep 'all_' f_list{iF} '_post_REM.mat'], ['all_' f_list{iF} '_post_REM'], '-v7.3');
+        save([lfp_mat_dir filesep 'all_' f_list{iF} '_freq_post_REM.mat'], ['all_' f_list{iF} '_freq_post_REM'], '-v7.3');
+        
+        % post SW
+        save([lfp_mat_dir filesep 'all_' f_list{iF} '_post_SW.mat'], ['all_' f_list{iF} '_post_SW'], '-v7.3');
+        save([lfp_mat_dir filesep 'all_' f_list{iF} '_freq_post_SW.mat'], ['all_' f_list{iF} '_freq_post_SW'], '-v7.3');
+
+    end
+    
+end
+%% save a file with the zscore config
+% save([ms_save_dir filesep ms_fname_save '.mat'], 'ms_seg_resize', '-v7.3')
+cfgs = [];
+cfgs.z_theshold = z_threshold;
+cfgs.date = datestr(date, 'yyyy_mm_dd');
+if exist('csc', 'var')
+    cfgs.filters.d = cfg_d;
+    cfgs.filters.t = cfg_t;
+    cfgs.filters.LG = cfg_lg;
+    cfgs.filters.MG = cfg_mg;
+    cfgs.filters.HG = cfg_hg;
+    cfgs.filters.UHG = cfg_uhg;
+    cfgs.filters.Rip = cfg_rip;
+end
+save([ms_save_dir filesep 'cfgs_z_' strrep(num2str(z_threshold), '.','p') '_on_' cfgs.date   '.mat'], 'cfgs', '-v7.3')
+
+close all
+end % end function
+
+ %     if length(ms_seg.time) ~= length(ms_seg.NLX_evt.t{end})
     %         warning(['Segment # ' num2str(iSeg) ', length of time and NLX_events do not match. Skipping...'])
     %         continue
     %     end
@@ -401,256 +750,3 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
     %         pause(.5)
     %         close all
     %     elseif  exist('csc','var')
-    
-    if length(ms_seg.time) ~= length(ms_seg.NLX_evt.t{end})
-        fprintf('Segment # %s, length of time %d and NLX_events  %d do not match. Using ms_seg.time to generate NLX TS\n',  num2str(iSeg),length(ms_seg.time),length(ms_seg.NLX_evt.t{end}) )
-        c_ms_time = ((ms_seg.time-ms_seg.time(1))*0.001)';
-        %         c_nlx_time = ((ms_seg.NLX_evt.t{end}-ms_seg.NLX_evt.t{end}(1)))%-0.0077;
-        
-        %         NLX_ts = [c_nlx_time, c_ms_time(length(c_nlx_time)+1:end)]+ms_seg.NLX_evt.t{end}(1);
-        
-        NLX_ts = c_ms_time + ms_seg.NLX_evt.t{end}(1);
-    else
-        NLX_ts = ms_seg.NLX_evt.t{end};
-        
-    end
-    these_idx = nearest_idx3(NLX_ts,csc.tvec');
-    
-    ms_seg.d_amp = D_amp(these_idx);
-    ms_seg.t_amp = T_amp(these_idx);
-    ms_seg.LG_amp = LG_amp(these_idx);
-    ms_seg.MG_amp = MG_amp(these_idx);
-    ms_seg.HG_amp = HG_amp(these_idx);
-    ms_seg.UHG_amp = UHG_amp(these_idx);
-    ms_seg.Rip_amp = Rip_amp(these_idx);
-    
-    
-    %     end
-    
-    %% to do add in thing that pulls out power for theta/lowG/highG/ripple?
-    
-    
-    % add the spiking probability for different cell types.
-    %     ms_seg.place_firing =
-    
-    % start of trk  =  trk_time; end of track = trk_end_time;
-    % get the time vector for current segment.
-    seg_time = datevec(ms_seg.time_labels);
-    % add time vector
-    if strcmp(ms_seg.pre_post, 'pre')
-        ms_seg.time2trk = etime(seg_time, trk_time)/60;
-    elseif strcmp(ms_seg.pre_post, 'post')
-        ms_seg.time2trk = etime(seg_time,trk_end_time)/60;
-    end
-    
-    cfg_SFP = [];
-    cfg_SFP.fnc = '==';
-    cfg_SFP.remove_val = 0;
-    ms_seg = MS_update_SFP(cfg_SFP, ms_seg);
-    
-    this_dir = [];
-    this_dir = [ms_save_dir filesep ms_seg_resize.file_names{iSeg}];
-    fprintf('<strong>%s</strong>: saving resized ms struct back to %s...\n', mfilename, this_dir)
-    if exist(this_dir, 'dir') % if the dir already exists, delete it and all the subfiles/dir and make a new one.  Avoids problems with multiple ms_resize.mat files in one dir.
-        rmdir(this_dir, 's')
-    end
-    mkdir(this_dir)
-    if  strcmp(ms_seg_resize.pre_post{iSeg}, 'post') && exist([this_dir filesep 'ms_seg_resize_' 'pre' '_' ms_seg_resize.hypno_label{iSeg} '.mat'])
-        delete([this_dir filesep ms_fname_save '_' 'pre' '_' ms_seg_resize.hypno_label{iSeg} '.mat'])
-    end
-    % if this is a homecage do not use the 'pre' or post' lab.
-    save([this_dir filesep ms_fname_save '_' ms_seg_resize.pre_post{iSeg} '_' ms_seg_resize.hypno_label{iSeg}],'ms_seg', '-v7.3');
-    
-    
-    
-    %% keep the index for the segment.
-    if isempty(all_seg_idx)
-        all_seg_idx(iSeg) = length(ms_seg.RawTraces);
-    else
-        all_seg_idx(iSeg) = length(ms_seg.RawTraces) + all_seg_idx(iSeg -1);
-    end
-    % cat the binary traces for pre V post, and REM v SW
-    if strcmp(ms_seg_resize.pre_post{iSeg}, 'pre')
-        all_binary_pre = [all_binary_pre; ms_seg.Binary];
-        all_RawTraces_pre = [all_RawTraces_pre; ms_seg.RawTraces];
-        all_detrendRaw_pre = [all_detrendRaw_pre; ms_seg.detrendRaw];
-        
-        if exist('csc', 'var')
-            all_d_pre = [all_d_pre, ms_seg.d_amp'];
-            all_t_pre = [all_t_pre, ms_seg.t_amp'];
-            all_LG_pre = [all_LG_pre, ms_seg.LG_amp'];
-            all_MG_pre = [all_MG_pre, ms_seg.MG_amp'];
-            all_HG_pre = [all_HG_pre, ms_seg.HG_amp'];
-            all_UHG_pre = [all_UHG_pre, ms_seg.UHG_amp'];
-            all_Rip_pre = [all_Rip_pre, ms_seg.Rip_amp'];
-        end
-        
-        % break out REM and SW
-        if strcmp(ms_seg_resize.hypno_label{iSeg}, 'REM')
-            all_binary_pre_REM = [all_binary_pre_REM; ms_seg.Binary];
-            all_RawTraces_pre_REM = [all_RawTraces_pre_REM; ms_seg.RawTraces];
-            all_detrendRaw_pre_REM = [all_detrendRaw_pre_REM; ms_seg.detrendRaw];
-            pre_REM_idx = [pre_REM_idx, iSeg];
-            
-            if exist('csc', 'var')
-                all_d_pre_REM = [all_d_pre_REM, ms_seg.d_amp'];
-                all_t_pre_REM = [all_t_pre_REM, ms_seg.t_amp'];
-                all_LG_pre_REM = [all_LG_pre_REM, ms_seg.LG_amp'];
-                all_MG_pre_REM = [all_MG_pre_REM, ms_seg.MG_amp'];
-                all_HG_pre_REM = [all_HG_pre_REM, ms_seg.HG_amp'];
-                all_UHG_pre_REM = [all_UHG_pre_REM, ms_seg.UHG_amp'];
-                all_Rip_pre_REM = [all_Rip_pre, ms_seg.Rip_amp'];
-            end
-        elseif strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
-            all_binary_pre_SW = [all_binary_pre_SW; ms_seg.Binary];
-            all_RawTraces_pre_SW = [all_RawTraces_pre_SW; ms_seg.RawTraces];
-            all_detrendRaw_pre_SW = [all_detrendRaw_pre_SW; ms_seg.detrendRaw];
-            pre_SW_idx = [pre_SW_idx, iSeg];
-            if exist('csc', 'var')
-                
-                all_d_pre_SW = [all_d_pre_SW, ms_seg.d_amp'];
-                all_t_pre_SW = [all_t_pre_SW, ms_seg.t_amp'];
-                all_LG_pre_SW = [all_LG_pre_SW, ms_seg.LG_amp'];
-                all_MG_pre_SW = [all_MG_pre_SW, ms_seg.MG_amp'];
-                all_HG_pre_SW = [all_HG_pre_SW, ms_seg.HG_amp'];
-                all_UHG_pre_SW = [all_UHG_pre_SW, ms_seg.UHG_amp'];
-                all_Rip_pre_SW = [all_Rip_pre_SW, ms_seg.Rip_amp'];
-            end
-        end
-        
-    elseif strcmp(ms_seg_resize.pre_post{iSeg}, 'post')
-        all_binary_post = [all_binary_post; ms_seg.Binary];
-        all_RawTraces_post = [all_RawTraces_post; ms_seg.RawTraces];
-        all_detrendRaw_post = [all_detrendRaw_post; ms_seg.detrendRaw];
-        if exist('csc', 'var')
-            all_d_post = [all_d_post, ms_seg.d_amp'];
-            all_t_post = [all_t_post, ms_seg.t_amp'];
-            all_LG_post = [all_LG_post, ms_seg.LG_amp'];
-            all_MG_post = [all_MG_post, ms_seg.MG_amp'];    
-            all_HG_post = [all_HG_post, ms_seg.HG_amp'];
-            all_UHG_post = [all_UHG_post, ms_seg.UHG_amp'];
-            all_Rip_post = [all_Rip_post, ms_seg.Rip_amp'];
-        end
-        % break out REM and SW
-        if strcmp(ms_seg_resize.hypno_label{iSeg}, 'REM')
-            all_binary_post_REM = [all_binary_post_REM; ms_seg.Binary];
-            all_RawTraces_post_REM = [all_RawTraces_post_REM; ms_seg.RawTraces];
-            all_detrendRaw_post_REM = [all_detrendRaw_post_REM; ms_seg.detrendRaw];
-            post_REM_idx = [post_REM_idx, iSeg];
-            if exist('csc', 'var')
-                all_d_post_REM = [all_d_post_REM, ms_seg.d_amp'];
-                all_t_post_REM = [all_t_post_REM, ms_seg.t_amp'];
-                all_LG_post_REM = [all_LG_post_REM, ms_seg.LG_amp'];
-                all_MG_post_REM = [all_MG_post_REM, ms_seg.MG_amp'];
-                all_HG_post_REM = [all_HG_post_REM, ms_seg.HG_amp'];
-                all_UHG_post_REM = [all_UHG_post_REM, ms_seg.UHG_amp'];
-                all_Rip_post_REM = [all_Rip_post_REM, ms_seg.Rip_amp'];
-            end
-        elseif strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
-            all_binary_post_SW = [all_binary_post_SW; ms_seg.Binary];
-            all_RawTraces_post_SW = [all_RawTraces_post_SW; ms_seg.RawTraces];
-            all_detrendRaw_post_SW = [all_detrendRaw_post_SW; ms_seg.detrendRaw];
-            post_SW_idx = [post_SW_idx, iSeg];
-            if exist('csc', 'var')
-                all_d_post_SW = [all_d_post_SW, ms_seg.d_amp'];
-                all_t_post_SW = [all_t_post_SW, ms_seg.t_amp'];
-                all_LG_post_SW = [all_LG_post_SW, ms_seg.LG_amp'];
-                all_MG_post_SW = [all_MG_post_SW, ms_seg.MG_amp'];
-                all_HG_post_SW = [all_HG_post_SW, ms_seg.HG_amp'];
-                all_UHG_post_SW = [all_UHG_post_SW, ms_seg.UHG_amp'];
-                all_Rip_post_SW = [all_Rip_post_SW, ms_seg.Rip_amp'];
-            end
-        end
-    end
-end
-all_seg_idx = [0 all_seg_idx];
-
-
-%% save the files.
-fprintf('<strong>%s</strong>: saving concatinating Binary, RawTraces, detrendRaw, and indicies\n', mfilename);
-
-
-% save everything
-save([ms_save_dir filesep 'all_seg_idx.mat'], 'all_seg_idx', '-v7.3');
-
-% pre only
-save([ms_save_dir filesep 'all_binary_pre.mat'], 'all_binary_pre', '-v7.3');
-save([ms_save_dir filesep 'all_RawTraces_pre.mat'], 'all_RawTraces_pre', '-v7.3');
-save([ms_save_dir filesep 'all_detrendRaw_pre.mat'], 'all_detrendRaw_pre', '-v7.3');
-
-% post only
-save([ms_save_dir filesep 'all_binary_post.mat' ], 'all_binary_post', '-v7.3');
-save([ms_save_dir filesep 'all_RawTraces_post.mat'], 'all_RawTraces_post', '-v7.3');
-save([ms_save_dir filesep 'all_detrendRaw_post.mat'], 'all_detrendRaw_post', '-v7.3');
-
-
-% pre REM only
-save([ms_save_dir filesep 'all_binary_pre_REM.mat'], 'all_binary_pre_REM', '-v7.3');
-save([ms_save_dir filesep 'all_RawTraces_pre_REM.mat'], 'all_RawTraces_pre_REM', '-v7.3');
-save([ms_save_dir filesep 'all_detrendRaw_pre_REM.mat'], 'all_detrendRaw_pre_REM', '-v7.3');
-
-% post SW only
-save([ms_save_dir filesep 'all_binary_post_REM.mat' ], 'all_binary_post_REM', '-v7.3');
-save([ms_save_dir filesep 'all_RawTraces_post_REM.mat'], 'all_RawTraces_post_REM', '-v7.3');
-save([ms_save_dir filesep 'all_detrendRaw_post_REM.mat'], 'all_detrendRaw_post_REM', '-v7.3');
-
-% pre REM only
-save([ms_save_dir filesep 'all_binary_pre_SW.mat'], 'all_binary_pre_SW', '-v7.3');
-save([ms_save_dir filesep 'all_RawTraces_pre_SW.mat'], 'all_RawTraces_pre_SW', '-v7.3');
-save([ms_save_dir filesep 'all_detrendRaw_pre_SW.mat'], 'all_detrendRaw_pre_SW', '-v7.3');
-
-% post SW only
-save([ms_save_dir filesep 'all_binary_post_SW.mat' ], 'all_binary_post_SW', '-v7.3');
-save([ms_save_dir filesep 'all_RawTraces_post_SW.mat'], 'all_RawTraces_post_SW', '-v7.3');
-save([ms_save_dir filesep 'all_detrendRaw_post_SW.mat'], 'all_detrendRaw_post_SW', '-v7.3');
-
-
-%% save the LFP arrays if needed
-
-
-if exist('csc', 'var')
-    lfp_mat_dir = [ms_save_dir filesep 'LFP_mats'];
-    mkdir(lfp_mat_dir)
-    f_list = {'d', 't', 'LG','MG','HG', 'UHG', 'Rip'};
-    
-    for iF = 1:length(f_list)
-        % pre
-        save([lfp_mat_dir filesep 'all_' f_list{iF} '_pre.mat'], ['all_' f_list{iF} '_pre'], '-v7.3');
-        
-        % pre REM
-        save([lfp_mat_dir filesep 'all_' f_list{iF} '_pre_REM.mat'], ['all_' f_list{iF} '_pre_REM'], '-v7.3');
-        
-        % pre SW
-        save([lfp_mat_dir filesep 'all_' f_list{iF} '_pre_SW.mat'], ['all_' f_list{iF} '_pre_SW'], '-v7.3');
-        
-        
-        %post
-        save([lfp_mat_dir filesep 'all_' f_list{iF} '_post.mat'], ['all_' f_list{iF} '_post'], '-v7.3');
-        
-        % post REM
-        save([lfp_mat_dir filesep 'all_' f_list{iF} '_post_REM.mat'], ['all_' f_list{iF} '_post_REM'], '-v7.3');
-        
-        % post SW
-        save([lfp_mat_dir filesep 'all_' f_list{iF} '_post_SW.mat'], ['all_' f_list{iF} '_post_SW'], '-v7.3');
-        
-    end
-    
-end
-%% save a file with the zscore config
-% save([ms_save_dir filesep ms_fname_save '.mat'], 'ms_seg_resize', '-v7.3')
-cfgs = [];
-cfgs.z_theshold = z_threshold;
-cfgs.date = datestr(date, 'yyyy_mm_dd');
-if exist('csc', 'var')
-    cfgs.filters.d = cfg_d;
-    cfgs.filters.t = cfg_t;
-    cfgs.filters.LG = cfg_lg;
-    cfgs.filters.MG = cfg_mg;
-    cfgs.filters.HG = cfg_hg;
-    cfgs.filters.UHG = cfg_uhg;
-    cfgs.filters.Rip = cfg_rip;
-end
-save([ms_save_dir filesep 'cfgs_z_' strrep(num2str(z_threshold), '.','p') '_on_' cfgs.date   '.mat'], 'cfgs', '-v7.3')
-
-close all
-end % end function
