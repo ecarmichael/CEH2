@@ -14,11 +14,17 @@ f_names  = { 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1043\LTD1', 'C:\User
     'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1254\LTD1', 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1254\LTD5',...
     'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1254\HATD1','C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1254\HATD5', 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1254\HATDSwitch'};
 
+
+
+subjects = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252', 'pv1254'};
+sessions = {'LTD1', 'LTD5', 'HATD1', 'HATD5', 'HATDSwitch'}; 
 % 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\HATD1'
 
 LFP_dir = 'K:\Jisoo_Project\LFP data\Jisoo';
 
+decode_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Decoding'; 
 
+ft_dir = 'C:\Users\ecarm\Documents\GitHub\fieldtrip'; 
 %%  loop over and extract LFP Amp and Freq.
 
 for iF =10%:length(f_names)
@@ -128,8 +134,6 @@ end
 
 %% get the REM times; 
 
-subjects = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252', 'pv1254'};
-sessions = {'LTD1', 'LTD5', 'HATD1', 'HATD5', 'HATDSwitch'}; 
 
 all_REM = nan(length(subjects), length(sessions)); 
 all_SWS = all_REM;
@@ -203,4 +207,167 @@ for iF =1:length(f_names)
 
     
 end
-REM_table = array2table(round(all_REM, 2), 'VariableNames', sessions, 'RowNames', subjects)
+REM_table = array2table(round(all_REM, 2), 'VariableNames', sessions, 'RowNames', subjects);
+SWS_table = array2table(round(all_SWS, 2), 'VariableNames', sessions, 'RowNames', subjects);
+
+
+%% generate a replay event triggered spectrogram for each session
+addpath(ft_dir)
+ft_defaults;
+
+for iF = 1:length(f_names)
+    
+    fprintf('<strong>%s</strong>: loading ms_resize from <strong>%s</strong>\n', mfilename, f_names{iF});
+    warning off; load([f_names{iF} filesep 'ms_resize.mat']); warning on;
+    
+    % get the session and subject IDs
+    parts = strsplit(f_names{iF},  filesep);
+    session = parts{end};
+    subject = parts{end-1};
+    date = parts{end};%(1:10);
+    if strcmp(date(end), '_')
+        date = date(1:end-1);
+    end
+    type = strsplit(parts{end}, '_');
+    type = type{end};
+    if strcmp(type,'HATDSwitch') && contains(subject, '1060')
+        type = 'HATDSwitch';
+        csc_type = 'HATSwitch';
+    else
+        csc_type = type; 
+    end
+    
+    % load the CSC files
+     % find the right csc folder
+    cd(LFP_dir)
+    
+    this_LFP_dir = MS_list_dir_names(cd, {subject, csc_type});
+    
+    cd(this_LFP_dir{1});
+    
+    % get the pre/post times
+    EVT = LoadEvents([]);
+    S_rec_idx = find(contains(EVT.label, 'Starting Recording')); % get the index for the start recoding cell
+    Stop_rec_idx = find(contains(EVT.label, 'Stopping Recording')); % get the index for the start recoding cell
+    
+    if strcmpi(subject, 'pv1060') && strcmpi(type, 'LTD1')
+        pre_S_rec_idx = 2;
+        post_S_rec_idx = 3;
+    elseif length(EVT.t{S_rec_idx}) ~= 2
+        warning('more than two recordings detected.  Fix this later.')
+        for iR = length(EVT.t{S_rec_idx}):-1:1
+            rec_dur(iR) = EVT.t{Stop_rec_idx}(iR) - EVT.t{S_rec_idx}(iR);
+        end
+        keep_rec = find((rec_dur/60/60) > 1.5);
+        if length(keep_rec) ~= 2
+            error('Something is wrong with the CSC. Expected 2 recordings but found %.0f',length(keep_rec));
+        end
+        pre_S_rec_idx = keep_rec(1);
+        post_S_rec_idx = keep_rec(2);
+    else
+        pre_S_rec_idx = 1;
+        post_S_rec_idx = 2;
+    end
+    
+
+    % get the channels to load from the pre-cut ms_seg data.
+    cfg_load = [];
+    for iC = length(ms_seg_resize.NLX_csc{1}.cfg.hdr) % loop over channels.
+        cfg_load.fc{iC} = [ms_seg_resize.NLX_csc{1}.cfg.hdr{iC}.AcqEntName '.ncs'];
+        cfg_load.desired_sampling_frequency = ms_seg_resize.NLX_csc{1}.cfg.hdr{iC}.SamplingFrequency;
+    end
+    cfg_load.fc(1) = [];
+    
+    % hard code LFP channel
+    if strcmp(subject, 'PV1043') && strcmp(type, 'LTD5')
+        cfg_load.fc{1} = 'CSC6.ncs';
+    end
+    
+    % load some data.
+    fprintf('<strong>%s</strong>: loading csc from <strong>%s</strong>\n', mfilename, cfg_load.fc{1});
+    
+    csc = MS_LoadCSC(cfg_load);
+    % restrict the data to the post recording only to avoid FT issues with
+    % discontinuous. 
+    csc = restrict(csc, EVT.t{S_rec_idx}(post_S_rec_idx), csc.tvec(end)); 
+    
+    % load the postREM binary for checking lengths of compiled post REM
+    % tvec and post REM binary mat
+    load([f_names{iF} filesep 'all_binary_post_REM.mat']); 
+    
+    % get the replay events
+    frame = load([decode_dir filesep subject filesep type filesep '1000shuffling.mat'], 'Final_start_frame');
+    
+    all_post_REM_time = [];
+    for ii = 1:length(ms_seg_resize.file_names)
+        if strcmpi(ms_seg_resize.hypno_label{ii}, 'REM') && strcmpi(ms_seg_resize.pre_post{ii}, 'Post') 
+            if length(ms_seg_resize.NLX_evt{ii}.t{end}) ~= size(ms_seg_resize.time{ii},1)
+                this_time = linspace(ms_seg_resize.NLX_evt{ii}.t{end}(1), ms_seg_resize.NLX_evt{ii}.t{end}(end), size(ms_seg_resize.time{ii},1)); 
+            else
+                this_time = ms_seg_resize.NLX_evt{ii}.t{end}; 
+            end
+            all_post_REM_time = [all_post_REM_time; this_time'];
+        end
+    end
+    
+    if length(all_post_REM_time) ~= size(all_binary_post_REM, 1)
+        error('compiled post REM tvec (%.0f) and saved binary (%.0f) differ in length',length(all_post_REM_time),size(all_binary_post_REM, 1) )
+        
+    end
+    
+    R_times = all_post_REM_time(frame.Final_start_frame); 
+    
+      figure(find(contains(sessions, session))*100 + find(contains(sessions, session)))
+    Triggered_Spec_FT(csc, R_times, [subject '-' type '  n = ' num2str(length(R_times))])
+    hh = hline([6 12], '--r');
+    hh(1).Color = [0.91 0.28 0.28]; 
+    hh(2).Color = [0.91 0.28 0.28]; 
+    xlim([-2 2])
+    xlabel('Time (s)'); ylabel('Freq (Hz)');
+    c = colorbar;
+    caxis([-8 8])
+    ylabel(c, 'zscore'); 
+    SetFigure([], gcf)
+    set(gcf, 'position', [680 416 750 550])
+
+
+    
+end
+
+
+%% 
+for iF = 1:length(ms_seg_resize.file_names)
+   fprintf('%s: duration = %.1fsec\n',  ms_seg_resize.file_names{iF}, (ms_seg_resize.time{iF}(end) - ms_seg_resize.time{iF}(1))/1000)
+end
+
+%% generate some videos.
+% raw_dir = 'K:\Jisoo_Project\RawData\pv1252\11_18_2021_pv1252_HATD1'; 
+
+raw_dir = 'K:\Jisoo_Project\RawData\pv1254\11_13_2021_pv1254_LTD1'; 
+ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1254\LTD1';
+decoding_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1254\LTD1';
+out_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Decoding_data\Videos'; 
+% MS_JC_example_REM_video(raw_dir, ms_dir, decoding_dir ,out_dir, [4581,4586,4936,5336])
+
+% MS_JC_example_REM_video(raw_dir, ms_dir, decoding_dir ,out_dir,
+% [7791,7796]); % 1252 Hatswitch
+
+MS_JC_example_REM_video(raw_dir, ms_dir, decoding_dir ,out_dir, [1981,2271,2621])
+
+
+%% try center of mass calculation
+
+% get replays
+for iE = length(Final_start_frame):-1:1
+events(:,iE) = decoding.REM_decoded_position(Final_start_frame(iE):Final_start_frame(iE)+14); 
+end
+
+[N,X] = hist(events(:,iE), length(decoding.bin_centers_vector)); 
+
+x = regionprops(true(size(events(:,iE))),events(:,iE),  'WeightedCentroid');
+
+
+matrix=events(:,iE)/sum(events(:,iE));
+[m,n]=size(matrix);
+[I,J]=ndgrid(1:m,1:n);
+   centroid=[dot(I(:),matrix(:)),  dot(J(:),matrix(:))]

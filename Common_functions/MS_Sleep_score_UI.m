@@ -332,7 +332,7 @@ while ishandle(h)
     % this_idx = nearest_idx([start stop],tvec-tvec(1)); % get the tvec index for the current window
     %     this_idx = nearest_idx(xlim,tvec-tvec(1)); % get the tvec index for the current window
     
-    
+    try
     was_a_key = waitforbuttonpress;
     key_hit = get(gcf, 'CurrentKey');
     if ismember(key_hit, cfg.state_keys(1:end-2))
@@ -349,16 +349,16 @@ while ishandle(h)
         %         plot(tvec- tvec(1), score);
         %         drawnow;
         if x_lim(2)+cfg.tvec_range(2) < T{1}(end)
-            this_idx = nearest_idx(xlim+cfg.tvec_range(2),tvec-tvec(1)); % get the tvec index for the current window
-            spec_idx = nearest_idx(xlim+cfg.tvec_range(2), T{1});
+            this_idx = nearest_idx3(xlim+cfg.tvec_range(2),tvec-tvec(1)); % get the tvec index for the current window
+            spec_idx = nearest_idx3(xlim+cfg.tvec_range(2), T{1});
             if ~isempty(cfg.spec.freq_high)
                 spec_h_idx = nearest_idx(xlim+cfg.tvec_range(2), Th{1});
             end
         else
             disp('at the end')
             done = 1; % used to break loop.
-            this_idx = [nearest_idx(x_lim(1)+cfg.tvec_range(2),tvec-tvec(1)), length(tvec)]; % get the tvec index for the current window
-            spec_idx = [nearest_idx(x_lim(1)+cfg.tvec_range(2), T{1}),length(T{1})];
+            this_idx = [nearest_idx3(x_lim(1)+cfg.tvec_range(2),tvec-tvec(1)), length(tvec)]; % get the tvec index for the current window
+            spec_idx = [nearest_idx3(x_lim(1)+cfg.tvec_range(2), T{1}),length(T{1})];
             if ~isempty(cfg.spec.freq_high)
                 spec_h_idx = [nearest_idx(x_lim(1)+cfg.tvec_range(2), Th{1}),length(Th{1})];
             end
@@ -368,8 +368,8 @@ while ishandle(h)
         break
     elseif ismember(key_hit,  cfg.state_keys(end-1))
         fprintf('REDO   \n')
-        this_idx = nearest_idx(xlim-cfg.tvec_range(2),tvec-tvec(1)); % get the tvec index for the current window
-        spec_idx = nearest_idx(xlim-cfg.tvec_range(2), T{1});
+        this_idx = nearest_idx3(xlim-cfg.tvec_range(2),tvec-tvec(1)); % get the tvec index for the current window
+        spec_idx = nearest_idx3(xlim-cfg.tvec_range(2), T{1});
         if ~isempty(cfg.spec.freq_high)
             spec_h_idx = nearest_idx(xlim-cfg.tvec_range(2), Th{1});
         end
@@ -427,6 +427,9 @@ while ishandle(h)
     %         ax(999) = subplot(nSubplots, 1, nSubplots);
     %         ylim([min(emg(cfg.emg_chan,:)), max(emg(cfg.emg_chan,:))])
     %     end
+    catch
+        save('score_autosave_extra.mat', 'score');
+    end
 end
 
 %% [to do] get the transitions and convert to iv format.

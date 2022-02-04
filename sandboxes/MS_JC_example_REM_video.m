@@ -1,15 +1,18 @@
-addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
+function MS_JC_example_REM_video(raw_dir, ms_dir, decode_dir,output_dir, replay_idx)
 
 
-inter_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold';
-addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
-
-% % pv1060 LTD5
-raw_dir = '/home/williamslab/Desktop/7_19_2019_PV1060_LTD5';
-decode_dir = '/home/williamslab/Dropbox (Williams Lab)/10.Manifold/pv1060/LTD5';
-% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_18_2019_PV1069_HATD5';
-ms_dir = '/home/williamslab/Dropbox (Williams Lab)/Inter/pv1060/LTD5';
-replay_idx = [991 1001 1636 1646 2361]; 
+% addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
+% 
+% 
+% inter_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold';
+% addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
+% 
+% % % pv1060 LTD5
+% raw_dir = '/home/williamslab/Desktop/7_19_2019_PV1060_LTD5';
+% decode_dir = '/home/williamslab/Dropbox (Williams Lab)/10.Manifold/pv1060/LTD5';
+% % ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_18_2019_PV1069_HATD5';
+% ms_dir = '/home/williamslab/Dropbox (Williams Lab)/Inter/pv1060/LTD5';
+% replay_idx = [991 1001 1636 1646 2361]; 
 
 % %pv1060 HATD5
 % raw_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1060/11_26_2019_PV1060_HATSwitch';
@@ -29,7 +32,11 @@ warning on
 
 load([decode_dir filesep 'decoding.mat'])
 
+if isunix
 track_image = imread(['/home/williamslab/Dropbox (Williams Lab)/Inter/pv1060/LTD5/Track_low.jpg']);
+else
+    track_image = imread('C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\LTD5\Track_low.jpg');
+end
 %% generate a time vector for the all_binary_post_REM
 
 REM_idx = contains(ms_seg_resize.hypno_label, 'REM');
@@ -40,30 +47,35 @@ REM_blocks = find(REM_idx & post_idx);
 all_tvec = [];
 all_ca_f = [];
 ca_mat = [];
+ca_t_all = [];
 for iB = REM_blocks
-
-all_tvec = [all_tvec ; ms_seg_resize.time{iB}];
     
-% get the raw videos while you are here
-    ca_obj = [];
-    ca_obj = VideoReader([raw_dir filesep ms_seg_resize.file_names{iB} filesep 'msCam' num2str(1) '.avi']);
-    for iF = ca_obj.NumFrames:-1:1
-        ca_f{iF} = read(ca_obj, iF);
-        ca_t(iF) = ca_obj.CurrentTime;
-        ca_mat(:,:,iF) = im2double(ca_f{iF}); 
+    all_tvec = [all_tvec ; ms_seg_resize.time{iB}];
+    
+    % get the raw videos while you are here
+    v_files = dir([raw_dir filesep ms_seg_resize.file_names{iB} filesep 'msCam*']);
+    
+    for iV = 1:length(v_files)
+        ca_obj = [];
+        ca_obj = VideoReader([v_files(iV).folder filesep v_files(iV).name]);
+        for iF = ca_obj.NumFrames:-1:1
+            ca_f{iF} = read(ca_obj, iF);
+            ca_t(iF) = ca_obj.CurrentTime;
+            ca_mat(:,:,iF) = im2double(ca_f{iF});
+        end
+        
+        ca_t_all = [ca_t_all, ca_t];
+        % try to substract mean per pixel
+        %     ca_mat = cell2mat(ca_f);
+        %     ca_mat = ca_mat - mean(ca_mat, 3);
+        
+        all_ca_f = cat(3,all_ca_f, ca_mat) ;
+        clear ca_mat ca_f ca_t
     end
+    %     ca_mov{iB}.ca_f = ca_f;
+    %     ca_mov{iB}.ca_t = ca_t;
+    %     ca_mov{iB}.ca_ms_t = ms_seg_resize.time{iB};
     
-    % try to substract mean per pixel
-%     ca_mat = cell2mat(ca_f); 
-%     ca_mat = ca_mat - mean(ca_mat, 3);
-    
-    all_ca_f = cat(3,all_ca_f, ca_mat) ;
-    clear ca_mat ca_f ca_t
-    
-%     ca_mov{iB}.ca_f = ca_f;
-%     ca_mov{iB}.ca_t = ca_t;
-%     ca_mov{iB}.ca_ms_t = ms_seg_resize.time{iB};
-
 end
 
 all_ca_f(all_ca_f< 0) = 0; 
@@ -72,11 +84,14 @@ if size(all_tvec, 1) ~= size(all_binary_post_REM,1)
     error('ms_seg post_rem tvec is not the same size as the all_binary_post_REM')
 end
 
+mean_f = mean(all_ca_f,3); 
+
 % get the sampling freq
 Fs = mode(diff(all_tvec));
 
 %%  generate the plots
-replay_evt = 1
+for iEvt = 1:length(replay_idx)
+replay_evt = iEvt;
 start_idx = replay_idx(replay_evt) - Fs*2;
 end_idx = replay_idx(replay_evt) + Fs *2; 
 
@@ -152,7 +167,7 @@ for iF = end_idx:-1:start_idx
         h = scatter((decoding.REM_decoded_position(iF)/max_pos)*(size(track_image,2)), size(track_image,1)/2, 800, 'LineWidth', 5);
 %         h = scatter(decoding.REM_decoded_position(iF), 1, 800, 'LineWidth', 5);
         if ismember(iF, replay_win) && iF < 1001
-           h.MarkerEdgeColor = core_colors(1,:);
+           h.MarkerEdgeColor = core_colors(3,:);
         elseif ismember(iF, replay_win) && iF >1000
             h.MarkerEdgeColor = core_colors(3,:);
         else
@@ -166,7 +181,7 @@ for iF = end_idx:-1:start_idx
         hl = xline(median([all_tvec(iF)/1000 - 2.5 all_tvec(iF)/1000 + 2.5]), 'linewidth', 6 );
     
     subplot(6,4,[7 8 11 12 15 16 19 20 23 24])
-    imagesc(all_ca_f(:,:,iF))
+    imagesc((all_ca_f(:,:,iF) - mean_f)./mean_f)
 %     hold on
 %     scatter(y*ms.ds, x*ms.ds,100,c_ord,'LineWidth',1.5);
     set(gca, 'xtick', [], 'ytick', [])
@@ -185,9 +200,9 @@ end
 rate = 1; 
 
 parts = strsplit([raw_dir filesep ms_seg_resize.file_names{iB}], filesep);
-mkdir(['/home/williamslab/Dropbox (Williams Lab)/Decoding_data/Videos/' parts{end-1}])
-writerObj = VideoWriter(['/home/williamslab/Dropbox (Williams Lab)/Decoding_data/Videos/' parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_full_' num2str(rate) 'x_evt' num2str(replay_evt) '_fix.avi']);
-fprintf(['Writing: /home/williamslab/Dropbox (Williams Lab)/Decoding_data/Videos/' parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_full_' num2str(rate) 'x.avi\n'])
+mkdir([output_dir filesep parts{end-1}])
+writerObj = VideoWriter([output_dir filesep parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_full_' num2str(rate) 'x_evt' num2str(replay_evt) '_fix.avi']);
+fprintf('Saving video as: <strong>%s</strong>\n', [output_dir filesep parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_full_' num2str(rate) 'x.avi'])
 writerObj.FrameRate = (Fs/rate)/4;
 writerObj.Quality = 100;
 % set the seconds per image
@@ -203,6 +218,7 @@ for iF = start_idx:rate:end_idx
 end
 % close the writer object
 close(writerObj);
+end
 
 %%
 % cd(raw_dir)
@@ -317,14 +333,14 @@ close(writerObj);
 % 
 
 %% softmax the decoded probs
-rng(11)
-for ii = size(decoding.WAKE_decoded_probabilities,2):-1:1
-    if isnan(decoding.WAKE_decoded_probabilities(:,ii))
-        soft_decode_pos(ii) = NaN;
-    else
-        
-    soft_decode_pos(ii) = max(softmax(decoding.WAKE_decoded_probabilities(1:end-1,ii))); 
-    end
-end
+% rng(11)
+% for ii = size(decoding.WAKE_decoded_probabilities,2):-1:1
+%     if isnan(decoding.WAKE_decoded_probabilities(:,ii))
+%         soft_decode_pos(ii) = NaN;
+%     else
+%         
+%     soft_decode_pos(ii) = max(softmax(decoding.WAKE_decoded_probabilities(1:end-1,ii))); 
+%     end
+% end
 
 

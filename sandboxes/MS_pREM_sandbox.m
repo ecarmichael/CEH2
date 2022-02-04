@@ -42,7 +42,7 @@ else
     LFP_dir = 'K:\Jisoo_Project\LFP data\Jisoo';
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
-   data_dir ='C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\HATD5'; % change this to the data folder that you want.  LFP will update automatically.
+   data_dir ='C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\LTD1'; % change this to the data folder that you want.  LFP will update automatically.
    cell_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\4.PlaceCell'; % where to find place cell classification and centroids. 
    
    % Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_22_2019_PV1069_HATSwitch';
@@ -143,8 +143,8 @@ Stop_rec_idx = find(contains(EVT.label, 'Stopping Recording')); % get the index 
 % hardcode odd session with three 
 if strcmpi(subject, 'pv1060') && strcmpi(type, 'LTD1')
     
-           pre_S_rec_idx = 2;
-        post_S_rec_idx = 3;
+    pre_S_rec_idx = 2;
+    post_S_rec_idx = 3;
 
     CSC_pre1 = CSC;
     CSC_pre1.tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
@@ -152,9 +152,9 @@ if strcmpi(subject, 'pv1060') && strcmpi(type, 'LTD1')
     emg_h_pre1 = emg_h(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
     
     CSC_pre = CSC;
-    CSC_pre.tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(2),CSC.tvec));
-    CSC_pre.data = CSC.data(:,1:nearest_idx(EVT.t{Stop_rec_idx}(2),CSC.tvec));
-    emg_h_pre = emg_h(1:nearest_idx(EVT.t{Stop_rec_idx}(2),CSC.tvec));
+    CSC_pre.tvec = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(2),CSC.tvec):nearest_idx(EVT.t{Stop_rec_idx}(2),CSC.tvec));
+    CSC_pre.data = CSC.data(nearest_idx(EVT.t{S_rec_idx}(2),CSC.tvec):nearest_idx(EVT.t{Stop_rec_idx}(2),CSC.tvec));
+    emg_h_pre = emg_h(nearest_idx(EVT.t{S_rec_idx}(2),CSC.tvec):nearest_idx(EVT.t{Stop_rec_idx}(2),CSC.tvec));
     
     CSC_post= CSC;
     CSC_post.tvec = CSC.tvec(nearest_idx(EVT.t{S_rec_idx}(3), CSC.tvec):end);
@@ -165,6 +165,8 @@ if strcmpi(subject, 'pv1060') && strcmpi(type, 'LTD1')
     CSC_cut.tvec = [CSC_pre1.tvec; (CSC_pre.tvec - CSC_pre.tvec(1))+(CSC_pre1.tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency))];
     CSC_cut.tvec = [CSC_cut.tvec; (CSC_post.tvec - CSC_post.tvec(1))+(CSC_cut.tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency))];
     CSC_cut.data = [CSC_pre1.data,CSC_pre.data CSC_post.data];
+    
+    OG_tvec = [CSC_pre1.tvec; CSC_pre.tvec; CSC_post.tvec];
     
     emg_h_cut = [emg_h_pre1,emg_h_pre, emg_h_post];
     
@@ -204,6 +206,8 @@ else
     CSC_cut.tvec = [CSC_pre.tvec; (CSC_post.tvec - CSC_post.tvec(1))+(CSC_pre.tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency))];
     CSC_cut.data = [CSC_pre.data, CSC_post.data];
     
+    og_tvec = [CSC_pre.tvec; CSC_post.tvec]; 
+    
     emg_h_cut = [emg_h_pre, emg_h_post];
 end
 
@@ -212,7 +216,7 @@ save([inter_dir filesep 'pREM' filesep 'Cut_CSC.mat'], 'CSC_cut', '-v7.3');
 
 % deal with gaps in the data. 
 if sum(diff(CSC_cut.tvec) > 2*mode(diff(CSC_cut.tvec))) == 1
-    fprintf('<strong>%s</strong>: Tvec contains missing data. replacing with linspeced time for scoring only.\n', mfilename);
+    error('<strong>%s</strong>: Tvec contains missing data. replacing with linspeced time for scoring only.\n', mfilename);
     
     brk_idx =  find(diff(CSC_cut.tvec) > 2*mode(diff(CSC_cut.tvec)));
     gap = diff(CSC_cut.tvec(brk_idx:brk_idx+1));
@@ -295,7 +299,7 @@ cfg_filt_t.display_filter = 0; % use this to see the fvtool (but very slow with 
 % reason.
 
 % extract raw LFP only.
-this_csc =CSC_cut;
+this_csc = CSC_cut;
 this_csc.data = this_csc.data(1,:);
 this_csc.label = this_csc.label{1};
 temp_hdr = this_csc.cfg.hdr{2};
@@ -565,7 +569,7 @@ mkdir(['pREM_' num2str(min_len*1000) 'ms'] )
 for iR =1:size(pREM_idx,1)
     
     Phasic_data{iR} = this_csc.data((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
-    Phasic_EMG{iR} = emg_h((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
+    Phasic_EMG{iR} = emg_h_cut((pREM_idx(iR,1)- win_s*Fs):(pREM_idx(iR,2)+ win_s*Fs));
     
     cwt(Phasic_data{iR}, Fs);
     x_lim = xlim;

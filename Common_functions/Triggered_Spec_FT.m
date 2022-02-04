@@ -25,7 +25,9 @@ elseif nargin <2
     fprintf('<strong>%s<\strong> Requires csc and events inputs', mfilename);
 end
 
-
+if max(diff(csc.tvec)) > csc.cfg.hdr{1}.SamplingFrequency
+    error('discontinous data this may cause problems')
+end
 % conver the data to the ft format
 data_ft = MS_TSDtoFT([], csc); % convert to ft format.
 
@@ -52,7 +54,7 @@ cfg.method       = 'wavelet';
 cfg.taper        = 'hanning';
 cfg.foi          = 2:.5:120; % frequencies of interest
 % cfg.t_ftimwin    = ones(length(cfg.foi),1).*0.5;%20./cfg.foi;  % window size: fixed at 0.5s
-cfg.toi          = -3:((1/data_trl.fsample)*10):2; % times of interest
+cfg.toi          = -5:((1/data_trl.fsample)*10):3; % times of interest
 cfg.pad          = 'nextpow2'; % recommened by FT to make FFT more efficient.
 
 TFR = ft_freqanalysis(cfg, data_trl);
@@ -66,9 +68,9 @@ else
 end
 cfg = [];
 cfg.channel      = data_ft.label{1};
-cfg.baseline     = [-3 -.25];
+cfg.baseline     = [-5 -2];
 cfg.baselinetype = 'zscore';
 cfg.title = freq_params_str;
 ft_singleplotTFR(cfg, TFR);
 
-vline(0)
+vline(0, '--k')
