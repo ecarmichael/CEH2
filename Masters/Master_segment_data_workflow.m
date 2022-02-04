@@ -386,6 +386,7 @@ for iSub = Subjects
 
 % 1254
 %for LTD1
+
 ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1254\LTD1';
 csc_dir = 'K:\Jisoo_Project\LFP data\Jisoo\2021-11-13_09-21-27_pv1254_LTD1'; 
 
@@ -421,16 +422,14 @@ ms_resize_dir = ms_dir;
 %for HATD1
 % ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_19_2021_pv1254_HATD1';
 % csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-19_09-45-12_pv1254_HATD1'; 
-% 
-% 
+% % 
+% % 
 % iSess = '11_19_2021_pv1254_HATD1';
 % iSub = 'PV1254';
 
 %for HATD3
 % ms_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1254/11_21_2021_pv1254_HATD3';
 % csc_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo/2021-11-21_09-33-39_pv1254_HATD3'; 
-% 
-% 
 % iSess = '11_21_2021_pv1254_HATD3';
 % iSub = 'PV1254';
 
@@ -562,7 +561,7 @@ ms_resize_dir = ms_dir;
         elseif strcmpi(iSub, 'PV1191')
             cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'};
         elseif strcmpi(iSub, 'PV1254')
-            cfg_seg.csc.fc = {'CSC1.ncs','CSC6.ncs'}; % 7 has higher theta but no gamma/SWR
+            cfg_seg.csc.fc = {'CSC1.ncs','CSC8.ncs'}; % 7 has higher theta but no gamma/SWR
         else
             cfg_seg.csc.fc = {'CSC1.ncs','CSC7.ncs'}; % Alternatively, just use the actual names as: {'CSC1.ncs', 'CSC5.ncs'};
         end

@@ -32,7 +32,8 @@ if strcmp(computer, 'GLNXA64')
     elseif strcmpi(getenv('USERNAME'), 'williamslab')
         addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
         addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
-        data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1252/11_22_2021_pv1252_HATD5';
+        data_dir = '/home/williamslab/Dropbox (Williams Lab)/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter/PV1254/11_19_2021_pv1254_HATD1';
+%         data_dir='/media/williamslab/Seagate Expansion Drive/Jisoo_Project/Across_episodes_Scoring/pv1252/11_24_2021_pv1252_HATDSwitch';
         
                         
         LFP_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/LFP data/Jisoo';
@@ -96,6 +97,8 @@ end
 % hard code LFP channel 
 if strcmp(subject, 'PV1043') && strcmp(type, 'LTD5')
     cfg_load.fc{2} = 'CSC6.ncs';
+elseif strcmp(subject, 'PV1254') 
+    cfg_load.fc{2} = 'CSC8.ncs';
 end
 
 % load some data.
@@ -451,7 +454,7 @@ for ii = length(IPI):-1:1
 end
 REM.theta_unit = theta_csc.units; 
 REM.phi = REM_phi{iB};
-REM.IPI = IPI;
+REM.IPI = IPI;REM.IPI = IPI;
 for ii = length(IPI):-1:1
     REM.IPI_mean{ii} =  1/mean(IPI{ii});
     if REM_tvecs{ii} < EVT.t{Stop_rec_idx}(pre_S_rec_idx)
@@ -460,6 +463,7 @@ for ii = length(IPI):-1:1
         REM.labels{ii} = 'post';
     end
 end
+
 
 cd(inter_dir)
 mkdir('REM')
@@ -720,10 +724,12 @@ load('all_binary_post.mat');
 
 
 % get the cell centroids for coloring.  (if they exist)
+if exist('cell_dir', 'var')
 if exist([cell_dir filesep lower(subject) filesep type filesep 'spatial_analysis.mat'], 'file')
     load([cell_dir filesep lower(subject) filesep type filesep 'spatial_analysis.mat']);
 elseif exist([cell_dir filesep lower(subject) filesep strrep(type, 'TS', 'TDS') filesep 'spatial_analysis.mat'], 'file')
         load([cell_dir filesep lower(subject) filesep strrep(type, 'TS', 'TDS') filesep 'spatial_analysis.mat']);
+end
 end
 if exist('spatial_analysis', 'var')
     place_idx = zeros(length(spatial_analysis.bin),1); % allocate the index array
@@ -1074,7 +1080,7 @@ save([inter_dir filesep 'pREM_' num2str(min_len*1000) 'ms' filesep 'pREM_dur.mat
 %         all_tvec = [all_tvec, tvec_cut];
 % %         all_data = [all_data, data_cut]; 
 %     end
-%     start_tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(1),CSC.tvec));
+%     start_tvec = CSC.tvec(1:nearest_idx(EVT.t{Stop_rec_idx}(pre_idx),CSC.tvec));
 %     all_tvec = [start_tvec; all_tvec + start_tvec(end)+(1/CSC.cfg.hdr{1}.SamplingFrequency)];
 %     
 % %     start_data = CSC.data(1:2,1:nearest_idx(EVT.t{S_rec_idx+1}(1),CSC.tvec));
