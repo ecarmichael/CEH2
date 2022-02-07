@@ -318,41 +318,68 @@ for iF = 1:length(f_names)
     R_times = all_post_REM_time(frame.Final_start_frame); 
     
       figure(find(contains(sessions, session))*100 + find(contains(sessions, session)))
-    Triggered_Spec_FT(csc, R_times, [subject '-' type '  n = ' num2str(length(R_times))])
-    hh = hline([6 12], '--r');
-    hh(1).Color = [0.91 0.28 0.28]; 
-    hh(2).Color = [0.91 0.28 0.28]; 
-    xlim([-2 2])
-    xlabel('Time (s)'); ylabel('Freq (Hz)');
-    c = colorbar;
-    caxis([-8 8])
-    ylabel(c, 'zscore'); 
-    SetFigure([], gcf)
-    set(gcf, 'position', [680 416 750 550])
+%     Triggered_Spec_FT(csc, R_times, [subject '-' type '  n = ' num2str(length(R_times))])
+%     hh = hline([6 12], '--r');
+%     hh(1).Color = [0.91 0.28 0.28]; 
+%     hh(2).Color = [0.91 0.28 0.28]; 
+%     xlim([-2 2])
+%     xlabel('Time (s)'); ylabel('Freq (Hz)');
+%     c = colorbar;
+%     caxis([-8 8])
+%     ylabel(c, 'zscore'); 
+%     SetFigure([], gcf)
+%     set(gcf, 'position', [680 416 750 550])
 
+
+% event triggered LFP average
+all_lfps = [];
+win_s = [-1 1]; t_axis = win_s(1):1/csc.cfg.hdr{1}.SamplingFrequency:win_s(2); 
+for iE = length(R_times):-1:1
+    
+    sta_idx = nearest_idx3([R_times(iE)+win_s(1) R_times(iE)+win_s(2)], csc.tvec);
+    all_lfps(iE,:) = csc.data(1,sta_idx(1):sta_idx(2)); 
 
     
 end
+hold on
+plot(t_axis, nanmean(all_lfps), 'k', 'linewidth', 1.5);
+plot(t_axis, nanmean(all_lfps) + (std(all_lfps) / sqrt(size(all_lfps,1))), '--r')
+plot(t_axis, nanmean(all_lfps) - (std(all_lfps) / sqrt(size(all_lfps,1))), '--r')
 
 
+end
 %% 
 for iF = 1:length(ms_seg_resize.file_names)
    fprintf('%s: duration = %.1fsec\n',  ms_seg_resize.file_names{iF}, (ms_seg_resize.time{iF}(end) - ms_seg_resize.time{iF}(1))/1000)
 end
 
 %% generate some videos.
-% raw_dir = 'K:\Jisoo_Project\RawData\pv1252\11_18_2021_pv1252_HATD1'; 
-
-raw_dir = 'K:\Jisoo_Project\RawData\pv1254\11_13_2021_pv1254_LTD1'; 
-ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1254\LTD1';
-decoding_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1254\LTD1';
 out_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Decoding_data\Videos'; 
+
+% raw_dir = 'K:\Jisoo_Project\RawData\pv1252\11_18_2021_pv1252_HATD1'; 
+% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1254\HATD1';
+% decoding_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1254\HATD1';
 % MS_JC_example_REM_video(raw_dir, ms_dir, decoding_dir ,out_dir, [4581,4586,4936,5336])
+
+% raw_dir = 'K:\Jisoo_Project\RawData\pv1254\11_13_2021_pv1254_LTD1'; 
+% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1254\LTD1';
+% decoding_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1254\LTD1';
+% MS_JC_example_REM_video(raw_dir, ms_dir, decoding_dir ,out_dir, [1981,2271,2621])
+
+
+raw_dir = 'K:\Jisoo_Project\RawData\pv1192\4_17_2021_PV1192_HATD1'; 
+ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1192\HATD1';
+decoding_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1192\HATD1';
+MS_JC_example_REM_video(raw_dir, ms_dir, decoding_dir ,out_dir, [2586 5030 5316])
+close all
+raw_dir = 'K:\Jisoo_Project\RawData\pv1069\LTD1'; 
+ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1069\LTD1';
+decoding_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1069\LTD1';
+MS_JC_example_REM_video(raw_dir, ms_dir, decoding_dir ,out_dir, [2766 5846])
 
 % MS_JC_example_REM_video(raw_dir, ms_dir, decoding_dir ,out_dir,
 % [7791,7796]); % 1252 Hatswitch
 
-MS_JC_example_REM_video(raw_dir, ms_dir, decoding_dir ,out_dir, [1981,2271,2621])
 
 
 %% try center of mass calculation
@@ -360,14 +387,30 @@ MS_JC_example_REM_video(raw_dir, ms_dir, decoding_dir ,out_dir, [1981,2271,2621]
 % get replays
 for iE = length(Final_start_frame):-1:1
 events(:,iE) = decoding.REM_decoded_position(Final_start_frame(iE):Final_start_frame(iE)+14); 
+input = events(:,iE);
+input(isnan(input)) = [];
+
+x = regionprops(bwlabel(true(size(input))),input,  'WeightedCentroid');
+w_cent(iE) = input(round(x.WeightedCentroid(2)));
+s_end(:,iE) = [input(1) input(end)];
 end
 
-[N,X] = hist(events(:,iE), length(decoding.bin_centers_vector)); 
+% c_ord = linspacer
+figure(1)
+hold on
+for iE = 1:length(events)
+plot(s_end(:,iE), [iE iE], 'linewidth', 3); 
+plot(w_cent(iE), iE, '*','color', 'k')
+end
+% .5:1:length(events)+0.5, decoding.bin_centers_vector,     events')
+ylabel('Event #')
+xlabel('track (cm)')
 
-x = regionprops(true(size(events(:,iE))),events(:,iE),  'WeightedCentroid');
-
-
-matrix=events(:,iE)/sum(events(:,iE));
-[m,n]=size(matrix);
-[I,J]=ndgrid(1:m,1:n);
-   centroid=[dot(I(:),matrix(:)),  dot(J(:),matrix(:))]
+% [N,X] = hist(events(:,iE), length(decoding.bin_centers_vector)); 
+% 
+% 
+% 
+% matrix=input/sum(input);
+% [m,n]=size(matrix);
+% [I,J]=ndgrid(1:m,1:n);
+%    centroid=[dot(I(:),matrix(:)),  dot(J(:),matrix(:))]
