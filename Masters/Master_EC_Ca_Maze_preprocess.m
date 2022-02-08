@@ -128,8 +128,9 @@ for iF = 6%1:length(f_names)
         fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',[iSub '-' iSess]);
     
 %     run the actual segmentation workflow
-            MS_Segment_raw(cfg_seg, csc_dir, data_dir, ms_resize_dir);
-    
+            MS_Segment_raw_EC(cfg_seg, csc_dir, data_dir, ms_resize_dir);
+            
+
     
 
     
