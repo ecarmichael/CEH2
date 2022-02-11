@@ -87,21 +87,21 @@ if sum(contains(lower(DLC_fields), 'nose'))==1 && sum(contains(lower(DLC_fields)
         
         % angle test plot
 %                
-%         hold on
-%          for iF =1:length(behav.Nose)
-%         plot(behav.position(iF,1), behav.position(iF,2), 'or')
-%         plot([behav.R_Ear(iF,1),  behav.L_Ear(iF,1)], [behav.R_Ear(iF,2),  behav.L_Ear(iF,2)], 'sr')
-%         plot(ear_mid(iF, 1), ear_mid(iF,2), '.b')
-%         plot(behav.Nose(iF,1), behav.Nose(iF,2), 'xg')
-%         plot([ear_mid(iF,1), behav.LED(iF,1)],[ear_mid(iF,2), behav.LED(iF,2)], 'k')
-%         xlim([min(behav.position(:,1)) max(behav.position(:,1))]); 
-%         ylim([min(behav.position(:,2)) max(behav.position(:,2))]);
-%         text(0, 0, num2str(behav.HD(iF)));
-%         text(0, 5, num2str(behav.speed(iF))); 
-%         drawnow
-%         pause(0.0303/300)
-%                 cla(gca)
-%          end
+        hold on
+         for iF =1:length(behav.Nose)
+        plot(behav.position(iF,1), behav.position(iF,2), 'or')
+        plot([behav.R_Ear(iF,1),  behav.L_Ear(iF,1)], [behav.R_Ear(iF,2),  behav.L_Ear(iF,2)], 'sr')
+        plot(ear_mid(iF, 1), ear_mid(iF,2), '.b')
+        plot(behav.Nose(iF,1), behav.Nose(iF,2), 'xg')
+        plot([ear_mid(iF,1), behav.LED(iF,1)],[ear_mid(iF,2), behav.LED(iF,2)], 'k')
+        xlim([min(behav.position(:,1)) max(behav.position(:,1))]); 
+        ylim([min(behav.position(:,2)) max(behav.position(:,2))]);
+        text(0, 0, num2str(behav.HD(iF)));
+        text(0, 5, num2str(behav.speed(iF))); 
+        drawnow
+        pause(0.0303/300)
+                cla(gca)
+         end
 end
 
 

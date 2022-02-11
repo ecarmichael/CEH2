@@ -105,15 +105,32 @@ for iT = 1:length(TS)
         warning(['TS do not match ms data' TS{iT}.filename   ':  ' num2str(length(TS{iT}.system_clock{1}))   ' - ms TS: ' num2str(ms.timestamps(iT))])
     end
 end
-fprintf('\n<strong>MS_Segment_raw</strong>: ms.mat loaded and timestamps collected\n');
+fprintf('\n<strong>%s</strong>: ms.mat loaded and timestamps collected\n', mfilename);
 
 %% Get some basic statistics for the individual Ca Traces
 cfg_stats = [];
 cfg_stats.data_type = 'RawTraces';
 
 ms = MS_characterize_trace(cfg_stats, ms);
-fprintf('\n<strong>MS_Segment_raw</strong>: basic statstics computed for each Ca trace\n');
+fprintf('\n<strong>%s</strong>: basic statstics computed for each Ca trace\n', mfilename);
 
+%% add the deconvolved traces if it is in the path
+if ~isfield(ms, 'detrendRaw')
+    ms = msExtractBinary_detrendTraces(ms);
+end
+% if exist('deconvolveCa.m', 'file') == 2
+%     fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
+%     for iChan = size(ms.RawTraces,2):-1:1
+%             tic;
+%             [denoise,deconv] = deconvolveCa(ms.detrendRaw(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
+%             toc;
+%             all_denoise(:,iChan) = denoise;    all_deconv(:,iChan) = deconv;
+%     end
+%     ms.denoise = all_denoise; 
+%     ms.deconv = all_deconv; 
+%     ms.decon_params = 'deconvolveCa(ms.detrendRaw(:,iChan), ''foopsi'', ''ar2'', ''smin'', -2.5, ''optimize_pars'', true, ''optimize_b'', true)'; 
+%     
+% end
 
 %% append the TS folder name to the ms struct.
 
@@ -143,7 +160,7 @@ ms = MS_append_data_sandbox(ms, 'file_names', TS_name);
 
 %% segment the data
 cfg_seg = []; 
-% cfg_seg.user_fields = {'BinaryTraces'};
+cfg_seg.user_fields = {'denoise', 'deconv', 'detrendRaw'};
 ms_seg = MS_segment_ms_sandbox(cfg_seg, ms);
 
 
@@ -345,9 +362,27 @@ fprintf('MS time samples %.0f   |    %.0f NLX', length(ms_seg.RawTraces{maze_idx
     ms_trk = MS_de_cell(ms_trk);
     
     % binarize the trace
+    if ~isfield(ms_trk, 'detrendRaw')
     ms_trk = msExtractBinary_detrendTraces(ms_trk);
+    end
+    
+    % add in the NLX data
+    
+    res_csc_trk = restrict(csc, evt_blocks{maze_idx}.t{cfg.evt.t_chan}(1), evt_blocks{maze_idx}.t{cfg.evt.t_chan}(end));
+    res_evt_trk = restrict(nlx_evts, evt_blocks{maze_idx}.t{cfg.evt.t_chan}(1), evt_blocks{maze_idx}.t{cfg.evt.t_chan}(end));
+    
+    
+    
+    ms_trk = MS_append_data_sandbox(ms_trk, 'NLX_csc', res_csc_trk, 'NLX_evt', res_evt_trk, 'hypno_label', hypno_labels{maze_idx}, 'time_labels', time_labels{maze_idx});
+    ms_trk.hypno_label = 'MAZE'; 
     
     save([ms_resize_dir filesep 'ms_trk.mat'], 'ms_trk', '-v7.3')
+    
+    % save the CSC, events, and position files as well
+    save([ms_resize_dir filesep 'LFP.mat'], 'csc', '-v7.3');
+    evt = nlx_evts;
+    save([ms_resize_dir filesep 'Events.mat'], 'evt', '-v7.3')
+
 %     clear 'ms_trk';
     
     % remove from main ms struct
@@ -680,6 +715,11 @@ all_RawTraces_pre_SW = []; all_RawTraces_post_SW = [];
 all_detrendRaw_pre_SW = []; all_detrendRaw_post_SW = [];
 pre_SW_idx = []; post_SW_idx = [];
 
+if isfield(ms_seg_resize, 'denoise')
+    all_deconv_pre = []; all_deconv_post = [];
+    all_deconv_pre_REM = []; all_deconv_post_REM = [];
+    all_deconv_pre_SW = []; all_deconv_post_SW = [];
+end
 
 for iSeg = 1:length(ms_seg_resize.RawTraces)
     ms_seg = []; % cleared so that we can use this var name for saving. 
@@ -728,7 +768,7 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
         all_binary_pre = [all_binary_pre; ms_seg.Binary];
         all_RawTraces_pre = [all_RawTraces_pre; ms_seg.RawTraces];
         all_detrendRaw_pre = [all_detrendRaw_pre; ms_seg.detrendRaw];
-        
+        if isfield(ms_seg_resize, 'denoise'); all_deconv_pre = [all_deconv_pre; ms_seg.deconv]; end
         
         % break out REM and SW
         if strcmp(ms_seg_resize.hypno_label{iSeg}, 'REM')
@@ -737,12 +777,15 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
             all_RawTraces_pre_REM = [all_RawTraces_pre_REM; ms_seg.RawTraces];
             all_detrendRaw_pre_REM = [all_detrendRaw_pre_REM; ms_seg.detrendRaw];
             pre_REM_idx = [pre_REM_idx, iSeg];
+           if isfield(ms_seg_resize, 'denoise'); all_deconv_pre_REM = [all_deconv_pre_REM; ms_seg.deconv]; end
+
         elseif strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
             all_tvec_pre_SW = [all_tvec_pre_SW; ms_seg.time];
             all_binary_pre_SW = [all_binary_pre_SW; ms_seg.Binary];
             all_RawTraces_pre_SW = [all_RawTraces_pre_SW; ms_seg.RawTraces];
             all_detrendRaw_pre_SW = [all_detrendRaw_pre_SW; ms_seg.detrendRaw];
             pre_SW_idx = [pre_SW_idx, iSeg];
+            if isfield(ms_seg_resize, 'denoise'); all_deconv_pre_SW = [all_deconv_pre_SW; ms_seg.deconv]; end
         end
         
     elseif strcmp(ms_seg_resize.pre_post{iSeg}, 'post')
@@ -750,7 +793,8 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
         all_binary_post = [all_binary_post; ms_seg.Binary];
         all_RawTraces_post = [all_RawTraces_post; ms_seg.RawTraces];
         all_detrendRaw_post = [all_detrendRaw_post; ms_seg.detrendRaw];
-        
+        if isfield(ms_seg_resize, 'denoise'); all_deconv_post = [all_deconv_post; ms_seg.deconv]; end
+
         % break out REM and SW
         if strcmp(ms_seg_resize.hypno_label{iSeg}, 'REM')
             all_tvec_post_REM = [all_tvec_post_REM; ms_seg.time];
@@ -758,14 +802,14 @@ for iSeg = 1:length(ms_seg_resize.RawTraces)
             all_RawTraces_post_REM = [all_RawTraces_post_REM; ms_seg.RawTraces];
             all_detrendRaw_post_REM = [all_detrendRaw_post_REM; ms_seg.detrendRaw];
             post_REM_idx = [post_REM_idx, iSeg];
-            
+            if isfield(ms_seg_resize, 'denoise'); all_deconv_post_REM = [all_deconv_post_REM; ms_seg.deconv]; end
         elseif strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
             all_tvec_post_SW = [all_tvec_post_SW; ms_seg.time];
             all_binary_post_SW = [all_binary_post_SW; ms_seg.Binary];
             all_RawTraces_post_SW = [all_RawTraces_post_SW; ms_seg.RawTraces];
             all_detrendRaw_post_SW = [all_detrendRaw_post_SW; ms_seg.detrendRaw];
             post_SW_idx = [post_SW_idx, iSeg];
-            
+            if isfield(ms_seg_resize, 'denoise'); all_deconv_post_SW = [all_deconv_post_SW; ms_seg.deconv]; end
         end
     end
 end
@@ -813,12 +857,19 @@ save([ms_resize_dir filesep 'all_binary_post_SW.mat' ], 'all_binary_post_SW', '-
 save([ms_resize_dir filesep 'all_RawTraces_post_SW.mat'], 'all_RawTraces_post_SW', '-v7.3');
 save([ms_resize_dir filesep 'all_detrendRaw_post_SW.mat'], 'all_detrendRaw_post_SW', '-v7.3');
 
+if isfield(ms_seg_resize, 'denoise')
+    save([ms_resize_dir filesep 'all_deconv_pre.mat'], 'all_deconv_pre', '-v7.3');
+    save([ms_resize_dir filesep 'all_deconv_pre_REM.mat'], 'all_deconv_pre_REM', '-v7.3');
+    save([ms_resize_dir filesep 'all_deconv_pre_SW.mat'], 'all_deconv_pre_SW', '-v7.3');
+    save([ms_resize_dir filesep 'all_deconv_post.mat'], 'all_deconv_post', '-v7.3');
+    save([ms_resize_dir filesep 'all_deconv_post_REM.mat'], 'all_deconv_post_REM', '-v7.3');
+    save([ms_resize_dir filesep 'all_deconv_post_SW.mat'], 'all_deconv_post_SW', '-v7.3');
+end
+
+
 
 %% clean up and export the ms_seg_resize
 save([ms_resize_dir filesep 'ms_resize.mat'], 'ms_seg_resize', '-v7.3')
-save([ms_resize_dir filesep 'LFP.mat'], 'csc', '-v7.3');
-evt = nlx_evts; 
-save([ms_resize_dir filesep 'Events.mat'], 'evt', '-v7.3')
 
 
 %% visualize

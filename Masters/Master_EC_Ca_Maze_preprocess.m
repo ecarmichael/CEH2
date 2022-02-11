@@ -125,10 +125,24 @@ for iF = 6%1:length(f_names)
     cfg_seg.resize.spec.lfp_chan = 2; % which channel to use for the spectrogram.
     cfg_seg.resize.method = 'wavelet';
     
-        fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',[iSub '-' iSess]);
+    fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',[iSub '-' iSess]);
     
-%     run the actual segmentation workflow
-            MS_Segment_raw_EC(cfg_seg, csc_dir, data_dir, ms_resize_dir);
+    %     run the actual segmentation workflow
+%     MS_Segment_raw_EC(cfg_seg, csc_dir, data_dir, ms_resize_dir);
+    
+    cd(ms_resize_dir)
+    % extrack the postion data for the
+    load('ms_trk.mat');
+    
+    trk_dir = dir([data_dir filesep '*MAZE']);
+    [~, behav] = MS_collect_DLC([trk_dir.folder filesep trk_dir.name]);
+    
+%     cd(csc_dir); 
+%     pos = LoadPos([]);
+%     
+%     trk_idx = nearest_idx3(ms_trk.NLX_evt.NLX_evt.t{end}, pos.tvec);
+%     trk_pos = pos.data(:,trk_idx);
+    
             
 
     
