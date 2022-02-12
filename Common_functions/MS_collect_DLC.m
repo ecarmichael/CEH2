@@ -122,7 +122,7 @@ end
 cam_idx = find(length(data_out.(fields{1})) == [length(TS{1}.system_clock{1}),length(TS{1}.system_clock{2})]);
 
 
-data_out.tvec = TS{1}.system_clock{cam_idx}; 
+data_out.tvec = TS{1}.system_clock{cam_idx} - TS{1}.system_clock{cam_idx}(1); 
 % get speed
 vx = dxdt(data_out.tvec,data_out.(fields{1})(:,1), 'verbose', 1);
 vy = dxdt(data_out.tvec,data_out.(fields{1})(:,2));

@@ -115,7 +115,7 @@ ms = MS_characterize_trace(cfg_stats, ms);
 fprintf('\n<strong>%s</strong>: basic statstics computed for each Ca trace\n', mfilename);
 
 %% add the deconvolved traces if it is in the path
-if ~isfield(ms, 'detrendRaw')
+if isfield(ms, 'detrendRaw') && ~isfield(ms, 'Binary')
     ms = msExtractBinary_detrendTraces(ms);
 end
 % if exist('deconvolveCa.m', 'file') == 2
@@ -160,7 +160,7 @@ ms = MS_append_data_sandbox(ms, 'file_names', TS_name);
 
 %% segment the data
 cfg_seg = []; 
-cfg_seg.user_fields = {'denoise', 'deconv', 'detrendRaw'};
+cfg_seg.user_fields = {'Binary','denoise', 'deconv', 'detrendRaw'};
 ms_seg = MS_segment_ms_sandbox(cfg_seg, ms);
 
 
@@ -361,21 +361,16 @@ fprintf('MS time samples %.0f   |    %.0f NLX', length(ms_seg.RawTraces{maze_idx
     
     ms_trk = MS_de_cell(ms_trk);
     
-    % binarize the trace
-    if ~isfield(ms_trk, 'detrendRaw')
-    ms_trk = msExtractBinary_detrendTraces(ms_trk);
-    end
-    
     % add in the NLX data
     
     res_csc_trk = restrict(csc, evt_blocks{maze_idx}.t{cfg.evt.t_chan}(1), evt_blocks{maze_idx}.t{cfg.evt.t_chan}(end));
     res_evt_trk = restrict(nlx_evts, evt_blocks{maze_idx}.t{cfg.evt.t_chan}(1), evt_blocks{maze_idx}.t{cfg.evt.t_chan}(end));
     
-    
-    
+    % append the NLX data
     ms_trk = MS_append_data_sandbox(ms_trk, 'NLX_csc', res_csc_trk, 'NLX_evt', res_evt_trk, 'hypno_label', hypno_labels{maze_idx}, 'time_labels', time_labels{maze_idx});
     ms_trk.hypno_label = 'MAZE'; 
     
+    % save the track ms file separately
     save([ms_resize_dir filesep 'ms_trk.mat'], 'ms_trk', '-v7.3')
     
     % save the CSC, events, and position files as well
@@ -415,84 +410,6 @@ fprintf('MS time samples %.0f   |    %.0f NLX', length(ms_seg.RawTraces{maze_idx
 
     fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: #%d : <strong>%s</strong> was flagged for removal\n', maze_idx, ms_seg.removed{end});
     
-
-
-
-% %%  identify MS recordings without NLX which should be the track section. 
-% if length(evt_blocks) < length(TS)
-%     fprintf('Length of TS (%d) and evt_blocks (%d) are not equal. Checking for odd MS timestamp lengths out...\n',length(TS), length(evt_blocks));
-%     
-%     for iT = length(TS):-1:1
-%         l_ts(iT) = length(TS{iT}.system_clock{1});
-%     end
-%     
-%     for iE = length(evt_blocks):-1:1
-%         l_evt(iE) = length(evt_blocks{iE}.t{cfg.evt.t_chan});
-%     end
-%     
-%     odd_idx = find(~ismembertol(l_ts, l_evt, 50,'OutputAllIndices',true,'DataScale', 1));
-%     
-%     for iOdd = 1:length(odd_idx)
-%         fprintf('Found odd TS files at idx: %d.   Length: %d samples\n', odd_idx(iOdd), length(TS{odd_idx(iOdd)}.system_clock{1}));
-%     end
-%     
-%     % keep the track ms struct and save
-%     keep_idx = 1:size(ms_seg.RawTraces,1);
-%     keep_idx =keep_idx((keep_idx ~= odd_idx));
-%     
-%     % get the pre, trk, post values
-%     for iC = length(TS):-1:1
-%         if iC < odd_idx
-%             ms_seg.pre_post{iC} = 'pre';
-%         elseif iC == odd_idx
-%             ms_seg.pre_post{iC} = 'task';
-%         elseif iC > odd_idx
-%             ms_seg.pre_post{iC} = 'post';
-%         end
-%     end
-%     
-%     cfg_rem = [];
-%     ms_trk = MS_remove_data_sandbox(cfg_rem, ms_seg, keep_idx);
-%     
-%     ms_trk = MS_de_cell(ms_trk);
-%     
-%     % binarize the trace
-%     
-%     ms_trk = msExtractBinary_detrendTraces(ms_trk);
-%     
-%     save([ms_resize_dir filesep 'ms_trk.mat'], 'ms_trk', '-v7.3')
-% %     clear 'ms_trk';
-%     
-%     % remove from main ms struct
-%     cfg_rem = [];
-% %     rm_idx = find(odd_idx== ms_seg.seg_id); % why is this here? 
-%     ms_seg = MS_remove_data_sandbox(cfg_rem, ms_seg, odd_idx);
-%     
-%     
-%     if ~isfield(ms_seg, 'removed')
-%         ms_seg.removed = {};
-%     end
-%     
-%     if ~isfield(ms_seg, 'removed_reason')
-%         ms_seg.removed_reason = {};
-%     end
-%     ms_seg.removed{end+1} = TS_name{odd_idx};
-%     ms_seg.removed_reason{end+1} = 'Odd Index values. Likely Track Segment';
-% 
-%     % remove from TS and labeling structs
-%     TS(odd_idx) = [];
-%     
-%     TS_name(odd_idx)= [];
-%     
-%     hypno_labels(odd_idx) = [];
-%     
-%     time_labels(odd_idx) = [];
-%         
-%     fprintf('\n<strong>MS_Segment_raw</strong>: miniscope epoch: #%d : <strong>%s</strong> was flagged for removal\n', odd_idx, ms_seg.removed{end});
-%     
-% end
-
-
 %% append the NLX data to the ms structure (be saure to use the same channel as the one used for extraction (cfg_evt_blocks.t_chan).
 flag = [];
 cut_offs = NaN(2,length(TS));

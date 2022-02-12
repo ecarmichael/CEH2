@@ -69,7 +69,7 @@ for iF = 6%1:length(f_names)
     iSess = parts{end}; 
 
     % save the output here. 
-    ms_resize_dir = [PARAMS.inter_dir filesep f_names(iF).name]; 
+    ms_resize_dir = [PARAMS.inter_dir filesep iSub filesep f_names(iF).name]; 
     mkdir(ms_resize_dir); 
     
     
@@ -128,14 +128,27 @@ for iF = 6%1:length(f_names)
     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',[iSub '-' iSess]);
     
     %     run the actual segmentation workflow
-%     MS_Segment_raw_EC(cfg_seg, csc_dir, data_dir, ms_resize_dir);
+    MS_Segment_raw_EC(cfg_seg, csc_dir, data_dir, ms_resize_dir);
     
     cd(ms_resize_dir)
     % extrack the postion data for the
     load('ms_trk.mat');
     
+    
+    
     trk_dir = dir([data_dir filesep '*MAZE']);
     [~, behav] = MS_collect_DLC([trk_dir.folder filesep trk_dir.name]);
+    
+    behav.time = behav.time + ms_trk.time(1); 
+    if isempty(behav)
+        error('behav is empty')
+    end
+    
+    if length(ms_trk.time) ~= length(behav.time)
+       behav = MS_align_data(behav, ms_trk);
+    end
+        cd(ms_resize_dir)
+    save('behav_DLC.mat', 'behav', '-v7.3')
     
 %     cd(csc_dir); 
 %     pos = LoadPos([]);
