@@ -145,7 +145,7 @@ for iSub = 1:length(sub_list) % comment length out and just do iSub = X session.
         time_str = regexp(ms_trk.file_names,'\d*','Match');
         f_info.time = datestr(datestr([time_str{1} ':' time_str{2} ':' time_str{3}]), 'HH:MM:SS');
         
-        fprintf('<strong>%s</strong>: loading ms trk from %s %s...\n', mfilename, f_info.fname)
+        fprintf('<strong>%s</strong>: loading ms trk from %s...\n', mfilename, f_info.fname)
         
         % get the position info from the DLC output file.
         load('behav_DLC.mat')
