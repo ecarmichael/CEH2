@@ -139,6 +139,8 @@ for iF = 6%1:length(f_names)
     trk_dir = dir([data_dir filesep '*MAZE']);
     [~, behav] = MS_collect_DLC([trk_dir.folder filesep trk_dir.name]);
     
+    behav.position = behav.position /.666;
+    behav.units = 'cm' 
     behav.time = behav.time + ms_trk.time(1); 
     if isempty(behav)
         error('behav is empty')

@@ -35,6 +35,10 @@ elseif nargin <2
     evt = []; 
 end
 
+if isempty(evt) && exist('Events.mat','file')
+    load('Events.mat'); 
+end
+
 
 %% get the basic information form the name
 fname = strsplit(data_dir, filesep);
@@ -112,31 +116,102 @@ fprintf(fid, 'Meta.event_off = ''TTL Input on AcqSystem1_0 board 0 port 3 value 
 
 
 if ~isempty(evt)
-    % get all the trial starts
-    trials.choice = evt.t{find(strcmpi(evt.label, 'c'))}; 
-    trials.start_C = evt.t{find(contains(evt.label, 'Center Entered'))}((nearest_idx3(trials.choice, evt.t{find(contains(evt.label, 'Center Entered'))}))); 
     
-    trials.force_L = evt.t{find(strcmpi(evt.label, 'fl'))}; 
-    trials.start_FL = evt.t{find(contains(evt.label, 'Center Entered'))}((nearest_idx3(trials.force_L, evt.t{find(contains(evt.label, 'Center Entered'))}))); 
-    
-    trials.force_R = evt.t{find(strcmpi(evt.label, 'fr'))}; 
-    trials.start_FR = evt.t{find(contains(evt.label, 'Center Entered'))}((nearest_idx3(trials.force_R, evt.t{find(contains(evt.label, 'Center Entered'))}))); 
-    
-    trials.rew_L = evt.t{find(strcmpi(evt.label, 'L'))}; 
-    trials.enter_L = evt.t{find(contains(evt.label, 'L reward Entered'))}((nearest_idx3(trials.force_L, evt.t{find(contains(evt.label, 'L reward Entered'))}))); 
-    
-    
-    trials.rew_R = evt.t{find(strcmpi(evt.label, 'R'))}; 
-    trials.enter_R = evt.t{find(contains(evt.label, 'R reward Entered'))}((nearest_idx3(trials.force_L, evt.t{find(contains(evt.label, 'R reward Entered'))}))); 
-    
-    
-    
-    
-    
-    
-    
-    
+for ir = length(evt.t{1}):-1:1
+    dur(ir) = evt.t{2}(ir) - evt.t{1}(ir);
 end
+[~, idx] = sort(dur, 'descend'); 
+this_rec = idx(3); 
+
+evt_r = restrict(evt, evt.t{1}(this_rec), evt.t{2}(this_rec)); 
+
+    
+    % get all the trial starts
+    trials.choice = evt_r.t{strcmpi(evt_r.label, 'c')}; 
+    trials.start_C = evt_r.t{contains(evt_r.label, 'Box Exited')}((nearest_idx3(trials.choice, evt_r.t{contains(evt_r.label, 'Box Exited')},-1))); 
+    
+    trials.force_L = evt_r.t{strcmpi(evt_r.label, 'fl')}; 
+    trials.start_FL = evt_r.t{contains(evt_r.label, 'Box Exited')}(nearest_idx3(trials.force_L, evt_r.t{contains(evt_r.label, 'Box Exited')},-1)); 
+    
+    trials.force_R = evt_r.t{strcmpi(evt_r.label, 'fr')}; 
+    trials.start_FR = evt_r.t{contains(evt_r.label, 'Box Exited')}((nearest_idx3(trials.force_R, evt_r.t{contains(evt_r.label, 'Box Exited')},-1))); 
+    
+    trials.rew_L = evt_r.t{strcmpi(evt_r.label, 'L')}; 
+    trials.enter_L = evt_r.t{contains(evt_r.label, 'L reward Entered')}((nearest_idx3(trials.rew_L, evt_r.t{contains(evt_r.label, 'L reward Entered')},-1))); 
+    
+    
+    trials.rew_R = evt_r.t{strcmpi(evt_r.label, 'R')}; 
+    trials.enter_R = evt_r.t{contains(evt_r.label, 'R reward Entered')}((nearest_idx3(trials.rew_R, evt_r.t{contains(evt_r.label, 'R reward Entered')},-1))); 
+    
+    
+%     trials.box = evt_r.t{strcmpi(evt_r.label, 'b')}; 
+%     trials.enter_box = evt_r.t{contains(evt_r.label, 'Box Entered')}((nearest_idx3(trials.box , evt_r.t{contains(evt_r.label, 'Box Entered')}, -1))); 
+
+    trials.box = sort([trials.start_C, trials.start_FL,trials.start_FR]) - 30; 
+    
+    trials.tstart = sort([trials.start_C, trials.start_FL,trials.start_FR]); 
+    trials.tend = sort([trials.rew_L, trials.rew_R]) +5; 
+    
+    if length(trials.tstart) ~= length(trials.tend)
+        if length(trials.tstart)-1 == length(trials.tend)
+           warning('tstart (%.0f) tend (%.0f) differ by 1. Assuming incomplete last trial', length(trials.tstart),length(trials.tend)); 
+        else
+           error('%s: tstart (%.0f) tend (%.0f) differ. Determine why...',mfilename, length(trials.tstart),length(trials.tend)); 
+        
+        end
+    end
+    
+    % convert to ms times; 
+    fnames = fieldnames(trials); 
+    for iF = 1:length(fnames)
+        trials_ms.(fnames{iF}) = behav.time(nearest_idx3(trials.(fnames{iF}), evt_r.t{end}));
+    end
+end
+% %% test event
+% 
+% % close(101)
+% figure(101)
+% subplot(1,2,1)
+% pos_r = restrict(pos, evt.t{1}(this_rec), evt.t{2}(this_rec)); 
+% hold on
+% plot(pos_r.data(1,:), pos_r.data(2,:), '.k')
+% 
+% plot(pos_r.data(1,nearest_idx3(trials.start_C, pos_r.tvec)), pos_r.data(2,nearest_idx3(trials.start_C, pos_r.tvec)), 'sb', 'markersize', 12, 'markerfacecolor', 'b')
+% plot(pos_r.data(1,nearest_idx3(trials.start_FR, pos_r.tvec)), pos_r.data(2,nearest_idx3(trials.start_FR, pos_r.tvec)), 'sr', 'markersize', 12, 'markerfacecolor', 'r')
+% plot(pos_r.data(1,nearest_idx3(trials.start_FL, pos_r.tvec)), pos_r.data(2,nearest_idx3(trials.start_FL, pos_r.tvec)), 'sm', 'markersize', 12, 'markerfacecolor', 'm')
+% 
+% plot(pos_r.data(1,nearest_idx3(trials.enter_R, pos_r.tvec)), pos_r.data(2,nearest_idx3(trials.enter_R, pos_r.tvec)), 'dr', 'markersize', 12, 'markerfacecolor', 'r')
+% plot(pos_r.data(1,nearest_idx3(trials.enter_L, pos_r.tvec)), pos_r.data(2,nearest_idx3(trials.enter_L, pos_r.tvec)), 'db', 'markersize', 12, 'markerfacecolor', 'b')
+% 
+% 
+% plot(pos_r.data(1,nearest_idx3(trials.box, pos_r.tvec)), pos_r.data(2,nearest_idx3(trials.box, pos_r.tvec)), 'ob', 'markersize', 12, 'markerfacecolor', 'b')
+% 
+% % plot(pos_r.data(1,nearest_idx3(evt.t{find(contains(evt.label, 'Box Exited'))}, pos_r.tvec)), pos_r.data(2,nearest_idx3(evt.t{find(contains(evt.label, 'Box Exited'))}, pos_r.tvec)), 'sb', 'markersize', 12, 'markerfacecolor', 'b')
+% % plot(pos_r.data(1,nearest_idx3(evt.t{find(contains(evt.label, 'fl'))}, pos_r.tvec)), pos_r.data(2,nearest_idx3(evt.t{find(contains(evt.label, 'fl'))}, pos_r.tvec)), 'sr', 'markersize', 12, 'markerfacecolor', 'r')
+% 
+% legend({'tracking', 'choise', 'Force R', 'Force L', 'Rew R', 'Rew L', 'Box ent'})
+% 
+% subplot(1,2,2)
+% c_ord = linspecer(length(trials.tend)); 
+% hold on
+% for ii  = 1:length(trials.tend)
+%     this_pos = restrict(pos, trials.tstart(ii), trials.tend(ii));
+%     
+%     plot(this_pos.data(1,:), this_pos.data(2,:), '.', 'color', c_ord(ii,:)); 
+%     pause(0.5)
+% end
+% 
+% %%  event plots using behav. 
+% figure(103)
+% c_ord = linspecer(length(trials_ms.tend)); 
+% hold on
+% for ii  = 1:length(trials_ms.tend)
+% %     this_pos = nearest_idx3(trials_ms.tstart(ii), behav.time);
+%     
+%     plot(behav.position(nearest_idx3(trials_ms.tstart(ii), behav.time):nearest_idx3(trials_ms.tend(ii), behav.time),1), behav.position(nearest_idx3(trials_ms.tstart(ii), behav.time):nearest_idx3(trials_ms.tend(ii), behav.time),2), '.', 'color', c_ord(ii,:)); 
+%     pause(0.5)
+% end
+% %%
 
 
 
