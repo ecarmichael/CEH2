@@ -1,5 +1,5 @@
-function behav_out = MS_behav_add_Coord(behav, fieldname)
-%% MS_behav_add_Coord: lets the user draw the idealized trajectory and appends the coordinates to the behav structure. It also appends the linearized position. 
+function behav_out = MS_behav_append_Coord(behav, fieldname)
+%% MS_behav_append_Coord: lets the user draw the idealized trajectory and appends the coordinates to the behav structure. It also appends the linearized position. 
 %
 %
 %

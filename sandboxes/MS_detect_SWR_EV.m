@@ -241,7 +241,8 @@ for iSub = 1:length(Subjects)
         cfg_swr.method = 'zscore';
         cfg_swr.min_len = 0.04; % mouse SWR: 40ms from Vandecasteele et al. 2014
         cfg_swr.merge_thr = 0.01; %merge events that are within 20ms of each other.
-        cfg_swr.nan_idx = SWD_idx; % where are any nans, say from excluding artifacts, other events...
+        cfg_swr.artif_det = 1;
+%         cfg_swr.nan_idx = SWD_idx; % where are any nans, say from excluding artifacts, other events...
         
         % restrictions
         cfg_swr.max_len = [];

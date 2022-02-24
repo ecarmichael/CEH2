@@ -96,10 +96,12 @@ if isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
         csc_artif.data(iChan,:) = abs(csc_artif.data(iChan,:)); % detect artifacts both ways
     end
     %
-    %     switch cfg.artif_det.method
-    %         case 'zscore'
-    %         art_thresh = std(csc_artif.data(1,:))*cfg.artif_det.threshold;
-    %     end
+        switch cfg.artif_det.method
+            case 'zscore'
+            cfg.artif_det.threshold = std(csc_artif.data(1,:))*cfg.artif_det.threshold;
+            case 'raw'
+            cfg.artif_det.threshold = max(csc_artif.data(iChan,:))*.95; 
+        end
     
     
     artif_evts = TSDtoIV(cfg.artif_det,csc_artif);
@@ -208,7 +210,7 @@ events_out.usr.evt_len = (events_out.tend - events_out.tstart)';
 if isfield(cfg, 'max_len') && ~isempty(cfg.max_len)
         cfg_max_len = [];
         cfg_max_len.operation = '<';
-        cfg_max_len.threshold = cfg.max_len;
+        cfg_max_len.threshold = cfg.max_len.threshold;
     events_out = SelectIV(cfg_max_len,events_out,'evt_len');
     
     fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (%s %d ms removed).\n',length(events_out.tstart), cfg_max_len.operation, (cfg_max_len.threshold)*1000);

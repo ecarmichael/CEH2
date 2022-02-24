@@ -135,32 +135,43 @@ for iF = 6%1:length(f_names)
     load('ms_trk.mat');
     
     
-    
+    % load the DLC data
     trk_dir = dir([data_dir filesep '*MAZE']);
     [~, behav] = MS_collect_DLC([trk_dir.folder filesep trk_dir.name]);
     
-    behav.position = behav.position /.666;
-    behav.units = 'cm' 
-    behav.time = behav.time + ms_trk.time(1); 
+    % convert pixels to cm. 
+    behav.position = (behav.position /.666)/10; % convert pixels to cms
+    behav.units = 'cm' ;
+    behav.t_start =  ms_trk.time(1); % keep the original starting time in case it is needed later.
+    behav.time = behav.time + ms_trk.time(1); % correct time to start at zero. 
     if isempty(behav)
         error('behav is empty')
     end
     
+    % algin time to matach Ca2+ time 
     if length(ms_trk.time) ~= length(behav.time)
        behav = MS_align_data(behav, ms_trk);
     end
-        cd(ms_resize_dir)
+    
+    
+    % append the idealized coordinates    
+    if exist([PARAMS.inter_dir filesep 'Common_CoorD.mat'], 'file') % check for a common coordindate file. 
+        load([PARAMS.inter_dir filesep 'Common_CoorD.mat']); % if it exists load it. 
+        behav.CoorD_L = Common_CoorD.CoorD_L;
+        behav.CoorD_R = Common_CoorD.CoorD_R;
+    else
+        behav = MS_behav_append_Coord(behav, 'CoorD_L'); % if not then 
+        behav = MS_behav_append_Coord(behav, 'CoorD_R'); % if not then
+    end
+    
+    % append the trial event times from nvt. (assumes NLX zoned tracking
+    % was used. If not avilable try using the tracking matlabapp
+    % Maze_GUI_sandbox (WIP); 
+    load([ms_resize_dir filesep 'Events.mat']); 
+    behav = MS_behav_append_MAZE(behav, evt); 
+    
+    cd(ms_resize_dir)
     save('behav_DLC.mat', 'behav', '-v7.3')
-    
-%     cd(csc_dir); 
-%     pos = LoadPos([]);
-%     
-%     trk_idx = nearest_idx3(ms_trk.NLX_evt.NLX_evt.t{end}, pos.tvec);
-%     trk_pos = pos.data(:,trk_idx);
-    
-            
 
-    
 
-    
 end
