@@ -3,7 +3,8 @@
 
 %% init
 
-data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\B10_chrna2_electrophy_tungtsen electrode\B10_chrna2_SMpredictible_D1\GcfB10_Chrna2_SM-PUFF_D1_915';
+% data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\B10_chrna2_electrophy_tungtsen electrode\B10_chrna2_SMpredictible_D1\GcfB10_Chrna2_SM-PUFF_D1_915';
+data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/Chrna_SWR/DREADDA_chrna2E_SM_D1_1556'
 
 cd(data_dir);
 
@@ -16,21 +17,56 @@ MS_Quick_psd
 %% load the data
 
 cfg_csc = [];
-cfg_csc.fc = {'CSC4.ncs'}%, 'CSC3.ncs'};  % pick the channels to load
+cfg_csc.fc = {'CSC15.ncs'}%, 'CSC3.ncs'};  % pick the channels to load
 csc = LoadCSC(cfg_csc); % load the csc data
 
 pos = LoadPos([]); % load the position data.  This appears to be empty. 
 
 evt = LoadEvents([]);
 
+%% high pass
+d = fdesign.highpass('N,F3dB',4,2,csc.cfg.hdr{1}.SamplingFrequency);
+Hd = design(d,'butter');
+b = Hd.sosMatrix; a = Hd.scaleValues;
+% fvtool(Hd)
+
+temp_sig = csc.data;
+
+nan_idx = find(isnan(temp_sig));
+
+if ~isempty(nan_idx)
+    fprintf('WARNING: FilterLFP.m: signal %d contains NaNs (%d).\n',iS,length(nan_idx));
+    temp_sig(nan_idx) = 0;
+end
+
+% filter
+%temp_sig = filtfilt(sos,g,temp_sig);
+temp_sig = filtfilt(b,a,temp_sig);
+
+% reinstate NaNs and put signal back into tsd
+temp_sig(nan_idx) = NaN;
+csc.data(1,:) = temp_sig;
+
 
 %% filter the LFP into the ripple band. 
 
 
-         cfg_swr = [];
+
+% low pass filter the data
+    cfg_filt_d = [];
+    cfg_filt_d.type = 'butter'; %Cheby1 is sharper than butter
+    cfg_filt_d.f  = [140 250]; % broad, could use 150-200?
+    cfg_filt_d.order = 4; %type filter order (fine for this f range)
+    cfg_filt_d.display_filter = 0; % use this to see the fvtool
+    cfg.filt.display_filter = 1; % use this to see the fvtool
+
+
+
+
+        cfg_swr = [];
         cfg_swr.check = 0; % plot checks.
         cfg_swr.filt.type = 'butter'; %Cheby1 is sharper than butter
-        cfg_swr.filt.f  = [120 250]; % broad, could use 150-200?
+        cfg_swr.filt.f  = [125 250]; % broad, could use 150-200?
         cfg_swr.filt.order = 4; %type filter order (fine for this f range)
         cfg_swr.filt.display_filter = 0; % use this to see the fvtool
         
@@ -41,9 +77,9 @@ evt = LoadEvents([]);
         
         % detection
         cfg_swr.artif_det.method = 'zscore';
-        cfg_swr.artif_det.threshold = 5; 
+        cfg_swr.artif_det.threshold = 4; 
         cfg_swr.artif_det.dcn = '>';
-        cfg_swr.artif_det.rm_len = .5;
+        cfg_swr.artif_det.rm_len = .2;
         cfg_swr.threshold = 2.5;% in sd
         cfg_swr.method = 'zscore';
         cfg_swr.min_len = 0.04; % mouse SWR: 40ms from Vandecasteele et al. 2014
@@ -61,7 +97,7 @@ evt = LoadEvents([]);
         %                 cfg_swr.min_len.operation = '<';
         %                 cfg_swr.min_len.threshold = .2;
         cfg_swr.nCycles = 20; % number of cycles
-        cfg_swr.nCycles_operation = '=<'; % number of cycles
+        cfg_swr.nCycles_operation = '<='; % number of cycles
         
         % variaence
         cfg_swr.var = [];

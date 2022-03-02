@@ -8,6 +8,15 @@ cd('C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\
 load('behav_DLC.mat');
 load('ms_trk.mat'); 
 
+%% office computer
+
+addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
+addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
+
+cd('/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/Maze_Ca/inter/pv1254/2021_12_17_pv1254_MZD3');
+
+load('behav_DLC.mat');
+load('ms_trk.mat'); 
 %% play with linerization using one direction at a time
 pos = MS_behav2tsd(behav); 
 pos.tvec = pos.tvec/1000; 
