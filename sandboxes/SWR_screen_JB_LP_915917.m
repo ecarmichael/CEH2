@@ -5,6 +5,7 @@
 
 data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\B10_chrna2_electrophy_tungtsen electrode\B10_chrna2_SMpredictible_D1\GcfB10_Chrna2_SM-PUFF_D1_915';
 
+data_dir = 'C:\Users\ecarm\Desktop\JB1466_2022-02-26_swr_test'
 cd(data_dir);
 
 
@@ -19,7 +20,7 @@ cfg_csc = [];
 cfg_csc.fc = {'CSC4.ncs'}%, 'CSC3.ncs'};  % pick the channels to load
 csc = LoadCSC(cfg_csc); % load the csc data
 
-pos = LoadPos([]); % load the position data.  This appears to be empty. 
+% pos = LoadPos([]); % load the position data.  This appears to be empty. 
 
 evt = LoadEvents([]);
 
@@ -55,7 +56,7 @@ evt = LoadEvents([]);
         % restrictions
         cfg_swr.max_len = [];
         cfg_swr.max_len.operation = '<';
-        cfg_swr.max_len.threshold = .1;
+        cfg_swr.max_len.threshold = .2;
         
         %                 cfg_swr.min_len = [];
         %                 cfg_swr.min_len.operation = '<';
