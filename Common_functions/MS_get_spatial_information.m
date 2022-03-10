@@ -13,7 +13,6 @@ function [MI, posterior, occupancy_vector, p_active, likelihood] = MS_get_spatia
 %    - binary_in [1 x nSamples] binary vector from a Ca trace.  Binary
 %    thresholds are set using MS_msExtractBinary_detrendTraces
 %
-%    - binary_tvec [1 x nSamples] time vector corresponding to the Ca trace
 %
 %    - position_in [1 or 2 x nSamples] position array for X and Y over
 %    time. 

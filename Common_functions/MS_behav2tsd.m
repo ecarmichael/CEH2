@@ -14,7 +14,7 @@ function tsd_out = MS_behav2tsd(behav, conv_fact)
 %% convert everything
 if nargin<2
     conv_fact = 1;
-    tsd_out = tsd(behav.time, behav.position(:,1:2)'/conv_fact, {'x', 'y'}, 'px');
+    tsd_out = tsd(behav.time', behav.position(:,1:2)'/conv_fact, {'x', 'y'}, 'px');
 else
-    tsd_out = tsd(behav.time, behav.position(:,1:2)'/conv_fact, {'x', 'y'}, 'cm');
+    tsd_out = tsd(behav.time', behav.position(:,1:2)'/conv_fact, {'x', 'y'}, 'cm');
 end

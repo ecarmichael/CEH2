@@ -162,6 +162,8 @@ for iF = 6%1:length(f_names)
     else
         behav = MS_behav_append_Coord(behav, 'CoorD_L'); % if not then 
         behav = MS_behav_append_Coord(behav, 'CoorD_R'); % if not then
+        behav = MS_behav_append_Coord(behav, 'CoorD_M'); % if not then
+
     end
     
     % append the trial event times from nvt. (assumes NLX zoned tracking
