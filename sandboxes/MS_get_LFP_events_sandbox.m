@@ -244,22 +244,22 @@ if  isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
 end
 
 
-%% contrast band
-if isfield(cfg, 'cont_filt')
-    
-    cfg_f = [];
-    cfg_f.f = cfg.cont_filt.f; cfg_f.type = 'fdesign'; 
-%     cfg_f.display_filter = 1
-    csc_con = FilterLFP(cfg_f,csc);
-    csc_con.data = zscore(abs(hilbert(csc_con.data))); 
-    
-    for ii  = length(events_out.tstart):-1:1
-       this_csc = restrict(csc_con, events_out.tstart(ii)-.5, events_out.tend(ii)+.5); 
-       
-       events_out.usr.contrast(ii) = nanmean(this_csc.data); 
-    end
-end
-
+% %% contrast band
+% if isfield(cfg, 'cont_filt')
+%     
+%     cfg_f = [];
+%     cfg_f.f = cfg.cont_filt.f; cfg_f.type = 'fdesign'; 
+% %     cfg_f.display_filter = 1
+%     csc_con = FilterLFP(cfg_f,csc);
+%     csc_con.data = zscore(abs(hilbert(csc_con.data))); 
+%     
+%     for ii  = length(events_out.tstart):-1:1
+%        this_csc = restrict(csc_con, events_out.tstart(ii)-.5, events_out.tend(ii)+.5); 
+%        
+%        events_out.usr.contrast(ii) = nanmean(this_csc.data); 
+%     end
+% end
+% 
 
 %% check again
 if cfg.check
