@@ -33,7 +33,7 @@ f_info.session = parts{end};
 
 cfg_csc = [];
 if strcmp(f_info.subject, 'JB1556')
-    cfg_csc.fc = {'CSC6.ncs'};%, 'CSC3.ncs'};  % pick the channels to load
+    cfg_csc.fc = {'CSC8.ncs'};%, 'CSC3.ncs'};  % pick the channels to load
     conv_fac = 138/30;
 else
     cfg_csc.fc = {'CSC16.ncs'}; % for JB 1446;
@@ -87,7 +87,7 @@ z_ratio(~move_idx) = zscore(csc_th.data(~move_idx)./csc_delta.data(~move_idx));
 cfg_swr = [];
 cfg_swr.check = 0; % plot checks.
 cfg_swr.filt.type = 'butter'; %Cheby1 is sharper than butter
-cfg_swr.filt.f  = [125 250]; % broad, could use 150-200?
+cfg_swr.filt.f  = [125 200]; % broad, could use 150-200?
 cfg_swr.filt.order = 4; %type filter order (fine for this f range)
 cfg_swr.filt.display_filter = 0; % use this to see the fvtool
 
@@ -96,10 +96,10 @@ cfg_swr.kernel.samples = csc.cfg.hdr{1}.SamplingFrequency/100;
 cfg_swr.kernel.sd = csc.cfg.hdr{1}.SamplingFrequency/100;
 
 % detection
-cfg_swr.artif_det.method = 'zscore';
-cfg_swr.artif_det.threshold = 6;
-cfg_swr.artif_det.dcn = '>';
-cfg_swr.artif_det.rm_len = .2;
+% cfg_swr.artif_det.method = 'zscore';
+% cfg_swr.artif_det.threshold = 8;
+% cfg_swr.artif_det.dcn = '>';
+% cfg_swr.artif_det.rm_len = .2;
 cfg_swr.threshold = 2.5;% in sd
 cfg_swr.method = 'zscore';
 cfg_swr.min_len = 0.04; % mouse SWR: 40ms from Vandecasteele et al. 2014
@@ -138,37 +138,72 @@ cfg_plot.display = 'iv';
 cfg_plot.title = 'var_raw';
 PlotTSDfromIV(cfg_plot, SWR_evts, csc)
 
+keep_idx_tsd = csc;
+keep_idx_tsd.data = [sat_idx | move_idx | z_ratio > 1];
+
+
 %% check figure
+cord = linspecer(3);
 figure(102)
 hold on
-plot(csc.tvec, csc.data*1000, 'b');
-plot(linspeed.tvec, linspeed.data, 'r'); 
-plot(csc.tvec, [sat_idx | move_idx | z_ratio > 1], 'k'); 
-plot(csc.tvec, z_ratio, 'c'); 
-legend({'data', 'smooth speed', 'excluded idx', 'theta/delta z'}); 
-
+% yyaxis right
+plot((linspeed.tvec -linspeed.tvec(1))/60/60 , linspeed.data,  'color', cord(2,:));
+% ylim([0 50])
+% yyaxis left
+plot((csc.tvec - csc.tvec(1))/60/60, csc.data*1000, 'color', cord(1,:));
+plot((csc.tvec - csc.tvec(1))/60/60, z_ratio,  'color', cord(3,:)); 
+plot((csc.tvec - csc.tvec(1))/60/60, [sat_idx | move_idx | z_ratio > 1], 'k'); 
+legend({ 'smooth speed','data', 'theta/delta z', 'excluded idx'}); 
+xlim([min((csc.tvec - csc.tvec(1))/60/60) max((csc.tvec - csc.tvec(1))/60/60)])
+xlabel('time from cp21/vehicle (hrs)')
+ylabel('LFP voltage')
 
 %% brek up into 20min blocks
-
-dt = 10*60;
+nEvts = []; ndur = [];
+dt = 30*60;
 t = csc.tvec(1):dt:csc.tvec(end);
 
-
-for ii = length(t):-1:1
-    if ii == length(t)
+for ii = length(t)-1:-1:1
+    if ii == length(t)-1
         these_swr = restrict(SWR_evts, t(ii), csc.tvec(end));
-        
+        these_keep = restrict(keep_idx_tsd, t(ii), csc.tvec(end));
+
     else
         % retrict to this time block
         these_swr = restrict(SWR_evts, t(ii), t(ii+1));
-        
+        these_keep = restrict(keep_idx_tsd, t(ii), t(ii+1));
+
         
         
     end
     
+    ndur(ii) = sum(~these_keep.data)/csc.cfg.hdr{1}.SamplingFrequency; % convert used samples to total time used for SWR detection in this block; 
+    nEvts(ii) = length(these_swr.tend); 
+    
+    if ndur(ii) < 120
+        ndur(ii) = NaN;
+        nEvts(ii) = NaN;
+    end
+    
+%     cfg_plot = [];
+%     cfg_plot.title = 'var_raw';
+%     PlotTSDfromIV(cfg_plot, these_swr, csc)
+    
+    disp(num2str(nEvts(ii)/ndur(ii)))
+    
     
     
 end
+
+figure(202)
+yyaxis left
+plot(t(1:end-1)/60/60, nEvts./ndur)
+xlabel('time from cp21/vehicle (hrs)')
+ylabel('SWR events / second')
+yyaxis right
+plot(t(1:end-1)/60/60, ndur)
+ylabel('time used for detection per block (s)')
+
 
 %% visualize
 c_ord = linspecer(size(csc.data, 1)+2);
