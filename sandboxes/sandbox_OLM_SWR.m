@@ -4,13 +4,13 @@
 %% init
 
 % data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\B10_chrna2_electrophy_tungtsen electrode\B10_chrna2_SMpredictible_D1\GcfB10_Chrna2_SM-PUFF_D1_915';
-data_dir = '/home/williamslab/Dropbox (Williams Lab)/Data SWR sm/JB1556_2022-03-09_day1';
+% data_dir = '/home/williamslab/Dropbox (Williams Lab)/Data SWR sm/JB1556_2022-03-09_day1';
 
-
-
+data_dir = '/home/williamslab/Dropbox (Williams Lab)/Data SWR sm/JB1556_2022-03-10_day2';
 
 cd(data_dir);
 
+cord = linspecer(3);
 
 %% screen the PSDs (only run this once. It will save a png of all the PSDs)
 
@@ -26,9 +26,6 @@ parts = strsplit(parts{end}, '_');
 f_info.subject = parts{1};
 f_info.date = parts{2};
 f_info.session = parts{end};
-
-
-
 %% load the data
 
 cfg_csc = [];
@@ -45,12 +42,6 @@ cfg_pos.convFact = [conv_fac conv_fac];
 pos = LoadPos(cfg_pos); % load the position data.  This appears to be empty.
 
 evt = LoadEvents([]);
-
-
-% restrict csc and position to 4 hours.
-csc = restrict(csc, csc.tvec(1), csc.tvec(1)+(4*60*60));
-pos = restrict(pos, csc.tvec(1), csc.tvec(1)+(4*60*60));
-
 
 % get the movement
 linspeed = getLinSpd([], pos);
@@ -83,6 +74,25 @@ ratio.data = zscore((csc_th.data ./ csc_delta.data)');
 z_ratio = nan(1, length(csc.tvec));
 z_ratio(~move_idx) = zscore(csc_th.data(~move_idx)./csc_delta.data(~move_idx));
 
+
+sat_idx = (csc.data == max(csc.data)) | (csc.data == min(csc.data));
+
+%% check figure
+figure(102)
+tic
+hold on
+% yyaxis right
+plot((linspeed.tvec -linspeed.tvec(1))/60/60 , linspeed.data,  'color', cord(2,:));
+% ylim([0 50])
+% yyaxis left
+plot((csc.tvec - csc.tvec(1))/60/60, csc.data*1000, 'color', cord(1,:));
+plot((csc.tvec - csc.tvec(1))/60/60, z_ratio,  'color', cord(3,:)); 
+plot((csc.tvec - csc.tvec(1))/60/60, [sat_idx | move_idx | z_ratio > 1], 'k'); 
+legend({ 'smooth speed','data', 'theta/delta z', 'excluded idx'}); 
+xlim([min((csc.tvec - csc.tvec(1))/60/60) max((csc.tvec - csc.tvec(1))/60/60)])
+xlabel('time from cp21/vehicle (hrs)')
+ylabel('LFP voltage')
+toc
 %% filter the LFP into the ripple band.
 cfg_swr = [];
 cfg_swr.check = 0; % plot checks.
@@ -105,7 +115,7 @@ cfg_swr.method = 'zscore';
 cfg_swr.min_len = 0.04; % mouse SWR: 40ms from Vandecasteele et al. 2014
 cfg_swr.merge_thr = 0.02; %merge events that are within 20ms of each other.
 
-sat_idx = (csc.data == max(csc.data)) | (csc.data == min(csc.data));
+
 
 cfg_swr.nan_idx = [sat_idx | move_idx | z_ratio > 1]; % where are any nans, say from excluding artifacts, other events...
 
@@ -141,46 +151,46 @@ PlotTSDfromIV(cfg_plot, SWR_evts, csc)
 keep_idx_tsd = csc;
 keep_idx_tsd.data = [sat_idx | move_idx | z_ratio > 1];
 
+%% restrict if needed
 
-%% check figure
-cord = linspecer(3);
-figure(102)
-hold on
-% yyaxis right
-plot((linspeed.tvec -linspeed.tvec(1))/60/60 , linspeed.data,  'color', cord(2,:));
-% ylim([0 50])
-% yyaxis left
-plot((csc.tvec - csc.tvec(1))/60/60, csc.data*1000, 'color', cord(1,:));
-plot((csc.tvec - csc.tvec(1))/60/60, z_ratio,  'color', cord(3,:)); 
-plot((csc.tvec - csc.tvec(1))/60/60, [sat_idx | move_idx | z_ratio > 1], 'k'); 
-legend({ 'smooth speed','data', 'theta/delta z', 'excluded idx'}); 
-xlim([min((csc.tvec - csc.tvec(1))/60/60) max((csc.tvec - csc.tvec(1))/60/60)])
-xlabel('time from cp21/vehicle (hrs)')
-ylabel('LFP voltage')
+if length(evt.t{1}) > 1
+    pre_t = [evt.t{1}(1), evt.t{2}(1)]; 
+    post_t = [evt.t{1}(2), evt.t{2}(2)]; 
+    
+    
+csc_pre = restrict(csc,pre_t(1), pre_t(1)+(1*60 *60));
+csc_post = restrict(csc,post_t(1), post_t(1)+(4*60 *60));
+fprintf('Restriction check: ppre duration = %0.2f hours\n', (csc_pre.tvec(end)-csc_pre.tvec(1))/60/60)
 
+else
+    % restrict csc and position to 4 hours.
+csc_post = restrict(csc, csc.tvec(1), csc.tvec(1)+(4*60*60));
+end
+
+
+fprintf('Restriction check: post duration = %0.2f hours\n', (csc_post.tvec(end)-csc_post.tvec(1))/60/60)
 %% brek up into 20min blocks
 nEvts = []; ndur = [];
-dt = 30*60;
-t = csc.tvec(1):dt:csc.tvec(end);
 
-for ii = length(t)-1:-1:1
-    if ii == length(t)-1
-        these_swr = restrict(SWR_evts, t(ii), csc.tvec(end));
-        these_keep = restrict(keep_idx_tsd, t(ii), csc.tvec(end));
+dt = 30*60; % block duration in seconds. 
 
+t = csc_post.tvec(1):dt:csc_post.tvec(end)+dt; % get the time blocks in the recording. 
+t_zero = ((t - t(1))/60/60)+(.5*(dt/60/60)); % zero out for plotting 
+
+for ii = length(t):-1:1
+    if ii == length(t)
+        these_swr = restrict(SWR_evts, t(ii), csc_post.tvec(end));
+        these_keep = restrict(keep_idx_tsd, t(ii), csc_post.tvec(end));
     else
         % retrict to this time block
         these_swr = restrict(SWR_evts, t(ii), t(ii+1));
         these_keep = restrict(keep_idx_tsd, t(ii), t(ii+1));
-
-        
-        
     end
     
     ndur(ii) = sum(~these_keep.data)/csc.cfg.hdr{1}.SamplingFrequency; % convert used samples to total time used for SWR detection in this block; 
     nEvts(ii) = length(these_swr.tend); 
     
-    if ndur(ii) < 120
+    if ndur(ii) < 200
         ndur(ii) = NaN;
         nEvts(ii) = NaN;
     end
@@ -190,34 +200,104 @@ for ii = length(t)-1:-1:1
 %     PlotTSDfromIV(cfg_plot, these_swr, csc)
     
     disp(num2str(nEvts(ii)/ndur(ii)))
-    
-    
-    
 end
 
 figure(202)
 yyaxis left
-plot(t(1:end-1)/60/60, nEvts./ndur)
+plot(t_zero, nEvts./ndur)
 xlabel('time from cp21/vehicle (hrs)')
 ylabel('SWR events / second')
 yyaxis right
-plot(t(1:end-1)/60/60, ndur)
+plot(t_zero, ndur)
+ylim([0 max(ndur)])
 ylabel('time used for detection per block (s)')
+xlim([0 4])
 
-
-%% visualize
-c_ord = linspecer(size(csc.data, 1)+2);
-figure(101)
+figure(200)
+% yyaxis left
 hold on
-for ii = 1:size(csc.data, 1)
-    ax(ii) = subplot(size(csc.data, 1), 1,ii);
-    hold on
-    plot(csc.tvec, csc.data(ii,:), 'color', c_ord(ii,:));
-    xlim([csc.tvec(1) csc.tvec(end)])
-    ylim([min(csc.data,[],'all')*1.10, max(csc.data, [], 'all')*1.10]);
-    plot(evt.t{3}, zeros(size(evt.t{3})), 'xk');
+bar(t_zero-(.5*(dt/60/60)), nEvts./ndur, 'facecolor', cord(1,:), 'EdgeColor', cord(1,:))
+xlabel('time from cp21/vehicle (hrs)')
+ylabel('SWR rate ')
+
+xlim([-.5 4])
+plot(t_zero(isnan(nEvts)) -(.5*(dt/60/60)), zeros(1, length(t_zero(isnan(nEvts))))+max(nEvts./ndur), 'x')
+title([f_info.subject ' ' f_info.session])
+
+
+
+% if there is a pre recording get the measures and append plot
+if length(evt.t{1})>1 % if there is a pre recording get it here. 
+    t_minus = csc_pre.tvec(1):dt:csc_pre.tvec(end);
     
+    pre_nEvts = []; pre_ndur = []; 
+
+    t_minus_zero = ((t_minus - t_minus(1))/60/60)+(.5*(dt/60/60))-1; 
+
+    
+    
+for ii = length(t_minus):-1:1
+    if ii == length(t_minus)
+        these_swr = restrict(SWR_evts, t_minus(ii), csc_post.tvec(end));
+        these_keep = restrict(keep_idx_tsd, t_minus(ii), csc_post.tvec(end));
+    else
+        % retrict to this time block
+        these_swr = restrict(SWR_evts, t_minus(ii), t_minus(ii+1));
+        these_keep = restrict(keep_idx_tsd, t_minus(ii), t_minus(ii+1));
+    end
+    
+    pre_ndur(ii) = sum(~these_keep.data)/csc.cfg.hdr{1}.SamplingFrequency; % convert used samples to total time used for SWR detection in this block; 
+    pre_nEvts(ii) = length(these_swr.tend); 
+    
+    if pre_ndur(ii) < 200
+        pre_ndur(ii) = NaN;
+        pre_nEvts(ii) = NaN;
+    end
+
+    disp(num2str(pre_nEvts(ii)/pre_ndur(ii)))
 end
 
-linkaxes(ax, 'x')
 
+figure(202)
+clf
+yyaxis left
+plot([t_minus_zero    t_zero],[pre_nEvts./pre_ndur,  nEvts./ndur])
+xlabel('time from cp21/vehicle (hrs)')
+ylabel('SWR events / second')
+yyaxis right
+plot([t_minus_zero    t_zero],[pre_ndur,  ndur])
+ylim([0 max([pre_ndur, ndur])+1000])
+ylabel('time used for detection per block (s)')
+xlim([-1 4])
+rectangle('Position', [t_minus_zero(end), 0, abs(t_zero(1) - t_minus_zero(end)), max([pre_ndur, ndur])], 'facecolor', [.2 .2 .2 .2], 'edgecolor', [.2 .2 .2 .2])
+
+figure(203)
+% yyaxis left
+hold on
+bar(t_zero- (.5*(dt/60/60)), (nEvts./ndur)./nanmean(pre_nEvts./pre_ndur), 'facecolor', cord(1,:), 'EdgeColor', cord(1,:))
+xlabel('time from cp21/vehicle (hrs)')
+ylabel('SWR rate normalized to 1hr pre')
+% yyaxis right
+% plot(t_zero,  ndur)
+ylabel('time used for detection per block (s)')
+xlim([0 4])
+plot(t_zero(isnan(nEvts)) -(.5*(dt/60/60)), zeros(1,length(t_zero(isnan(nEvts))))+max(nEvts./ndur), 'x')
+% rectangle('Position', [t_minus_zero(end), 0, abs(t_zero(1) - t_minus_zero(end)), max([pre_ndur, ndur])], 'facecolor', [.2 .2 .2 .2], 'edgecolor', [.2 .2 .2 .2])
+end
+
+
+
+
+%% collect the data for comparisons
+d = dir; 
+mkdir([d.folder filesep 'inter'])
+
+data_out = [];
+data_out.SWR_evts = SWR_evts; 
+data_out.tvec = csc.tvec; 
+data_out.evt = evt;
+data_out.t_zero = t_zero; 
+
+if exist('t_minus')
+data_out.t_min
+end
