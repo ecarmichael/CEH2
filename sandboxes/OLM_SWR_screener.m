@@ -1,31 +1,38 @@
-%% JB SWR screener
+%% 
 
-
+function OLM_SWR_screener()
 %% init
 
 % data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\B10_chrna2_electrophy_tungtsen electrode\B10_chrna2_SMpredictible_D1\GcfB10_Chrna2_SM-PUFF_D1_915';
 % data_dir = '/home/williamslab/Dropbox (Williams Lab)/Data SWR sm/JB1556_2022-03-09_day1';
 
-data_dir = '/home/williamslab/Dropbox (Williams Lab)/Data SWR sm/JB1556_2022-03-10_day2';
+% data_dir = '/home/williamslab/Dropbox (Williams Lab)/Data SWR sm/JB1556_2022-03-10_day2';
 
-cd(data_dir);
+% cd(data_dir);
 
 cord = linspecer(3);
 
+parts = strsplit(cd, filesep);
+parent_path = strjoin(parts(1:end-1), filesep);
+
+inter_dir = [parent_path filesep 'inter'];
+mkdir(inter_dir)
 %% screen the PSDs (only run this once. It will save a png of all the PSDs)
 
-MS_Quick_psd
+% MS_Quick_psd
 
 %% get the session information
 
 
 parts = strsplit(cd, filesep);
+partent = parts{1:end-1}; 
 
 parts = strsplit(parts{end}, '_');
 
 f_info.subject = parts{1};
 f_info.date = parts{2};
 f_info.session = parts{end};
+
 %% load the data
 
 cfg_csc = [];
@@ -33,7 +40,8 @@ if strcmp(f_info.subject, 'JB1556')
     cfg_csc.fc = {'CSC8.ncs'};%, 'CSC3.ncs'};  % pick the channels to load
     conv_fac = 138/30;
 else
-    cfg_csc.fc = {'CSC16.ncs'}; % for JB 1446;
+    cfg_csc.fc = {'CSC13.ncs'}; % for JB 1446;
+    conv_fac = 255/30;
 end
 csc = LoadCSC(cfg_csc); % load the csc data
 
@@ -42,6 +50,8 @@ cfg_pos.convFact = [conv_fac conv_fac];
 pos = LoadPos(cfg_pos); % load the position data.  This appears to be empty.
 
 evt = LoadEvents([]);
+start_rec = find(contains(evt.label, 'Starting Recording')); 
+stop_rec = find(contains(evt.label, 'Stopping Recording')); 
 
 % get the movement
 linspeed = getLinSpd([], pos);
@@ -77,6 +87,9 @@ z_ratio(~move_idx) = zscore(csc_th.data(~move_idx)./csc_delta.data(~move_idx));
 
 sat_idx = (csc.data == max(csc.data)) | (csc.data == min(csc.data));
 
+
+keep_idx_tsd = csc;
+keep_idx_tsd.data = [sat_idx | move_idx | z_ratio > 1];
 %% check figure
 figure(102)
 tic
@@ -93,6 +106,8 @@ xlim([min((csc.tvec - csc.tvec(1))/60/60) max((csc.tvec - csc.tvec(1))/60/60)])
 xlabel('time from cp21/vehicle (hrs)')
 ylabel('LFP voltage')
 toc
+SetFigure([], gcf); 
+saveas(gcf,[inter_dir filesep 'data_tvec'], 'png')
 %% filter the LFP into the ripple band.
 cfg_swr = [];
 cfg_swr.check = 0; % plot checks.
@@ -148,14 +163,13 @@ cfg_plot.display = 'iv';
 cfg_plot.title = 'var_raw';
 PlotTSDfromIV(cfg_plot, SWR_evts, csc)
 
-keep_idx_tsd = csc;
-keep_idx_tsd.data = [sat_idx | move_idx | z_ratio > 1];
 
+close all
 %% restrict if needed
 
-if length(evt.t{1}) > 1
-    pre_t = [evt.t{1}(1), evt.t{2}(1)]; 
-    post_t = [evt.t{1}(2), evt.t{2}(2)]; 
+if length(evt.t{start_rec}) > 1
+    pre_t = [evt.t{start_rec}(1), evt.t{stop_rec}(1)]; 
+    post_t = [evt.t{start_rec}(2), evt.t{stop_rec}(2)]; 
     
     
 csc_pre = restrict(csc,pre_t(1), pre_t(1)+(1*60 *60));
@@ -175,7 +189,7 @@ nEvts = []; ndur = [];
 dt = 30*60; % block duration in seconds. 
 
 t = csc_post.tvec(1):dt:csc_post.tvec(end)+dt; % get the time blocks in the recording. 
-t_zero = ((t - t(1))/60/60)+(.5*(dt/60/60)); % zero out for plotting 
+t_zero = ((t - t(1))/60/60);%+(.5*(dt/60/60)); % zero out for plotting 
 
 for ii = length(t):-1:1
     if ii == length(t)
@@ -212,7 +226,10 @@ plot(t_zero, ndur)
 ylim([0 max(ndur)])
 ylabel('time used for detection per block (s)')
 xlim([0 4])
+title([f_info.subject ' ' f_info.session])
 
+saveas(gcf, [inter_dir filesep f_info.subject '_' f_info.session '_post'], 'fig')
+saveas(gcf, [inter_dir filesep f_info.subject '_' f_info.session '_post'], 'png')
 figure(200)
 % yyaxis left
 hold on
@@ -223,11 +240,12 @@ ylabel('SWR rate ')
 xlim([-.5 4])
 plot(t_zero(isnan(nEvts)) -(.5*(dt/60/60)), zeros(1, length(t_zero(isnan(nEvts))))+max(nEvts./ndur), 'x')
 title([f_info.subject ' ' f_info.session])
-
+saveas(gcf, [inter_dir filesep f_info.subject '_' f_info.session '_post_bar'], 'fig')
+saveas(gcf, [inter_dir filesep f_info.subject '_' f_info.session '_post_bar'], 'png')
 
 
 % if there is a pre recording get the measures and append plot
-if length(evt.t{1})>1 % if there is a pre recording get it here. 
+if length(evt.t{start_rec})>1 % if there is a pre recording get it here. 
     t_minus = csc_pre.tvec(1):dt:csc_pre.tvec(end);
     
     pre_nEvts = []; pre_ndur = []; 
@@ -270,6 +288,7 @@ ylim([0 max([pre_ndur, ndur])+1000])
 ylabel('time used for detection per block (s)')
 xlim([-1 4])
 rectangle('Position', [t_minus_zero(end), 0, abs(t_zero(1) - t_minus_zero(end)), max([pre_ndur, ndur])], 'facecolor', [.2 .2 .2 .2], 'edgecolor', [.2 .2 .2 .2])
+title([f_info.subject ' ' f_info.session])
 
 figure(203)
 % yyaxis left
@@ -282,22 +301,38 @@ ylabel('SWR rate normalized to 1hr pre')
 ylabel('time used for detection per block (s)')
 xlim([0 4])
 plot(t_zero(isnan(nEvts)) -(.5*(dt/60/60)), zeros(1,length(t_zero(isnan(nEvts))))+max(nEvts./ndur), 'x')
+title([f_info.subject ' ' f_info.session])
+
 % rectangle('Position', [t_minus_zero(end), 0, abs(t_zero(1) - t_minus_zero(end)), max([pre_ndur, ndur])], 'facecolor', [.2 .2 .2 .2], 'edgecolor', [.2 .2 .2 .2])
+saveas(gcf, [inter_dir filesep f_info.subject '_' f_info.session '_full_bar'], 'fig')
+saveas(gcf, [inter_dir filesep f_info.subject '_' f_info.session '_full_bar'], 'png')
+
 end
 
 
 
 
 %% collect the data for comparisons
-d = dir; 
-mkdir([d.folder filesep 'inter'])
+
 
 data_out = [];
+data_out.f_info = f_info; 
 data_out.SWR_evts = SWR_evts; 
 data_out.tvec = csc.tvec; 
 data_out.evt = evt;
 data_out.t_zero = t_zero; 
 
+    data_out.t_zero = t_zero; 
+    data_out.nEvts = nEvts; 
+    data_out.nDur = ndur; 
+
 if exist('t_minus')
-data_out.t_min
+    data_out.t_minus = t_minus; 
+    data_out.pre_nEvts = pre_nEvts; 
+    data_out.pre_nDur = pre_ndur; 
+end
+
+save([inter_dir filesep f_info.subject '_' f_info.session '_data_out.mat'], '-v7.3', 'data_out')
+
+close all
 end
