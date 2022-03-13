@@ -1,4 +1,4 @@
-%% 
+%%
 
 function OLM_SWR_screener()
 %% init
@@ -25,7 +25,7 @@ mkdir(inter_dir)
 
 
 parts = strsplit(cd, filesep);
-partent = parts{1:end-1}; 
+partent = parts{1:end-1};
 
 parts = strsplit(parts{end}, '_');
 
@@ -50,8 +50,8 @@ cfg_pos.convFact = [conv_fac conv_fac];
 pos = LoadPos(cfg_pos); % load the position data.  This appears to be empty.
 
 evt = LoadEvents([]);
-start_rec = find(contains(evt.label, 'Starting Recording')); 
-stop_rec = find(contains(evt.label, 'Stopping Recording')); 
+start_rec = find(contains(evt.label, 'Starting Recording'));
+stop_rec = find(contains(evt.label, 'Stopping Recording'));
 
 % get the movement
 linspeed = getLinSpd([], pos);
@@ -99,14 +99,14 @@ plot((linspeed.tvec -linspeed.tvec(1))/60/60 , linspeed.data,  'color', cord(2,:
 % ylim([0 50])
 % yyaxis left
 plot((csc.tvec - csc.tvec(1))/60/60, csc.data*1000, 'color', cord(1,:));
-plot((csc.tvec - csc.tvec(1))/60/60, z_ratio,  'color', cord(3,:)); 
-plot((csc.tvec - csc.tvec(1))/60/60, [sat_idx | move_idx | z_ratio > 1], 'k'); 
-legend({ 'smooth speed','data', 'theta/delta z', 'excluded idx'}); 
+plot((csc.tvec - csc.tvec(1))/60/60, z_ratio,  'color', cord(3,:));
+plot((csc.tvec - csc.tvec(1))/60/60, [sat_idx | move_idx | z_ratio > 1], 'k');
+legend({ 'smooth speed','data', 'theta/delta z', 'excluded idx'});
 xlim([min((csc.tvec - csc.tvec(1))/60/60) max((csc.tvec - csc.tvec(1))/60/60)])
 xlabel('time from cp21/vehicle (hrs)')
 ylabel('LFP voltage')
 toc
-SetFigure([], gcf); 
+SetFigure([], gcf);
 saveas(gcf,[inter_dir filesep 'data_tvec'], 'png')
 %% filter the LFP into the ripple band.
 cfg_swr = [];
@@ -161,24 +161,24 @@ SWR_evts = MS_get_LFP_events_sandbox(cfg_swr, csc);
 
 cfg_plot.display = 'iv';
 cfg_plot.title = 'var_raw';
-PlotTSDfromIV(cfg_plot, SWR_evts, csc)
+% PlotTSDfromIV(cfg_plot, SWR_evts, csc)
 
 
 close all
 %% restrict if needed
 
 if length(evt.t{start_rec}) > 1
-    pre_t = [evt.t{start_rec}(1), evt.t{stop_rec}(1)]; 
-    post_t = [evt.t{start_rec}(2), evt.t{stop_rec}(2)]; 
+    pre_t = [evt.t{start_rec}(1), evt.t{stop_rec}(1)];
+    post_t = [evt.t{start_rec}(2), evt.t{stop_rec}(2)];
     
     
-csc_pre = restrict(csc,pre_t(1), pre_t(1)+(1*60 *60));
-csc_post = restrict(csc,post_t(1), post_t(1)+(4*60 *60));
-fprintf('Restriction check: ppre duration = %0.2f hours\n', (csc_pre.tvec(end)-csc_pre.tvec(1))/60/60)
-
+    csc_pre = restrict(csc,pre_t(1), pre_t(1)+(1*60 *60));
+    csc_post = restrict(csc,post_t(1), post_t(1)+(4*60 *60));
+    fprintf('Restriction check: ppre duration = %0.2f hours\n', (csc_pre.tvec(end)-csc_pre.tvec(1))/60/60)
+    
 else
     % restrict csc and position to 4 hours.
-csc_post = restrict(csc, csc.tvec(1), csc.tvec(1)+(4*60*60));
+    csc_post = restrict(csc, csc.tvec(1), csc.tvec(1)+(4*60*60));
 end
 
 
@@ -186,10 +186,10 @@ fprintf('Restriction check: post duration = %0.2f hours\n', (csc_post.tvec(end)-
 %% brek up into 20min blocks
 nEvts = []; ndur = [];
 
-dt = 30*60; % block duration in seconds. 
+dt = 20*60; % block duration in seconds.
 
-t = csc_post.tvec(1):dt:csc_post.tvec(end)+dt; % get the time blocks in the recording. 
-t_zero = ((t - t(1))/60/60);%+(.5*(dt/60/60)); % zero out for plotting 
+t = csc_post.tvec(1):dt:csc_post.tvec(end)+dt; % get the time blocks in the recording.
+t_zero = ((t - t(1))/60/60);%+(.5*(dt/60/60)); % zero out for plotting
 
 for ii = length(t):-1:1
     if ii == length(t)
@@ -201,17 +201,17 @@ for ii = length(t):-1:1
         these_keep = restrict(keep_idx_tsd, t(ii), t(ii+1));
     end
     
-    ndur(ii) = sum(~these_keep.data)/csc.cfg.hdr{1}.SamplingFrequency; % convert used samples to total time used for SWR detection in this block; 
-    nEvts(ii) = length(these_swr.tend); 
+    ndur(ii) = sum(~these_keep.data)/csc.cfg.hdr{1}.SamplingFrequency; % convert used samples to total time used for SWR detection in this block;
+    nEvts(ii) = length(these_swr.tend);
     
-    if ndur(ii) < 200
+    if ndur(ii) < 300
         ndur(ii) = NaN;
         nEvts(ii) = NaN;
     end
     
-%     cfg_plot = [];
-%     cfg_plot.title = 'var_raw';
-%     PlotTSDfromIV(cfg_plot, these_swr, csc)
+    %     cfg_plot = [];
+    %     cfg_plot.title = 'var_raw';
+    %     PlotTSDfromIV(cfg_plot, these_swr, csc)
     
     disp(num2str(nEvts(ii)/ndur(ii)))
 end
@@ -245,68 +245,68 @@ saveas(gcf, [inter_dir filesep f_info.subject '_' f_info.session '_post_bar'], '
 
 
 % if there is a pre recording get the measures and append plot
-if length(evt.t{start_rec})>1 % if there is a pre recording get it here. 
+if length(evt.t{start_rec})>1 % if there is a pre recording get it here.
     t_minus = csc_pre.tvec(1):dt:csc_pre.tvec(end);
     
-    pre_nEvts = []; pre_ndur = []; 
-
-    t_minus_zero = ((t_minus - t_minus(1))/60/60)+(.5*(dt/60/60))-1; 
-
+    pre_nEvts = []; pre_ndur = [];
+    
+    t_minus_zero = ((t_minus - t_minus(1))/60/60)-1;
     
     
-for ii = length(t_minus):-1:1
-    if ii == length(t_minus)
-        these_swr = restrict(SWR_evts, t_minus(ii), csc_post.tvec(end));
-        these_keep = restrict(keep_idx_tsd, t_minus(ii), csc_post.tvec(end));
-    else
-        % retrict to this time block
-        these_swr = restrict(SWR_evts, t_minus(ii), t_minus(ii+1));
-        these_keep = restrict(keep_idx_tsd, t_minus(ii), t_minus(ii+1));
+    
+    for ii = length(t_minus):-1:1
+        if ii == length(t_minus)
+            these_swr = restrict(SWR_evts, t_minus(ii), csc_post.tvec(end));
+            these_keep = restrict(keep_idx_tsd, t_minus(ii), csc_post.tvec(end));
+        else
+            % retrict to this time block
+            these_swr = restrict(SWR_evts, t_minus(ii), t_minus(ii+1));
+            these_keep = restrict(keep_idx_tsd, t_minus(ii), t_minus(ii+1));
+        end
+        
+        pre_ndur(ii) = sum(~these_keep.data)/csc.cfg.hdr{1}.SamplingFrequency; % convert used samples to total time used for SWR detection in this block;
+        pre_nEvts(ii) = length(these_swr.tend);
+        
+        if pre_ndur(ii) < 200
+            pre_ndur(ii) = NaN;
+            pre_nEvts(ii) = NaN;
+        end
+        
+        disp(num2str(pre_nEvts(ii)/pre_ndur(ii)))
     end
     
-    pre_ndur(ii) = sum(~these_keep.data)/csc.cfg.hdr{1}.SamplingFrequency; % convert used samples to total time used for SWR detection in this block; 
-    pre_nEvts(ii) = length(these_swr.tend); 
     
-    if pre_ndur(ii) < 200
-        pre_ndur(ii) = NaN;
-        pre_nEvts(ii) = NaN;
-    end
-
-    disp(num2str(pre_nEvts(ii)/pre_ndur(ii)))
-end
-
-
-figure(202)
-clf
-yyaxis left
-plot([t_minus_zero    t_zero],[pre_nEvts./pre_ndur,  nEvts./ndur])
-xlabel('time from cp21/vehicle (hrs)')
-ylabel('SWR events / second')
-yyaxis right
-plot([t_minus_zero    t_zero],[pre_ndur,  ndur])
-ylim([0 max([pre_ndur, ndur])+1000])
-ylabel('time used for detection per block (s)')
-xlim([-1 4])
-rectangle('Position', [t_minus_zero(end), 0, abs(t_zero(1) - t_minus_zero(end)), max([pre_ndur, ndur])], 'facecolor', [.2 .2 .2 .2], 'edgecolor', [.2 .2 .2 .2])
-title([f_info.subject ' ' f_info.session])
-
-figure(203)
-% yyaxis left
-hold on
-bar(t_zero- (.5*(dt/60/60)), (nEvts./ndur)./nanmean(pre_nEvts./pre_ndur), 'facecolor', cord(1,:), 'EdgeColor', cord(1,:))
-xlabel('time from cp21/vehicle (hrs)')
-ylabel('SWR rate normalized to 1hr pre')
-% yyaxis right
-% plot(t_zero,  ndur)
-ylabel('time used for detection per block (s)')
-xlim([0 4])
-plot(t_zero(isnan(nEvts)) -(.5*(dt/60/60)), zeros(1,length(t_zero(isnan(nEvts))))+max(nEvts./ndur), 'x')
-title([f_info.subject ' ' f_info.session])
-
-% rectangle('Position', [t_minus_zero(end), 0, abs(t_zero(1) - t_minus_zero(end)), max([pre_ndur, ndur])], 'facecolor', [.2 .2 .2 .2], 'edgecolor', [.2 .2 .2 .2])
-saveas(gcf, [inter_dir filesep f_info.subject '_' f_info.session '_full_bar'], 'fig')
-saveas(gcf, [inter_dir filesep f_info.subject '_' f_info.session '_full_bar'], 'png')
-
+    figure(202)
+    clf
+    yyaxis left
+    plot([t_minus_zero    t_zero],[pre_nEvts./pre_ndur,  nEvts./ndur])
+    xlabel('time from cp21/vehicle (hrs)')
+    ylabel('SWR events / second')
+    yyaxis right
+    plot([t_minus_zero    t_zero],[pre_ndur,  ndur])
+    ylim([0 max([pre_ndur, ndur])+1000])
+    ylabel('time used for detection per block (s)')
+    xlim([-1 4])
+    rectangle('Position', [t_minus_zero(end), 0, abs(t_zero(1) - t_minus_zero(end)), max([pre_ndur, ndur])], 'facecolor', [.2 .2 .2 .2], 'edgecolor', [.2 .2 .2 .2])
+    title([f_info.subject ' ' f_info.session])
+    
+    figure(203)
+    % yyaxis left
+    hold on
+    bar(t_zero- (.5*(dt/60/60)), (nEvts./ndur)./nanmean(pre_nEvts./pre_ndur), 'facecolor', cord(1,:), 'EdgeColor', cord(1,:))
+    xlabel('time from cp21/vehicle (hrs)')
+    ylabel('SWR rate normalized to 1hr pre')
+    % yyaxis right
+    % plot(t_zero,  ndur)
+    ylabel('time used for detection per block (s)')
+    xlim([0 4])
+    plot(t_zero(isnan(nEvts)) -(.5*(dt/60/60)), zeros(1,length(t_zero(isnan(nEvts))))+max(nEvts./ndur), 'x')
+    title([f_info.subject ' ' f_info.session])
+    
+    % rectangle('Position', [t_minus_zero(end), 0, abs(t_zero(1) - t_minus_zero(end)), max([pre_ndur, ndur])], 'facecolor', [.2 .2 .2 .2], 'edgecolor', [.2 .2 .2 .2])
+    saveas(gcf, [inter_dir filesep f_info.subject '_' f_info.session '_full_bar'], 'fig')
+    saveas(gcf, [inter_dir filesep f_info.subject '_' f_info.session '_full_bar'], 'png')
+    
 end
 
 
@@ -316,20 +316,21 @@ end
 
 
 data_out = [];
-data_out.f_info = f_info; 
-data_out.SWR_evts = SWR_evts; 
-data_out.tvec = csc.tvec; 
+data_out.f_info = f_info;
+data_out.SWR_evts = SWR_evts;
+data_out.tvec = csc.tvec;
+data_out.keep_idx_tsd = keep_idx_tsd; 
 data_out.evt = evt;
-data_out.t_zero = t_zero; 
+data_out.t_zero = t_zero;
 
-    data_out.t_zero = t_zero; 
-    data_out.nEvts = nEvts; 
-    data_out.nDur = ndur; 
+data_out.t_zero = t_zero;
+data_out.nEvts = nEvts;
+data_out.nDur = ndur;
 
 if exist('t_minus')
-    data_out.t_minus = t_minus; 
-    data_out.pre_nEvts = pre_nEvts; 
-    data_out.pre_nDur = pre_ndur; 
+    data_out.t_minus = t_minus;
+    data_out.pre_nEvts = pre_nEvts;
+    data_out.pre_nDur = pre_ndur;
 end
 
 save([inter_dir filesep f_info.subject '_' f_info.session '_data_out.mat'], '-v7.3', 'data_out')
