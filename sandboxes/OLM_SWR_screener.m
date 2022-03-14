@@ -1,6 +1,6 @@
 %%
 
-function OLM_SWR_screener()
+function OLM_SWR_screener(block_dur)
 %% init
 
 % data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\B10_chrna2_electrophy_tungtsen electrode\B10_chrna2_SMpredictible_D1\GcfB10_Chrna2_SM-PUFF_D1_915';
@@ -58,7 +58,15 @@ linspeed = getLinSpd([], pos);
 
 speed_int = interp1(linspeed.tvec, smooth(linspeed.data, csc.cfg.hdr{1}.SamplingFrequency*2), csc.tvec);
 
+
 move_idx = (speed_int >1)';
+
+if strcmp(f_info.subject, 'JB1556') && strcmp(f_info.session, 'day5')
+    
+    move_idx(nearest_idx3(18210, csc.tvec):nearest_idx3(19140, csc.tvec)) = 0; 
+    move_idx(nearest_idx3(20120, csc.tvec):end) = 0;
+
+end
 
 %% get the theta delta ratio
 cfg_con_f = [];
@@ -186,10 +194,13 @@ fprintf('Restriction check: post duration = %0.2f hours\n', (csc_post.tvec(end)-
 %% brek up into 20min blocks
 nEvts = []; ndur = [];
 
-dt = 20*60; % block duration in seconds.
+dt = block_dur*60; % block duration in seconds.
 
 t = csc_post.tvec(1):dt:csc_post.tvec(end)+dt; % get the time blocks in the recording.
 t_zero = ((t - t(1))/60/60);%+(.5*(dt/60/60)); % zero out for plotting
+
+t_zero = t_zero(1:nearest_idx3(4, t_zero));
+t = t(1:nearest_idx3(4, t_zero));
 
 for ii = length(t):-1:1
     if ii == length(t)
@@ -318,16 +329,20 @@ end
 data_out = [];
 data_out.f_info = f_info;
 data_out.SWR_evts = SWR_evts;
-data_out.tvec = csc.tvec;
+data_out.csc = csc;
 data_out.keep_idx_tsd = keep_idx_tsd; 
 data_out.evt = evt;
+data_out.t = t;
 data_out.t_zero = t_zero;
 
-data_out.t_zero = t_zero;
+
+
 data_out.nEvts = nEvts;
 data_out.nDur = ndur;
 
 if exist('t_minus')
+    data_out.pre = pre_t;
+data_out.post = post_t;
     data_out.t_minus = t_minus;
     data_out.pre_nEvts = pre_nEvts;
     data_out.pre_nDur = pre_ndur;
