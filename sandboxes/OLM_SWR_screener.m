@@ -103,7 +103,7 @@ figure(102)
 tic
 hold on
 % yyaxis right
-plot((linspeed.tvec -linspeed.tvec(1))/60/60 , linspeed.data,  'color', cord(2,:));
+plot((csc.tvec - csc.tvec(1))/60/60,  speed_int,  'color', cord(2,:));
 % ylim([0 50])
 % yyaxis left
 plot((csc.tvec - csc.tvec(1))/60/60, csc.data*1000, 'color', cord(1,:));

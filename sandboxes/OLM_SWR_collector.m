@@ -76,11 +76,12 @@ end
 
 % this_data = data_t; 
 
-tvec = all_data{1}.t(3:end)+(mode(diff(all_data{1}.t(4:end)))/2);
-tvec = tvec(1:end-1)
+% tvec = all_data{1}.t(3:end)+(mode(diff(all_data{1}.t(4:end)))/2);
+% tvec = tvec(1:end-1)
 
-this_data = data_len(:,1:end-1);
-% tvec = all_data{1}.t+(mode(diff(all_data{1}.t))/2);
+% this_data = data_len(:,1:end-1);
+this_data = data
+tvec = all_data{1}.t+(mode(diff(all_data{1}.t))/2);
 c_ord = linspecer(3); 
 cp = [1,3, 5]; 
 subj = [1,2]; 
