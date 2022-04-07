@@ -42,6 +42,7 @@ cfg_def.Ca_type = 'RawTraces'; % can be either 'RawTraces' or FiltTraces' (maybe
 cfg_def.Ca_chan = 1:floor(n_cells/20):n_cells; % get a subset of cells.
 cfg_def.plot_type = '3d'; % '2d' or '3d'
 cfg_def.offset = 1; 
+cfg_def.rescale = []; 
 cfg_def.width = 1.5; 
 cfg_def.x_zoom = []; % where to zoom in on the x_axis for each plot.
 cfg_def.view = [0 45]; 
@@ -71,15 +72,26 @@ switch cfg.plot_type
     % 2d
     case '2d'
         for iC = 1:length(cfg.Ca_chan)
-            
-            plot(time_in2*0.001, ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC))+iC*cfg.offset, 'color', c_ord(iC,:), 'linewidth', cfg.width)
-            tick_val(iC) = median(ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC))+iC*cfg.offset); 
-            tick_label{iC} = cfg.Ca_chan(iC); 
+            if strcmp(cfg.rescale, 'zscore')
+                plot(time_in2*0.001, zscore(ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC)))+iC*cfg.offset, 'color', c_ord(iC,:), 'linewidth', cfg.width)
+                tick_val(iC) = median(zscore(ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC)))+iC*cfg.offset);
+            elseif strcmp(cfg.rescale, 'max')
+                plot(time_in2*0.001, ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC))./max(ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC)))+iC*cfg.offset, 'color', c_ord(iC,:), 'linewidth', cfg.width)
+                tick_val(iC) = median(ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC))./max(ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC)))+iC*cfg.offset);
+            else
+                plot(time_in2*0.001, ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC))+iC*cfg.offset, 'color', c_ord(iC,:), 'linewidth', cfg.width)
+                tick_val(iC) = median(ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC))+iC*cfg.offset);
+            end
+            tick_label{iC} = cfg.Ca_chan(iC);
         end
         % 3d
     case '3d'
         for iC = 1:length(cfg.Ca_chan)
-            plot3(time_in2*0.001, repmat(iC,size(ms_data_in.(cfg.Ca_type),1),1), ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC)), 'color', c_ord(iC,:), 'linewidth', cfg.width)
+            if strcmp(cfg.rescale, 'zscore')
+                plot3(time_in2*0.001, repmat(iC,size(ms_data_in.(cfg.Ca_type),1),1), zscore(ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC))), 'color', c_ord(iC,:), 'linewidth', cfg.width)
+            else
+                plot3(time_in2*0.001, repmat(iC,size(ms_data_in.(cfg.Ca_type),1),1), ms_data_in.(cfg.Ca_type)(:,cfg.Ca_chan(iC)), 'color', c_ord(iC,:), 'linewidth', cfg.width)
+            end
         end
         view(cfg.view)
 end

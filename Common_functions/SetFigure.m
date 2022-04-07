@@ -14,13 +14,13 @@ function h = SetFigure(cfg_in, h)
 % EC - 2016-10-05
 
 %% defaults
-cfg.ft_size = 18;
-cfg.font = 'helvetica';
+cfg_def.ft_size = 18;
+cfg_def.font = 'helvetica';
 % cfg_def.fontweight = 'normal';
-cfg.grid = 'off';
-cfg.resize = 1;
+cfg_def.grid = 'off';
+cfg_def.resize = 1;
 
-% cfg = ProcessConfig2(cfg_def, cfg_in);
+cfg = ProcessConfig2(cfg_def, cfg_in);
 
 
 figure(h)
