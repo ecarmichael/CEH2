@@ -40,14 +40,14 @@ end
 
 
 %%
-min_frame = nanmean(cam1_s(:,200:700,:),3);
+min_frame = nanmean(cam1(:,200:700,:),3);
 % all_min =min(cam1(150:400, 200:650,:), [], 'all'); 
-d_cam1 = nan(size(cam1_s(:,200:700, :))); 
+d_cam1 = nan(size(cam1(:,200:700, :))); 
 colormap('gray');
 for iF = 1:ms.vidObj{1}.NumFrames- 50
 %     min_idx = cam1(150:400, 200:650,iF) < min_frame;
 % min_frame = nanmean(cam1_s(:,200:700,iF:iF+30),3);
-   d_cam1(:,:,iF) = (nanmean(cam1_s(:,200:700,iF:iF+10),3) ./ min_frame) -1; 
+   d_cam1(:,:,iF) = (nanmedian(cam1(:,200:700,iF:iF+5),3) ./ min_frame) -1; 
 %     d_cam1_t(min_idx) = all_min; 
 %      = d_cam1_t;
 % if median(d_cam1(:,:,iF), 'all') < 0
@@ -63,25 +63,29 @@ d_cam1_norm =1- d_cam1 ./ (nanmean(d_cam1, 'all') +(nanstd(d_cam1, [], 'all')*3)
 % max_cur = (nanmean(d_cam1_norm, 'all') +(nanstd(d_cam1_norm, [], 'all')*1));
 % min_cur = (nanmean(d_cam1_norm, 'all') -(nanstd(d_cam1_norm, [], 'all')*3));
 
-
+clear G
 for iF = 1:ms.vidObj{1}.NumFrames- 50
 % d_cam1_norm(d_cam1_norm(:, :, iF) > max_cur) = max_cur; 
 % d_cam1_norm(d_cam1_norm(:, :, iF) < min_cur) = min_cur; 
+% d_cam1(:,:,iF) = normalize(d_cam1(:,:,iF));% ./(mean(d_cam1(:,:,iF), 'all') + std(d_cam1(:,:,iF), [], 'all')*2);
 
-imagesc(d_cam1_norm(:,:,iF)); 
+imagesc(d_cam1(:,:,iF)); 
 % imagesc(cam1_s(:,:,iF)); 
 
     drawnow
+    G(iF) = getframe(gcf) ;
     
 end
 
 %% make a gif?
 Fs  =ms.vidObj{1}.FrameRate; 
-for n = 1:ms.vidObj{1}.NumFrames-50
+for n = 1:2:200%ms.vidObj{1}.NumFrames-50
+          [imind,cm] = rgb2ind(G(n).cdata,255);
+
       if n == 1
-          imwrite(d_cam1(:,:,n),'temp_df.gif','gif','DelayTime',1/Fs, 'Loopcount',inf);
+          imwrite(imind,cm,'temp_df.gif','gif','DelayTime',1/Fs, 'Loopcount',inf);
       else
-          imwrite(d_cam1(:,:,n),'temp_df.gif','gif','DelayTime',1/Fs,'WriteMode','append');
+          imwrite(imind,cm,'temp_df.gif','gif','DelayTime',1/Fs,'WriteMode','append');
       end
 end
 
@@ -132,11 +136,12 @@ for iF = 1:ms.vidObj{1}.NumFrames- 50
 % d_cam1_norm(d_cam1_norm(:, :, iF) > max_cur) = max_cur; 
 % d_cam1_norm(d_cam1_norm(:, :, iF) < min_cur) = min_cur; 
 
+
 imagesc(d_cam1(:,:,iF)); 
 % imagesc(cam1_s(:,:,iF)); 
 
     drawnow
-    
+   G(iF) =  getframe(gcf);
 end
 
 %% get data from full ms

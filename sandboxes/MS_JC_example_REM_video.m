@@ -21,7 +21,7 @@ function MS_JC_example_REM_video(raw_dir, ms_dir, decode_dir,output_dir, replay_
 % ms_dir = '/home/williamslab/Dropbox (Williams Lab)/Inter/pv1060/HATDSwitch';
 % replay_idx = [556 581 591 646 1206 1216 1486 1511 2291 2296 2306]; 
 
-raw_dir = 'K:\Jisoo_Project\RawData\pv1192\4_17_2021_PV1192_HATD1'; 
+raw_dir = 'C:\Users\ecarm\Desktop'; 
 decode_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1192\HATD1'; 
 ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1192\4_17_2021_PV1192_HATD1'; 
 replay_idx = [2584 5030 5316 ]; 
@@ -30,6 +30,8 @@ output_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Decoding_data\Videos\EC_muse
 
 re_len = 16; 
 core_colors = linspecer(3); 
+
+
 %% load everything
 
 load([ms_dir filesep 'all_binary_post_REM'])
@@ -46,6 +48,10 @@ else
     track_image = imread('C:\Users\ecarm\Dropbox (Williams Lab)\Inter\pv1060\LTD5\Track_crop.jpg');
     mouse_image = imread('C:\Users\ecarm\Pictures\mouse_sleep_fill.jpeg');
 end
+
+Fs = mode(diff(ms_seg_resize.time{1}));
+start_idx = replay_idx(replay_evt) - round(Fs*1);
+end_idx = replay_idx(replay_evt) + round(Fs *1); 
 %% generate a time vector for the all_binary_post_REM
 
 REM_idx = contains(ms_seg_resize.hypno_label, 'REM');
@@ -55,6 +61,7 @@ REM_blocks = find(REM_idx & post_idx);
 
 all_tvec = [];
 all_ca_f = [];
+all_ca = []; 
 ca_mat = [];
 ca_t_all = [];
 for iB = REM_blocks
@@ -62,28 +69,37 @@ for iB = REM_blocks
     all_tvec = [all_tvec ; ms_seg_resize.time{iB}];
     
 %     get the raw videos while you are here
-    v_files = dir([raw_dir filesep ms_seg_resize.file_names{iB} filesep 'msCam*']);
+%     v_files = dir([raw_dir filesep ms_seg_resize.file_names{iB} filesep 'msCam*']);
+%     
+%     for iV = 1:length(v_files)
+%         ca_obj = [];
+%         ca_obj = VideoReader([v_files(iV).folder filesep v_files(iV).name]);
+%         for iF = ca_obj.NumFrames:-1:1
+%             ca_f{iF} = read(ca_obj, iF);
+%             ca_t(iF) = ca_obj.CurrentTime;
+%             ca_mat(:,:,iF) = im2double(ca_f{iF});
+%         end
+%         
+%         ca_t_all = [ca_t_all, ca_t];
+%         % try to substract mean per pixel
+%         %     ca_mat = cell2mat(ca_f);
+%         %     ca_mat = ca_mat - mean(ca_mat, 3);
+%         
+%         all_ca_f = cat(3,all_ca_f, ca_mat) ;
+%         clear ca_mat ca_f ca_t
+%     end
+%     
+%     all_ca{iB} =  all_ca_f; 
     
-    for iV = 1:length(v_files)
-        ca_obj = [];
-        ca_obj = VideoReader([v_files(iV).folder filesep v_files(iV).name]);
-        for iF = ca_obj.NumFrames:-1:1
-            ca_f{iF} = read(ca_obj, iF);
-            ca_t(iF) = ca_obj.CurrentTime;
-            ca_mat(:,:,iF) = im2double(ca_f{iF});
-        end
-        
-        ca_t_all = [ca_t_all, ca_t];
-        % try to substract mean per pixel
-        %     ca_mat = cell2mat(ca_f);
-        %     ca_mat = ca_mat - mean(ca_mat, 3);
-        
-        all_ca_f = cat(3,all_ca_f, ca_mat) ;
-        clear ca_mat ca_f ca_t
-    end
+%     for ii = size(all_ca_f, 1):-1:1
+%         
+%         for jj = size(all_ca_f, 2):-1:1
+%             all_ca_int(ii,jj,:) = interp1(all_ca_f(ii,jj,:),
+%         end
+%     end
 %         ca_mov{iB}.ca_f = ca_f;
 %         ca_mov{iB}.ca_t = ca_t;
-        ca_mov{iB}.ca_ms_t = ms_seg_resize.time{iB};
+%         ca_mov{iB}.ca_ms_t = ms_seg_resize.time{iB};
     
 end
 
@@ -97,9 +113,146 @@ end
 
 % get the sampling freq
 Fs = mode(diff(all_tvec));
+%%
+% interp ca data
+
+    v_files = dir([raw_dir filesep ms_seg_resize.file_names{REM_blocks(1)} filesep '**' filesep 'msvideo.avi']);
+
+    [~,I] = max([v_files(:).datenum]); % get the newest. 
+    
+
+ca_obj = VideoReader([v_files(I).folder filesep v_files(I).name]); 
+
+for iF = ca_obj.NumFrames:-1:1
+%     ca_f{iF} = ;
+    ca_t(iF) = ca_obj.CurrentTime;
+    ca_mat(:,:,iF) = im2double(read(ca_obj, iF));
+end
+        
+
+%% generate dF/F 
+figure(1)
+clf
+this_ca_mat = ca_mat(:,:,start_idx-50:end_idx+50); 
+
+for ii = size(this_ca_mat,1):-1:1
+    for jj = size(this_ca_mat,2):-1:1
+        this_ca_mat(ii, jj, :) = smooth(this_ca_mat(ii, jj, :), 10); 
+        
+    end
+end
+
+
+min_frame = nanmean(this_ca_mat(:,60:end,:),3);
+d_cam1 = nan(size(this_ca_mat(:,60:end, :))); 
+colormap('gray');
+for iF = 1:size(this_ca_mat,3)-5
+
+    d_cam1(:,:,iF) = ((nanmax(this_ca_mat(:,60:end,iF:iF +5),[],3) ./ (min_frame)) -1);
+%     mean_f(iF) = max(d_cam1(:,:,iF),[], 'all') -  min(d_cam1(:,:,iF),[], 'all'); 
+%     d_cam1(:,:,iF) = mat2gray(d_cam1(:,:,iF)); 
+end
+
+
+clear G
+indx = 51:size(this_ca_mat,3)-50; 
+
+for iF = 1:length(indx)
+imagesc(d_cam1(:,:,indx(iF))); 
+title(num2str(mean_f(indx(iF))))
+    drawnow
+        set(gcf, 'color', 'k'); axis off; box on;
+
+   G(iF) =  getframe(gcf);
+%    pause(.2)
+end
+
+
+%% generate color patch frames;
+c_ord = linspecer(size(ms_seg_resize.SFPs,3)-200); 
+
+% figure(1)
+
+norm_Raw = all_RawTraces_post_REM;%./norm(all_RawTraces_post_REM,inf); 
+
+for iC = size(all_RawTraces_post_REM,2):-1:1
+    norm_Raw(:,iC) = smooth( norm_Raw(:,iC), 15, 'sgolay');
+
+    norm_z(:,iC) = zscore(norm_Raw(:,iC)); 
+%     norm_Raw(:,iC) = MS_norm_range(norm_Raw(:,iC), 0, 1);
+end
+norm_z(norm_z < 0) = 0; 
+
+norm_z = norm_z./(max(norm_z, [], 'all')*.8); 
+norm_z(norm_z > 1) = 1;
+norm_z(norm_z < 0.1) = 0; 
+
+
+norm_Raw(norm_Raw < 0) = 0; 
+
+norm_Raw = norm_Raw ./(max(norm_Raw, [], 'all')*.8); 
+norm_Raw(norm_Raw > 1) = 1;
+
+norm_Raw(norm_Raw < 0.1) = 0; 
+
+% norm_Raw = MS_norm_range(norm_Raw, 0, 1); 
+clear E
+% F = NaN(1,end_idx - start_idx ); 
+%parfor ii = 1:round(size(all_RawTraces_post_REM,1)/8)
+indx = start_idx:end_idx; 
+parfor ii = 1:length(indxs)
+    disp(indx(ii))
+    
+    rel_df = norm_z(indx(ii),:);
+    
+    clf
+    hold on
+    
+    for iC = size(ms_seg_resize.SFPs,3)-200:-1:1
+        [M] =contourc(ms_seg_resize.SFPs(:,:,iC), [2,2]);
+        [M2] =contourc(ms_seg_resize.SFPs(:,:,iC), [3,3]);
+%         [M3] =contourc(ms_seg_resize.SFPs(:,:,iC), [5,5]);
+
+%         clear c
+        % c.ZData(c.ZData > 0) = iC;
+        % cp = get(c, 'Children');
+        % get(cp, 'cdata')
+        % colormap(c_ord
+        M(:,(M(1,:) < 5 | M(2,:) < 5)) = nan;
+        M(1,:) = fillmissing(M(1,:), 'nearest');
+        M(2,:) = fillmissing(M(2,:), 'nearest');
+        
+        M2(:,(M2(1,:) < 5 | M2(2,:) < 5)) = nan;
+        M2(1,:) = fillmissing(M2(1,:), 'nearest');
+        M2(2,:) = fillmissing(M2(2,:), 'nearest');
+        
+%         M3(:,(M3(1,:) < 5 | M3(2,:) < 5)) = nan;
+%         M3(1,:) = fillmissing(M3(1,:), 'nearest');
+%         M3(2,:) = fillmissing(M3(2,:), 'nearest');
+        if sum(rel_df) ==0
+            continue
+        end
+        patch(M(1,:), M(2,:), c_ord(iC,:),'edgealpha', 0, 'FaceAlpha', rel_df(iC)/2)
+        patch(M2(1,:), M2(2,:), c_ord(iC,:),'edgealpha', 0, 'FaceAlpha', rel_df(iC))
+%         patch(M3(1,:), M3(2,:), c_ord(iC,:),'edgealpha', 0, 'FaceAlpha', rel_df(iC))
+
+        % pause(.5)
+    end
+    
+%     xlim([0 ms_seg_resize.width/ms_seg_resize.ds]);
+%     ylim([0 ms_seg_resize.height/ms_seg_resize.ds]);
+xlim([50 230]); ylim([50 160]); 
+    set(gcf, 'color', 'k'); axis off; box on;
+
+    
+    drawnow;
+    E(ii) = getframe(gcf) ;
+    % plot(M(1,:), M(2,:), 'k')
+end
+
 
 %%  generate the plots
-for iEvt = 1:length(replay_idx)
+% for iEvt = 1%:length(replay_idx)
 replay_evt = iEvt;
 start_idx = replay_idx(replay_evt) - round(Fs*1);
 end_idx = replay_idx(replay_evt) + round(Fs *1); 
@@ -130,7 +283,8 @@ set(gca, 'xtick', [], 'ytick', [])
 set(gcf, 'color', 'k')
 
 % ax(200)= subplot(6,4,[ 5 6 9 10 13 14 17 18 21 22]);
- ax(200)= subplot(7,4,[7 8 11 12 15 16 19 20 23 24 27 28]); 
+%  ax(200)= subplot(7,4,[7 8 11 12 15 16  ]); 
+ax(200) = subplot(7,4,[7 8 11 12 ]);
 MS_Ca_Raster(all_binary_post_REM(start_idx-Fs*1.5:end_idx+Fs*1.5,:)', all_tvec(start_idx-Fs*1.5:end_idx+Fs*1.5)/1000, 5)
 set(gca, 'color', 'k', 'XColor',[.6 .6 .6], 'YColor',[.6 .6 .6] ); %set background color. 
 ylabel('Cell ID', 'Color', [.6 .6 .6])
@@ -148,8 +302,8 @@ if exist('replay_idx', 'var')
 end
 
 % 
-% ax(300) = subplot(6,4,[7 8 11 12 ]);%15 16 19 20 23 24]); 
-ax(300) = subplot(7,4,[ 5 6 9 10]);%15 16 19 20 23 24]); 
+ax(300) = subplot(7,4,[ 5 6 9 10 ]);%15 16 19 20 23 24]); 
+% ax(300) = subplot(7,4,[ 5 6 9 10]);%15 16 19 20 23 24]); 
 hold on
 % yyaxis left
 % set(gca, 'color', 'k', 'XColor',[0 0 0], 'YColor',[0 0 0] );
@@ -181,7 +335,7 @@ linkaxes(ax, 'x');
 
 
 % plot bayes theorum? 
-subplot(7,4,[13 17])
+subplot(7,4,[14, 18])
 C = [0 .5] ;  % center 
 a = .8;      % major axis 
 e = .8 ;    % eccentricity 
@@ -194,7 +348,7 @@ text(0, .575, 'p (position | spikes)', 'color', 'w', 'fontsize', 10,'HorizontalA
 hold on
 % arrow
 p1 = [0 1.2];                         % First Point
-p2 = [1 2];                         % Second Point
+p2 = [0 2];                         % Second Point
 dp = p2-p1;                         % Difference
 quiver(p1(1),p1(2),dp(1),dp(2),1,'color', 'w', 'LineWidth', 2, 'MaxHeadSize', 1)
 
@@ -217,15 +371,19 @@ ylim([-2 2.2])
 
 
 % add some calcium image
-% subplot(6,4,[ 17 18 21 22]);
-%     set(gca, 'color', 'k'); axis off; box on;
-% hold on
-% % text(
-% xlim([0 size(track_image,2)])
+subplot(7,4,[19 20 23 24 27 28]);
+    set(gca, 'color', 'k'); axis off; box on;
+imshow(E(1).cdata); 
+
+
+% add some calcium image
+subplot(7,4,[13 17]);
+    set(gca, 'color', 'k'); axis off; box on;
+imshow(G(1).cdata); 
 
 % mouse sleeping
 
-subplot(7,4,[ 21 22 25 26]);
+subplot(7,4,[21 22 25 26]);
     set(gca, 'color', 'k'); axis off; box on;
 hold on
 imagesc(flipud(imcomplement(mouse_image)))
@@ -284,7 +442,9 @@ for iF = start_idx:end_idx
     % move the Calcium
     %     title(sprintf('Behav Time = %.3fs | Ca Time = %.3fs', b_t(iF), ms.frameNum(this_idx+iF)*Fs));
 %     subplot(6,4,[5 6 9 10 13 14 17 18 21 22])
-    subplot(7,4,[7 8 11 12 15 16 19 20 23 24 27 28]); 
+%     subplot(7,4,[7 8 11 12 15 16 19 20 23 24 27 28]);
+subplot(7,4,[ 5 6 9 10 ]);
+
     xlim([all_tvec(iF)/1000 - 1.5 all_tvec(iF)/1000 + 1.5])
         hl = xline(median([all_tvec(iF)/1000 - 1.5 all_tvec(iF)/1000 + 1.5]), 'linewidth', 6 );
     
@@ -296,7 +456,8 @@ for iF = start_idx:end_idx
 
 % move the decoding
 %     subplot(6,4,[7 8 11 12 ]); %15 16 19 20 23 24])
-    subplot(7,4,[ 5 6 9 10])
+%     subplot(7,4,[ 5 6 9 10])
+subplot(7,4,[7 8 11 12 ])
     xlim([all_tvec(iF)/1000 - 1.5 all_tvec(iF)/1000 + 1.5])
     h2 = xline(median([all_tvec(iF)/1000 - 1.5 all_tvec(iF)/1000 + 1.5]), 'linewidth', 6 );
     
@@ -317,7 +478,16 @@ for iF = start_idx:end_idx
     delete(hl)
     delete(h2)
 
+    % add some calcium image
+subplot(7,4,[15 16 19 20 23 24]);
+    set(gca, 'color', 'k'); axis off; box on;
+imshow(E(iF - start_idx+1).cdata);
+% set(gca, 'YDir', 'reverse', 'XDir', 'reverse');
     
+subplot(7,4,[13 17]);
+    set(gca, 'color', 'k'); axis off; box on;
+imshow(G(iF - start_idx+1).cdata); 
+
 end
 
 %% write the video to disc. 
@@ -325,7 +495,7 @@ rate = 1;
 
 parts = strsplit([raw_dir filesep ms_seg_resize.file_names{iB}], filesep);
 mkdir([output_dir filesep parts{end-1}])
-writerObj = VideoWriter([output_dir filesep parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_short_' num2str(rate) 'x_evt' num2str(replay_evt) '_fix.avi']);
+writerObj = VideoWriter([output_dir filesep parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_museum' num2str(replay_evt) '_fix.avi']);
 fprintf('Saving video as: <strong>%s</strong>\n', [output_dir filesep parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_short_' num2str(rate) 'x.avi'])
 writerObj.FrameRate = ((Fs)/rate)/4;
 writerObj.Quality = 100;
@@ -342,25 +512,36 @@ for iF = start_idx:rate:end_idx
 end
 % close the writer object
 close(writerObj);
-end
 
 
 
 %% make a gif?
 
-filename = [output_dir filesep parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_short_' num2str(rate) 'x_evt' num2str(replay_evt) '_fix.gif'] 
-mov1 = VideoReader([output_dir filesep parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_short_' num2str(rate) 'x_evt' num2str(replay_evt) '_fix.avi']);
+filename = [output_dir filesep parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_museum' num2str(replay_evt) '_fix.gif']
+mov1 = VideoReader([output_dir filesep parts{end-1} filesep 'Example_Ca_Post_REM_decode_raster_museum' num2str(replay_evt) '_fix.avi']);
 vidFrames = read(mov1);
 for n = 1:mov1.NumFrames
       [imind,cm] = rgb2ind(vidFrames(:,:,:,n),255);
       if n == 1;
-          imwrite(imind,cm,filename,'gif','DelayTime',1/((Fs/rate))*2, 'Loopcount',inf);
+          imwrite(imind,cm,filename,'gif','DelayTime',1/((Fs/rate))*5, 'Loopcount',inf);
       else
-          imwrite(imind,cm,filename,'gif','DelayTime',1/((Fs/rate))*2,'WriteMode','append');
+          imwrite(imind,cm,filename,'gif','DelayTime',1/((Fs/rate))*5,'WriteMode','append');
       end
 end
 
 
+
+%% gif of the color cell activity
+
+for n = 1:length(E)%ms.vidObj{1}.NumFrames-50
+          [imind,cm] = rgb2ind(E(n).cdata,255);
+
+      if n == 1
+          imwrite(imind,cm,'temp_col.gif','gif','DelayTime',1/Fs, 'Loopcount',inf);
+      else
+          imwrite(imind,cm,'temp_col.gif','gif','DelayTime',1/Fs,'WriteMode','append');
+      end
+end
 
 %%
 % cd(raw_dir)
