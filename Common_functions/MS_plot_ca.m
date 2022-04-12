@@ -1,4 +1,4 @@
-function MS_plot_ca(cfg_in, ms_data_in)
+function MS_plot_ca(cfg_in, ms_data_in, to_plot)
 %% MS_plot_ca_nlx: makes a simple plot of calicum traces. Can be either segmented (recording blocks) or one continous signal.
 %
 %
@@ -9,6 +9,9 @@ function MS_plot_ca(cfg_in, ms_data_in)
 %           if continuous, this is the ms.RawTraces or ms.FiltTraces [time x cell]
 %           if segmented, this is a cell array with each containing
 %           RawTraces or Filttraces [nSeg cells]
+%
+%     - to_plot: [string] shortcut to plot a specific data field. replaces
+%     cfg.Ca_type; 
 %
 %
 %    Outputs:
@@ -25,6 +28,11 @@ function MS_plot_ca(cfg_in, ms_data_in)
 %
 %% initialize
 
+if nargin == 3
+    cfg_in.Ca_type = to_plot; 
+end
+
+
 % if the ms_data in is continous or segmented (in cells) set the type.
 if ~iscell(ms_data_in.RawTraces)
     type = 'continuous';
@@ -40,7 +48,7 @@ end
 cfg_def =[];
 cfg_def.Ca_type = 'RawTraces'; % can be either 'RawTraces' or FiltTraces' (maybe others?)
 cfg_def.Ca_chan = 1:floor(n_cells/20):n_cells; % get a subset of cells.
-cfg_def.plot_type = '3d'; % '2d' or '3d'
+cfg_def.plot_type = '2d'; % '2d' or '3d'
 cfg_def.offset = 1; 
 cfg_def.rescale = []; 
 cfg_def.width = 1.5; 

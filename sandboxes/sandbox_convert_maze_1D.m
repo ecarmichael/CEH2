@@ -146,11 +146,10 @@ subplot(2,2,2)
 % hold on
 % plot(PQ(:,1),PQ(:,2),'*g')
 hold on
-plot(pos_snap_L.data(1,:),pos_snap_L.data(2,:),'ok', 'markersize', 10, 'markeredgecolor', 'k')
-plot(pos_snap_L.data(1,:),pos_snap_L.data(2,:),'xm', 'markersize', 10)
+h1 = plot(pos_snap_L.data(1,:),pos_snap_L.data(2,:),'ok', 'markersize', 10, 'markeredgecolor', 'k');
+h2 = plot(pos_snap_L.data(1,:),pos_snap_L.data(2,:),'xm', 'markersize', 10);
 xlim([min([pos_L.data(1,:), pos_move.data(1,:)]), max([pos_L.data(1,:), pos_move.data(1,:)])]); 
 ylim([min([pos_L.data(2,:), pos_move.data(2,:)]), max([pos_L.data(2,:), pos_move.data(2,:)])]); 
-legend('Nearest Pos L')
 
 
 
@@ -159,11 +158,11 @@ legend('Nearest Pos L')
 % hold on
 % plot(PQ(:,1),PQ(:,2),'*g')
 hold on
-plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'ok', 'markersize', 10, 'markeredgecolor', 'k')
-plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'xc', 'markersize', 10)
+hr1 = plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'ok', 'markersize', 10, 'markeredgecolor', 'k');
+hr2 = plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'xc', 'markersize', 10);
 xlim([min([pos_L.data(1,:), pos_move.data(1,:)]), max([pos_L.data(1,:), pos_move.data(1,:)])]); 
 ylim([min([pos_L.data(2,:), pos_move.data(2,:)]), max([pos_L.data(2,:), pos_move.data(2,:)])]); 
-legend('Nearest Pos R')
+legend([h2, hr2],{'Nearest Pos L', 'Nearest Pos R'})
 
 %% standardize and linearize
 % load(
@@ -182,10 +181,12 @@ linpos.R = LinearizePos(cfg,pos_R_cut, SCoorD_R);
 
 figure(1)
 subplot(2,2,3)
-plot(linpos.L.tvec, linpos.L.data, '.r')
+plot(linpos.L.tvec, linpos.L.data, '.r');
+xlim([min([linpos.L.tvec, linpos.R.tvec]), max([linpos.L.tvec, linpos.R.tvec])])
+
 subplot(2,2,4)
 plot(linpos.R.tvec, linpos.R.data, '.b')
-
+xlim([min([linpos.L.tvec, linpos.R.tvec]), max([linpos.L.tvec, linpos.R.tvec])])
 %% compute tuning curves for each cell
 bin_s = 1; 
 bins = floor(min(linpos.L.data)):bin_s:ceil(max(linpos.L.data));
@@ -237,4 +238,3 @@ for iCell = size(ms_L_cut.data,1):-1:1
 end
 
 
-end

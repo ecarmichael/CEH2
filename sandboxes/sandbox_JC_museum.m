@@ -379,11 +379,11 @@ field([4]) = 3;
 figure(101)
 clf
 hold on
-for ii = 1:9
-sm_field(ii,:) = imgaussfilt(circshift(field, ii*10), round(MS_randn_range(1, 1, 2, 10)));
+for ii = 1:10
+sm_field(ii,:) = imgaussfilt(circshift(field, ii*9), round(MS_randn_range(1, 1, 2, 10)));
 end
 
-for ii = 1:9
+for ii = 1:10
 h(ii) = area(pos, sm_field(ii,:)./max(sm_field,[], 'all'), 'FaceColor', c_ord(ii,:), 'FaceAlpha', .3)
 end
 legend([h(1), h(4) h(8)], {'cell 1', 'cell 2', 'cell 3'}, 'Box', 'off')
@@ -397,17 +397,21 @@ SetFigure([], gcf)
 figure(102)
 clf
 hold on
-for ii = 1:9
+for ii = 1:10
 %     this_data = smooth(all_RawTraces_post_REM(:,ii), 'sgolay'); 
    
 % plot(all_tvec, (this_data./max(this_data))+ii)
 this_s = find(sm_field(ii,:) >.25);
 this_s = datasample(this_s, floor(length(this_s)/4)); 
-line([this_s; this_s], [zeros(size(this_s))+ii*10-5 ; zeros(size(this_s))+ii*10+5], 'color', c_ord(ii,:), 'linewidth', 2)
+line([this_s; this_s], [zeros(size(this_s))+ii-.5 ; zeros(size(this_s))+ii+.5], 'color', c_ord(ii,:), 'linewidth', 2)
     
 end
-set(gca, 'xticklabels', get(gca, 'xtick')/10)
-xlabel
+% ylim([.5 10.5]*10)
+set(gca, 'xticklabels', get(gca, 'xtick')/10);
+set(gca, 'ytick', 1:10);
+ylim([0.5 10.5])
+xlabel('time (s)');
+ylabel('neuron');
 SetFigure([], gcf)
 %%
 % cd(raw_dir)
