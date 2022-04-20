@@ -31,6 +31,15 @@ fprintf('<strong>%s</strong>: loading data file: <strong>%s</strong>...\n', mfil
 A = ncread(minian_fname,'A');                 
 C = ncread(minian_fname,'C');
 S = ncread(minian_fname,'S');
+raw = ncread(minian_fname,'YrA'); % gets crazy values 
+
+unit_labels = ncread(minian_fname, 'unit_labels'); 
+keep_idx = 0 <=unit_labels; 
+
+A = A(:,:,keep_idx); 
+C = C(:, keep_idx); 
+S = S(:,keep_idx); 
+raw = raw(:,keep_idx); 
 
 ms.dirname = cd; % where did you find the file?
 ms.numFrames = size(C); % get the number of frames in the data. 
@@ -52,7 +61,12 @@ ms.frameNum = ncread(minian_fname,'frame');
 ms.frameNum = ms.frameNum+1; %compensate for python indexing
 max_proj = ncread(minian_fname, 'max_proj'); 
 
+% raw traces
 
+ms.denoise = C; 
+ms.deconv = S; 
+
+ms = MS_deconv2rate([], ms);
 
 %% plot a check if needed. 
 if plot_flag
@@ -62,8 +76,8 @@ if plot_flag
     figure(99999)
     clf
     
-    subplot(1,5,1:2)
-%     imagesc(1:ms.w ms.max_proj'); hold on
+    subplot(4,5,[1:2 6, 7])
+    imagesc(1:ms.w ms.max_proj'); hold on
     set(gca, 'YDir', 'normal'); 
     
     subplot(1,5,3:5)
