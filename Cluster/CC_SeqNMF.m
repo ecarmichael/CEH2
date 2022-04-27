@@ -103,15 +103,21 @@ ylim([min(behav.position(:,1)) max(behav.position(:,1))*1.3])
 % this_pos = L_laps_pos;
 % this_velo = L_laps_velo; 
 
-fprintf('Running all laps\n')
+% fprintf('Running R laps\n')
 % this_data = R_data;
 % this_pos = R_laps_pos;
 % this_velo = R_laps_velo; 
 
+% fprintf('Running all movement\n')
+% this_data = data_in(:,movement_idx);
+% this_pos = pos(movement_idx);
+% this_velo = velocity(movement_idx); 
+
+keep_idx = (L_laps > 0) | (R_laps > 0); 
 fprintf('Running all laps\n')
-this_data = data_in(:,movement_idx);
-this_pos = ms.time(movement_idx);
-this_velo = velocity(movement_idx); 
+this_data = data_in(:,keep_idx);
+this_pos = pos(keep_idx);
+this_velo = velocity(keep_idx); 
 
 PosFs = Fs; % b/c we already interpolated the position data to the ms.time. 
 
@@ -125,7 +131,7 @@ pos_mat = zeros(length(this_pos),length(pos_bins));
 for ii = length(this_pos):-1:1
     pos_mat(ii,nearest_idx3(this_pos(ii,1), pos_bins)) = this_velo(ii); 
 end
-pos_mat = (pos_mat); 
+% pos_mat = (pos_mat); 
 % make the test/trian sets.  
 trainNEURAL = this_data(:,1:splitN); 
 trainPOS = pos_mat(1:splitS,:); 
@@ -285,9 +291,9 @@ for iteri = nIter:-1:1
     else
         hybrids = [];
     end
-    display(['seqNMF run ' num2str(iteri) '/' num2str(nIter)])
+    fprintf(['seqNMF run ' num2str(iteri) '/' num2str(nIter) '| ' num2str(sum(is_significant(iteri,:))) 'sig\n'])
     hybrids{iteri} = hybrid; 
-    fprintf('Iter # .0f ', iteri);  
+%     fprintf('Iter # %.0f ', iteri);  
     toc
 end
 
@@ -332,16 +338,16 @@ saveas(gcf, [save_dir filesep 'position'], 'fig')
 pause(1)
 saveas(gcf, [save_dir filesep 'position'], 'png')
 
-count = 0; 
+count = 0;
 for ii = 1:10
     if count < 5
-    if ishandle(ii)
-        count = count+1; 
-        figure(ii)
-        saveas(gcf, [save_dir filesep 'Seq_iter_' num2str(ii)], 'fig')
-        pause(1)
-        saveas(gcf, [save_dir filesep 'Seq_iter_' num2str(ii)], 'png')
-    end
+        if ishandle(ii)
+            count = count+1;
+            figure(ii)
+            saveas(gcf, [save_dir filesep 'Seq_iter_' num2str(ii)], 'fig')
+            pause(1)
+            saveas(gcf, [save_dir filesep 'Seq_iter_' num2str(ii)], 'png')
+        end
     end
 end
 

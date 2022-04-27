@@ -1,5 +1,5 @@
 %% seq NMF JC test
-
+clear all; close all; 
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared')); % where the codebase repo can be found
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2')); % where the multisite repo can be found
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\seqNMF'));
@@ -8,12 +8,12 @@ data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1060\HATD1';
 cd(data_dir)
 
 load('behav.mat');
-load('ms')
+load('ms.mat', 'ms')
 
 %% try it with the CC seqNMF script.
 
-k = 6;
-l = .5;
+k = 4;
+l = 2;
 
 close all
 CC_SeqNMF(ms, behav, k, l, 0.0034)
@@ -21,6 +21,7 @@ CC_SeqNMF(ms, behav, k, l, 0.0034)
 
 
 %% same but REM
+l = 2;
 
 load('all_binary_post_REM.mat')
 
@@ -28,6 +29,28 @@ CC_SeqNMF_Sleep(all_binary_post_REM,33, k, l, 0.0034)
 
 
 
+%% comapre the Seq templates with the detected replays
+load('C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1060\HATD1\Seq_out_sleep_L0p5\Seq_out_sleep.mat'); 
+
+load('C:\Users\ecarm\Dropbox (Williams Lab)\Decoding\pv1060\HATD1\1000shuffling.mat','Replay_score_actual', 'Final_Replay_score', 'Final_start_frame');
+% replay_evts = load(
+
+%% try a peri event plot of the H mat values from Seq
+ iter = 1;
+ this_W = Seq_out_sleep.W{iter}; 
+ this_H = Seq_out_sleep.H{iter};
+
+ % test figure
+ c_ord = linspecer(size(this_H,1)); 
+ figure(101)
+ clf
+ subplot(5,1,1:2)
+  hold on
+
+ for ii = size(this_H,1):-1:1
+     plot(1:length(this_H(ii,:)), (this_H(ii,:)./max(this_H(ii,:)))-ii, 'color', c_ord(ii,:));  
+ end
+xlim([1 size(this_H,2)])
 
 
 %% loop for SCEs

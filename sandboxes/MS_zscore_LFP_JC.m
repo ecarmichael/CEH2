@@ -218,6 +218,15 @@ end
     UHG_freq = MS_estimate_freq(UHG.tvec, UHG.data);
     Rip_freq = MS_estimate_freq(Ripple.tvec, Ripple.data);
     
+    % get the MI for theta and the gammas
+    
+    t_LG_MI = MS_ModIdx(theta, LG, 2*theta.cfg.hdr{1}.SamplingFrequency); 
+    t_MG_MI = MS_ModIdx(theta, MG, 2*theta.cfg.hdr{1}.SamplingFrequency); 
+    t_HG_MI = MS_ModIdx(theta, HG, 2*theta.cfg.hdr{1}.SamplingFrequency); 
+    t_UHG_MI = MS_ModIdx(theta, UHG, 2*theta.cfg.hdr{1}.SamplingFrequency); 
+
+    
+    
     % zscore them 
     [~, D_amp_mu, D_amp_sig] = zscore(D_amp); 
     [~, T_amp_mu, T_amp_sig] = zscore(T_amp); 

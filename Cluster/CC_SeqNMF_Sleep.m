@@ -28,7 +28,13 @@ end
 %% Fit with seqNMF: most of this is straight out of Mackevicius et al. 2019 https://elifesciences.org/articles/38471
 
 fprintf('Running all laps\n')
-this_data = data_in;
+if size(data_in, 1) > size(data_in,2)
+    fprintf('<strong>%s</strong>: Data appears to be Samples(%.0f) x nCells (%.0f). Flipping it...\n',mfilename, size(data_in,1), size(data_in,2)); 
+this_data = data_in';
+else
+    fprintf('<strong>%s</strong>: Data appears to be nCells (%.0f) x Samples(%.0f) x. this is correct\n',mfilename, size(data_in,1), size(data_in,2)); 
+    this_data = data_in;
+end
 
 
 % break data into training set and test set
@@ -113,7 +119,7 @@ Ws = []; Hs = []; loadings = []; pvals = []; is_significant = []; hybrid = [];
 for iteri = nIter:-1:1
     tic
  [W, H, ~,loadings(iteri,:),power]= seqNMF(X,'K',k,'L',Lneural,...
-            'lambdaL1W', .1, 'lambda', opt_lambda,'lambdaOrthoH', lambdaOrthoH, 'lambdaOrthoW', lambdaOrthoW, 'maxiter', 100, 'showPlot', 0); 
+            'lambdaL1W', .1, 'lambda', opt_lambda,'lambdaOrthoH', lambdaOrthoH, 'lambdaOrthoW', lambdaOrthoW, 'maxiter', 100, 'showPlot', 1); 
     p = .05;
     [pvals(iteri,:),is_significant(iteri,:)] = test_significance(testNEURAL,W,p);
     Ws{iteri} = W(:,is_significant(iteri,:)==1,:); 
@@ -126,9 +132,9 @@ for iteri = nIter:-1:1
     else
         hybrids = [];
     end
-    display(['seqNMF run ' num2str(iteri) '/' num2str(nIter)])
+    fprintf(['seqNMF run ' num2str(iteri) '/' num2str(nIter) '| ' num2str(sum(is_significant(iteri,:))) 'sig\n'])
     hybrids{iteri} = hybrid; 
-    fprintf('Iter # .0f ', iteri);  
+%     fprintf('Iter # .0f ', iteri);  
     toc
 end
 
