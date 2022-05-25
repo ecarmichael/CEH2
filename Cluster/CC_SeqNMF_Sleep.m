@@ -119,7 +119,7 @@ Ws = []; Hs = []; loadings = []; pvals = []; is_significant = []; hybrid = [];
 for iteri = nIter:-1:1
     tic
  [W, H, ~,loadings(iteri,:),power]= seqNMF(X,'K',k,'L',Lneural,...
-            'lambdaL1W', .1, 'lambda', opt_lambda,'lambdaOrthoH', lambdaOrthoH, 'lambdaOrthoW', lambdaOrthoW, 'maxiter', 100, 'showPlot', 1); 
+            'lambdaL1W', .1, 'lambda', opt_lambda,'lambdaOrthoH', lambdaOrthoH, 'lambdaOrthoW', lambdaOrthoW, 'maxiter', 100, 'showPlot', 0); 
     p = .05;
     [pvals(iteri,:),is_significant(iteri,:)] = test_significance(testNEURAL,W,p);
     Ws{iteri} = W(:,is_significant(iteri,:)==1,:); 
@@ -166,22 +166,36 @@ mkdir(save_dir)
 save([save_dir filesep 'Seq_out_sleep'], 'Seq_out_sleep',  '-v7.3'); 
 
 figure(1010)
-saveas(gcf, [save_dir filesep 'Sig_seqs_sleep_bar'], 'fig')
-pause(1)
+% saveas(gcf, [save_dir filesep 'Sig_seqs_sleep_bar'], 'fig')
+% pause(3)
 saveas(gcf, [save_dir filesep 'Sig_seqs_sleep_bar'], 'png')
+% 
+% sig_figs = find(sum(Seq_out_sleep.is_significant, 2) > 0); 
+% for ii = 1:length(sig_figs)
+%     if ishandle(sig_figs(ii))
+%         figure(sig_figs(ii))
+%         saveas(gcf, [save_dir filesep 'Seq_sleep_iter_' num2str(sig_figs(ii))], 'fig')
+%         pause(1)
+%         saveas(gcf, [save_dir filesep 'Seq_sleep_iter_' num2str(sig_figs(ii))], 'png')
+%     end
+% end
 
-count = 0; 
-for ii = 1:10
-    if count < 5
-    if ishandle(ii)
-        count = count+1; 
-        figure(ii)
-        saveas(gcf, [save_dir filesep 'Seq_sleep_iter_' num2str(ii)], 'fig')
+%% backup to regen WH plots from saved file
+
+for iteri = length(Seq_out_sleep.W)-1:-1:1
+    
+    if sum(Seq_out_sleep.is_significant(iteri,:)) > 0
+        [~, ~, ~, hybrid] = helper.ClusterByFactor(Seq_out_sleep.W{iteri}(:,:,:),1);
+        indSort = hybrid(:,3);
+        tstart = 1;
+        figure(iteri); 
+        clf; 
+        WHPlot(Seq_out_sleep.W{iteri}(indSort,:,:),Seq_out_sleep.H{iteri}(:,tstart:end), Seq_out_sleep.trainNEURAL(indSort,tstart:end), 1)
+%         saveas(gcf, [save_dir filesep 'Seq_sleep_iter_' num2str(sig_figs(iteri))], 'fig')
         pause(1)
-        saveas(gcf, [save_dir filesep 'Seq_sleep_iter_' num2str(ii)], 'png')
-    end
-    end
-end
+                print([save_dir filesep 'Seq_sleep_iter_' num2str(iteri)],'-dpng','-r300')
 
-
-end % end function. 
+        close(iteri)
+    end
+    
+end % end function.
