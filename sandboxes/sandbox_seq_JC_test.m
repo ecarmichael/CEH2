@@ -3,7 +3,7 @@ clear all; close all;
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared')); % where the codebase repo can be found
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2')); % where the multisite repo can be found
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\seqNMF'));
-data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1060\HATD1';
+data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1069\HATDSwitch';
 
 cd(data_dir)
 
@@ -27,32 +27,91 @@ load('all_binary_post_REM.mat')
 
 CC_SeqNMF_Sleep(all_binary_post_REM,33, k, l, 0.0034)
 
+l = .5;
+CC_SeqNMF_Sleep(all_binary_post_REM,33, k, l, 0.0034)
 
 
 %% comapre the Seq templates with the detected replays
-load('C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1060\HATD1\Seq_out_sleep_L0p5\Seq_out_sleep.mat'); 
+load('C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1060\HATDSwitch\Seq_out_sleep_L2\Seq_out_sleep.mat'); 
 
-load('C:\Users\ecarm\Dropbox (Williams Lab)\Decoding\pv1060\HATD1\1000shuffling.mat','Replay_score_actual', 'Final_Replay_score', 'Final_start_frame');
+load('C:\Users\ecarm\Dropbox (Williams Lab)\Decoding\pv1060\HATDSwitch\1000shuffling.mat','Replay_score_actual', 'Final_Replay_score', 'Final_start_frame');
 % replay_evts = load(
 
 %% try a peri event plot of the H mat values from Seq
- iter = 1;
+ sig_its = find(sum( Seq_out_sleep.is_significant,2)>0); 
+ 
+ for kk = 19%:length(sig_its)
+     
+ iter = sig_its(kk);
  this_W = Seq_out_sleep.W{iter}; 
  this_H = Seq_out_sleep.H{iter};
+ this_H_z = zscore(this_H, [], 2); 
 
  % test figure
- c_ord = linspecer(size(this_H,1)); 
+ c_ord = MS_SeqNMF_colours(size(this_H,1)); 
  figure(101)
  clf
- subplot(5,1,1:2)
+ subplot(3,size(this_H,1),1:size(this_H,1))
   hold on
 
- for ii = size(this_H,1):-1:1
+ for ii = 1:size(this_H,1)
      plot(1:length(this_H(ii,:)), (this_H(ii,:)./max(this_H(ii,:)))-ii, 'color', c_ord(ii,:));  
  end
+
 xlim([1 size(this_H,2)])
+ylim([-size(this_H,1) 0])
+y_t = get(gca, 'ytick'); 
+set(gca, 'ytick', y_t(1):1:y_t(end-1), 'YTickLabel', abs(y_t(1):1:y_t(end-1)))
+ylabel('Seq Motif')
+xlabel('frame #')
 
+% add in the replay times
+vline(Final_start_frame)
 
+% 
+for ii = 1:size(this_H,1)
+    subplot(3,size(this_H,1),size(this_H,1)+ii)
+    title(['Motif' num2str(ii) ': H mean'])
+    
+% R_vec = interp1(1:length(Seq_out_sleep.this_data), fillmissing(Replay_score_actual, 'pchip'), 1:length(Seq_out_sleep.this_data)); 
+
+% this_corr = corrcoef(this_H(ii,:), Re
+    H_mean = NaN(size(this_H,1), 121); 
+    Hs = []; 
+    for jj = length(Final_start_frame):-1:1
+        if Final_start_frame(jj)+30 <= length(this_H)
+            Hs(:,:,jj) = this_H_z(ii, Final_start_frame(jj)-30*2:Final_start_frame(jj)+30*2); 
+        H_mean(jj,:) = this_H_z(ii, Final_start_frame(jj)-30*2:Final_start_frame(jj)+30*2); 
+        end
+    end
+    hold on
+    plot((-30*2:30*2)./30, mean(H_mean), 'color', c_ord(ii,:), 'linewidth', 2);
+    plot((-30*2:30*2)./30, mean(H_mean)+2*(std(H_mean)/sqrt(length(H_mean))),'--',  'color', c_ord(ii,:));
+    plot((-30*2:30*2)./30, mean(H_mean)-2*(std(H_mean)/sqrt(length(H_mean))),'--', 'color', c_ord(ii,:));
+
+        y_lim = ylim; 
+
+    rectangle('Position', [0 y_lim(2)*0.95 15./30 y_lim(2)*0.05], 'FaceColor', 'k')
+    ylabel('H motif strength')
+    vline(0)
+    xlabel('time (s)')
+    subplot(3,size(this_H,1),size(this_H,1)*2+ii)
+    a_c_ord = winter(size(Hs,3)); 
+    hold on
+    for jj = 1:size(Hs,3) 
+        plot3((-30*2:30*2)./30,jj*ones(size(Hs(:,:,jj))), Hs(:,:,jj), 'color',a_c_ord(jj,:))
+    end
+    view(-.5, 70)
+    ylabel('event')
+    zlabel('zscore H loading')
+    xlabel('Replay start time (s)')
+    title(['Motif ' num2str(ii) ': H per event'])
+    
+end
+
+pause(2)
+% close(101)
+end
 %% loop for SCEs
 data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold';
 cd(data_dir)

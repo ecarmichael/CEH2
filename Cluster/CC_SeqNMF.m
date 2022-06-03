@@ -330,26 +330,45 @@ save([save_dir filesep 'Seq_out'], 'Seq_out',  '-v7.3');
 
 figure(1010)
 saveas(gcf, [save_dir filesep 'Sig_seqs_bar'], 'fig')
-pause(1)
+pause(3)
 saveas(gcf, [save_dir filesep 'Sig_seqs_bar'], 'png')
 
 figure(111)
 saveas(gcf, [save_dir filesep 'position'], 'fig')
-pause(1)
+pause(3)
 saveas(gcf, [save_dir filesep 'position'], 'png')
 
-count = 0;
-for ii = 1:10
-    if count < 5
-        if ishandle(ii)
-            count = count+1;
-            figure(ii)
-            saveas(gcf, [save_dir filesep 'Seq_iter_' num2str(ii)], 'fig')
-            pause(1)
-            saveas(gcf, [save_dir filesep 'Seq_iter_' num2str(ii)], 'png')
-        end
-    end
-end
+% count = 0;
+% for ii = 1:10
+%     if count < 5
+%         if ishandle(ii)
+%             count = count+1;
+%             figure(ii)
+%             saveas(gcf, [save_dir filesep 'Seq_iter_' num2str(ii)], 'fig')
+%             pause(1)
+%             saveas(gcf, [save_dir filesep 'Seq_iter_' num2str(ii)], 'png')
+%         end
+%     end
+% end
 
+%%
+for iteri = length(Seq_out.W):-1:1
+    
+    if sum(Seq_out.is_significant(iteri,:)) > 0
+        [~, ~, ~, hybrid] = helper.ClusterByFactor(Seq_out.W{iteri}(:,:,:),1);
+        indSort = hybrid(:,3);
+        tstart = 1;
+        figure(iteri); 
+        clf; 
+        WHPlot(Seq_out.W{iteri}(indSort,:,:),Seq_out.H{iteri}(:,tstart:end), Seq_out.trainNEURAL(indSort,tstart:end), 1, Seq_out.trainPOS(:,floor(tstart*33/33):end)')
+        maximize
+%         saveas(gcf, [save_dir filesep 'Seq_iter_' num2str(iteri)], 'fig')
+        pause(3)
+        print([save_dir filesep 'Seq_iter_' num2str(iteri)],'-dpng','-r300')
+%         saveas(gcf, [save_dir filesep 'Seq_iter_' num2str(iteri)], 'png')
+        close(iteri)
+    end
+    
+end % end function.
 
 end % end function. 
