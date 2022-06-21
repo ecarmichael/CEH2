@@ -28,7 +28,10 @@ function [idx_out] = MS_overlap_tiebreaker(data_in, val_in, win_s)
 %% intialize
 
 if nargin < 3
-    error('not enough inputs')
+    warning('not enough inputs. Running demo...')
+    data_in = [1   5    6   7   12];
+    val_in  = [.2  .4   .6  .1  .4];
+    win_s = 3 ;
 end
 
 if length(data_in) ~= length(val_in)
