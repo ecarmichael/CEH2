@@ -27,14 +27,13 @@ cfg_rem.data_type = 'deconv';
 ms_trk_rem = MS_Remove_trace(cfg_rem, ms_trk); 
 
 
-%%
+%% follow grosmark et al. method of deconv preprocessing 
 Csp = ms_trk_rem.deconv./ms_trk_rem.denoise; 
 Csp = Csp > 0.01; 
 ms_trk_rem.Csp = Csp; 
 
-
-
 cfg_plot.Ca_type = 'Csp'; 
+cfg_plot.plot_type = '2d'; 
 MS_plot_ca(cfg_plot, ms_trk_rem)
 
 %% bin and convolve
@@ -66,15 +65,22 @@ time_proj = assembly_activity(Ass_Temp,gau_sdf');
 
 
 %% color code the assemblies 
-Ass_sort = []; 
+Ass_sort = []; figure(303); hold on
 for ii = size(Ass_Temp,2):-1:1
     
     [Ass_sort(:,ii), this_idx] = sort(Ass_Temp(:,ii), 'descend'); 
     thresh = prctile(Ass_Temp(:,ii), 95); 
     c_idx = Ass_Temp(this_idx,ii) > thresh; 
+    
 %     plot(Ass_Temp(c_idx, ii), )
     
     
+end
+
+%% stem plot for first few ensembles 
+ figure(303); hold on
+for ii = 1:5
+        stem(Ass_Temp(:,ii))
 end
 
 %% plot the output
@@ -83,24 +89,24 @@ figure(202)
 ax(1) = subplot(5,1,1:4);
 hold on
 for ii = size(gau_sdf, 2):-1:1
-    s_t = ms_trk.time(Csp(:,ii) >0);
+    s_t = ms_trk.time(Csp(:,ii) >0)/1000;
     if ~isempty(s_t)
        plot([s_t, s_t]', [(ones(size(s_t))*ii)-.5, (ones(size(s_t))*ii)+.5]', 'color', 'k', 'linewidth', 4)
         
     end
 %     plot(ms_trk.time, gau_sdf(:,ii)+ii)
 end
-xlim([ms_trk.time(1) ms_trk.time(end)])
+xlim([ms_trk.time(1)/1000 ms_trk.time(end)/1000])
 ylim([0 size(Csp, 2)])
     
 ax(2) = subplot(5,1,5);
 hold on
 c_ord = linspecer(10); 
 for ii = 1:10
-   plot3(ms_trk.time, time_proj(ii,:),ones(1, length(time_proj))*100* ii, 'color', c_ord(ii,:)) 
+   plot3(ms_trk.time/1000, zscore(time_proj(ii,:)),ones(1, length(time_proj))*100* ii, 'color', c_ord(ii,:)) 
     
 end
-    xlim([ms_trk.time(1) ms_trk.time(end)])
+    xlim([ms_trk.time(1)/1000 ms_trk.time(end)/1000])
 
 linkaxes(ax, 'x')
 

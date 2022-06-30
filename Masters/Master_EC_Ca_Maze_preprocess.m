@@ -37,6 +37,7 @@ else
     PARAMS.inter_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter'; % where to put intermediate files
     PARAMS.code_base_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; % where the codebase repo can be found
     PARAMS.code_CEH2_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2'; % where the multisite repo can be found
+    PARAMS.oasis_dir = 'C:\Users\ecarm\Documents\GitHub\OASIS_matlab'; 
 end
 
 rng(11,'twister') % for reproducibility
@@ -51,8 +52,6 @@ clear os
 
 
 %% list the files to process and then loop over each session. 
-
-
 f_names = dir('*MZD*'); 
 
 for iF = 6%1:length(f_names)
@@ -128,7 +127,9 @@ for iF = 6%1:length(f_names)
     fprintf('<strong>MS_Segment_raw</strong>: processing session: <strong>%s</strong> ...\n',[iSub '-' iSess]);
     
     %     run the actual segmentation workflow
+    addpath(genpath(PARAMS.oasis_dir)); oasis_setup; 
     MS_Segment_raw_EC(cfg_seg, csc_dir, data_dir, ms_resize_dir);
+    rmpath(genpath(PARAMS.oasis_dir)); 
     
     cd(ms_resize_dir)
     % extrack the postion data for the
@@ -137,6 +138,9 @@ for iF = 6%1:length(f_names)
     
     % load the DLC data
     trk_dir = dir([data_dir filesep '*MAZE']);
+    if isempty(dir([trk_dir.folder filesep trk_dir.name filesep '*DLC*.csv']))
+        error('YOU DIDN"T DLC THIS SESSION YET...!\n')
+    end
     [~, behav] = MS_collect_DLC([trk_dir.folder filesep trk_dir.name]);
     
     % convert pixels to cm. 

@@ -1,4 +1,4 @@
-addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
+% addpath(genpath('/home/williamslab/Documents/Github/CEH2'));
 
 
 inter_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold';
@@ -9,7 +9,7 @@ addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
 % decode_dir = '/home/williamslab/Dropbox (Williams Lab)/10.Manifold/pv1060/LTD5';
 % ms_dir = '/home/williamslab/Dropbox (Williams Lab)/Inter/pv1060/LTD5';
 
-% raw_dir = 
+raw_dir = 'K:\Jisoo_Project\RawData\pv1060\7_19_2019_PV1060_LTD5'; 
 decode_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1060\LTD5'; 
 ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1060\7_19_2019_PV1060_LTD5';
 

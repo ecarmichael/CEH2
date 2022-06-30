@@ -1,5 +1,5 @@
-function pos_tsd = LoadPos(cfg_in)
-% pos_tsd = LoadPos(cfg)
+function pos_tsd = MS_LoadPos(cfg_in)
+% pos_tsd = MS_LoadPos(cfg)
 %
 % Wrapper function for loading Neuralynx .nvt file
 %
@@ -21,7 +21,7 @@ function pos_tsd = LoadPos(cfg_in)
 % youkitan 2014-11-05
 % A.Carey 2015-02-11 (added convFact)
 % youkitan edit Feb 2017, added units
-%
+% EC wrapper that adds in angles as an output from the position file. 
 %%
 cfg_def.fn = {};
 cfg_def.removeZeros = 1;

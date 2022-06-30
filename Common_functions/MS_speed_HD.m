@@ -112,16 +112,13 @@ hd_tc = spk_h./ occ_h .* mode(diff(spd.tvec));
 
 figure
 subplot(2,3,1)
-title('Occ')
 h= polarplot(deg2rad(hd_edges(1:end-1)),occ_h);
 
 
 subplot(2,3,2)
-title('spk')
 polarplot(deg2rad(hd_edges(1:end-1)),spk_h);
 
 subplot(2,3,3)
-title('tc')
 
 polarplot(deg2rad(hd_edges(1:end-1)),(hd_tc));
 
@@ -134,25 +131,26 @@ ylabel('velocity (cm/s)'); xlabel('HD (deg)');
 axis xy
 colormap([0,0,0; parula])
 caxis([0 max(vec_occ, [], 'all')])
+title('Occ')
 
 subplot(2,3,5)
-title('Spk')
 imagesc([hd_bins 360],spd_bins, spk_vec');
 set(gca, 'xtick', [0 180 360], 'ytick', 0:floor(max(spd.data)/.8));
 ylabel('velocity (cm/s)'); xlabel('HD (deg)');
 axis xy
 colormap([0,0,0; parula])
 caxis([0 max(spk_vec, [], 'all')])
+title('Spk')
 
 
 subplot(2,3,6)
-title('tc')
 imagesc([hd_bins 360],spd_bins, tc');
 set(gca, 'xtick', [0 180 360], 'ytick', 0:floor(max(spd.data)/.8))
 ylabel('velocity (cm/s)'); xlabel('HD (deg)');
 axis xy
 colormap([0,0,0; parula])
 caxis([0 max(tc, [], 'all')/2])
+title('tc')
 
 
 

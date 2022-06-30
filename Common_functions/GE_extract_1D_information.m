@@ -23,8 +23,8 @@ function [MI, posterior, occupancy_vector, prob_being_active, likelihood ] = GE_
 % inclusion_vec: logical vector including (1) or excluding (0) corresponding timestamps. Has to be the same size as binary_trace.
 
 %% Ignore excluded periods
-binarized_trace = binarized_trace(inclusion_vector);
-interp_behav_vec = interp_behav_vec(inclusion_vector);
+binarized_trace = binarized_trace(logical(inclusion_vector));
+interp_behav_vec = interp_behav_vec(logical(inclusion_vector));
 
 %% Create bin vectors
 prob_being_active = sum(binarized_trace)./length(binarized_trace); % Expressed in probability of firing (<1)

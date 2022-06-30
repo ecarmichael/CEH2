@@ -19,7 +19,9 @@ cd('/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/Maze_
 load('behav_DLC.mat');
 load('ms_trk.mat'); 
 
+%% get the rate from deconv
 
+ms_trk = MS_deconv2rate([], ms_trk)
 
 %% remove inactive cells
 
@@ -32,7 +34,7 @@ ms_trk_act = MS_Remove_trace(cfg_rem, ms_trk);
 
 
 %% play with linerization using one direction at a time
-
+data_type = 'rate'; 
 
 pos = MS_behav2tsd(behav); 
 pos.tvec = pos.tvec/1000; 
@@ -49,10 +51,10 @@ pos_move.data = pos_move.data(:, move_idx);
 
 ms_trk_move = ms_trk_act; 
 ms_trk_move.time = ms_trk_act.time(move_idx);
-ms_trk_move.Binary = ms_trk_act.Binary(move_idx,:);
+ms_trk_move.(data_type) = ms_trk_act.(data_type)(move_idx,:);
 
 % convert ms_trk_move to tsd
-ms_tsd = tsd(ms_trk_move.time'/1000, ms_trk.Binary', 'Binary'); 
+ms_tsd = tsd(ms_trk_move.time'/1000, ms_trk_move.(data_type)', data_type); 
 
 %% split L and R trials
 trials_R_s = sort([behav.trials_ms.start_CL; behav.trials_ms.start_FL])/1000;
@@ -104,21 +106,21 @@ figure(101)
 clf
 subplot(2,2,1)
 hold on
-plot(pos_L.data(1,:), pos_L.data(2,:), '.r')
-plot(pos_R.data(1,:), pos_R.data(2,:), '.b')
+plot(pos_L.data(1,:), pos_L.data(2,:), '.b')
+plot(pos_R.data(1,:), pos_R.data(2,:), '.r')
 xlim([min([pos_L.data(1,:), pos_move.data(1,:)]), max([pos_L.data(1,:), pos_move.data(1,:)])]); 
 ylim([min([pos_L.data(2,:), pos_move.data(2,:)]), max([pos_L.data(2,:), pos_move.data(2,:)])]); 
-
-legend({'left', 'right'})
+title('initial trial segmentation')
+legend({'right', 'left'}, 'location', 'southeast')
 
 subplot(2,2,2)
 hold on
-plot(pos_L_cut.data(1,:), pos_L_cut.data(2,:), '.r')
-plot(pos_R_cut.data(1,:), pos_R_cut.data(2,:), '.b')
+h1 = plot(pos_L_cut.data(1,:), pos_L_cut.data(2,:), '.b');
+h2 =plot(pos_R_cut.data(1,:), pos_R_cut.data(2,:), '.r');
 xlim([min([pos_L.data(1,:), pos_move.data(1,:)]), max([pos_L.data(1,:), pos_move.data(1,:)])]); 
 ylim([min([pos_L.data(2,:), pos_move.data(2,:)]), max([pos_L.data(2,:), pos_move.data(2,:)])]); 
-legend({'left', 'right'})
-
+legend([h1 h2], {'left', 'right'}, 'location', 'southeast')
+title('limit corrected segmentation')
 %% snap position to ideal
 
 P = behav.CoorD_L.coord'; 
@@ -140,17 +142,17 @@ pos_snap_R.data(2,:) = P(k, 2);
 
 
 figure(101)
+clf
 subplot(2,2,2)
 % hold on
 % plot(P(:,1),P(:,2),'ko')
 % hold on
 % plot(PQ(:,1),PQ(:,2),'*g')
 hold on
-plot(pos_snap_L.data(1,:),pos_snap_L.data(2,:),'ok', 'markersize', 10, 'markeredgecolor', 'k')
-plot(pos_snap_L.data(1,:),pos_snap_L.data(2,:),'xm', 'markersize', 10)
+hl1 = plot(pos_snap_L.data(1,:),pos_snap_L.data(2,:),'ok', 'markersize', 10, 'markeredgecolor', 'k');
+hl2 = plot(pos_snap_L.data(1,:),pos_snap_L.data(2,:),'xc', 'markersize', 10);
 xlim([min([pos_L.data(1,:), pos_move.data(1,:)]), max([pos_L.data(1,:), pos_move.data(1,:)])]); 
 ylim([min([pos_L.data(2,:), pos_move.data(2,:)]), max([pos_L.data(2,:), pos_move.data(2,:)])]); 
-legend('Nearest Pos L')
 
 
 
@@ -159,11 +161,12 @@ legend('Nearest Pos L')
 % hold on
 % plot(PQ(:,1),PQ(:,2),'*g')
 hold on
-plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'ok', 'markersize', 10, 'markeredgecolor', 'k')
-plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'xc', 'markersize', 10)
+hr1 = plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'ok', 'markersize', 10, 'markeredgecolor', 'k');
+hr2 = plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'xm', 'markersize', 10);
 xlim([min([pos_L.data(1,:), pos_move.data(1,:)]), max([pos_L.data(1,:), pos_move.data(1,:)])]); 
 ylim([min([pos_L.data(2,:), pos_move.data(2,:)]), max([pos_L.data(2,:), pos_move.data(2,:)])]); 
-legend('Nearest Pos R')
+legend([h1 h2, hl2, hr2],{'left', 'right','Nearest Pos L', 'Nearest Pos R'}, 'location', 'southeast')
+
 
 %% standardize and linearize
 % load(
@@ -180,61 +183,81 @@ linpos.L = LinearizePos(cfg,pos_L_cut, SCoorD_L);
 cfg.Coord = SCoorD_R.coord;
 linpos.R = LinearizePos(cfg,pos_R_cut, SCoorD_R);
 
-figure(1)
 subplot(2,2,3)
-plot(linpos.L.tvec, linpos.L.data, '.r')
-subplot(2,2,4)
-plot(linpos.R.tvec, linpos.R.data, '.b')
+hold on
+hlinl = plot(linpos.L.tvec, linpos.L.data, '.b');
+xlim([min([linpos.L.tvec, linpos.R.tvec]), max([linpos.L.tvec, linpos.R.tvec])])
+hlinr = plot(linpos.R.tvec, linpos.R.data, '.r');
+xlim([min([linpos.L.tvec, linpos.R.tvec]), max([linpos.L.tvec, linpos.R.tvec])]);
+legend([hlinl, hlinr], 'Linearized left trajectories', 'Linearized right trajectories'); 
 
 %% compute tuning curves for each cell
-bin_s = 1; 
-bins = floor(min(linpos.L.data)):bin_s:ceil(max(linpos.L.data));
+bin_s = 3; 
+bins = floor(min([linpos.R.data, linpos.L.data])):bin_s:39%ceil(max([linpos.R.data, linpos.L.data]));
 
-xbins = floor(min(pos_L_cut.data(1,:))):bin_s:ceil(max(pos_L_cut.data(1,:)))
-ybins = floor(min(pos_L_cut.data(2,:))):bin_s:ceil(max(pos_L_cut.data(2,:)))
+
+subplot(2,2,4)
+imagesc(bins,1:2, [histc(linpos.L.data, bins)/mode(diff(linpos.L.tvec)); histc(linpos.R.data, bins)/mode(diff(linpos.R.tvec))]/60); 
+set(gca,'Ytick', 1:2, 'YTickLabel', {'left occupancy', 'right occupancy'}); 
+c = colorbar; 
+c.Label = 'time (s)'; 
+
+% xbins = floor(min(pos_L_cut.data(1,:))):bin_s:ceil(max(pos_L_cut.data(1,:)))
+% ybins = floor(min(pos_L_cut.data(2,:))):bin_s:ceil(max(pos_L_cut.data(2,:)))
 nShuff = 500;
 
-MI = []; posterior = []; occupancy = []; p_active = []; 
+MI = []; posterior = []; occupancy = []; p_active = []; TC = []; 
 for iCell = size(ms_L_cut.data,1):-1:1
     
     if sum(ms_L_cut.data(iCell, :)) ==0
         MI(iCell) = 0;
-        posterior(iCell,:) = NaN(iCell, length(bins));
+        posterior(iCell,:) = NaN(1, length(bins)-1);
         TC(iCell, :) = posterior(iCell,:);
         p_active(iCell) = 0;
         
     else
 %         [MI(iCell), posterior(iCell,:),occupancy,p_active(iCell), TC(iCell,:)] = MS_get_spatial_information(ms_L_cut.data(iCell, :), linpos.L.data, bins);
-        [MI(iCell), posterior(iCell,:),occupancy,p_active(iCell), TC(iCell,:)] = GE_extract_1D_information(logical(ms_L_cut.data(iCell, :))', linpos.L.data', bins', ones(1, length(ms_L_cut.data(iCell, :))));
+        [MI(iCell), posterior(iCell,:),occupancy,p_active(iCell), TC(iCell,:)] = GE_extract_1D_information((ms_R_cut.data(iCell, :)>0)', linpos.R.data', bins', ones(length(ms_R_cut.data(iCell, :)),1));
 
+        figure(191)
+        hold on
+        
+        
+        
         % convert likel
         for ishuff = nShuff:-1:1
             shuf_data = circshift(ms_L_cut.data(iCell, :), round(MS_randn_range(1,1,1,length(ms_L_cut.data(iCell, :)))));
             
-            [shuff_MI(ishuff), ~, ~, ~, shuff_TC(ishuff,:)] = MS_get_spatial_information(shuf_data, linpos.L.data, bins);
+            [shuff_MI(ishuff), ~, ~, ~, shuff_TC(ishuff,:)] = GE_extract_1D_information((shuf_data>0)', linpos.L.data', bins',ones(length(ms_L_cut.data(iCell, :)),1));
             
-            pval = sum(shuff_TC(ishuff,:) > TC(iCell,:),1)/nShuff;
-            
-            sig_TC(iCell,:) = TC(iCell,:); 
-            
-            sig_TC(iCell,pval > 0.05) = 0; 
-            
-%             if sum(sig_TC < 0.05)
-            sig_idx = 1; 
-            
+              
             % test plot if needed
-            
+        end
+        
+        figure(1010)
+        clf
+        hold on
+        plot(bins(1:end-1) + diff(bins), TC(iCell,:), 'b');
+        plot(bins(1:end-1) + diff(bins), mean(shuff_TC,1), '--r')
+        
+        
+        pval = sum(shuff_TC(ishuff,:) > TC(iCell,:),1)/nShuff;
+        
+        sig_TC(iCell,:) = TC(iCell,:);
+        
+        sig_TC(iCell,pval > 0.05) = 0;
+        
+        if sum(sig_TC < 0.05)
+            sig_idx = 1;
+    end
+        
             figure(102)
-            imagesc(xbins, ybins, o')
+            imagesc(xbins, ybins, occupancy')
             hold on
             plot(pos_snap_L.data(1,:), pos_snap_L.data(2,:), '.');
             set(gca, 'YDir', 'reverse')
-            
-            
-        end
-        
+
     end
 end
 
 
-end

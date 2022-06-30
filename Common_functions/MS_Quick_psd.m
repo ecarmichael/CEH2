@@ -141,15 +141,24 @@ color.green = double([168,221,181])/255;
 color.red = [0.9    0.3    0.3]; 
 
 subplot(3,2,[2,3,5,6])
+% sort channel labels
 for iSite = 1:length(csc.label)
+    this_num = regexp(csc.label{iSite},'\d*','Match');
+    num_labels(iSite) = str2num(this_num{1});
+end
+[~, sorted_labels_idx] = sort(num_labels); 
+
+l = 0; 
+for iSite = sorted_labels_idx
+    l = l+1;
     hold on
-    plot(psd.(csc.label{iSite}(1:end-4)).f, 10*log10(psd.(csc.label{iSite}(1:end-4)).pxx), 'color', c_ord(iSite,:),'linewidth', line_width);
+    plot(psd.(csc.label{iSite}(1:end-4)).f, 10*log10(psd.(csc.label{iSite}(1:end-4)).pxx), 'color', c_ord(l,:),'linewidth', line_width);
 end
 xlim([0 200])
 y_val = ylim;
 xlabel('Frequency (Hz)')
 % colour bars for specific frequencies of interest. 
-legend(strrep(csc.label, '_', ' '),  'location', 'southwest', 'orientation', 'vertical');
+legend(strrep(csc.label(sorted_labels_idx), '_', ' '),  'location', 'southwest', 'orientation', 'vertical');
 rectangle('position', [1, y_val(1), 4, y_val(2) - y_val(1)],  'facecolor', [color.red 0.2], 'edgecolor', [color.red 0.2])
 rectangle('position', [6, y_val(1), 4, y_val(2) - y_val(1)],  'facecolor', [color.blue 0.2], 'edgecolor', [color.blue 0.2])
 rectangle('position', [40, y_val(1), 30, y_val(2) - y_val(1)],  'facecolor', [color.green 0.2], 'edgecolor', [color.green 0.2])
@@ -169,10 +178,11 @@ title(strrep(d_name{end}, '_', ' '))
 axes('Position',[.7 .6 .2 .3])
 box on
 % add colours for freq bands
-
-for iSite = 2:length(csc.label)
+l = 0; 
+for iSite = sorted_labels_idx
     hold on
-    plot(psd.(csc.label{iSite}(1:end-4)).f, 10*log10(psd.(csc.label{iSite}(1:end-4)).pxx), 'color', c_ord(iSite,:),'linewidth', line_width);
+    l = l+1; 
+    plot(psd.(csc.label{iSite}(1:end-4)).f, 10*log10(psd.(csc.label{iSite}(1:end-4)).pxx), 'color', c_ord(l,:),'linewidth', line_width);
 end
 xlim([0 12])
 y_val = ylim;

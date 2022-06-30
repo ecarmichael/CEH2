@@ -47,6 +47,8 @@ sess_id = fname{end};
 
 fprintf('\n<strong>Session data appears to be Subject %s, on %s, with task: %s</strong>\n', subject_id, date_id,  sess_id)
 
+numTT = length(dir('*.ntt'));
+
 % open the file to write
 fid = fopen([dir_name '_meta.m'], 'w');
 
@@ -55,9 +57,13 @@ fprintf(fid, '%% ''This Meta.m was generated using %s.m'';\n', mfilename);
 
 fprintf(fid, ['Meta.version = ' num2str(1) ';\n']);
 fprintf(fid, 'Meta.species = ''mouse'';\n');
+if contains(subject_id, 'MD')
+    fprintf(fid, 'Meta.experimenter = ''EC / MD'';\n');
+else
 fprintf(fid, 'Meta.experimenter = ''EC / EP'';\n');
+end
 fprintf(fid, 'Meta.behavior = ''OF'';\n');
-fprintf(fid, 'Meta.probe = ''Versa 4'';\n');
+fprintf(fid, ['Meta.probe = ''Versa ' num2str(numTT) ''';\n']);
 
 %% Get the flexible subject information
 fprintf(fid, '\n%%Subject information\n');
@@ -84,14 +90,20 @@ fprintf(fid, 'Meta.LFP_hemisphere = ''R'';\n');
 %same for CSC
 
 % fprintf(fid, ['Meta.tetrodeDepths = ' num2str(depth) ';\n']);
-fprintf(fid, 'Meta.EMG = ''CSC16.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+if strcmp(subject_id, 'MD3')
+    fprintf(fid, 'Meta.EMG = ''CSC32.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
 
+else
+fprintf(fid, 'Meta.EMG = ''CSC16.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+end
 
 if strcmp(subject_id, 'M21') 
     fprintf(fid, 'Meta.goodCSC = ''CSC8.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
 elseif strcmp(subject_id, 'M23')
     fprintf(fid, 'Meta.goodCSC = ''CSC5.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
     fprintf(fid, 'Meta.goodCSC2 = ''CSC6.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+elseif strcmp(subject_id, 'MD3')
+    fprintf(fid, 'Meta.goodCSC = ''CSC10.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
 else
     fprintf(fid, 'Meta.goodCSC = ''CSC5.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
 end

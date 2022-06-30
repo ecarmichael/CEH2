@@ -115,22 +115,22 @@ ms = MS_characterize_trace(cfg_stats, ms);
 fprintf('\n<strong>%s</strong>: basic statstics computed for each Ca trace\n', mfilename);
 
 %% add the deconvolved traces if it is in the path
-if isfield(ms, 'detrendRaw') && ~isfield(ms, 'Binary')
+if  ~isfield(ms, 'Binary')
     ms = msExtractBinary_detrendTraces(ms);
 end
-% if exist('deconvolveCa.m', 'file') == 2
-%     fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
-%     for iChan = size(ms.RawTraces,2):-1:1
-%             tic;
-%             [denoise,deconv] = deconvolveCa(ms.detrendRaw(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
-%             toc;
-%             all_denoise(:,iChan) = denoise;    all_deconv(:,iChan) = deconv;
-%     end
-%     ms.denoise = all_denoise;
-%     ms.deconv = all_deconv;
-%     ms.decon_params = 'deconvolveCa(ms.detrendRaw(:,iChan), ''foopsi'', ''ar2'', ''smin'', -2.5, ''optimize_pars'', true, ''optimize_b'', true)';
-%
-% end
+if ~isfield(ms, 'denoise') %&& exist('deconvolveCa.m', 'file') == 2
+    fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
+    for iChan = size(ms.RawTraces,2):-1:1
+            tic;
+            [denoise,deconv] = deconvolveCa(ms.detrendRaw(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
+            toc;
+            all_denoise(:,iChan) = denoise;    all_deconv(:,iChan) = deconv;
+    end
+    ms.denoise = all_denoise;
+    ms.deconv = all_deconv;
+    ms.decon_params = 'deconvolveCa(ms.detrendRaw(:,iChan), ''foopsi'', ''ar2'', ''smin'', -2.5, ''optimize_pars'', true, ''optimize_b'', true)';
+
+end
 
 %% append the TS folder name to the ms struct.
 
