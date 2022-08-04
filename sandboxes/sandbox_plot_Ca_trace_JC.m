@@ -19,6 +19,7 @@ cfg_plot = [];
 cfg_plot.plot_type = '2d'; 
 % cfg_plot.rescale = 'max';
 cfg_plot.Ca_chan = [14 23 34 59 69 76 77 88 100 111 122 125 129 131 146 147 157 162 187 200 229 243 245 262 273];
+% cfg_plot.Ca_chan = cfg_plot.Ca_chan+25
 % cfg_plot.Ca_chan = 250:300;
 cfg_plot.offset = .7;
 % cfg_plot.colors = repmat([0 0 0], length(cfg_plot.Ca_chan),1)

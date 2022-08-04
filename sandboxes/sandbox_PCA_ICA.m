@@ -79,7 +79,7 @@ end
 
 %% stem plot for first few ensembles 
  figure(303); hold on
-for ii = 1:5
+for ii = 3
         stem(Ass_Temp(:,ii))
 end
 

@@ -152,9 +152,9 @@ colormap([0,0,0; parula])
 caxis([0 max(tc, [], 'all')/2])
 title('tc')
 
+vec_tc = tc; 
 
+%% play with kalman filters WIP
 
-%% play with kalman filters
-
-addpath(genpath('/home/williamslab/Documents/KalmanAll'))
+% addpath(genpath('/home/williamslab/Documents/KalmanAll'))
 

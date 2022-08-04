@@ -122,8 +122,8 @@ for iC = 1:length(file_list)
         if iB == 2
             
 %             trials = dSub_wmaze_trialfun([], this_pos)
-            arms = {'l', 'c', 'r'}; maze.arms = arms; 
-            for ii = 1:3
+            arms = {'l', 'c', 'r', 'b'}; maze.arms = arms; 
+            for ii = 1:length(arms)
             if sum(strcmp(this_evt.label, arms{ii})) > 0
                 maze.(arms{ii}) = this_evt.t{strcmp(this_evt.label, arms{ii})};
             else
@@ -172,7 +172,7 @@ for iC = 1:length(file_list)
         
         % Waveform
         try % see if the waveform file exists and works.
-            load([this_S.label{1}(1:6) '-wv.mat'], 'mWV', 'xrange')
+            load([this_S.label{1}(1:end-2) '-wv.mat'], 'mWV', 'xrange')
             
             subplot (3,4,1)
             hold on
@@ -240,6 +240,7 @@ for iC = 1:length(file_list)
         %
         % prepare S for plots
         if iB == 2 || iB == 3
+                      
             
             % interpolate the spikes to match the time vector
             move_idx =  (.5 < this_spd.data) & (this_spd.data < 6); 
@@ -269,6 +270,20 @@ for iC = 1:length(file_list)
             end
             %% convert to heat map.
             
+                        % exclude box movement in from Reward site to box
+            if iB == 2 && strcmp(Meta.subject, 'MD3')
+                maze_x = [44; 53]; 
+                maze_y = [38 ]; 
+                rem_idx_x = (this_pos.data(1,:) < maze_x(1)) | (this_pos.data(1,:) > maze_x(2));
+                rem_idx_y = (this_pos.data(2,:) > maze_y(1));
+                rem_idx = rem_idx_x & rem_idx_y; 
+%                 disp('stop')
+%                 figure(111)
+%                 hold on
+%                 plot(this_pos.data(1,~rem_idx), this_pos.data(2,~rem_idx), '.b')
+%                 plot(this_pos.data(1,rem_idx), this_pos.data(2,rem_idx), '.r')
+
+            end
             
             % set up bins
             if iB == 2
@@ -385,7 +400,7 @@ for iC = 1:length(file_list)
         cfg_vec = [];
         cfg_vec.jump_thresh = 20;
         cfg_vec.interp = 1; 
-        vec_map = MS_speed_HD(cfg_vec, this_S, this_pos, this_spd);
+%         vec_map = MS_speed_HD(cfg_vec, this_S, this_pos, this_spd);
             
         end
         
