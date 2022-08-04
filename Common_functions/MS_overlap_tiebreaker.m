@@ -39,11 +39,36 @@ if length(data_in) ~= length(val_in)
 end
 
 %% convert data to start and ends
-data = [data_in, data_in+win_s];
+data_dif = (data_in);
+
+for ii = 1:length(data_dif)-1
+    in_range = data_dif(1,ii+1:end) < data_dif(2,ii); 
+    if sum(in_range) > 0
+%         max( val_in
+        
+    end
+    
+    
+    
+end
 
 
 
+for ii = 1:length(data_in)-1
+    vals_within = val_in(data_in < data_in(ii)+win_s);
+    conflict_vals = data_in(ii:end);
+    [~, idx] = max(vals_within(ii:end));
+    
+    winners(ii) = conflict_vals(idx);
+%     for jj = ii+1:length(data_in)
+%         if this_d > data_in(jj)
+%             fprintf('ii(%2.0d) jj(%2.0d) %2.0d - %2.0d\n', ii, jj,this_d, data_in(jj))
+% %             max(
+%         end
+%     end
+end
 
+keep_winners = unique(winners);
 
 
 

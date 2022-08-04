@@ -1,4 +1,4 @@
-function behav_out = MS_NLX_append_MAZE(pos, evt_r)
+function trials = MS_NLX_append_MAZE(pos, evt_r)
 %%  MS_NLX_append_MAZE:
 %
 %
@@ -29,7 +29,7 @@ if  ~exist('pos', 'var')
     end
 end
     
-if length(evt_r.t{find(contains(evt.label, 'Start'))}) > 1
+if length(evt_r.t{find(contains(evt_r.label, 'Start'))}) > 1
     error('Events not restricted to time on maze')
 end
   
@@ -71,7 +71,9 @@ for ii = 1:length(trials.start_C)
     R_diff = trials.enter_R - trials.start_C(ii);
     L_diff = trials.enter_L - trials.start_C(ii);
     fprintf('Trial %.0f: time to R %.0f | time to L %.0f  = ',ii, min(R_diff(R_diff> 0)), min(L_diff(L_diff> 0)))
-    if (isempty(L_diff(L_diff> 0)) ||  min(R_diff(R_diff> 0)) < min(L_diff(L_diff> 0)))
+    
+    % see which reward is the closest to the choice point. 
+    if  ~isempty(R_diff(R_diff> 0)) && (isempty(L_diff(L_diff> 0)) ||  min(R_diff(R_diff> 0)) < min(L_diff(L_diff> 0)))
         trials.start_CR = [ trials.start_CR trials.start_C(ii)];
         fprintf('R trial\n')
     elseif ~isempty(L_diff(L_diff> 0)) && (isempty(R_diff(R_diff> 0)) || min(R_diff(R_diff> 0)) > min(L_diff(L_diff> 0)))
@@ -131,25 +133,14 @@ if length(trials.tstart) ~= length(trials.tend)
     end
 end
 
-% convert to ms times;
-fnames = fieldnames(trials);
-for iF = 1:length(fnames)
-    trials_ms.(fnames{iF}) = behav.time(nearest_idx3(trials.(fnames{iF}), evt_r.t{end}));
-end
 
 
 %% add in the correct/incorrect to both
 trials.correct = correct;
-trials_ms.correct = correct; 
 % same for the types
 trials.type = type;
-trials_ms.type= type; 
 %% collect outputs
-
-behav_out.trials_nlx = trials;
-behav_out.trials_ms = trials_ms;
-
-
+pos_out.trials_nlx = trials;
 
 %% test event
 %
@@ -189,14 +180,14 @@ behav_out.trials_ms = trials_ms;
 %%  event plots using behav.
 figure(903)
 % subplot(1,2,2); 
-xlim([min(behav.position(:,1)) max(behav.position(:,1))]); 
-ylim([min(behav.position(:,2)) max(behav.position(:,2))]);
-c_ord = linspecer(length(trials_ms.tend));
+xlim([min(pos.data(1,:)) max(pos.data(1,:))]); 
+ylim([min(pos.data(2,:)) max(pos.data(2,:))]);
+c_ord = linspecer(length(trials.tend));
 hold on
-for ii  = 1:length(trials_ms.tend)
+for ii  = 1:length(trials.tend)
 %     this_pos = nearest_idx3(trials_ms.tstart(ii), behav.time);
-    plot(behav.position(nearest_idx3(trials_ms.tstart(ii), behav.time):nearest_idx3(trials_ms.tend(ii), behav.time),1), behav.position(nearest_idx3(trials_ms.tstart(ii), behav.time):nearest_idx3(trials_ms.tend(ii), behav.time),2), '.', 'color', c_ord(ii,:));
-    ht = text(min(behav.position(:,1))*1.1, max(behav.position(:,2)*.9), trials.type{ii});
+    plot(pos.data(1,nearest_idx3(trials.tstart(ii), pos.tvec):nearest_idx3(trials.tend(ii), pos.tvec)), pos.data(2,nearest_idx3(trials.tstart(ii), pos.tvec):nearest_idx3(trials.tend(ii), pos.tvec)), '.', 'color', c_ord(ii,:));
+    ht = text(min(pos.data(1,:))*1.1, max(pos.data(2,:)*.9), trials.type{ii});
 %     drawnow
     pause(.5)
         delete(ht); 
