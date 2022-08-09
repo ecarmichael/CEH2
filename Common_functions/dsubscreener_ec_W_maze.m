@@ -122,15 +122,24 @@ for iC = 1:length(file_list)
         if iB == 2
             
 %             trials = dSub_wmaze_trialfun([], this_pos)
-            arms = {'l', 'c', 'r', 'b'}; maze.arms = arms; 
-            for ii = 1:length(arms)
-            if sum(strcmp(this_evt.label, arms{ii})) > 0
-                maze.(arms{ii}) = this_evt.t{strcmp(this_evt.label, arms{ii})};
-            else
-                maze.(arms{ii}) = []; 
-            end
-            end
-            fprintf('Left: %d   |  Center: %d   | Right: %d\n', length(maze.l), length(maze.c), length(maze.r))
+            trials = MS_NLX_append_MAZE(this_pos, this_evt);
+%             arms = {'l', 'c', 'r', 'b'}; maze.arms = arms; 
+%             for ii = 1:length(arms)
+%             if sum(strcmp(this_evt.label, arms{ii})) > 0
+%                 maze.(arms{ii}) = this_evt.t{strcmp(this_evt.label, arms{ii})};
+%             else
+%                 maze.(arms{ii}) = []; 
+%             end
+%             end
+        trials_iv = iv(trials.tstart, trials.tend); 
+        this_pos = restrict(this_pos, trials_iv); 
+        this_S = restrict(this_S, trials_iv); 
+        this_spd = restrict(this_spd, trials_iv); 
+%         keep_idx = ~cellfun(@isempty, this_S.t); 
+%         this_S.t = this_S.t(keep_idx); 
+%         this_S.label = this_S.label(keep_idx); 
+
+            fprintf('<strong>Left: %d | Choice: %d /%d | Right: %d</strong>\n', sum(strcmp(trials.type, 'FL')), sum(contains(trials.type, '- C')), sum(contains(trials.type, ' - ')), sum(strcmp(trials.type, 'FR')))
             
         elseif iB == 3
                 this_pos.data(1,:) = this_pos.data(1,:)/2;
