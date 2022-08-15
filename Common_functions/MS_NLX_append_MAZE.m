@@ -91,11 +91,11 @@ for ii = 1:length(type_vec)
     else
         if type_vec(ii-1) == 3
             trials.start_CL(ii) = time_vec_s(ii);
-            fprintf('CL at %d, previous %d\n', time_vec_s(ii), type_vec(ii-1))
+            fprintf('CL at %.2fs, previous %d\n', time_vec_s(ii), type_vec(ii-1))
             type_vec(ii) = 14;
         elseif type_vec(ii-1) == 4
             trials.start_CR(ii) = time_vec_s(ii);
-            fprintf('CR at %d, previous %d\n', time_vec_s(ii), type_vec(ii-1))
+            fprintf('CR at %.2fs, previous %d\n', time_vec_s(ii), type_vec(ii-1))
             type_vec(ii) = 13;
 
         end
@@ -114,11 +114,20 @@ for ii = 1:length(trials.start_CL)
     R_diff = trials.enter_R - trials.start_CL(ii);
     L_diff = trials.enter_L - trials.start_CL(ii);
     fprintf('Trial %.0f: time to R %.0f | time to L %.0f  = ',ii, min(R_diff(R_diff> 0)), min(L_diff(L_diff> 0)))
-    if (isempty(L_diff(L_diff> 0)) ||  min(R_diff(R_diff> 0)) < min(L_diff(L_diff> 0)))
+    if ~isempty(L_diff(L_diff> 0)) && isempty(R_diff(R_diff> 0))
         fprintf('R rew -> CL - C\n')
         type_vec_cl(ii) = 141;
         correct_cl(ii) = 1;
-    elseif (isempty(R_diff(R_diff> 0)) ||  min(R_diff(R_diff> 0)) > min(L_diff(L_diff> 0)))
+    elseif min(R_diff(R_diff> 0)) < min(L_diff(L_diff> 0))
+        fprintf('R rew -> CL - C\n')
+        type_vec_cl(ii) = 141;
+        correct_cl(ii) = 1;
+        
+    elseif ~isempty(R_diff(R_diff> 0)) && isempty(L_diff(L_diff> 0))
+        fprintf('L rew -> CL - I\n')
+        type_vec_cl(ii) = 140;
+        correct_cl(ii) = 0;
+    elseif min(R_diff(R_diff> 0)) > min(L_diff(L_diff> 0))
         fprintf('L rew -> CL - I\n')
         type_vec_cl(ii) = 140;
         correct_cl(ii) = 0;
@@ -130,11 +139,19 @@ for ii = 1:length(trials.start_CR)
     R_diff = trials.enter_R - trials.start_CR(ii);
     L_diff = trials.enter_L - trials.start_CR(ii);
     fprintf('Trial %.0f: time to R %.0f | time to L %.0f  = ',ii, min(R_diff(R_diff> 0)), min(L_diff(L_diff> 0)))
-    if (isempty(L_diff(L_diff> 0)) ||  min(R_diff(R_diff> 0)) < min(L_diff(L_diff> 0)))
+    if ~isempty(L_diff(L_diff> 0)) && isempty(R_diff(R_diff> 0))
         fprintf('R rew -> CR - I\n')
         type_vec_cr(ii) = 130;
         correct_cr(ii) = 0;
-    elseif (isempty(R_diff(R_diff> 0)) ||  min(R_diff(R_diff> 0)) > min(L_diff(L_diff> 0)))
+    elseif  min(R_diff(R_diff> 0)) < min(L_diff(L_diff> 0))
+        fprintf('R rew -> CR - I\n')
+        type_vec_cr(ii) = 130;
+        correct_cr(ii) = 0;
+    elseif ~isempty(R_diff(R_diff> 0)) && isempty(L_diff(L_diff> 0))
+        fprintf('L rew -> CR - C\n')
+        type_vec_cr(ii) = 131;
+        correct_cr(ii) = 1;
+    elseif  min(R_diff(R_diff> 0)) > min(L_diff(L_diff> 0))
         fprintf('L rew -> CR - C\n')
         type_vec_cr(ii) = 131;
         correct_cr(ii) = 1;
@@ -151,9 +168,9 @@ correct_trials(find(type_vec == 131 | type_vec == 130)) = correct_cr;
 type = {};
 for ii = length(type_vec):-1:1
     if type_vec(ii) ==3
-        type{ii} = 'FL';
-    elseif type_vec(ii) ==4
         type{ii} = 'FR';
+    elseif type_vec(ii) ==4
+        type{ii} = 'FL';
     elseif type_vec(ii) ==141
         type{ii} = 'CL-C';
     elseif type_vec(ii) ==140
@@ -291,9 +308,11 @@ plot(pos.data(1,:), pos.data(2,:), '.', 'color', [.7 .7 .7 .2])
 
 %     this_pos = nearest_idx3(trials_ms.tstart(ii), behav.time);
     plot(pos.data(1,nearest_idx3(trials.tstart(ii), pos.tvec):nearest_idx3(trials.tend(ii), pos.tvec)), pos.data(2,nearest_idx3(trials.tstart(ii), pos.tvec):nearest_idx3(trials.tend(ii), pos.tvec)), '.', 'color', c_ord(ii,:));
-    ht = text(min(pos.data(1,:))*1.1, max(pos.data(2,:)*.95), [trials.type{ii} '-' num2str(trials.tstart(ii),6)]);
+    ht = text(min(pos.data(1,:))*1.1, max(pos.data(2,:)*.98), [trials.type{ii} '-' num2str(trials.tstart(ii),6)]);
+    ht = text(min(pos.data(1,:))*1.1, max(pos.data(2,:)*.90), ['         '  num2str(trials.tend(ii),6)]);
+
     xlim([min(pos.data(1,:)) max(pos.data(1,:))]); 
-ylim([min(pos.data(2,:)) max(pos.data(2,:))]);
+    ylim([min(pos.data(2,:)) max(pos.data(2,:))]);
 %     drawnow
 %         delete(ht); 
 
@@ -308,7 +327,7 @@ clf
 plot(pos.data(1,:), pos.data(2,:), '.', 'color', [.7 .7 .7 .2])
 hold on
 
-for ii = 1:5:length(pos.tvec)
+for ii = 1:10:length(pos.tvec)
    hxy = plot(pos.data(1,ii), pos.data(2,ii), 'or'); 
    ht = text(min(pos.data(1,:))*1.1, max(pos.data(2,:)*.9), num2str(pos.tvec(ii)));
    drawnow

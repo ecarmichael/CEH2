@@ -54,7 +54,7 @@ clear os
 %% list the files to process and then loop over each session. 
 f_names = dir('*MZD*'); 
 
-for iF = 6%1:length(f_names)
+for iF = 1:length(f_names)
 
     data_dir = [f_names(iF).folder filesep f_names(iF).name]; 
     

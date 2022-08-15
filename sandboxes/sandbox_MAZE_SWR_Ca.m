@@ -3,14 +3,14 @@
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
 
-ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3'; 
+ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1252\2021_12_16_pv1252_MZD3'; 
 
-lfp_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\LFP\2021_12_17_pv1254_MZD3_LFP';
+lfp_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\LFP\2021_12_16_pv1252_MZD3_LFP';
 
 %% find SWR for one session
-
+cd(lfp_dir)
 cfg = []; 
-cfg.fc = {'CSC6.ncs'};
+cfg.fc = {'CSC6.ncs', 'CSC7.ncs'};
 cfg.desired_sampling_frequency = 2000;
 csc = MS_LoadCSC(cfg);
 
@@ -43,20 +43,30 @@ post_csc = restrict(csc, post_sleep(1), post_sleep(2));disp((post_csc.tvec(end) 
 
 nan_idx = []; 
 
-this_csc = pre_csc; 
+this_csc = maze_csc; 
+this_csc_swr = this_csc;
+this_csc_swr.data = maze_csc.data(1,:); 
+this_csc_swr.label = maze_csc.label(1); 
+this_csc_swr.cfg.hdr = []; 
+this_csc_swr.cfg.hdr{1} = maze_csc.cfg.hdr{1};
+
+this_csc.data = maze_csc.data(2,:); 
+this_csc.label = maze_csc.label(2); 
+this_csc.cfg.hdr = [];
+this_csc.cfg.hdr{1} = maze_csc.cfg.hdr{2};
 %% select indicies for exclusion
 
 maze_linspd = getLinSpd([],maze_pos); 
 maze_linspd.data = smooth(maze_linspd.data, ceil(1/mode(diff(maze_pos.tvec))))'; 
 
-speed_int = interp1(maze_linspd.tvec, smooth(maze_linspd.data, maze_csc.cfg.hdr{1}.SamplingFrequency*2), maze_csc.tvec);
+speed_int = interp1(maze_linspd.tvec, maze_linspd.data, maze_csc.tvec);
 
 move_idx = speed_int > 10; 
 sat_idx = abs(maze_csc.data) == max(abs(maze_csc.data)); % remove saturations. if non this will just remove the max point. 
 
 nan_idx = [sat_idx | move_idx' ]; 
 
-%% get teh contrast filters and their ratios
+%% get the contrast filters and their ratios
 
 cfg_con_f = [];
 cfg_con_f.threshold = 0;
@@ -84,8 +94,25 @@ ratio.data = ((csc_th.data ./ csc_delta.data)');
 if isempty(nan_idx)
 nan_idx = (ratio.data >.5); 
 else
+%     nan_idx = interp1(ratio.tvec, ratio.
     nan_idx = nan_idx | (ratio.data >.5);
 end
+
+%% check the movement and Theta/Delta exclusion
+figure(1001)
+clf
+subplot(2,1,1)
+hold on
+plot(maze_csc);
+plot(maze_csc.tvec, nan_idx/1000)
+xlim([maze_csc.tvec(1) maze_csc.tvec(end)])
+
+subplot(2,1,2)
+hold on
+plot(maze_csc.tvec, nan_idx-1)
+plot(this_csc.tvec, speed_int)
+xlim([maze_csc.tvec(1) maze_csc.tvec(end)])
+
 %% filter the LFP into the ripple band.
 cfg_swr = [];
 cfg_swr.check = 0; % plot checks.
@@ -134,8 +161,9 @@ SWR_evts = MS_get_LFP_events_sandbox(cfg_swr, this_csc);
 %         cfg_max_len.operation = '>';
 %         cfg_max_len.threshold = 5;
 %          SWR_evts = SelectIV(cfg_max_len,SWR_evts,'nCycles');
-
+subplot(2,1,1)
 % check quality. 
 cfg_plot.display = 'tsd'; %'iv';
 cfg_plot.title = 'var_raw';
 PlotTSDfromIV(cfg_plot, SWR_evts, this_csc)
+
