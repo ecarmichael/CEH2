@@ -163,7 +163,7 @@ SWR_evts = MS_get_LFP_events_sandbox(cfg_swr, this_csc);
 %          SWR_evts = SelectIV(cfg_max_len,SWR_evts,'nCycles');
 subplot(2,1,1)
 % check quality. 
-cfg_plot.display = 'tsd'; %'iv';
+cfg_plot.display = 'iv'; %'iv';
 cfg_plot.title = 'var_raw';
 PlotTSDfromIV(cfg_plot, SWR_evts, this_csc)
 
