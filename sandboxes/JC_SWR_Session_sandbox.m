@@ -31,6 +31,15 @@ Sess_pop_shuff_pre = [];
 Sess_pop_shuff_post = [];
 Sess_SCE_SWR_tdiff_pre = [];
 Sess_SCE_SWR_tdiff_post = [];
+Sess_Shuff_SCE_SWR_tdiff_pre = [];
+Sess_Shuff_SCE_SWR_tdiff_post = [];
+
+Sess_SCE_SWR_tdiff_mean_pre = [];
+Sess_SCE_SWR_tdiff_mean_post = [];
+
+Sess_Shuff_SCE_SWR_tdiff_mean_pre = [];
+Sess_Shuff_SCE_SWR_tdiff_mean_post = [];
+
 Sess_SWR_CA_t_pre = [];
 Sess_SWR_CA_t_post = [];
 Sess_SCE_amp_pre = [];
@@ -40,9 +49,11 @@ Sess_Shuff_amp_post = [];
 Sess_Shuff_SCE_SWR_t_pre = [];
 Sess_Shuff_SCE_SWR_t_post = [];
 
-plot_f = 0; % toggle plots for speed.
+plot_f = 1; % toggle plots for speed.
 
-for iSess = 1%:length(sessions)
+cutoff = .35;
+
+for iSess = 4%:length(sessions)
     %% load some data
     
     
@@ -112,16 +123,16 @@ for iSess = 1%:length(sessions)
     
     [SWR_evts, ~, SWR_amp] = MS_get_LFP_events_sandbox(cfg_swr, csc);
     
-    %         cfg_plot.display = 'tsd';
-    %                         PlotTSDfromIV(cfg_plot, SWR_evts, csc)
+            cfg_plot.display = 'iv';
+                            PlotTSDfromIV(cfg_plot, SWR_evts, csc)
     %                 pause(2)
     
-    g = groot;
-    if ~isempty(g.Children)
-        figure(1)
-        saveas(gcf, 'SWR_evts_examples', 'png');
-        close all
-    end
+    %     g = groot;
+    %     if ~isempty(g.Children)
+    %         figure(1)
+%             saveas(gcf, 'SWR_evts_examples', 'png');
+    %         close all
+    %     end
     
     %% collect the events and cfgs and convert time to idx.
     parts = strsplit(cd, filesep);
@@ -160,12 +171,12 @@ for iSess = 1%:length(sessions)
     cd(ms_dir{iSess})
     load('ms_resize.mat');
     
-        load('all_binary_pre_SW.mat');
+    load('all_binary_pre_SW.mat');
     load('all_binary_post_SW.mat');
     
     nFrames = 33; % number of frames before and after the center of each event.
     %% get the SCEs
-
+    
     
     % get the NLX time for Ca data
     pre_tvec = []; post_tvec = [];
@@ -307,7 +318,7 @@ for iSess = 1%:length(sessions)
     
     pre_SCE_times = pre_tvec(SCE_idx_pre);
     post_SCE_times = post_tvec(SCE_idx_post);
-    
+        
     %%
     % initialize some arrays for later concatenation.
     all_SWR_activity_pre = [];
@@ -321,6 +332,8 @@ for iSess = 1%:length(sessions)
     
     all_SCE_SWR_tdiff_pre = [];
     all_SCE_SWR_tdiff_post = [];
+    all_Shuff_SCE_SWR_t_diff_pre = [];
+    all_Shuff_SCE_SWR_t_diff_post = [];
     
     all_Shuff_SCE_SWR_t_pre = [];
     all_Shuff_SCE_SWR_t_post = [];
@@ -328,7 +341,7 @@ for iSess = 1%:length(sessions)
     win_s = 3; %time in seconds
     
     for iSeg = 1:length(ms_seg_resize.NLX_csc)
-        if strcmp(ms_seg_resize.hypno_label{iSeg}, 'REM')
+        if strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
             continue
         end
         swr_r = restrict(events.SWR.iv, ms_seg_resize.NLX_csc{iSeg}.tvec(1), ms_seg_resize.NLX_csc{iSeg}.tvec(end));
@@ -370,9 +383,11 @@ for iSess = 1%:length(sessions)
             SCE_SWR_t_post = [];
             Shuff_SCE_SWR_t_pre = [];
             Shuff_SCE_SWR_t_post = [];
+            Shuff_SCE_SWR_t_diff_pre = [];
+            Shuff_SCE_SWR_t_diff_post = [];
             %                     SWR_LFP_data = []; SWR_LFP_tvec = [];
-
-
+            
+            
             for iE = length(swr_idx):-1:1
                 % check that the event is not occuring too close to the edge.
                 if swr_idx(iE) <= (nFrames*win_s) || swr_idx(iE) >= length(this_ms.NLX_evt.t{end})-(nFrames*win_s)
@@ -394,7 +409,7 @@ for iSess = 1%:length(sessions)
                         SCE_activity_pre(:,count) = pop_act_pre(SCE_idx-(nFrames*win_s): SCE_idx+(nFrames*win_s));
                         
                         SCE_SWR_tdiff_pre(:,count) = pre_SCE_times - swr_centers(iE);
-
+                        
                         if sum(((pre_SCE_times - swr_centers(iE)) > -.2) & ((pre_SCE_times - swr_centers(iE)) <= 0)) >0
                             SCE_SWR_t_pre(count) = -1;
                         elseif sum(((pre_SCE_times - swr_centers(iE)) > 0) & ((pre_SCE_times - swr_centers(iE)) < .2)) >0
@@ -406,13 +421,14 @@ for iSess = 1%:length(sessions)
                         % shuffle for SCE-SWR chance
                         for iShuff = 1000:-1:1
                             this_shuff = MS_randn_range(1,1,pre_SCE_times(1), pre_SCE_times(end));
-                            if sum(((this_shuff - swr_centers(iE)) > -.2) & ((this_shuff - swr_centers(iE)) <= 0)) >0
+                            if sum(((this_shuff - swr_centers(iE)) > -cutoff) & ((this_shuff - swr_centers(iE)) <= 0)) >0
                                 Shuff_SCE_SWR_t_pre(count, iShuff) = -1;
-                            elseif sum(((this_shuff - swr_centers(iE)) > 0) & ((this_shuff - swr_centers(iE)) < .2)) >0
+                            elseif sum(((this_shuff - swr_centers(iE)) > 0) & ((this_shuff - swr_centers(iE)) < cutoff)) >0
                                 Shuff_SCE_SWR_t_pre(count, iShuff) = 1;
                             else
                                 Shuff_SCE_SWR_t_pre(count, iShuff) = 0;
                             end
+                            Shuff_SCE_SWR_t_diff_post(count, iShuff) = this_shuff - swr_centers(iE);
                         end
                         
                     elseif swr_centers(iE) >= post_start
@@ -434,13 +450,14 @@ for iSess = 1%:length(sessions)
                         
                         for iShuff = 1000:-1:1
                             this_shuff = MS_randn_range(1,1,post_SCE_times(1), post_SCE_times(end));
-                            if sum(((this_shuff - swr_centers(iE)) > -.2) & ((this_shuff - swr_centers(iE)) <= 0)) >0
+                            if sum(((this_shuff - swr_centers(iE)) > -cutoff) & ((this_shuff - swr_centers(iE)) <= 0)) >0
                                 Shuff_SCE_SWR_t_post(count, iShuff) = -1;
-                            elseif sum(((this_shuff - swr_centers(iE)) > 0) & ((this_shuff - swr_centers(iE)) < .2)) >0
+                            elseif sum(((this_shuff - swr_centers(iE)) > 0) & ((this_shuff - swr_centers(iE)) < cutoff)) >0
                                 Shuff_SCE_SWR_t_post(count,iShuff) = 1;
                             else
                                 Shuff_SCE_SWR_t_post(count,iShuff) = 0;
                             end
+                            Shuff_SCE_SWR_t_diff_post(count, iShuff) = this_shuff - swr_centers(iE);
                         end
                     end
                 end
@@ -452,6 +469,8 @@ for iSess = 1%:length(sessions)
             all_SWR_evts_pre = cat(2, all_SWR_evts_pre, swr_centers');
             all_SCE_activity_pre = cat(2,all_SCE_activity_pre, SCE_activity_pre);
             all_SCE_SWR_tdiff_pre = cat(2,all_SCE_SWR_tdiff_pre, SCE_SWR_tdiff_pre);
+            all_Shuff_SCE_SWR_t_diff_pre = cat(1,all_Shuff_SCE_SWR_t_diff_pre, Shuff_SCE_SWR_t_diff_pre);
+            
             all_SCE_SWR_t_pre = cat(2,all_SCE_SWR_t_pre, SCE_SWR_t_pre);
             all_Shuff_SCE_SWR_t_pre = cat(1,all_Shuff_SCE_SWR_t_pre, Shuff_SCE_SWR_t_pre);
         elseif  swr_centers(end) >= post_start
@@ -459,32 +478,34 @@ for iSess = 1%:length(sessions)
             all_SWR_evts_post = cat(2, all_SWR_evts_post, swr_centers');
             all_SCE_activity_post = cat(2,all_SCE_activity_post, SCE_activity_post);
             all_SCE_SWR_tdiff_post = cat(2,all_SCE_SWR_tdiff_post, SCE_SWR_tdiff_post);
+            all_Shuff_SCE_SWR_t_diff_post = cat(1,all_Shuff_SCE_SWR_t_diff_post, Shuff_SCE_SWR_t_diff_post);
+            
             all_SCE_SWR_t_post = cat(2,all_SCE_SWR_t_post, SCE_SWR_t_post);
-            all_Shuff_SCE_SWR_t_post = cat(1,all_Shuff_SCE_SWR_t_post, Shuff_SCE_SWR_t_post); 
+            all_Shuff_SCE_SWR_t_post = cat(1,all_Shuff_SCE_SWR_t_post, Shuff_SCE_SWR_t_post);
         end
         %             all_SWR_LFP.data = cat(2,all_SWR_LFP.data, SWR_LFP_data);
         
     end % if swr_idx is empty.
-  % recording segments/blocks
-
-%% Get a shuffle dist for the occurance of SWRs and SCEs within +/-200ms
-% 
-% %     shuff_SCE_SWR_pre(ii) = 
-% 
-% rand_pre_t = MS_randn_range(10000, 1, 5, pre_end);
-%     for ii = length(rand_pre_t):-1:1
-%         
-%         
-%     if sum(((post_SCE_times - rand_pre_t(iE)) > -.2) & ((post_SCE_times - rand_pre_t(iE)) <= 0)) >0
-%         SCE_SWR_t_post(count) = -1;
-%     elseif sum(((post_SCE_times - rand_pre_t(iE)) > 0) & ((post_SCE_times - rand_pre_t(iE)) < .2)) >0
-%         SCE_SWR_t_post(count) = 1;
-%     else
-%         SCE_SWR_t_post(count) = 0;
-%     end
-%     
-%     
-% end
+    % recording segments/blocks
+    
+    %% Get a shuffle dist for the occurance of SWRs and SCEs within +/-200ms
+    %
+    % %     shuff_SCE_SWR_pre(ii) =
+    %
+    % rand_pre_t = MS_randn_range(10000, 1, 5, pre_end);
+    %     for ii = length(rand_pre_t):-1:1
+    %
+    %
+    %     if sum(((post_SCE_times - rand_pre_t(iE)) > -.2) & ((post_SCE_times - rand_pre_t(iE)) <= 0)) >0
+    %         SCE_SWR_t_post(count) = -1;
+    %     elseif sum(((post_SCE_times - rand_pre_t(iE)) > 0) & ((post_SCE_times - rand_pre_t(iE)) < .2)) >0
+    %         SCE_SWR_t_post(count) = 1;
+    %     else
+    %         SCE_SWR_t_post(count) = 0;
+    %     end
+    %
+    %
+    % end
     
     %%  collect the SWRs from LFP
     % get the LFP snippets around the SWR
@@ -572,6 +593,9 @@ for iSess = 1%:length(sessions)
         ylabel('SWRs')
         xlabel('Concatenated SWS time (s)')
         
+        maximize
+%         saveas(gcf, ['C:\Users\ecarm\Desktop\SWR_SCE_SWR_' parts{end-1} '_' parts{end} '.png'])
+        
         % linkaxes(ax1, 'x')
         % linkaxes(ax2, 'x')
     end
@@ -658,31 +682,71 @@ for iSess = 1%:length(sessions)
         xlim([-1 1])
         
         parts = strsplit(events.SWR.session, '_');
-        saveas(gcf, ['C:\Users\ecarm\Desktop\SWR_summary_' parts{end-1} '_' parts{end} '.png'])
+        maximize
+%         saveas(gcf, ['C:\Users\ecarm\Desktop\SWR_summary_' parts{end-1} '_' parts{end} '.png'])
     end
     
+    %% collect the SCE-SWR times
+    all_SCE_SWR_min_pre = [];
+    for ii = size(all_SCE_SWR_tdiff_pre,2):-1:1
+        [~, idx] = min(abs(all_SCE_SWR_tdiff_pre(:,ii)));
+        all_SCE_SWR_min_pre(ii) = all_SCE_SWR_tdiff_pre(idx,ii);
+    end
+    
+    all_SCE_SWR_min_post = [];
+    for ii = size(all_SCE_SWR_tdiff_post,2):-1:1
+        [~, idx] = min(abs(all_SCE_SWR_tdiff_post(:,ii)));
+        all_SCE_SWR_min_post(ii) = all_SCE_SWR_tdiff_post(idx,ii);
+    end
+    
+    all_shuff_SCE_SWR_min_pre = [];
+    for ii = size(all_Shuff_SCE_SWR_t_diff_pre,2):-1:1
+        [~, idx] = min(abs(all_Shuff_SCE_SWR_t_diff_pre(:,ii)));
+        all_shuff_SCE_SWR_min_pre(ii) = all_Shuff_SCE_SWR_t_diff_pre(idx,ii);
+    end
+    
+    all_shuff_SCE_SWR_min_post = [];
+    for ii = size(all_Shuff_SCE_SWR_t_diff_post,2):-1:1
+        [~, idx] = min(abs(all_Shuff_SCE_SWR_t_diff_post(:,ii)));
+        all_shuff_SCE_SWR_min_post(ii) = all_Shuff_SCE_SWR_t_diff_post(idx,ii);
+    end
     %% follect across cells
     if exist('all_SCE_activity_pre', 'var') && ~isempty(all_SCE_activity_pre)
         Sess_pop_act_pre = [Sess_pop_act_pre; all_SCE_activity_pre'];
         Sess_pop_shuff_pre = [Sess_pop_shuff_pre; shuff_pre(:,1:size(all_SCE_activity_pre,1))];
         
-        Sess_SCE_SWR_tdiff_pre = [Sess_SCE_SWR_tdiff_pre; all_SCE_SWR_tdiff_pre]; 
+        % get the time between the SCE and the closest SWR.
+        Sess_SCE_SWR_tdiff_pre = [Sess_SCE_SWR_tdiff_pre, all_SCE_SWR_min_pre];
+        Sess_Shuff_SCE_SWR_tdiff_pre = [Sess_Shuff_SCE_SWR_tdiff_pre, all_shuff_SCE_SWR_min_pre];
+        
+        Sess_SCE_SWR_tdiff_mean_pre = [Sess_SCE_SWR_tdiff_mean_pre, [nanmean(all_SCE_SWR_t_pre== 1); nanmean(all_SCE_SWR_t_pre == -1)]];
+        Sess_Shuff_SCE_SWR_tdiff_mean_pre = [Sess_Shuff_SCE_SWR_tdiff_mean_pre, [nanmean(all_Shuff_SCE_SWR_t_pre== 1, 'all'); nanmean(all_Shuff_SCE_SWR_t_pre == -1, 'all')]];
+        
+        %keep all the time differences between SCEs and SWRs
+        %         Sess_SCE_SWR_tdiff_all_pre = [Sess_SCE_SWR_tdiff_all_pre; reshape(all_SCE_SWR_tdiff_pre,[],1)];
+        %         Sess_Shuff_SCE_SWR_tdiff_all_pre = [Sess_Shuff_SCE_SWR_tdiff_all_pre; reshape(all_Shuff_SCE_SWR_t_diff_pre, [],1)];
         
         Sess_SWR_CA_t_pre = [Sess_SWR_CA_t_pre; all_SCE_SWR_t_pre'];
-        Sess_Shuff_SCE_SWR_t_pre = [Sess_Shuff_SCE_SWR_t_pre; all_Shuff_SCE_SWR_t_pre'];
-
+        Sess_Shuff_SCE_SWR_t_pre = [Sess_Shuff_SCE_SWR_t_pre, all_Shuff_SCE_SWR_t_pre'];
+        
     end
     if exist('all_SCE_activity_post', 'var') && ~isempty(all_SCE_activity_post)
         Sess_pop_act_post =[Sess_pop_act_post;  all_SCE_activity_post'];
         Sess_pop_shuff_post = [Sess_pop_shuff_post; shuff_post(:,1:size(all_SCE_activity_post,1))];
-
-        Sess_SCE_SWR_tdiff_post = [Sess_SCE_SWR_tdiff_post; all_SCE_SWR_tdiff_post]; 
-
+        
+        Sess_SCE_SWR_tdiff_post = [Sess_SCE_SWR_tdiff_post, all_SCE_SWR_min_post];
+        Sess_Shuff_SCE_SWR_tdiff_post = [Sess_Shuff_SCE_SWR_tdiff_post, all_shuff_SCE_SWR_min_post];
+        
+        
+        Sess_SCE_SWR_tdiff_mean_post = [Sess_SCE_SWR_tdiff_mean_post, [nanmean(all_SCE_SWR_t_post== 1); nanmean(all_SCE_SWR_t_post == -1)]];
+        Sess_Shuff_SCE_SWR_tdiff_mean_post = [Sess_Shuff_SCE_SWR_tdiff_mean_post, [nanmean(all_Shuff_SCE_SWR_t_post== 1, 'all'); nanmean(all_Shuff_SCE_SWR_t_post == -1, 'all')]];
+        
+        %         Sess_SCE_SWR_tdiff_all_post = [Sess_SCE_SWR_tdiff_all_post, reshape(
+        
         Sess_SWR_CA_t_post = [Sess_SWR_CA_t_post; all_SCE_SWR_t_post'];
-        Sess_Shuff_SCE_SWR_t_post = [Sess_Shuff_SCE_SWR_t_post; all_Shuff_SCE_SWR_t_post'];
+        Sess_Shuff_SCE_SWR_t_post = [Sess_Shuff_SCE_SWR_t_post all_Shuff_SCE_SWR_t_post'];
     end
-    
-    
+        
     
     Sess_SCE_amp_pre = [Sess_SCE_amp_pre; SCE_amp_pre];
     Sess_SCE_amp_post = [Sess_SCE_amp_post; SCE_amp_post];
@@ -692,7 +756,7 @@ for iSess = 1%:length(sessions)
     
     
     close all
-    clearvars -except sessions ms_dir iSess win_s plot_f  Sess_*
+    clearvars -except sessions ms_dir iSess win_s plot_f  Sess_* cutoff
     %_pop_act_pre Sess_pop_act_post     Sess_pop_shuff_pre Sess_pop_shuff_post    Sess_SCE_amp_pre Sess_SCE_amp_post        Sess_Shuff_amp_pre Sess_Shuff_amp_post
     
 end
@@ -703,17 +767,19 @@ subplot(4,3,[1 4])
 cla
 hold on
 % plot(-win_s:1/33:win_s, nanmean([Sess_pop_act_pre; Sess_pop_act_post]), 'b');
-d_h = shadedErrorBar(-win_s:1/33:win_s, nanmean(Sess_pop_act_pre), nanstd(Sess_pop_act_pre)./sqrt(length(Sess_pop_act_pre)));
-d_h.mainLine.Color = c_ord(2,:);
-d_h.mainLine.LineWidth = 3;
-d_h.patch.FaceColor = c_ord(2,:);
-d_h.patch.FaceAlpha = .2;
-% control
+
 d_h = shadedErrorBar(-win_s:1/33:win_s, nanmean(Sess_pop_shuff_pre), nanstd(Sess_pop_shuff_pre)./sqrt(length(Sess_pop_shuff_pre)));
 d_h.mainLine.Color = [.6 .6 .6];
 d_h.mainLine.LineWidth = 3;
 d_h.patch.FaceColor = [.6 .6 .6];
 d_h.patch.FaceAlpha = .2;
+
+d_h2 = shadedErrorBar(-win_s:1/33:win_s, nanmean(Sess_pop_act_pre), nanstd(Sess_pop_act_pre)./sqrt(length(Sess_pop_act_pre)));
+d_h2.mainLine.Color = c_ord(2,:);
+d_h2.mainLine.LineWidth = 3;
+d_h2.patch.FaceColor = c_ord(2,:);
+d_h2.patch.FaceAlpha = .2;
+% control
 xlabel('time from  SCE event (s)')
 ylabel('Recruited cell (%)')
 
@@ -724,12 +790,6 @@ xline(0);
 subplot(4,3,[7 10])
 cla
 hold on
-% plot(-win_s:1/33:win_s, nanmean([Sess_pop_act_pre; Sess_pop_act_post]), 'b');
-d_h = shadedErrorBar(-win_s:1/33:win_s, nanmean(Sess_pop_act_post), nanstd(Sess_pop_act_post)./sqrt(length(Sess_pop_act_post)));
-d_h.mainLine.Color = c_ord(1,:);
-d_h.mainLine.LineWidth = 3;
-d_h.patch.FaceColor = c_ord(1,:);
-d_h.patch.FaceAlpha = .2;
 % control
 d_h = shadedErrorBar(-win_s:1/33:win_s, nanmean(Sess_pop_shuff_post), nanstd(Sess_pop_shuff_post)./sqrt(length(Sess_pop_shuff_post)));
 d_h.mainLine.Color = [.6 .6 .6];
@@ -738,6 +798,14 @@ d_h.patch.FaceColor = [.6 .6 .6];
 d_h.patch.FaceAlpha = .2;
 xlabel('time from  SCE event (s)')
 ylabel('Recruited cell (%)')
+
+% plot(-win_s:1/33:win_s, nanmean([Sess_pop_act_pre; Sess_pop_act_post]), 'b');
+d_h2 = shadedErrorBar(-win_s:1/33:win_s, nanmean(Sess_pop_act_post), nanstd(Sess_pop_act_post)./sqrt(length(Sess_pop_act_post)));
+d_h2.mainLine.Color = c_ord(1,:);
+d_h2.mainLine.LineWidth = 3;
+d_h2.patch.FaceColor = c_ord(1,:);
+d_h2.patch.FaceAlpha = .2;
+
 
 % plot(-win_s:1/33:win_s, nanmean([Sess_pop_shuff_pre; Sess_pop_shuff_post]), 'color', [.3 .3 .3]);
 xlim([-1 1]);
@@ -748,63 +816,72 @@ xline(0);
 subplot(4,3,[2])
 cla
 hold on
-b_h1 = bar([1 2], [nanmean(Sess_SWR_CA_t_pre ==1),  nanmean(Sess_SWR_CA_t_pre ==-1); nanmean(Sess_Shuff_SCE_SWR_t_pre ==1, 'all') nanmean(Sess_Shuff_SCE_SWR_t_pre ==-1, 'all')]'*100);
+b_in = [nanmean(Sess_SCE_SWR_tdiff_mean_pre(2,:)), nanmean(Sess_SCE_SWR_tdiff_mean_pre(1,:)); nanmean(Sess_Shuff_SCE_SWR_tdiff_mean_pre(2,:)), nanmean(Sess_Shuff_SCE_SWR_tdiff_mean_pre(1,:))]'*100;
+% b_h1 = bar([1 2], [nanmean(Sess_SWR_CA_t_pre == -1), nanmean(Sess_SWR_CA_t_pre == 1); nanmean(Sess_Shuff_SCE_SWR_t_pre == -1, 'all') nanmean(Sess_Shuff_SCE_SWR_t_pre == 1, 'all')]'*100);
+b_h1 = bar([1 2], b_in);
+
 b_h1(1).FaceColor = c_ord(2,:);
 b_h1(2).FaceColor = [.6 .6 .6];
 ylim([0 20])
-set(gca, 'xtick', [1 2], 'xticklabels', {'SCE->SWR', 'SWR->SCE'})
-
-subplot(4,3,[5])
-cla
-min_diff =[]; 
-
-for ii = size(Sess_SCE_SWR_tdiff_pre,2):-1:1
-    [~, idx] = min(abs(Sess_SCE_SWR_tdiff_pre(:,ii))); 
-    min_diff(ii) = Sess_SCE_SWR_tdiff_pre(idx,ii); 
-end
-    
-% [~, idx] = min(abs(Sess_SCE_SWR_tdiff_pre)); 
-histogram(min_diff, 25,'BinLimits', [-1 1])
-% hold on
-% histogram(Sess_
-xlim([-1 1]);
-vline([-.2 .2])
-
-subplot(4,3,[11])
-cla
-min_diff =[]; 
-for ii = size(Sess_SCE_SWR_tdiff_post,2):-1:1
-    [~, idx] = min(abs(Sess_SCE_SWR_tdiff_post(:,ii))); 
-    min_diff(ii) = Sess_SCE_SWR_tdiff_post(idx,ii); 
-end
-histogram(min_diff, 25,'BinLimits', [-1 1])
-xlim([-1 1]);
-vline([-.2 .2])
+set(gca, 'xtick', [1 2], 'xticklabels', {'SWR->SCE','SCE->SWR'})
+ylabel('% of events')
 
 subplot(4,3,[8])
 cla
 hold on
-bh2 = bar([1 2], [nanmean(Sess_SWR_CA_t_post ==1),nanmean(Sess_SWR_CA_t_post ==-1); nanmean(Sess_Shuff_SCE_SWR_t_post ==1, 'all'), nanmean(Sess_Shuff_SCE_SWR_t_post ==-1, 'all')]'*100);
+% b_in = [nanmean(Sess_SWR_CA_t_post == -1) nanmean(Sess_SWR_CA_t_post == 1); nanmean(Sess_Shuff_SCE_SWR_t_post == -1, 'all'), nanmean(Sess_Shuff_SCE_SWR_t_post == 1, 'all')]'*100;
+b_in = [nanmean(Sess_SCE_SWR_tdiff_mean_post(2,:)), nanmean(Sess_SCE_SWR_tdiff_mean_post(1,:)); nanmean(Sess_Shuff_SCE_SWR_tdiff_mean_post(2,:)), nanmean(Sess_Shuff_SCE_SWR_tdiff_mean_post(1,:))]'*100;
+% eb_in = [nanstd(Sess_SCE_SWR_tdiff_mean_post(2,:)), nanstd(Sess_SCE_SWR_tdiff_mean_post(1,:)); nanstd(Sess_Shuff_SCE_SWR_tdiff_mean_post(2,:)), nanstd(Sess_Shuff_SCE_SWR_tdiff_mean_post(1,:))]'*100;
+b_h2 = bar([1 2], b_in);
+% errorbar([1 2], b_in, eb_in)
 b_h2(1).FaceColor = c_ord(1,:);
 b_h2(2).FaceColor = [.6 .6 .6];
 ylim([0 20])
-set(gca, 'xtick', [1 2], 'xticklabels', {'SCE->SWR', 'SWR->SCE'})
+set(gca, 'xtick', [1 2], 'xticklabels', {'SWR->SCE','SCE->SWR'})
+ylabel('% of events')
+
+subplot(4,3,[5])
+cla
+histogram(Sess_SCE_SWR_tdiff_pre, 25,'BinLimits', [-1 1])
+% hold on
+% histogram(Sess_
+xlim([-1 1]);
+vline([-.2 .2])
+ylabel('# SCE events')
+xline(-cutoff,'--k', 'SWR->SCE', 'LabelHorizontalAlignment', 'left', 'LabelOrientation', 'horizontal');
+xline(cutoff,'--k', 'SCE->SWR', 'LabelHorizontalAlignment', 'right', 'LabelOrientation', 'horizontal');
+
+
+subplot(4,3,[11])
+cla
+hold on
+histogram(Sess_SCE_SWR_tdiff_post, 25,'BinLimits', [-1 1])
+xlim([-1 1]);
+% vline([-.2 .2])
+xline(-cutoff,'--k', 'SWR->SCE', 'LabelHorizontalAlignment', 'left', 'LabelOrientation', 'horizontal');
+xline(cutoff,'--k', 'SCE->SWR', 'LabelHorizontalAlignment', 'right', 'LabelOrientation', 'horizontal');
+
+ylabel('# SCE events')
+xlabel('time from SCE onset (s)')
+
 
 
 subplot(4,3,[3 6])
 cla
 hold on
-d_h = shadedErrorBar(-win_s:1/2000:win_s, nanmean(Sess_SCE_amp_pre), nanstd(Sess_SCE_amp_pre)./sqrt(length(Sess_SCE_amp_pre)));
-d_h.mainLine.Color = c_ord(2,:);
-d_h.mainLine.LineWidth = 3;
-d_h.patch.FaceColor = c_ord(2,:);
-d_h.patch.FaceAlpha = .2;
 % control
 d_h = shadedErrorBar(-win_s:1/2000:win_s, nanmean(Sess_Shuff_amp_pre), nanstd(Sess_Shuff_amp_pre)./sqrt(length(Sess_Shuff_amp_pre)));
 d_h.mainLine.Color = [.6 .6 .6];
 d_h.mainLine.LineWidth = 3;
 d_h.patch.FaceColor = [.6 .6 .6];
 d_h.patch.FaceAlpha = .2;
+
+d_h = shadedErrorBar(-win_s:1/2000:win_s, nanmean(Sess_SCE_amp_pre), nanstd(Sess_SCE_amp_pre)./sqrt(length(Sess_SCE_amp_pre)));
+d_h.mainLine.Color = c_ord(2,:);
+d_h.mainLine.LineWidth = 3;
+d_h.patch.FaceColor = c_ord(2,:);
+d_h.patch.FaceAlpha = .2;
+
 
 % plot(-win_s:1/2000:win_s, nanmean([Sess_SCE_amp_pre; Sess_SCE_amp_post]), 'r');
 % plot(-win_s:1/2000:win_s, nanmean([Sess_Shuff_amp_pre; Sess_Shuff_amp_post]), 'color', [.3 .3 .3]);
@@ -816,17 +893,20 @@ ylabel('Ripple band amplitude')
 subplot(4,3,[9 12])
 cla
 hold on
-d_h = shadedErrorBar(-win_s:1/2000:win_s, nanmean(Sess_SCE_amp_post), nanstd(Sess_SCE_amp_post)./sqrt(length(Sess_SCE_amp_post)));
-d_h.mainLine.Color = c_ord(1,:);
-d_h.mainLine.LineWidth = 3;
-d_h.patch.FaceColor = c_ord(1,:);
-d_h.patch.FaceAlpha = .2;
+
 % control
 d_h = shadedErrorBar(-win_s:1/2000:win_s, nanmean(Sess_Shuff_amp_post), nanstd(Sess_Shuff_amp_post)./sqrt(length(Sess_Shuff_amp_post)));
 d_h.mainLine.Color = [.6 .6 .6];
 d_h.mainLine.LineWidth = 3;
 d_h.patch.FaceColor = [.6 .6 .6];
 d_h.patch.FaceAlpha = .2;
+
+d_h = shadedErrorBar(-win_s:1/2000:win_s, nanmean(Sess_SCE_amp_post), nanstd(Sess_SCE_amp_post)./sqrt(length(Sess_SCE_amp_post)));
+d_h.mainLine.Color = c_ord(1,:);
+d_h.mainLine.LineWidth = 3;
+d_h.patch.FaceColor = c_ord(1,:);
+d_h.patch.FaceAlpha = .2;
+
 
 % plot(-win_s:1/2000:win_s, nanmean([Sess_SCE_amp_pre; Sess_SCE_amp_post]), 'r');
 % plot(-win_s:1/2000:win_s, nanmean([Sess_Shuff_amp_pre; Sess_Shuff_amp_post]), 'color', [.3 .3 .3]);
@@ -842,4 +922,22 @@ ylabel('Ripple band amplitude')
 
 
 
-
+%% make a plot of SCE mean
+% SCE_pop_act_post = [];
+% 
+% for ii = length(SCE_idx_pre):-1:1
+% 
+% 
+%     SCE_pop_act_post
+% 
+% end
+% 
+% 
+% figure(901)
+% subplot(2,1,1)
+%   imagesc(-win_s:1/33:win_s, 1:size(all_binary_pre_REM,1), mean(all_SWR_activity_pre,3))
+%   ylabel({'Pre' ;'Cell ID'})
+%   set(gca, 'xtick', []);
+%   xline(0, '--w', 'linewidth', 2);
+%   title('SWR-triggered mean Ca activity (binarized)')
+%   xlim([-1 1]);

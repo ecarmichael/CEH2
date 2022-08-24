@@ -115,7 +115,7 @@ xlabel('time from cp21/vehicle (hrs)')
 ylabel('LFP voltage')
 toc
 SetFigure([], gcf);
-saveas(gcf,[inter_dir filesep 'data_tvec'], 'png')
+% saveas(gcf,[inter_dir filesep 'data_tvec'], 'png')
 %% filter the LFP into the ripple band.
 cfg_swr = [];
 cfg_swr.check = 0; % plot checks.
