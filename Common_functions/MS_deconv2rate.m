@@ -35,7 +35,7 @@ cfg = ProcessConfig(cfg_def, cfg_in);
 
 ms_out = ms_in;
 
-if ~iscell(ms_in.RawTraces)
+if ~iscell(ms_in.deconv)
     fprintf('<strong>%s</strong>: single continuous data detected \n\n', mfilename);
     
     Csp = ms_in.deconv./ms_in.denoise;
@@ -51,7 +51,7 @@ if ~iscell(ms_in.RawTraces)
     
 else
     fprintf('<strong>%s</strong>: segmented data detected (%.0f segments in RawTraces), treating as segmented\n', mfilename, length(ms_in.RawTraces));
-    for iSeg = 1:length(ms_in.RawTraces)
+    for iSeg = 1:length(ms_in.deconv)
         
         Csp = ms_in.deconv{iSeg}./ms_in.denoise{iSeg};
         Csp = Csp > cfg.min_decon;

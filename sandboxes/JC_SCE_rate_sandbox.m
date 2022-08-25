@@ -13,43 +13,94 @@ plot_f = 1; % toggle plots for speed.
 
 cutoff_n_cell = 50;
 
+method = 'decon'; 
+
 for iSess = 4%:length(sessions)
     %% load some data
     
     cd(ms_dir{iSess})
     load('ms_resize.mat');
+       load('ms_trk.mat'); 
+
+if strcmpi(method, 'decon')
+    load('all_binary_pre_REM.mat');
+    load('all_binary_post_REM.mat');
+    load('all_binary_pre_SW.mat');
+    load('all_binary_post_SW.mat');
     
-    load('all_RawTraces_post_REM.mat'); 
-    %% deconvolve the detrend.  Hacky since it is only on the degmented data. 
+    data_pre_REM = all_binary_pre_REM; 
+    data_post_REM = all_binary_post_REM; 
+    
+    data_pre_REM = all_binary_pre_REM; 
+    data_post_REM = all_binary_post_REM; 
+    
+    data_trk = ms_trk.Binary; 
+    clear all_*
+
+else
     addpath('C:\Users\ecarm\Documents\GitHub\OASIS_matlab')
     oasis_setup;
+    
+    load('all_RawTraces_pre_REM.mat');
+    load('all_RawTraces_post_REM.mat');
+    
+    load('all_RawTraces_pre_SW.mat');
+    load('all_RawTraces_post_SW.mat');
+    
+    % decon the traces
     all_denoise = []; all_deconv= [];
     fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
     tic;
     for iChan = size(all_RawTraces_post_REM,2):-1:1
         disp(num2str(iChan))
-            [denoise,deconv] = deconvolveCa(all_RawTraces_post_REM(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
-            ms.all_denoise(:,iChan) = denoise;    ms.all_deconv(:,iChan) = deconv;
+        [denoise,deconv] = deconvolveCa(all_RawTraces_pre_REM(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
+        ms_pre_REM.denoise(:,iChan) = denoise;    ms_pre_REM.deconv(:,iChan) = deconv;
+        
+        [denoise,deconv] = deconvolveCa(all_RawTraces_post_REM(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
+        ms_post_REMs.denoise(:,iChan) = denoise;    ms_post_REM.deconv(:,iChan) = deconv;
+        
+        [denoise,deconv] = deconvolveCa(all_RawTraces_pre_SW(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
+        ms_pre_SW.denoise(:,iChan) = denoise;    ms_pre_SW.deconv(:,iChan) = deconv;
+        
+        [denoise,deconv] = deconvolveCa(all_RawTraces_post_SW(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
+        ms_post_SW.denoise(:,iChan) = denoise;    ms_post_SW.deconv(:,iChan) = deconv;
+
     end
     toc;
-
     
-    figure(1010)
+    ms_pre_REM = MS_deconv2rate([], ms_pre_REM);
+    ms_post_REM = MS_deconv2rate([], ms_post_REM);
+    ms_pre_SW = MS_deconv2rate([], ms_pre_SW);
+    ms_post_SW = MS_deconv2rate([], ms_post_SW);
+
+            
+    
+    figure(1011)
+    c_ord = linspecer(5);
     cla
     hold on
-    for ii = 1:25
-       plot((1:length(ms.all_denoise))/mode(diff(ms_seg_resize.time{1})), all_RawTraces_post_REM(:, ii) +.2*ii, 'k')
-       plot((1:length(ms.all_denoise))/mode(diff(ms_seg_resize.time{1})), ms.all_denoise(:, ii) +.2*ii, 'b')
-       plot((1:length(ms.all_denoise))/mode(diff(ms_seg_resize.time{1})), all_deconv(:, ii) +.2*ii, 'r')
-
+    bin_holder = zeros(length(all_binary_post_REM),1);
+    tvec = (1:length(ms.denoise))/mode(diff(ms_seg_resize.time{1}));
+    offset = .5;
+    for ii = 1:20
+        plot(tvec(logical(all_binary_post_REM(:,ii))), bin_holder(logical(all_binary_post_REM(:,ii))) +offset*ii, 'd','color',  c_ord(3,:), 'linewidth', 2)
+        plot(tvec, all_RawTraces_post_REM(:, ii) +offset*ii, 'k', 'linewidth',1)
+        plot(tvec, ms.denoise(:, ii) +offset*ii,'color',  c_ord(1,:), 'linewidth', 1)
+        plot(tvec, ms.deconv(:, ii) +offset*ii,'color',  c_ord(2,:)', 'linewidth', 1)
+        plot(tvec, ms.rate(:, ii) +offset*ii, 'color', c_ord(5,:))
     end
+    
+    %% convert Rate to Lui style firing intervals ( >3Sd)
+    for ii = size(ms.rate,2):-1:1
+        ms.rate_binary(:,ii) = ms.rate(:,ii) > (mean(ms.rate(:,ii)) + std(ms.rate(:,ii))*3);
+    end
+    
     %%
     
     load('all_binary_pre_SW.mat');
     load('all_binary_post_SW.mat');
     
-    load('all_binary_pre_REM.mat');
-    load('all_binary_post_REM.mat');
+
     
     nFrames = 33; % number of frames before and after the center of each event.
     %% get the SCEs
