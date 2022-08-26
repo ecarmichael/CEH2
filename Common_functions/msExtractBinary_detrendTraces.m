@@ -1,13 +1,22 @@
-function [ms] = msExtractBinary_detrendTraces(ms);
+function [ms] = msExtractBinary_detrendTraces(ms, z_threshold, Fs)
 %MSEXTRACTBINARY Summary of this function goes here
 %   Detailed explanation goes here
 
 %% Parameters
+if nargin < 2
     z_threshold = 3;
+    Fs = round(1/mode(diff(ms.time)));
+elseif nargin < 3
+    Fs = round(1/mode(diff(ms.time)));
+end
 
-    [bFilt,aFilt] = butter(2,  2/(30/2), 'low');
+if Fs <10
+    error('Something is wrong with the sampling rate'); 
+end
 
-    for trace_i = 1:ms.numNeurons;
+    [bFilt,aFilt] = butter(2,  2/(Fs/2), 'low');
+
+    for trace_i = ms.numNeurons:-1:1
         detrend_raw_trace=detrend(ms.RawTraces(:,trace_i),2);   
         filt_trace = zscore(filtfilt(bFilt,aFilt,detrend_raw_trace));
 
@@ -21,8 +30,5 @@ function [ms] = msExtractBinary_detrendTraces(ms);
         ms.Binary(:,trace_i) = binary_trace;
 
     end
-
-
-
 end
 
