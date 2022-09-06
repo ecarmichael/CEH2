@@ -8,7 +8,8 @@
 % LFP_data = 'E:\Jisoo_Project\LFP data\Jisoo\2019-07-08_09-03-55_PV1069_LTD1';
 % LFP_data = 'E:\Jisoo_Project\LFP data\Jisoo\2019-10-14_09-37-25_PV1069_HATD1';
 % LFP_data = 'E:\Jisoo_Project\LFP data\Jisoo\2019-10-22_09-35-31_PV1069_HATDSwitch';
-LFP_data = 'E:\Jisoo_Project\LFP data\Jisoo\2019-07-12_09-24-26_PV1069_LTD5'; 
+% LFP_data = 'E:\Jisoo_Project\LFP data\Jisoo\2019-07-12_09-24-26_PV1069_LTD5'; 
+LFP_data = '/home/williamslab/Desktop/JC_SWR/2019-07-12_09-24-26_PV1069_LTD5'; 
 % LFP_data = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\LFP\2021_12_16_pv1252_MZD3_LFP';
 
 % data_dir  =

@@ -295,44 +295,44 @@ pos_out.trials_nlx = trials;
 %
 
 %%  event plots using behav.
-figure(903)
-% clf
-% subplot(1,2,2); 
-
-c_ord = linspecer(length(trials.tend));
-
-for ii  = 1:length(trials.tend)
-    subplot(4,4,ii)
-    hold on
-plot(pos.data(1,:), pos.data(2,:), '.', 'color', [.7 .7 .7 .2])
-
-%     this_pos = nearest_idx3(trials_ms.tstart(ii), behav.time);
-    plot(pos.data(1,nearest_idx3(trials.tstart(ii), pos.tvec):nearest_idx3(trials.tend(ii), pos.tvec)), pos.data(2,nearest_idx3(trials.tstart(ii), pos.tvec):nearest_idx3(trials.tend(ii), pos.tvec)), '.', 'color', c_ord(ii,:));
-    ht = text(min(pos.data(1,:))*1.1, max(pos.data(2,:)*.98), [trials.type{ii} '-' num2str(trials.tstart(ii),6)]);
-    ht = text(min(pos.data(1,:))*1.1, max(pos.data(2,:)*.90), ['         '  num2str(trials.tend(ii),6)]);
-
-    xlim([min(pos.data(1,:)) max(pos.data(1,:))]); 
-    ylim([min(pos.data(2,:)) max(pos.data(2,:))]);
-%     drawnow
-%         delete(ht); 
-
-end
+% figure(903)
+% % clf
+% % subplot(1,2,2); 
+% 
+% c_ord = linspecer(length(trials.tend));
+% 
+% for ii  = 1:length(trials.tend)
+%     subplot(4,4,ii)
+%     hold on
+% plot(pos.data(1,:), pos.data(2,:), '.', 'color', [.7 .7 .7 .2])
+% 
+% %     this_pos = nearest_idx3(trials_ms.tstart(ii), behav.time);
+%     plot(pos.data(1,nearest_idx3(trials.tstart(ii), pos.tvec):nearest_idx3(trials.tend(ii), pos.tvec)), pos.data(2,nearest_idx3(trials.tstart(ii), pos.tvec):nearest_idx3(trials.tend(ii), pos.tvec)), '.', 'color', c_ord(ii,:));
+%     ht = text(min(pos.data(1,:))*1.1, max(pos.data(2,:)*.98), [trials.type{ii} '-' num2str(trials.tstart(ii),6)]);
+%     ht = text(min(pos.data(1,:))*1.1, max(pos.data(2,:)*.90), ['         '  num2str(trials.tend(ii),6)]);
+% 
+%     xlim([min(pos.data(1,:)) max(pos.data(1,:))]); 
+%     ylim([min(pos.data(2,:)) max(pos.data(2,:))]);
+% %     drawnow
+% %         delete(ht); 
+% 
+% end
 %     pause(1)
 
 % close(903)
 %%  tracking playback (for debugging)
-figure(10101)
-clf
-
-plot(pos.data(1,:), pos.data(2,:), '.', 'color', [.7 .7 .7 .2])
-hold on
-
-for ii = 1:10:length(pos.tvec)
-   hxy = plot(pos.data(1,ii), pos.data(2,ii), 'or'); 
-   ht = text(min(pos.data(1,:))*1.1, max(pos.data(2,:)*.9), num2str(pos.tvec(ii)));
-   drawnow
-   pause(0.01)
-   delete(hxy); 
-   delete(ht)
-end
+% figure(10101)
+% clf
+% 
+% plot(pos.data(1,:), pos.data(2,:), '.', 'color', [.7 .7 .7 .2])
+% hold on
+% 
+% for ii = 1:10:length(pos.tvec)
+%    hxy = plot(pos.data(1,ii), pos.data(2,ii), 'or'); 
+%    ht = text(min(pos.data(1,:))*1.1, max(pos.data(2,:)*.9), num2str(pos.tvec(ii)));
+%    drawnow
+%    pause(0.01)
+%    delete(hxy); 
+%    delete(ht)
+% end
 

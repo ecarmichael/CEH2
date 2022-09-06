@@ -76,7 +76,7 @@ for iSub =1:length(subjects)
 
         dsubscreener_ec_W_maze(cd, inter_dir);
 %           M23_Clust_batch
-%         MS_Write_meta_dSub;
+        MS_Write_meta_dSub;
           
         
     end
