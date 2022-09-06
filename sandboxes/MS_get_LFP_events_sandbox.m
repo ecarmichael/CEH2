@@ -1,4 +1,4 @@
-function events_out = MS_get_LFP_events_sandbox(cfg_in, csc)
+function [events_out,csc_filt, amp_filt] = MS_get_LFP_events_sandbox(cfg_in, csc)
 %% MS_get_LFP_events_sandbox: WIP pipeline for rapid event detection in LFP data.
 %
 %

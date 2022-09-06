@@ -12,6 +12,7 @@ function data_ft = MS_TSDtoFT(cfg_in,data)
 
 cfg_def = [];
 cfg_def.mode = 'as-is'; % {'as-is','resample'}, defines how to deal with gaps in data
+cfg_def.Fs = []; % defaults to guess sampling frequency. Can be User specified 
 cfg = ProcessConfig(cfg_def,cfg_in);
 
 if ~CheckTSD(data)
@@ -19,14 +20,19 @@ if ~CheckTSD(data)
 end
 
 dts = unique(diff(data.tvec));
-if length(dts) > 1
-    fprintf('\nTSDtoFT.m: WARNING: tvec diffs are not constant, cannot determine Fs.');
-    % could approximate with a median if matches average closely enough
-    Fs = 1./median(dts);
-    fprintf('\nTSDtoFT.m: Fs %.2f estimated.\n',Fs);
+if isempty(cfg.Fs)
+    if length(dts) > 1
+        fprintf('\nTSDtoFT.m: WARNING: tvec diffs are not constant, cannot determine Fs.');
+        % could approximate with a median if matches average closely enough
+        Fs = 1./mode(diff(data.tvec));
+        fprintf('\nTSDtoFT.m: Fs %.2f estimated.\n',Fs);
+    else
+        Fs = 1./dts;
+        fprintf('\nTSDtoFT.m: Fs %.2f detected.\n',Fs);
+    end
 else
-    Fs = 1./dts;
-    fprintf('\nTSDtoFT.m: Fs %.2f detected.\n',Fs);
+    Fs = cfg.Fs;
+    fprintf('<strong>%s</strong>: User Fs %.2f detected.\n',mfilename, Fs);
 end
 
 %
