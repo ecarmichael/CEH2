@@ -996,6 +996,18 @@ ylabel('cell ID')
         cfg_fig.ft_size = 14;
         SetFigure(cfg_fig, gcf)
         maximize
+        
+        %% spectrogram
+        if exist('ft_defaults','file')
+            
+            Triggered_Spec_FT(csc, post_SCE_times, 'SCE Event', [100:.5:300],[], [-.25 .25])
+            xlim([-.2 .2])
+            ylim([120 250])
+            SetFigure([], gcf)
+            
+            
+            
+        end
 %% make a plot of SCE mean
 % SCE_pop_act_post = [];
 % 
