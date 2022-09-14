@@ -1,4 +1,4 @@
-function Triggered_Spec_FT(csc, events, label, Freq_range)
+function Triggered_Spec_FT(csc, events, label, Freq_range, baseline)
 %% Triggered_Spec_FT: wrapper function for generating an event triggered spectrogram using the FieldTrip ft_freqanalysis.
 %
 %
@@ -20,6 +20,7 @@ function Triggered_Spec_FT(csc, events, label, Freq_range)
 %
 %% initialize
 if nargin < 4
+    baseline = []; 
     Freq_range = 2:.5:120;
 elseif    nargin < 3
     label = [];
@@ -73,7 +74,9 @@ else
 end
 cfg = [];
 cfg.channel      = data_ft.label{1};
-% cfg.baseline     = [-5 -2];
+if ~isempty(baseline)
+    cfg.baseline     = baseline;
+end
 cfg.baselinetype = 'zscore';
 cfg.title = freq_params_str;
 ft_singleplotTFR(cfg, TFR);
