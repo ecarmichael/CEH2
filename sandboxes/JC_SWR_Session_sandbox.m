@@ -121,10 +121,10 @@ for iSess = 4%:length(sessions)
     cfg_swr.var.operation = '<';
     cfg_swr.var.threshold = 1;
     
-    [SWR_evts, ~, SWR_amp] = MS_get_LFP_events_sandbox(cfg_swr, csc);
+    [SWR_evts,SWR_filt, SWR_amp] = MS_get_LFP_events_sandbox(cfg_swr, csc);
     
             cfg_plot.display = 'iv';
-                            PlotTSDfromIV(cfg_plot, SWR_evts, csc)
+%                             PlotTSDfromIV(cfg_plot, SWR_evts, SWR_amp)
     %                 pause(2)
     
     %     g = groot;
@@ -341,7 +341,7 @@ for iSess = 4%:length(sessions)
     win_s = 3; %time in seconds
     
     for iSeg = 1:length(ms_seg_resize.NLX_csc)
-        if strcmp(ms_seg_resize.hypno_label{iSeg}, 'SW')
+        if strcmp(ms_seg_resize.hypno_label{iSeg}, 'REM')
             continue
         end
         swr_r = restrict(events.SWR.iv, ms_seg_resize.NLX_csc{iSeg}.tvec(1), ms_seg_resize.NLX_csc{iSeg}.tvec(end));
@@ -597,7 +597,7 @@ for iSess = 4%:length(sessions)
 %         saveas(gcf, ['C:\Users\ecarm\Desktop\SWR_SCE_SWR_' parts{end-1} '_' parts{end} '.png'])
         
         % linkaxes(ax1, 'x')
-        % linkaxes(ax2, 'x')
+        linkaxes(ax2, 'x')
     end
     %%
     if plot_f
@@ -919,9 +919,78 @@ ylabel('Ripple band amplitude')
 
 
 
-
-
-
+%% plot for fun
+  data_in = all_binary_post_SW;
+    tic
+    all_shuff = [];
+    for iS = shuff:-1:1
+        this_data = [];
+        for ii = size(data_in, 2):-1:1
+            this_data(ii,:) = circshift(data_in(:,ii),floor(MS_randn_range(1,1,1,length(data_in(:,ii)))));
+        end % end cells
+        
+        %    all_shuff(iS, :) = movmean(nansum(this_data,1), frame_n_200); %malvache
+        all_shuff(iS, :) = ((movsum(nansum(this_data,1), frame_n_200))./size(data_in,2))*100; % liu
+    end % end shuff
+    toc
+    
+    % find time points in real data that exceed threshold
+    %  liu pop % version.
+    pop_act = ((movsum(nansum(data_in,2), frame_n_200))./size(data_in,2))*100; %
+    shuff_95 = prctile(all_shuff, 95, 'all');
+    
+    thresh = shuff_95;
+    % malvache
+    % thresh = shuff_mean + 3*shuff_sd;
+    % shuff_mean = mean(all_shuff,'all');
+    % shuff_sd = std(all_shuff, [],'all');
+    % pop_act = movmean(nansum(data_in,2), frame_n_200);
+    
+    % exlude events that are too close. use findpeaks
+    [peak_act, SCE_idx] = findpeaks(pop_act, 1, 'MinPeakHeight', thresh, 'MinPeakDistance', nFrames);
+    
+    tvec_SCE_post =  0:(1/nFrames):(length(data_in)-1)*(1/nFrames);
+%%
+figure(9999)
+clf
+cmap = [1,1,1;0,0,0]; 
+% cmap = linspecer(256); 
+% cmap(1,:) = 0;
+colormap(cmap); 
+c_data_in =zeros(size(data_in));
+for ii = size(data_in,2):-1:1
+%    c_data_in(data_in(:,ii)==1,ii) = ii+100; 
+    
+   c_data_in(data_in(:,ii)==1,ii) = 1; 
+end
+caxis([0 size(data_in,2)+100])
+ax2(1) =subplot(20,1,1:16);
+imagesc(tvec_SCE_post, 1:size(c_data_in,2), c_data_in')
+set(gca, 'YDir', 'normal', 'xtick', [], 'ytick', [0:250:round(size(data_in,2)/100)*100])
+ylabel('cell ID')
+ ax2(2) =subplot(20,1,17:19);
+        hold on
+        plot(tvec_SCE_post, pop_act);
+        plot(tvec_SCE_post(SCE_idx+1), pop_act(SCE_idx+1), 'x')
+        xlim([tvec_SCE_post(1) tvec_SCE_post(end)])
+        hline(thresh)
+        ylabel('% active cells')
+        set(gca, 'xtick', [])
+        
+                ax2(3) =subplot(20,1,20);
+        cla
+        line([tvec_SCE_post(post_SWR_idx); tvec_SCE_post(post_SWR_idx)], repmat([0; 1] ,1, length(post_SWR_idx)),'color', 'r')
+        ylabel('SWRs')
+        xlabel('Concatenated SWS time (s)')
+        set(gca, 'ytick', [])
+        
+        
+                    linkaxes(ax2, 'x')
+        xlim([66 71])
+        
+        cfg_fig.ft_size = 14;
+        SetFigure(cfg_fig, gcf)
+        maximize
 %% make a plot of SCE mean
 % SCE_pop_act_post = [];
 % 

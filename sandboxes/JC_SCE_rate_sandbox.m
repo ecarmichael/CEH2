@@ -25,10 +25,11 @@ ms_dir = {'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_a
 plot_f = 0; % toggle plots for speed.
 
 cutoff_n_cell = 50;
+cutt_of_percent = 5; 
 
-method = 'decon';
+method = 'binary';
 
-for iSess = 13:length(ms_dir)
+for iSess = 1:length(ms_dir)
     %% load some data
     
     cd(ms_dir{iSess})
@@ -62,7 +63,7 @@ for iSess = 13:length(ms_dir)
         % decon the traces
         fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
         tic;
-        for iChan = size(all_RawTraces_post_REM,2):-1:1
+        for iChan = 25:-1:1 %size(all_detrendRaw_post_REM,2):-1:1
             disp(num2str(iChan))
             [denoise,deconv] = deconvolveCa(all_RawTraces_pre_REM(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
             temp_pre_REM.denoise(:,iChan) = denoise;    temp_pre_REM.deconv(:,iChan) = deconv;
@@ -123,21 +124,28 @@ for iSess = 13:length(ms_dir)
         
         data.trk = temp_trk.rate_binary;
         %%   plot for debugging.
-        %     figure(1011)
-        %     c_ord = linspecer(5);
-        %     cla
-        %     hold on
-        %     bin_holder = zeros(length(all_binary_post_REM),1);
-        %     tvec = (1:length(ms_post_REM.denoise))/round(1/mode(diff(ms.time)));
-        %     offset = .5;
-        %     for ii = 600:620
-        %         plot(tvec(logical(all_binary_post_REM(:,ii))), bin_holder(logical(all_binary_post_REM(:,ii))) +offset*ii, 'd','color',  c_ord(3,:), 'linewidth', 2)
-        %         plot(tvec, all_detrendRaw_post_REM(:, ii) +offset*ii, 'k', 'linewidth',1)
-        %         plot(tvec, ms_post_REM.denoise(:, ii) +offset*ii,'color',  c_ord(1,:), 'linewidth', 1)
-        %         plot(tvec, ms_post_REM.deconv(:, ii) +offset*ii,'color',  c_ord(2,:)', 'linewidth', 1)
-        %         plot(tvec, ms_post_REM.rate(:, ii) +offset*ii, 'color', c_ord(5,:))
-        %         plot(tvec(ms_post_REM.rate_binary(:,ii)), bin_holder(ms_post_REM.rate_binary(:,ii)) +offset*ii, 's','color', c_ord(4,:))
-        %     end
+            figure(1011)
+            c_ord = linspecer(5);
+            cla
+            hold on
+            bin_holder = zeros(length(all_binary_post_REM),1);
+            tvec = (1:length(all_binary_post_REM))/round(1/mode(diff(ms_trk.time/1000)));
+            offset = .5;
+            for ii = 1:25
+%                 yyaxis left
+                plot(tvec, all_RawTraces_post_REM(:, ii) +offset*ii, 'k', 'linewidth',1)
+                plot(tvec(logical(all_binary_post_REM(:,ii))), bin_holder(logical(all_binary_post_REM(:,ii)))-.05 +offset*ii, 'd','color',  c_ord(3,:), 'markerfacecolor', c_ord(3,:))
+                plot(tvec, temp_post_REM.denoise(:, ii) +offset*ii,'color',  c_ord(1,:), 'linewidth', 1)
+                plot(tvec, temp_post_REM.deconv(:, ii) +offset*ii,'color',  c_ord(2,:)', 'linewidth', 1)
+                plot(tvec(temp_post_REM.rate_binary(:,ii)), bin_holder(temp_post_REM.rate_binary(:,ii))-.02 +offset*ii, 's','color', c_ord(4,:), 'markerfacecolor', c_ord(4,:))
+%                 yyaxis right
+                plot(tvec, temp_post_REM.rate(:, ii)/4 +offset*ii, '-', 'color', c_ord(5,:))
+
+            end
+            set(gca, 'ytick', (1:25)/2, 'yticklabel', 1:25)
+            xlabel('time (s)')
+            ylabel('Cell ID')
+            legend({'Raw traces','Binary', 'Denoise', 'deconv','Rate logical', 'Rate'}, 'Location', 'north', 'Orientation', 'horizontal')
         %% clean up
         clear temp_* data_deconv ms_p* all_*
         
@@ -163,7 +171,7 @@ for iSess = 13:length(ms_dir)
     %% get the SCEs for each data type
     types = fieldnames(data);
     
-    thresh = 5; % use basic 5% cutoff.
+    thresh = cutt_of_percent; % use basic 5% cutoff.
     trk_start = datevec(ms_trk.time_labels);
     trk_end = ms_trk.time(end)/1000;
     for iT = 1:length(types)
@@ -303,6 +311,8 @@ for iSess = 13:length(ms_dir)
         SCE_idx_pre = SCE_idx;
         %     shuff_pre = all_shuff;
         %     thresh_pre = thresh;
+        edge_idx = SCE_idx > length(e_time);
+        SCE_idx(edge_idx)  =length(e_time); 
         
         pop_act_out.(sess_id).(types{iT}) = pop_act;
         SCE_times_out.(sess_id).(types{iT}) = e_time(SCE_idx);
@@ -314,6 +324,8 @@ for iSess = 13:length(ms_dir)
     
 end
 %% collect the oututs
+clear all
+load('C:\Users\ecarm\Desktop\SCEs\SCE_deconv.mat'); 
 types = fieldnames(SCE_rate_out.PV1060_HATSwitch);
 sess_list = fieldnames(SCE_rate_out);
 % all_SCE_rate_trk = nan(1, length(sess_list)); 
@@ -351,19 +363,295 @@ for iS = length(sess_list):-1:1
         all_SCE_rate_post_REM(iS) = NaN;
     end
     
+    if contains(sess_list{iS}, 'LTD')
+        if isfield(SCE_rate_out.(sess_list{iS}), 'trk')
+            all_SCE_rate_trk_LTD(iS) = SCE_rate_out.(sess_list{iS}).trk;
+        else
+            all_SCE_rate_trk_LTD(iS) = NaN;
+        end
+        
+        if isfield(SCE_rate_out.(sess_list{iS}), 'pre_SW')
+            all_SCE_rate_pre_SW_LTD(iS) = SCE_rate_out.(sess_list{iS}).pre_SW;
+        else
+            all_SCE_rate_pre_SW_LTD(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'pre_REM')
+            all_SCE_rate_pre_REM_LTD(iS) = SCE_rate_out.(sess_list{iS}).pre_REM;
+        else
+            all_SCE_rate_pre_REM_LTD(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'post_SW')
+            all_SCE_rate_post_SW_LTD(iS) = SCE_rate_out.(sess_list{iS}).post_SW;
+        else
+            all_SCE_rate_post_SW_LTD(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'post_REM')
+            all_SCE_rate_post_REM_LTD(iS) = SCE_rate_out.(sess_list{iS}).post_REM;
+        else
+            all_SCE_rate_post_REM_LTD(iS) = NaN;
+        end
+    elseif contains(sess_list{iS}, 'HATS')
+        if isfield(SCE_rate_out.(sess_list{iS}), 'trk')
+            all_SCE_rate_trk_HAT(iS) = SCE_rate_out.(sess_list{iS}).trk;
+        else
+            all_SCE_rate_trk_HAT(iS) = NaN;
+        end
+        
+        if isfield(SCE_rate_out.(sess_list{iS}), 'pre_SW')
+            all_SCE_rate_pre_SW_HAT(iS) = SCE_rate_out.(sess_list{iS}).pre_SW;
+        else
+            all_SCE_rate_pre_SW_HAT(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'pre_REM')
+            all_SCE_rate_pre_REM_HAT(iS) = SCE_rate_out.(sess_list{iS}).pre_REM;
+        else
+            all_SCE_rate_pre_REM_HAT(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'post_SW')
+            all_SCE_rate_post_SW_HAT(iS) = SCE_rate_out.(sess_list{iS}).post_SW;
+        else
+            all_SCE_rate_post_SW_HAT(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'post_REM')
+            all_SCE_rate_post_REM_HAT(iS) = SCE_rate_out.(sess_list{iS}).post_REM;
+        else
+            all_SCE_rate_post_REM_HAT(iS) = NaN;
+        end
+    elseif contains(sess_list{iS}, 'HAT')
+        if isfield(SCE_rate_out.(sess_list{iS}), 'trk')
+            all_SCE_rate_trk_HATS(iS) = SCE_rate_out.(sess_list{iS}).trk;
+        else
+            all_SCE_rate_trk_HATS(iS) = NaN;
+        end
+        
+        if isfield(SCE_rate_out.(sess_list{iS}), 'pre_SW')
+            all_SCE_rate_pre_SW_HATS(iS) = SCE_rate_out.(sess_list{iS}).pre_SW;
+        else
+            all_SCE_rate_pre_SW_HATS(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'pre_REM')
+            all_SCE_rate_pre_REM_HATS(iS) = SCE_rate_out.(sess_list{iS}).pre_REM;
+        else
+            all_SCE_rate_pre_REM_HAT(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'post_SW')
+            all_SCE_rate_post_SW_HATS(iS) = SCE_rate_out.(sess_list{iS}).post_SW;
+        else
+            all_SCE_rate_post_SW_HAT(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'post_REM')
+            all_SCE_rate_post_REM_HATS(iS) = SCE_rate_out.(sess_list{iS}).post_REM;
+        else
+            all_SCE_rate_post_REM_HATS(iS) = NaN;
+        end
+    end
     
 end
 
 
 
-%% print a summary figure
-b_in = ([all_SCE_rate_pre_REM; all_SCE_rate_pre_SW; all_SCE_rate_trk; all_SCE_rate_post_SW; all_SCE_rate_post_REM]'); 
+% print a summary figure
+b_in =     (([all_SCE_rate_pre_REM; all_SCE_rate_pre_SW; all_SCE_rate_trk; all_SCE_rate_post_SW; all_SCE_rate_post_REM]'*6)/30)*60; % convert to 
+b_in_LTD = (([all_SCE_rate_pre_REM_LTD; all_SCE_rate_pre_SW_LTD; all_SCE_rate_trk_LTD; all_SCE_rate_post_SW_LTD; all_SCE_rate_post_REM_LTD]'*6)/30)*60; % convert to 
+b_in_HAT = (([all_SCE_rate_pre_REM_HAT; all_SCE_rate_pre_SW_HAT; all_SCE_rate_trk_HAT; all_SCE_rate_post_SW_HAT; all_SCE_rate_post_REM_HAT]'*6)/30)*60; % convert to 
+b_in_HATS = (([all_SCE_rate_pre_REM_HATS; all_SCE_rate_pre_SW_HATS; all_SCE_rate_trk_HATS; all_SCE_rate_post_SW_HATS; all_SCE_rate_post_REM_HATS]'*6)/30)*60; % convert to 
 
 
 figure(202)
+clf
+subplot(2,2,1)
+title('Deconv')
+
+cla
 hold on
 bar(1:5, nanmean(b_in))
 e_b = errorbar(1:5, nanmean(b_in),nanstd(b_in)./sqrt(length(b_in)));
 e_b.LineStyle = 'None'; 
+set(gca, 'xtick', 1:5, 'XTickLabel', {'Pre REM', 'Pre SW', 'Track', 'Post SW', 'Post REM'})
+ylabel({'SCEs per min'; [num2str(5) '% active threshold']})
+xlim([.5 5.5])
+
+subplot(2,2,3)
+cla
+hold on
+bar(1:5, [nanmean(b_in_LTD); nanmean(b_in_HAT); nanmean(b_in_HATS)])
+errorbar_groups([nanmean(b_in_LTD); nanmean(b_in_HAT); nanmean(b_in_HATS)], [nanstd(b_in_HAT)./sqrt(length(b_in_LTD)) ; nanstd(b_in_HAT)./sqrt(length(b_in_HAT)); nanstd(b_in_HATS)./sqrt(length(b_in_HATS))], 'FigID', gcf, 'AxID', gca);
+% e_b = errorbar(1:5, [nanmean(b_in_LTD); nanmean(b_in_HAT)] ,nanstd([b_in_LTD; b_in_HAT)./sqrt(length(b_in_LTD)));
+set(gca, 'XTickLabel', {'Pre REM', 'Pre SW', 'Track', 'Post SW', 'Post REM'})
+ylabel({'SCEs per min'; [num2str(5) '% active threshold']})
+legend({'LT1/5', 'HAT1/5', 'HATSwitch'})
+
+
+clear all
+load('C:\Users\ecarm\Desktop\SCEs\SCE_binary.mat'); 
+types = fieldnames(SCE_rate_out.PV1060_HATSwitch);
+sess_list = fieldnames(SCE_rate_out);
+% all_SCE_rate_trk = nan(1, length(sess_list)); 
+% all_SCE_rate_pre_SW = nan(1, length(sess_list)); 
+% all_SCE_rate_pre_REM = nan(1, length(sess_list)); 
+% all_SCE_rate_post_SW = nan(1, length(sess_list)); 
+% all_SCE_rate_post_REM = nan(1, length(sess_list)); 
+clear all_SCE*
+for iS = length(sess_list):-1:1
+    
+    if isfield(SCE_rate_out.(sess_list{iS}), 'trk')
+        all_SCE_rate_trk(iS) = SCE_rate_out.(sess_list{iS}).trk;
+    else
+        all_SCE_rate_trk(iS) = NaN;
+    end
+    
+    if isfield(SCE_rate_out.(sess_list{iS}), 'pre_SW')
+        all_SCE_rate_pre_SW(iS) = SCE_rate_out.(sess_list{iS}).pre_SW;
+    else
+        all_SCE_rate_pre_SW(iS) = NaN;
+    end
+    if isfield(SCE_rate_out.(sess_list{iS}), 'pre_REM')
+        all_SCE_rate_pre_REM(iS) = SCE_rate_out.(sess_list{iS}).pre_REM;
+    else
+        all_SCE_rate_pre_REM(iS) = NaN;
+    end
+    if isfield(SCE_rate_out.(sess_list{iS}), 'post_SW')
+        all_SCE_rate_post_SW(iS) = SCE_rate_out.(sess_list{iS}).post_SW;
+    else
+        all_SCE_rate_post_SW(iS) = NaN;
+    end
+    if isfield(SCE_rate_out.(sess_list{iS}), 'post_REM')
+        all_SCE_rate_post_REM(iS) = SCE_rate_out.(sess_list{iS}).post_REM;
+    else
+        all_SCE_rate_post_REM(iS) = NaN;
+    end
+    
+    if contains(sess_list{iS}, 'LTD')
+        if isfield(SCE_rate_out.(sess_list{iS}), 'trk')
+            all_SCE_rate_trk_LTD(iS) = SCE_rate_out.(sess_list{iS}).trk;
+        else
+            all_SCE_rate_trk_LTD(iS) = NaN;
+        end
+        
+        if isfield(SCE_rate_out.(sess_list{iS}), 'pre_SW')
+            all_SCE_rate_pre_SW_LTD(iS) = SCE_rate_out.(sess_list{iS}).pre_SW;
+        else
+            all_SCE_rate_pre_SW_LTD(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'pre_REM')
+            all_SCE_rate_pre_REM_LTD(iS) = SCE_rate_out.(sess_list{iS}).pre_REM;
+        else
+            all_SCE_rate_pre_REM_LTD(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'post_SW')
+            all_SCE_rate_post_SW_LTD(iS) = SCE_rate_out.(sess_list{iS}).post_SW;
+        else
+            all_SCE_rate_post_SW_LTD(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'post_REM')
+            all_SCE_rate_post_REM_LTD(iS) = SCE_rate_out.(sess_list{iS}).post_REM;
+        else
+            all_SCE_rate_post_REM_LTD(iS) = NaN;
+        end
+    elseif contains(sess_list{iS}, 'HATS')
+        if isfield(SCE_rate_out.(sess_list{iS}), 'trk')
+            all_SCE_rate_trk_HAT(iS) = SCE_rate_out.(sess_list{iS}).trk;
+        else
+            all_SCE_rate_trk_HAT(iS) = NaN;
+        end
+        
+        if isfield(SCE_rate_out.(sess_list{iS}), 'pre_SW')
+            all_SCE_rate_pre_SW_HAT(iS) = SCE_rate_out.(sess_list{iS}).pre_SW;
+        else
+            all_SCE_rate_pre_SW_HAT(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'pre_REM')
+            all_SCE_rate_pre_REM_HAT(iS) = SCE_rate_out.(sess_list{iS}).pre_REM;
+        else
+            all_SCE_rate_pre_REM_HAT(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'post_SW')
+            all_SCE_rate_post_SW_HAT(iS) = SCE_rate_out.(sess_list{iS}).post_SW;
+        else
+            all_SCE_rate_post_SW_HAT(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'post_REM')
+            all_SCE_rate_post_REM_HAT(iS) = SCE_rate_out.(sess_list{iS}).post_REM;
+        else
+            all_SCE_rate_post_REM_HAT(iS) = NaN;
+        end
+    elseif contains(sess_list{iS}, 'HAT')
+        if isfield(SCE_rate_out.(sess_list{iS}), 'trk')
+            all_SCE_rate_trk_HATS(iS) = SCE_rate_out.(sess_list{iS}).trk;
+        else
+            all_SCE_rate_trk_HATS(iS) = NaN;
+        end
+        
+        if isfield(SCE_rate_out.(sess_list{iS}), 'pre_SW')
+            all_SCE_rate_pre_SW_HATS(iS) = SCE_rate_out.(sess_list{iS}).pre_SW;
+        else
+            all_SCE_rate_pre_SW_HATS(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'pre_REM')
+            all_SCE_rate_pre_REM_HATS(iS) = SCE_rate_out.(sess_list{iS}).pre_REM;
+        else
+            all_SCE_rate_pre_REM_HAT(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'post_SW')
+            all_SCE_rate_post_SW_HATS(iS) = SCE_rate_out.(sess_list{iS}).post_SW;
+        else
+            all_SCE_rate_post_SW_HAT(iS) = NaN;
+        end
+        if isfield(SCE_rate_out.(sess_list{iS}), 'post_REM')
+            all_SCE_rate_post_REM_HATS(iS) = SCE_rate_out.(sess_list{iS}).post_REM;
+        else
+            all_SCE_rate_post_REM_HATS(iS) = NaN;
+        end
+    end
+    
+end
+
+
+
+% print a summary figure
+b_in =     (([all_SCE_rate_pre_REM; all_SCE_rate_pre_SW; all_SCE_rate_trk; all_SCE_rate_post_SW; all_SCE_rate_post_REM]'*6)/30)*60; % convert to 
+b_in_LTD = (([all_SCE_rate_pre_REM_LTD; all_SCE_rate_pre_SW_LTD; all_SCE_rate_trk_LTD; all_SCE_rate_post_SW_LTD; all_SCE_rate_post_REM_LTD]'*6)/30)*60; % convert to 
+b_in_HAT = (([all_SCE_rate_pre_REM_HAT; all_SCE_rate_pre_SW_HAT; all_SCE_rate_trk_HAT; all_SCE_rate_post_SW_HAT; all_SCE_rate_post_REM_HAT]'*6)/30)*60; % convert to 
+b_in_HATS = (([all_SCE_rate_pre_REM_HATS; all_SCE_rate_pre_SW_HATS; all_SCE_rate_trk_HATS; all_SCE_rate_post_SW_HATS; all_SCE_rate_post_REM_HATS]'*6)/30)*60; % convert to 
+
+
+figure(202)
+subplot(2,2,2)
+title('Binary')
+cla
+hold on
+bar(1:5, nanmean(b_in))
+e_b = errorbar(1:5, nanmean(b_in),nanstd(b_in)./sqrt(length(b_in)));
+e_b.LineStyle = 'None'; 
+set(gca, 'xtick', 1:5, 'XTickLabel', {'Pre REM', 'Pre SW', 'Track', 'Post SW', 'Post REM'})
+ylabel({'SCEs per min'; [num2str(5) '% active threshold']})
+xlim([.5 5.5])
+
+subplot(2,2,4)
+cla
+hold on
+bar(1:5, [nanmean(b_in_LTD); nanmean(b_in_HAT); nanmean(b_in_HATS)])
+errorbar_groups([nanmean(b_in_LTD); nanmean(b_in_HAT); nanmean(b_in_HATS)], [nanstd(b_in_HAT)./sqrt(length(b_in_LTD)) ; nanstd(b_in_HAT)./sqrt(length(b_in_HAT)); nanstd(b_in_HATS)./sqrt(length(b_in_HATS))], 'FigID', gcf, 'AxID', gca);
+% e_b = errorbar(1:5, [nanmean(b_in_LTD); nanmean(b_in_HAT)] ,nanstd([b_in_LTD; b_in_HAT)./sqrt(length(b_in_LTD)));
+set(gca, 'XTickLabel', {'Pre REM', 'Pre SW', 'Track', 'Post SW', 'Post REM'})
+ylabel({'SCEs per min'; [num2str(5) '% active threshold']})
+legend({'LT1/5', 'HAT1/5', 'HATSwitch'})
+
+
+SetFigure([], gcf);
+
+%% recompute the SCEs for different thresholds. 
+% cut_val = .5;
+% 
+% sess_list = fieldnames(pop_act_out);
+% 
+% for iS = 1:length(sess_list)
+%     [~, SCE_idx] = findpeaks(pop_act_out.(sess_list{iS}). pop_act, 1, 'MinPeakHeight', thresh, 'MinPeakDistance', nFrames);
+% 
+%     
+%     
+%     
+%     
+% end
 
 
