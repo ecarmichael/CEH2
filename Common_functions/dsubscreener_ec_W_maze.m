@@ -116,31 +116,31 @@ for iC = 1:length(file_list)
 %         this_spd.data(1) = this_spd.data(2); 
         this_evt = restrict(evt, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(2)); 
         
-        if isempty(this_S.t{1})
+        if isempty(this_S.t{1}) || length(this_S.t{1}) < 200
             continue
         end
         if iB == 2
             
-%             trials = dSub_wmaze_trialfun([], this_pos)
-            trials = MS_NLX_append_MAZE(this_pos, this_evt);
-%             arms = {'l', 'c', 'r', 'b'}; maze.arms = arms; 
-%             for ii = 1:length(arms)
-%             if sum(strcmp(this_evt.label, arms{ii})) > 0
-%                 maze.(arms{ii}) = this_evt.t{strcmp(this_evt.label, arms{ii})};
-%             else
-%                 maze.(arms{ii}) = []; 
-%             end
-%             end
-        trials_iv = iv(trials.tstart, trials.tend); 
-        this_pos = restrict(this_pos, trials_iv); 
-        this_S = restrict(this_S, trials_iv); 
-        this_spd = restrict(this_spd, trials_iv); 
-%         keep_idx = ~cellfun(@isempty, this_S.t); 
-%         this_S.t = this_S.t(keep_idx); 
-%         this_S.label = this_S.label(keep_idx); 
-
-            fprintf('<strong>Left: %d | Choice: %d /%d | Right: %d</strong>\n', sum(strcmp(trials.type, 'FL')), sum(contains(trials.type, '- C')), sum(contains(trials.type, ' - ')), sum(strcmp(trials.type, 'FR')))
-            
+% %             trials = dSub_wmaze_trialfun([], this_pos)
+%             trials = MS_NLX_append_MAZE(this_pos, this_evt);
+% %             arms = {'l', 'c', 'r', 'b'}; maze.arms = arms; 
+% %             for ii = 1:length(arms)
+% %             if sum(strcmp(this_evt.label, arms{ii})) > 0
+% %                 maze.(arms{ii}) = this_evt.t{strcmp(this_evt.label, arms{ii})};
+% %             else
+% %                 maze.(arms{ii}) = []; 
+% %             end
+% %             end
+%         trials_iv = iv(trials.tstart, trials.tend); 
+%         this_pos = restrict(this_pos, trials_iv); 
+%         this_S = restrict(this_S, trials_iv); 
+%         this_spd = restrict(this_spd, trials_iv); 
+% %         keep_idx = ~cellfun(@isempty, this_S.t); 
+% %         this_S.t = this_S.t(keep_idx); 
+% %         this_S.label = this_S.label(keep_idx); 
+% 
+%             fprintf('<strong>Left: %d | Choice: %d /%d | Right: %d</strong>\n', sum(strcmp(trials.type, 'FL')), sum(contains(trials.type, '- C')), sum(contains(trials.type, ' - ')), sum(strcmp(trials.type, 'FR')))
+%             
         elseif iB == 3
                 this_pos.data(1,:) = this_pos.data(1,:)/2;
                 this_pos.data(2,:) = this_pos.data(2,:)/2;
@@ -156,7 +156,7 @@ for iC = 1:length(file_list)
             [Px, Fx] = pwelch(this_csc.data(1,:), hanning(cfg_psd.hann_win), cfg_psd.hann_win/2, cfg_psd.hann_win*2 , this_csc.cfg.hdr{1}.SamplingFrequency);
         end
         figure((100*iC) + iB)
-           SetFigure([], gcf);
+        SetFigure([], gcf);
         set(gcf, 'position', [81 -377  1760  880])
         subplot(3,4,9)
         hold on
@@ -191,7 +191,7 @@ for iC = 1:length(file_list)
 %             legend("Ch 1", "Ch 2","Ch 3","Ch 4", 'fontsize', 8, 'location', 'north', 'orientation', 'horizontal' ); legend boxoff
             xlabel ("Time (ms)")
             axis off
-            title ({strrep(fname, '_', ' ') ;  strrep(this_S.label{1}, '_', ' '); ['grade: ' this_S.label{1}(end-2)] ; Blocks{iB}})
+            title ({strrep(fname, '_', ' ') ;  strrep(this_S.label{1}, '_', ' '); ['grade: ' this_S.label{1}(end-2) ' (' num2str(length(this_S.t{1})) ' spikes)'] ; Blocks{iB}})
             xlim([min(xrange,[], 'all') max(xrange,[], 'all')])
         catch
             subplot (3,4,1)

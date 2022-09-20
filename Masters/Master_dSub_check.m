@@ -24,6 +24,15 @@ ft_dir = '/home/ecarmichael/Documents/GitHub/fieldtrip';
 inter_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % where to save the outputs
 data_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % where to get the data
 
+%% Home windows
+
+mvdm_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; % where the codebase repo can be found
+CEH2_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2'; % where the multisite repo can be found
+ft_dir = 'C:\Users\ecarm\Documents\GitHub\fieldtrip'; 
+
+inter_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inter';
+data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess'; 
+
 %% Erin's PC
 % data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team
 % Folder\Eric\dSubiculum\inProcess';
@@ -64,7 +73,7 @@ for iSub =1:length(subjects)
     sessions(cellfun('isempty', sessions)) = [];
     
 
-    for iS = length(sessions):-1:1 %length(sessions)
+    for iS = 17:-1:1%length(sessions):-1:1 %length(sessions)
         if strcmpi(sessions{iS}, 'M23_2021-08-13_D18')
             continue
         end
@@ -73,10 +82,15 @@ for iSub =1:length(subjects)
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
 %         dsubscreener_ec(cd, inter_dir);
 %         dsubscreener_ec_W_maze(cd, inter_dir);
-
-        dsubscreener_ec_W_maze(cd, inter_dir);
-%           M23_Clust_batch
         MS_Write_meta_dSub;
+        
+        dsubscreener_ec_W_maze(cd, inter_dir);
+        hypno = dSub_Sleep_screener; 
+        
+        save([data_dir filesep 'hypno_init.mat'], 'hypno', '-v7.3'); 
+        saveas(gcf, [data_dir filesep 'hypno_init.png'])
+        close all
+%           M23_Clust_batch
           
         
     end
