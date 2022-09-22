@@ -1,4 +1,4 @@
-function maze = MAZE_tracking_gui(data_dir, rec_idx)
+% function maze = MAZE_tracking_gui(data_dir, rec_idx)
 %% MAZE_tracking_gui: loads the position and event data (NLX format)
 %
 %
@@ -20,15 +20,15 @@ function maze = MAZE_tracking_gui(data_dir, rec_idx)
 %
 %
 %% initialize
-
-if nargin <1
+% 
+% if nargin <1
+%     rec_idx = [];
+%     data_dir = cd;
+% elseif nargin < 2
     rec_idx = [];
-    data_dir = cd;
-elseif nargin < 2
-    rec_idx = [];
-end
+% end
 
-cd(data_dir)
+% cd(data_dir)
 %% load the events and position,
 
 evts = LoadEvents([]);
@@ -96,20 +96,34 @@ for ii = length(states):-1:1
             maze.trials.times = [maze.trials.times; maze.events.(states{ii})];
             for iT = 1:length(this_evt)
                 if  strcmp(GUI_states{this_evt(iT)}, 'C_R') && strcmp(GUI_states{this_evt(iT)+1}, 'R_Rew')
-                    maze.trials.types{end+1} = 'R correct';
+                    maze.trials.types{end+1} = 'CR correct';
                 elseif strcmp(GUI_states{this_evt(iT)}, 'C_R') && strcmp(GUI_states{this_evt(iT)+1}, 'L_Rew')
-                    maze.trials.types{end+1} = 'R error';
+                    maze.trials.types{end+1} = 'CR error';
                 elseif  strcmp(GUI_states{this_evt(iT)}, 'C_L') && strcmp(GUI_states{this_evt(iT)+1}, 'L_Rew')
-                    maze.trials.types{end+1} = 'L correct';
+                    maze.trials.types{end+1} = 'CL correct';
                 elseif strcmp(GUI_states{this_evt(iT)}, 'C_L') && strcmp(GUI_states{this_evt(iT)+1}, 'R_Rew')
-                    maze.trials.types{end+1} = 'L error';
+                    maze.trials.types{end+1} = 'CL error';
                     %                 end
                 end
             end
         end
         
+        if strcmp(states{ii}, 'F_R')
+            maze.trials.times = [maze.trials.times; maze.events.(states{ii})];
+            for iT = 1:length(this_evt)
+                maze.trials.types{end+1} = 'FR correct';
+            end
+        end
         
+        if strcmp(states{ii}, 'F_L')
+            maze.trials.times = [maze.trials.times; maze.events.(states{ii})];
+            for iT = 1:length(this_evt)
+                maze.trials.types{end+1} = 'FL correct';
+            end
+        end
+
     else
+        this_evt = find(contains(GUI_states, states{ii}));
         maze.events.(states{ii}) = GUI_state_times(this_evt+1);
     end
 end
@@ -126,8 +140,13 @@ save('maze.mat', 'maze', '-v7.3')
 %%  Check the events and split the trials into a summary plot.
 figure(902)
 clf
-types = {'R correct', 'R error', 'L correct', 'L error'};
-c_ord = linspecer(length(types));
+types = { 'FR correct'  'FL correct', 'CR correct', 'CR error', 'CL correct', 'CL error'};
+c_ord = [0, 180, 120;...
+    100 125 200;...
+    0, 200, 100;...
+    255, 0 , 0;...
+    88 136 175;...
+    255, 0 , 0]/255; 
 
 for ii  = 1:length(maze.trials.types)
     subplot(4,4,ii)
