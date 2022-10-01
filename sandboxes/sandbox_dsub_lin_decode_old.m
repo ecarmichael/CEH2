@@ -10,11 +10,15 @@ evts = LoadEvents([]);
 
 blocks = MS_get_waze_blocks(evts); 
 
-pos = MS_LoadPos([]); 
-
+cfg_pos = [];
+cfg_pos.convFact = [6.95 6.95];
+pos = MS_LoadPos(cfg_pos); 
+pos.data  = pos.data(1:2,:); 
+pos.label = pos.label(1:2); 
 load('maze.mat'); 
 
 meta = MS_Load_meta();
+load('C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess\MD3\Common_CoorD.mat')
 
 cfg = [];
 cfg.fc = {'TT2_01_3.t'}; 
@@ -42,10 +46,11 @@ pos_move.data = pos_move.data(:, move_idx);
 spike_x = interp1(pos.tvec, pos.data(1,:), S.t{1}, 'linear'); 
 spike_y = interp1(pos.tvec, pos.data(2,:), S.t{1}, 'linear'); 
 
-figure(1)
+figure(101)
+subplot(2,2,1)
 hold on
-% plot(pos.data(1,:), pos.data(2,:), '.', 'color', [.2 .2 .2]); 
-% plot(spike_x, spike_y, '.r')
+plot(pos.data(1,:), pos.data(2,:), '.', 'color', [.2 .2 .2]); 
+plot(spike_x, spike_y, '.r')
 
 t_types = unique(maze.trials.types); 
 c_trial = linspecer(length(t_types)); 
@@ -70,6 +75,7 @@ S_L = restrict(S, L_iv);
 S_R = restrict(S, R_iv);
 
 figure(101)
+subplot(2,2,2)
 hold on
 plot(pos_L.data(1,:), pos_L.data(2,:), '.b');
 plot(pos_R.data(1,:), pos_R.data(2,:), '.r');
@@ -78,49 +84,48 @@ legend({'left', 'right'})
 
 %% snap position to ideal
 
-P = behav.CoorD_L.coord'; 
-PQ = pos_L_cut.data'; 
-[k, ~] = dsearchn(P, PQ);
+PL = Common_CoorD.CoorD_L.coord'; 
+PQL = pos_L.data(1:2,:)'; 
+[k, ~] = dsearchn(PL, PQL);
 
-pos_snap_L = pos_L_cut; 
-pos_snap_L.data(1,:) = P(k, 1);
-pos_snap_L.data(2,:) = P(k, 2);
+pos_snap_L = pos_L; 
+pos_snap_L.data(1,:) = PL(k, 1);
+pos_snap_L.data(2,:) = PL(k, 2);
 
-P = behav.CoorD_R.coord'; 
-PQ = pos_R_cut.data'; 
-[k, ~] = dsearchn(P, PQ);
+PR = Common_CoorD.CoorD_R.coord'; 
+PQR = pos_R.data(1:2,:)'; 
+[k, ~] = dsearchn(PR, PQR);
 
-pos_snap_R = pos_R_cut; 
-pos_snap_R.data(1,:) = P(k, 1);
-pos_snap_R.data(2,:) = P(k, 2);
+pos_snap_R = pos_R; 
+pos_snap_R.data(1,:) = PR(k, 1);
+pos_snap_R.data(2,:) = PR(k, 2);
 
 
 
 figure(101)
-clf
 subplot(2,2,2)
-% hold on
-% plot(P(:,1),P(:,2),'ko')
-% hold on
-% plot(PQ(:,1),PQ(:,2),'*g')
+cla
 hold on
+% plot(PL(:,1),PL(:,2),'ko')
+% hold on
+plot(PQL(:,1),PQL(:,2),'*b', 'markersize', 2)
+
+% hold on
 hl1 = plot(pos_snap_L.data(1,:),pos_snap_L.data(2,:),'ok', 'markersize', 10, 'markeredgecolor', 'k');
 hl2 = plot(pos_snap_L.data(1,:),pos_snap_L.data(2,:),'xc', 'markersize', 10);
 xlim([min([pos_L.data(1,:), pos_move.data(1,:)]), max([pos_L.data(1,:), pos_move.data(1,:)])]); 
 ylim([min([pos_L.data(2,:), pos_move.data(2,:)]), max([pos_L.data(2,:), pos_move.data(2,:)])]); 
 
+x_lim = xlim; 
+y_lim = ylim; 
 
-
-% hold on
-% plot(P(:,1),P(:,2),'ko')
-% hold on
-% plot(PQ(:,1),PQ(:,2),'*g')
 hold on
-hr1 = plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'ok', 'markersize', 10, 'markeredgecolor', 'k');
+plot(PQR(:,1),PQR(:,2),'*r', 'markersize', 2)
+hr1 = plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'dk', 'markersize', 10, 'markeredgecolor', 'k');
 hr2 = plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'xm', 'markersize', 10);
-xlim([min([pos_L.data(1,:), pos_move.data(1,:)]), max([pos_L.data(1,:), pos_move.data(1,:)])]); 
-ylim([min([pos_L.data(2,:), pos_move.data(2,:)]), max([pos_L.data(2,:), pos_move.data(2,:)])]); 
-legend([h1 h2, hl2, hr2],{'left', 'right','Nearest Pos L', 'Nearest Pos R'}, 'location', 'southeast')
+xlim([min([pos_R.data(1,:), pos_move.data(1,:)]), max([pos_R.data(1,:), pos_move.data(1,:)])]); 
+ylim([min([pos_R.data(2,:), pos_move.data(2,:)]), max([pos_R.data(2,:), pos_move.data(2,:)])]); 
+legend([hl1 hr1, hl2, hr2],{'left', 'right','Nearest Pos L', 'Nearest Pos R'}, 'location', 'southeast')
 
 
 %% standardize and linearize
@@ -128,17 +133,26 @@ legend([h1 h2, hl2, hr2],{'left', 'right','Nearest Pos L', 'Nearest Pos R'}, 'lo
 cfg = [];
 cfg.binsize = .5;
 cfg.run_dist = Common_CoorD.run_dist;
-SCoorD_R = StandardizeCoord(cfg, behav.CoorD_L, Common_CoorD.run_dist);
-SCoorD_L = StandardizeCoord(cfg, behav.CoorD_R, Common_CoorD.run_dist);
+SCoorD_R = StandardizeCoord(cfg, Common_CoorD.CoorD_L, Common_CoorD.run_dist);
+SCoorD_L = StandardizeCoord(cfg, Common_CoorD.CoorD_R, Common_CoorD.run_dist);
 
 %
 cfg = [];
 cfg.Coord = SCoorD_L.coord;
-linpos.L = LinearizePos(cfg,pos_L_cut, SCoorD_L);
+linpos.L = LinearizePos(cfg,pos_L, SCoorD_L);
 cfg.Coord = SCoorD_R.coord;
-linpos.R = LinearizePos(cfg,pos_R_cut, SCoorD_R);
+linpos.R = LinearizePos(cfg,pos_R, SCoorD_R);
 
 subplot(2,2,3)
+cla
+hold on 
+plot(SCoorD_L.coord(1,:), SCoorD_L.coord(2,:), '.b');
+plot(SCoorD_R.coord(1,:), SCoorD_R.coord(2,:), '.r');
+xlim(x_lim);
+ylim(y_lim);
+
+
+subplot(2,2,4)
 hold on
 hlinl = plot(linpos.L.tvec, linpos.L.data, '.b');
 xlim([min([linpos.L.tvec, linpos.R.tvec]), max([linpos.L.tvec, linpos.R.tvec])])
@@ -150,12 +164,12 @@ legend([hlinl, hlinr], 'Linearized left trajectories', 'Linearized right traject
 bin_s = 3; 
 bins = floor(min([linpos.R.data, linpos.L.data])):bin_s:39%ceil(max([linpos.R.data, linpos.L.data]));
 
-
-subplot(2,2,4)
+figure(102)
+subplot(2,2,1)
 imagesc(bins,1:2, [histc(linpos.L.data, bins)/mode(diff(linpos.L.tvec)); histc(linpos.R.data, bins)/mode(diff(linpos.R.tvec))]/60); 
 set(gca,'Ytick', 1:2, 'YTickLabel', {'left occupancy', 'right occupancy'}); 
 c = colorbar; 
-c.Label = 'time (s)'; 
+% c.Label = 'time (s)'; 
 
 % xbins = floor(min(pos_L_cut.data(1,:))):bin_s:ceil(max(pos_L_cut.data(1,:)))
 % ybins = floor(min(pos_L_cut.data(2,:))):bin_s:ceil(max(pos_L_cut.data(2,:)))

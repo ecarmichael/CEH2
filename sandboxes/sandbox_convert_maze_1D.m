@@ -161,11 +161,11 @@ ylim([min([pos_L.data(2,:), pos_move.data(2,:)]), max([pos_L.data(2,:), pos_move
 % hold on
 % plot(PQ(:,1),PQ(:,2),'*g')
 hold on
-hr1 = plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'ok', 'markersize', 10, 'markeredgecolor', 'k');
+hr1 = plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'dk', 'markersize', 10, 'markeredgecolor', 'k');
 hr2 = plot(pos_snap_R.data(1,:),pos_snap_R.data(2,:),'xm', 'markersize', 10);
 xlim([min([pos_L.data(1,:), pos_move.data(1,:)]), max([pos_L.data(1,:), pos_move.data(1,:)])]); 
 ylim([min([pos_L.data(2,:), pos_move.data(2,:)]), max([pos_L.data(2,:), pos_move.data(2,:)])]); 
-legend([h1 h2, hl2, hr2],{'left', 'right','Nearest Pos L', 'Nearest Pos R'}, 'location', 'southeast')
+legend([hl1 hr1, hl2, hr2],{'left', 'right','Nearest Pos L', 'Nearest Pos R'}, 'location', 'southeast')
 
 
 %% standardize and linearize
