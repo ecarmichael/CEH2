@@ -20,12 +20,12 @@
 %
 %
 %% initialize
-% 
+%
 % if nargin <1
 %     rec_idx = [];
 %     data_dir = cd;
 % elseif nargin < 2
-    rec_idx = [];
+rec_idx = [];
 % end
 
 % cd(data_dir)
@@ -121,9 +121,12 @@ for ii = length(states):-1:1
                 maze.trials.types{end+1} = 'FL correct';
             end
         end
-
+        
     else
         this_evt = find(contains(GUI_states, states{ii}));
+        if this_evt(end) >= length(GUI_state_times)
+            this_evt = this_evt(1:end-1);
+        end
         maze.events.(states{ii}) = GUI_state_times(this_evt+1);
     end
 end
@@ -146,7 +149,7 @@ c_ord = [0, 180, 120;...
     0, 200, 100;...
     255, 0 , 0;...
     88 136 175;...
-    255, 0 , 0]/255; 
+    255, 0 , 0]/255;
 
 for ii  = 1:length(maze.trials.types)
     subplot(4,4,ii)
@@ -166,33 +169,33 @@ end
 % figure(903)
 % clf
 % c_ord = linspecer(length(maze.trials.types)+3);
-% 
+%
 % hold on
 % plot(pos.data(1,:), pos.data(2,:), '.', 'color', [.7 .7 .7 .2])
-% 
+%
 % for ii = size(maze.Box_in,1):-1:1
 %     plot(pos.data(1,nearest_idx3(maze.Box_in(ii,1), pos.tvec):nearest_idx3(maze.Box_in(ii,2), pos.tvec)), pos.data(2,nearest_idx3(maze.Box_in(ii,1), pos.tvec):nearest_idx3(maze.Box_in(ii,2), pos.tvec)), '.',...
 %         'color', c_ord(7,:));
 % end
-% 
+%
 % for ii = size(maze.F_L,1):-1:1
 %     plot(pos.data(1,nearest_idx3(maze.F_L(ii,1), pos.tvec):nearest_idx3(maze.F_L(ii,2), pos.tvec)), pos.data(2,nearest_idx3(maze.F_L(ii,1), pos.tvec):nearest_idx3(maze.F_L(ii,2), pos.tvec)), '.',...
 %         'color', c_ord(5,:));
 % end
-% 
+%
 % for ii = size(maze.F_R,1):-1:1
 %     plot(pos.data(1,nearest_idx3(maze.F_R(ii,1), pos.tvec):nearest_idx3(maze.F_R(ii,2), pos.tvec)), pos.data(2,nearest_idx3(maze.F_R(ii,1), pos.tvec):nearest_idx3(maze.F_R(ii,2), pos.tvec)), '.',...
 %         'color', c_ord(6,:));
 % end
-% 
+%
 % for ii  = 1:length(maze.trials.types)
 %         plot(pos.data(1,nearest_idx3(maze.trials.times(ii,1), pos.tvec):nearest_idx3(maze.trials.times(ii,2), pos.tvec)), pos.data(2,nearest_idx3(maze.trials.times(ii,1), pos.tvec):nearest_idx3(maze.trials.times(ii,2), pos.tvec)), '.',...
 %         'color', c_ord(find(contains(types, maze.trials.types{ii})),:));
 % end
-% 
+%
 % % legend(['Box', 'F_L', 'F_R', types])
-% 
-% 
+%
+%
 % xlim([min(pos.data(1,:)) max(pos.data(1,:))]);
 % ylim([min(pos.data(2,:)) max(pos.data(2,:))]);
 
