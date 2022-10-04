@@ -1,4 +1,4 @@
-function TC = dSub_gen_1d_TC(cfg_in, data_dir)
+function TC_out = dSub_gen_1d_TC(cfg_in, data_dir)
 %% MS_gen_1d_TC: generate a 1d tuning curve by linea
 %
 %
@@ -33,6 +33,7 @@ cfg_def = [];
 cfg_def.bin_s = 2.5;
 cfg_def.gk_win = 5;
 cfg_def.gk_sd = 2.5;
+cfg_def.plot = 1; % plot flag.
 
 cfg = ProcessConfig(cfg_def, cfg_in);
 
@@ -45,6 +46,12 @@ bin_c = bins(1:end-1)+cfg.bin_s/2;
 gkernal = gausskernel(cfg.gk_win/cfg.bin_s, cfg.gk_sd/cfg.bin_s);
 
 %% load stuff
+
+fname = strsplit(data_dir, filesep);
+fname = strrep(fname{end}, '-', '_');
+parts = strsplit(fname, '_'); 
+sess = parts{end}; 
+
 evts = LoadEvents([]);
 
 blocks = MS_get_waze_blocks(evts);
@@ -58,20 +65,24 @@ load('maze.mat');
 
 % meta = MS_Load_meta();
 load('C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess\MD3\Common_CoorD.mat')
+if str2double(sess(2:end)) < 14
+    Common_CoorD.CoorD_L.coord(1,:) = Common_CoorD.CoorD_L.coord(1,:) - 4; 
+    Common_CoorD.CoorD_R.coord(1,:) = Common_CoorD.CoorD_R.coord(1,:) - 4; 
+end
 
-cfg = [];
+cfg_S = [];
 % cfg.fc = {'TT2_01_3.t'};
-cfg.getTTnumbers = 0;
+cfg_S.getTTnumbers = 0;
 % cfg.min_cluster_quality = 4;
-S = LoadSpikes(cfg);
+S = LoadSpikes(cfg_S);
 
 % remove low quality cells
 for iS = length(S.t):-1:1
-   if strcmp(S.label{iS}(end-2), '5')
-       fprintf('Removing cell: %s due to low quality (%s)\n', S.label{iS}, S.label{iS}(end-2))
-       S.t(iS) = [];
-       S.label(iS) = [];
-   end
+    if strcmp(S.label{iS}(end-2), '5')
+        fprintf('Removing cell: %s due to low quality (%s)\n', S.label{iS}, S.label{iS}(end-2))
+        S.t(iS) = [];
+        S.label(iS) = [];
+    end
 end
 
 
@@ -84,8 +95,8 @@ evts = restrict(evts, blocks.W_maze(1), blocks.W_maze(2));
 linspeed = getLinSpd([],pos); % linear speed
 
 % Threshold speed
-cfg = []; cfg.method = 'raw'; cfg.operation = '>'; cfg.threshold = 1; % speed limit in cm/sec
-iv_fast = TSDtoIV(cfg,linspeed); % only keep intervals with speed above thresh
+cfg_l = []; cfg_l.method = 'raw'; cfg_l.operation = '>'; cfg_l.threshold = 1; % speed limit in cm/sec
+iv_fast = TSDtoIV(cfg_l,linspeed); % only keep intervals with speed above thresh
 
 % Restrict data so it includes fast intervals only
 pos_fast = restrict(pos,iv_fast);
@@ -122,21 +133,21 @@ S_R = restrict(S_fast, R_iv);
 % plot(pos_R.data(1,:), pos_R.data(2,:), '.r');
 % legend({'left', 'right'})
 %% standardize and linearize
-cfg = [];
-cfg.binsize = .5;
-cfg.run_dist = Common_CoorD.run_dist;
+cfg_c = [];
+cfg_c.binsize = .5;
+cfg_c.run_dist = Common_CoorD.run_dist;
 coordL_cm = []; coordL_cm.coord = Common_CoorD.CoorD_L.coord; coordL_cm.units = 'cm';
 coordR_cm = []; coordR_cm.coord = Common_CoorD.CoorD_R.coord;  coordR_cm.units = 'cm';
 
-coord.L = StandardizeCoord(cfg,coordL_cm, Common_CoorD.run_dist);
-coord.R = StandardizeCoord(cfg,coordR_cm, Common_CoorD.run_dist);
+coord.L = StandardizeCoord(cfg_c,coordL_cm, Common_CoorD.run_dist);
+coord.R = StandardizeCoord(cfg_c,coordR_cm, Common_CoorD.run_dist);
 
 
-%
-cfg = [];
-cfg.Coord = coord.L;
+% %
+% cfg_l = [];
+% cfg_l.Coord = coord.L;
 linpos.L = LinearizePos([],pos_L, coord.L);
-cfg.Coord = coord.R;
+% cfg_l.Coord = coord.R;
 linpos.R = LinearizePos([],pos_R, coord.R);
 
 % subplot(2,2,3)
@@ -190,8 +201,10 @@ occ_R = trim_histc(occ_R);
 occ_R(occ_R==0) = NaN;
 occ_R = conv(occ_R, gkernal, 'same');
 %%
-figure(102)
-clf
+if cfg.plot
+    figure(102)
+    clf
+end
 for iS = 1:length(S.t)
     % overall spike stats
     fr = length(S.t{iS}) / (pos.tvec(end) - pos.tvec(1));
@@ -215,120 +228,132 @@ for iS = 1:length(S.t)
     %%
     
     if isempty(S_L.t{iS})
-        TC{iS}.spk_L = [];
-        TC{iS}.spk_tc_L = [];
-        TC{iS}.spk_tc_L_z = [];
+        TCs{iS}.spk_L = [];
+        TCs{iS}.spk_tc_L = [];
+        TCs{iS}.spk_tc_L_z = [];
         spk_idx_L = [];
     else
         % spk_hist
-        TC{iS}.spk_L = interp1(linpos.L.tvec, linpos.L.data, S_L.t{iS}, 'linear');
-        TC{iS}.spk_h_L = histc(TC{iS}.spk_L', bins);
-        TC{iS}.spk_h_L = conv(TC{iS}.spk_h_L(1:end-1), gkernal, 'same');
-        TC{iS}.spk_tc_L = TC{iS}.spk_h_L./occ_L;
+        TCs{iS}.spk_L = interp1(linpos.L.tvec, linpos.L.data, S_L.t{iS}, 'linear');
+        TCs{iS}.spk_h_L = histc(TCs{iS}.spk_L', bins);
+        TCs{iS}.spk_h_L = conv(TCs{iS}.spk_h_L(1:end-1), gkernal, 'same');
+        TCs{iS}.spk_tc_L = TCs{iS}.spk_h_L./occ_L;
         
-        TC{iS}.spk_tc_L_z = (TC{iS}.spk_tc_L - fr_mean) ./ fr_sd;
+        TCs{iS}.spk_tc_L_z = (TCs{iS}.spk_tc_L - fr_mean) ./ fr_sd;
         spk_idx_L = nearest_idx3(S_L.t{iS}, linpos.L.tvec);
         
     end
     
     if isempty(S_R.t{iS})
-        TC{iS}.spk_R = [];
-        TC{iS}.spk_tc_R = [];
-        TC{iS}.spk_tc_R_z = [];
+        TCs{iS}.spk_R = [];
+        TCs{iS}.spk_tc_R = [];
+        TCs{iS}.spk_tc_R_z = [];
         spk_idx_R = [];
     else
-        TC{iS}.spk_R = interp1(linpos.R.tvec, linpos.R.data, S_R.t{iS}, 'linear');
-        TC{iS}.spk_h_R = histc(TC{iS}.spk_R', bins);
-        TC{iS}.spk_h_R = conv(TC{iS}.spk_h_R(1:end-1), gkernal, 'same');
-        TC{iS}.spk_tc_R = TC{iS}.spk_h_R./occ_R;
+        TCs{iS}.spk_R = interp1(linpos.R.tvec, linpos.R.data, S_R.t{iS}, 'linear');
+        TCs{iS}.spk_h_R = histc(TCs{iS}.spk_R', bins);
+        TCs{iS}.spk_h_R = conv(TCs{iS}.spk_h_R(1:end-1), gkernal, 'same');
+        TCs{iS}.spk_tc_R = TCs{iS}.spk_h_R./occ_R;
         
-        TC{iS}.spk_tc_R_z = (TC{iS}.spk_tc_R - fr_mean) ./ fr_sd;
+        TCs{iS}.spk_tc_R_z = (TCs{iS}.spk_tc_R - fr_mean) ./ fr_sd;
         spk_idx_R = nearest_idx3(S_R.t{iS}, linpos.R.tvec);
     end
     %% plot TCs
-    m = length(S.t);
-    n = 5;
-    
-    subplot(n,m,[iS m+iS m*2+iS])
-    c_ord = linspecer(6);
-    cla
-    hold on
-    if isempty(linpos.L.tvec)
-        tvec_L = [];
-    else
-        tvec_L = linpos.L.tvec - linpos.L.tvec(1);
-    end
-    if isempty(linpos.R.tvec)
-        tvec_R = [];
-    else
-        tvec_R = linpos.R.tvec - linpos.R.tvec(1);
-    end
-    
-    rectangle('position', [0, min([tvec_L, tvec_R]), 25,  max([tvec_L, tvec_R]) - min([tvec_L, tvec_R])], 'facecolor', [c_ord(2,:), .2], 'edgecolor', 'none')
-    rectangle('position', [25, min([tvec_L, tvec_R]), 5,  max([linpos.L.tvec, linpos.R.tvec]) - min([linpos.L.tvec, linpos.R.tvec])], 'facecolor', [c_ord(6,:), .2], 'edgecolor', 'none')
-    
-    rectangle('position', [30, min([tvec_L, tvec_R]), 20, max([tvec_L, tvec_R]) - min([tvec_L, tvec_R])], 'facecolor', [c_ord(3,:), .2], 'edgecolor', 'none')
-    rectangle('position', [50, min([tvec_L, tvec_R]), 20, max([tvec_L, tvec_R]) - min([tvec_L, tvec_R])], 'facecolor', [c_ord(5,:), .2], 'edgecolor', 'none')
-    rectangle('position', [70, min([tvec_L, tvec_R]), 20, max([tvec_L, tvec_R]) - min([tvec_L, tvec_R])], 'facecolor', [c_ord(4,:), .2], 'edgecolor', 'none')
-    rectangle('position', [90, min([tvec_L, tvec_R]), 10, max([tvec_L, tvec_R]) - min([tvec_L, tvec_R])], 'facecolor', [c_ord(1,:), .2], 'edgecolor', 'none')
-    
-    
-    hlinl = plot(linpos.L.data, tvec_L, '.', 'color', [0.7 0.7 .7]);
-    hlinls = plot(linpos.L.data(spk_idx_L), tvec_L(spk_idx_L), 'x', 'color', [0 0 1]);
-    
-    hlinr = plot(linpos.R.data, tvec_R, '.', 'color', [.7 0.7 0.7]);
-    hlinrs = plot(linpos.R.data(spk_idx_R),tvec_R(spk_idx_R),  'x', 'color', [1 0 0]);
-    ylim([min([tvec_L, tvec_R]), max([tvec_L, tvec_R])])
-    
-    % ylim([min([linpos.L.tvec, linpos.R.tvec]), max([linpos.L.tvec, linpos.R.tvec])]);
-    set(gca, 'YDir', 'reverse')
-    ylabel('time (s)')
-    % legend([hlinl, hlinr, hlinls, hlinrs], 'Linearized left trajectories', 'Linearized right trajectories', 'Left spikes', 'Right spikes', 'location', 'northoutside');
-    if isempty(spk_idx_L)
-        legend([ hlinrs], 'Right spikes', 'location', 'northoutside', 'Orientation', 'horizontal');
-    elseif isempty(spk_idx_R)
-        legend([ hlinls,], 'Left spikes', 'location', 'northoutside', 'Orientation', 'horizontal');
-        if ~isempty(spk_idx_L) &&  ~isempty(spk_idx_R)
-            legend([ hlinls, hlinrs], 'Left spikes', 'Right spikes', 'location', 'northoutside', 'Orientation', 'horizontal');
+    if cfg.plot
+        
+        m = length(S.t);
+        n = 5;
+        
+        subplot(n,m,[iS m+iS m*2+iS])
+        c_ord = linspecer(6);
+        cla
+        hold on
+        if isempty(linpos.L.tvec)
+            tvec_L = [];
+        else
+            tvec_L = linpos.L.tvec - min([linpos.L.tvec(1) linpos.R.tvec(1)]) ;
         end
-    end
-    set(gca, 'xtick', [12.5 27.5 40 60 80 95], 'xTickLabel', {'Start arm','Decision' 'Arm 1', 'Arm 2', 'Arm 3', 'Reward'})
-    if ~isempty(S_L.t{iS})
-        subplot(n,m,[m*3+iS])
-        cla
-        hold on
-        yyaxis left
-        plot(bin_c, occ_L,  '-', 'color', [.7 .7 .7])
-        ylim([min([occ_L occ_R]), max([occ_L occ_R])]);
-        set(gca, 'YColor', 'k')
-        ylabel('Occupancy L (s)')
-        yyaxis right
-        plot(bin_c,TC{iS}.spk_tc_L, '-', 'color', c_ord(2,:))
-        ylim([min([TC{iS}.spk_tc_L TC{iS}.spk_tc_R]), max([TC{iS}.spk_tc_L TC{iS}.spk_tc_R])]);
-        ylabel('firing rate (Hz)')
-        set(gca, 'YColor', c_ord(1,:))
+        if isempty(linpos.R.tvec)
+            tvec_R = [];
+        else
+            tvec_R = linpos.R.tvec - min([linpos.L.tvec(1) linpos.R.tvec(1)]) ;
+        end
+
+        rectangle('position', [0, min([tvec_L, tvec_R]), 25,  max([tvec_L, tvec_R]) - min([tvec_L, tvec_R])], 'facecolor', [c_ord(2,:), .2], 'edgecolor', 'none')
+        rectangle('position', [25, min([tvec_L, tvec_R]), 5,  max([linpos.L.tvec, linpos.R.tvec]) - min([linpos.L.tvec, linpos.R.tvec])], 'facecolor', [c_ord(6,:), .2], 'edgecolor', 'none')
+        
+        rectangle('position', [30, min([tvec_L, tvec_R]), 20, max([tvec_L, tvec_R]) - min([tvec_L, tvec_R])], 'facecolor', [c_ord(3,:), .2], 'edgecolor', 'none')
+        rectangle('position', [50, min([tvec_L, tvec_R]), 20, max([tvec_L, tvec_R]) - min([tvec_L, tvec_R])], 'facecolor', [c_ord(5,:), .2], 'edgecolor', 'none')
+        rectangle('position', [70, min([tvec_L, tvec_R]), 20, max([tvec_L, tvec_R]) - min([tvec_L, tvec_R])], 'facecolor', [c_ord(4,:), .2], 'edgecolor', 'none')
+        rectangle('position', [90, min([tvec_L, tvec_R]), 10, max([tvec_L, tvec_R]) - min([tvec_L, tvec_R])], 'facecolor', [c_ord(1,:), .2], 'edgecolor', 'none')
+        
+        
+        hlinl = plot(linpos.L.data, tvec_L, '.', 'color', [0.7 0.7 .7]);
+        hlinls = plot(linpos.L.data(spk_idx_L), tvec_L(spk_idx_L), 'x', 'color', [0 0 1]);
+        
+        hlinr = plot(linpos.R.data, tvec_R, '.', 'color', [.7 0.7 0.7]);
+        hlinrs = plot(linpos.R.data(spk_idx_R),tvec_R(spk_idx_R),  'x', 'color', [1 0 0]);
+        ylim([min([tvec_L, tvec_R]), max([tvec_L, tvec_R])])
+        
+        % ylim([min([linpos.L.tvec, linpos.R.tvec]), max([linpos.L.tvec, linpos.R.tvec])]);
+        set(gca, 'YDir', 'reverse')
+        ylabel('time (s)')
+        % legend([hlinl, hlinr, hlinls, hlinrs], 'Linearized left trajectories', 'Linearized right trajectories', 'Left spikes', 'Right spikes', 'location', 'northoutside');
+        if isempty(spk_idx_L)
+            legend([ hlinrs], 'Right spikes', 'location', 'northoutside', 'Orientation', 'horizontal');
+        elseif isempty(spk_idx_R)
+            legend([ hlinls,], 'Left spikes', 'location', 'northoutside', 'Orientation', 'horizontal');
+            if ~isempty(spk_idx_L) &&  ~isempty(spk_idx_R)
+                legend([ hlinls, hlinrs], 'Left spikes', 'Right spikes', 'location', 'northoutside', 'Orientation', 'horizontal');
+            end
+        end
         set(gca, 'xtick', [12.5 27.5 40 60 80 95], 'xTickLabel', {'Start arm','Decision' 'Arm 1', 'Arm 2', 'Arm 3', 'Reward'})
-    end
-    
-    if ~isempty(S_R.t{iS})
-        subplot(n,m,[m*4+iS])
-        cla
-        hold on
-        yyaxis left
-        plot(bin_c, occ_R,  '-', 'color', [.7 .7 .7])
-        ylim([min([occ_L occ_R]), max([occ_L occ_R])]);
-        set(gca, 'YColor', 'k')
-        ylabel('Occupancy R (s)')
-        yyaxis right
-        plot(bin_c,TC{iS}.spk_tc_R, '-', 'color', c_ord(1,:))
-        ylim([min([TC{iS}.spk_tc_L TC{iS}.spk_tc_R]), max([TC{iS}.spk_tc_L TC{iS}.spk_tc_R])]);
-        ylabel('firing rate (Hz)')
-        set(gca, 'YColor', c_ord(1,:))
-        set(gca, 'xtick', [12.5 27.5 40 60 80 95], 'xTickLabel', {'Start arm','Decision' 'Arm 1', 'Arm 2', 'Arm 3', 'Reward'})
+        xtickangle(25)
+        if ~isempty(S_L.t{iS})
+            subplot(n,m,[m*3+iS])
+            cla
+            hold on
+            yyaxis left
+            plot(bin_c, occ_L,  '-', 'color', [.7 .7 .7])
+            ylim([min([occ_L occ_R]), max([occ_L occ_R])]);
+            set(gca, 'YColor', 'k')
+            ylabel('Occupancy L (s)')
+            yyaxis right
+            plot(bin_c,TCs{iS}.spk_tc_L, '-', 'color', c_ord(2,:))
+            ylim([min([TCs{iS}.spk_tc_L TCs{iS}.spk_tc_R]), max([TCs{iS}.spk_tc_L TCs{iS}.spk_tc_R])]);
+            ylabel('firing rate (Hz)')
+            set(gca, 'YColor', c_ord(1,:))
+            set(gca, 'xtick', [12.5 27.5 40 60 80 95], 'xTickLabel', {'Start arm','Decision' 'Arm 1', 'Arm 2', 'Arm 3', 'Reward'})
+            xtickangle(25)
+        end
+        
+        if ~isempty(S_R.t{iS})
+            subplot(n,m,[m*4+iS])
+            cla
+            hold on
+            yyaxis left
+            plot(bin_c, occ_R,  '-', 'color', [.7 .7 .7])
+            ylim([min([occ_L occ_R]), max([occ_L occ_R])]);
+            set(gca, 'YColor', 'k')
+            ylabel('Occupancy R (s)')
+            yyaxis right
+            plot(bin_c,TCs{iS}.spk_tc_R, '-', 'color', c_ord(1,:))
+            ylim([min([TCs{iS}.spk_tc_L TCs{iS}.spk_tc_R]), max([TCs{iS}.spk_tc_L TCs{iS}.spk_tc_R])]);
+            ylabel('firing rate (Hz)')
+            set(gca, 'YColor', c_ord(1,:))
+            set(gca, 'xtick', [12.5 27.5 40 60 80 95], 'xTickLabel', {'Start arm','Decision' 'Arm 1', 'Arm 2', 'Arm 3', 'Reward'})
+            xtickangle(25)
+        end
     end
 end
 %% collect outputs
 
-% TC_out = [];
-% TC_out.TC = TC;
-% TC_out.
+TC_out = [];
+if exist('TCs')
+    TC_out.TCs = TCs;
+    TC_out.bin_c = bin_c;
+    TC_out.bin_ticks_lines = [0 25 30 50 70 90 100]; 
+    TC_out.bin_ticks =TC_out.bin_ticks_lines(1:end-1)+ (diff(TC_out.bin_ticks_lines)/2);  %[12.5 27.5 40 60 80 95];
+    TC_out.bin_tick_labels = {'Start arm','Decision' 'Arm 1', 'Arm 2', 'Arm 3', 'Reward'};
+end
+

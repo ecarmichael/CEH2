@@ -202,7 +202,6 @@ for iC = 1:length(file_list)
         % get the wave properties
         if exist('mWV', 'var')
             wave_prop = MS_get_wave_properties(this_S, [xrange(:,1) mWV],this_csc.tvec,  0);
-            
         end
         
         % ISI

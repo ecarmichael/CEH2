@@ -73,22 +73,28 @@ for iSub =1:length(subjects)
     sessions(cellfun('isempty', sessions)) = [];
     
 
-    for iS = 17:-1:1%length(sessions):-1:1 %length(sessions)
-        if strcmpi(sessions{iS}, 'M23_2021-08-13_D18')
+    for iS = length(sessions):-1:1 
+       
+        if strcmpi(sessions{iS}, 'M23_2021-08-13_D18') || ~contains(sessions{iS}, 'M')
             continue
         end
         close all
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
+        if ~exist('maze.mat')
+            continue
+        end
 %         dsubscreener_ec(cd, inter_dir);
 %         dsubscreener_ec_W_maze(cd, inter_dir);
         MS_Write_meta_dSub;
-        
-        dsubscreener_ec_W_maze(cd, inter_dir);
-        hypno = dSub_Sleep_screener; 
-        
-        save([data_dir filesep 'hypno_init.mat'], 'hypno', '-v7.3'); 
-        saveas(gcf, [data_dir filesep 'hypno_init.png'])
+        MS_dSub_space_screener([], cd, 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inter\Spatial_screening')
+%         dsubscreener_ec_W_maze(cd, inter_dir);
+
+% hypno
+%         hypno = dSub_Sleep_screener;  
+%         save([data_dir filesep 'hypno_init.mat'], 'hypno', '-v7.3'); 
+%         saveas(gcf, [data_dir filesep 'hypno_init.png'])
+
         close all
 %           M23_Clust_batch
           

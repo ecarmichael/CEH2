@@ -155,7 +155,6 @@ xlim([min([pos_L.data(1,:), pos_move.data(1,:)]), max([pos_L.data(1,:), pos_move
 ylim([min([pos_L.data(2,:), pos_move.data(2,:)]), max([pos_L.data(2,:), pos_move.data(2,:)])]); 
 
 
-
 % hold on
 % plot(P(:,1),P(:,2),'ko')
 % hold on
