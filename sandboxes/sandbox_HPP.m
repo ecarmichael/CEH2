@@ -9,7 +9,7 @@ cd(data_dir)
 %% load data
 
 cfg_lfp = [];
-cfg_lfp.fc = {'CSC4.ncs'};
+cfg_lfp.fc = {'CSC1.ncs'};
 
 csc = MS_LoadCSC(cfg_lfp);
 
@@ -24,12 +24,13 @@ for ii = length(evts.t{1}):-1:1
 end
 
 
-csc_r = restrict(csc, evts.t{1}(end-1), evts.t{2}(end-1)); 
-evts_r = restrict(evts, evts.t{1}(end-1), evts.t{2}(end-1)); 
+csc_r = restrict(csc, evts.t{1}(2), evts.t{1}(2) + 600); 
+evts_r = restrict(evts, evts.t{1}(2), evts.t{1}(2) + 600); 
 
 
-pulse = sort([evts_r.t{3} evts_r.t{4} evts_r.t{5}]); 
-pulseIV = iv(pulse, pulse+0.025); 
+pulse = unique(sort([evts_r.t{3} evts_r.t{4} evts_r.t{5} evts_r.t{6} evts_r.t{7} evts_r.t{8} evts_r.t{9} evts_r.t{10} evts_r.t{11} evts_r.t{12} evts_r.t{13} evts_r.t{14} evts_r.t{15} evts_r.t{16} evts_r.t{17} evts_r.t{18}])); 
+% pulse = unique(sort([evts_r.t{5} evts_r.t{7}, evts_r.t{12}, evts_r.t{7}]))
+pulseIV = iv(pulse-0.025, pulse); 
 %% detect SWRs in test recording
 
 cfg_swr = [];
@@ -69,10 +70,35 @@ cfg_swr.var.threshold = 1;
 
 [SWR_evts, SWR_filt, SWR_amp] = MS_get_LFP_events_sandbox(cfg_swr, csc_r);
 
-cfg_plot.display = 'tsd';
-PlotTSDfromIV(cfg_plot, SWR_evts, csc_r)
-
 SWR_centers = IVcenters(SWR_evts); 
+
+%% plot and check for pulse IDs
+close all
+cfg_plot.display = 'tsd';
+PlotTSDfromIV(cfg_plot, SWR_evts, csc_r);
+
+
+% vline(evts_r.t{3}, '-b')
+% vline(pulse, '--g')
+c_ord = linspecer(length(evts_r.t)); 
+for ii = 3:length(evts_r.t)
+    for jj = 1:length(evts_r.t{ii})
+        xline(evts_r.t{ii}(jj), '-', num2str(ii), 'color', c_ord(ii,:));
+    end
+% h.Color = c_ord(ii,:); 
+end
+% vline(evts_r.t{5}, '-.m')
+% vline(evts_r.t{6}, '--y')
+% vline(evts_r.t{7}, '--c')
+xlim([csc_r.tvec(1) csc_r.tvec(end)])
+
+x_t = get(gca, 'xtick');
+set(gca, 'xtick', csc_r.tvec(1): .1: csc_r.tvec(end))
+set(gca, 'xticklabel', (csc_r.tvec(1): .1: csc_r.tvec(end))-csc_r.tvec(1))
+
+xlim([csc_r.tvec(1)+346.5 csc_r.tvec(1)+347.5])
+ylim([-6*10^-4 6*10^-4])
+% 
 
 %% limit to event that overlap 
 

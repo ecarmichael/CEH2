@@ -87,9 +87,9 @@ emg_post = restrict(emg, blocks.Post_sleep(1), blocks.Post_sleep(2));
 %% Detect sleep
 
 
-
-hypno = dSub_Sleep_screener(csc_post, emg_post)
-
+tic
+    hypno = dSub_Sleep_screener(csc_post, emg_post); 
+toc
 
 %% SWR 
 
