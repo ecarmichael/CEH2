@@ -107,7 +107,7 @@ end
 file_list = dir([inter_dir filesep 'All_cells']);
 
 for filename = length(file_list):-1:1
-    if contains(file_list(filename).name(1),"M");
+    if contains(file_list(filename).name(1),"M")
         names{filename} = file_list(filename).name;
     else
         names{filename}= [];
