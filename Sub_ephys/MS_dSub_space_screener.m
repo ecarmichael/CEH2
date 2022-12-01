@@ -56,7 +56,8 @@ pos.data  = pos.data(1:2,:);
 pos.label = pos.label(1:2);
 load('maze.mat');
 
-load('C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess\MD3\Common_CoorD.mat')
+
+load([fileparts(data_dir) filesep 'Common_CoorD.mat'])
 
 if str2double(sess(2:end)) < 14
     Common_CoorD.CoorD_L.coord(1,:) = Common_CoorD.CoorD_L.coord(1,:) - 4;
@@ -149,7 +150,7 @@ S_R = restrict(S_w, R_iv);
 %% grab the linearized maze data TCs
 cfg_tc = [];
 cfg_tc.plot = 0;
-TC = dSub_gen_1d_TC(cfg_tc, cd);
+TC = dSub_gen_1d_TC(cfg_tc, cd, Common_CoorD);
 
 %% generate rate map
 
@@ -270,8 +271,8 @@ for iS = 1:length(S.t)
     OF_pos(1,x_rm_idx) = NaN;
     OF_pos(2,y_rm_idx) = NaN;
     
-    OF_pos_int(1,:) = fillmissing(OF_pos(1,:), 'linear');
-    OF_pos_int(2,:) = fillmissing(OF_pos(2,:), 'linear');
+    OF_pos_int(1,:) = OF_pos(1,:);%fillmissing(OF_pos(1,:), 'linear');
+    OF_pos_int(2,:) = OF_pos(2,:); %fillmissing(OF_pos(2,:), 'linear');
     
     
     %     figure(99)
