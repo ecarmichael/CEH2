@@ -1,4 +1,4 @@
-% function maze = MAZE_tracking_gui(data_dir, rec_idx)
+function maze = MAZE_tracking_gui(data_dir, rec_idx)
 %% MAZE_tracking_gui: loads the position and event data (NLX format)
 %
 %
@@ -21,14 +21,14 @@
 %
 %% initialize
 %
-% if nargin <1
-%     rec_idx = [];
-%     data_dir = cd;
-% elseif nargin < 2
-rec_idx = [];
-% end
+if nargin <1
+    rec_idx = [];
+    data_dir = cd;
+elseif nargin < 2
+    rec_idx = [];
+end
 
-% cd(data_dir)
+cd(data_dir)
 %% load the events and position,
 
 evts = LoadEvents([]);
@@ -200,7 +200,7 @@ end
 % ylim([min(pos.data(2,:)) max(pos.data(2,:))]);
 
 
-%% plot but for DLC
+%% plot for DLC
 
 %%  Check the events and split the trials into a summary plot.
 % figure(902)

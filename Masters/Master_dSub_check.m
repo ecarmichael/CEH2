@@ -12,8 +12,10 @@ mvdm_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'
 CEH2_dir = '/home/williamslab/Documents/Github/CEH2';
 ft_dir = '/home/williamslab/Documents/Github/fieldtrip';
 
-data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % office unix
-inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % office unix
+data_dir = '/home/williamslab/Williams Lab Dropbox/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % office unix
+inter_dir = '/home/williamslab/Williams Lab Dropbox/Williams Lab Team Folder/Eric/dSubiculum/inter'; % office unix
+
+
 
 %% home linux.
 
@@ -89,6 +91,12 @@ for iSub =1:length(subjects)
 %         dsubscreener_ec_W_maze(cd, inter_dir);
 % %         MS_Write_meta_dSub;
 % %         MS_dSub_space_screener([], cd, 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inter\Spatial_screening')
+
+%         dsubscreener_ec(cd, inter_dir);
+
+
+        MS_Write_meta_dSub;
+        MS_dSub_space_screener([], cd,  [inter_dir filesep 'Spatial_screening'])
 %         dsubscreener_ec_W_maze(cd, inter_dir);
 
 % hypno
@@ -108,7 +116,7 @@ end
 file_list = dir([inter_dir filesep 'All_cells']);
 
 for filename = length(file_list):-1:1
-    if contains(file_list(filename).name(1),"M");
+    if contains(file_list(filename).name(1),"M")
         names{filename} = file_list(filename).name;
     else
         names{filename}= [];

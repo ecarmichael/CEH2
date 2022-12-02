@@ -1,4 +1,4 @@
-function TC_out = dSub_gen_1d_TC(cfg_in, data_dir)
+function TC_out = dSub_gen_1d_TC(cfg_in, data_dir, Common_CoorD)
 %% MS_gen_1d_TC: generate a 1d tuning curve by linea
 %
 %
@@ -22,8 +22,12 @@ function TC_out = dSub_gen_1d_TC(cfg_in, data_dir)
 if nargin < 1
     cfg_in = [];
     data_dir = cd;
-elseif nargin <2
+    Common_CoorD = [];
+elseif nargin ==2
     data_dir = cd;
+    Common_CoorD = [];
+elseif nargin < 3
+    Common_CoorD = [];
 end
 
 cd(data_dir)
@@ -64,7 +68,10 @@ pos.label = pos.label(1:2);
 load('maze.mat');
 
 % meta = MS_Load_meta();
-load('C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess\MD3\Common_CoorD.mat')
+if isempty(Common_CoorD)
+    load('C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess\MD3\Common_CoorD.mat')
+end
+
 if str2double(sess(2:end)) < 14
     Common_CoorD.CoorD_L.coord(1,:) = Common_CoorD.CoorD_L.coord(1,:) - 4; 
     Common_CoorD.CoorD_R.coord(1,:) = Common_CoorD.CoorD_R.coord(1,:) - 4; 
