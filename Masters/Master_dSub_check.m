@@ -30,8 +30,8 @@ mvdm_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; %
 CEH2_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2'; % where the multisite repo can be found
 ft_dir = 'C:\Users\ecarm\Documents\GitHub\fieldtrip'; 
 
-inter_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inter';
-data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inProcess'; 
+inter_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\dSubiculum\inter';
+data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\dSubiculum\inProcess'; 
 
 %% Erin's PC
 % data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team
@@ -82,12 +82,13 @@ for iSub =1:length(subjects)
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
         if ~exist('maze.mat')
-            continue
+            MAZE_tracking_gui
+%             continue
         end
 %         dsubscreener_ec(cd, inter_dir);
 %         dsubscreener_ec_W_maze(cd, inter_dir);
-        MS_Write_meta_dSub;
-        MS_dSub_space_screener([], cd, 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inter\Spatial_screening')
+% %         MS_Write_meta_dSub;
+% %         MS_dSub_space_screener([], cd, 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inter\Spatial_screening')
 %         dsubscreener_ec_W_maze(cd, inter_dir);
 
 % hypno

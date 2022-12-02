@@ -203,26 +203,26 @@ end
 %% plot but for DLC
 
 %%  Check the events and split the trials into a summary plot.
-figure(902)
-clf
-types = {'FR correct', 'FL correct', 'CR correct', 'CR error', 'CL correct', 'CL error'};
-c_ord = [175, 255, 10;...
-    170 75 170;...
-    10, 186, 140;...
-    200, 0 , 0;...
-    75 125 200;...
-    255, 0 , 0]/255;
-
-for ii  = 1:length(maze.trials.types)
-    subplot(4,4,ii)
-    hold on
-    plot(behav.position(:,1), behav.position(:,2), '.', 'color', [.7 .7 .7 .2])
-    
-    plot(behav.position(nearest_idx3(maze.trials.times(ii,1), behav.time):nearest_idx3(maze.trials.times(ii,2), behav.time),1), behav.position(nearest_idx3(maze.trials.times(ii,1), behav.time):nearest_idx3(maze.trials.times(ii,2), behav.time),2), '.',...
-        'color', c_ord(find(contains(types, maze.trials.types{ii})),:));
-    ht = text(min(behav.position(:,1))*1.1, max(behav.position(:,2)*.98), [maze.trials.types{ii} '-' num2str(maze.trials.times(ii,1),6)]);
-    ht = text(min(behav.position(:,1))*1.1, max(behav.position(:,2)*.90), ['         '  num2str(maze.trials.times(ii,2),6)]);
-    
-    xlim([min(behav.position(:,1)) max(behav.position(:,1))]);
-    ylim([min(behav.position(:,2)) max(behav.position(:,2))]);
-end
+% figure(902)
+% clf
+% types = {'FR correct', 'FL correct', 'CR correct', 'CR error', 'CL correct', 'CL error'};
+% c_ord = [175, 255, 10;...
+%     170 75 170;...
+%     10, 186, 140;...
+%     200, 0 , 0;...
+%     75 125 200;...
+%     255, 0 , 0]/255;
+% 
+% for ii  = 1:length(maze.trials.types)
+%     subplot(4,4,ii)
+%     hold on
+%     plot(behav.position(:,1), behav.position(:,2), '.', 'color', [.7 .7 .7 .2])
+%     
+%     plot(behav.position(nearest_idx3(maze.trials.times(ii,1), behav.time):nearest_idx3(maze.trials.times(ii,2), behav.time),1), behav.position(nearest_idx3(maze.trials.times(ii,1), behav.time):nearest_idx3(maze.trials.times(ii,2), behav.time),2), '.',...
+%         'color', c_ord(find(contains(types, maze.trials.types{ii})),:));
+%     ht = text(min(behav.position(:,1))*1.1, max(behav.position(:,2)*.98), [maze.trials.types{ii} '-' num2str(maze.trials.times(ii,1),6)]);
+%     ht = text(min(behav.position(:,1))*1.1, max(behav.position(:,2)*.90), ['         '  num2str(maze.trials.times(ii,2),6)]);
+%     
+%     xlim([min(behav.position(:,1)) max(behav.position(:,1))]);
+%     ylim([min(behav.position(:,2)) max(behav.position(:,2))]);
+% end
