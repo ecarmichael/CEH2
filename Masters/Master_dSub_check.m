@@ -84,8 +84,14 @@ for iSub =1:length(subjects)
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
         if ~exist('maze.mat')
-            MAZE_tracking_gui
-%             continue
+            pos = MAZE_tracking_gui;
+            Maze_GUI_NLX_sandbox
+            while ~exist('GUI_states', 'var') % hold while maze scoring.
+                pause(0.1);
+            end
+            MAZE_check_gui(pos, GUI_states, GUI_state_times)
+            %             continue
+            clear pos GUI_*
         end
 %         dsubscreener_ec(cd, inter_dir);
 %         dsubscreener_ec_W_maze(cd, inter_dir);
