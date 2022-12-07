@@ -162,32 +162,32 @@ linpos.R = LinearizePos([],pos_R, coord.R);
 % hold on
 % hl = plot(coordL_cm.coord(1,:), coordL_cm.coord(2,:), '.b');
 % h2 = plot(coordR_cm.coord(1,:), coordR_cm.coord(2,:), '.r');
-
+% 
 % xlim(x_lim);
 % ylim(y_lim);
-
+% 
 % spk_idx_L = nearest_idx3(S_L.t{1}, linpos.L.tvec);
 % spk_idx_R = nearest_idx3(S_R.t{1}, linpos.R.tvec);
-%
+% 
 % subplot(2,2,4)
 % c_ord = linspecer(6);
 % cla
 % hold on
 % rectangle('position', [min([linpos.L.tvec, linpos.R.tvec]), 0,  max([linpos.L.tvec, linpos.R.tvec]) - min([linpos.L.tvec, linpos.R.tvec]), 25], 'facecolor', [c_ord(2,:), .2], 'edgecolor', 'none')
 % rectangle('position', [min([linpos.L.tvec, linpos.R.tvec]), 25,  max([linpos.L.tvec, linpos.R.tvec]) - min([linpos.L.tvec, linpos.R.tvec]), 5], 'facecolor', [c_ord(6,:), .2], 'edgecolor', 'none')
-%
+% 
 % rectangle('position', [min([linpos.L.tvec, linpos.R.tvec]), 30,  max([linpos.L.tvec, linpos.R.tvec]) - min([linpos.L.tvec, linpos.R.tvec]), 20], 'facecolor', [c_ord(3,:), .2], 'edgecolor', 'none')
 % rectangle('position', [min([linpos.L.tvec, linpos.R.tvec]), 50,  max([linpos.L.tvec, linpos.R.tvec]) - min([linpos.L.tvec, linpos.R.tvec]), 20], 'facecolor', [c_ord(5,:), .2], 'edgecolor', 'none')
 % rectangle('position', [min([linpos.L.tvec, linpos.R.tvec]), 70,  max([linpos.L.tvec, linpos.R.tvec]) - min([linpos.L.tvec, linpos.R.tvec]), 20], 'facecolor', [c_ord(4,:), .2], 'edgecolor', 'none')
 % rectangle('position', [min([linpos.L.tvec, linpos.R.tvec]), 90,  max([linpos.L.tvec, linpos.R.tvec]) - min([linpos.L.tvec, linpos.R.tvec]), 10], 'facecolor', [c_ord(1,:), .2], 'edgecolor', 'none')
-%
+% 
 % hlinl = plot(linpos.L.tvec, linpos.L.data, '.', 'color', [0.2 0.2 .2]);
 % hlinls = plot(linpos.L.tvec(spk_idx_L), linpos.L.data(spk_idx_L), 'x', 'color', [0 0 1]);
-%
+% 
 % xlim([min([linpos.L.tvec, linpos.R.tvec]), max([linpos.L.tvec, linpos.R.tvec])])
 % hlinr = plot(linpos.R.tvec, linpos.R.data, '.', 'color', [.2 0.2 0.2]);
 % hlinrs = plot(linpos.R.tvec(spk_idx_R), linpos.R.data(spk_idx_R), 'x', 'color', [1 0 0]);
-%
+% 
 % xlim([min([linpos.L.tvec, linpos.R.tvec]), max([linpos.L.tvec, linpos.R.tvec])]);
 % legend([hlinl, hlinr, hlinls, hlinrs], 'Linearized left trajectories', 'Linearized right trajectories', 'Left spikes', 'Right spikes');
 % yyaxis right
@@ -209,7 +209,7 @@ occ_R(occ_R==0) = NaN;
 occ_R = conv(occ_R, gkernal, 'same');
 %%
 if cfg.plot
-    figure(102)
+    figure(1002)
     clf
 end
 for iS = 1:length(S.t)
