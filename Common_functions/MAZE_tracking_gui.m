@@ -75,6 +75,7 @@ pos = restrict(pos, evts.t{s_rec_idx}(rec_idx), evts.t{e_rec_idx}(rec_idx));
 
 Maze_GUI_NLX_sandbox
 
+waitfor(0, 'Userdata', 'GUI_states');
 %% convert to trials
 
 box_in = GUI_state_times(contains(GUI_states,  'Box_in'));
