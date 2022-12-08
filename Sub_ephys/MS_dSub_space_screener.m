@@ -179,7 +179,7 @@ for iS = 1:length(S.t)
     plot(Common_CoorD.CoorD_R.coord(1,:), Common_CoorD.CoorD_R.coord(2,:), '--', 'color', c_ord(2,:))
     % spike characteristics
     try % see if the waveform file exists and works.
-        load([S.label{iS}(1:end-2) '-wv.mat'], 'mWV', 'xrange')
+        load([S.label{iS}(1:end-4) '-wv.mat'], 'mWV', 'xrange')
         
         subplot(2,6,1:3);
         hold on
@@ -257,7 +257,7 @@ for iS = 1:length(S.t)
         
         imagescnan(TC.bin_c, 1:2, [this_tc.spk_tc_L; this_tc.spk_tc_R])
         cb = colorbar;
-        set(gca, 'XTick', TC.bin_ticks, 'XTickLabel', TC.bin_tick_labels)
+        set(gca, 'XTick', TC.bin_ticks, 'XTickLabel', TC.bin_tick_labels, 'ytick', 1:2, 'YTickLabel', {'Right', 'Left'});
         vline(TC.bin_ticks_lines(2:end), 'r'); 
         cb=colorbar; cb.Label.String = 'rate (Hz)'; cb.Ticks = [0 cb.Ticks(end)];
         xtickangle(45)
