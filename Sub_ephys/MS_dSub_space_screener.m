@@ -55,6 +55,10 @@ pos = MS_LoadPos(cfg_pos);
 pos.data  = pos.data(1:2,:);
 pos.label = pos.label(1:2);
 load('maze.mat');
+if length(maze.events.Box_in(:,1)) < 4
+    fprintf('Skipping due to low number of trials (n=%d)\n', length(maze.events.Box_in(:,1)))
+return
+end
 
 
 load([fileparts(data_dir) filesep 'Common_CoorD.mat'])
@@ -71,8 +75,12 @@ S = LoadSpikes(cfg_S);
 
 % remove low quality cells
 for iS = length(S.t):-1:1
-    if strcmp(S.label{iS}(end-2), '5')
+    if strcmp(S.label{iS}(end-2), '5')  
         fprintf('Removing cell: %s due to low quality (%s)\n', S.label{iS}, S.label{iS}(end-2))
+        S.t(iS) = [];
+        S.label(iS) = [];
+    elseif length(S.t{iS}) < 200
+        fprintf('Removing cell: %s due to low number of spikes (%d)\n', S.label{iS},S.t{iS})
         S.t(iS) = [];
         S.label(iS) = [];
     end
@@ -120,6 +128,7 @@ c_ord = linspecer(4);
 R_idx = contains( maze.trials.types, {'FR correct'; 'CR correct'; 'CL error'});
 L_idx = contains( maze.trials.types, {'FL correct'; 'CL correct'; 'CR error'});
 
+
 if length(maze.events.Box_in(:,1)) < length(maze.trials.times(:,2))
     % add box to trials
     R_idx = R_idx(1:length(maze.events.Box_in(:,1)));
@@ -129,6 +138,13 @@ if length(maze.events.Box_in(:,1)) < length(maze.trials.times(:,2))
     R_iv = iv(maze.events.Box_in(R_idx,1), maze.trials.times(R_idx,2)+5);
     L_iv = iv(maze.events.Box_in(L_idx,1), maze.trials.times(L_idx,2)+5);
     
+elseif length(maze.events.Box_in(:,1)) > length(maze.trials.times(:,2))
+     R_idx = R_idx(1:length(maze.trials.times(:,2)));
+    L_idx = L_idx(1:length(maze.trials.times(:,2)));
+    
+    W_iv = iv(maze.events.Box_in(1:length(maze.trials.times(:,1)),1), maze.trials.times(:,2)+5);
+    R_iv = iv(maze.events.Box_in(R_idx,1), maze.trials.times(R_idx,2)+5);
+    L_iv = iv(maze.events.Box_in(L_idx,1), maze.trials.times(L_idx,2)+5);
 else
     
     % add box to trials
@@ -254,10 +270,15 @@ for iS = 1:length(S.t)
     if ~isempty(TC)
         subplot(2,6,7:8);
         this_tc = TC.TCs{iS};
-        
+        if isempty(this_tc.spk_tc_L)
+            this_tc.spk_tc_L = nan(size(this_tc.spk_tc_R)); 
+        end
+        if isempty(this_tc.spk_tc_R)
+            this_tc.spk_tc_R = nan(size(this_tc.spk_tc_L)); 
+        end
         imagescnan(TC.bin_c, 1:2, [this_tc.spk_tc_L; this_tc.spk_tc_R])
         cb = colorbar;
-        set(gca, 'XTick', TC.bin_ticks, 'XTickLabel', TC.bin_tick_labels, 'ytick', 1:2, 'YTickLabel', {'Right', 'Left'});
+        set(gca, 'XTick', TC.bin_ticks, 'XTickLabel', TC.bin_tick_labels, 'ytick', 1:2, 'YTickLabel', {'Right', 'Left'}, 'color', 'k');
         vline(TC.bin_ticks_lines(2:end), 'r'); 
         cb=colorbar; cb.Label.String = 'rate (Hz)'; cb.Ticks = [0 cb.Ticks(end)];
         xtickangle(45)

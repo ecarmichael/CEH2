@@ -74,7 +74,7 @@ for iSub =1:length(subjects)
     end
     sessions(cellfun('isempty', sessions)) = [];
     
-
+%%
     for iS = length(sessions):-1:1 
        
         if strcmpi(sessions{iS}, 'M23_2021-08-13_D18') || ~contains(sessions{iS}, 'M')
@@ -84,25 +84,25 @@ for iSub =1:length(subjects)
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
         if ~exist('maze.mat')
-            pos = MAZE_tracking_gui;
-            Maze_GUI_NLX_sandbox
-            while ~exist('GUI_states', 'var') % hold while maze scoring.
-                pause(0.1);
-            end
-            MAZE_check_gui(pos, GUI_states, GUI_state_times)
-            %             continue
-            clear pos GUI_*
+            continue
+%             pos = MAZE_tracking_gui;
+%             Maze_GUI_NLX_sandbox
+%             while ~exist('GUI_states', 'var') % hold while maze scoring.
+%                 pause(0.1);
+%             end
+%             MAZE_check_gui(pos, GUI_states, GUI_state_times)
+%             %             continue
+%             clear pos GUI_*
         end
 %         dsubscreener_ec(cd, inter_dir);
 %         dsubscreener_ec_W_maze(cd, inter_dir);
-% %         MS_Write_meta_dSub;
 % %         MS_dSub_space_screener([], cd, 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inter\Spatial_screening')
 
 %         dsubscreener_ec(cd, inter_dir);
 
 
         MS_Write_meta_dSub;
-        MS_dSub_space_screener([], cd,  [inter_dir filesep 'Spatial_screening'])
+        MS_dSub_space_screener([], cd,  [inter_dir filesep 'Spatial_screening_26'])
 %         dsubscreener_ec_W_maze(cd, inter_dir);
 
 % hypno
