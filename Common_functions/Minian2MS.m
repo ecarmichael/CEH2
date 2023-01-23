@@ -1,20 +1,20 @@
-function ms = Minian2MS(data_dir)
+function ms = Minian2MS(data_dir, plot_flag)
 %% Minian2Mat: Read the netCDF output from Minian. based on function found here: https://groups.google.com/g/miniscope/c/fW7xGqWLd4E
 %
 %
 %
-%    Inputs: 
+%    Inputs:
 %    - data_dir: [string]  path to data
 %
 %
 %
-%    Outputs: 
-%    - ms: [struct] contains the outputs from Minian 
+%    Outputs:
+%    - ms: [struct] contains the outputs from Minian
 %
 %
 %
 %
-% EC 2022-12-18   initial version 
+% EC 2022-12-18   initial version
 %
 %
 %
@@ -22,92 +22,145 @@ function ms = Minian2MS(data_dir)
 
 if nargin <1
     data_dir = cd;
+    plot_flag = 1;
+elseif nargin <2
+    plot_flag = 1;
 end
 
-if ~isempty(dir('*.nc'))
+if isempty(dir('*.nc'))
     error('No .nc file detected in current directory')
 end
 
 %% load everything
-fname = [data_dir filesep 'minian_dataset.nc']; 
+fname = [data_dir filesep 'minian_dataset.nc'];
 ms = [];
 
-ms.SFP  = ncread(fname,'A');                  
+ms.SFP  = ncread(fname,'A');
+%compute spf centroids
+for ii = size(ms.SFP, 3):-1:1
+    ilabel = logical(imfill((ms.SFP(:,:,ii)), 'holes'));
+    c_out = regionprops(ilabel,'centroid');
+    
+    ms.centroids(:,ii) = c_out.Centroid;
+end
+
 ms.Deconv  = ncread(fname,'C');
 ms.Spikes  = ncread(fname,'S');
-ms.c0 = ncread(fname,'c0');
+ms.c0 = ncread(fname,'c0'); % convolved traces?
 ms.background = ncread(fname,'b');
 ms.b0 = ncread(fname,'b0');
 ms.background_trace = ncread(fname,'f');
-% RawTraces = ncread(fname,'YrA');
+ms.RawTraces = ncread(fname,'YrA');
 
-ms.frame = ncread(fname,'frame');
+ms.frame = double(ncread(fname,'frame'));
 
-ms.units = ncread(fname,'unit_id');
-ms.unit_labels = ncread(fname,'unit_labels');
-ms.unit_labels = ms.unit_labels+1; 
+ms.units = double(ncread(fname,'unit_id'));
+ms.unit_labels = double(ncread(fname,'unit_labels'));
+ms.unit_labels = ms.unit_labels+1;
 
 ms.max_proj = ncread(fname,'max_proj');
 
 
 %Less usefull variables: height, width, frame, motion
-ms.height = ncread(fname,'height');
-ms.width = ncread(fname,'width');
-ms.motion = ncread(fname,'motion');
+ms.height = double(ncread(fname,'height'));
+ms.width = double(ncread(fname,'width'));
+ms.motion = double(ncread(fname,'motion'));
+
 
 %Variables; animal, session, shift_dim are of an unsupported datatype and
 % cannot be extracted with ncread
 
 
-%% Make version of variables with bad cells (label =-1) removed
-indx = 0 <= ms.unit_labels;
-
-ids = unit_labels(indx);
-A = ms.SFP(:,:,indx);
-C = ms.RawTraces(:,indx);
-S = ms.Sdata(:,indx);
-c0 = ms.c0data(:,indx);
+% %% Make version of variables with bad cells (label =-1) removed
+% indx = 0 <= ms.unit_labels;
+%
+% ids = ms.unit_labels(indx);
+% A = ms.SFP(:,:,indx);
+% C = ms.RawTraces(:,indx);
+% S = ms.Sdata(:,indx);
+% c0 = ms.c0data(:,indx);
 % YrA = ms.YrAdata(:,indx);
 
 %% quick plot to check data
 
-if plot_flag 
+if plot_flag
     figure(1919)
     clf
-        c_ord = linspecer(10); 
-
+    if length(ms.units) < 20
+        nCells  = length(ms.units);
+    else
+        nCells = 20;
+    end
+    c_ord = linspecer(nCells);
+    
     subplot(2,2,2)
     imagesc(mean(ms.SFP(:,:,:),3))
     hold on
-    for ii = 1:10
-        [row, col] = find(ms.SFP(:,:,ii) == max(max(ms.SFP(:,:,ii)))); 
+
+    for ii = 1:nCells
+        [row, col] = find(ms.SFP(:,:,ii) == max(max(ms.SFP(:,:,ii))));
         scatter(col, row,50, 'MarkerEdgeColor', c_ord(ii,:), 'LineWidth', 2)
     end
-    
-    subplot(2,2,[1 3])
-    hold on
-    for ii = 1:10
-        plot(ms.frame, ms.Deconv(:,ii)+ii*10,'color', c_ord(ii,:), 'linewidth', 2)
-        plot(ms.frame, (ms.Spikes(:,ii)*5)+ii*10,'color', 'k')
+    title(['nCells: ' num2str(length(ms.units))]);
+    xlim([min(ms.centroids(1,:))-min(ms.centroids(1,:))*.2  max(ms.centroids(1,:))+max(ms.centroids(1,:))*.2])
+    ylim([min(ms.centroids(2,:))-min(ms.centroids(2,:))*.2  max(ms.centroids(2,:))+max(ms.centroids(2,:))*.2])
 
-    end
-    set(gca,'ytick', 0:10:100, 'YTickLabel', 0:11)
-    
-     subplot(2,2,4)
+    subplot(2,2,4)
+    cla
+    all_cord = parula(floor(length(ms.units)*1.2));%zeros(length(ms.units),3);%repmat(linspecer(5), 100, 1); 
     hold on
-    c_ord = linspecer(10); 
-    for ii = 1:10
-        plot(ms.frame, ms.c0(:,ii)+ii*10,'color', c_ord(ii,:))
+    mult_fac = 5; 
+    for ii = 1:length(ms.units)
+        plot(ms.frame*(1/30), zscore(ms.Deconv(:,ii))+ii*mult_fac,  'color', all_cord(ii,:), 'linewidth', 1.5)
+
+%         plot(ms.frame*(1/30), zscore(ms.Deconv(:,ii))+ii*10,'color', all_cord(ii,:), 'linewidth', 1)
+%         plot(ms.frame*(1/30), (ms.Spikes(:,ii)*5)+ii*10,'color', 'k')
+        
     end
+    title('zscored deconvolved traces (all cells)')
+    ylabel('cell ID')
+    xlabel('time (s)')
+    set(gca,'ytick', 0:100:length(ms.units)*mult_fac, 'YTickLabel', 0:mult_fac:length(ms.units)+1, 'TickDir', 'out')
+    ylim([mult_fac (length(ms.units)+2)*mult_fac])
+    xlim([ms.frame(1)*(1/30) ms.frame(end)*(1/30)])
+    
+    
+      subplot(2,2,[1 3])
+    hold on
+    for ii = 1:nCells
+        plot(ms.frame*(1/30), ms.RawTraces(:,ii)+ii*10,'color', [0.8 0.8 0.8], 'linewidth', 1)
+        plot(ms.frame*(1/30), ms.Deconv(:,ii)+ii*10,'color', c_ord(ii,:), 'linewidth', 2)
+        plot(ms.frame*(1/30), (ms.Spikes(:,ii)*5)+ii*10,'color', 'k')
+        
+    end
+    title('Denoise and deconvolved traces for sample cells')
+    ylabel('cell ID')
+    xlabel('time (s)')
+    set(gca,'ytick', 0:10:nCells*10, 'YTickLabel', 0:nCells+1, 'TickDir', 'out')
+    ylim([10 (nCells+2)*10])
+    xlim([ms.frame(1)*(1/30) ms.frame(end)*(1/30)])
+    
+%     subplot(2,2,4)
+%     hold on
+%     for ii = 1:nCells
+%         plot(ms.frame, ms.c0(:,ii)+ii,'color', c_ord(ii,:))
+%     end
+%     title('Convolved traces for sample cells')
+%     xlabel('cell ID')
+%     ylabel('time (s)')
+maximize
+saveas(gcf, 'Minian_Screener.png');
+saveas(gcf, 'Minian_Screener.fig')
+
 end
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
 end
