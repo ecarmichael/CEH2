@@ -70,6 +70,16 @@ ms.height = double(ncread(fname,'height'));
 ms.width = double(ncread(fname,'width'));
 ms.motion = double(ncread(fname,'motion'));
 
+% load the timestamps. 
+TS = readtable('timeStamps.csv');
+
+tvec = table2array(TS(:,2));
+
+% correct for offsets if needed
+if tvec(1) ~= 0
+    tvec = tvec+abs(tvec(1));
+end
+ms.tvec = tvec./1000; % convert to seconds
 
 %Variables; animal, session, shift_dim are of an unsupported datatype and
 % cannot be extracted with ncread
@@ -115,7 +125,7 @@ if plot_flag
     hold on
     mult_fac = 5; 
     for ii = 1:length(ms.units)
-        plot(ms.frame*(1/30), zscore(ms.Deconv(:,ii))+ii*mult_fac,  'color', all_cord(ii,:), 'linewidth', 1.5)
+        plot(ms.tvec, zscore(ms.Deconv(:,ii))+ii*mult_fac,  'color', all_cord(ii,:), 'linewidth', 1.5)
 
 %         plot(ms.frame*(1/30), zscore(ms.Deconv(:,ii))+ii*10,'color', all_cord(ii,:), 'linewidth', 1)
 %         plot(ms.frame*(1/30), (ms.Spikes(:,ii)*5)+ii*10,'color', 'k')
@@ -126,15 +136,15 @@ if plot_flag
     xlabel('time (s)')
     set(gca,'ytick', 0:100:length(ms.units)*mult_fac, 'YTickLabel', (0:100:length(ms.units)*mult_fac)/mult_fac, 'TickDir', 'out')
     ylim([mult_fac (length(ms.units)+2)*mult_fac])
-    xlim([ms.frame(1)*(1/30) ms.frame(end)*(1/30)])
+    xlim([ms.tvec(1) ms.tvec(end)])
     
     
       subplot(2,2,[1 3])
     hold on
     for ii = 1:nCells
-        plot(ms.frame*(1/30), ms.RawTraces(:,ii)+ii*10,'color', [0.8 0.8 0.8], 'linewidth', 1)
-        plot(ms.frame*(1/30), ms.Deconv(:,ii)+ii*10,'color', c_ord(ii,:), 'linewidth', 2)
-        plot(ms.frame*(1/30), (ms.Spikes(:,ii)*5)+ii*10,'color', 'k')
+        plot(ms.tvec, ms.RawTraces(:,ii)+ii*10,'color', [0.8 0.8 0.8], 'linewidth', 1)
+        plot(ms.tvec, ms.Deconv(:,ii)+ii*10,'color', c_ord(ii,:), 'linewidth', 2)
+        plot(ms.tvec, (ms.Spikes(:,ii)*5)+ii*10,'color', 'k')
         
     end
     title('Denoise and deconvolved traces for sample cells')
@@ -142,7 +152,7 @@ if plot_flag
     xlabel('time (s)')
     set(gca,'ytick', 0:10:nCells*10, 'YTickLabel', 0:nCells+1, 'TickDir', 'out')
     ylim([10 (nCells+2)*10])
-    xlim([ms.frame(1)*(1/30) ms.frame(end)*(1/30)])
+    xlim([ms.tvec(1) ms.tvec(end)])
     
 %     subplot(2,2,4)
 %     hold on
