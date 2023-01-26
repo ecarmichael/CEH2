@@ -1,4 +1,4 @@
-function [vec_tc, hd_tc, hd_bins] = MS_speed_HD(cfg_in, S, pos,spd)
+function [vec_tc, hd_tc, hd_bins] = MS_speed_HD_v4(cfg_in, S, pos,spd)
 %% MS_speed_HD:
 %
 %
@@ -31,13 +31,8 @@ cfg_def.smooth_sd = .2; % small smoothing
 
 cfg = ProcessConfig2(cfg_def, cfg_in);
 
-%%      
-% check if the data is in rad or deg.
-if max(pos.data(3,:)) <= pi && min(pos.data(3,:)) >= -pi
-    pos.data(3,:) = rad2deg(pos.data(3,:));
-end
+%%         
 if cfg.interp
-    
     keep_idx = (pos.data(3,:) ~= 0) & (pos.data(3,:) <= 360); % remove idx = 0.  Seems to be default state for NLX when unsure of dir.
     jumps = [0 rad2deg(circ_dist(deg2rad(pos.data(3,2:end)), deg2rad(pos.data(3,1:end-1))))]; % catch big jumps in HD angle
     keep_idx = keep_idx & abs(jumps) < cfg.jump_thresh;
@@ -100,7 +95,7 @@ end
 % get the pure HD signal
 [occ_h, hd_edges] = histcounts(pos.data(3,:),360/cfg.hd_bins);
 spk_h = histcounts(spk_ang,360/cfg.hd_bins);
-hd_tc = spk_h./ occ_h .* mode(diff(pos.tvec));
+hd_tc = spk_h./ occ_h .* mode(diff(spd.tvec));
 
 % get the speed profile
 

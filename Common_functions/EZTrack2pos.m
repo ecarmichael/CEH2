@@ -113,9 +113,9 @@ TS = readtable('timeStamps.csv');
 tvec = table2array(TS(:,2));
 
 % correct for offsets if needed
-if tvec(1) ~= 0
-    tvec = tvec+abs(tvec(1));
-end
+% if tvec(1) ~= 0
+%     tvec = tvec+abs(tvec(1));
+% end
 tvec = tvec./1000; % convert to seconds
 %% convert to pos TSD
 

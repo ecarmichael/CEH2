@@ -123,8 +123,8 @@ for iSub = 1:length(sub_list)
             %            continue
         elseif exist([maze_dir filesep scope_id filesep 'minian_ms.mat'], 'file')
             fprintf('<strong> minian_ms found in</strong> %s', [maze_dir filesep scope_id])
-            load([maze_dir filesep scope_id filesep 'minian_ms']);
-            Maze.minianms = minianms;
+            load([maze_dir filesep scope_id filesep 'minian_ms.mat'], 'ms');
+            Maze.minianms = ms; clear ms; 
         elseif exist([maze_dir filesep scope_id filesep 'minian_dataset.nc'], 'file') && ~exist([maze_dir filesep scope_id filesep 'minian_ms.mat'], 'file')
             fprintf('<strong> minian_dataset.nc found in</strong> %s', [maze_dir filesep scope_id])
             
@@ -139,7 +139,7 @@ for iSub = 1:length(sub_list)
         elseif exist([maze_dir filesep scope_id filesep 'headOrientation.csv'], 'file')
             fprintf('<strong> Processing HeadOrientation.csv found in</strong> %s', [maze_dir filesep scope_id])
             
-            Maze.HD = MS_Load_v4HD([maze_dir filesep scope_id], 0);
+            [Maze.HD, Maze.spd] = MS_Load_v4HD([maze_dir filesep scope_id], 0);
         end
         
          % check for processed tracking
@@ -149,8 +149,12 @@ for iSub = 1:length(sub_list)
         elseif exist([maze_dir filesep scope_id filesep '0_LocationOutput.csv'], 'file')
             fprintf('<strong> Processing 0_LocationOutput.csv found in</strong> %s', [maze_dir filesep scope_id])
             
-            Maze.HD = MS_Load_v4HD([maze_dir filesep scope_id], 1);
+            [Maze.pos, Maze.spd] = EZTrack2pos([maze_dir filesep scope_id], 1);
         end
+        
+        % interpolate to match data to ms. 
+        if length(Maze.minianms.
+        
         
     end
     

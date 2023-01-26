@@ -76,9 +76,9 @@ TS = readtable('timeStamps.csv');
 tvec = table2array(TS(:,2));
 
 % correct for offsets if needed
-if tvec(1) ~= 0
-    tvec = tvec+abs(tvec(1));
-end
+% if tvec(1) ~= 0
+%     tvec = tvec+abs(tvec(1));
+% end
 ms.tvec = tvec./1000; % convert to seconds
 
 %Variables; animal, session, shift_dim are of an unsupported datatype and
@@ -86,7 +86,18 @@ ms.tvec = tvec./1000; % convert to seconds
 
 
 % %% Make version of variables with bad cells (label =-1) removed
-% indx = 0 <= ms.unit_labels;
+indx = 0 < ms.unit_labels;
+
+ms.SFP = ms.SFP(:,:,indx);
+ms.centroids = ms.centroids(:,indx);
+ms.Deconv = ms.Deconv(:,indx);
+ms.Spikes = ms.Spikes(:, indx);
+ms.c0 = ms.c0(:,indx);
+ms.b0 = ms.b0(:,indx);
+ms.RawTraces = ms.RawTraces(:,indx);
+ms.units = ms.units(indx);
+ms.unit_labels = ms.unit_labels(indx);
+
 %
 % ids = ms.unit_labels(indx);
 % A = ms.SFP(:,:,indx);
@@ -94,6 +105,18 @@ ms.tvec = tvec./1000; % convert to seconds
 % S = ms.Sdata(:,indx);
 % c0 = ms.c0data(:,indx);
 % YrA = ms.YrAdata(:,indx);
+
+%% convert S 'denoised' signal into a Spikes timestamp data struct
+
+threshold = 20; % percentile for threshold. 
+% extract activity for each cells
+ms.S = ts;
+
+for iS = length(ms.unit_labels):-1:1
+   ms.S.t{iS} = ms.tvec(ms.Spikes(:,iS) >  prctile(ms.Spikes(:,iS), threshold)); 
+   ms.S.label{iS} = num2str(ms.unit_labels(iS)); 
+
+end
 
 %% quick plot to check data
 

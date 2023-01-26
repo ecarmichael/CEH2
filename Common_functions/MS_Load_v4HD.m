@@ -1,4 +1,4 @@
-function hd_temp = MS_Load_v4HD(data_dir, plot_flag)
+function hd= MS_Load_v4HD(data_dir, plot_flag)
 %% MS_Load_v4HD:
 %
 %
@@ -30,7 +30,7 @@ cd(data_dir);
 hd_temp = [];
 
 hd_tbl = readtable('headOrientation.csv');
-hd_temp.time = hd_tbl.TimeStamp_ms_ ./ 1000; 
+hd_temp.tvec = hd_tbl.TimeStamp_ms_ ./ 1000; 
 hd_temp.quat = [hd_tbl.qw, hd_tbl.qx, hd_tbl.qy, hd_tbl.qz]; 
 
 % convert to euclidean 
@@ -68,4 +68,4 @@ end
 
 %% export in tsd format
 
-hd = tsd(hd_temp.time, [eulZYX, hd_temp.motion]', {'Z', 'Y', 'X', 'Motion'}); 
+hd = tsd(hd_temp.tvec, [eulZYX, hd_temp.motion]', {'Z', 'Y', 'X', 'Motion'}); 
