@@ -1,4 +1,4 @@
-function ms = Minian2MS(data_dir, plot_flag)
+function ms = Minian2MS(data_dir, plot_flag, save_flag)
 %% Minian2Mat: Read the netCDF output from Minian. based on function found here: https://groups.google.com/g/miniscope/c/fW7xGqWLd4E
 %
 %
@@ -23,8 +23,12 @@ function ms = Minian2MS(data_dir, plot_flag)
 if nargin <1
     data_dir = cd;
     plot_flag = 1;
+    save_flag = 0; 
 elseif nargin <2
     plot_flag = 1;
+    save_flag = 0;
+elseif nargin < 3
+    save_flag = 0;
 end
 
 if isempty(dir('*.nc'))
@@ -120,7 +124,7 @@ if plot_flag
     title('zscored deconvolved traces (all cells)')
     ylabel('cell ID')
     xlabel('time (s)')
-    set(gca,'ytick', 0:100:length(ms.units)*mult_fac, 'YTickLabel', 0:mult_fac:length(ms.units)+1, 'TickDir', 'out')
+    set(gca,'ytick', 0:100:length(ms.units)*mult_fac, 'YTickLabel', (0:100:length(ms.units)*mult_fac)/mult_fac, 'TickDir', 'out')
     ylim([mult_fac (length(ms.units)+2)*mult_fac])
     xlim([ms.frame(1)*(1/30) ms.frame(end)*(1/30)])
     
@@ -152,6 +156,10 @@ maximize
 saveas(gcf, 'Minian_Screener.png');
 saveas(gcf, 'Minian_Screener.fig')
 
+end
+
+if save_flag
+    save('minian_ms', 'ms')
 end
 
 
