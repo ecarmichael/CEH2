@@ -71,7 +71,7 @@ ms.width = double(ncread(fname,'width'));
 ms.motion = double(ncread(fname,'motion'));
 
 % load the timestamps. 
-TS = readtable('timeStamps.csv');
+TS = readtable([data_dir filesep 'timeStamps.csv']);
 
 tvec = table2array(TS(:,2));
 nan_idx = (table2array(TS(:,3)));
@@ -187,13 +187,14 @@ if plot_flag
 %     xlabel('cell ID')
 %     ylabel('time (s)')
 maximize
-saveas(gcf, 'Minian_Screener.png');
-saveas(gcf, 'Minian_Screener.fig')
+pause(1)
+saveas(gcf,[data_dir filesep 'Minian_Screener.png']);
+saveas(gcf,[data_dir filesep 'Minian_Screener.fig']);
 
 end
 
 if save_flag
-    save('minian_ms', 'ms')
+    save([data_dir filesep 'minian_ms'], 'ms')
 end
 
 

@@ -129,7 +129,7 @@ for iSub = 1:length(sub_list)
             fprintf('<strong> minian_dataset.nc found in</strong> %s', [maze_dir filesep scope_id])
             
             Maze.minianms = Minian2MS([maze_dir filesep scope_id], 1, 1);
-            saveas(gcf, [sub_id '_' sess_found{iS} '_Maze_ms.png'])
+%             saveas(gcf, [sub_id '_' sess_found(iS).name '_Maze_ms.png'])
         end
         
         % check for processed HD
