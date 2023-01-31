@@ -31,7 +31,7 @@ elseif nargin < 3
     save_flag = 0;
 end
 
-if isempty(dir('*.nc'))
+if isempty(dir([data_dir filesep '*.nc']))
     error('No .nc file detected in current directory')
 end
 
@@ -74,13 +74,14 @@ ms.motion = double(ncread(fname,'motion'));
 TS = readtable('timeStamps.csv');
 
 tvec = table2array(TS(:,2));
-
+nan_idx = (table2array(TS(:,3)));
 % correct for offsets if needed
 % if tvec(1) ~= 0
 %     tvec = tvec+abs(tvec(1));
 % end
 ms.tvec = tvec./1000; % convert to seconds
 
+% ms.tvec = linspace(ms.tvec(1), ms.tvec(end), length(ms.frame)); 
 %Variables; animal, session, shift_dim are of an unsupported datatype and
 % cannot be extracted with ncread
 
