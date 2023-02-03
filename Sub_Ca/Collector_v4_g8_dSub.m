@@ -37,25 +37,25 @@ if nargin <1
     inter_dir = [cd filesep 'Inter'];
     sub_id = 'dSub_g8';
     task_id = 'w_maze';
-    scope_id = 'My_v4_Miniscope';
+    scope_id = 'My_V4_Miniscope';
     cam_id = 'My_WebCam';
 elseif nargin <2
     inter_dir = [cd filesep 'Inter'];
     sub_id = 'dSub_g8';
     task_id = 'w_maze';
-    scope_id = 'My_v4_Miniscope';
+    scope_id = 'My_V4_Miniscope';
     cam_id = 'My_WebCam';
 elseif nargin < 3
     sub_id = 'dSub_g8';
     task_id = 'w_maze';
-    scope_id = 'My_v4_Miniscope';
+    scope_id = 'My_V4_Miniscope';
     cam_id = 'My_WebCam';
 elseif nargin <4
     task_id = 'w_maze';
-    scope_id = 'My_v4_Miniscope';
+    scope_id = 'My_V4_Miniscope';
     cam_id = 'My_WebCam';
 elseif nargin <5
-    scope_id = 'My_v4_Miniscope';
+    scope_id = 'My_V4_Miniscope';
     cam_id = 'My_WebCam';
 elseif nargin <6
     cam_id = 'My_WebCam';
@@ -152,10 +152,45 @@ for iSub = 1:length(sub_list)
             
             Maze.pos = MS_DLC2TSD([maze_dir filesep cam_id], [], 0);
 %             [Maze.pos, Maze.spd] = EZTrack2pos([maze_dir filesep scope_id], 1);
+
+            % fill in points outside of ROI
+            figure(1010)
+            clf
+            maximize
+            plot(pos.data(1,:), pos.data(2,:), '.'); 
+            maze_out_roi = drawpolygon(gca, 'color', 'blue');
+            
+            maze_in_roi = drawpolygon(gca, 'color', 'red');
+            maze_in2_roi = drawpolygon(gca, 'color', 'red');
+            
+            in_idx = inpolygon(Maze.pos.data(1,:), Maze.pos.data(2,:), maze_out_roi.Position(:,1), maze_out_roi.Position(:,2));
+            out_idx = inpolygon(Maze.pos.data(1,:), Maze.pos.data(2,:), maze_in_roi.Position(:,1), maze_in_roi.Position(:,2));
+            if exist('maze_in2_roi')
+                out2_idx = inpolygon(Maze.pos.data(1,:), Maze.pos.data(2,:), maze_in2_roi.Position(:,1), maze_in2_roi.Position(:,2));
+                out_idx = out_idx | out2_idx; 
+            end
+
+            % check
+            figure(1011)
+            clf
+            hold on
+%             plot(Maze.pos.data(1,:), Maze.pos.data(2,:), 'b.');
+            plot(Maze.pos.data(1,in_idx & ~out_idx),Maze.pos.data(2,in_idx & ~out_idx),'b.') % points inside
+            plot(Maze.pos.data(1,~in_idx | out_idx),Maze.pos.data(2,~in_idx | out_idx),'rx') % points outside
+            
+            % remove the points outside the boundries and replace with
+            % nearest neighbour. 
+            Maze.pos.data(1:2,~in_idx | out_idx) = NaN; 
+            Maze.pos.data(1,:) = fillmissing(Maze.pos.data(1,:), 'nearest'); 
+            Maze.pos.data(2,:) = fillmissing(Maze.pos.data(2,:), 'nearest'); 
+            plot(Maze.pos.data(1,:), Maze.pos.data(2,:), 'bo');
+            legend({'Inbounds', 'Outbounds', 'Missing Filled'}); 
+            
         end
         
+        % fill in tracking data outside the ROIs
+
         % interpolate to match data to ms. 
-%         if length(Maze.minianms.
         
         
     end
