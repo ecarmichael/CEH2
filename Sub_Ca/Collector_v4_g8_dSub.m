@@ -186,7 +186,7 @@ for iSub = 1:length(sub_list)
             Maze.pos.data(2,:) = fillmissing(Maze.pos.data(2,:), 'nearest');
             plot(Maze.pos.data(1,:), Maze.pos.data(2,:), 'bo');
             legend({'Inbounds', 'Outbounds', 'Missing Filled'});
-            pause(1)
+            pause(3)
             close(1011)
             close(1010)
         end

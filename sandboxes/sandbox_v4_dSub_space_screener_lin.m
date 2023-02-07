@@ -1,4 +1,4 @@
-function sandbox_v4_dSub_space_screener(cfg_in, fname)
+function sandbox_v4_dSub_space_screener_lin(cfg_in,data_dir,  fname)
 %% MS_dSub_space_screener:
 %
 %
@@ -48,16 +48,9 @@ subject =  strsplit(fname, '_2023');
 subject = subject{1}; 
 
 
-% load('maze.mat');
 
-% load([fileparts(data_dir) filesep 'Common_CoorD.mat'])
-% 
-% if str2double(sess(2:end)) < 14
-%     Common_CoorD.CoorD_L.coord(1,:) = Common_CoorD.CoorD_L.coord(1,:) - 4;
-%     Common_CoorD.CoorD_R.coord(1,:) = Common_CoorD.CoorD_R.coord(1,:) - 4;
-% end
 %% load the maze data
-load([fname '.mat'])
+load([data_dir filesep fname '.mat'])
 if strcmpi(type, 'maze')
     S = Maze.minianms.S;
     ms = Maze.minianms;
@@ -67,6 +60,12 @@ pos_w.data = pos_w.data(1:2,:);
 pos_w.label = [];
 pos_w.label = {'x', 'y'}; 
 
+%% get the maze scoring
+
+% if ~isfield(Maze, 'maze')
+% pos = 
+
+%% speed and movement thresholdholds.
 linspeed = getLinSpd([],pos_w); % linear speed
 
 % Threshold speed
@@ -101,53 +100,57 @@ end
 
 
 %% Spatial tuning in the maze
-% % trial times
-% R_idx = contains( maze.trials.types, {'FR correct'; 'CR correct'; 'CL error'});
-% L_idx = contains( maze.trials.types, {'FL correct'; 'CL correct'; 'CR error'});
-% 
-% 
-% if length(maze.events.Box_in(:,1)) < length(maze.trials.times(:,2))
-%     % add box to trials
-%     R_idx = R_idx(1:length(maze.events.Box_in(:,1)));
-%     L_idx = L_idx(1:length(maze.events.Box_in(:,1)));
-% 
-%     W_iv = iv(maze.events.Box_in(:,1), maze.trials.times(1:length(maze.events.Box_in(:,1)),2)+5);
-%     R_iv = iv(maze.events.Box_in(R_idx,1), maze.trials.times(R_idx,2)+5);
-%     L_iv = iv(maze.events.Box_in(L_idx,1), maze.trials.times(L_idx,2)+5);
-%     
-% elseif length(maze.events.Box_in(:,1)) > length(maze.trials.times(:,2))
-%      R_idx = R_idx(1:length(maze.trials.times(:,2)));
-%     L_idx = L_idx(1:length(maze.trials.times(:,2)));
-%     
-%     W_iv = iv(maze.events.Box_in(1:length(maze.trials.times(:,1)),1), maze.trials.times(:,2)+5);
-%     R_iv = iv(maze.events.Box_in(R_idx,1), maze.trials.times(R_idx,2)+5);
-%     L_iv = iv(maze.events.Box_in(L_idx,1), maze.trials.times(L_idx,2)+5);
-% else
-%     
-%     % add box to trials
-%     W_iv = iv(maze.events.Box_in(:,1), maze.trials.times(:,2)+5);
-%     R_iv = iv(maze.events.Box_in(R_idx,1), maze.trials.times(R_idx,2)+5);
-%     L_iv = iv(maze.events.Box_in(L_idx,1), maze.trials.times(L_idx,2)+5);
-% end
-% 
-% 
-% 
-% pos_W = restrict(pos_w, W_iv);
-% pos_L = restrict(pos_w, L_iv);
-% pos_R = restrict(pos_w, R_iv);
-% 
-% S_W = restrict(S_w, W_iv);
-% S_L = restrict(S_w, L_iv);
-% S_R = restrict(S_w, R_iv);
-% 
-% %% grab the linearized maze data TCs
-% cfg_tc = [];
-% cfg_tc.plot = 0;
-% TC = dSub_gen_1d_TC(cfg_tc, cd, Common_CoorD);
+load([data_dir filesep 'Common_CoorD.mat'])
+
+maze = Maze.maze;
+
+% trial times
+R_idx = contains( maze.trials.types, {'FR correct'; 'CR correct'; 'CL error'});
+L_idx = contains( maze.trials.types, {'FL correct'; 'CL correct'; 'CR error'});
+
+
+if length(maze.events.Box_in(:,1)) < length(maze.trials.times(:,2))
+    % add box to trials
+    R_idx = R_idx(1:length(maze.events.Box_in(:,1)));
+    L_idx = L_idx(1:length(maze.events.Box_in(:,1)));
+
+    W_iv = iv(maze.events.Box_in(:,1), maze.trials.times(1:length(maze.events.Box_in(:,1)),2)+5);
+    R_iv = iv(maze.events.Box_in(R_idx,1), maze.trials.times(R_idx,2)+5);
+    L_iv = iv(maze.events.Box_in(L_idx,1), maze.trials.times(L_idx,2)+5);
+    
+elseif length(maze.events.Box_in(:,1)) > length(maze.trials.times(:,2))
+     R_idx = R_idx(1:length(maze.trials.times(:,2)));
+    L_idx = L_idx(1:length(maze.trials.times(:,2)));
+    
+    W_iv = iv(maze.events.Box_in(1:length(maze.trials.times(:,1)),1), maze.trials.times(:,2)+5);
+    R_iv = iv(maze.events.Box_in(R_idx,1), maze.trials.times(R_idx,2)+5);
+    L_iv = iv(maze.events.Box_in(L_idx,1), maze.trials.times(L_idx,2)+5);
+else
+    
+    % add box to trials
+    W_iv = iv(maze.events.Box_in(:,1), maze.trials.times(:,2)+5);
+    R_iv = iv(maze.events.Box_in(R_idx,1), maze.trials.times(R_idx,2)+5);
+    L_iv = iv(maze.events.Box_in(L_idx,1), maze.trials.times(L_idx,2)+5);
+end
+
+
+
+pos_W = restrict(pos_w, W_iv);
+pos_L = restrict(pos_w, L_iv);
+pos_R = restrict(pos_w, R_iv);
+
+S_W = restrict(S_w, W_iv);
+S_L = restrict(S_w, L_iv);
+S_R = restrict(S_w, R_iv);
+
+%% grab the linearized maze data TCs
+cfg_tc = [];
+cfg_tc.plot = 0;
+TC = dSub_gen_1d_TC(cfg_tc, cd, Common_CoorD);
 
 %% generate rate map
 
-for iS = 1:length(S.t)
+for iS = 1:length(S_w.t)
     %%
     figure(iS)
     clf
