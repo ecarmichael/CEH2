@@ -154,7 +154,7 @@ for iSite = sorted_labels_idx
     hold on
     plot(psd.(csc.label{iSite}(1:end-4)).f, 10*log10(psd.(csc.label{iSite}(1:end-4)).pxx), 'color', c_ord(l,:),'linewidth', line_width);
 end
-xlim([0 200])
+xlim([0 250])
 y_val = ylim;
 xlabel('Frequency (Hz)')
 % colour bars for specific frequencies of interest. 
