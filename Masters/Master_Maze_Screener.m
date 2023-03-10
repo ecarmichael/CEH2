@@ -17,7 +17,7 @@
 %% initialize
 
 close all
-restoredefaultpath
+%restoredefaultpath
 global PARAMS  % these are global parameters that can be called into any function.  I limit these to directories for storing, loading, and saving files and codebases.
 os = computer;
 % parent_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06';
@@ -42,7 +42,7 @@ if strcmp(os, 'GLNXA64')
         PARAMS.code_CEH2_dir = '/home/williamslab/Documents/Github/CEH2'; % where the multisite repo can be found
     else
         PARAMS.data_dir = '/lustre06/project/6064766/ecar/Maze_ca/inter'; % where to find the raw data
-        PARAMS.code_base_dir = '/home/ecar/GitHub/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
+        PARAMS.code_base_dir = '/home/ecar/Github/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
         PARAMS.code_CEH2_dir = '/home/ecar/GitHub/CEH2'; % where the multisite repo can be found
     end    
 else
@@ -152,7 +152,7 @@ for iSub = 1:length(sub_list) % comment length out and just do iSub = X session.
         load('behav_DLC.mat')
         
         % preprocess the sessions
-%         cfg.cells = [4,68];
+        cfg.cells = 1:100%[4,68];
         data = MS_compute_place(cfg, ms_trk, behav, f_info);
         
         
