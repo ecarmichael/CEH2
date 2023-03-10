@@ -1,4 +1,4 @@
-function events_out = MS_get_LFP_events_sandbox(cfg_in, csc)
+function [events_out,csc_filt, amp_filt] = MS_get_LFP_events_sandbox(cfg_in, csc)
 %% MS_get_LFP_events_sandbox: WIP pipeline for rapid event detection in LFP data.
 %
 %
@@ -96,10 +96,12 @@ if isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
         csc_artif.data(iChan,:) = abs(csc_artif.data(iChan,:)); % detect artifacts both ways
     end
     %
-    %     switch cfg.artif_det.method
-    %         case 'zscore'
-    %         art_thresh = std(csc_artif.data(1,:))*cfg.artif_det.threshold;
-    %     end
+        switch cfg.artif_det.method
+            case 'zscore'
+            cfg.artif_det.threshold = std(csc_artif.data(1,:))*cfg.artif_det.threshold;
+            case 'raw'
+            cfg.artif_det.threshold = max(csc_artif.data(iChan,:))*.95; 
+        end
     
     
     artif_evts = TSDtoIV(cfg.artif_det,csc_artif);
@@ -208,7 +210,7 @@ events_out.usr.evt_len = (events_out.tend - events_out.tstart)';
 if isfield(cfg, 'max_len') && ~isempty(cfg.max_len)
         cfg_max_len = [];
         cfg_max_len.operation = '<';
-        cfg_max_len.threshold = cfg.max_len;
+        cfg_max_len.threshold = cfg.max_len.threshold;
     events_out = SelectIV(cfg_max_len,events_out,'evt_len');
     
     fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (%s %d ms removed).\n',length(events_out.tstart), cfg_max_len.operation, (cfg_max_len.threshold)*1000);
@@ -242,13 +244,29 @@ if  isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
 end
 
 
+% %% contrast band
+% if isfield(cfg, 'cont_filt')
+%     
+%     cfg_f = [];
+%     cfg_f.f = cfg.cont_filt.f; cfg_f.type = 'fdesign'; 
+% %     cfg_f.display_filter = 1
+%     csc_con = FilterLFP(cfg_f,csc);
+%     csc_con.data = zscore(abs(hilbert(csc_con.data))); 
+%     
+%     for ii  = length(events_out.tstart):-1:1
+%        this_csc = restrict(csc_con, events_out.tstart(ii)-.5, events_out.tend(ii)+.5); 
+%        
+%        events_out.usr.contrast(ii) = nanmean(this_csc.data); 
+%     end
+% end
+% 
 
 %% check again
 if cfg.check
     cfg_plot = [];
     cfg_plot.display = 'iv';
     cfg_plot.mode = 'center';
-    cfg_plot.width = 0.2;
+    cfg_plot.width = .2;
     cfg_plot.target = csc.label{1};
     cfg_plot.title = 'var_raw';
     PlotTSDfromIV(cfg_plot,events_out,csc);

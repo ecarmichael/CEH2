@@ -1,5 +1,5 @@
-function MS_plot_ca_trace(data_in, tvec, threshold, linesize)
-%% MS_plot_ca_trace:
+function MS_plot_ca_binary_trace(data_in, tvec, threshold, linesize)
+%% MS_plot_ca_binary_trace:
 %
 %
 %

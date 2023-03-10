@@ -12,8 +12,10 @@ mvdm_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'
 CEH2_dir = '/home/williamslab/Documents/Github/CEH2';
 ft_dir = '/home/williamslab/Documents/Github/fieldtrip';
 
-data_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % office unix
-inter_dir = '/home/williamslab/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % office unix
+data_dir = '/home/williamslab/Williams Lab Dropbox/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % office unix
+inter_dir = '/home/williamslab/Williams Lab Dropbox/Williams Lab Team Folder/Eric/dSubiculum/inter'; % office unix
+
+
 
 %% home linux.
 
@@ -23,6 +25,15 @@ ft_dir = '/home/ecarmichael/Documents/GitHub/fieldtrip';
 
 inter_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inter'; % where to save the outputs
 data_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Eric/dSubiculum/inProcess'; % where to get the data
+
+%% Home windows
+
+mvdm_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; % where the codebase repo can be found
+CEH2_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2'; % where the multisite repo can be found
+ft_dir = 'C:\Users\ecarm\Documents\GitHub\fieldtrip'; 
+
+inter_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\dSubiculum\inter';
+data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\dSubiculum\inProcess'; 
 
 %% Erin's PC
 % data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team
@@ -63,20 +74,44 @@ for iSub =1:length(subjects)
     end
     sessions(cellfun('isempty', sessions)) = [];
     
-
-    for iS = length(sessions):-1:1 %length(sessions)
-        if strcmpi(sessions{iS}, 'M23_2021-08-13_D18')
+%%
+    for iS = length(sessions):-1:1 
+       
+        if strcmpi(sessions{iS}, 'M23_2021-08-13_D18') || ~contains(sessions{iS}, 'M')
             continue
         end
         close all
         % run the screener script saving the output in the inter_dir.
         cd([data_dir filesep subjects{iSub} filesep sessions{iS}])
+        if ~exist('maze.mat')
+            continue
+%             pos = MAZE_tracking_gui;
+%             Maze_GUI_NLX_sandbox
+%             while ~exist('GUI_states', 'var') % hold while maze scoring.
+%                 pause(0.1);
+%             end
+%             MAZE_check_gui(pos, GUI_states, GUI_state_times)
+%             %             continue
+%             clear pos GUI_*
+        end
 %         dsubscreener_ec(cd, inter_dir);
 %         dsubscreener_ec_W_maze(cd, inter_dir);
+% %         MS_dSub_space_screener([], cd, 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\dSubiculum\inter\Spatial_screening')
 
-        dsubscreener_ec_W_maze(cd, inter_dir);
+%         dsubscreener_ec(cd, inter_dir);
+
+
+        MS_Write_meta_dSub;
+        MS_dSub_space_screener([], cd,  [inter_dir filesep 'Spatial_screening_26'])
+%         dsubscreener_ec_W_maze(cd, inter_dir);
+
+% hypno
+%         hypno = dSub_Sleep_screener;  
+%         save([data_dir filesep 'hypno_init.mat'], 'hypno', '-v7.3'); 
+%         saveas(gcf, [data_dir filesep 'hypno_init.png'])
+
+        close all
 %           M23_Clust_batch
-%         MS_Write_meta_dSub;
           
         
     end
@@ -87,7 +122,7 @@ end
 file_list = dir([inter_dir filesep 'All_cells']);
 
 for filename = length(file_list):-1:1
-    if contains(file_list(filename).name(1),"M");
+    if contains(file_list(filename).name(1),"M")
         names{filename} = file_list(filename).name;
     else
         names{filename}= [];

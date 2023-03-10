@@ -113,8 +113,9 @@ Acc_bin_centers = Acc_bin_centers(1:end-1);
 
 %% plot basics for each cell
 
-for iC = cfg.cells % loop through cells
+for iC = fliplr(cfg.cells) % loop through cells
     fprintf('\nProcessing cell %d...    ', iC);
+    tic
     
     if sum(ms.Binary(movement_idx,iC)) == 0
         continue
@@ -160,7 +161,6 @@ for iC = cfg.cells % loop through cells
         [Acc_Shuff_MI(iShuff), ~, ~,~, Acc_Shuff_likelihood(:,iShuff)] = MS_get_spatial_information(shuffled_binarized, acc_mat, cfg.a_bins);
 %         toc
     end
-    toc
     fprintf('\n')
     %% compute the significance values vs shuffle
     %get Place sig tuning
@@ -320,7 +320,7 @@ for iC = cfg.cells % loop through cells
     SI(iC).spatial.accel.Sig_map = Acc_Sig_map;
     SI(iC).spatial.accel.occupany = Acc_occupancy;
     %     SI.accel.stats{iC} = Acc_stats;
-    
+    toc
 end
 
 %% save the output.

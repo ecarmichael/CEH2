@@ -80,6 +80,7 @@ else
     swd_1.session_table = session_table;
     swd_2.session_table = session_table;
     
+    mkdir(inter_dir(1:end-1)); 
     save([inter_dir 'SWR_SWD_LFPs.mat'], 'ripple_1', 'ripple_2', 'swd_1', 'swd_2');
 end
 %%  compile LFP events across subjects.
@@ -152,7 +153,7 @@ end
 %% use FieldTrip to compute PETSpec
 addpath(ft_dir)
 ft_defaults
-%%
+%% generate SWD spec
 % load
 load([inter_dir 'ft_hdr']);
 
@@ -220,11 +221,6 @@ set(gca, 'xtick', [-0.5 0 0.5]);
 xlabel('time (s)');
 ylabel('SWD events')
 
-
-
-
-
-
 % plot a PETSpec
 cfg = [];
 cfg.channel      = data_trl.label{1};
@@ -268,6 +264,123 @@ delete(setdiff(all_figs, figs2keep));
 saveas(gcf, [inter_dir filesep 'Spec_' fig_name], 'fig')
 saveas(gcf, [inter_dir filesep 'Spec_' fig_name], 'png')
 print(gcf, [inter_dir filesep 'Spec_' fig_name], '-depsc')
+
+%% generate and plot SWR spec and Ca activity
+
+% load
+load([inter_dir 'ft_hdr']);
+
+this_data = []; 
+for ii = 1:size(all_ripple_2,1)
+    for jj = 1:size(all_ripple_2,2)
+        this_data = [this_data, all_ripple_2{ii, jj}];
+    end
+end
+fig_name = 'SWR_post';
+% split cell into trials
+for ii = size(this_data,2):-1:1
+    these_trls{ii} = this_data(:,ii)';
+    these_times{ii} = -1:1/Fs:1;
+end
+
+% build a pseudo trl file
+data_trl = [];
+data_trl.label = {'CSC'};
+data_trl.fsample = Fs;
+data_trl.cfg = [];
+data_trl.hdr = hdr;
+data_trl.trial = these_trls;
+data_trl.time = these_times;
+% data_trl.cfg.trl = trl
+
+% use FT to compute the Spec
+cfg              = []; % start with empty cfg
+cfg.output       = 'pow';
+cfg.channel      = data_trl.label{1};
+cfg.method       = 'mtmconvol';
+cfg.taper        = 'hanning';
+
+if contains(lower(fig_name), 'swd')
+    cfg.foi          = 150:5:750; % frequencies of interest
+    cfg.toi          = -.5:1/data_trl.fsample:0.5; % times of interest
+else
+    cfg.foi          = 100:2:200; % frequencies of interest
+    cfg.toi          = -.5:1/data_trl.fsample:0.5; % times of interest
+end
+cfg.t_ftimwin    = ones(size(cfg.foi)).*0.05;%20./cfg.foi;  % window size: fixed at 0.5s
+
+cfg.pad          = 'nextpow2'; % recommened by FT to make FFT more efficient.
+cfg.feedback     = 'no'; % might supress verbose output, possible speed improvement.
+TFR = ft_freqanalysis(cfg, data_trl);
+
+xrange= cfg.toi; 
+% track config for plotting.
+if contains(lower(fig_name), 'swd')
+freq_params_str = sprintf('Spec using %0.0d SWDs. Method: %s, Taper: %s', length(data_trl.trial),cfg.method, cfg.taper);
+else
+    freq_params_str = sprintf('Spec using %0.0d SWRs. Method: %s, Taper: %s', length(data_trl.trial),cfg.method, cfg.taper);
+end
+
+%%
+% plot the overall popmatrix 
+all_pop = []; 
+for ii = 1:size(ripple_2.pop,1)
+   for jj = 1:size(swd_2.pop,2)
+    all_pop = [all_pop; swd_2.pop{ii, jj}]; 
+   end
+end
+
+figure
+ca_tvec = ((0:size(all_pop, 2))/ca_Fs) -.5;
+imagesc(ca_tvec, 1:size(all_pop,1), all_pop)
+set(gca, 'xtick', [-0.5 0 0.5]);
+xlabel('time (s)');
+ylabel('SWR events')
+
+% plot a PETSpec
+cfg = [];
+cfg.channel      = data_trl.label{1};
+cfg.baseline     = [xrange(1) -.03];
+cfg.baselinetype = 'relative';
+cfg.title = freq_params_str;
+ft_singleplotTFR(cfg, TFR);
+xlabel('time (s)');
+ylabel('frequency (Hz)')
+% add the mean LFP trace.
+cut_idx = nearest_idx([xrange(1) xrange(end)], data_trl.time{1});
+this_win = this_data(cut_idx(1):cut_idx(2),:);
+hold on
+if contains(lower(fig_name), 'swd')
+    xfac = 40;
+else
+    xfac = 60;
+end
+offset = round(median(TFR.freq));
+plot(data_trl.time{1}(cut_idx(1):cut_idx(2)), (nanmean(this_win,2).*xfac)+offset, 'w', 'linewidth', 1)
+plot(data_trl.time{1}(cut_idx(1):cut_idx(2)), ((nanmean(this_win,2) +std(this_win,[],2)).*xfac)+offset, '--','color', [.8 .8 .8 .8], 'linewidth', .5)
+plot(data_trl.time{1}(cut_idx(1):cut_idx(2)), ((nanmean(this_win,2) -std(this_win,[],2)).*xfac)+offset, '--','color', [.8 .8 .8 .8], 'linewidth', .5)
+
+
+% move to a subplot; 
+figlist=get(groot,'Children');
+
+newfig=figure(200);
+tcl=tiledlayout(newfig,'flow');
+
+for i = 1:numel(figlist)
+    figure(figlist(i));
+    ax=gca;
+    ax.Parent=tcl;
+    ax.Layout.Tile=i;
+end
+
+figs2keep = 200;
+all_figs = findobj(0, 'type', 'figure');
+delete(setdiff(all_figs, figs2keep));
+saveas(gcf, [inter_dir filesep 'Spec_' fig_name '_new'], 'fig')
+saveas(gcf, [inter_dir filesep 'Spec_' fig_name '_new'], 'png')
+print(gcf, [inter_dir filesep 'Spec_' fig_name '_new'], '-depsc')
+saveas(gcf, [inter_dir filesep 'Spec_' fig_name '_new'], 'svg')
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -360,8 +473,6 @@ end
                 end
             end
             
-        end
- end
 
  
  %% plot all the popmats for SWD

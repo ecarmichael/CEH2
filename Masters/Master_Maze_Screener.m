@@ -146,13 +146,15 @@ for iSub = 1:length(sub_list) % comment length out and just do iSub = X session.
         time_str = regexp(ms_trk.file_names,'\d*','Match');
         f_info.time = datestr(datestr([time_str{1} ':' time_str{2} ':' time_str{3}]), 'HH:MM:SS');
         
-        fprintf('<strong>%s</strong>: loading ms trk from %s %s...\n', mfilename, f_info.fname)
+        fprintf('<strong>%s</strong>: loading ms trk from %s...\n', mfilename, f_info.fname)
         
         % get the position info from the DLC output file.
         load('behav_DLC.mat')
         
         % preprocess the sessions
         cfg.cells = 1:100%[4,68];
+        %cfg.cells = [4,5,6, 10,20, 25, 43, 47, 58,62, 68];
+        cfg.p_bin_size = 10; 
         data = MS_compute_place(cfg, ms_trk, behav, f_info);
         
         
@@ -160,7 +162,7 @@ for iSub = 1:length(sub_list) % comment length out and just do iSub = X session.
         
         
         % save the output file back to the intermediate dir.
-        save([PARAMS.inter_dir filesep strrep([f_info.fname '_' f_info.date '_' strrep(f_info.time, ':','-') '_' strrep(f_info.task, ' ', '_')], '-','_')], 'data', '-v7.3')
+        save([PARAMS.inter_dir filesep strrep([f_info.fname '_78'], '-','_')], 'data_out', '-v7.3')
         close all
         clear data
     end % end sess

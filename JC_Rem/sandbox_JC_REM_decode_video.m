@@ -5,10 +5,13 @@ inter_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold';
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
 
 
-raw_dir = '/home/williamslab/Desktop/7_19_2019_PV1060_LTD5';
-decode_dir = '/home/williamslab/Dropbox (Williams Lab)/10.Manifold/pv1060/LTD5';
-% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_18_2019_PV1069_HATD5';
-ms_dir = '/home/williamslab/Dropbox (Williams Lab)/Inter/pv1060/LTD5';
+% raw_dir = '/home/williamslab/Desktop/7_19_2019_PV1060_LTD5';
+% decode_dir = '/home/williamslab/Dropbox (Williams Lab)/10.Manifold/pv1060/LTD5';
+% ms_dir = '/home/williamslab/Dropbox (Williams Lab)/Inter/pv1060/LTD5';
+
+% raw_dir = 
+decode_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\10.Manifold\pv1060\LTD5'; 
+ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1060\7_19_2019_PV1060_LTD5';
 
 core_colors = linspecer(3); 
 %% load everything

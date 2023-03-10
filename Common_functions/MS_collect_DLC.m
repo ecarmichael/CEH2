@@ -113,6 +113,17 @@ for iF  = 1:length(file_list)
     fnum = [fnum , 1:length(this_field{iF, 1})]; 
 end
 
+
+% apply simple smoothing over any points that are larger than a 3sd jump. 
+    for iFields = 1:length(fields)
+        nan_idx = zscore(abs(diff(data_out.(fields{iFields})(:,1)))) > 3; 
+        data_out.(fields{iFields})(nan_idx,1) = NaN; 
+        data_out.(fields{iFields})(:,1) = fillmissing(data_out.(fields{iFields})(:,1), 'spline');
+        nan_idx = zscore(abs(diff(data_out.(fields{iFields})(:,2)))) > 3; 
+        data_out.(fields{iFields})(nan_idx,2) = NaN; 
+        data_out.(fields{iFields})(:,2) = fillmissing(data_out.(fields{iFields})(:,2), 'spline');
+    end
+
 TS = MS_Load_TS([]); 
 
 if length(TS{1}.system_clock{1}) ~= length(data_out.(fields{1})) && length(TS{1}.system_clock{2}) ~= length(data_out.(fields{1}))
@@ -121,18 +132,23 @@ end
 
 cam_idx = find(length(data_out.(fields{1})) == [length(TS{1}.system_clock{1}),length(TS{1}.system_clock{2})]);
 
+if TS{1}.system_clock{cam_idx}(1) < TS{1}.system_clock{cam_idx}(2)
+    data_out.tvec = TS{1}.system_clock{cam_idx} - TS{1}.system_clock{cam_idx}(1); 
+else
+    data_out.tvec = TS{1}.system_clock{cam_idx} - TS{1}.system_clock{cam_idx}(2); 
+    data_out.tvec = data_out.tvec + mode(diff(data_out.tvec(2:end))); 
+    data_out.tvec(1) = 0; 
+end
 
-data_out.tvec = TS{1}.system_clock{cam_idx} - TS{1}.system_clock{cam_idx}(1); 
 % get speed
-vx = dxdt(data_out.tvec,data_out.(fields{1})(:,1), 'verbose', 1);
+vx = dxdt(data_out.tvec,data_out.(fields{1})(:,1));
 vy = dxdt(data_out.tvec,data_out.(fields{1})(:,2));
 
 % get the HD
+ear_mid(:,1) = (data_out.(fields{contains(fields, 'R')})(:,1) + data_out.(fields{contains(fields, 'L') & ~contains(fields, 'LED')})(:,1))/2; % get x mid
+ear_mid(:,2) = (data_out.(fields{contains(fields, 'R')})(:,2) + data_out.(fields{contains(fields, 'L') & ~contains(fields, 'LED')})(:,2))/2; % get x mid
 
-        ear_mid(:,1) = (data_out.R_ear(:,1) + data_out.L_ear(:,1))/2; % get x mid
-        ear_mid(:,2) = (data_out.R_ear(:,2) + data_out.L_ear(:,2))/2; % get x mid
-       
-        HD = rad2deg(atan2(ear_mid(:,2) - data_out.LED(:,2),ear_mid(:,1) - data_out.LED(:,1)));
+HD = rad2deg(atan2(ear_mid(:,2) - data_out.LED(:,2),ear_mid(:,1) - data_out.LED(:,1)));
 
 % convert to behav format
 nan_idx = isnan(data_out.(fields{1})(:,1)); 

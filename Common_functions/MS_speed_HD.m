@@ -31,8 +31,13 @@ cfg_def.smooth_sd = .2; % small smoothing
 
 cfg = ProcessConfig2(cfg_def, cfg_in);
 
-%%         
+%%      
+% check if the data is in rad or deg.
+if max(pos.data(3,:)) <= pi && min(pos.data(3,:)) >= -pi
+    pos.data(3,:) = rad2deg(pos.data(3,:));
+end
 if cfg.interp
+    
     keep_idx = (pos.data(3,:) ~= 0) & (pos.data(3,:) <= 360); % remove idx = 0.  Seems to be default state for NLX when unsure of dir.
     jumps = [0 rad2deg(circ_dist(deg2rad(pos.data(3,2:end)), deg2rad(pos.data(3,1:end-1))))]; % catch big jumps in HD angle
     keep_idx = keep_idx & abs(jumps) < cfg.jump_thresh;
@@ -95,7 +100,7 @@ end
 % get the pure HD signal
 [occ_h, hd_edges] = histcounts(pos.data(3,:),360/cfg.hd_bins);
 spk_h = histcounts(spk_ang,360/cfg.hd_bins);
-hd_tc = spk_h./ occ_h .* mode(diff(spd.tvec));
+hd_tc = spk_h./ occ_h .* mode(diff(pos.tvec));
 
 % get the speed profile
 
@@ -112,16 +117,13 @@ hd_tc = spk_h./ occ_h .* mode(diff(spd.tvec));
 
 figure
 subplot(2,3,1)
-title('Occ')
 h= polarplot(deg2rad(hd_edges(1:end-1)),occ_h);
 
 
 subplot(2,3,2)
-title('spk')
 polarplot(deg2rad(hd_edges(1:end-1)),spk_h);
 
 subplot(2,3,3)
-title('tc')
 
 polarplot(deg2rad(hd_edges(1:end-1)),(hd_tc));
 
@@ -134,29 +136,30 @@ ylabel('velocity (cm/s)'); xlabel('HD (deg)');
 axis xy
 colormap([0,0,0; parula])
 caxis([0 max(vec_occ, [], 'all')])
+title('Occ')
 
 subplot(2,3,5)
-title('Spk')
 imagesc([hd_bins 360],spd_bins, spk_vec');
 set(gca, 'xtick', [0 180 360], 'ytick', 0:floor(max(spd.data)/.8));
 ylabel('velocity (cm/s)'); xlabel('HD (deg)');
 axis xy
 colormap([0,0,0; parula])
 caxis([0 max(spk_vec, [], 'all')])
+title('Spk')
 
 
 subplot(2,3,6)
-title('tc')
 imagesc([hd_bins 360],spd_bins, tc');
 set(gca, 'xtick', [0 180 360], 'ytick', 0:floor(max(spd.data)/.8))
 ylabel('velocity (cm/s)'); xlabel('HD (deg)');
 axis xy
 colormap([0,0,0; parula])
 caxis([0 max(tc, [], 'all')/2])
+title('tc')
 
+vec_tc = tc; 
 
+%% play with kalman filters WIP
 
-%% play with kalman filters
-
-addpath(genpath('/home/williamslab/Documents/KalmanAll'))
+% addpath(genpath('/home/williamslab/Documents/KalmanAll'))
 

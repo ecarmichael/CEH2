@@ -116,22 +116,31 @@ for iC = 1:length(file_list)
 %         this_spd.data(1) = this_spd.data(2); 
         this_evt = restrict(evt, block_idx.(Blocks{iB})(1),block_idx.(Blocks{iB})(2)); 
         
-        if isempty(this_S.t{1})
+        if isempty(this_S.t{1}) || length(this_S.t{1}) < 200
             continue
         end
         if iB == 2
             
-%             trials = dSub_wmaze_trialfun([], this_pos)
-            arms = {'l', 'c', 'r'}; maze.arms = arms; 
-            for ii = 1:3
-            if sum(strcmp(this_evt.label, arms{ii})) > 0
-                maze.(arms{ii}) = this_evt.t{strcmp(this_evt.label, arms{ii})};
-            else
-                maze.(arms{ii}) = []; 
-            end
-            end
-            fprintf('Left: %d   |  Center: %d   | Right: %d\n', length(maze.l), length(maze.c), length(maze.r))
-            
+% %             trials = dSub_wmaze_trialfun([], this_pos)
+%             trials = MS_NLX_append_MAZE(this_pos, this_evt);
+% %             arms = {'l', 'c', 'r', 'b'}; maze.arms = arms; 
+% %             for ii = 1:length(arms)
+% %             if sum(strcmp(this_evt.label, arms{ii})) > 0
+% %                 maze.(arms{ii}) = this_evt.t{strcmp(this_evt.label, arms{ii})};
+% %             else
+% %                 maze.(arms{ii}) = []; 
+% %             end
+% %             end
+%         trials_iv = iv(trials.tstart, trials.tend); 
+%         this_pos = restrict(this_pos, trials_iv); 
+%         this_S = restrict(this_S, trials_iv); 
+%         this_spd = restrict(this_spd, trials_iv); 
+% %         keep_idx = ~cellfun(@isempty, this_S.t); 
+% %         this_S.t = this_S.t(keep_idx); 
+% %         this_S.label = this_S.label(keep_idx); 
+% 
+%             fprintf('<strong>Left: %d | Choice: %d /%d | Right: %d</strong>\n', sum(strcmp(trials.type, 'FL')), sum(contains(trials.type, '- C')), sum(contains(trials.type, ' - ')), sum(strcmp(trials.type, 'FR')))
+%             
         elseif iB == 3
                 this_pos.data(1,:) = this_pos.data(1,:)/2;
                 this_pos.data(2,:) = this_pos.data(2,:)/2;
@@ -147,7 +156,7 @@ for iC = 1:length(file_list)
             [Px, Fx] = pwelch(this_csc.data(1,:), hanning(cfg_psd.hann_win), cfg_psd.hann_win/2, cfg_psd.hann_win*2 , this_csc.cfg.hdr{1}.SamplingFrequency);
         end
         figure((100*iC) + iB)
-           SetFigure([], gcf);
+        SetFigure([], gcf);
         set(gcf, 'position', [81 -377  1760  880])
         subplot(3,4,9)
         hold on
@@ -172,7 +181,7 @@ for iC = 1:length(file_list)
         
         % Waveform
         try % see if the waveform file exists and works.
-            load([this_S.label{1}(1:6) '-wv.mat'], 'mWV', 'xrange')
+            load([this_S.label{1}(1:end-2) '-wv.mat'], 'mWV', 'xrange')
             
             subplot (3,4,1)
             hold on
@@ -182,7 +191,7 @@ for iC = 1:length(file_list)
 %             legend("Ch 1", "Ch 2","Ch 3","Ch 4", 'fontsize', 8, 'location', 'north', 'orientation', 'horizontal' ); legend boxoff
             xlabel ("Time (ms)")
             axis off
-            title ({strrep(fname, '_', ' ') ;  strrep(this_S.label{1}, '_', ' '); ['grade: ' this_S.label{1}(end-2)] ; Blocks{iB}})
+            title ({strrep(fname, '_', ' ') ;  strrep(this_S.label{1}, '_', ' '); ['grade: ' this_S.label{1}(end-2) ' (' num2str(length(this_S.t{1})) ' spikes)'] ; Blocks{iB}})
             xlim([min(xrange,[], 'all') max(xrange,[], 'all')])
         catch
             subplot (3,4,1)
@@ -193,7 +202,6 @@ for iC = 1:length(file_list)
         % get the wave properties
         if exist('mWV', 'var')
             wave_prop = MS_get_wave_properties(this_S, [xrange(:,1) mWV],this_csc.tvec,  0);
-            
         end
         
         % ISI
@@ -240,6 +248,7 @@ for iC = 1:length(file_list)
         %
         % prepare S for plots
         if iB == 2 || iB == 3
+                      
             
             % interpolate the spikes to match the time vector
             move_idx =  (.5 < this_spd.data) & (this_spd.data < 6); 
@@ -269,6 +278,20 @@ for iC = 1:length(file_list)
             end
             %% convert to heat map.
             
+                        % exclude box movement in from Reward site to box
+            if iB == 2 && strcmp(Meta.subject, 'MD3')
+                maze_x = [44; 53]; 
+                maze_y = [38 ]; 
+                rem_idx_x = (this_pos.data(1,:) < maze_x(1)) | (this_pos.data(1,:) > maze_x(2));
+                rem_idx_y = (this_pos.data(2,:) > maze_y(1));
+                rem_idx = rem_idx_x & rem_idx_y; 
+%                 disp('stop')
+%                 figure(111)
+%                 hold on
+%                 plot(this_pos.data(1,~rem_idx), this_pos.data(2,~rem_idx), '.b')
+%                 plot(this_pos.data(1,rem_idx), this_pos.data(2,rem_idx), '.r')
+
+            end
             
             % set up bins
             if iB == 2
@@ -385,7 +408,7 @@ for iC = 1:length(file_list)
         cfg_vec = [];
         cfg_vec.jump_thresh = 20;
         cfg_vec.interp = 1; 
-        vec_map = MS_speed_HD(cfg_vec, this_S, this_pos, this_spd);
+%         vec_map = MS_speed_HD(cfg_vec, this_S, this_pos, this_spd);
             
         end
         

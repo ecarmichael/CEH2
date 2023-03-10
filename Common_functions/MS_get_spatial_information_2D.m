@@ -1,3 +1,4 @@
+
 function [MI, posterior, occupancy_vector, p_active, likelihood] = MS_get_spatial_information_2D(binary_in, position_in, X_bin_vec, Y_bin_vec)
 %% MS_get_spatial_information: extracts the spatial information for a given binary signal across positions. 
 %
