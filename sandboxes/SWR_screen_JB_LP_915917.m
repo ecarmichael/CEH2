@@ -21,8 +21,8 @@ MS_Quick_psd
 %% load the data
 
 cfg_csc = [];
-cfg_csc.fc = {'CSC10.ncs'}%, 'CSC3.ncs'};  % pick the channels to load; 
-% cfg_csc.desired_sampling_frequency = 2000;
+cfg_csc.fc = {'CSC7.ncs'}%, 'CSC3.ncs'};  % pick the channels to load; 
+cfg_csc.desired_sampling_frequency = 2000;
 csc = MS_LoadCSC(cfg_csc); % load the csc data
 
 % pos = LoadPos([]); % load the position data.  This appears to be empty.
@@ -106,14 +106,14 @@ cfg_swr.filt.display_filter = 0; % use this to see the fvtool
 cfg_swr.kernel.samples = csc.cfg.hdr{1}.SamplingFrequency/100;
 cfg_swr.kernel.sd = csc.cfg.hdr{1}.SamplingFrequency/1000;
 
-% detection
-cfg_swr.artif_det.method = 'zscore';
-cfg_swr.artif_det.threshold = 6;
-cfg_swr.artif_det.dcn = '>';
-cfg_swr.artif_det.rm_len = .1;
+% % detection
+% cfg_swr.artif_det.method = 'zscore';
+% cfg_swr.artif_det.threshold = 6;
+% cfg_swr.artif_det.dcn = '>';
+% cfg_swr.artif_det.rm_len = .1;
 cfg_swr.threshold = 2;% in sd
 cfg_swr.method = 'zscore';
-cfg_swr.min_len = 0.04; % mouse SWR: 40ms from Vandecasteele et al. 2014
+cfg_swr.min_len = 0.03; % mouse SWR: 40ms from Vandecasteele et al. 2014
 cfg_swr.merge_thr = 0.01; %merge events that are within 20ms of each other.
 %
 
@@ -158,7 +158,7 @@ cfg_swr.max_len.threshold = .2;
 %                 cfg_swr.min_len = [];
 %                 cfg_swr.min_len.operation = '<';
 %                 cfg_swr.min_len.threshold = .2;
-cfg_swr.nCycles = 20; % number of cycles
+cfg_swr.nCycles = 15; % number of cycles
 cfg_swr.nCycles_operation = '<='; % number of cycles
 
 % variaence
