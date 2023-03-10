@@ -147,7 +147,7 @@ end
 
 %% generate rate map
 
-for iS = 1:length(S.t)
+for iS = 1:length(S_w.t)
     %%
     figure(iS)
     clf
@@ -167,15 +167,18 @@ for iS = 1:length(S.t)
     
     hold on
     hr =  plot(spk_x,spk_y, '.r', 'markersize', 6);
-    
+         axis off;
+
 %     plot(Common_CoorD.CoorD_L.coord(1,:), Common_CoorD.CoorD_L.coord(2,:), '--', 'color', c_ord(1,:))
 %     plot(Common_CoorD.CoorD_R.coord(1,:), Common_CoorD.CoorD_R.coord(2,:), '--', 'color', c_ord(2,:))
     ax2= subplot(4,6,[13:15]);
     hold on
-    scatter(pos_w.tvec, pos_w.data(1,:), 55, tvec_cord, '.','MarkerFaceAlpha',.2,'MarkerEdgeAlpha',.2);
-    scatter(pos_w.tvec, pos_w.data(2,:), 55, tvec_cord, '.','MarkerFaceAlpha',.2,'MarkerEdgeAlpha',.2);
+    scatter(pos_w.tvec, pos_w.data(1,:), 55, 'b', '.','MarkerFaceAlpha',.2,'MarkerEdgeAlpha',.2);
+    scatter(pos_w.tvec, pos_w.data(2,:), 55, 'm', '.','MarkerFaceAlpha',.2,'MarkerEdgeAlpha',.2);
     plot(pos_w.tvec(spk_idx),pos_w.data(1,spk_idx) , '.r', 'markersize', 6);
     plot(pos_w.tvec(spk_idx),pos_w.data(2,spk_idx) , '.r', 'markersize', 6);
+    ylabel('position');
+    legend({'x', 'y', 'spike'},'orientation', 'horizontal', 'location', 'southeast')
     
     % rate map
     if max(pos_w.data(1,:)) <300 && max(pos_w.data(2,:)) < 300
@@ -234,9 +237,10 @@ for iS = 1:length(S.t)
     subplot(4,6,[4:6 10:12]);
     pcolor(tc'); shading flat; axis off;
     cb=colorbar; cb.Label.String = 'rate (Hz)'; cb.Ticks = [0 cb.Ticks(end)];
-    
+    title('rate map')
     % plot the cell info
-    subplot(4,6,[17])   
+    
+    subplot(4,6,[17 18 22 23])   
     imagesc(mean(ms.SFP(:,:,:),3))
     hold on
 
@@ -245,14 +249,18 @@ for iS = 1:length(S.t)
     title(['nCells: ' num2str(length(ms.units(iS)))]);
     xlim([min(ms.centroids(1,:))-min(ms.centroids(1,:))*.2  max(ms.centroids(1,:))+max(ms.centroids(1,:))*.2])
     ylim([min(ms.centroids(2,:))-min(ms.centroids(2,:))*.2  max(ms.centroids(2,:))+max(ms.centroids(2,:))*.2])
+    
+    subplot(4,6,[19 20 21])
+    cla
+    hold on
+    plot(ms.tvec, ms.Deconv(:,iS), 'color', c_ord(1,:));
+    
+    plot(ms.tvec, ms.RawTraces(:,iS), 'color', [.8 .8 .8 .2]);
+    xlim([ms.tvec(1), ms.tvec(end)])
+    title('Raw and deconvolved calcium trace')
+    xlabel('time (s)');
+    legend({'deconv', 'raw'}); 
 
-        subplot(4,6,[22 23 24])   
-        cla
-        hold on
-                plot(ms.tvec, ms.Deconv(:,iS), 'color', c_ord(1,:));
-
-        plot(ms.tvec, ms.RawTraces(:,iS), 'color', [.8 .8 .8 .2]); 
-xlim([ms.tvec(1), ms.tvec(end)])
     
 %     
 %     % plot the linear TCs
@@ -360,7 +368,8 @@ xlim([ms.tvec(1), ms.tvec(end)])
 %         cfg_fig.ft_size = 12;
 %         SetFigure(cfg_fig, gcf)
 %         maximize
-%         saveas(gcf, [save_dir filesep fname '_' S.label{iS}(1:end-2) '.png'])
+mkdir([save_dir filesep subject '_' sess filesep])
+        saveas(gcf, [save_dir filesep subject '_' sess filesep fname '_' S.label{iS} '.png'])
 %         % saveas(gcf, [save_dir filesep fname '_' S.label{iS}(1:end-2) '.fig'])
 %         
 %         this_TC = TC;
