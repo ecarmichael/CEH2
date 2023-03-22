@@ -134,11 +134,29 @@ end
 nan_idx = isnan(data_out.(fields{1})(:,1)); 
 
 %% grab the timestamps. 
+t_file = dir('time*'); 
 
-TS = readtable('timeStamps.csv');
-
+if contains(t_file.name, '.csv')
+TS = readtable(t_file.name);
 data_out.tvec = table2array(TS(:,2));
+frameNum = TS(:,1);
+maxBufferUsed =  max(table2array(TS(:,3)));
 
+elseif contains(t_file.name, '.dat')
+    cfg_ts = [];
+    cfg_ts.correct_time = 0; 
+    
+    TS = MS_Load_TS(cfg_ts);
+    for ii = length(TS{1}.system_clock):-1:1
+        TS_len(ii) = length(TS{1}.system_clock{ii});
+    end
+    this_cam_idx = nearest_idx(length(data_out.(fields{1})), TS_len); % get the nearest timestamps. 
+    data_out.tvec = TS{1}.system_clock{this_cam_idx};
+    data_out.tvec(1) = 0; 
+    frameNum = TS{1}.framenumber{this_cam_idx}; 
+    maxBufferUsed = TS{1}.buffer{this_cam_idx};
+
+end
 data_out.tvec = data_out.tvec./1000; % convert to seconds
 
 if length(data_out.tvec) ~= length(data_out.(fields{1}))
@@ -186,12 +204,12 @@ behav.dirName = cd;
 behav.numFiles = length(file_list);
 behav.numFrames = data_out.tvec;
 behav.vidNum = fnum;
-behav.frameNum = TS(:,1);
+behav.frameNum = frameNum;
 behav.maxFramesPerFile = 1000;
 behav.height = ceil(max(data_out.(fields{1})(:,1)));
 behav.width =  ceil(max(data_out.(fields{1})(:,2)));
 behav.camNumber = 1; 
-behav.maxBufferUsed =  max(table2array(TS(:,3)));
+behav.maxBufferUsed =  maxBufferUsed; 
 behav.position = data_out.(fields{1})(:,1:2); 
 behav.speed = sqrt(vx.^2+vy.^2)';
 behav.HD = HD; 

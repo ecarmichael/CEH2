@@ -17,7 +17,7 @@
 %% initialize
 
 close all
-restoredefaultpath
+%restoredefaultpath
 global PARAMS  % these are global parameters that can be called into any function.  I limit these to directories for storing, loading, and saving files and codebases.
 os = computer;
 % parent_dir = '/home/ecarmichael/Dropbox (Williams Lab)/Williams Lab Team Folder/Ingrid/Behav test and scripts/ck2cre-1359hd/2021_01_30/14_18_06';
@@ -40,10 +40,11 @@ if strcmp(os, 'GLNXA64')
         PARAMS.stats_dir = PARAMS.inter_dir; % where to put the statistical output .txt
         PARAMS.code_base_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
         PARAMS.code_CEH2_dir = '/home/williamslab/Documents/Github/CEH2'; % where the multisite repo can be found
-    end
-    PARAMS.behav_dir = 'Behav_DLC';
-    PARAMS.ms_dir = 'Ingrid (Results_Calcium data 2020)';
-    
+    else
+        PARAMS.data_dir = '/lustre06/project/6064766/ecar/Maze_ca/inter'; % where to find the raw data
+        PARAMS.code_base_dir = '/home/ecar/Github/vandermeerlab/code-matlab/shared'; % where the codebase repo can be found
+        PARAMS.code_CEH2_dir = '/home/ecar/GitHub/CEH2'; % where the multisite repo can be found
+    end    
 else
     PARAMS.data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter'; % where to find the rpreprocessed data
     PARAMS.code_base_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; % where the codebase repo can be found
@@ -151,7 +152,8 @@ for iSub = 1:length(sub_list) % comment length out and just do iSub = X session.
         load('behav_DLC.mat')
         
         % preprocess the sessions
-        cfg.cells = [4,5,6, 10,20, 25, 43, 47, 58,62, 68];
+        cfg.cells = 1:100%[4,68];
+        %cfg.cells = [4,5,6, 10,20, 25, 43, 47, 58,62, 68];
         cfg.p_bin_size = 10; 
         data = MS_compute_place(cfg, ms_trk, behav, f_info);
         
