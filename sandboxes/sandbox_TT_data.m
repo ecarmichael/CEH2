@@ -71,7 +71,7 @@ c.TickLabels = {'start', 'end'};
 title('Movement only')
 
 % plot the positions in time when the animal is moving. 
-subplot(6,2,7:8)
+mov_h = subplot(6,2,7:8)
 hold on
 tvec_zero = pos.tvec - pos.tvec(1);  % makes time realtive to start of recording. 
 yyaxis left
@@ -111,7 +111,7 @@ theta_amp = abs(hilbert(theta_csc.data)); % get the amplitude
 
 %% plot the theta amp on top of the raw LFP
 
-subplot(6, 2, 9:12)
+move_h = subplot(6, 2, 9:12)
 hold on
 csc_tvec_zero = csc.tvec - csc.tvec(1); % will differ from tvec_zero since this has a higher sampling freq
 
@@ -124,6 +124,8 @@ ylabel('voltage (mV)')
 legend(csc.label{1})
 % plot(csc_tvec_zero, theta_amp(1,:), 'b');
 
+
+linkaxes(
 
 
 

@@ -3,7 +3,9 @@ function ms = MS_append_deconv(ms)
 
 ms = msExtractBinary_detrendTraces(ms);
 total_t = tic; 
-if exist('deconvolveCa.m', 'file') == 2
+if ~exist('deconvolveCa.m', 'file') == 2
+    error('OASIS deconvolveCa.m not found. Check that OASIS is in the path and oasis_setup has been run')' 
+else
     fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
     for iChan = size(ms.RawTraces,2):-1:1
             tic;
@@ -17,5 +19,5 @@ if exist('deconvolveCa.m', 'file') == 2
     
 %     total_toc = toc;
     toc(total_t);
-    fprintf('<strong>%s</strong>: took %.2fs to process %.0f channels\n', mfilename, toc(total_t), size(ms.RawTraces,2));  
+    fprintf('<strong>%s</strong>: took %.2fs to process %.0f channels\n', mfilename, toc(total_t), size(ms.RawTraces,2)); 
 end
