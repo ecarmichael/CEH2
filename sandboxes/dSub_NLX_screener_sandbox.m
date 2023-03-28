@@ -36,8 +36,9 @@ data_dir = 'C:\Users\williamslab\Dropbox (Williams Lab)\Williams Lab Team Folder
  
 
 cd(data_dir); % go to the data folder specified above
-%% load dada
+%% load data
 cfg.getTTnumbers = 0;
+% cfg.uint = 64; 
 S = LoadSpikes(cfg);
 
 cfg_pos = [];
@@ -46,24 +47,30 @@ pos = MS_LoadPos([]);
 
 spd = getLinSpd([], pos)
 
-% interpolate the spikes to match the time vector
-spk_x = interp1(pos.tvec,pos.data(1,:),S.t{1},'linear');
-spk_y = interp1(pos.tvec,pos.data(2,:),S.t{1},'linear');
+
 
 %% plot the position
 
 figure(101)
-
-plot(pos.data(1,:), pos.data(2,:), '.', 'color', [0.8 0.8 0.8]);
-hold on
-
-
-S_idx = nearest_idx(S.t{1}, pos.tvec);
-
-
-plot(spk_x,spk_y, '.r')
-axis off
-
+cla
+m = ceil(length(S.t)/4)+1;
+n = ceil(length(S.t)/4)+1;
+for ii = 1:length(S.t)
+    disp(ii)
+    subplot(m,n,ii)
+    plot(pos.data(1,:), pos.data(2,:), '.', 'color', [0.8 0.8 0.8]);
+    hold on
+    
+    
+    S_idx = nearest_idx(S.t{ii}, pos.tvec);
+    % interpolate the spikes to match the time vector
+spk_x = interp1(pos.tvec,pos.data(1,:),S.t{1},'linear');
+spk_y = interp1(pos.tvec,pos.data(2,:),S.t{1},'linear');
+    
+    plot(spk_x,spk_y, '.r')
+    axis off
+    title(num2str(ii))
+end
 %% convert to heat map. 
 
 % set up bins

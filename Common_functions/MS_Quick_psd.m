@@ -152,7 +152,7 @@ l = 0;
 for iSite = sorted_labels_idx
     l = l+1;
     hold on
-    plot(psd.(csc.label{iSite}(1:end-4)).f, 10*log10(psd.(csc.label{iSite}(1:end-4)).pxx), 'color', c_ord(l,:),'linewidth', line_width);
+    plot3(psd.(csc.label{iSite}(1:end-4)).f, 10*log10(psd.(csc.label{iSite}(1:end-4)).pxx),ones(size(psd.(csc.label{iSite}(1:end-4)).f))*iSite, 'color', c_ord(l,:),'linewidth', line_width);
 end
 xlim([0 250])
 y_val = ylim;
