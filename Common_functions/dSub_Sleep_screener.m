@@ -1,4 +1,4 @@
-function [hypno, csc, emg] = dSub_Sleep_screener(csc, emg)
+function [hypno, csc, emg] = dSub_Sleep_screener(csc, emg, wake_idx)
 %% dSub_Sleep_screener: run an intial screening of sleep ephys data to classify data as movement or rough sleep stages. 
 %
 %
@@ -26,16 +26,16 @@ function [hypno, csc, emg] = dSub_Sleep_screener(csc, emg)
 % EC 2022-08-22   initial version 
 %
 %% initialize
-    Meta = MS_Load_meta;
 
 if nargin < 1
+        Meta = MS_Load_meta;
     cfg_csc.fc = {Meta.goodCSC};%, 'CSC3.ncs'};  % pick the channels to load
     csc = LoadCSC(cfg_csc); % load the csc data
     
     cfg_csc.fc = {Meta.EMG};%, 'CSC3.ncs'};  % pick the channels to load
     emg = LoadCSC(cfg_csc); % load the csc data
 elseif nargin < 2
-    
+        Meta = MS_Load_meta;
     cfg_csc.fc = {Meta.EMG};%, 'CSC3.ncs'};  % pick the channels to load
     emg = LoadCSC(cfg_csc); % load the csc data
 end
@@ -46,11 +46,11 @@ end
 
 cord = linspecer(5);
 
-d_t_ratio = .5; 
-emg_rms_prctile = 70; 
+d_t_ratio = 1; 
+emg_rms_prctile = 90; 
 %% get the EMG RMS
 
-emg_rms = sqrt(movmedian(emg.data.^2, csc.cfg.hdr{1}.SamplingFrequency*5));      % RMS Value Over ‘WinLen’ Samples
+emg_rms = sqrt(movmedian(emg.data.^2, csc.cfg.hdr{1}.SamplingFrequency*10));      % RMS Value Over ‘WinLen’ Samples
 
 % emg_rms_z = zscore(emg_rms); 
 
@@ -63,33 +63,36 @@ move_idx = emg_rms >move_thresh;
 %% get the theta delta ratio
 cfg_con_t = [];
 cfg_con_t.threshold = 0;
-cfg_con_t.f = [6 12]; cfg_con_t.type = 'fdesign';
+cfg_con_t.f = [7 10]; cfg_con_t.type = 'fdesign';
 %     cfg_con_f.display_filter = 1
 csc_th = FilterLFP(cfg_con_t,csc);
 % csc_th.data = smooth(csc_th.data, csc.cfg.hdr{1}.SamplingFrequency*2);
-csc_th.data = smooth(abs(hilbert(csc_th.data)), csc.cfg.hdr{1}.SamplingFrequency*10);
+csc_th.data = smoothdata(abs(hilbert(csc_th.data)), 'movmean', csc.cfg.hdr{1}.SamplingFrequency*10);
 
 cfg_con_d = [];
 cfg_con_d.threshold = 0;
-cfg_con_d.f = [1 4]; cfg_con_d.type = 'fdesign';
-%     cfg_con_f.display_filter = 1
+cfg_con_d.f = [0.5 4]; cfg_con_d.type = 'fdesign';
+% cfg_con_d.display_filter = 1
 csc_delta = FilterLFP(cfg_con_d,csc);
 % csc_delta.data = smooth(csc_delta.data, csc.cfg.hdr{1}.SamplingFrequency*2);
-csc_delta.data = smooth(abs(hilbert(csc_delta.data)), csc.cfg.hdr{1}.SamplingFrequency*10);
+csc_delta.data = smoothdata(abs(hilbert(csc_delta.data)), 'movmean', csc.cfg.hdr{1}.SamplingFrequency*10);
 
 
 ratio = csc;
 ratio.data = zscore((csc_th.data ./ csc_delta.data)');
 
 z_ratio = nan(1, length(csc.tvec));
-z_ratio(~move_idx) = zscore((csc_th.data(~move_idx)./emg_rms(~move_idx)'));%csc_delta.data(~move_idx)));
+z_ratio(~move_idx) = zscore((csc_th.data(1, ~move_idx)./emg_rms(1,~move_idx)));%csc_delta.data(~move_idx)));
 
 
-sat_idx = (csc.data == max(csc.data)) | (csc.data == min(csc.data));
+sat_idx = zeros(1, length(csc.data));%(abs(csc.data) >= prctile(abs(csc.data), 90));% | (csc.data <= prctile(csc.data, 5));
+for ii = 1:size(wake_idx,1)
+   sat_idx(wake_idx(ii, 1):wake_idx(ii, 2)) = 1; 
+end
 
 hypno_init = ones(size(csc.tvec))*2; % set everything to SWS; 
 hypno_init(~move_idx & z_ratio > d_t_ratio) = 3; % putative REM
-hypno_init(move_idx) = 1; %awake based on movement; 
+hypno_init(move_idx | sat_idx) = 1; %awake based on movement; 
 
 labels = {'Wake', 'SWS', 'REM'}; 
 
@@ -100,8 +103,8 @@ wake_tsd = tsd(csc.tvec, (hypno_init == 1)', 'wake');
 
 wake_cfg.threshold = 0; 
 wake_cfg.dcn = '>';
-wake_cfg.minlen = 10;
-wake_cfg.merge_thr = 10; 
+wake_cfg.minlen = 5;
+wake_cfg.merge_thr = 5; 
 wake_iv = TSDtoIV(wake_cfg, wake_tsd);
 
 
@@ -109,8 +112,8 @@ REM_tsd = tsd(csc.tvec, (hypno_init == 3)', 'REM');
 
 rem_cfg.threshold = 0; 
 rem_cfg.dcn = '>';
-rem_cfg.minlen = 15;
-rem_cfg.merge_thr = 1; 
+rem_cfg.minlen = 10;
+rem_cfg.merge_thr = 5; 
 REM_iv = TSDtoIV(rem_cfg, REM_tsd);
  
 % cfg = [];
@@ -142,10 +145,11 @@ cla
 tic
 hold on
 yyaxis right
-plot((csc.tvec - csc.tvec(1)),  emg_rms*1000,  'color', cord(2,:));
+plot((csc.tvec - csc.tvec(1)),  emg_rms'*1000,  'color', cord(2,:));
 ylim([min(emg_rms*1000), 3*max(emg_rms*1000)])
 yline(move_thresh*1000)
 set(gca, 'xtick', [])
+ylabel('EMG voltage (mV)')
 
 % ylim([0 50])
 yyaxis left
@@ -153,6 +157,7 @@ plot((csc.tvec - csc.tvec(1)), csc.data*1000, 'color', cord(1,:));
 legend({'Raw LFP', 'smooth EMG-rms'});
 % xlim([min((csc.tvec - csc.tvec(1))/60/60) max((csc.tvec - csc.tvec(1))/60/60)])
 ylim([.75*min(csc.data*1000), 1.25*max(csc.data*1000)])
+ylabel('LFP voltage')
 
 set(gca, 'xtick', [])
 % ylabel('LFP voltage')
@@ -163,9 +168,11 @@ cla
 hold on
 plot((csc.tvec - csc.tvec(1)),  ~move_idx & z_ratio > .5, 'k');
 plot((csc.tvec - csc.tvec(1)), z_ratio,  'color', cord(3,:));
-legend({'excluded idx', 'theta/delta z'});
+% plot((csc.tvec - csc.tvec(1)), sat_idx - 2,  'color', cord(5,:));
+ylabel('Theta-delta ratio')
+legend({'REM idx', 'theta/delta z'});
 
-yline(.5); 
+% yline(.5); 
 set(gca, 'xtick', [])
 
 ax(3) = subplot(7,1,7);
