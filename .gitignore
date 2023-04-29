@@ -25,3 +25,7 @@
 # cluster files
 *.out
 *.sl
+
+# narval stuff
+narval*
+*.pub

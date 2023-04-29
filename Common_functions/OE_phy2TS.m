@@ -29,6 +29,7 @@ S.type = 'ts';
 for ii = length(good_clusters_ids):-1:1
     S.t{ii} = double(spike_times(spike_clusters == good_clusters_ids(ii)));
     S.label{ii} = num2str(good_clusters_ids(ii));
+
 end
 
 S.cfg.history.mfun{1} = mfilename;
