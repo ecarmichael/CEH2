@@ -5,10 +5,11 @@ code_dir = 'C:\Users\ecarm\Downloads\Dos-Santos Assembly ICA\Dos-Santos Assembly
 
 RnR_dir = 'C:\Users\ecarm\Documents\GitHub\RnR_methods'; 
 
-data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3'; 
+data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3'; 
 restoredefaultpath
 addpath(genpath(codebase_dir))
 addpath(genpath(RnR_dir));
+
 addpath(code_dir)
 
 cd(data_dir)
@@ -79,14 +80,19 @@ end
 
 %% stem plot for first few ensembles 
  figure(303); hold on
-for ii = 3
+for ii = 2
         stem(Ass_Temp(:,ii))
 end
 
 %% plot the output
 
 figure(202)
-ax(1) = subplot(5,1,1:4);
+ax(1) = subplot(6, 1, 1)
+hold on
+plot(ms_trk.time/1000, behav.position(:,1)); 
+plot(ms_trk.time/1000, behav.position(:,2)); 
+xlim([ms_trk.time(1)/1000 ms_trk.time(end)/1000])
+ax(2) = subplot(6,1,2:5);
 hold on
 for ii = size(gau_sdf, 2):-1:1
     s_t = ms_trk.time(Csp(:,ii) >0)/1000;
@@ -99,7 +105,7 @@ end
 xlim([ms_trk.time(1)/1000 ms_trk.time(end)/1000])
 ylim([0 size(Csp, 2)])
     
-ax(2) = subplot(5,1,5);
+ax(3) = subplot(6,1,6);
 hold on
 c_ord = linspecer(10); 
 for ii = 1:10
