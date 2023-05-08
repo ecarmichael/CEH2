@@ -6,7 +6,7 @@ disp('vandermeerlab codebase added')
 % add EC's codebase here: 
 addpath(genpath('/home/williamslab/Documents/Github/CEH2'))
 
-data_dir = '/home/williamslab/Downloads/TT_data'; % where is the data
+data_dir = '/home/williamslab/Desktop/For Travis - LFP test/ground'; % where is the data
 
 %% quick PSD from a session
 
@@ -17,9 +17,11 @@ MS_Quick_psd; % run this to get a PSD from all the channels in this dir.
 cd(data_dir)
 
 cfg = [];
-cfg.decimateByFactor = 16; % used to downsample the 32000 data to 2000Hz
-cfg.fc = {'CSC1.ncs'}; % comment this to load all channels in this folder. 
-csc = LoadCSC(cfg); % load all csc channels. 
+cfg.fc = {'CSC2.ncs' 'CSC9.ncs', 'CSC10.ncs', 'CSC14.ncs'}; % comment this to load all channels in this folder. 
+
+cfg.desired_sampling_frequency = 2000; % helps with speed. 
+
+csc = MS_LoadCSC(cfg); % load csc channels. 
 
 art_idx = zscore(abs(csc.data)) > 3; % get index for large amp events, likely hitting a wall or something. 
 %% load the position
@@ -125,7 +127,7 @@ legend(csc.label{1})
 % plot(csc_tvec_zero, theta_amp(1,:), 'b');
 
 
-linkaxes(
+% linkaxes(
 
 
 

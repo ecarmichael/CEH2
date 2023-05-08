@@ -5,13 +5,13 @@ function [ms] = msExtractBinary_detrendTraces(ms, z_threshold, Fs)
 %% Parameters
 if nargin < 2
     z_threshold = 3;
-    Fs = round(1/mode(diff(ms.time)));
+    Fs = mode(diff(ms.time));
 elseif nargin < 3
-    Fs = round(1/mode(diff(ms.time)));
+    Fs = mode(diff(ms.time));
 end
 
 if Fs <10
-    error('Something is wrong with the sampling rate'); 
+%     error('Something is wrong with the sampling rate'); 
 end
 
     [bFilt,aFilt] = butter(2,  2/(Fs/2), 'low');

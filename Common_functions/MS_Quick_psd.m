@@ -94,11 +94,11 @@ end
 %     pair_labels{iSite} = [real_label{iSite}(1:3) '-' real_label{iSite+1}(1:3)]
 % end
 %% make a plot of the targets [BETA] relative to bregma. 
+        figure
 
 % electrode plot (beta)
 if exist('*Keys', 'file')
     if isfield(ExpKeys, 'Target')
-        figure
         c_ord = linspecer(length(csc.label)); % predefine some colours.
         
         subplot(2,3,1)
