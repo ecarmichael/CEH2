@@ -17,7 +17,7 @@ MS_Quick_psd; % run this to get a PSD from all the channels in this dir.
 cd(data_dir)
 
 cfg = [];
-cfg.fc = {'CSC2.ncs' 'CSC9.ncs', 'CSC10.ncs', 'CSC14.ncs'}; % comment this to load all channels in this folder. 
+cfg.fc = {'CSC2.ncs' 'CSC8.ncs', 'CSC10.ncs', 'CSC14.ncs'}; % comment this to load all channels in this folder. 
 
 cfg.desired_sampling_frequency = 2000; % helps with speed. 
 
@@ -111,19 +111,44 @@ theta_csc = FilterLFP(cfg_filt_t, csc); % filter the raw LFP using
 
 theta_amp = abs(hilbert(theta_csc.data)); % get the amplitude
 
+theta_phi  = angle(hilbert(theta_csc.data(1,:))); 
+
+theta_csc.data = theta_csc.data(1,:); 
+%% Get the gamma power in time
+
+cfg_filt_t = [];
+cfg_filt_t.type = 'butter';%'fdesign'; %the type of filter I want to use via filterlfp
+cfg_filt_t.f  = [30 55]; % freq range to match Mizuseki et al. 2011
+cfg_filt_t.order = 3; %type filter order
+% cfg_filt_t.display_filter = 1; % use this to see the fvtool
+
+gamma_csc = FilterLFP(cfg_filt_t, csc); % filter the raw LFP using
+
+gamma_amp = abs(hilbert(gamma_csc.data)); % get the amplitude
+
+gamma_csc.data = gamma_csc.data(1,:); 
+%% Mod idx
+
+mod_th_g = MS_ModIdx_win(theta_csc, gamma_csc, 30*theta_csc.cfg.hdr{1}.SamplingFrequency);
+
 %% plot the theta amp on top of the raw LFP
+c_ord = winter(length(csc.label)); 
 
 move_h = subplot(6, 2, 9:12)
 hold on
 csc_tvec_zero = csc.tvec - csc.tvec(1); % will differ from tvec_zero since this has a higher sampling freq
 
-plot(csc_tvec_zero, csc.data(1,:), 'k');
-plot(csc_tvec_zero(art_idx), csc.data(1,art_idx), '.r');
+for ii = length(csc.label):-1:1
+plot(csc_tvec_zero, csc.data(ii,:)-(ii/50), 'color', c_ord(ii,:));
+plot(csc_tvec_zero(art_idx), csc.data(ii,art_idx)-(ii/50), '.r');
+
+% labels{ii} = csc.label{ii}; 
+end
 
 xlim([csc_tvec_zero(1) csc_tvec_zero(end)]); 
 xlabel('time (s)')
 ylabel('voltage (mV)')
-legend(csc.label{1})
+legend(csc.label)
 % plot(csc_tvec_zero, theta_amp(1,:), 'b');
 
 

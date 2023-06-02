@@ -13,7 +13,7 @@ cd(data_dir);
 %% load the data
 
 cfg_csc = [];
-cfg_csc.fc = {'CSC2.ncs'};
+cfg_csc.fc = {'CSC6.ncs'};
 
 csc = MS_LoadCSC(cfg_csc);
 

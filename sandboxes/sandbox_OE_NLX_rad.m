@@ -225,7 +225,8 @@ title('Ecoding phase')
 =======
 plot(pos_encode_trials.data(1,:), pos_encode_trials.data(2,:), '.', 'color', c_ord(1,:));
 plot(pos_encode_iti.data(1,:), pos_encode_iti.data(2,:), '.', 'color', c_ord(2,:));
-legend({'Trials'; 'ITI'})
+legend({'Trials'; 'ITI'})wake_t = [0 1660 11177 13440 17000 csc.tvec(end)]; 
+
 title('Ecoding phase')
 >>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
 subplot(3,3,2)
