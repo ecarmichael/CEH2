@@ -88,7 +88,7 @@ for iSub = 1:length(sub_list)
     cd(this_sub_dir)
     sess_found = dir('2*');
     
-    for iS = 1:length(sess_found)
+    for iS = length(sess_found):-1:1
         cd([this_sub_dir filesep sess_found(iS).name])
         recs_found = dir;
         % remove the first two which are '.' and '..'.
@@ -125,13 +125,39 @@ for iSub = 1:length(sub_list)
         elseif exist([maze_dir filesep scope_id filesep 'minian_ms.mat'], 'file')
             fprintf('<strong> minian_ms found in</strong> %s', [maze_dir filesep scope_id])
             load([maze_dir filesep scope_id filesep 'minian_ms.mat'], 'ms');
-            Maze.minianms = ms; clear ms;
+            Maze.ms = ms; clear ms;
+            Maze.ms.Minian = True;
         elseif exist([maze_dir filesep scope_id filesep 'minian_dataset.nc'], 'file') && ~exist([maze_dir filesep scope_id filesep 'minian_ms.mat'], 'file')
             fprintf('<strong> minian_dataset.nc found in</strong> %s', [maze_dir filesep scope_id])
             
-            Maze.minianms = Minian2MS([maze_dir filesep scope_id], 1, 1);
+            Maze.ms = Minian2MS([maze_dir filesep scope_id], 1, 1);
+                        Maze.ms.Minian = True;
             %             saveas(gcf, [sub_id '_' sess_found(iS).name '_Maze_ms.png'])
         end
+        
+        % check for processed CNMFE
+        if ~exist([maze_dir filesep scope_id filesep 'ms.mat'], 'file')
+            fprintf('<strong> No Minian output found in</strong> %s\n', [maze_dir filesep scope_id])
+%             continue
+        elseif exist([maze_dir filesep scope_id filesep 'ms.mat'], 'file')
+            fprintf('<strong> ms found in</strong> %s\n', [maze_dir filesep scope_id])
+           warning off;
+            load([maze_dir filesep scope_id filesep 'ms.mat'], 'ms');
+            load([maze_dir filesep scope_id filesep 'ms.mat'], 'ms');
+
+            warning on;
+            cd([maze_dir filesep scope_id])
+            ms = MS_append_timeStamps(ms); 
+            ms = MS_append_sharp_SFPs(ms);
+            if exist('deconvolveCa.m', 'file') == 2
+                ms = MS_append_deconv(ms); 
+            end
+            Maze.ms = ms; clear ms;
+            Maze.ms.tvec = Maze.ms.time;
+            Maze.ms = rmfield(Maze.ms, 'time'); 
+        end
+        
+        
         
         % check for processed HD
         if ~exist([maze_dir filesep scope_id filesep 'headOrientation.csv'], 'file')
@@ -159,9 +185,13 @@ for iSub = 1:length(sub_list)
             clf
             maximize
             plot(Maze.pos.data(1,:), Maze.pos.data(2,:), '.');
+            fprintf('Draw around the outside (blue)\n')
             maze_out_roi = drawpolygon(gca, 'color', 'blue');
             
+            fprintf('Draw around the inside (other side) (red)\n')
             maze_in_roi = drawpolygon(gca, 'color', 'red');
+            
+            fprintf('Draw around the inside (other side) (red)\n')
             maze_in2_roi = drawpolygon(gca, 'color', 'red');
             
             in_idx = inpolygon(Maze.pos.data(1,:), Maze.pos.data(2,:), maze_out_roi.Position(:,1), maze_out_roi.Position(:,2));
@@ -192,9 +222,9 @@ for iSub = 1:length(sub_list)
         end
         
         % interpolate to match data to ms.
-        
-        ms_length = length(Maze.minianms.RawTraces);
-        ms_times = [Maze.minianms.tvec(1) Maze.minianms.tvec(end)];
+            ms_length = length(Maze.ms.RawTraces);
+            ms_times = [Maze.ms.tvec(1) Maze.ms.tvec(end)];
+
         
         hd_length = length(Maze.HD.data);
         hd_times = [Maze.HD.tvec(1) Maze.HD.tvec(end)];
@@ -203,11 +233,11 @@ for iSub = 1:length(sub_list)
             fprintf('Length of data differs between <strong>%s (%.3f - %.3fs)</strong> and <strong>%s (%.3f - %.3fs)</strong>\n', 'Minian_ms', ms_times(1), ms_times(2), 'HD', hd_times(1), hd_times(2))
             int_data = [];
             for ii = size(Maze.HD.data,1):-1:1
-                int_data(ii,:) = interp1(Maze.HD.tvec,Maze.HD.data(ii,:),  Maze.minianms.tvec);
+                int_data(ii,:) = interp1(Maze.HD.tvec,Maze.HD.data(ii,:),  Maze.ms.tvec);
             end
             Maze.HD.data = int_data;
         end
-        Maze.HD.tvec = Maze.minianms.tvec;
+        Maze.HD.tvec = Maze.ms.tvec;
         
         % position data.
         pos_length = length(Maze.pos.data);
@@ -216,30 +246,52 @@ for iSub = 1:length(sub_list)
             fprintf('Length of data differs between <strong>%s (%.3f - %.3fs)</strong> and <strong>%s (%.3f - %.3fs)</strong>\n', 'Minian_ms', ms_times(1), ms_times(2), 'Pos', pos_times(1), pos_times(2))
             int_data = [];
             for ii = size(Maze.pos.data,1):-1:1
-                int_data(ii,:) = interp1( Maze.pos.tvec, Maze.pos.data(ii,:), Maze.minianms.tvec);
+                int_data(ii,:) = interp1( Maze.pos.tvec, Maze.pos.data(ii,:), Maze.ms.tvec);
             end
             Maze.pos.data = int_data;
         end
-        Maze.pos.tvec = Maze.minianms.tvec;
+        Maze.pos.tvec = Maze.ms.tvec;
         
         
         %% Open Field
-        
-        % check for processed data
         if ~exist([OF_dir filesep scope_id filesep 'minian_dataset.nc'], 'file') && ~exist([OF_dir filesep scope_id filesep 'minian_ms.mat'], 'file')
             fprintf('<strong> No Minian output found in</strong> %s', [OF_dir filesep scope_id])
-            %            continue
+%             continue
         elseif exist([OF_dir filesep scope_id filesep 'minian_ms.mat'], 'file')
             fprintf('<strong> minian_ms found in</strong> %s', [OF_dir filesep scope_id])
             load([OF_dir filesep scope_id filesep 'minian_ms.mat'], 'ms');
-            OF.minianms = ms; clear ms;
+            OF.ms = ms; clear ms;
+            OF.ms.type = 'Minian';
         elseif exist([OF_dir filesep scope_id filesep 'minian_dataset.nc'], 'file') && ~exist([OF_dir filesep scope_id filesep 'minian_ms.mat'], 'file')
             fprintf('<strong> minian_dataset.nc found in</strong> %s', [OF_dir filesep scope_id])
             
-            OF.minianms = Minian2MS([OF_dir filesep scope_id], 1, 1);
-            %             saveas(gcf, [sub_id '_' sess_found(iS).name '_OF_ms.png'])
+            OF.ms = Minian2MS([OF_dir filesep scope_id], 1, 1);
+            OF.ms.Minian = True;
+            %             saveas(gcf, [sub_id '_' sess_found(iS).name '_Maze_ms.png'])
         end
         
+        % check for processed CNMFE
+        if ~exist([OF_dir filesep scope_id filesep 'ms.mat'], 'file')
+            fprintf('<strong> No Minian output found in</strong> %s\n', [OF_dir filesep scope_id])
+%             continue
+        elseif exist([OF_dir filesep scope_id filesep 'ms.mat'], 'file')
+            fprintf('<strong> ms found in</strong> %s\n', [OF_dir filesep scope_id])
+           warning off;
+            load([OF_dir filesep scope_id filesep 'ms.mat'], 'ms');
+
+            warning on;
+            cd([OF_dir filesep scope_id])
+            ms = MS_append_timeStamps(ms); 
+            ms = MS_append_sharp_SFPs(ms);
+            if exist('deconvolveCa.m', 'file') == 2
+                ms = MS_append_deconv(ms); 
+            end
+            OF.ms = ms; clear ms;
+            OF.ms.tvec = OF.ms.time;
+            OF.ms = rmfield(OF.ms, 'time');
+            OF.ms.type = 'CNMFe';
+        end
+
         % check for processed HD
         if ~exist([OF_dir filesep scope_id filesep 'headOrientation.csv'], 'file')
             fprintf('<strong> No HD output found in</strong> %s', [OF_dir filesep scope_id])
@@ -293,15 +345,15 @@ for iSub = 1:length(sub_list)
         end
         
         if exist('OF', 'var')
-            if sum(contains(fieldnames(OF), {'minianms','HD', 'pos'})) ~=3
+            if sum(contains(fieldnames(OF), {'ms','HD', 'pos'})) ~=3
                 fprintf(['<strong>' sub_list{iSub} '_' sess_found(iS).name ' is incomplete</strong>\n'])
                 continue
             end
         end
         % interpolate to match data to ms.
         
-        ms_length = length(OF.minianms.RawTraces);
-        ms_times = [OF.minianms.tvec(1) OF.minianms.tvec(end)];
+        ms_length = length(OF.ms.RawTraces);
+        ms_times = [OF.ms.tvec(1) OF.ms.tvec(end)];
         
         hd_length = length(OF.HD.data);
         hd_times = [OF.HD.tvec(1) OF.HD.tvec(end)];
@@ -310,11 +362,11 @@ for iSub = 1:length(sub_list)
             fprintf('Length of data differs between <strong>%s (%.3f - %.3fs)</strong> and <strong>%s (%.3f - %.3fs)</strong>\n', 'Minian_ms', ms_times(1), ms_times(2), 'HD', hd_times(1), hd_times(2))
             int_data = [];
             for ii = size(OF.HD.data,1):-1:1
-                int_data(ii,:) = interp1(OF.HD.tvec,OF.HD.data(ii,:),  OF.minianms.tvec);
+                int_data(ii,:) = interp1(OF.HD.tvec,OF.HD.data(ii,:),  OF.ms.tvec);
             end
             OF.HD.data = int_data;
         end
-        OF.HD.tvec = OF.minianms.tvec;
+        OF.HD.tvec = OF.ms.tvec;
         
         % position data.
         pos_length = length(OF.pos.data);
@@ -323,11 +375,11 @@ for iSub = 1:length(sub_list)
             fprintf('Length of data differs between <strong>%s (%.3f - %.3fs)</strong> and <strong>%s (%.3f - %.3fs)</strong>\n', 'Minian_ms', ms_times(1), ms_times(2), 'Pos', pos_times(1), pos_times(2))
             int_data = [];
             for ii = size(OF.pos.data,1):-1:1
-                int_data(ii,:) = interp1( OF.pos.tvec, OF.pos.data(ii,:), OF.minianms.tvec);
+                int_data(ii,:) = interp1( OF.pos.tvec, OF.pos.data(ii,:), OF.ms.tvec);
             end
             OF.pos.data = int_data;
         end
-        OF.pos.tvec = OF.minianms.tvec;
+        OF.pos.tvec = OF.ms.tvec;
         
         %% save the data back to the intermediate dir
         if ~exist(inter_dir, 'dir')

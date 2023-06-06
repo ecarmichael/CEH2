@@ -27,6 +27,9 @@ if nargin < 2
      end
 end
 
+if ~isfield(ms, 'time') && isfield(ms, 'tvec')
+    ms.time = ms.tvec;
+end
 
 %%
 figure(1919)
@@ -36,14 +39,14 @@ figure(1919)
     
     subplot(2,2,2)
     cla
-    imagesc(max(ms.SFPs_sharp(:,:,:),[],3));
+    imagesc(max(ms.SFPs(:,:,:),[],3));
     c_val = caxis; 
-    caxis([0 c_val(2)*.2])
+    caxis([0 15])
     hold on
 
     for ii = 1:length(cell_ids)
         [row, col] = find(ms.SFPs_sharp(:,:,cell_ids(ii)) == max(max(ms.SFPs_sharp(:,:,cell_ids(ii)))));
-        scatter(col, row,50, 'MarkerEdgeColor', c_ord(ii,:), 'LineWidth', 2)
+        scatter(col, row,50,'o',  'MarkerEdgeColor',c_ord(ii,:) , 'LineWidth', 1);% c_ord(ii,:)
     end
     title(['nCells: ' num2str(ms.numNeurons)]);
 %     xlim([min(ms.Centroids(:,1))-min(ms.Centroids(:,1))*.2  max(ms.Centroids(:,1))+max(ms.Centroids(:,1))*.2])
@@ -62,12 +65,17 @@ figure(1919)
 % %         plot(ms.frame*(1/30), (ms.Spikes(:,ii)*5)+ii*10,'color', 'k')
 %         
 %     end
-    title('zscored deconvolved traces')
+    title('zscored denoised traces')
     ylabel('cell ID')
     xlabel('time (s)')
+     c_val = caxis; 
+    caxis([0 16])
 %     set(gca,'ytick', 0:100:ms.numNeurons*mult_fac, 'YTickLabel', (0:100:length(ms.units)*mult_fac)/mult_fac, 'TickDir', 'out')
     ylim([0 ms.numNeurons])
-    xlim([ms.time(1) ms.time(end)])
+%     xlim([ms.time(1) ms.time(end)])
+xlim([65 260])
+%         set(gca,'xtick', [round(abs(ms.time(1))) round(ms.time(end),0)], 'xTickLabel', [round(abs(ms.time(1))) round(ms.time(end),0)], 'TickDir', 'out')
+
     
     
     subplot(2,2,[1 3])
@@ -88,10 +96,14 @@ figure(1919)
     title('Denoise and deconvolved traces for sample cells')
     ylabel('cell ID')
     xlabel('time (s)')
-    set(gca,'ytick', [1:length(cell_ids)]*fact, 'YTickLabel', cell_ids, 'TickDir', 'out')
+    set(gca,'ytick', [1 length(cell_ids)]*fact, 'YTickLabel', [cell_ids(1) cell_ids(end)], 'TickDir', 'out')
+%     x_ticks = get(gca, 'xtick'); 
+%         x_lab = get(gca, 'xticklabel'); 
+        set(gca,'xtick', [round(abs(ms.time(1))) round(ms.time(end),0)], 'xTickLabel', [round(abs(ms.time(1))) round(ms.time(end),0)], 'TickDir', 'out')
+
     ylim([0 (length(cell_ids)+2)*fact])
     xlim([ms.time(1) ms.time(end)])
-    legend({'Raw', 'Denoise', 'Deconv'}, 'Location', 'north', 'Orientation', 'horizontal')
+    legend({'Raw', 'Denoise', 'Deconv'}, 'Location', 'north', 'Orientation', 'horizontal', 'box', 'off')
     
 
 maximize

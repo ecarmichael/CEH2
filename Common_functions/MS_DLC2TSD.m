@@ -92,9 +92,11 @@ this_field = [];
 
 for iF  = 1:length(file_list)
     DLC_data = table2array(readtable(file_list{iF}, 'Headerlines', 3));
-    tbl = readtable(file_list{iF});
-    DLC_labels = tbl{1,2:end};
-    fields = unique(DLC_labels); % get the parts
+    tbl = readtable(file_list{iF},'Headerlines', 1);
+    DLC_labels = tbl.Properties.VariableNames(2:end);
+   fields= DLC_labels;
+   fields(contains(DLC_labels, '_')) = [];  
+%     fields = unique(DLC_labels); % get the parts
     
     for iFields = 1:length(fields)
         f_idx = find(contains(DLC_labels, fields{iFields}));
