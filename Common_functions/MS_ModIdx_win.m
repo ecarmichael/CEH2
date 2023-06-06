@@ -142,15 +142,25 @@ toc
 % 
 figure(1010)
 clf
-ax(1) = subplot(4,1,1:2);
-hold on
+ax(1) = subplot(3,1,1:2);
+yyaxis left
 plot(sig_phi.tvec, Phi_1)
+ylabel('radians')
+ yyaxis right
 plot(sig_phi.tvec, Amp_1*10000);
+ylabel('amplitude')
+title('Phase and amplitude')
+legend({'Phi', 'Amp'})
+set(gca, 'XTick', [])
 % 
 % ax(2) = subplot(4,1,3);
 % plot(sig_amp.tvec, ModIdx_z)
+
+ax(3) = subplot(3,1,3);
+plot(sig_amp.tvec, ModIdx)
+ylabel('Mod Idx')
+legend('Mod Idx')
 % 
-% % ax(3) = subplot(4,1,4);
-% % plot(sig_amp.tvec, ModIdx)
-% 
-% linkaxes(ax, 'x')
+linkaxes(ax, 'x')
+
+xlim([sig_phi.tvec(1) sig_phi.tvec(end)])

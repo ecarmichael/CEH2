@@ -10,11 +10,11 @@ decode_dir = '/home/williamslab/Dropbox (Williams Lab)/10.Manifold/pv1060/LTD5';
 ms_dir = '/home/williamslab/Dropbox (Williams Lab)/Inter/pv1060/LTD5';
 
 
-raw_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1060/11_23_2019_PV1060_HATD5/H13_M25_S1_HATD5';
-decode_dir = '/home/williamslab/Dropbox (Williams Lab)/10.Manifold/pv1060/HATD5';
-% ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_18_2019_PV1069_HATD5';
-ms_dir = '/home/williamslab/Dropbox (Williams Lab)/Inter/pv1060/HATD5';
-
+% raw_dir = '/media/williamslab/Seagate Expansion Drive/Jisoo_Project/RawData/pv1060/11_23_2019_PV1060_HATD5/H13_M25_S1_HATD5';
+% decode_dir = '/home/williamslab/Dropbox (Williams Lab)/10.Manifold/pv1060/HATD5';
+% % ms_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\10_18_2019_PV1069_HATD5';
+% ms_dir = '/home/williamslab/Dropbox (Williams Lab)/Inter/pv1060/HATD5';
+% 
 
 
 core_colors = linspecer(4); 

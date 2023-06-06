@@ -187,6 +187,13 @@ plot(pos_encode_iti.data(1,:), pos_encode_iti.data(2,:), '.', 'color', c_ord(1,:
 legend({'Trials'; 'ITI'})
 title('Ecoding phase')
 
+
+%plot(pos_encode_trials.data(1,:), pos_encode_trials.data(2,:), '.', 'color', c_ord(1,:));
+%plot(pos_encode_iti.data(1,:), pos_encode_iti.data(2,:), '.', 'color', c_ord(2,:));
+%legend({'Trials'; 'ITI'})wake_t = [0 1660 11177 13440 17000 csc.tvec(end)]; 
+
+%title('Ecoding phase')
+
 subplot(3,3,2)
 plot(pos_sleep.data(1,:), pos_sleep.data(2,:), '.k');
 title('Sleep')
