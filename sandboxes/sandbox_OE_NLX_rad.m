@@ -1,6 +1,5 @@
 %% sandbox Radial Ephys
 
-<<<<<<< HEAD
 % raw_data_dir = 'J:\M29_2023-03-31_12-51-20_Rad5\Record Node 113\experiment1\recording2\continuous\Acquisition_Board-100.Rhythm Data';
 % 
 % spike_dir = 'J:\M29_2023_04_01_Rad5_kilo'%'C:\Users\ecarm\Desktop\M29_2023_04_01_Rad5_kilo';
@@ -49,15 +48,6 @@ cd(raw_data_dir)
 tvec = readNPY('timestamps.npy');
 
 % tvec = oe_evt.t(1) - tvec(1); 
-=======
-raw_data_dir = 'J:\M29_2023-03-31_12-51-20_Rad5\Record Node 113\experiment1\recording2\continuous\Acquisition_Board-100.Rhythm Data';
-
-spike_dir = 'J:\M29_2023_04_01_Rad5_kilo'%'C:\Users\ecarm\Desktop\M29_2023_04_01_Rad5_kilo';
-
-nlx_data_dir = 'D:\M29_2023-03-31_Rad5';
-
-c_ord = linspecer(3); 
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
 %% load the tracking
 
 cd(nlx_data_dir);
@@ -69,7 +59,6 @@ start_rec= evt.t{ismember(evt.label, 'Starting Recording')};
 end_rec = evt.t{ismember(evt.label, 'Stopping Recording')};
 
 sleep_times = evt.t{ismember(evt.label, 'sleep')};
-<<<<<<< HEAD
 % sleep_times = sleep_times(1);
 
 if sum(ismember(evt.label, 'end sleep')) == 0
@@ -91,29 +80,25 @@ else
 end
 
 % trial events
-=======
-end_sleep_times = evt.t{ismember(evt.label, 'end sleep')};
-REM_sleep_times = evt.t{ismember(evt.label, 'rem')};
 
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
+% end_sleep_times = evt.t{ismember(evt.label, 'end sleep')};
+% REM_sleep_times = evt.t{ismember(evt.label, 'rem')};
+
 t_start = [start_rec evt.t{ismember(evt.label, 't')}];
 t_end = [evt.t{ismember(evt.label, 'te')}];
 
 % normalize to start rec
 end_rec = end_rec - start_rec;
 
-<<<<<<< HEAD
 start_sleep_time = start_sleep_time - start_rec;
 end_sleep_time = end_sleep_time - start_rec;
-=======
-sleep_times = sleep_times - start_rec;
-end_sleep_times = end_sleep_times - start_rec;
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
+
 REM_sleep_times = REM_sleep_times - start_rec;
 
 t_start = t_start - start_rec;
 t_end = t_end - start_rec;
 
+start_rec_og = start_rec;
 start_rec = start_rec - start_rec;
 
 
@@ -121,7 +106,6 @@ start_rec = start_rec - start_rec;
 over_lap_idx = ismember(t_start, t_end);
 t_start(over_lap_idx) = [];
 
-<<<<<<< HEAD
 t_start_encode = t_start(t_start < start_sleep_time);
 t_start_recall = t_start(t_start > end_sleep_time);
 
@@ -136,23 +120,23 @@ t_end_recall = t_end(t_end > end_sleep_time);
 figure(10101)
 cla
 hold on
-scatter(oe_t_start, ones(size(oe_t_start)), 'sb', 'filled')
-scatter(oe_t_end, ones(size(oe_t_end)), 'db', 'filled')
-scatter(t_start, ones(size(t_start))+0.001, 'sr', 'filled')
-scatter(t_end, ones(size(t_end))+0.001, 'dr', 'filled')
-ylim([0.9995 1.002])
+scatter(oe_t_start, ones(size(oe_t_start)),50, 'sb', 'filled')
+scatter(oe_t_end, ones(size(oe_t_end)),50, 'db', 'filled')
+scatter(t_start, ones(size(t_start))+1,50, 'sr', 'filled')
+scatter(t_end, ones(size(t_end))+1,50, 'dr', 'filled')
+ylim([0 2.5])
 % plot(t_end, ones(size(t_end)), 'dr')
 
 offset = mean(oe_t_end - t_end'); 
 fprintf('estimated offset: %0.2fs. Correcting... \n', offset)
 
-scatter(oe_t_start - offset, ones(size(oe_t_start)), 'o', 'filled')
-scatter(oe_t_end- offset, ones(size(oe_t_end)),4, c_ord(4,:), 'o', 'filled')
+scatter(oe_t_start - offset, ones(size(oe_t_start))+.5,50, c_ord(3,:), 's', 'filled')
+scatter(oe_t_end- offset, ones(size(oe_t_end))+.5,50, c_ord(3,:), 'd', 'filled')
 % scatter(t_start, ones(size(t_start))+0.001, 'sr', 'filled')
 % scatter(t_end, ones(size(t_end))+0.001, 'dr', 'filled')
 legend({ 'oe  start', 'oe end','nlx start', 'nlx end', 'oe correct start', 'oe corrected end'})
 
-
+set(gca, 'ytick', [ 1 1.5 2], 'yticklabels', {'OE org', 'OE Corrected', 'NLX'})
 
 
 %% load the position and trim it to the trial and sleep periods. 
@@ -171,7 +155,8 @@ linspeed = getLinSpd([],pos); % linear speed
 cfg = []; cfg.method = 'raw'; cfg.operation = 'range'; cfg.threshold = [4 20]; % speed limit in cm/sec
 iv_fast = TSDtoIV(cfg,linspeed); % only keep intervals with speed above thresh
  
-pos_fast = restrict(pos, iv_fast);
+% pos_fast = restrict(pos, iv_fast);
+pos_fast = pos; 
 
 pos_fast.tvec = pos_fast.tvec - pos.tvec(1);
 pos.tvec = pos.tvec - pos.tvec(1);
@@ -186,26 +171,7 @@ pos_encode_iti = restrict(pos_fast, t_start_encode, t_start_encode+60);
 
 pos_recall_trials = restrict(pos_fast, t_start_recall(2:end)+60, t_end_recall(2:end));
 pos_recall_iti = restrict(pos_fast, t_start_recall, t_start_recall+60);
-=======
-t_start_encode = t_start(t_start < sleep_times);
-t_start_recall = t_start(t_start > end_sleep_times);
 
-t_end_encode = t_end(t_end < sleep_times);
-t_end_recall = t_end(t_end > end_sleep_times);
-
-pos = LoadPos([]);
-pos.tvec = pos.tvec - pos.tvec(1);
-
-pos_encode = restrict(pos, start_rec, sleep_times);
-pos_recall = restrict(pos, end_sleep_times, pos.tvec(end));
-pos_sleep = restrict(pos, sleep_times, end_sleep_times);
-
-pos_encode_trials = restrict(pos, t_start_encode+60, t_end_encode);
-pos_encode_iti = restrict(pos, t_start_encode, t_start_encode+60);
-
-pos_recall_trials = restrict(pos, t_start_recall+60, t_end_recall);
-pos_recall_iti = restrict(pos, t_start_recall, t_start_recall+60);
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
 
 fprintf('Encoding dur: %.0fmins \nSleep dur: %.0fmins \nRecall dur: %.0fmins\n', (pos_encode.tvec(end) - pos_encode.tvec(1))/60,  (pos_sleep.tvec(end) - pos_sleep.tvec(1))/60, (pos_recall.tvec(end) - pos_recall.tvec(1))/60)
 
@@ -216,26 +182,24 @@ figure(101)
 clf
 subplot(3,3,1)
 hold on
-<<<<<<< HEAD
 plot(pos_encode_trials.data(1,:), pos_encode_trials.data(2,:), '.', 'color', c_ord(2,:));
 plot(pos_encode_iti.data(1,:), pos_encode_iti.data(2,:), '.', 'color', c_ord(1,:));
 legend({'Trials'; 'ITI'})
 title('Ecoding phase')
 
-=======
-plot(pos_encode_trials.data(1,:), pos_encode_trials.data(2,:), '.', 'color', c_ord(1,:));
-plot(pos_encode_iti.data(1,:), pos_encode_iti.data(2,:), '.', 'color', c_ord(2,:));
-legend({'Trials'; 'ITI'})wake_t = [0 1660 11177 13440 17000 csc.tvec(end)]; 
 
-title('Ecoding phase')
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
+%plot(pos_encode_trials.data(1,:), pos_encode_trials.data(2,:), '.', 'color', c_ord(1,:));
+%plot(pos_encode_iti.data(1,:), pos_encode_iti.data(2,:), '.', 'color', c_ord(2,:));
+%legend({'Trials'; 'ITI'})wake_t = [0 1660 11177 13440 17000 csc.tvec(end)]; 
+
+%title('Ecoding phase')
+
 subplot(3,3,2)
 plot(pos_sleep.data(1,:), pos_sleep.data(2,:), '.k');
 title('Sleep')
 
 subplot(3,3,3)
 hold on
-<<<<<<< HEAD
 plot(pos_recall_trials.data(1,:), pos_recall_trials.data(2,:), '.', 'color', c_ord(2,:));
 plot(pos_recall_iti.data(1,:), pos_recall_iti.data(2,:), '.', 'color', c_ord(1,:));
 title('Recall phase')
@@ -247,15 +211,7 @@ title('Recall phase')
 % cla
 
 % for ii = 1:length(pos_recall.
-=======
-plot(pos_recall_trials.data(1,:), pos_recall_trials.data(2,:), '.', 'color', c_ord(1,:));
-plot(pos_recall_iti.data(1,:), pos_recall_iti.data(2,:), '.', 'color', c_ord(2,:));
-title('Recall phase')
 
-%% get some tvec info
-cd(raw_data_dir)
-tvec = readNPY('timestamps.npy');
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
 
 
 %% load some spikes and convert them to the TS format.
@@ -265,34 +221,20 @@ S = OE_phy2TS;
 
 % convert S.t to time using timestamps.
 for ii = 1:length(S.t)
-<<<<<<< HEAD
     this_t = tvec(S.t{ii}) - offset;
     S.t{ii} = this_t(this_t >0); 
-=======
-    S.t{ii} = tvec(S.t{ii});
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
-    
+
 end
 
 %restrict to encoding/sleep/recall
-<<<<<<< HEAD
 S_encode = restrict(S, start_rec, start_sleep_time);
 S_recall = restrict(S, end_sleep_time, end_rec);
 S_sleep = restrict(S, start_sleep_time, end_sleep_time);
-=======
-S_encode = restrict(S, start_rec, sleep_times);
-S_recall = restrict(S, end_sleep_times, end_rec);
-S_sleep = restrict(S, sleep_times, end_sleep_times);
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
 
 S_encode_trials = restrict(S, t_start_encode+60, t_end_encode);
 S_encode_iti = restrict(S, t_start_encode, t_start_encode+60);
 
-<<<<<<< HEAD
 S_recall_trials = restrict(S, t_start_recall(2:end)+60, t_end_recall(2:end));
-=======
-S_recall_trials = restrict(S, t_start_recall+60, t_end_recall);
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
 S_recall_iti = restrict(S, t_start_recall, t_start_recall+60);
 
 %% plot the spike rasters
@@ -303,13 +245,9 @@ plot(S);
 % for ii = 1:length(REM_sleep_times)
 % xline([REM_sleep_times(ii)], 'color', c_ord(2,:))
 % end
-<<<<<<< HEAD
 xline([start_sleep_time], 'color', c_ord(3,:), 'linewidth', 5)
 xline([end_sleep_time], 'color', c_ord(3,:), 'linewidth', 5)
-=======
-xline([sleep_times], 'color', c_ord(3,:), 'linewidth', 5)
-xline([end_sleep_times], 'color', c_ord(3,:), 'linewidth', 5)
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
+
 
 
 
@@ -341,15 +279,10 @@ end
 
 
 % set up bins
-<<<<<<< HEAD
 SET_xmin = 0; SET_ymin = 20; % set up bins
 SET_xmax = 80; SET_ymax = 110;
 SET_xBinSz = 2.5; SET_yBinSz = 2.5;
-=======
-SET_xmin = 0; SET_ymin = 0; % set up bins
-SET_xmax = 500; SET_ymax = 700;
-SET_xBinSz = 20; SET_yBinSz = 20;
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
+
 
  
 x_edges = SET_xmin:SET_xBinSz:SET_xmax;
@@ -362,7 +295,7 @@ kernel = gausskernel([1 1],1); % 2d gaussian in bins
 occ_hist_encode = histcn(pos_encode_trials.data(1:2,:)',y_edges,x_edges); % 2-D version of histc()
 occ_hist_encode = conv2(occ_hist_encode,kernel,'same');
  
-no_occ_idx_encode = find(occ_hist_encode < 7.5); % NaN out bins never visited
+no_occ_idx_encode = find(occ_hist_encode < 15); % NaN out bins never visited
 occ_hist_encode(no_occ_idx_encode) = NaN;
  
 occ_hist_encode = occ_hist_encode .* (1/30); % convert samples to seconds using video frame rate (30 Hz)
@@ -429,11 +362,8 @@ for ii = 1:length(S.t)
     spk_x = interp1(pos_recall_trials.tvec,pos_recall_trials.data(1,:),S_recall_trials.t{ii},'linear');
     spk_y = interp1(pos_recall_trials.tvec,pos_recall_trials.data(2,:),S_recall_trials.t{ii},'linear');
     if ip >= (n*m)/2
-<<<<<<< HEAD
         figure(2002+ii)
-=======
-        figure(102+ii)
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
+
         ip = 1;
     else
         ip = ip+1;
@@ -462,16 +392,11 @@ end
 
 %% pick certain cells
 
-<<<<<<< HEAD
-cell_id = 97; 
+cell_id = 104; 
 ii = contains(S.label, num2str(cell_id))
 % ii = 48; 
 % ii = 33
-=======
-cell_id = 549; 
-ii = 48; 
-ii = 33
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
+
 
 figure(999)
 subplot(2,2,1)
@@ -512,7 +437,6 @@ subplot(2,2,1)
     subplot(2,2,4)
     pcolor(tc'); shading flat; axis off
     
-<<<<<<< HEAD
     
     %% try some SWR dtection
     cd(csc_dir)
@@ -527,7 +451,49 @@ csc.cfg.hdr{1}.SamplingFrequency = 1000;
 clear data tvec_csc
 
 
-csc_sleep = restrict(csc, 0, start_sleep_time)
+csc_sleep = restrict(csc,0,start_sleep_time)%, csc.tvec(end))
+
+%% emg
+[emg_data, emg_tvec, emg_hdr] = load_open_ephys_data('100_RhythmData-B_CH52.continuous');
+
+emg_data = decimate(emg_data,cfg.decimateByFactor);
+emg_tvec = emg_tvec(1:cfg.decimateByFactor:end);
+
+emg = tsd(emg_tvec, emg_data', 'EMG');
+emg.cfg.hdr{1}.SamplingFrequency = 1000;
+clear emg_data emg_tvec
+
+% get the theta delta ratio
+cfg_emg = [];
+cfg_emg.threshold = 0;
+cfg_emg.f = [15 30]; 
+% cfg_emg.type = 'cheby1';
+% cfg_emg.display_filter = 1
+emg_f = FilterLFP(cfg_emg,csc);
+
+% emg_sleep = restrict(emg_f, end_sleep_time, csc.tvec(end))
+emg_sleep = restrict(emg_f,0,start_sleep_time)%, csc.tvec(end))
+
+
+%% movement
+emg_rms = emg_sleep; 
+
+emg_rms.data = sqrt(movmedian(emg_sleep.data.^2, emg_sleep.cfg.hdr{1}.SamplingFrequency*10));      % RMS Value Over ‘WinLen’ Samples
+
+% emg_rms_z = zscore(emg_rms.data); 
+
+emg_rms_mm = movmedian(emg_rms.data,(csc.cfg.hdr{1}.SamplingFrequency)*1);
+
+move_thresh = prctile(emg_rms_mm, 10);
+% REM_thresh = prctile(emg_rms_mm, 15); 
+
+move_idx = emg_rms_mm >move_thresh; 
+% move_ iv
+% cfg = []; cfg.method = 'zscore'; cfg.operation = '>';cfg.dcn = cfg.operation ; cfg.threshold = .5; % speed limit in cm/sec
+% iv_move = TSDtoIV(cfg,emg_rms); % only keep intervals with speed above thresh
+
+
+
 %%
 cfg_swr = [];
 cfg_swr.check = 0; % plot checks.
@@ -568,6 +534,7 @@ cfg_swr.nCycles_operation = '>='; % number of cycles
 % cfg_swr.var = [];
 % cfg_swr.var.operation = '<';
 % cfg_swr.var.threshold = 1;
+cfg_swr.nan_idx = move_idx;
 
 SWR_evts = MS_get_LFP_events_sandbox(cfg_swr, csc_sleep);
 
@@ -579,15 +546,50 @@ SWR_evts = MS_get_LFP_events_sandbox(cfg_swr, csc_sleep);
 %         cfg_max_len.operation = '>';
 %         cfg_max_len.threshold = 5;
 %          SWR_evts = SelectIV(cfg_max_len,SWR_evts,'nCycles');
-subplot(2,1,1)
-% check quality. 
+
+%% keep only SWRs during imobility
+
+% swr_keep = DifferenceIV([],SWR_evts, iv_move ); 
+
+%manual event curration
+for ii = 1:length(SWR_evts.tstart)
+   SWR_evts.usr.id(ii) = ii; 
+    
+end
+
+cfg_plot = [];
 cfg_plot.display = 'iv'; %'iv';
-cfg_plot.title = 'var_raw';
-PlotTSDfromIV(cfg_plot, SWR_evts, csc_sleep)
+cfg_plot.title = 'id';
+PlotTSDfromIV(cfg_plot, swr_keep, csc_sleep)
+
+%%
+% keep_idx = [1 29 30 32 37 38 39 61 72 73 74 75 81 82 83 96 97 98 99 100 101 102 103 104 105 106 113 114 116 117 119 123 137 138 139 140 141 142 143 145 146 160 161 163 164 173 174 175 176 177 178 179 180 181 186 ];
+
+keep_idx = [9 10 11 12 13 14 17 18 19 20 21 22 23 24 25 26 27];
+
+
+rm_idx = ones(1,length(swr_keep.tstart)); 
+rm_idx(keep_idx) = 0; 
+rm_idx = logical(rm_idx); 
+% for ii = length(swr_keep.tstart):-1:1
+%     if ismember(ii, keep_idx)
+        swr_keep.tstart(rm_idx) = [];
+        swr_keep.tend(rm_idx) = [];
+        f_names = fieldnames(swr_keep.usr);
+        for iF = 1:length(f_names)
+            swr_keep.usr.(f_names{iF})(rm_idx) = [];
+        end
+%     end
+% end
+
+subplot(2,1,1)
+cla
+% check quality. 
+cfg_plot = [];
+% cfg_plot.display = 'iv'; %'iv';
+cfg_plot.title = 'id';
+PlotTSDfromIV(cfg_plot, swr_keep, csc_sleep)
     
 
 
-    %%
-=======
->>>>>>> 32571c65916360fad701263c200a58b2c278b3dc
     
