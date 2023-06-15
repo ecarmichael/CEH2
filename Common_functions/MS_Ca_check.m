@@ -32,13 +32,14 @@ end
 figure(1919)
     clf
 
-    c_ord = winter(length(cell_ids));
+    c_ord = summer(length(cell_ids));
     
     subplot(2,2,2)
     cla
-    imagesc(max(ms.SFPs_sharp(:,:,:),[],3));
-    c_val = caxis; 
-    caxis([0 c_val(2)*.2])
+    MS_plot_all_SFPs(ms.SFPs_sharp); 
+%     imagesc(max(ms.SFPs_sharp(:,:,:),[],3));
+%     c_val = caxis; 
+%     caxis([0 c_val(2)*.2])
     hold on
 
     for ii = 1:length(cell_ids)
@@ -51,7 +52,9 @@ figure(1919)
 
     subplot(2,2,4)
     cla
-    imagesc( ms.time,1:ms.numNeurons,  zscore(ms.denoise)'); set(gca, 'YDir', 'normal'); 
+    imagesc( ms.time,1:ms.numNeurons,  zscore(ms.Binary)'); set(gca, 'YDir', 'normal'); 
+      c_val = caxis; 
+    caxis([0 c_val(2)*.2])
 %     all_cord = parula(floor(ms.numNeurons*1.2));%zeros(length(ms.units),3);%repmat(linspecer(5), 100, 1); 
 %     hold on
 %     mult_fac = .05; 
@@ -62,6 +65,7 @@ figure(1919)
 % %         plot(ms.frame*(1/30), (ms.Spikes(:,ii)*5)+ii*10,'color', 'k')
 %         
 %     end
+%        set(gca, 'color', 'k')
     title('zscored deconvolved traces')
     ylabel('cell ID')
     xlabel('time (s)')
@@ -79,7 +83,7 @@ figure(1919)
         this_deconv(this_deconv==0) = NaN; 
         plot(ms.time, (ms.RawTraces(:,cell_ids(ii)))+ii*fact,'color', [0.6 0.6 0.6], 'linewidth', 1)
         plot(ms.time, (ms.denoise(:,cell_ids(ii)))+ii*fact,'color', [c_ord(ii,:) .5], 'linewidth', 1)
-        plot(ms.time, ((this_deconv*5) - fact/4)+ii*fact,'color','k', 'linewidth', 3)
+        plot(ms.time, ((this_deconv*5) - fact/4)+ii*fact,'color','k', 'linewidth',1)
 
 %         plot(ms.time, ((this_deconv*5) - fact/4)+ii*fact,'color', c_ord(ii,:), 'linewidth', 1)
 %         plot(ms.time, (ms.Spikes(:,ii)*5)+ii*10,'color', 'k')

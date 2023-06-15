@@ -261,6 +261,12 @@ end
 % end
 % 
 
+%% add in the event number as a .usr
+
+for ii = length(events_out.tstart):-1:1
+   events_out.usr.num(ii) = ii;     
+end
+
 %% check again
 if cfg.check
     cfg_plot = [];
