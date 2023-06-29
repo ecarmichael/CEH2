@@ -94,7 +94,9 @@ xlim([65 260])
         plot(ms.time, (ms.RawTraces(:,cell_ids(ii)))+ii*fact,'color', [0.6 0.6 0.6], 'linewidth', 1)
         plot(ms.time, (ms.denoise(:,cell_ids(ii)))+ii*fact,'color', [c_ord(ii,:) .5], 'linewidth', 1)
         plot(ms.time, ((this_deconv*5) - fact/4)+ii*fact,'color','k', 'linewidth',1)
-
+        if isfield(ms, 'Binary')
+        plot(ms.time, ((this_deconv*5) - fact/4)+ii*fact,'color','k', 'linewidth',1)
+        end
 %         plot(ms.time, ((this_deconv*5) - fact/4)+ii*fact,'color', c_ord(ii,:), 'linewidth', 1)
 %         plot(ms.time, (ms.Spikes(:,ii)*5)+ii*10,'color', 'k')
         

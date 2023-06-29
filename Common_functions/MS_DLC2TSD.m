@@ -184,6 +184,12 @@ elseif sum(contains(fields, 'body'))>0 && sum(contains(fields, 'head'))>0
     
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.head(:,2),ear_mid(:,1) - data_out.head(:,1)));
     
+elseif sum(contains(fields, 'Green'))>0 && sum(contains(fields, 'Red'))>0
+    ear_mid(:,1) = (data_out.Red(:,1) + data_out.Green(:,1))/2; % get x mid
+    ear_mid(:,2) = (data_out.Red(:,2) + data_out.Green(:,2))/2; % get x mid
+    
+    HD = rad2deg(atan2(ear_mid(:,2) - data_out.Body(:,2),ear_mid(:,1) - data_out.Body(:,1)));
+    
 end
 
 
