@@ -1,4 +1,4 @@
-function [pos, behav] = MS_DLC2TSD(dir_in, model_in, plot_flag)
+function [pos, behav] = MS_DLC2TSD(dir_in, model_in,conv_fac, plot_flag)
 %% MS_DLC2TSD: loads and collects all DLC files in a directory. Will skip over files without a number since DLC saves the interation number in the .csv
 %
 %
@@ -27,11 +27,16 @@ function [pos, behav] = MS_DLC2TSD(dir_in, model_in, plot_flag)
 if nargin == 0
     dir_in = cd; % just use current dir.
     model_in = [];
+    conv_fac = [1 1];
     plot_flag = 0;
 elseif nargin == 1
     model_in = [];
+    conv_fac = [1 1];
     plot_flag = 0;
-elseif nargin ==2 
+elseif nargin ==2
+    conv_fac = [1 1];
+    plot_flag = 0;
+elseif nargin ==3
     plot_flag = 0;
 end
 
@@ -46,7 +51,7 @@ cd(dir_in);
 
 file_list = {};
 d = dir(['*DLC*.csv']);
-rem_idx = zeros(1,length(d)); 
+rem_idx = zeros(1,length(d));
 for iF = length(d):-1:1
     parts = strsplit(d(iF).name, {'_', '.'});
     
@@ -57,18 +62,18 @@ for iF = length(d):-1:1
         inter_ver(iF) = str2double(parts{end-1});
         file_list{iF} = d(iF).name;
     else
-        inter_ver(iF) = NaN; 
-        file_list{iF} = NaN; 
-        rem_idx(iF) = iF; 
+        inter_ver(iF) = NaN;
+        file_list{iF} = NaN;
+        rem_idx(iF) = iF;
     end
-    f_num(iF) = str2double( regexp(d(iF).name, '\d+','match', 'once' )); % used to sort the files. 
+    f_num(iF) = str2double( regexp(d(iF).name, '\d+','match', 'once' )); % used to sort the files.
 end
 
-[~, idx] = sort(f_num);              % sort the file names based on 
+[~, idx] = sort(f_num);              % sort the file names based on
 file_list  = file_list(idx);
 inter_ver  = inter_ver(idx);
 rem_idx = rem_idx(idx);
-    
+
 % remove empty cells
 rem_idx(rem_idx == 0) = [];
 file_list(rem_idx) = [];
@@ -94,9 +99,9 @@ for iF  = 1:length(file_list)
     DLC_data = table2array(readtable(file_list{iF}, 'Headerlines', 3));
     tbl = readtable(file_list{iF},'Headerlines', 1);
     DLC_labels = tbl.Properties.VariableNames(2:end);
-   fields= DLC_labels;
-   fields(contains(DLC_labels, '_')) = [];  
-%     fields = unique(DLC_labels); % get the parts
+    fields= DLC_labels;
+    fields(contains(DLC_labels, '_')) = [];
+    %     fields = unique(DLC_labels); % get the parts
     
     for iFields = 1:length(fields)
         f_idx = find(contains(DLC_labels, fields{iFields}));
@@ -118,7 +123,7 @@ for iF  = 1:length(file_list)
     for iFields = 1:length(fields)
         data_out.(fields{iFields}) = [ data_out.(fields{iFields});  this_field{iF, iFields}];
     end
-    fnum = [fnum , 1:length(this_field{iF, 1})]; 
+    fnum = [fnum , 1:length(this_field{iF, 1})];
 end
 
 
@@ -133,31 +138,38 @@ for iFields = 1:length(fields)
 end
 
 
-nan_idx = isnan(data_out.(fields{1})(:,1)); 
+% convert to cfg units. Default conv fac is 1, so still in pixels.
+for iFields = 1:length(fields)
+    data_out.(fields{iFields})(:,1)  = data_out.(fields{iFields})(:,1)./ conv_fac(1);
+    data_out.(fields{iFields})(:,2)  = data_out.(fields{iFields})(:,2)./ conv_fac(2);
+end
 
-%% grab the timestamps. 
-t_file = dir('time*'); 
+
+nan_idx = isnan(data_out.(fields{1})(:,1));
+
+%% grab the timestamps.
+t_file = dir('time*');
 
 if contains(t_file.name, '.csv')
-TS = readtable(t_file.name);
-data_out.tvec = table2array(TS(:,2));
-frameNum = TS(:,1);
-maxBufferUsed =  max(table2array(TS(:,3)));
-
+    TS = readtable(t_file.name);
+    data_out.tvec = table2array(TS(:,2));
+    frameNum = TS(:,1);
+    maxBufferUsed =  max(table2array(TS(:,3)));
+    
 elseif contains(t_file.name, '.dat')
     cfg_ts = [];
-    cfg_ts.correct_time = 0; 
+    cfg_ts.correct_time = 0;
     
     TS = MS_Load_TS(cfg_ts);
     for ii = length(TS{1}.system_clock):-1:1
         TS_len(ii) = length(TS{1}.system_clock{ii});
     end
-    this_cam_idx = nearest_idx(length(data_out.(fields{1})), TS_len); % get the nearest timestamps. 
+    this_cam_idx = nearest_idx(length(data_out.(fields{1})), TS_len); % get the nearest timestamps.
     data_out.tvec = TS{1}.system_clock{this_cam_idx};
-    data_out.tvec(1) = 0; 
-    frameNum = TS{1}.framenumber{this_cam_idx}; 
+    data_out.tvec(1) = 0;
+    frameNum = TS{1}.framenumber{this_cam_idx};
     maxBufferUsed = TS{1}.buffer{this_cam_idx};
-
+    
 end
 data_out.tvec = data_out.tvec./1000; % convert to seconds
 
@@ -165,11 +177,9 @@ if length(data_out.tvec) ~= length(data_out.(fields{1}))
     error('DLC samples (%.0f) differ from timestamps.dat (%.0f)',length(data_out.(fields{1})), length(data_out.tvec));
 end
 
-%% compute some other measures. 
+%% compute some other measures.
 
-% get speed
-vx = dxdt(data_out.tvec,data_out.(fields{1})(:,1));
-vy = dxdt(data_out.tvec,data_out.(fields{1})(:,2));
+
 
 % get the HD
 if sum(contains(fields, 'R')) > 0 && sum(contains(fields, 'L')) > 0 && sum(contains(fields, 'LED')) > 0
@@ -178,11 +188,13 @@ if sum(contains(fields, 'R')) > 0 && sum(contains(fields, 'L')) > 0 && sum(conta
     ear_mid(:,2) = (data_out.(fields{contains(fields, 'R')})(:,2) + data_out.(fields{contains(fields, 'L') & ~contains(fields, 'LED')})(:,2))/2; % get x mid
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.LED(:,2),ear_mid(:,1) - data_out.LED(:,1)));
     
+    
 elseif sum(contains(fields, 'body'))>0 && sum(contains(fields, 'head'))>0
     ear_mid(:,1) = data_out.body(:,1);
     ear_mid(:,2) = data_out.body(:,2);
     
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.head(:,2),ear_mid(:,1) - data_out.head(:,1)));
+    
     
 elseif sum(contains(fields, 'Green'))>0 && sum(contains(fields, 'Red'))>0
     ear_mid(:,1) = (data_out.Red(:,1) + data_out.Green(:,1))/2; % get x mid
@@ -191,6 +203,12 @@ elseif sum(contains(fields, 'Green'))>0 && sum(contains(fields, 'Red'))>0
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.Body(:,2),ear_mid(:,1) - data_out.Body(:,1)));
     
 end
+
+% get the speed from the mid-ear position
+vx = dxdt(data_out.tvec,ear_mid(:,1));
+vy = dxdt(data_out.tvec,ear_mid(:,2));
+
+
 
 
 %% convert to pos tsd
@@ -201,7 +219,12 @@ for iD = 1:length(fields)
 end
 
 pos = tsd(data_out.tvec,[data, sqrt(vx.^2+vy.^2)', HD]', [labels 'Speed', 'HD']);
-pos.units = 'px'; 
+
+if conv_fac(1) == 1 && conv_fac(2) == 1
+    pos.units = 'px';
+else
+    pos.units = 'cm';
+end
 
 
 
@@ -216,13 +239,13 @@ behav.frameNum = frameNum;
 behav.maxFramesPerFile = 1000;
 behav.height = ceil(max(data_out.(fields{1})(:,1)));
 behav.width =  ceil(max(data_out.(fields{1})(:,2)));
-behav.camNumber = 1; 
-behav.maxBufferUsed =  maxBufferUsed; 
-behav.position = data_out.(fields{1})(:,1:2); 
+behav.camNumber = 1;
+behav.maxBufferUsed =  maxBufferUsed;
+behav.position = data_out.(fields{1})(:,1:2);
 behav.speed = sqrt(vx.^2+vy.^2)';
-behav.HD = HD; 
+behav.HD = HD;
 
-%% test out the HD. 
+%% test out the HD.
 if plot_flag
     figure(797)
     clf
@@ -239,11 +262,11 @@ if plot_flag
         %     plot([ear_mid(iF,1), behav.position(iF,1)],[ear_mid(iF,2), behav.position(iF,2)], 'k')
         xlim([min(pos.data(1,:)) max(pos.data(1,:))]);
         ylim([min(pos.data(2,:)) max(pos.data(2,:))]);
-        text(min(pos.data(1,:)), min(pos.data(2,:))+10,['HD (deg): ' num2str(pos.data(end,iF),3)]);
-        text(min(pos.data(1,:)), min(pos.data(2,:))+20,['Speed (px/s): ' num2str(pos.data(end-1,iF),3)]);
+        text(min(pos.data(1,:)), min(pos.data(2,:))+((max(pos.data(2,:)) - min(pos.data(2,:)))/18),['HD (deg): ' num2str(pos.data(end,iF),3)]);
+        text(min(pos.data(1,:)), min(pos.data(2,:))+((max(pos.data(2,:)) - min(pos.data(2,:)))/10),['Speed (' pos.units '/s): ' num2str(pos.data(end-1,iF),3)]);
         drawnow
         pause(0.0303/300)
         cla(gca)
     end
 end
-cd(og_dir); 
+cd(og_dir);
