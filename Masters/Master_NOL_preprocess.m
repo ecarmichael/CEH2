@@ -31,6 +31,8 @@ cfg_def.conv_fac = [6.6  5.8];
 cfg_def.behav_label = 'Body';
 cfg_def.TTL_trig = '6'; 
 cfg_def.TTL_frame = '4'; 
+cfg_def.csc_chan = {'CH44', 'CH51'};
+cfg_def.emg_chan = {64}; 
 
 
 cfg = ProcessConfig(cfg_def, cfg_in);
@@ -58,14 +60,19 @@ if sum(contains(evts.label, cfg.TTL_trig)) == 1
     evts.label{(contains(evts.label, cfg.TTL_frame))} = 'TTL_frame'; 
     evts.label{(contains(evts.label, cfg.TTL_trig))} = 'TTL_trig'; 
     
-    start_t = evts.t{(contains(evts.label, 'TTL_trig'))}(1);
-    end_t = evts.t{(contains(evts.label, 'TTL_trig'))}(end); 
+    for ii = 1:length(evts.label)
+        dur(ii) = evts.t{ii}(end) - evts.t{ii}(1); 
+    end
+    
+    [~, max_TTL] = max(dur); 
+    start_t = evts.t{max_TTL}(1);
+    end_t = evts.t{max_TTL}(end); 
     
 else
     error('No trigger TTL found. Required for synchronizing data')
 end
 
-fprintf('<strong>%s</strong>: OE frame TTL duration = %f\n', mfilename, end_t - start_t)
+fprintf('<strong>%s</strong>: OE frame TTL (<strong>''%s''</strong>), duration = %.0fsec (%2.1fhr)\n', mfilename,evts.label{max_TTL}, end_t - start_t, (end_t - start_t)/60/60)
 
 
 %% load spikes if they are there
@@ -78,13 +85,20 @@ for ii = 1:length(S.t)
    S.t{ii} = S.t{ii}./30000; 
 end
 
-%% get the evts if they are there
 
-% [evts] = OE_LoadEvents(
+%% load the CSC data. 
+cd(OE_dir)
+
+cfg_csc = [];
+cfg_csc.fc = cfg.csc_chan;
+cfg_csc.desired_sampling_frequency = 2000;
+csc = OE_old_csc2TSD(cfg_csc);
 
 
+%% align the behav times to OE times
 
 
+pause
 
 end
 

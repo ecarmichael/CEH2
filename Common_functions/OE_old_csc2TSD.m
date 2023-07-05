@@ -48,6 +48,59 @@ if isempty(cfg.fc)
     [~, sort_idx] = sort(num_labels);
     cfg.fc =  cfg.fc(sort_idx);
     
+elseif iscell(cfg.fc)  && ischar(cfg.fc{1}) && ~isempty(strfind(cfg.fc{1}, '.continuous'))
+    fprintf('Processing User selected channels: \n')
+    for ii  = 1:length(cfg.fc)
+        fprintf('<strong>%s</strong>\n', cfg.fc{ii})
+    end
+    
+elseif iscell(cfg.fc)  && ischar(cfg.fc{1}) && isempty(strfind(cfg.fc{1}, '.continuous'))
+
+    fnames = [];
+    
+    for ii = length(cfg.fc):-1:1
+       this_fc = dir(['*' cfg.fc{ii} '.continuous']) ; 
+       fnames{ii} = this_fc.name; 
+    end
+    
+    fprintf('Mathcing User selected channels: \n')
+    for ii  = 1:length(cfg.fc)
+        fprintf('<strong>%s</strong> = <strong>%s</strong>\n', cfg.fc{ii}, fnames{ii})
+    end
+    
+    cfg.fc = fnames; 
+    
+   
+elseif iscell(cfg.fc)  && isnumeric(cfg.fc{1})
+    
+    fnames = dir('*.continuous');
+    
+    for ii = length(fnames):-1:1
+        
+        fcs{ii} = fnames(ii).name;
+        
+        [parts]= strsplit(fcs{ii}, '.');
+        [label_num{ii}]= parts{1}(strfind(parts{1}, 'CH'):end);
+        
+        this_num = regexp(label_num{ii},'\d*','Match');
+        num_labels(ii) = str2double(this_num{1});
+
+    end
+    
+ 
+    
+    [num_sort, sort_idx] = sort(num_labels);
+    keep_idx = ~ismember(num_sort, [cfg.fc{:}]);
+    og_fc = cfg.fc; 
+    cfg.fc =  fcs(sort_idx);
+    
+    cfg.fc(~keep_idx) = []; 
+    
+   fprintf('Mathcing User selected channels: \n')
+    for ii  = 1:length(cfg.fc)
+        fprintf('<strong>%f</strong> = <strong>%s</strong>\n', og_fc(ii), cfg.fc{ii})
+    end
+    
 end
 
 

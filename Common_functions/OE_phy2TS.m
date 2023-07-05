@@ -10,8 +10,12 @@ C = textscan(fid, '%s%s');
 fclose(fid);
 
 fid = fopen('cluster_info.tsv');
-I= textscan(fid, '%s%s%s%s%s%s%s%s%s%s');
+I= textscan(fid, '%s%s%s%s%s%s');
 fclose(fid);
+
+I =I{6}(3:2:end); 
+I = str2double(I); 
+
 
 cids = cellfun(@str2num, C{1}(2:end), 'uni', false);
 ise = cellfun(@isempty, cids);
@@ -32,7 +36,7 @@ S = [];
 S.type = 'ts';
 for ii = length(good_clusters_ids):-1:1
     S.t{ii} = double(spike_times(spike_clusters == good_clusters_ids(ii)));
-    S.label{ii} = num2str(good_clusters_ids(ii));
+    S.label{ii} = [num2str(good_clusters_ids(ii)) '-' num2str(I(ii))]; 
 
 end
 
