@@ -19,18 +19,18 @@ function Triggered_Spec_FT(csc, events, label, Freq_range, baseline, t_win)
 % TODO: add cfg configs
 %
 %% initialize
-if nargin < 6
+if nargin  == 5
     t_win = [-2.5 2.5]; 
-elseif nargin < 5
+elseif nargin ==4
     baseline = []; 
     t_win = [-2.5 2.5]; 
-elseif nargin < 4
+elseif nargin ==3
         t_win = [-2.5 2.5];
         baseline = []; 
     Freq_range = 2:.5:120;
-elseif    nargin < 3
+elseif nargin==2
     label = [];
-        t_win = [-2.5 2.5]; 
+    t_win = [-2.5 2.5]; 
     baseline = []; 
     Freq_range = 2:.5:120;
 elseif nargin <2

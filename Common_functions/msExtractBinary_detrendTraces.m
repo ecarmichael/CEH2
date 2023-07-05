@@ -11,7 +11,8 @@ elseif nargin < 3
 end
 
 if Fs <10
-%     error('Something is wrong with the sampling rate'); 
+    warning('Something is wrong with the sampling rate.   flipping it to samples');
+    Fs = round(1/Fs); 
 end
 
     [bFilt,aFilt] = butter(2,  2/(Fs/2), 'low');

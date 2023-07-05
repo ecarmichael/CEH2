@@ -9,6 +9,10 @@ fid = fopen('cluster_group.tsv');
 C = textscan(fid, '%s%s');
 fclose(fid);
 
+fid = fopen('cluster_info.tsv');
+I= textscan(fid, '%s%s%s%s%s%s%s%s%s%s');
+fclose(fid);
+
 cids = cellfun(@str2num, C{1}(2:end), 'uni', false);
 ise = cellfun(@isempty, cids);
 cids = [cids{~ise}];
