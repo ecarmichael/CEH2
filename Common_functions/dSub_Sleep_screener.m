@@ -48,10 +48,21 @@ cord = linspecer(5);
 
 d_t_ratio = 1; 
 emg_rms_prctile = 90; 
+
+%% mark out wake periods from the EMG; 
+sat_idx = false(1, length(csc.data));%(abs(csc.data) >= prctile(abs(csc.data), 90));% | (csc.data <= prctile(csc.data, 5));
+for ii = 1:size(wake_idx,1)
+   sat_idx(wake_idx(ii, 1):wake_idx(ii, 2)) = 1; 
+end
+
+
+
 %% get the EMG RMS
 
 emg_rms = sqrt(movmedian(emg.data.^2, csc.cfg.hdr{1}.SamplingFrequency*10));      % RMS Value Over ‘WinLen’ Samples
+emg_og = emg_rms;
 
+emg_rms(sat_idx) = NaN; 
 % emg_rms_z = zscore(emg_rms); 
 
 % emg_rms = movmedian(emg_rms,(csc.cfg.hdr{1}.SamplingFrequency)*5);
@@ -63,32 +74,32 @@ move_idx = emg_rms >move_thresh;
 %% get the theta delta ratio
 cfg_con_t = [];
 cfg_con_t.threshold = 0;
-cfg_con_t.f = [7 10]; cfg_con_t.type = 'fdesign';
-%     cfg_con_f.display_filter = 1
+cfg_con_t.f = [6 12]; cfg_con_t.type = 'fdesign';
+%     cfg_con_t.display_filter = 1
 csc_th = FilterLFP(cfg_con_t,csc);
 % csc_th.data = smooth(csc_th.data, csc.cfg.hdr{1}.SamplingFrequency*2);
 csc_th.data = smoothdata(abs(hilbert(csc_th.data)), 'movmean', csc.cfg.hdr{1}.SamplingFrequency*10);
 
 cfg_con_d = [];
 cfg_con_d.threshold = 0;
-cfg_con_d.f = [0.5 4]; cfg_con_d.type = 'fdesign';
+cfg_con_d.f = [1.5 4]; cfg_con_d.type = 'fdesign';
 % cfg_con_d.display_filter = 1
 csc_delta = FilterLFP(cfg_con_d,csc);
 % csc_delta.data = smooth(csc_delta.data, csc.cfg.hdr{1}.SamplingFrequency*2);
 csc_delta.data = smoothdata(abs(hilbert(csc_delta.data)), 'movmean', csc.cfg.hdr{1}.SamplingFrequency*10);
 
 
+% block out any known wake/problematic periods
+% csc_th.data(sat_idx) = NaN; 
+% csc_delta.data(sat_idx) = NaN; 
+
 ratio = csc;
 ratio.data = zscore((csc_th.data ./ csc_delta.data)');
 
 z_ratio = nan(1, length(csc.tvec));
-z_ratio(~move_idx) = zscore((csc_th.data(1, ~move_idx)./emg_rms(1,~move_idx)));%csc_delta.data(~move_idx)));
+z_ratio(~move_idx|sat_idx) = zscore((csc_th.data(1, ~move_idx|sat_idx)./emg_rms(1,~move_idx|sat_idx)));%csc_delta.data(~move_idx)));
 
-
-sat_idx = zeros(1, length(csc.data));%(abs(csc.data) >= prctile(abs(csc.data), 90));% | (csc.data <= prctile(csc.data, 5));
-for ii = 1:size(wake_idx,1)
-   sat_idx(wake_idx(ii, 1):wake_idx(ii, 2)) = 1; 
-end
+z_ratio = ratio.data'; 
 
 hypno_init = ones(size(csc.tvec))*2; % set everything to SWS; 
 hypno_init(~move_idx & z_ratio > d_t_ratio) = 3; % putative REM
@@ -138,14 +149,15 @@ end
 
 
 %% check figure
-figure(222)
-
+figure(221)
+clf
 ax(1) = subplot(7,1,1:4);
 cla
-tic
-hold on
 yyaxis right
+hold on
+plot((csc.tvec - csc.tvec(1)),  emg_og'*1000,  'color', [0.3 0.3 0.3]);
 plot((csc.tvec - csc.tvec(1)),  emg_rms'*1000,  'color', cord(2,:));
+
 ylim([min(emg_rms*1000), 3*max(emg_rms*1000)])
 yline(move_thresh*1000)
 set(gca, 'xtick', [])
@@ -161,13 +173,12 @@ ylabel('LFP voltage')
 
 set(gca, 'xtick', [])
 % ylabel('LFP voltage')
-toc
 
 ax(2) = subplot(7,1,5:6);
 cla
 hold on
 plot((csc.tvec - csc.tvec(1)),  ~move_idx & z_ratio > .5, 'k');
-plot((csc.tvec - csc.tvec(1)), z_ratio,  'color', cord(3,:));
+plot((csc.tvec - csc.tvec(1)), ratio.data,  'color', cord(3,:));
 % plot((csc.tvec - csc.tvec(1)), sat_idx - 2,  'color', cord(5,:));
 ylabel('Theta-delta ratio')
 legend({'REM idx', 'theta/delta z'});
