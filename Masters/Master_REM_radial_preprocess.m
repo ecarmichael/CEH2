@@ -1,26 +1,19 @@
-function [evt,S, csc, pos, behav] = Master_NOL_preprocess(cfg_in, Kilo_dir, OE_dir, DLC_dir, save_dir)
-%% MS_preprocess_NOL:  Extracts the position, spike, and CSC data for an OE session.
+function out = Master_REM_radial_preprocess(cfg_in, data_dir)
+%% Master_REM_radial_preprocess:  Extracts the position, spike, and CSC data for a REM radial session.
 %
 %
 %
 %    Inputs:
 %    - cfg_in: [struct]  configuration parameters to overwrite the defaults
 %
-%    - kilo_dir: [path]  directory with the processed kilosort/phy2
-%    output
-%
-%    -  oE_dir: [path]  directory with the OE continuous files
-%
-%    - DLC_dir: [path] directory/directories with the DLC outputs. Can be a
-%    cell array to process multiple directories for one session.
-%
+%    - dat_dir: [path]  directory with the NLX data
 %    Outputs:
 %    -
 %
 %
 %
 %
-% EC 2023-06-29   initial version
+% EC 2023-07-10   initial version
 %
 %
 %
