@@ -55,3 +55,58 @@ plot(csc.tvec, csc.data);
 
 
 xlim([csc.tvec(1) csc.tvec(end)])
+
+
+%% gettting the power and phase
+
+% filter the LFP in the theta band
+cfg_filt_t = [];
+cfg_filt_t.type = 'cheby1';%'fdesign'; %the type of filter I want to use via filterlfp
+cfg_filt_t.f  = [5 12]; % freq range to match Mizuseki et al. 2011
+cfg_filt_t.order = 3; %type filter order
+cfg_filt_t.display_filter = 0; % use this to see the fvtool
+
+theta_csc = FilterLFP(cfg_filt_t, csc); % filter the raw LFP using
+
+theta_amp = abs(hilbert(theta_csc.data)); % get the amplitude
+
+theta_phi  = angle(hilbert(theta_csc.data(1,:))); 
+
+theta_csc.data = theta_csc.data(1,:); 
+
+
+
+%% same but for slow gamma
+
+% filter the LFP in the theta band
+cfg_filt_t = [];
+cfg_filt_t.type = 'butter';%'fdesign'; %the type of filter I want to use via filterlfp
+cfg_filt_t.f  = [30 58]; % freq range to match Mizuseki et al. 2011
+cfg_filt_t.order = 4; %type filter order
+cfg_filt_t.display_filter = 1; % use this to see the fvtool
+
+SG_csc = FilterLFP(cfg_filt_t, csc); % filter the raw LFP using
+
+SG_amp = abs(hilbert(SG_csc.data)); % get the amplitude
+
+
+
+
+%% same but for slow gamma
+
+% filter the LFP in the theta band
+cfg_filt_t = [];
+cfg_filt_t.type = 'butter';%'fdesign'; %the type of filter I want to use via filterlfp
+cfg_filt_t.f  = [70 90]; % freq range to match Mizuseki et al. 2011
+cfg_filt_t.order = 4; %type filter order
+cfg_filt_t.display_filter = 1; % use this to see the fvtool
+
+FG_csc = FilterLFP(cfg_filt_t, csc); % filter the raw LFP using
+
+FG_amp = abs(hilbert(FG_csc.data)); % get the amplitude
+
+
+%% Try some Phase-amp coupling
+
+
+mod_th_g = MS_ModIdx_win(theta_csc, SG_csc, 30*theta_csc.cfg.hdr{1}.SamplingFrequency);
