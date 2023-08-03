@@ -37,10 +37,12 @@ function hi = MS_plot_all_SFPs(SFPs_in)
 % set background to match (needs to happen before the other nan "layers"
 imagesc(zeros(size(SFPs_in,1), size(SFPs_in,2)))
 
-for ii = 1:size(SFPs_in,3)
+for ii = size(SFPs_in,3):-1:1
     hold on
-    this_spf = SFPs_in(:,:,ii); 
-    this_spf(this_spf==0) = NaN; 
+%     this_spf = imgaussfilt(SFPs_in(:,:,ii), 'FilterSize', 5);
+    this_spf = SFPs_in(:,:,ii);
+    this_spf(this_spf == 0) = NaN; 
+%     this_spf(this_spf < prctile(this_spf, 70, 'all')) = NaN;
         hi = imagesc(this_spf);
         set(hi,'alphadata',~isnan(this_spf));
 end

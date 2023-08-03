@@ -35,7 +35,9 @@ end
 figure(1919)
     clf
 
-    c_ord = summer(length(cell_ids));
+% c_ord = [linspace(0,1,length(cell_ids))', zeros(length(cell_ids),2)]
+% colormap(colorMap);
+    c_ord = parula(length(cell_ids)*2);
     
     subplot(2,2,2)
     cla
@@ -48,7 +50,8 @@ figure(1919)
 
     for ii = 1:length(cell_ids)
         [row, col] = find(ms.SFPs_sharp(:,:,cell_ids(ii)) == max(max(ms.SFPs_sharp(:,:,cell_ids(ii)))));
-        scatter(col, row,50,'o',  'MarkerEdgeColor',c_ord(ii,:) , 'LineWidth', 1);% c_ord(ii,:)
+        text(col, row, num2str(cell_ids(ii)), 'FontSize', 10, 'FontWeight', 'bold', 'Color', 'k');
+%         scatter(col, row,50,'o',  'MarkerEdgeColor',c_ord(ii,:) , 'LineWidth', 1);% c_ord(ii,:)
     end
     title(['nCells: ' num2str(ms.numNeurons)]);
 %     xlim([min(ms.Centroids(:,1))-min(ms.Centroids(:,1))*.2  max(ms.Centroids(:,1))+max(ms.Centroids(:,1))*.2])
@@ -79,7 +82,6 @@ figure(1919)
 %     set(gca,'ytick', 0:100:ms.numNeurons*mult_fac, 'YTickLabel', (0:100:length(ms.units)*mult_fac)/mult_fac, 'TickDir', 'out')
     ylim([0 ms.numNeurons])
 %     xlim([ms.time(1) ms.time(end)])
-xlim([65 260])
 %         set(gca,'xtick', [round(abs(ms.time(1))) round(ms.time(end),0)], 'xTickLabel', [round(abs(ms.time(1))) round(ms.time(end),0)], 'TickDir', 'out')
 
     
@@ -114,4 +116,4 @@ xlim([65 260])
     legend({'Raw', 'Denoise', 'Deconv'}, 'Location', 'north', 'Orientation', 'horizontal', 'box', 'off')
     
 
-maximize
+% maximize

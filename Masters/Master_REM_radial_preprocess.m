@@ -123,14 +123,14 @@ Recall.pos = restrict(pos, recall_t(1), recall_t(2));
 
 
 % correct for pixel 2 cm conversion. 
-Encode.pos.data(1,:) = Encode.pos.data(1,:)*6.4; 
-Encode.pos.data(2,:) = Encode.pos.data(2,:)*6.4; 
+Encode.pos.data(1,:) = Encode.pos.data(1,:)./6; 
+Encode.pos.data(2,:) = Encode.pos.data(2,:)./6; 
 
-Sleep.pos.data(1,:) = Sleep.pos.data(1,:)*4; 
-Sleep.pos.data(2,:) = Sleep.pos.data(2,:)*4; 
+Sleep.pos.data(1,:) = Sleep.pos.data(1,:)./4; 
+Sleep.pos.data(2,:) = Sleep.pos.data(2,:)./4; 
 
-Recall.pos.data(1,:) = Recall.pos.data(1,:)*6.4; 
-Recall.pos.data(2,:) = Recall.pos.data(2,:)*6.4; 
+Recall.pos.data(1,:) = Recall.pos.data(1,:)./6; 
+Recall.pos.data(2,:) = Recall.pos.data(2,:)./6; 
 
 
 % apply light smoothing 

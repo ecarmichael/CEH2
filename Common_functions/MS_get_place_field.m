@@ -1,4 +1,4 @@
-function out = MS_get_place_field(cfg_in, S, pos)
+function out = MS_get_place_field(cfg_in, S, pos, spd)
 %% MS_get_place_field: computes the rate map for a given set of cells. 
 %
 %
@@ -8,7 +8,10 @@ function out = MS_get_place_field(cfg_in, S, pos)
 %
 %    - S [struct]   TS struct containing spike times
 %
-%    - pos [struct]    TSD for the position. 
+%    - pos [struct]    TSD for the position.
+%
+%    - spd [struct]  tsd for speed. Can be used to limit to periods of
+%    movement. if empty will not limit. 
 %
 %    Outputs: 
 %    - out: [1 x NCell]   spatial information and rate map for each cell. 
@@ -22,39 +25,47 @@ function out = MS_get_place_field(cfg_in, S, pos)
 %
 %% initialize
 
+if nargin < 4
+    spd = [];
+end
+
 
 cfg_def = [];
-
-
-
+cfg_def.gau_sd = 1; 
+cfg_def.gau_win =2; 
+cfg_def.xBinSz = 2.5;
+cfg_def.yBinSz = 2.5; 
+cfg_def.min_occ = 7.5; 
 
 cfg = ProcessConfig(cfg_def, cfg_in); 
 
+% gaussian kernal
+kernel = gausskernel([cfg.gau_win cfg.gau_win],cfg.gau_sd); % 2d gaussian in bins
 
 %% set up bins
-SET_xmin = floor(min(pos.data(2,:))/100)*100 ; SET_ymin = floor(min(pos.data(1,:))/100)*100; % set up bins
-SET_xmax = ceil(max(pos.data(2,:))/100)*100;   SET_ymax = ceil(max(pos.data(1,:))/100)*100;
+cfg.xmin = floor(min(pos.data(1,:))/10)*10 ; cfg.ymin = floor(min(pos.data(2,:))/10)*10; % set up bins
+cfg.xmax = ceil(max(pos.data(1,:))/10)*10;   cfg.ymax = ceil(max(pos.data(2,:))/10)*10;
 
-% SET_xmin = 100; 
-% SET_xmax = 400;
-% SET_ymin = 200;
-% SET_ymax = 700;
-SET_xBinSz =30; SET_yBinSz = 30;
+% cfg.xmin = 100; 
+% cfg.xmax = 400;
+% cfg.ymin = 200;
+% cfg.ymax = 700;
+% cfg.xBinSz =30; cfg.yBinSz = 30;
 
 
  
-x_edges = SET_xmin:SET_xBinSz:SET_xmax;
-y_edges = SET_ymin:SET_yBinSz:SET_ymax;
+x_edges = cfg.xmin:cfg.xBinSz:cfg.xmax;
+y_edges = cfg.ymin:cfg.yBinSz:cfg.ymax;
 
-% gaussian kernal
-kernel = gausskernel([2 2],2); % 2d gaussian in bins
 
 % compute occupancy encode
-occ_hist = histcn(pos.data(1:2,:)',y_edges,x_edges); % 2-D version of histc()
+occ_hist = histcn(pos.data(1:2,:)',x_edges,y_edges); % 2-D version of histc()
 occ_hist = conv2(occ_hist,kernel,'same');
- 
-no_occ_idx = find(occ_hist < 2); % NaN out bins never visited
+
+no_occ_idx = find(occ_hist < cfg.min_occ); % NaN out bins never visited
 occ_hist(no_occ_idx) = NaN;
+ 
+
  
 occ_hist = occ_hist .* (1/30); % convert samples to seconds using video frame rate (30 Hz)
 
@@ -66,6 +77,7 @@ s2_idx = 2:2:n*m;
 figure(102)
 clf
 ip = 0; 
+tc = [];
 for ii = 1:length(S.t)
     spk_x = interp1(pos.tvec,pos.data(1,:),S.t{ii},'linear');
     spk_y = interp1(pos.tvec,pos.data(2,:),S.t{ii},'linear');
@@ -84,13 +96,19 @@ for ii = 1:length(S.t)
     plot(spk_x, spk_y, '.r');axis off;
     
     % compute the rate map
-    spk_hist = histcn([spk_x, spk_y],y_edges,x_edges);
+    spk_hist = histcn([spk_x, spk_y],x_edges,y_edges);
     spk_hist = conv2(spk_hist,kernel, 'same');
     
     spk_hist(no_occ_idx) = NaN;
-    tc = spk_hist./occ_hist;
+    tc{ii} = spk_hist./occ_hist;
 
     subplot(m, n, s2_idx(ip))
-    pcolor(tc'); shading flat; axis off; %colorbar('Location', 'northoutside')
+    pcolor(tc{ii}'); shading flat; axis off; %colorbar('Location', 'northoutside')
    
 end
+%% 
+
+out = [];
+out.cfg = cfg; 
+out.tc = tc; 
+out.occ = occ_hist;
