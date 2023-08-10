@@ -57,9 +57,9 @@ save([save_dir filesep strrep([out.meta.subject '_' out.meta.date '_' out.meta.s
 %% try it for a session
 
 
-maps = MS_get_place_field([], restrict(out.Encode.S, out.Encode.trials(1,:), out.Encode.trials(2,:)), restrict(out.Encode.pos, out.Encode.trials(1,:), out.Encode.trials(2,:)))
+maps = MS_get_place_field([], restrict(out.Encode.S, out.Encode.trials(1,:), out.Encode.trials(2,:)), restrict(out.Encode.pos, out.Encode.trials(1,:), out.Encode.trials(2,:)), out.Encode.speed)
 
 
 %%
-maps = MS_get_place_field([], restrict(out.Recall.S, out.Recall.trials(1,:), out.Recall.trials(2,:)), restrict(out.Recall.pos, out.Recall.trials(1,:), out.Recall.trials(2,:)))
+maps = MS_get_place_field([], restrict(out.Recall.S, out.Recall.trials(1,:), out.Recall.trials(2,:)), restrict(out.Recall.pos, out.Recall.trials(1,:), out.Recall.trials(2,:)), out.Recall.speed)
 

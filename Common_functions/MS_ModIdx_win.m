@@ -1,4 +1,4 @@
-function ModIdx = MS_ModIdx_win(sig_phi, sig_amp, win_s)
+function ModIdx = MS_ModIdx_win(sig_phi, sig_amp, win_s, nShuff)
 %% MS_ModIdx_win: computes the modulation index as a continuous variable between two signals. Indended for theta - gamma modulation as per Tort et al. 2010/2009/2008
 %
 %
@@ -9,6 +9,8 @@ function ModIdx = MS_ModIdx_win(sig_phi, sig_amp, win_s)
 %    - sig_amp: [struct] filtered LFP data in the csc format (vdmlab codebase) to be used for the amplitude component. 
 %
 %    - win_s: [double]   window size in samples. 
+%
+%    - nShuff: [double] 
 %
 %    Outputs: 
 %    - ModIdx: [nSamples x 1]   modulation index. 
@@ -102,6 +104,7 @@ phi_bins = -pi:pi/9:pi;
 
 ModIdx = NaN(size(Phi_1)); 
     tic
+%    - sig_amp: [struct] filtered LFP data in the csc format (vdmlab codebase) to be used for the amplitude component. 
 for ii = 1:win_s:length(ModIdx)
     if (ii+win_s)> length(ModIdx)
         this_idx = ii:length(ModIdx); 
@@ -118,11 +121,9 @@ for ii = 1:win_s:length(ModIdx)
         phi_amp(iB) = nanmean(this_amp(phi_idx == iB)); 
     end
     
-    shuff_amp = this_amp(randperm(length(this_amp))); 
-    for iB = unique(phi_idx)
-        phi_amp_shuff(iB) = nanmean(shuff_amp(phi_idx == iB)); 
-    end
     
+    
+
 %     nbins = length(phi_amp); 
 
 %     Pj = (phi_amp+eps)/sum(phi_amp); % normalize phase-amp coupling
@@ -138,9 +139,20 @@ for ii = 1:win_s:length(ModIdx)
 
 end
 toc
+
+
+% %% get the shuffle values
+% 
+%     for iShuff  = nShuff:-1:1; 
+%     shuff_amp = this_amp(randperm(length(this_amp))); 
+%     for iB = unique(phi_idx)
+%         phi_amp_shuff(iB) = nanmean(shuff_amp(phi_idx == iB)); 
+%     end
+%     end
+    
 %% check the output
 % 
-figure(1010)
+figure
 clf
 ax(1) = subplot(3,1,1:2);
 yyaxis left

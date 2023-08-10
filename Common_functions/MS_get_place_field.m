@@ -35,12 +35,30 @@ cfg_def.gau_sd = 1;
 cfg_def.gau_win =2; 
 cfg_def.xBinSz = 2.5;
 cfg_def.yBinSz = 2.5; 
-cfg_def.min_occ = 7.5; 
+cfg_def.min_occ = .25; 
+cfg_def.spd_thresh = 2.5; % in cm/s; 
 
 cfg = ProcessConfig(cfg_def, cfg_in); 
 
 % gaussian kernal
 kernel = gausskernel([cfg.gau_win cfg.gau_win],cfg.gau_sd); % 2d gaussian in bins
+
+%% restrict to movement if speed is given. 
+
+if ~isempty(spd)
+   
+    cfg_spd = [];
+    cfg_spd.method = 'raw'; 
+    cfg_spd.operation = '>'; 
+    cfg_spd.threshold = cfg.spd_thresh;
+    iv_move = TSDtoIV(cfg_spd,spd); % only keep intervals with speed above thresh
+
+    
+    S = restrict(S, iv_move); 
+    pos = restrict(pos, iv_move); 
+    
+end
+
 
 %% set up bins
 cfg.xmin = floor(min(pos.data(1,:))/10)*10 ; cfg.ymin = floor(min(pos.data(2,:))/10)*10; % set up bins
@@ -62,12 +80,13 @@ y_edges = cfg.ymin:cfg.yBinSz:cfg.ymax;
 occ_hist = histcn(pos.data(1:2,:)',x_edges,y_edges); % 2-D version of histc()
 occ_hist = conv2(occ_hist,kernel,'same');
 
+
+occ_hist = occ_hist .* (1/30); % convert samples to seconds using video frame rate (30 Hz)
 no_occ_idx = find(occ_hist < cfg.min_occ); % NaN out bins never visited
 occ_hist(no_occ_idx) = NaN;
  
 
  
-occ_hist = occ_hist .* (1/30); % convert samples to seconds using video frame rate (30 Hz)
 
 %% plot some simple maps with spikes
 m = 4;
@@ -79,6 +98,10 @@ clf
 ip = 0; 
 tc = [];
 for ii = 1:length(S.t)
+    
+    if isempty(S.t{ii})
+        continue
+    end
     spk_x = interp1(pos.tvec,pos.data(1,:),S.t{ii},'linear');
     spk_y = interp1(pos.tvec,pos.data(2,:),S.t{ii},'linear');
     if ip >= (n*m)/2
@@ -91,7 +114,6 @@ for ii = 1:length(S.t)
     disp(ip)
     subplot(m, n, s1_idx(ip))
     plot(pos.data(1,:), pos.data(2,:), '.k');
-    title(S.label{ii})
     hold on
     plot(spk_x, spk_y, '.r');axis off;
     
@@ -104,7 +126,9 @@ for ii = 1:length(S.t)
 
     subplot(m, n, s2_idx(ip))
     pcolor(tc{ii}'); shading flat; axis off; %colorbar('Location', 'northoutside')
-   
+    
+       title([strrep(S.label{ii}(1:end-2), '_', '-' ) ' (peak: ' num2str(max(tc{ii},[], 'all'),2) 'Hz)'])
+
 end
 %% 
 
