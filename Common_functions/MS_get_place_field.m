@@ -133,6 +133,7 @@ end
 %% 
 
 out = [];
+out.label = S.label;
 out.cfg = cfg; 
 out.tc = tc; 
 out.occ = occ_hist;
