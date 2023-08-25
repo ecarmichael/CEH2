@@ -1,15 +1,5 @@
 %%sandbox_Master_NOL
 
-kilo_dir = '/home/williamslab/Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/M30_2023-06-27_NOL1/kilo_out';
-
-OE_dir = '/home/williamslab/Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/M30_2023-06-27_NOL1/Record Node 120'; 
-
-DLC_dir = {'/home/williamslab/Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/M30_2023-06-27_NOL1/2023_06_27/09_24_45/My_WebCam'; ...
-    '/home/williamslab/Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/M30_2023-06-27_NOL1/2023_06_27/14_14_54/My_WebCam'}; 
-
-save_dir = '/home/williamslab/Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/inter'; 
-
-
 if strcmp(computer, 'GLNXA64')
     
     addpath(genpath('/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared'));
@@ -17,9 +7,25 @@ if strcmp(computer, 'GLNXA64')
     addpath(genpath('/home/williamslab/Documents/Github/CEH2'))
     
     addpath(genpath('/home/williamslab/Documents/Github/npy-matlab'))
-
+    
+    pre_fix = '/home/williamslab/';
+else
+    pre_fix = 'C:\Users\ecarm\'; 
+    addpath(genpath('C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'));
+    
+    addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'))
+    
+    addpath(genpath('C:\Users\ecarm\Documents\GitHub\npy-matlab'))
 end
 
+kilo_dir = [pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/M30_2023-06-27_NOL1/kilo_out', '/', filesep)];
+
+OE_dir = [pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/M30_2023-06-27_NOL1/Record Node 120', '/', filesep)]; 
+
+DLC_dir = {[pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/M30_2023-06-27_NOL1/2023_06_27/09_24_45/My_WebCam', '/', filesep)]; ...
+    [pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/M30_2023-06-27_NOL1/2023_06_27/14_14_54/My_WebCam', '/', filesep)]}; 
+
+save_dir = [pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/inter', '/', filesep)];
 
 
 
@@ -44,8 +50,6 @@ if strcmp(computer, 'GLNXA64')
     
     addpath(genpath('/home/williamslab/Documents/Github/CEH2'))
     
-    addpath(genpath('/home/williamslab/Documents/Github/npy-matlab'))
-
 end
 
 %% 

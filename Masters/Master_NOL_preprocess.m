@@ -44,6 +44,14 @@ pos = [];
 evt = [];
 
 
+%% get the meta or create it. 
+cd(OE_dir)
+[p_dir] = fileparts(cd); 
+cd(p_dir)
+MS_Write_meta_NOL
+meta = MS_Load_meta;
+
+
 %% load the event
 cd(OE_dir)
 
@@ -83,13 +91,13 @@ end
 cd(OE_dir)
 
 cfg_csc = [];
-cfg_csc.fc = cfg.csc_chan;
+cfg_csc.fc =  {meta.OE_goodCSC};%cfg.csc_chan;
 cfg_csc.desired_sampling_frequency = 2000;
 csc = OE_old_csc2TSD(cfg_csc);
 
 
 cfg_csc = [];
-cfg_csc.fc = cfg.emg_chan;
+cfg_csc.fc =  {meta.OE_EMG};
 cfg_csc.desired_sampling_frequency = 2000;
 emg = OE_old_csc2TSD(cfg_csc);
 
@@ -100,11 +108,26 @@ csc.cfg.hdr{end+1} = emg.cfg.hdr{1};
 %%  Get the position data if it is there
 
 if ~isempty(DLC_dir)
-    [pos, ~] = MS_DLC2TSD(DLC_dir, [], cfg.conv_fac);
-    if pos.tvec(1) <0
-        pos.tvec = pos.tvec + abs(pos.tvec(1)); 
-    elseif pos.tvec(1) >0
-        pos.tvec  = pos.tvec - abs(pos.tvec(1)); 
+    
+    if length(DLC_dir) <2
+    
+        [pos, ~] = MS_DLC2TSD(DLC_dir, [], cfg.conv_fac);
+        if pos.tvec(1) <0
+            pos.tvec = pos.tvec + abs(pos.tvec(1));
+        elseif pos.tvec(1) >0
+            pos.tvec  = pos.tvec - abs(pos.tvec(1));
+        end
+    
+    else
+        for ii = 1:length(DLC_dir)
+            [this_pos{ii}, ~] = MS_DLC2TSD(DLC_dir{ii}, []);
+            if this_pos{ii}.tvec(1) <0
+                this_pos{ii}.tvec = this_pos{ii}.tvec + abs(this_pos{ii}.tvec(1));
+            elseif this_pos{ii}.tvec(1) >0
+                this_pos{ii}.tvec  = this_pos{ii}.tvec - abs(this_pos{ii}.tvec(1));
+            end
+        end
+        
     end
 end
 fprintf('<strong>%s</strong>: Pos duration = %f\n', mfilename, pos.tvec(end) - pos.tvec(1))

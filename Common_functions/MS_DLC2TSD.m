@@ -176,7 +176,15 @@ data_out.tvec = data_out.tvec./1000; % convert to seconds
 if length(data_out.tvec) ~= length(data_out.(fields{1}))
     error('DLC samples (%.0f) differ from timestamps.dat (%.0f)',length(data_out.(fields{1})), length(data_out.tvec));
 end
+%% get the meta data from the json to pull the recording start time. 
+j_files = dir('*.json');
 
+   fid = fopen([fileparts(j_files.folder) filesep j_files.name]);
+    raw = fread(fid,inf);
+    str = char(raw');
+    Exp_json = jsondecode(str);
+    fclose(fid);
+    
 %% compute some other measures.
 
 
@@ -226,7 +234,11 @@ else
     pos.units = 'cm';
 end
 
+pos.cfg.json = Exp_json; 
 
+if ~isfield(pos.cfg.json, 'msecSinceEpoch')
+    pos.cfg.json.msecSinceEpoch = pos.cfg.json.recordingStartTime.msecSinceEpoch; 
+end
 
 %% convert to behav format
 behav = [];
@@ -244,6 +256,7 @@ behav.maxBufferUsed =  maxBufferUsed;
 behav.position = data_out.(fields{1})(:,1:2);
 behav.speed = sqrt(vx.^2+vy.^2)';
 behav.HD = HD;
+behav.json = Exp_json; 
 
 %% test out the HD.
 if plot_flag

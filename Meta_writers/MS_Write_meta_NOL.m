@@ -1,4 +1,4 @@
-function meta = MS_Write_meta_Rad(data_dir)
+function meta = MS_Write_meta_NOL(data_dir)
 %% MS_Write_meta_Rad: this will create an Meta file by taking the information from the data files
 %   and putting it into an exicutable Meta.m script. Yo can then run Meta.m
 %   to have a structure with all of the values as a struct
@@ -47,19 +47,19 @@ sess_id = fname{end};
 
 fprintf('\n<strong>Session data appears to be Subject %s, on %s, with task: %s</strong>\n', subject_id, date_id,  sess_id)
 
-numTT = length(dir('*.ntt'));
+% numTT = length(dir('*.ntt'));
 
 % open the file to write
 fid = fopen([dir_name '_meta.m'], 'w');
 
 %% fill in the consistent information
-fprintf(fid, '%% ''This Meta.m was generated using %s.m'';\n', mfilename);
+fprintf(fid, '%% ''This Meta.m was generated using %s.m on %s'';\n', mfilename, date);
 
 fprintf(fid, ['Meta.version = ' num2str(1) ';\n']);
 fprintf(fid, 'Meta.species = ''mouse'';\n');
 fprintf(fid, 'Meta.experimenter = ''EC / MD'';\n');
-fprintf(fid, 'Meta.behavior = ''Rad'';\n');
-fprintf(fid, ['Meta.probe = ''Shuttle ' num2str(numTT) ''';\n']);
+fprintf(fid, 'Meta.behavior = ''NOL'';\n');
+fprintf(fid, ['Meta.probe = ''Shuttle 64 '';\n']);
 
 %% Get the flexible subject information
 fprintf(fid, '\n%%Subject information\n');
@@ -92,15 +92,21 @@ if strcmpi(subject_id, 'M30')
     fprintf(fid, 'Meta.goodCSC = ''CSC21.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
     fprintf(fid, 'Meta.goodCSC2 = ''CSC54.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
     
+    fprintf(fid, 'Meta.OE_EMG = ''CH64''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+    fprintf(fid, 'Meta.OE_EMG2 = ''CH36''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+    
+    fprintf(fid, 'Meta.OE_goodCSC = ''CH49''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+    fprintf(fid, 'Meta.OE_goodCSC2 = ''CH29''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+    
 end
 fprintf(fid, 'Meta.quality = ''NaN''; %%0 is poor, 1 means cell faded, 2 means ok, 3 means great!, NaN means not yet filled in\n');
 
 
 
 %% experimental variables: NLX digital I/O
-fprintf(fid, '\n%%NLX digital I/O codes\n');
-fprintf(fid, 'Meta.event_off = ''TTL Input on AcqSystem1_0 board 0 port 3 value (0x0000).''; %% off signal for all events.  Might need to be updated.\n');
-
+% fprintf(fid, '\n%%NLX digital I/O codes\n');
+% fprintf(fid, 'Meta.event_off = ''TTL Input on AcqSystem1_0 board 0 port 3 value (0x0000).''; %% off signal for all events.  Might need to be updated.\n');
+% 
 
 fclose(fid);
 disp('Meta written')

@@ -52,24 +52,31 @@ evts = LoadEvents([]);
 % get the block times
 st_idx = find(contains(evts.label, 'Starting Recording')); 
 end_idx = find(contains(evts.label, 'Stopping Recording'));
+dur = []; keep = zeros(length(evts.t{st_idx})); 
 
 for ii = length(evts.t{st_idx}):-1:1
-   dur(ii) =  evts.t{end_idx}(ii)  - evts.t{st_idx}(ii);
-   fprintf('Rec %.0f = %.0fmins \n', ii, dur(ii)/60)
+    if ((evts.t{end_idx}(ii)  - evts.t{st_idx}(ii))/60) < 5 % skip recordings less than 5min. 
+        continue
+    end
+   dur(end+1) =  evts.t{end_idx}(ii)  - evts.t{st_idx}(ii);
+   keep(ii) = 1;
+   fprintf('Rec %.0f = %.0fmins \n', ii, dur(end)/60)
     
 end
 
 if length(dur) > 3
     error('Too many recordings')
 end
+% which recordings are real. 
+rec_idx = find(keep); 
 
-encode_t = [evts.t{st_idx}(1), evts.t{end_idx}(1)]; 
-sleep_t = [evts.t{end_idx}(2) - 14400, evts.t{end_idx}(2)]; 
-recall_t = [evts.t{st_idx}(3), evts.t{end_idx}(3)]; 
+encode_t = [evts.t{st_idx}(rec_idx(1)), evts.t{end_idx}(rec_idx(1))]; 
+sleep_t = [evts.t{st_idx}(rec_idx(2)) , evts.t{end_idx}(rec_idx(2))]; % why was this '- 14400' here: [evts.t{end_idx}(2) - 14400 , evts.t{end_idx}(2)]??
+recall_t = [evts.t{st_idx}(rec_idx(3)), evts.t{end_idx}(rec_idx(3))]; 
 
-fprintf('<strong>%s</strong>: Encode: %0.2fs\n', mfilename,encode_t(2) - encode_t(1));
-fprintf('<strong>%s</strong>: Sleep: %0.2fs\n', mfilename,sleep_t(2) -sleep_t(1));
-fprintf('<strong>%s</strong>: Recall: %0.2fs\n', mfilename, recall_t(2) - recall_t(1));
+fprintf('<strong>%s</strong>: Encode: %0.2fmin\n', mfilename,(encode_t(2) - encode_t(1))/60);
+fprintf('<strong>%s</strong>: Sleep: %0.2fmin\n', mfilename,(sleep_t(2) -sleep_t(1))/60);
+fprintf('<strong>%s</strong>: Recall: %0.2fmin\n', mfilename, (recall_t(2) - recall_t(1))/60);
 
 Encode.evts = restrict(evts, encode_t(1), encode_t(2)); 
 Sleep.evts = restrict(evts, sleep_t(1), sleep_t(2));
@@ -178,11 +185,15 @@ t_start_recall = [Recall.csc.tvec(1) t_start(t_start > sleep_t(end))]+60;
 t_end_encode = t_end(t_end < sleep_t(1)) ;
 t_end_recall = t_end(t_end > sleep_t(end)) ;
 
-Encode.trials = [t_start_encode; t_end_encode]; 
-Encode.ITI = [t_start_encode-60; t_start_encode]; 
-
-Recall.trials = [t_start_recall; t_end_recall]; 
-Recall.ITI = [t_start_recall-60; t_start_recall]; 
+Encode.trials = [t_start_encode; t_end_encode];
+Encode.ITI = [t_start_encode-60; t_start_encode];
+if strcmpi(meta.session, 'Rad3') && strcmpi(meta.subject, 'M30')
+    Recall.trials = [t_start_recall(1:4); [t_end_recall Recall.csc.tvec(end)]];
+    Recall.ITI = [t_start_recall(1:4)-60; t_start_recall(1:4)];
+else
+    Recall.trials = [t_start_recall; t_end_recall];
+    Recall.ITI = [t_start_recall-60; t_start_recall];
+end
 
 % %% generate the hypnogram
 % 
