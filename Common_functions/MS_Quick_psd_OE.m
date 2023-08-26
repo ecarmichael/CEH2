@@ -23,13 +23,13 @@ function psd = MS_Quick_psd_OE(Chan_to_use, type, save_dir)
 
 if nargin == 0
     Chan_to_use = {};
-    type = 'long';
+    type = 'fast';
     save_dir = cd;
     disp('''Chan_to_use'' not specified.  Using all .continuous files')
     disp('''type'' not specified, using ''long'' for all data. Use type = ''fast'' for only the first 1/4 of the data to save time')
 
 elseif nargin == 1
-    type = 'long';
+    type = 'fast';
     save_dir = cd;
     disp(' ''type'' not specified, using ''long'' for all data. Use type = ''fast'' for only the first 1/4 of the data to save time')
 elseif nargin ==2
