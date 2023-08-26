@@ -100,6 +100,13 @@ for iF  = 1:length(file_list)
     tbl = readtable(file_list{iF},'Headerlines', 1);
     DLC_labels = tbl.Properties.VariableNames(2:end);
     fields= DLC_labels;
+    % hack to have it work for Bryan's data
+    if sum(contains(DLC_labels, 'body_center'))>0
+        bd_idx = find(contains(DLC_labels, 'body_center')); 
+        DLC_labels{bd_idx(1)} = 'body';
+                fields{bd_idx(1)} = 'body';
+
+    end
     fields(contains(DLC_labels, '_')) = [];
     %     fields = unique(DLC_labels); % get the parts
     
@@ -148,43 +155,69 @@ end
 nan_idx = isnan(data_out.(fields{1})(:,1));
 
 %% grab the timestamps.
-t_file = dir('time*');
-
-if contains(t_file.name, '.csv')
-    TS = readtable(t_file.name);
-    data_out.tvec = table2array(TS(:,2));
-    frameNum = TS(:,1);
-    maxBufferUsed =  max(table2array(TS(:,3)));
+if ~isempty(dir('*.nvt'))
+    fprintf('<strong>%s</strong>: NVT file found, using it for timestamps\n', mfilename)
     
-elseif contains(t_file.name, '.dat')
-    cfg_ts = [];
-    cfg_ts.correct_time = 0;
+    nvt_f =  dir('*.nvt');
     
-    TS = MS_Load_TS(cfg_ts);
-    for ii = length(TS{1}.system_clock):-1:1
-        TS_len(ii) = length(TS{1}.system_clock{ii});
+    [data_out.tvec, ~, ~, ~, ~, ~, ~] = Nlx2MatVT(nvt_f.name, [1 1 1 1 1 1 ], 1, 1, [] );
+    data_out.tvec = data_out.tvec*10^-6; % convert to seconds
+    frameNum = 1:length(data_out.tvec); 
+    maxBufferUsed = NaN; 
+    
+else
+    
+    t_file = dir('time*');
+    
+    if contains(t_file.name, '.csv')
+        TS = readtable(t_file.name);
+        data_out.tvec = table2array(TS(:,2));
+        frameNum = TS(:,1);
+        maxBufferUsed =  max(table2array(TS(:,3)));
+        
+    elseif contains(t_file.name, '.dat')
+        cfg_ts = [];
+        cfg_ts.correct_time = 0;
+        
+        TS = MS_Load_TS(cfg_ts);
+        for ii = length(TS{1}.system_clock):-1:1
+            TS_len(ii) = length(TS{1}.system_clock{ii});
+        end
+        this_cam_idx = nearest_idx(length(data_out.(fields{1})), TS_len); % get the nearest timestamps.
+        data_out.tvec = TS{1}.system_clock{this_cam_idx};
+        data_out.tvec(1) = 0;
+        frameNum = TS{1}.framenumber{this_cam_idx};
+        maxBufferUsed = TS{1}.buffer{this_cam_idx};
+        
     end
-    this_cam_idx = nearest_idx(length(data_out.(fields{1})), TS_len); % get the nearest timestamps.
-    data_out.tvec = TS{1}.system_clock{this_cam_idx};
-    data_out.tvec(1) = 0;
-    frameNum = TS{1}.framenumber{this_cam_idx};
-    maxBufferUsed = TS{1}.buffer{this_cam_idx};
+    data_out.tvec = data_out.tvec./1000; % convert to seconds
+    
     
 end
-data_out.tvec = data_out.tvec./1000; % convert to seconds
-
 if length(data_out.tvec) ~= length(data_out.(fields{1}))
-    error('DLC samples (%.0f) differ from timestamps.dat (%.0f)',length(data_out.(fields{1})), length(data_out.tvec));
+    fprintf('DLC samples (%.0f) differ from timestamps.dat (%.0f). Trimming...\n',length(data_out.(fields{1})), length(data_out.tvec));
+    
+    if length(data_out.tvec)< length(data_out.(fields{1}))
+        for iFields = 1:length(fields)
+            data_out.(fields{iFields}) = data_out.(fields{iFields})(1:length(data_out.tvec),:);
+        end
+    end
 end
-%% get the meta data from the json to pull the recording start time. 
-j_files = dir('*.json');
-
-   fid = fopen([fileparts(j_files.folder) filesep j_files.name]);
+%% get the meta data from the json to pull the recording start time.
+if ~isempty(dir('*.json'))
+    
+    j_files = dir('*.json');
+    
+    fid = fopen([fileparts(j_files.folder) filesep j_files.name]);
     raw = fread(fid,inf);
     str = char(raw');
     Exp_json = jsondecode(str);
     fclose(fid);
     
+else
+    Exp_json = [];
+end
+
 %% compute some other measures.
 
 
@@ -210,6 +243,11 @@ elseif sum(contains(fields, 'Green'))>0 && sum(contains(fields, 'Red'))>0
     
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.Body(:,2),ear_mid(:,1) - data_out.Body(:,1)));
     
+elseif sum(contains(fields, 'nose'))>0 && sum(contains(fields, 'body'))>0
+    ear_mid(:,1) = data_out.body(:,1);
+    ear_mid(:,2) = data_out.body(:,2);
+    
+    HD = rad2deg(atan2(ear_mid(:,2) - data_out.nose(:,2),ear_mid(:,1) - data_out.nose(:,1)));
 end
 
 % get the speed from the mid-ear position
@@ -234,10 +272,10 @@ else
     pos.units = 'cm';
 end
 
-pos.cfg.json = Exp_json; 
+pos.cfg.json = Exp_json;
 
-if ~isfield(pos.cfg.json, 'msecSinceEpoch')
-    pos.cfg.json.msecSinceEpoch = pos.cfg.json.recordingStartTime.msecSinceEpoch; 
+if isfield(pos.cfg.json, 'recordingStartTime') && ~isfield(pos.cfg.json, 'msecSinceEpoch')
+    pos.cfg.json.msecSinceEpoch = pos.cfg.json.recordingStartTime.msecSinceEpoch;
 end
 
 %% convert to behav format
@@ -256,7 +294,7 @@ behav.maxBufferUsed =  maxBufferUsed;
 behav.position = data_out.(fields{1})(:,1:2);
 behav.speed = sqrt(vx.^2+vy.^2)';
 behav.HD = HD;
-behav.json = Exp_json; 
+behav.json = Exp_json;
 
 %% test out the HD.
 if plot_flag
