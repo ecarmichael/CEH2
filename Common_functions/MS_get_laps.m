@@ -28,7 +28,7 @@ function [laps, start_idx, end_idx] = MS_get_laps(direction, length_thresh, merg
 %% initialize
 
 if nargin <2
-    error('Speficy a direction vector and a length_threshold (in samples)')
+    error('Specify a direction vector and a length_threshold (in samples)')
 elseif nargin ==2 
     merge_width = 0; 
 end
