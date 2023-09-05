@@ -112,4 +112,6 @@ else % only use the user fields
     
 end
 
+ms_out.numNeurons = size(ms_out.RawTraces,2); 
+
 
