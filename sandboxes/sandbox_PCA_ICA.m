@@ -1,22 +1,43 @@
 %% sandbox_PCA/ICA
 
-codebase_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared'; 
-ca_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2'; 
 
+if strcmp(computer, 'GLNXA64')
+    
+    codebase_dir = '/home/williamslab/Documents/Github/vandermeerlab/code-matlab/shared';
+    ca_dir = '/home/williamslab/Documents/Github/CEH2';
+    oasis_dir = '/home/williamslab/Documents/Github/OASIS_matlab';
+    
+    code_dir = '/home/williamslab/Documents/Github/Dos-Santos Assembly ICA/Dos-Santos Assembly ICA';
+    
+    RnR_dir = '/home/williamslab/Documents/Github/RnR_methods';
+    
+    % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
+    data_dir = '/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter';
+    rem_dir = '/home/williamslab/Williams Lab Dropbox/Eric Carmichael/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter';
+    decode_dir = [data_dir filesep 'decoding']; 
+    
+else
+    
+    codebase_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared';
+    ca_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2';
+    oasis_dir = 'C:\Users\ecarm\Documents\GitHub\OASIS_matlab';
+    
+    code_dir = 'C:\Users\ecarm\Downloads\Dos-Santos Assembly ICA\Dos-Santos Assembly ICA';
+    
+    RnR_dir = 'C:\Users\ecarm\Documents\GitHub\RnR_methods';
+    
+    % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
+    data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter';
+    rem_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter';
+    
+end
 
-code_dir = 'C:\Users\ecarm\Downloads\Dos-Santos Assembly ICA\Dos-Santos Assembly ICA';
-
-RnR_dir = 'C:\Users\ecarm\Documents\GitHub\RnR_methods'; 
-
-% data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3'; 
-data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter'; 
-rem_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter'; 
 restoredefaultpath
 
-cd('C:\Users\ecarm\Documents\GitHub\OASIS_matlab')
+cd(oasis_dir)
 oasis_setup
 
-addpath(genpath(ca_dir)); 
+addpath(genpath(ca_dir));
 addpath(genpath(codebase_dir))
 addpath(genpath(RnR_dir));
 
@@ -26,54 +47,54 @@ cd(data_dir)
 
 rng(123, 'twister')
 
-%% 
+%%
 
 % load('ms_trk.mat')
 % load('behav_DLC.mat')
-this_sess = 'pv1069_LTD5_data.mat'; 
+this_sess = 'pv1069_LTD5_data.mat';
 
 load(this_sess)
 
-behav = MS_align_data(behav,ms); 
+behav = MS_align_data(behav,ms);
 
-move_idx = behav.speed > 2.5; 
+move_idx = behav.speed > 2.5;
 %%
 
-ms_trk = ms; 
+ms_trk = ms;
 keep_idx = zeros(1,size(ms_trk.RawTraces,2));
-keep_idx(1:floor(size(ms_trk.RawTraces,2)*.66)) = 1; 
+keep_idx(1:floor(size(ms_trk.RawTraces,2)*.66)) = 1;
 
-remove_cell_id = find(~keep_idx); 
+remove_cell_id = find(~keep_idx);
 
 cfg_rem = [];
 cfg_rem.remove_idx = find(~keep_idx);
-cfg_rem.data_type = 'RawTraces'; 
-ms_trk_rem = MS_Remove_trace(cfg_rem, ms_trk); 
+cfg_rem.data_type = 'RawTraces';
+ms_trk_rem = MS_Remove_trace(cfg_rem, ms_trk);
 
 
-ms_trk_rem = MS_append_deconv(ms_trk_rem); 
+ms_trk_rem = MS_append_deconv(ms_trk_rem);
 
 % remove inactive cells
 
-keep_idx = sum(ms_trk_rem.deconv, 1) >0; 
+keep_idx = sum(ms_trk_rem.deconv, 1) >0;
 
-remove_cell_id_decon = find(~keep_idx); 
+remove_cell_id_decon = find(~keep_idx);
 
 cfg_rem = [];
 cfg_rem.remove_idx = find(~keep_idx);
-cfg_rem.data_type = 'deconv'; 
-ms_trk_rem = MS_Remove_trace(cfg_rem, ms_trk_rem); 
+cfg_rem.data_type = 'deconv';
+ms_trk_rem = MS_Remove_trace(cfg_rem, ms_trk_rem);
 
 % deconv the all_b
 
 
-%% follow grosmark et al. method of deconv preprocessing 
-Csp = ms_trk_rem.deconv./ms_trk_rem.denoise; 
-Csp = Csp > 0.01; 
-ms_trk_rem.Csp = Csp; 
+%% follow grosmark et al. method of deconv preprocessing
+Csp = ms_trk_rem.deconv./ms_trk_rem.denoise;
+Csp = Csp > 0.01;
+ms_trk_rem.Csp = Csp;
 
-% cfg_plot.Ca_type = 'RawTraces'; 
-% cfg_plot.plot_type = '2d'; 
+% cfg_plot.Ca_type = 'RawTraces';
+% cfg_plot.plot_type = '2d';
 % MS_plot_ca(cfg_plot, ms_trk_rem)
 
 %% bin and convolve
@@ -83,36 +104,36 @@ gauss_SD = 0.5./binsize; % 0.02 seconds (20ms) SD
 gk = gausskernel(gauss_window,gauss_SD); gk = gk./binsize; % normalize by binsize
 gau_sdf = conv2(Csp,gk,'same'); % convolve with gaussian window
 
-gau_z = zscore(gau_sdf, [], 2); 
+gau_z = zscore(gau_sdf, [], 2);
 %% plot the gaussian smoothed Csp
 % figure(101)
 % ax(1)= subplot(5,1,1);
 % hold on
-% plot(ms_trk.time, behav.position(:,1)); 
-% plot(ms_trk.time, behav.position(:,2)); 
+% plot(ms_trk.time, behav.position(:,1));
+% plot(ms_trk.time, behav.position(:,2));
 % xlim([ms_trk.time(1) ms_trk.time(end)])
-% 
+%
 % ax(2) = subplot(5,1,2:5);
 % imagesc(ms_trk.time, 1:size(Csp,2), gau_z')
-% 
+%
 % linkaxes(ax, 'x')
 
 
-% %% optional bin the time into something larger than a frame. 
+% %% optional bin the time into something larger than a frame.
 
 
 % bin_s = 1; % time in seconds
-% 
-% tvec = round(ms.time(1))/1000:bin_s:round(ms.time(end)/1000); 
-% 
-% 
+%
+% tvec = round(ms.time(1))/1000:bin_s:round(ms.time(end)/1000);
+%
+%
 % data_int = []; data_sdf = [];
 % for ii = size(gau_z,2):-1:1
 %     data_int(:,ii) = interp1(ms.time/1000, gau_z(:,ii), tvec);
 %     data_sdf (:,ii) = interp1(ms.time/1000, gau_sdf(:,ii), tvec);
 % end
-% 
-% 
+%
+%
 % % spk_count = histcounts(
 
 
@@ -121,87 +142,121 @@ gau_z = zscore(gau_sdf, [], 2);
 binsize = .5;
 tbin_edges = ms.time(1)/1000:binsize:ms.time(end)/1000; % vector of time bin edges (for histogram)
 tbin_centers = tbin_edges(1:end-1)+binsize/2; % vector of time bin centers (for plotting)
- 
+
 data_h = [];
 for ii = size(Csp,2):-1:1
-
-this_cell = ms.time(find(Csp(: ,ii) & move_idx))/1000; 
-
-spk_count = histc(this_cell,tbin_edges); % get spike counts for each bin
-spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
-
-data_h(:,ii) = spk_count; 
+    
+    this_cell = ms.time(find(Csp(: ,ii) & move_idx))/1000;
+    
+    spk_count = histc(this_cell,tbin_edges); % get spike counts for each bin
+    spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
+    
+    data_h(:,ii) = spk_count;
 end
 
 
 
-tvec = tbin_centers; 
+tvec = tbin_centers;
 
 
-%% convert data if needed. 
+%% convert data if needed.
 % gau_z_t = gau_z;
 % gau_sdf_t = gau_sdf;
-% 
-% gau_z = data_int; 
-% gau_sdf = data_int; 
+%
+% gau_z = data_int;
+% gau_sdf = data_int;
 
 %% try the assembly code....
 
 Ass_Temp = assembly_patterns(data_h');
 
-time_proj = assembly_activity(Ass_Temp,data_h'); 
+time_proj = assembly_activity(Ass_Temp,data_h');
 
 
-%% color code the assemblies 
-Ass_sort = []; 
+%% color code the assemblies
+Ass_sort = [];
 %figure(303);clf;  hold on
 for ii = size(Ass_Temp,2):-1:1
     
-    [Ass_sort(:,ii), this_idx] = sort(Ass_Temp(:,ii), 'descend'); 
-    thresh = prctile(Ass_Temp(:,ii), 95); 
-    c_idx = Ass_Temp(this_idx,ii) > thresh; 
+    [Ass_sort(:,ii), this_idx] = sort(Ass_Temp(:,ii), 'descend');
+    thresh = prctile(Ass_Temp(:,ii), 95);
+    c_idx = Ass_Temp(this_idx,ii) > thresh;
     
-%     plot(Ass_Temp(c_idx, ii))
-%             stem(Ass_Temp(c_idx, ii))
-
+    %     plot(Ass_Temp(c_idx, ii))
+    %             stem(Ass_Temp(c_idx, ii))
+    
 end
 
 %% keep assemblies with strong activations
-keep_idx = zeros(1,size(Ass_Temp,2)); 
-Ass_pos_cells = cell(size(keep_idx)); 
+keep_idx = zeros(1,size(Ass_Temp,2));
+Ass_pos_cells = cell(size(keep_idx));
 for ii = size(Ass_Temp,2):-1:1
     
-   if max(Ass_Temp(:, ii)) > 0.2
-       keep_idx(ii) = 1; 
-       
-       z_weight = zscore(Ass_Temp(:,ii)); 
-
-       Ass_pos_cells{ii} = find(z_weight > 2); 
-
-   end
-   
-   
+    if max(Ass_Temp(:, ii)) > 0.2
+        keep_idx(ii) = 1;
+        
+        z_weight = zscore(Ass_Temp(:,ii));
+        
+        Ass_pos_cells{ii} = find(z_weight > 2);
+        
+    end
+    
+    
 end
 
-Ass_pos = Ass_Temp; 
-Ass_pos(:,~keep_idx) = []; 
-Ass_pos_cells(~keep_idx) = []; 
+Ass_pos = Ass_Temp;
+Ass_pos(:,~keep_idx) = [];
+Ass_pos_cells(~keep_idx) = [];
 
 time_proj_pos = time_proj;
 time_proj_pos(~keep_idx,:) = [];
-%% stem plot for first few ensembles 
- figure(303);clf; hold on
- c_ord = parula(size(Ass_pos,2)+2);
+%% stem plot for first few ensembles
+figure(303);clf; hold on
+c_ord = parula(size(Ass_pos,2)+2);
+
 for ii = 1:size(Ass_pos,2)
     subplot(4, ceil(size(Ass_pos,2)/4),ii)
     hold on
-        stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
-        view(90,90)
-        
-        stem(Ass_pos_cells{ii}, Ass_pos(Ass_pos_cells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
-        
+    stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
+    view(90,90)
+    
+    stem(Ass_pos_cells{ii}, Ass_pos(Ass_pos_cells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
+    
 end
 
+
+%% get the mean pop activity as per SCE
+data_in = Csp; 
+
+df = mode(diff(ms.time)); 
+frame_n = floor(df/2);
+if mod(frame_n, 2)==0; frame_n = frame_n+1; end
+frame_n_200 = floor(df/5); 
+
+shuff = 100;
+all_shuff = [];
+tic
+for iS = shuff:-1:1
+    this_data = []; 
+    for ii = size(data_in, 2):-1:1
+        this_data(ii,:) = circshift(data_in(:,ii),floor(MS_randn_range(1,1,1,length(data_in(:,ii)))));
+    end % end cells
+
+    all_shuff(iS, :) = movmean(nansum(this_data,1), frame_n_200); 
+end % end shuff
+toc
+
+shuff_mean = mean(all_shuff,'all');
+shuff_sd = std(all_shuff, [],'all');
+
+thresh = shuff_mean + 3*shuff_sd; 
+% find time points in real data that exceed threshold
+
+pop_act = movmean(nansum(data_in,2), frame_n_200);
+
+% exlude events that are too close. use findpeaks
+% figure(101); 
+[peak_act, SCE_idx] = findpeaks(pop_act, 1, 'MinPeakHeight', thresh, 'MinPeakDistance', df);
 %% plot the output
 
 figure(202)
@@ -209,47 +264,47 @@ clf
 % maximize
 ax(1) = subplot(6, 1, 1);
 hold on
-plot(ms_trk.time/1000, behav.position(:,1)); 
-% plot(ms_trk.time/1000, behav.position(:,2)); 
+plot(ms_trk.time/1000, behav.position(:,1));
+% plot(ms_trk.time/1000, behav.position(:,2));
 xlim([ms_trk.time(1)/1000 ms_trk.time(end)/1000])
 ylabel('position on track (cm)')
 set(gca, 'XTick', []);
 
-ax(2) = subplot(6,1,2:4);
+ax(2) = subplot(6,1,2:3);
 imagesc(ms.time/1000, 1:size(gau_z,2), gau_z')
 % hold on
 % for ii = size(gau_sdf, 2):-1:1
 %     s_t = ms_trk.time(Csp(:,ii) >0)/1000;
 %     if ~isempty(s_t)
 %        plot([s_t, s_t]', [(ones(size(s_t))*ii)-.5, (ones(size(s_t))*ii)+.5]', 'color', 'k', 'linewidth', 4)
-%         
+%
 %     end
 % %     plot(ms_trk.time, gau_sdf(:,ii)+ii)
 % end
 xlim([ms_trk.time(1)/1000 ms_trk.time(end)/1000])
 ylim([0 size(Csp, 2)])
-set(gca, 'XTick', [], 'YDir', 'normal') 
+set(gca, 'XTick', [], 'YDir', 'normal')
 ylabel('cell ID')
 
-c = colorbar('Location', 'east'); 
-c.AxisLocation = 'out'; 
-pos = c.Position; 
-c.Position = [pos(1)+.025 pos(2) pos(3) pos(4)]; 
-c.Label.String = 'z-score activity'; 
+c = colorbar('Location', 'east');
+c.AxisLocation = 'out';
+pos = c.Position;
+c.Position = [pos(1)+.025 pos(2) pos(3) pos(4)];
+c.Label.String = 'z-score activity';
 c.Label.FontSize = 20;
 
-ax(3) = subplot(6,1,5:6);
+ax(3) = subplot(6,1,4:5);
 cla
 hold on
-c_ord = cool(size(time_proj_pos,1)+4); 
+c_ord = cool(size(time_proj_pos,1)+4);
 for ii = 1:size(time_proj_pos,1)
-%    nan_idx = time_proj_pos(ii,:) < prctile(time_proj_pos(ii,:), 10);
-%    plot3(ms_trk.time(~nan_idx)/1000, zscore(time_proj_pos(ii,~nan_idx)),ones(1, sum(~nan_idx))*100* ii, '.', 'color', c_ord(ii,:)) 
-%        plot3(tvec, zscore(time_proj_pos(ii,:)),ones(1, length(time_proj_pos(ii,:)))*100* ii, 'color', c_ord(ii,:)) 
-       plot(tvec, zscore(time_proj_pos(ii,:))+ii*10, 'color', c_ord(ii+4,:)) 
-
-       tick_val(ii) = mode(zscore(time_proj_pos(ii,:))+ii*10); 
-       tick_label{ii} = num2str(ii); 
+    %    nan_idx = time_proj_pos(ii,:) < prctile(time_proj_pos(ii,:), 10);
+    %    plot3(ms_trk.time(~nan_idx)/1000, zscore(time_proj_pos(ii,~nan_idx)),ones(1, sum(~nan_idx))*100* ii, '.', 'color', c_ord(ii,:))
+    %        plot3(tvec, zscore(time_proj_pos(ii,:)),ones(1, length(time_proj_pos(ii,:)))*100* ii, 'color', c_ord(ii,:))
+    plot(tvec, zscore(time_proj_pos(ii,:))+ii*10, 'color', c_ord(ii+4,:))
+    
+    tick_val(ii) = mode(zscore(time_proj_pos(ii,:))+ii*10);
+    tick_label{ii} = num2str(ii);
 end
 % view(0,  15)
 set(gca, 'YTick', tick_val, 'YTickLabel', tick_label)
@@ -262,71 +317,87 @@ xlim([tvec(1) tvec(end)])
 %     zlim([0 size(time_proj_pos,1)*100])
 %     set(gca, 'color', 'k')
 
+% plot the SCE
+ax(4) = subplot(6,1,6);
+cla
+hold on
+plot(ms.time/1000, pop_act, 'color', c_ord(10,:), 'linewidth', 2)
+plot(ms.time/1000, nanmean(all_shuff) - shuff_sd*3,'--',  'color', [.8 .8 .8 .3], 'linewidth',.5)
+plot(ms.time/1000, nanmean(all_shuff) + shuff_sd*3,'--', 'color', [.8 .8 .8 .3], 'linewidth',.5)
+plot(ms.time/1000, nanmean(all_shuff), 'color', [.8 .8 .8 .3], 'linewidth', 1)
+
+ylabel('pop activity')
+
+
+linkaxes(ax, 'x')
+xlim([ms.time(1)/1000 ms.time(end)/1000])
+
+
 linkaxes(ax, 'x')
 
 
 
 
-%% get the assembly triggered position average. 
-win = floor(2.5 * mode(diff(behav.time))); 
+%% get the assembly triggered position average.
+win = floor(2.5 * mode(diff(behav.time)));
 figure(5)
 clf
-n = ceil(size(time_proj_pos,1)/2); 
-m = 2; 
+n = ceil(size(time_proj_pos,1)/2);
+m = 2;
 
 for ii = 1: size(time_proj_pos,1)
     subplot(m,n,ii)
     hold on
-    [~, p_idx] = findpeaks(zscore(time_proj_pos(ii,:)),'MinPeakHeight', 1.96 ,'MinPeakDistance', 2*floor(mode(diff(ms.time)))); 
+    [~, p_idx] = findpeaks(zscore(time_proj_pos(ii,:)),'MinPeakHeight', 1.96 ,'MinPeakDistance', 2*floor(mode(diff(ms.time))));
     
     this_pos = [];
     for ip = 1:length(p_idx)
-        this_idx = nearest_idx(tbin_centers(p_idx(ip)), behav.time/1000); 
+        this_idx = nearest_idx(tbin_centers(p_idx(ip)), behav.time/1000);
         if ((this_idx - win) >=0) && ((this_idx + win)<= length(behav.time))
-        this_pos(ip,:) = behav.position(this_idx - win:this_idx+win,1); 
-        plot((-win:win)/mode(diff(behav.time)), this_pos(ip,:), 'color',[c_ord(ii+4,:) .5])
+            this_pos(ip,:) = behav.position(this_idx - win:this_idx+win,1);
+            plot((-win:win)/mode(diff(behav.time)), this_pos(ip,:), 'color',[c_ord(ii+4,:) .5])
         end
     end
     
-        plot((-win:win)/mode(diff(behav.time)), mean(this_pos), 'color',[c_ord(ii+4,:) 1], 'linewidth', 3)
-    xlim([-win/mode(diff(behav.time)) win/mode(diff(behav.time))]); 
-%         set(gca, 'color', 'k')
-        title(['Assembly #' num2str(ii)])
-        plot(0, mean(this_pos(:,win)), 's','color',[c_ord(ii,:) 1], 'markersize', 20 )
-        
-        if ii == n+1
+    plot((-win:win)/mode(diff(behav.time)), mean(this_pos), 'color',[c_ord(ii+4,:) 1], 'linewidth', 3)
+    xlim([-win/mode(diff(behav.time)) win/mode(diff(behav.time))]);
+    %         set(gca, 'color', 'k')
+    title(['Assembly #' num2str(ii)])
+    plot(0, mean(this_pos(:,win)), 's','color',[c_ord(ii,:) 1], 'markersize', 20 )
+    
+    if ii == n+1
         xlabel({'time from assembly' ;  'onset (s)'})
-        end
-        if ii == 1 || ii== n+1
-            ylabel('position on track (cm)')
-        end
+    end
+    if ii == 1 || ii== n+1
+        ylabel('position on track (cm)')
+    end
 end
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % grab the REM data
-sess = strsplit(this_sess, '_'); 
-sub = sess{1}; 
-sess = sess{2}; 
+sess = strsplit(this_sess, '_');
+sub = sess{1};
+sess = sess{2};
 cd(rem_dir )
 
 sub_list = dir('PV*');
 keep_idx = [];
 for ii = 1:length(sub_list)
     if strfind(lower(sub_list(ii).name), lower(sub))
-        keep_idx(ii) = 1; 
+        keep_idx(ii) = 1;
     else
         keep_idx(ii) = 0;
     end
 end
 
 cd([rem_dir filesep sub_list(find(keep_idx)).name filesep])
-    
+
 sess_list = dir('*T*');
 keep_idx = [];
 for ii = 1:length(sess_list)
     if strfind(lower(sess_list(ii).name), lower(sess))
-        keep_idx(ii) = 1; 
+        keep_idx(ii) = 1;
     else
         keep_idx(ii) = 0;
     end
@@ -335,27 +406,56 @@ end
 cd(sess_list(find(keep_idx)).name)
 
 load('all_detrendRaw_post_REM.mat')
+load('all_RawTraces_post_REM.mat')
+load('all_binary_post_REM.mat')
 
-%remove cells that were excluded in the awake set. 
+
+%remove cells that were excluded in the awake set.
 
 all_detrendRaw_post_REM(:, remove_cell_id) = [];
+all_detrendRaw_post_REM(:, remove_cell_id_decon) = [];
 
-all_detrendRaw_post_REM(:, remove_cell_id_decon) = []; 
+all_RawTraces_post_REM(:, remove_cell_id) = [];
+all_RawTraces_post_REM(:, remove_cell_id_decon) = [];
+
+all_binary_post_REM(:, remove_cell_id) = [];
+all_binary_post_REM(:, remove_cell_id_decon) = [];
+% load the decoding as well
+
+cd(decode_dir)
+
+s_list = dir('pv*');
+
+sessions = [];
+
+keep_idx = zeros(1, length(s_list)); 
+for ii = length(s_list):-1:1
+if ~isempty(strfind(lower(s_list(ii).name), lower(sess))) && ~isempty(strfind(lower(s_list(ii).name), lower(sub)))
+ keep_idx(ii) = 1; 
+end
+end
+
+load(s_list(find(keep_idx)).name)
+
+decode_prob = decoding.REM_decoded_probabilities; 
+decode_pos = decoding.REM_decoded_position; 
+decode_bin = decoding.bin_centers_vector; 
+clear decoding; 
 
 %% deconvolve
 
-  fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
-    for iChan = size(all_detrendRaw_post_REM,2):-1:1
-            tic;
-            [denoise,deconv] = deconvolveCa(all_detrendRaw_post_REM(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
-            toc;
-            all_denoise(:,iChan) = denoise;    all_deconv(:,iChan) = deconv;
-    end
+fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
+for iChan = size(all_detrendRaw_post_REM,2):-1:1
+    tic;
+    [denoise,deconv] = deconvolveCa(all_detrendRaw_post_REM(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
+    toc;
+    all_denoise(:,iChan) = denoise;    all_deconv(:,iChan) = deconv;
+end
 
-    
-% follow grosmark et al. method of deconv preprocessing 
-Csp_rem = all_deconv./all_denoise; 
-Csp_rem = Csp_rem > 0.01; 
+
+% follow grosmark et al. method of deconv preprocessing
+Csp_rem = all_deconv./all_denoise;
+Csp_rem = Csp_rem > 0.01;
 
 
 %% bin and convolve
@@ -365,71 +465,157 @@ gauss_SD = 0.5./binsize; % 0.02 seconds (20ms) SD
 gk = gausskernel(gauss_window,gauss_SD); gk = gk./binsize; % normalize by binsize
 gau_sdf_rem = conv2(Csp_rem,gk,'same'); % convolve with gaussian window
 
-gau_z_rem = zscore(gau_sdf_rem, [], 2); 
+gau_z_rem = zscore(gau_sdf_rem, [], 2);
 
 %%
-rem_time =  0:1/mode(diff(ms.time)):(length(all_deconv)/mode(diff(ms.time))); 
-rem_time = rem_time(1:end-1); 
+rem_time =  0:1/mode(diff(ms.time)):(length(all_deconv)/mode(diff(ms.time)));
+rem_time = rem_time(1:end-1);
 
 binsize = .5;
 tbin_edges_rem = 0:binsize:(length(all_deconv)/mode(diff(ms.time))); % vector of time bin edges (for histogram)
 tbin_centers_rem = tbin_edges_rem(1:end-1)+binsize/2; % vector of time bin centers (for plotting)
- 
+
 data_h_rem = [];
 for ii = size(Csp_rem,2):-1:1
-
-this_cell = rem_time(find(Csp_rem(:,ii)));
-
-spk_count = histc(this_cell,tbin_edges_rem); % get spike counts for each bin
-spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
-
-data_h_rem(:,ii) = spk_count; 
+    
+    this_cell = rem_time(find(Csp_rem(:,ii)));
+    
+    spk_count = histc(this_cell,tbin_edges_rem); % get spike counts for each bin
+    spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
+    
+    data_h_rem(:,ii) = spk_count;
 end
 
 
 
-tvec_rem = tbin_centers_rem; 
+tvec_rem = tbin_centers_rem;
 
-%% try the assembly code 
+%% get the mean pop activity as per SCE
+data_in = all_binary_post_REM; 
+
+df = mode(diff(rem_time*1000)); 
+frame_n = floor(df/2);
+if mod(frame_n, 2)==0; frame_n = frame_n+1; end
+frame_n_200 = floor(df/5); 
+
+shuff = 100;
+all_shuff_rem = [];
+tic
+for iS = shuff:-1:1
+    this_data = []; 
+    for ii = size(data_in, 2):-1:1
+        this_data(ii,:) = circshift(data_in(:,ii),floor(MS_randn_range(1,1,1,length(data_in(:,ii)))));
+    end % end cells
+
+    all_shuff_rem(iS, :) = movmean(nansum(this_data,1), frame_n_200); 
+end % end shuff
+toc
+
+shuff_mean_rem = mean(all_shuff_rem,'all');
+shuff_sd_rem = std(all_shuff_rem, [],'all');
+
+thresh = shuff_mean + 3*shuff_sd_rem; 
+% find time points in real data that exceed threshold
+
+pop_act_rem = movmean(nansum(data_in,2), frame_n_200);
+
+% exlude events that are too close. use findpeaks
+% figure(101); 
+[peak_act_rem, SCE_idx_rem] = findpeaks(pop_act_rem, 1, 'MinPeakHeight', thresh, 'MinPeakDistance', df);
+
+%% try the assembly code
 
 
 Ass_Temp_rem = assembly_patterns(data_h_rem');
 
-%using wake assemblies. 
-wake_time_proj_rem = assembly_activity(Ass_pos,data_h_rem'); 
+%using wake assemblies.
+wake_time_proj_rem = assembly_activity(Ass_pos,data_h_rem');
 
 %% plot the wake Assemblies in REM
 
-figure(5); clf; 
-ax(1) = subplot(3,1,1:2);
-imagesc(tvec_rem, 1:size(all_detrendRaw_post_REM,2), zscore(all_detrendRaw_post_REM,0, 1))
-caxis([0 10])
+figure(5); clf;
+ax(1) = subplot(6,1,1);
+imagesc(rem_time, decode_bin,   decode_prob)
+ylabel('decoded position')
+set(gca, 'xtick', [], 'YDir', 'normal')
+c = colorbar('Location', 'east');
+c.AxisLocation = 'out';
+pos = c.Position;
+c.Position = [pos(1)+.025 pos(2) pos(3) pos(4)];
+c.Label.String = {'decoded'; 'probability'};
+c.Label.FontSize = 14;
+caxis([0 .3])
+title('Reactivation of wake assemblies in REM')
 
 
-ax(2)= subplot(3,1,3);
+ax(2) = subplot(6,1,2:3);
+cla
 hold on
-c_ord = cool(size(wake_time_proj_rem,1)+4); 
+% offset = 10; 
+% p_ord = parula(15); 
+% for ii = 1:10
+% %    plot(rem_time, zscore(all_detrendRaw_post_REM(:,ii))'+ii*offset); 
+%    plot(rem_time, zscore(all_denoise(:,ii))'+ii*offset, 'color', p_ord(ii,:)); 
+%    plot(rem_time, Csp_rem(:,ii)+(ii*offset) - offset/4,'color', [0 0 0])
+%       plot(rem_time, all_binary_post_REM(:,ii)+(ii*offset) - offset/3,'color', [.5 .5 .5])
+% 
+%       plot(rem_time, zscore(all_RawTraces_post_REM(:,ii))'+ii*offset,'color', [p_ord(ii,:) .4]); 
+% 
+% 
+% end
+imagesc(tvec_rem, 1:size(all_binary_post_REM,2), all_binary_post_REM')
+ylim([0.5 size(all_binary_post_REM,2)+.5])
+c = colorbar('Location', 'east');
+c.AxisLocation = 'out';
+pos = c.Position;
+c.Position = [pos(1)+.025 pos(2) pos(3) pos(4)];
+c.Label.String = 'binarized activity';
+c.Label.FontSize = 14;
+% c.Ticks = 
+ylabel('cell ID')
+caxis([0 1])
+set(gca, 'xtick', [], 'YDir', 'normal')
+
+
+
+ax(3)= subplot(6,1,4:5);
+hold on
+c_ord = cool(size(wake_time_proj_rem,1)+4);
 
 for ii = 1:size(wake_time_proj_rem, 1)
-
-%    nan_idx = time_proj_pos(ii,:) < prctile(time_proj_pos(ii,:), 10);
-%    plot3(ms_trk.time(~nan_idx)/1000, zscore(time_proj_pos(ii,~nan_idx)),ones(1, sum(~nan_idx))*100* ii, '.', 'color', c_ord(ii,:)) 
-%        plot3(tvec, zscore(time_proj_pos(ii,:)),ones(1, length(time_proj_pos(ii,:)))*100* ii, 'color', c_ord(ii,:)) 
-       plot(tvec_rem, zscore(wake_time_proj_rem(ii,:))+ii*10, 'color', c_ord(ii+4,:)) 
-
-       tick_val(ii) = mode(zscore(wake_time_proj_rem(ii,:))+ii*10); 
-       tick_label{ii} = num2str(ii); 
+    
+    %    nan_idx = time_proj_pos(ii,:) < prctile(time_proj_pos(ii,:), 10);
+    %    plot3(ms_trk.time(~nan_idx)/1000, zscore(time_proj_pos(ii,~nan_idx)),ones(1, sum(~nan_idx))*100* ii, '.', 'color', c_ord(ii,:))
+    %        plot3(tvec, zscore(time_proj_pos(ii,:)),ones(1, length(time_proj_pos(ii,:)))*100* ii, 'color', c_ord(ii,:))
+    plot(tvec_rem, zscore(wake_time_proj_rem(ii,:))+ii*10, 'color', c_ord(ii+4,:))
+    
+    tick_val(ii) = mode(zscore(wake_time_proj_rem(ii,:))+ii*10);
+    tick_label{ii} = num2str(ii);
 end
 % view(0,  15)
-set(gca, 'YTick', tick_val, 'YTickLabel', tick_label)
+set(gca, 'YTick', tick_val(1:2:end), 'YTickLabel', tick_label(1:2:end))
 
 ylabel('assembly ID')
 xlabel('time (s)')
 ylim([min(zscore(wake_time_proj_rem(1,:))+10), max(zscore(wake_time_proj_rem(1,:))+10*size(wake_time_proj_rem,1))])
-xlim([tvec_rem(1) tvec_rem(end)])
 %     xlim([ms_trk.time(1)/1000 ms_trk.time(end)/1000])
 %     zlim([0 size(time_proj_pos,1)*100])
 %     set(gca, 'color', 'k')
 
+
+
+% plot the SCE
+ax(4) = subplot(6,1,6);
+cla
+hold on
+plot(rem_time, pop_act_rem, 'color', c_ord(10,:), 'linewidth', 2)
+plot(rem_time, nanmean(all_shuff_rem) - shuff_sd_rem*3,'--',  'color', [.8 .8 .8 .3], 'linewidth',.5)
+plot(rem_time, nanmean(all_shuff_rem) + shuff_sd_rem*3,'--', 'color', [.8 .8 .8 .3], 'linewidth',.5)
+plot(rem_time, nanmean(all_shuff_rem), 'color', [.8 .8 .8 .3], 'linewidth', 1)
+
+ylabel('pop activity')
+
+
 linkaxes(ax, 'x')
+xlim([rem_time(1) rem_time(end)])
 
