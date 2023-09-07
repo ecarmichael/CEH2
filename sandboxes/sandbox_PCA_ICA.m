@@ -16,6 +16,9 @@ if strcmp(computer, 'GLNXA64')
     rem_dir = '/home/williamslab/Williams Lab Dropbox/Eric Carmichael/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter';
     decode_dir = [data_dir filesep 'decoding']; 
     
+    this_process_dir ='/home/williamslab/Williams Lab Dropbox/Eric Carmichael/JisooProject2020/2020_Results_aftercutting/';
+
+    
 else
     
     codebase_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared';
@@ -51,7 +54,7 @@ rng(123, 'twister')
 
 % load('ms_trk.mat')
 % load('behav_DLC.mat')
-this_sess = 'pv1069_LTD5_data.mat';
+this_sess = 'pv1060_HATDSwitch_data.mat';
 
 load(this_sess)
 
@@ -85,7 +88,52 @@ cfg_rem.remove_idx = find(~keep_idx);
 cfg_rem.data_type = 'deconv';
 ms_trk_rem = MS_Remove_trace(cfg_rem, ms_trk_rem);
 
-% deconv the all_b
+%% grab the spatial tuning properties. 
+dir_parts = strsplit(this_sess, filesep);
+parts = strsplit(dir_parts{end}, '_');
+task = parts{2}; 
+if contains(task, 'HATD6')
+    task = 'HATDSwitch';
+end
+subject = parts{1};
+
+
+if contains(task, 'HATD')% workaround for naming of HAT + D
+    load([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'])
+    load([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'SA.mat'])
+else
+    load([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'])
+    load([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'SA.mat'])
+end
+
+place = [];
+for iC = length(spatial_analysis.bin):-1:1
+    if iscell(spatial_analysis.bin{iC,1}.PlaceFieldCentroid)
+        temp = cell2mat(spatial_analysis.bin{iC,1}.PlaceFieldCentroid);
+    else
+        temp = spatial_analysis.bin{iC,1}.PlaceFieldCentroid;
+    end
+    place.centroids(iC) = temp(1);
+
+    % is it a place cell?
+    place.is(iC) = spatial_analysis.bin{iC,1}.IsPlaceCell;
+
+    place.map(iC,:) = mean(spatial_analysis.bin{iC,1}.PlaceField,1)/max(mean(spatial_analysis.bin{iC,1}.PlaceField,1)); % get the 1d place field and normalize.
+end
+
+place.centroids(remove_cell_id)= [];
+place.centroids(remove_cell_id_decon)= [];
+
+place.is(remove_cell_id)= [];
+place.is(remove_cell_id_decon)= [];
+
+place.map(remove_cell_id,:)= [];
+place.map(remove_cell_id_decon,:)= [];
+
+bin = 80/size(place.map,2); 
+p_bins = 10:bin:90; 
+p_bins = p_bins(1:end-1)+bin/2;
+% see if there are any anxiety cells
 
 
 %% follow grosmark et al. method of deconv preprocessing
@@ -167,25 +215,50 @@ tvec = tbin_centers;
 % gau_sdf = data_int;
 
 %% try the assembly code....
-
+rng(123, 'twister')
 Ass_Temp = assembly_patterns(data_h');
 
 time_proj = assembly_activity(Ass_Temp,data_h');
 
 
-%% color code the assemblies
-Ass_sort = [];
-%figure(303);clf;  hold on
-for ii = size(Ass_Temp,2):-1:1
+%% shuffle distribution for assemblies
+nShuff = 200; 
+
+
+Ass_shuff = [];
+for iS = nShuff:-1:1
+    tic
+    shuff_data = [];
+    for ic = size(data_h,2):-1:1
+        shuff_data(:,ic) = circshift(data_h(:,ic), floor(MS_randn_range(1,1,1,size(data_h,1)))); 
+    end
     
-    [Ass_sort(:,ii), this_idx] = sort(Ass_Temp(:,ii), 'descend');
-    thresh = prctile(Ass_Temp(:,ii), 95);
-    c_idx = Ass_Temp(this_idx,ii) > thresh;
+    this_ass = assembly_patterns(shuff_data');
     
-    %     plot(Ass_Temp(c_idx, ii))
-    %             stem(Ass_Temp(c_idx, ii))
     
+    for ii = size(this_ass,2):-1:1
+        
+        if max(this_ass(:, ii)) > 0.2
+            Ass_shuff(iS) = size(this_ass,2);
+        end
+    end
+    fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(this_ass,2), toc)
 end
+
+
+% %% color code the assemblies
+% Ass_sort = [];
+% %figure(303);clf;  hold on
+% for ii = size(Ass_Temp,2):-1:1
+%     
+%     [Ass_sort(:,ii), this_idx] = sort(Ass_Temp(:,ii), 'descend');
+%     thresh = prctile(Ass_Temp(:,ii), 95);
+%     c_idx = Ass_Temp(this_idx,ii) > thresh;
+%     
+%     %     plot(Ass_Temp(c_idx, ii))
+%     %             stem(Ass_Temp(c_idx, ii))
+%     
+% end
 
 %% keep assemblies with strong activations
 keep_idx = zeros(1,size(Ass_Temp,2));
@@ -210,20 +283,132 @@ Ass_pos_cells(~keep_idx) = [];
 
 time_proj_pos = time_proj;
 time_proj_pos(~keep_idx,:) = [];
-%% stem plot for first few ensembles
+
+Ass_z = (size(Ass_pos,2) - mean(Ass_shuff))/std(Ass_shuff); 
+fprintf('%.0f Positive Assemblies detected. Chance level is %.1f. zscore = %.1fSD\n', size(Ass_pos,2), mean(Ass_shuff), Ass_z)
+%% stem plot ensembles
 figure(303);clf; hold on
+figure(304);clf; hold on
+
+Ass_map = cell(size(Ass_pos,2),1); 
+Ass_mean_map = []; 
+Ass_pcells = Ass_map;
 c_ord = parula(size(Ass_pos,2)+2);
 
-for ii = 1:size(Ass_pos,2)
+cmap = parula(256);
+cmap(1,:) = 0; 
+for ii = size(Ass_pos,2):-1:1
+    figure(303)
     subplot(4, ceil(size(Ass_pos,2)/4),ii)
     hold on
     stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
     view(90,90)
     
     stem(Ass_pos_cells{ii}, Ass_pos(Ass_pos_cells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
+        title(['Assembly #' num2str(ii)])
+
+    
+    figure(304)
+        subplot(4, ceil(size(Ass_pos,2)/4),ii)
+    hold on
+    this_ass_map = []; these_place = zeros(size(Ass_pos_cells{ii})); 
+    fprintf('Assembly # %.0f had %.0f place cells\n', ii, sum(place.is(Ass_pos_cells{ii})))
+    for jj = 1:length(Ass_pos_cells{ii})
+        
+        if place.is(Ass_pos_cells{ii}(jj))
+            these_place(jj) = 1; 
+            place_int = interp1(p_bins,place.map(Ass_pos_cells{ii}(jj),:),  p_bins(1):1:p_bins(end));
+            
+            this_ass_map = [this_ass_map ; place_int]; 
+        end
+    end
+    
+    if ~isempty(this_ass_map)
+        imagesc(p_bins(1):1:p_bins(end), 1:length(sum(these_place)),  this_ass_map)
+        set(gca,'ytick',1:size(this_ass_map,1), 'YTickLabel',  Ass_pos_cells{ii}(logical(these_place))');
+        xlim([p_bins(1) p_bins(end)])
+        ylim([.5 size(this_ass_map,1)+.5])
+        colormap(cmap)
+        Ass_map{ii} = this_ass_map;
+        Ass_pcells{ii} = Ass_pos_cells{ii}(logical(these_place));
+        Ass_mean_map(ii,:) = mean(this_ass_map,1);
+    end
+    title(['Assembly #' num2str(ii)])
+    
+
+
+%     ms_t = MS_append_sharp_SFPs(ms_trk); 
+      
+    
+%     MS_plot_all_SFPs(imgaussfilt(ms_t.SFPs_sharp(:,:, Ass_pos_cells{ii}),2))
     
 end
 
+% Ass_pos = Ass_Temp;
+% Ass_pos(:,~keep_idx) = [];
+% Ass_pos_cells(~keep_idx) = [];
+% 
+% time_proj_pos = time_proj;
+% time_proj_pos(~keep_idx,:) = [];
+
+%% sort the maps based on peak spatial representation
+figure(1001); clf; 
+[~, idx] = max(Ass_mean_map, [], 2); 
+p_bins_int = p_bins(1):1:p_bins(end); 
+
+Ass_map_peak = p_bins_int(idx); 
+[~, s_idx] = sort(Ass_map_peak); 
+subplot(1,3,1)
+imagesc(p_bins_int, 1:size(Ass_mean_map,1), Ass_mean_map); 
+
+Ass_pos = Ass_pos(:,s_idx); 
+Ass_mean_map = Ass_mean_map(s_idx,:); 
+Ass_map = Ass_map(s_idx); 
+Ass_pcells = Ass_pcells(s_idx); 
+Ass_pos_cells_place = Ass_pos_cells(s_idx); 
+time_proj_pos_place = time_proj_pos(s_idx,:); 
+
+subplot(1,3,2)
+imagesc(p_bins_int, 1:size(Ass_mean_map,1), Ass_mean_map); 
+
+rm_idx =  find(cellfun(@length, Ass_pcells) < 4); 
+Ass_pos(:,rm_idx) = []; 
+Ass_mean_map(rm_idx,:) = []; 
+Ass_map(rm_idx) = [];
+Ass_pcells(rm_idx) = []; 
+Ass_pos_cells_place(rm_idx) = [];  
+time_proj_pos_place(rm_idx,:) = []; 
+subplot(1,3,3)
+imagesc(p_bins_int, 1:size(Ass_mean_map,1), Ass_mean_map); 
+%% updated the plots
+figure(303);clf; hold on
+figure(304);clf; hold on
+
+c_ord = parula(size(Ass_pos,2)+2);
+
+
+for ii = size(Ass_pos,2):-1:1
+    figure(303)
+    subplot(4, ceil(size(Ass_pos,2)/4),ii)
+    hold on
+    stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
+    view(90,90)
+    
+    stem(Ass_pos_cells_place{ii}, Ass_pos(Ass_pos_cells_place{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
+        title(['Assembly #' num2str(ii)])
+
+    
+    figure(304)
+        subplot(4, ceil(size(Ass_pos,2)/4),ii)
+    hold on
+    
+    imagesc(Ass_map{ii})
+end
+
+
+
+
+%% get the number of significant reactivations during wake for 
 
 %% get the mean pop activity as per SCE
 data_in = Csp; 
@@ -237,12 +422,12 @@ shuff = 100;
 all_shuff = [];
 tic
 for iS = shuff:-1:1
-    this_data = []; 
+    shuff_data = []; 
     for ii = size(data_in, 2):-1:1
-        this_data(ii,:) = circshift(data_in(:,ii),floor(MS_randn_range(1,1,1,length(data_in(:,ii)))));
+        shuff_data(ii,:) = circshift(data_in(:,ii),floor(MS_randn_range(1,1,1,length(data_in(:,ii)))));
     end % end cells
 
-    all_shuff(iS, :) = movmean(nansum(this_data,1), frame_n_200); 
+    all_shuff(iS, :) = movmean(nansum(shuff_data,1), frame_n_200); 
 end % end shuff
 toc
 
@@ -296,14 +481,17 @@ c.Label.FontSize = 20;
 ax(3) = subplot(6,1,4:5);
 cla
 hold on
-c_ord = cool(size(time_proj_pos,1)+4);
-for ii = 1:size(time_proj_pos,1)
+c_ord = cool(size(time_proj_pos_place,1)+4);
+for ii = 1:size(time_proj_pos_place,1)
     %    nan_idx = time_proj_pos(ii,:) < prctile(time_proj_pos(ii,:), 10);
     %    plot3(ms_trk.time(~nan_idx)/1000, zscore(time_proj_pos(ii,~nan_idx)),ones(1, sum(~nan_idx))*100* ii, '.', 'color', c_ord(ii,:))
     %        plot3(tvec, zscore(time_proj_pos(ii,:)),ones(1, length(time_proj_pos(ii,:)))*100* ii, 'color', c_ord(ii,:))
-    plot(tvec, zscore(time_proj_pos(ii,:))+ii*10, 'color', c_ord(ii+4,:))
     
-    tick_val(ii) = mode(zscore(time_proj_pos(ii,:))+ii*10);
+%     if 
+    
+    plot(tvec, zscore(time_proj_pos_place(ii,:))+ii*10, 'color', c_ord(ii+4,:))
+    
+    tick_val(ii) = mode(zscore(time_proj_pos_place(ii,:))+ii*10);
     tick_label{ii} = num2str(ii);
 end
 % view(0,  15)
@@ -311,7 +499,7 @@ set(gca, 'YTick', tick_val, 'YTickLabel', tick_label)
 
 ylabel('assembly ID')
 xlabel('time (s)')
-ylim([min(zscore(time_proj_pos(1,:))+10), max(zscore(time_proj_pos(1,:))+10*size(time_proj_pos,1))])
+ylim([min(zscore(time_proj_pos_place(1,:))+10), max(zscore(time_proj_pos_place(1,:))+10*size(time_proj_pos_place,1))])
 xlim([tvec(1) tvec(end)])
 %     xlim([ms_trk.time(1)/1000 ms_trk.time(end)/1000])
 %     zlim([0 size(time_proj_pos,1)*100])
@@ -342,13 +530,13 @@ linkaxes(ax, 'x')
 win = floor(2.5 * mode(diff(behav.time)));
 figure(5)
 clf
-n = ceil(size(time_proj_pos,1)/2);
+n = ceil(size(time_proj_pos_place,1)/2);
 m = 2;
 
-for ii = 1: size(time_proj_pos,1)
+for ii = 1: size(time_proj_pos_place,1)
     subplot(m,n,ii)
     hold on
-    [~, p_idx] = findpeaks(zscore(time_proj_pos(ii,:)),'MinPeakHeight', 1.96 ,'MinPeakDistance', 2*floor(mode(diff(ms.time))));
+    [~, p_idx] = findpeaks(zscore(time_proj_pos_place(ii,:)),'MinPeakHeight', 1.96 ,'MinPeakDistance', 2*floor(mode(diff(ms.time))));
     
     this_pos = [];
     for ip = 1:length(p_idx)
@@ -381,6 +569,10 @@ sub = sess{1};
 sess = sess{2};
 cd(rem_dir )
 
+if strcmpi(sess, 'HATDSwitch')
+    sess = 'HATSwitch';
+end
+
 sub_list = dir('PV*');
 keep_idx = [];
 for ii = 1:length(sub_list)
@@ -391,7 +583,7 @@ for ii = 1:length(sub_list)
     end
 end
 
-cd([rem_dir filesep sub_list(find(keep_idx)).name filesep])
+cd([rem_dir filesep sub_list(find(keep_idx)).name])
 
 sess_list = dir('*T*');
 keep_idx = [];
@@ -427,7 +619,10 @@ cd(decode_dir)
 s_list = dir('pv*');
 
 sessions = [];
+if strcmpi(sess, 'HATSwitch')
 
+sess = 'HATDSwitch';
+end
 keep_idx = zeros(1, length(s_list)); 
 for ii = length(s_list):-1:1
 if ~isempty(strfind(lower(s_list(ii).name), lower(sess))) && ~isempty(strfind(lower(s_list(ii).name), lower(sub)))
@@ -502,12 +697,12 @@ shuff = 100;
 all_shuff_rem = [];
 tic
 for iS = shuff:-1:1
-    this_data = []; 
+    shuff_data = []; 
     for ii = size(data_in, 2):-1:1
-        this_data(ii,:) = circshift(data_in(:,ii),floor(MS_randn_range(1,1,1,length(data_in(:,ii)))));
+        shuff_data(ii,:) = circshift(data_in(:,ii),floor(MS_randn_range(1,1,1,length(data_in(:,ii)))));
     end % end cells
 
-    all_shuff_rem(iS, :) = movmean(nansum(this_data,1), frame_n_200); 
+    all_shuff_rem(iS, :) = movmean(nansum(shuff_data,1), frame_n_200); 
 end % end shuff
 toc
 
@@ -579,6 +774,7 @@ set(gca, 'xtick', [], 'YDir', 'normal')
 
 
 ax(3)= subplot(6,1,4:5);
+cla
 hold on
 c_ord = cool(size(wake_time_proj_rem,1)+4);
 
@@ -587,9 +783,11 @@ for ii = 1:size(wake_time_proj_rem, 1)
     %    nan_idx = time_proj_pos(ii,:) < prctile(time_proj_pos(ii,:), 10);
     %    plot3(ms_trk.time(~nan_idx)/1000, zscore(time_proj_pos(ii,~nan_idx)),ones(1, sum(~nan_idx))*100* ii, '.', 'color', c_ord(ii,:))
     %        plot3(tvec, zscore(time_proj_pos(ii,:)),ones(1, length(time_proj_pos(ii,:)))*100* ii, 'color', c_ord(ii,:))
-    plot(tvec_rem, zscore(wake_time_proj_rem(ii,:))+ii*10, 'color', c_ord(ii+4,:))
     
-    tick_val(ii) = mode(zscore(wake_time_proj_rem(ii,:))+ii*10);
+    this_proj = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:)); 
+    plot(tvec_rem, this_proj+ii*1, 'color', c_ord(ii+4,:))
+    
+    tick_val(ii) = mode(this_proj)+ii;
     tick_label{ii} = num2str(ii);
 end
 % view(0,  15)
@@ -597,7 +795,7 @@ set(gca, 'YTick', tick_val(1:2:end), 'YTickLabel', tick_label(1:2:end))
 
 ylabel('assembly ID')
 xlabel('time (s)')
-ylim([min(zscore(wake_time_proj_rem(1,:))+10), max(zscore(wake_time_proj_rem(1,:))+10*size(wake_time_proj_rem,1))])
+% ylim([min(zscore(wake_time_proj_rem(1,:))+10), max(zscore(wake_time_proj_rem(1,:))+10*size(wake_time_proj_rem,1))])
 %     xlim([ms_trk.time(1)/1000 ms_trk.time(end)/1000])
 %     zlim([0 size(time_proj_pos,1)*100])
 %     set(gca, 'color', 'k')
