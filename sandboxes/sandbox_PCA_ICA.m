@@ -851,7 +851,7 @@ xlabel('time (s)')
 ax(4) = subplot(6,1,6);
 cla
 hold on
-plot(rem_time, pop_act_rem, 'color', c_ord(10,:), 'linewidth', 2)
+plot(rem_time, pop_act_rem, 'color', 'k', 'linewidth', 2)
 plot(rem_time, nanmean(all_shuff_rem) - shuff_sd_rem*3,'--',  'color', [.8 .8 .8 .3], 'linewidth',.5)
 plot(rem_time, nanmean(all_shuff_rem) + shuff_sd_rem*3,'--', 'color', [.8 .8 .8 .3], 'linewidth',.5)
 plot(rem_time, nanmean(all_shuff_rem), 'color', [.8 .8 .8 .3], 'linewidth', 1)
