@@ -31,11 +31,22 @@ save_dir = [pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/N
 
 
 %%
-Master_NOL_preprocess([], kilo_dir, OE_dir, DLC_dir, save_dir)
+out = Master_NOL_preprocess([], kilo_dir, OE_dir, DLC_dir, save_dir)
 
 
 
 
+save([save_dir filesep strrep([out.meta.subject '_' out.meta.date '_' out.meta.session], '-', '_') '.mat'],'out');  
+
+
+%% Raster example
+enc.S = restrict(out.S, out.csc.tvec(1), out.csc.tvec(2000*10));
+
+cfg_in = []; 
+cfg_in.spkColor  = parula(length(enc.S.t)+20);
+MultiRaster(cfg_in, enc.S)
+
+   exportgraphics(gcf, ['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\CIHR_2023_September' filesep out.meta.subject '_' out.meta.session  '_raster.pdf'], 'ContentType', 'vector');
 
 %%  REM rad
 

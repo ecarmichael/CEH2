@@ -1,4 +1,4 @@
-function [evt,S, csc, pos, behav] = Master_NOL_preprocess(cfg_in, Kilo_dir, OE_dir, DLC_dir, save_dir)
+function out = Master_NOL_preprocess(cfg_in, Kilo_dir, OE_dir, DLC_dir, save_dir)
 %% MS_preprocess_NOL:  Extracts the position, spike, and CSC data for an OE session.
 %
 %
@@ -119,6 +119,8 @@ if ~isempty(DLC_dir)
         end
     
     else
+        this_pos = []; 
+        all_tvec = []; all_data = [];
         for ii = 1:length(DLC_dir)
             [this_pos{ii}, ~] = MS_DLC2TSD(DLC_dir{ii}, []);
             if this_pos{ii}.tvec(1) <0
@@ -126,11 +128,21 @@ if ~isempty(DLC_dir)
             elseif this_pos{ii}.tvec(1) >0
                 this_pos{ii}.tvec  = this_pos{ii}.tvec - abs(this_pos{ii}.tvec(1));
             end
+            all_tvec = [all_tvec, this_pos{ii}.tvec']; 
+            all_data = [all_data, this_pos{ii}.data];
+
         end
+        
+        % merge the pos files
+        pos = tsd(all_tvec, all_data, 'label',this_pos{1}.label);
+        pos.units = this_pos{1}.units; 
         
     end
 end
 fprintf('<strong>%s</strong>: Pos duration = %f\n', mfilename, pos.tvec(end) - pos.tvec(1))
+
+
+speed = getLinSpd([],pos); % linear speed
 
 %% align the behav times to OE times
 
@@ -158,6 +170,7 @@ hypno = dSub_Sleep_screener(csc_temp, emg, []);
 %% save it all for output
 
 out = [];
+out.meta = meta; 
 out.S = S;
 out.evts = evts;
 out.csc = csc;
