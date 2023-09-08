@@ -107,7 +107,7 @@ if exist([this_process_dir filesep '4.PlaceCell' filesep subject filesep task fi
 elseif exist([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'], 'file')
         load([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'])
 else 
-    all_rem_z = NaN; Ass_z = NaN; 
+    rem_z = NaN; Ass_z = NaN; 
     return
 end
 % if contains(task, 'HATD')% workaround for naming of HAT + D
@@ -406,7 +406,7 @@ subplot(1,3,2)
 imagesc(p_bins_int, 1:size(Ass_mean_map,1), Ass_mean_map);
 set(gca,'ytick',1:size(Ass_mean_map,1)-.5,  'YTickLabel', num2str(Ass_idx(:)))
 
-rm_idx =  find(cellfun(@length, Ass_pcells) < 4); 
+rm_idx =  find(cellfun(@length, Ass_pcells) < 3); 
 Ass_map_peak(rm_idx) = [];
 Ass_idx(rm_idx) = []; 
 Ass_pos(:,rm_idx) = []; 
@@ -552,7 +552,7 @@ xlim([tvec(1) tvec(end)])
 ax(4) = subplot(6,1,6);
 cla
 hold on
-plot(ms.time/1000, pop_act, 'color', c_ord(10,:), 'linewidth', 2)
+plot(ms.time/1000, pop_act, 'color', 'k', 'linewidth', 2)
 plot(ms.time/1000, nanmean(all_shuff) - shuff_sd*3,'--',  'color', [.8 .8 .8 .3], 'linewidth',.5)
 plot(ms.time/1000, nanmean(all_shuff) + shuff_sd*3,'--', 'color', [.8 .8 .8 .3], 'linewidth',.5)
 plot(ms.time/1000, nanmean(all_shuff), 'color', [.8 .8 .8 .3], 'linewidth', 1)
@@ -889,8 +889,8 @@ Ass_2 = close_idx(idx(1));
 
 
 
-% Ass_1 = 12; 
-% Ass_2 = 4; 
+% Ass_1 = 8; 
+% Ass_2 = 1; 
 
 Ass_1_ids = Ass_pos_cells_place{Ass_1}; 
 Ass_2_ids = Ass_pos_cells_place{Ass_2}; 
@@ -1007,7 +1007,7 @@ ylim([0.5 offset+.5])
 xlim([0 60])
    exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_wake_zoom.pdf'], 'ContentType', 'vector');
    
-   
+   close(900)
 %% Get the wake stem and place plots for the example assemblies. 
 
 for iA = [Ass_1, Ass_2]
@@ -1015,7 +1015,7 @@ for iA = [Ass_1, Ass_2]
     Ass_t_maps = Ass_map{iA}; 
 
     
-l = 1:(size(Ass_t_maps,1)+1)*2; 
+l = 1:12; 
 
 m = 1:2:l(end)*2;
 
@@ -1065,7 +1065,7 @@ title(['Assembly #' num2str(iA)])
         
 
    exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_Asb_' num2str(iA) '.pdf'], 'ContentType', 'vector');
-close(iA)
+% close(iA)
 end
 
 %% REM reactivation plot for example assemblies and overall 
@@ -1172,10 +1172,11 @@ xlim([rem_time(1) rem_time(end)])
 
 subplot(7,1,2:3)
 ylim([0.5 offset+.5])
-xlim([120 150])
+[~, idx] = max(this_proj); 
+xlim([rem_time(idx) - 30 rem_time(idx)+30])
    exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_REM_zoom.pdf'], 'ContentType', 'vector');
    
-   
+   close(999)
 
 %% collect the REM_react
    rem_z.all = []; rem_z.close = []; rem_z.open = []; rem_z.isopen = []; 
