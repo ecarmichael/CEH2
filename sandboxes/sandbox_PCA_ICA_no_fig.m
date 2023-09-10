@@ -1,4 +1,4 @@
-function [rem_z, Ass_z, time_proj_pos_place, wake_time_proj_rem] = sandbox_PCA_ICA_no_fig(fname)
+function [rem_z, Ass_z, time_proj_pos_place, wake_time_proj_rem, behav_his] = sandbox_PCA_ICA_no_fig(fname)
 % sandbox_PCA/ICA
 
 
@@ -34,7 +34,7 @@ else
     data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter';
     rem_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter';
     decode_dir = [data_dir filesep 'decoding'];
-    this_process_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\JisooProject2020\2020_Results_aftercutting';
+    this_process_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael';
     
 end
 
@@ -66,6 +66,8 @@ behav = MS_align_data(behav,ms);
 
 move_idx = behav.speed > 2.5;
 
+
+behav_his = histcounts(behav.position(move_idx,1), 5:5:95); 
 %% check for place cell metrics
 dir_parts = strsplit(this_sess, filesep);
 parts = strsplit(dir_parts{end}, '_');
@@ -366,7 +368,7 @@ for ii = size(Ass_pos,2):-1:1
     %     MS_plot_all_SFPs(imgaussfilt(ms_t.SFPs_sharp(:,:, Ass_pos_cells{ii}),2))
     
 end
-nan_idx = isnan(max(Ass_mean_map, [], 2))
+nan_idx = isnan(max(Ass_mean_map, [], 2));
 Ass_idx(nan_idx) = [];
 Ass_pos(:,nan_idx) = [];
 Ass_mean_map(nan_idx,:) = [];
@@ -404,7 +406,7 @@ time_proj_pos_place = time_proj_pos_place(s_idx,:);
 
 
 
-rm_idx =  find(cellfun(@length, Ass_pcells) < 4);
+rm_idx =  find(cellfun(@length, Ass_pcells) < 2);
 Ass_map_peak(rm_idx) = [];
 Ass_idx(rm_idx) = [];
 Ass_pos(:,rm_idx) = [];
@@ -458,23 +460,23 @@ end
 
 cd(sess_list(find(keep_idx)).name)
 
-if exist('all_detrendRaw_post_REM.mat', 'file')
-    load('all_detrendRaw_post_REM.mat')
-    load('all_RawTraces_post_REM.mat')
-    load('all_binary_post_REM.mat')
-else
-    rem_z = NaN; wake_time_proj_rem = NaN;
-    return
-end
+% if exist('all_binary_post_REM.mat', 'file')
+%     load('all_detrendRaw_post_REM.mat')
+%     load('all_RawTraces_post_REM.mat')
+%     load('all_binary_post_REM.mat')
+% else
+%     rem_z = NaN; wake_time_proj_rem = NaN;
+%     return
+% end
 
 
 %remove cells that were excluded in the awake set.
 
-all_detrendRaw_post_REM(:, remove_cell_id) = [];
-all_detrendRaw_post_REM(:, remove_cell_id_decon) = [];
+% all_detrendRaw_post_REM(:, remove_cell_id) = [];
+% all_detrendRaw_post_REM(:, remove_cell_id_decon) = [];
 
-all_RawTraces_post_REM(:, remove_cell_id) = [];
-all_RawTraces_post_REM(:, remove_cell_id_decon) = [];
+% all_RawTraces_post_REM(:, remove_cell_id) = [];
+% all_RawTraces_post_REM(:, remove_cell_id_decon) = [];
 
 all_binary_post_REM(:, remove_cell_id) = [];
 all_binary_post_REM(:, remove_cell_id_decon) = [];
@@ -485,34 +487,34 @@ all_binary_post_REM(:, remove_cell_id_decon) = [];
 
 
 %% deconvolve
-addpath(genpath(oasis_dir))
-fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
-for iChan = size(all_detrendRaw_post_REM,2):-1:1
-    tic;
-    [denoise,deconv] = deconvolveCa(all_detrendRaw_post_REM(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
-    toc;
-    all_denoise(:,iChan) = denoise;    all_deconv(:,iChan) = deconv;
-end
-rmpath(genpath(oasis_dir))
-
-
-% follow grosmark et al. method of deconv preprocessing
-Csp_rem = all_deconv./all_denoise;
-Csp_rem = Csp_rem > 0.01;
+% addpath(genpath(oasis_dir))
+% fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
+% for iChan = size(all_detrendRaw_post_REM,2):-1:1
+%     tic;
+%     [denoise,deconv] = deconvolveCa(all_detrendRaw_post_REM(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
+%     toc;
+%     all_denoise(:,iChan) = denoise;    all_deconv(:,iChan) = deconv;
+% end
+% rmpath(genpath(oasis_dir))
+% 
+% 
+% % follow grosmark et al. method of deconv preprocessing
+% Csp_rem = all_deconv./all_denoise;
+% Csp_rem = Csp_rem > 0.01;
 
 
 %%
-rem_time =  0:1/mode(diff(ms.time)):(length(all_deconv)/mode(diff(ms.time)));
+rem_time =  0:1/mode(diff(ms.time)):(length(all_binary_post_REM)/mode(diff(ms.time)));
 rem_time = rem_time(1:end-1);
 
 binsize = .5;
-tbin_edges_rem = 0:binsize:(length(all_deconv)/mode(diff(ms.time))); % vector of time bin edges (for histogram)
+tbin_edges_rem = 0:binsize:(length(all_binary_post_REM)/mode(diff(ms.time))); % vector of time bin edges (for histogram)
 tbin_centers_rem = tbin_edges_rem(1:end-1)+binsize/2; % vector of time bin centers (for plotting)
 
 data_h_rem = [];
-for ii = size(Csp_rem,2):-1:1
+for ii = size(all_binary_post_REM,2):-1:1
     
-    this_cell = rem_time(find(Csp_rem(:,ii)));
+    this_cell = rem_time(find(all_binary_post_REM(:,ii)));
     
     spk_count = histc(this_cell,tbin_edges_rem); % get spike counts for each bin
     spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
@@ -548,21 +550,34 @@ for ii = size(wake_time_proj_rem, 1):-1:1
 end
 
 %% split the REM assemblies based on location on the track.
+if ~isempty(Ass_map_peak)
+
+    
+    if strcmpi(sess, 'HATDS')
+        close_idx = find(Ass_map_peak < 40);
+        mid_idx = find((40 <= Ass_map_peak) & (Ass_map_peak<=60));
+        open_idx = find(Ass_map_peak >60);
+    else
+        close_idx = find(Ass_map_peak > 60);
+        mid_idx = find((40 <= Ass_map_peak) & (Ass_map_peak<=60));
+        
+        open_idx = find(Ass_map_peak <40);
+    end
 
 
-close_idx = find(Ass_map_peak <= 50);
-open_idx = find(Ass_map_peak >50);
-
-
-close_peaks = sum(all_proj_rem(close_idx,:) > 1,2);
-open_peaks = sum(all_proj_rem(open_idx,:) > 1,2);
+% close_peaks = sum(all_proj_rem(close_idx,:) > .4,2);
+% open_peaks = sum(all_proj_rem(open_idx,:) > .4,2);
 
 % if sum(open_peaks == max(open_peaks)) ==1
-[~, idx] = max(open_peaks);
-Ass_1 = open_idx(idx(1));
-
-[~, idx] = max(close_peaks);
-Ass_2 = close_idx(idx(1));
+% [~, idx] = max(open_peaks);
+% Ass_1 = open_idx(idx(1));
+% 
+% [~, idx] = max(close_peaks);
+% Ass_2 = close_idx(idx(1));
+else
+     rem_z = NaN; 
+    return
+end
 
 % else % tie breaker
 %
@@ -572,7 +587,7 @@ Ass_2 = close_idx(idx(1));
 
 
 %% collect the REM_react
-rem_z.all = []; rem_z.close = []; rem_z.open = []; rem_z.isopen = [];
+rem_z.all = []; rem_z.close = []; rem_z.open = []; rem_z.mid = []; rem_z.isopen = [];rem_z.ismid = [];
 for ii =  size(wake_time_proj_rem,1):-1:1
     
     rem_z.all(ii,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
@@ -580,8 +595,17 @@ for ii =  size(wake_time_proj_rem,1):-1:1
     if sum(ismember(close_idx, ii)) > 0
         rem_z.close(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
         rem_z.isopen(ii) = 0;
+                rem_z.ismid(ii) = 0;
+
     elseif sum(ismember(open_idx, ii)) > 0
         rem_z.open(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
         rem_z.isopen(ii) = 1;
+        rem_z.ismid(ii) = 0;
+
+    elseif sum(ismember(mid_idx, ii)) > 0
+        rem_z.mid(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+        rem_z.ismid(ii) = 1;
+        rem_z.isopen(ii) = 0;
+
     end
 end

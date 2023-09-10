@@ -15,7 +15,7 @@ if strcmp(computer, 'GLNXA64')
     % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
     data_dir = '/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter';
     rem_dir = '/home/williamslab/Williams Lab Dropbox/Eric Carmichael/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter';
-    decode_dir = [data_dir filesep 'decoding']; 
+    decode_dir = [data_dir filesep 'decoding'];
     
     this_process_dir ='/home/williamslab/Williams Lab Dropbox/Eric Carmichael/JisooProject2020/2020_Results_aftercutting/';
     
@@ -33,15 +33,15 @@ else
     % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
     data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter';
     rem_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter';
-        decode_dir = [data_dir filesep 'decoding']; 
-this_process_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\JisooProject2020\2020_Results_aftercutting'; 
-
+    decode_dir = [data_dir filesep 'decoding'];
+    this_process_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\JisooProject2020\2020_Results_aftercutting';
+    
 end
 
 restoredefaultpath
 
 cd(oasis_dir)
-addpath(genpath(oasis_dir)); 
+addpath(genpath(oasis_dir));
 oasis_setup
 
 addpath(genpath(ca_dir));
@@ -52,7 +52,7 @@ addpath(code_dir)
 
 cd(data_dir)
 
-rng(123, 'twister')
+rng default
 
 %%
 
@@ -92,10 +92,10 @@ cfg_rem.remove_idx = find(~keep_idx);
 cfg_rem.data_type = 'deconv';
 ms_trk_rem = MS_Remove_trace(cfg_rem, ms_trk_rem);
 
-%% grab the spatial tuning properties. 
+%% grab the spatial tuning properties.
 dir_parts = strsplit(this_sess, filesep);
 parts = strsplit(dir_parts{end}, '_');
-task = parts{2}; 
+task = parts{2};
 if contains(task, 'HATD6')
     task = 'HATDSwitch';
 end
@@ -105,9 +105,9 @@ subject = parts{1};
 if exist([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'], 'file')
     load([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'])
 elseif exist([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'], 'file')
-        load([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'])
-else 
-    rem_z = NaN; Ass_z = NaN; 
+    load([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'])
+else
+    rem_z = NaN; Ass_z = NaN;
     return
 end
 % if contains(task, 'HATD')% workaround for naming of HAT + D
@@ -125,10 +125,10 @@ for iC = length(spatial_analysis.bin):-1:1
         temp = spatial_analysis.bin{iC,1}.PlaceFieldCentroid;
     end
     place.centroids(iC) = temp(1);
-
+    
     % is it a place cell?
     place.is(iC) = spatial_analysis.bin{iC,1}.IsPlaceCell;
-
+    
     place.map(iC,:) = mean(spatial_analysis.bin{iC,1}.PlaceField,1)/max(mean(spatial_analysis.bin{iC,1}.PlaceField,1)); % get the 1d place field and normalize.
 end
 
@@ -141,8 +141,8 @@ place.is(remove_cell_id_decon)= [];
 place.map(remove_cell_id,:)= [];
 place.map(remove_cell_id_decon,:)= [];
 
-bin = 80/size(place.map,2); 
-p_bins = 10:bin:90; 
+bin = 80/size(place.map,2);
+p_bins = 10:bin:90;
 p_bins = p_bins(1:end-1)+bin/2;
 % see if there are any anxiety cells
 
@@ -226,35 +226,36 @@ tvec = tbin_centers;
 % gau_sdf = data_int;
 
 %% try the assembly code....
-rng(123, 'twister')
+rng default
 Ass_Temp = assembly_patterns(data_h');
 
+rng default
 time_proj = assembly_activity(Ass_Temp,data_h');
 
 
 %% shuffle distribution for assemblies
-rng(123,'twister')
-nShuff = 200; 
+rng default
+nShuff = 200;
 
 Ass_shuff = NaN(1,nShuff);
 parfor iS = 1:nShuff
     tic
     shuff_data = NaN(size(data_h));
     for ic = 1:size(data_h,2)
-        shuff_data(:,ic) = circshift(data_h(:,ic), floor(MS_randn_range(1,1,1,size(data_h,1)))); 
+        shuff_data(:,ic) = circshift(data_h(:,ic), floor(MS_randn_range(1,1,1,size(data_h,1))));
     end
     
     this_ass = assembly_patterns(shuff_data');
     
     
-%     for ii = size(this_ass,2):-1:1
-        
-        if sum(max(this_ass) > 0.2) >0
-            Ass_shuff(iS) = sum(max(this_ass) > 0.2);
-        else
-            Ass_shuff(iS) = 0; 
-        end
-%     end
+    %     for ii = size(this_ass,2):-1:1
+    
+    if sum(max(this_ass) > 0.2) >0
+        Ass_shuff(iS) = sum(max(this_ass) > 0.2);
+    else
+        Ass_shuff(iS) = 0;
+    end
+    %     end
     fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(this_ass,2), toc)
 end
 
@@ -263,14 +264,14 @@ end
 % Ass_sort = [];
 % %figure(303);clf;  hold on
 % for ii = size(Ass_Temp,2):-1:1
-%     
+%
 %     [Ass_sort(:,ii), this_idx] = sort(Ass_Temp(:,ii), 'descend');
 %     thresh = prctile(Ass_Temp(:,ii), 95);
 %     c_idx = Ass_Temp(this_idx,ii) > thresh;
-%     
+%
 %     %     plot(Ass_Temp(c_idx, ii))
 %     %             stem(Ass_Temp(c_idx, ii))
-%     
+%
 % end
 
 %% keep assemblies with strong activations
@@ -298,19 +299,19 @@ Ass_idx = find(keep_idx);
 time_proj_pos = time_proj;
 time_proj_pos(~keep_idx,:) = [];
 
-Ass_z = (size(Ass_pos,2) - mean(Ass_shuff))/std(Ass_shuff); 
+Ass_z = (size(Ass_pos,2) - mean(Ass_shuff))/std(Ass_shuff);
 fprintf('%.0f Positive Assemblies detected. Chance level is %.1f. zscore = %.1fSD\n', size(Ass_pos,2), mean(Ass_shuff), Ass_z)
 %% stem plot ensembles
 figure(301);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
 figure(302);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
 
-Ass_map = cell(size(Ass_pos,2),1); 
-Ass_mean_map = []; 
+Ass_map = cell(size(Ass_pos,2),1);
+Ass_mean_map = [];
 Ass_pcells = Ass_map;
 c_ord = parula(size(Ass_pos,2)+2);
 
 cmap = parula(256);
-cmap(1,:) = 0; 
+cmap(1,:) = 0;
 for ii = size(Ass_pos,2):-1:1
     figure(301)
     subplot(4, ceil(size(Ass_pos,2)/4),ii)
@@ -319,21 +320,21 @@ for ii = size(Ass_pos,2):-1:1
     view(90,90)
     
     stem(Ass_pos_cells{ii}, Ass_pos(Ass_pos_cells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
-        title(['Assembly #' num2str(ii)])
-
+    title(['Assembly #' num2str(ii)])
+    
     
     figure(302)
-        subplot(4, ceil(size(Ass_pos,2)/4),ii)
+    subplot(4, ceil(size(Ass_pos,2)/4),ii)
     hold on
-    this_ass_map = []; these_place = zeros(size(Ass_pos_cells{ii})); 
+    this_ass_map = []; these_place = zeros(size(Ass_pos_cells{ii}));
     fprintf('Assembly # %.0f had %.0f place cells\n', ii, sum(place.is(Ass_pos_cells{ii})))
     for jj = 1:length(Ass_pos_cells{ii})
         
         if place.is(Ass_pos_cells{ii}(jj))
-            these_place(jj) = 1; 
+            these_place(jj) = 1;
             place_int = interp1(p_bins,place.map(Ass_pos_cells{ii}(jj),:),  p_bins(1):1:p_bins(end));
             
-            this_ass_map = [this_ass_map ; place_int]; 
+            this_ass_map = [this_ass_map ; place_int];
         end
     end
     
@@ -348,73 +349,73 @@ for ii = size(Ass_pos,2):-1:1
         Ass_mean_map(ii,:) = mean(this_ass_map,1);
     else
         
-      Ass_map{ii} = NaN(size(p_bins(1):1:p_bins(end))); 
-      Ass_pcells{ii} = NaN; 
-      Ass_mean_map(ii,:) = NaN(size(p_bins(1):1:p_bins(end))); 
+        Ass_map{ii} = NaN(size(p_bins(1):1:p_bins(end)));
+        Ass_pcells{ii} = NaN;
+        Ass_mean_map(ii,:) = NaN(size(p_bins(1):1:p_bins(end)));
     end
     title(['Assembly #' num2str(ii)])
     
-
-
-%     ms_t = MS_append_sharp_SFPs(ms_trk); 
-      
     
-%     MS_plot_all_SFPs(imgaussfilt(ms_t.SFPs_sharp(:,:, Ass_pos_cells{ii}),2))
+    
+    %     ms_t = MS_append_sharp_SFPs(ms_trk);
+    
+    
+    %     MS_plot_all_SFPs(imgaussfilt(ms_t.SFPs_sharp(:,:, Ass_pos_cells{ii}),2))
     
 end
-nan_idx = isnan(max(Ass_mean_map, [], 2))
-Ass_idx(nan_idx) = []; 
-Ass_pos(:,nan_idx) = []; 
-Ass_mean_map(nan_idx,:) = []; 
+nan_idx = isnan(max(Ass_mean_map, [], 2));
+Ass_idx(nan_idx) = [];
+Ass_pos(:,nan_idx) = [];
+Ass_mean_map(nan_idx,:) = [];
 Ass_map(nan_idx) = [];
-Ass_pcells(nan_idx) = []; 
+Ass_pcells(nan_idx) = [];
 
-Ass_pos_cells_place = Ass_pos_cells; 
-time_proj_pos_place = time_proj_pos; 
+Ass_pos_cells_place = Ass_pos_cells;
+time_proj_pos_place = time_proj_pos;
 
-Ass_pos_cells_place(nan_idx) = [];  
-time_proj_pos_place(nan_idx,:) = []; 
+Ass_pos_cells_place(nan_idx) = [];
+time_proj_pos_place(nan_idx,:) = [];
 
 
 % Ass_pos = Ass_Temp;
 % Ass_pos(:,~keep_idx) = [];
 % Ass_pos_cells(~keep_idx) = [];
-% 
+%
 % time_proj_pos = time_proj;
 % time_proj_pos(~keep_idx,:) = [];
 
 %% sort the maps based on peak spatial representation
-figure(1001); clf; 
-[~, idx] = max(Ass_mean_map, [], 2); 
-p_bins_int = p_bins(1):1:p_bins(end); 
+figure(1001); clf;
+[~, idx] = max(Ass_mean_map, [], 2);
+p_bins_int = p_bins(1):1:p_bins(end);
 
-Ass_map_peak = p_bins_int(idx); 
-[Ass_map_peak, s_idx] = sort(Ass_map_peak); 
+Ass_map_peak = p_bins_int(idx);
+[Ass_map_peak, s_idx] = sort(Ass_map_peak);
 subplot(1,3,1)
 imagesc(p_bins_int, 1:size(Ass_mean_map,1), Ass_mean_map);
 set(gca,'ytick',1:size(Ass_mean_map,1)-.5,  'YTickLabel', num2str(Ass_idx(:)))
 
-Ass_idx = Ass_idx(s_idx); 
-Ass_pos = Ass_pos(:,s_idx); 
-Ass_mean_map = Ass_mean_map(s_idx,:); 
-Ass_map = Ass_map(s_idx); 
-Ass_pcells = Ass_pcells(s_idx); 
-Ass_pos_cells_place = Ass_pos_cells_place(s_idx); 
-time_proj_pos_place = time_proj_pos_place(s_idx,:); 
+Ass_idx = Ass_idx(s_idx);
+Ass_pos = Ass_pos(:,s_idx);
+Ass_mean_map = Ass_mean_map(s_idx,:);
+Ass_map = Ass_map(s_idx);
+Ass_pcells = Ass_pcells(s_idx);
+Ass_pos_cells_place = Ass_pos_cells_place(s_idx);
+time_proj_pos_place = time_proj_pos_place(s_idx,:);
 
 subplot(1,3,2)
 imagesc(p_bins_int, 1:size(Ass_mean_map,1), Ass_mean_map);
 set(gca,'ytick',1:size(Ass_mean_map,1)-.5,  'YTickLabel', num2str(Ass_idx(:)))
 
-rm_idx =  find(cellfun(@length, Ass_pcells) < 3); 
+rm_idx =  find(cellfun(@length, Ass_pcells) < 3);
 Ass_map_peak(rm_idx) = [];
-Ass_idx(rm_idx) = []; 
-Ass_pos(:,rm_idx) = []; 
-Ass_mean_map(rm_idx,:) = []; 
+Ass_idx(rm_idx) = [];
+Ass_pos(:,rm_idx) = [];
+Ass_mean_map(rm_idx,:) = [];
 Ass_map(rm_idx) = [];
-Ass_pcells(rm_idx) = []; 
-Ass_pos_cells_place(rm_idx) = [];  
-time_proj_pos_place(rm_idx,:) = []; 
+Ass_pcells(rm_idx) = [];
+Ass_pos_cells_place(rm_idx) = [];
+time_proj_pos_place(rm_idx,:) = [];
 subplot(1,3,3)
 imagesc(p_bins_int, 1:size(Ass_mean_map,1), Ass_mean_map);
 set(gca,'ytick',1:size(Ass_mean_map,1)-.5,  'YTickLabel', num2str(Ass_idx(:)))
@@ -433,57 +434,57 @@ for ii = size(Ass_pos,2):-1:1
     view(90,90)
     
     stem(Ass_pos_cells_place{ii}, Ass_pos(Ass_pos_cells_place{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
-        title(['Assembly #' num2str(ii)])
-
+    title(['Assembly #' num2str(ii)])
+    
     
     figure(304)
-        subplot(4, ceil(size(Ass_pos,2)/4),ii)
+    subplot(4, ceil(size(Ass_pos,2)/4),ii)
     hold on
     
     imagesc(p_bins(1):1:p_bins(end), 1:size(Ass_map{ii},1), Ass_map{ii})
-            xlim([p_bins(1) p_bins(end)])
-        ylim([.5 size(Ass_map{ii},1)+.5])
-                colormap(cmap)
-
-        title(['Assembly#' num2str(Ass_idx(ii))])
+    xlim([p_bins(1) p_bins(end)])
+    ylim([.5 size(Ass_map{ii},1)+.5])
+    colormap(cmap)
+    
+    title(['Assembly#' num2str(Ass_idx(ii))])
 end
 
 
 
 
-%% get the number of significant reactivations during wake for 
+%% get the number of significant reactivations during wake for
 
 %% get the mean pop activity as per SCE
-data_in = Csp; 
+data_in = Csp;
 
-df = mode(diff(ms.time)); 
+df = mode(diff(ms.time));
 frame_n = floor(df/2);
 if mod(frame_n, 2)==0; frame_n = frame_n+1; end
-frame_n_200 = floor(df/5); 
+frame_n_200 = floor(df/5);
 
 shuff = 100;
 all_shuff = [];
 tic
 for iS = shuff:-1:1
-    shuff_data = []; 
+    shuff_data = [];
     for ii = size(data_in, 2):-1:1
         shuff_data(ii,:) = circshift(data_in(:,ii),floor(MS_randn_range(1,1,1,length(data_in(:,ii)))));
     end % end cells
-
-    all_shuff(iS, :) = movmean(nansum(shuff_data,1), frame_n_200); 
+    
+    all_shuff(iS, :) = movmean(nansum(shuff_data,1), frame_n_200);
 end % end shuff
 toc
 
 shuff_mean = mean(all_shuff,'all');
 shuff_sd = std(all_shuff, [],'all');
 
-thresh = shuff_mean + 3*shuff_sd; 
+thresh = shuff_mean + 3*shuff_sd;
 % find time points in real data that exceed threshold
 
 pop_act = movmean(nansum(data_in,2), frame_n_200);
 
 % exlude events that are too close. use findpeaks
-% figure(101); 
+% figure(101);
 [peak_act, SCE_idx] = findpeaks(pop_act, 1, 'MinPeakHeight', thresh, 'MinPeakDistance', df);
 %% plot the output
 
@@ -530,7 +531,7 @@ for ii = 1:size(time_proj_pos_place,1)
     %    plot3(ms_trk.time(~nan_idx)/1000, zscore(time_proj_pos(ii,~nan_idx)),ones(1, sum(~nan_idx))*100* ii, '.', 'color', c_ord(ii,:))
     %        plot3(tvec, zscore(time_proj_pos(ii,:)),ones(1, length(time_proj_pos(ii,:)))*100* ii, 'color', c_ord(ii,:))
     
-%     if 
+    %     if
     
     plot(tvec, zscore(time_proj_pos_place(ii,:))+ii*10, 'color', c_ord(ii+4,:))
     
@@ -663,22 +664,22 @@ s_list = dir('pv*');
 
 sessions = [];
 if strcmpi(sess, 'HATSwitch')
-
-sess = 'HATDSwitch';
+    
+    sess = 'HATDSwitch';
 end
-keep_idx = zeros(1, length(s_list)); 
+keep_idx = zeros(1, length(s_list));
 for ii = length(s_list):-1:1
-if ~isempty(strfind(lower(s_list(ii).name), lower(sess))) && ~isempty(strfind(lower(s_list(ii).name), lower(sub)))
- keep_idx(ii) = 1; 
-end
+    if ~isempty(strfind(lower(s_list(ii).name), lower(sess))) && ~isempty(strfind(lower(s_list(ii).name), lower(sub)))
+        keep_idx(ii) = 1;
+    end
 end
 
 load(s_list(find(keep_idx)).name)
 
-decode_prob = decoding.REM_decoded_probabilities; 
-decode_pos = decoding.REM_decoded_position; 
-decode_bin = decoding.bin_centers_vector; 
-clear decoding; 
+decode_prob = decoding.REM_decoded_probabilities;
+decode_pos = decoding.REM_decoded_position;
+decode_bin = decoding.bin_centers_vector;
+clear decoding;
 
 %% deconvolve
 addpath(genpath(oasis_dir))
@@ -730,43 +731,43 @@ end
 tvec_rem = tbin_centers_rem;
 
 %% get the mean pop activity as per SCE
-data_in = all_binary_post_REM; 
+data_in = all_binary_post_REM;
 
-df = mode(diff(rem_time*1000)); 
+df = mode(diff(rem_time*1000));
 frame_n = floor(df/2);
 if mod(frame_n, 2)==0; frame_n = frame_n+1; end
-frame_n_200 = floor(df/5); 
+frame_n_200 = floor(df/5);
 
 shuff = 100;
 all_shuff_rem = [];
 tic
 for iS = shuff:-1:1
-    shuff_data = []; 
+    shuff_data = [];
     for ii = size(data_in, 2):-1:1
         shuff_data(ii,:) = circshift(data_in(:,ii),floor(MS_randn_range(1,1,1,length(data_in(:,ii)))));
     end % end cells
-
-    all_shuff_rem(iS, :) = movmean(nansum(shuff_data,1), frame_n_200); 
+    
+    all_shuff_rem(iS, :) = movmean(nansum(shuff_data,1), frame_n_200);
 end % end shuff
 toc
 
 shuff_mean_rem = mean(all_shuff_rem,'all');
 shuff_sd_rem = std(all_shuff_rem, [],'all');
 
-thresh = shuff_mean + 3*shuff_sd_rem; 
+thresh = shuff_mean + 3*shuff_sd_rem;
 % find time points in real data that exceed threshold
 
 pop_act_rem = movmean(nansum(data_in,2), frame_n_200);
 
 % exlude events that are too close. use findpeaks
-% figure(101); 
+% figure(101);
 [peak_act_rem, SCE_idx_rem] = findpeaks(pop_act_rem, 1, 'MinPeakHeight', thresh, 'MinPeakDistance', df);
 
 %% try the assembly code
-rng(123, 'twister')
+rng default
 Ass_Temp_rem = assembly_patterns(data_h_rem');
 
-rng(123, 'twister')
+rng default
 %using wake assemblies.
 wake_time_proj_rem = assembly_activity(Ass_pos,data_h_rem');
 
@@ -790,17 +791,17 @@ title('Reactivation of wake assemblies in REM')
 ax(2) = subplot(6,1,2:3);
 cla
 hold on
-% offset = 10; 
-% p_ord = parula(15); 
+% offset = 10;
+% p_ord = parula(15);
 % for ii = 1:10
-% %    plot(rem_time, zscore(all_detrendRaw_post_REM(:,ii))'+ii*offset); 
-%    plot(rem_time, zscore(all_denoise(:,ii))'+ii*offset, 'color', p_ord(ii,:)); 
+% %    plot(rem_time, zscore(all_detrendRaw_post_REM(:,ii))'+ii*offset);
+%    plot(rem_time, zscore(all_denoise(:,ii))'+ii*offset, 'color', p_ord(ii,:));
 %    plot(rem_time, Csp_rem(:,ii)+(ii*offset) - offset/4,'color', [0 0 0])
 %       plot(rem_time, all_binary_post_REM(:,ii)+(ii*offset) - offset/3,'color', [.5 .5 .5])
-% 
-%       plot(rem_time, zscore(all_RawTraces_post_REM(:,ii))'+ii*offset,'color', [p_ord(ii,:) .4]); 
-% 
-% 
+%
+%       plot(rem_time, zscore(all_RawTraces_post_REM(:,ii))'+ii*offset,'color', [p_ord(ii,:) .4]);
+%
+%
 % end
 imagesc(tvec_rem, 1:size(all_binary_post_REM,2), all_binary_post_REM')
 ylim([0.5 size(all_binary_post_REM,2)+.5])
@@ -810,7 +811,7 @@ pos = c.Position;
 c.Position = [pos(1)+.025 pos(2) pos(3) pos(4)];
 c.Label.String = 'binarized activity';
 c.Label.FontSize = 14;
-% c.Ticks = 
+% c.Ticks =
 ylabel('cell ID')
 caxis([0 1])
 set(gca, 'xtick', [], 'YDir', 'normal')
@@ -828,7 +829,7 @@ for ii = 1:size(wake_time_proj_rem, 1)
     %    plot3(ms_trk.time(~nan_idx)/1000, zscore(time_proj_pos(ii,~nan_idx)),ones(1, sum(~nan_idx))*100* ii, '.', 'color', c_ord(ii,:))
     %        plot3(tvec, zscore(time_proj_pos(ii,:)),ones(1, length(time_proj_pos(ii,:)))*100* ii, 'color', c_ord(ii,:))
     
-    this_proj = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:)); 
+    this_proj = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
     all_proj_rem(ii,:) =  this_proj;
     plot(tvec_rem, this_proj+ii*1, 'color', c_ord(ii+4,:))
     
@@ -862,40 +863,116 @@ ylabel('pop activity')
 linkaxes(ax, 'x')
 xlim([rem_time(1) rem_time(end)])
 
-%% split the REM assemblies based on location on the track. 
+
+%% split the REM assemblies based on location on the track.
 
 
-close_idx = find(Ass_map_peak <= 50); 
-open_idx = find(Ass_map_peak >50); 
+if strcmpi(sess, 'HATDS')
+    close_idx = find(Ass_map_peak <= 50);
+    open_idx = find(Ass_map_peak >50);
+else
+    close_idx = find(Ass_map_peak > 50);
+    open_idx = find(Ass_map_peak <=50);
+end
 
 
-close_peaks = sum(all_proj_rem(close_idx,:) > 1,2); 
-open_peaks = sum(all_proj_rem(open_idx,:) > 1,2); 
+close_peaks = sum(all_proj_rem(close_idx,:) > 1,2);
+open_peaks = sum(all_proj_rem(open_idx,:) > 1,2);
 
 % if sum(open_peaks == max(open_peaks)) ==1
 [~, idx] = max(open_peaks);
-Ass_1 = open_idx(idx(1)); 
+Ass_1 = open_idx(idx(1));
 
 [~, idx] = max(close_peaks);
-Ass_2 = close_idx(idx(1)); 
+Ass_2 = close_idx(idx(1));
 
 % else % tie breaker
-% 
+%
 % end
 
+%%
+figure(908)
+subplot(5,1,1);
+cla
+
+plot(ms.time, behav.position(:,1));
+set(gca, 'xtick', []);
+
+subplot(5,1,2:3);
+cla
+hold on
+c_ord = cool(size(time_proj_pos_place,1)+4);
+for ii = 1:size(time_proj_pos_place,1)
+    %    nan_idx = time_proj_pos(ii,:) < prctile(time_proj_pos(ii,:), 10);
+    %    plot3(ms_trk.time(~nan_idx)/1000, zscore(time_proj_pos(ii,~nan_idx)),ones(1, sum(~nan_idx))*100* ii, '.', 'color', c_ord(ii,:))
+    %        plot3(tvec, zscore(time_proj_pos(ii,:)),ones(1, length(time_proj_pos(ii,:)))*100* ii, 'color', c_ord(ii,:))
+    
+    %     if
+    if ii == Ass_1 || ii == Ass_2
+        plot(tvec, zscore(time_proj_pos_place(ii,:))+ii*10, 'color', c_ord(ii+4,:), 'linewidth', 2)
+    else
+        plot(tvec, zscore(time_proj_pos_place(ii,:))+ii*10, 'color', c_ord(ii+4,:))
+    end
+    
+    tick_val(ii) = mode(zscore(time_proj_pos_place(ii,:))+ii*10);
+    tick_label{ii} = num2str(ii);
+end
+% view(0,  15)
+set(gca, 'YTick', tick_val, 'YTickLabel', tick_label)
+
+ylabel({'Wake'; 'assembly ID'})
+xlabel('time (s)')
+ylim([min(zscore(time_proj_pos_place(1,:))+10), max(zscore(time_proj_pos_place(1,:))+10*size(time_proj_pos_place,1))])
+xlim([tvec(1) tvec(end)])
 
 
-%% break out figures for specific assemblies. 
+
+subplot(5,1,4:5);
+cla
+hold on
+c_ord = cool(size(wake_time_proj_rem,1)+4);
+
+for ii = 1:size(wake_time_proj_rem, 1)
+    
+    %    nan_idx = time_proj_pos(ii,:) < prctile(time_proj_pos(ii,:), 10);
+    %    plot3(ms_trk.time(~nan_idx)/1000, zscore(time_proj_pos(ii,~nan_idx)),ones(1, sum(~nan_idx))*100* ii, '.', 'color', c_ord(ii,:))
+    %        plot3(tvec, zscore(time_proj_pos(ii,:)),ones(1, length(time_proj_pos(ii,:)))*100* ii, 'color', c_ord(ii,:))
+    
+    this_proj = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+    all_proj_rem(ii,:) =  this_proj;
+    if ii == Ass_1 || ii == Ass_2
+        plot(tvec_rem, this_proj+ii*1, 'color', c_ord(ii+4,:), 'linewidth', 2)
+    else
+        plot(tvec_rem, this_proj+ii*1, 'color', c_ord(ii+4,:))
+    end
+    
+    tick_val(ii) = median(this_proj(1:10))+ii;
+    tick_label{ii} = Ass_map_peak(ii);
+end
+% view(0,  15)
+set(gca, 'YTick', tick_val(1:end), 'YTickLabel', tick_label(1:end))
+
+ylabel({'REM'; 'Place cell peak'})
+xlabel('time (s)')
+xlim([rem_time(1) rem_time(end)])
 
 
 
-% Ass_1 = 8; 
-% Ass_2 = 1; 
+exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_all_Assemblies.pdf'], 'ContentType', 'vector');
 
-Ass_1_ids = Ass_pos_cells_place{Ass_1}; 
-Ass_2_ids = Ass_pos_cells_place{Ass_2}; 
 
-a_ord = cool(4); 
+close all
+%% break out figures for specific assemblies.
+
+
+
+% Ass_1 = 8;
+% Ass_2 = 1;
+
+Ass_1_ids = Ass_pos_cells_place{Ass_1};
+Ass_2_ids = Ass_pos_cells_place{Ass_2};
+
+a_ord = cool(4);
 
 
 figure(900)
@@ -915,26 +992,26 @@ hold on
 for ii = size(Ass_1_ids, 1):-1:1
     s_t = ms_trk.time(Csp(:,Ass_1_ids(ii)) >0)/1000;
     if ~isempty(s_t)
-       plot([s_t, s_t]', [(ones(size(s_t))*ii)-.5, (ones(size(s_t))*ii)+.5]', 'color', c_ord(Ass_1,:), 'linewidth', 2)
+        plot([s_t, s_t]', [(ones(size(s_t))*ii)-.5, (ones(size(s_t))*ii)+.5]', 'color', c_ord(Ass_1,:), 'linewidth', 2)
     end
 end
 % assembly 2
 for ii = size(Ass_2_ids, 1):-1:1
     s_t = ms_trk.time(Csp(:,Ass_2_ids(ii)) >0)/1000;
     if ~isempty(s_t)
-       plot([s_t, s_t]', [(ones(size(s_t))*ii)-.5+size(Ass_1_ids, 1), (ones(size(s_t))*ii)+.5+size(Ass_1_ids, 1)]', 'color', c_ord(Ass_2,:), 'linewidth', 2)
+        plot([s_t, s_t]', [(ones(size(s_t))*ii)-.5+size(Ass_1_ids, 1), (ones(size(s_t))*ii)+.5+size(Ass_1_ids, 1)]', 'color', c_ord(Ass_2,:), 'linewidth', 2)
     end
 end
 
-non_ass_idx = 1:size(gau_sdf, 2); 
-rm_idx = (ismember(non_ass_idx, Ass_1_ids)) | (ismember(non_ass_idx, Ass_2_ids)); 
-non_ass_idx(Ass_1_ids) = []; 
+non_ass_idx = 1:size(gau_sdf, 2);
+rm_idx = (ismember(non_ass_idx, Ass_1_ids)) | (ismember(non_ass_idx, Ass_2_ids));
+non_ass_idx(Ass_1_ids) = [];
 offset = size(Ass_1_ids, 1) + size(Ass_2_ids, 1);
 
 for ii = size(non_ass_idx, 2):-1:1
     s_t = ms_trk.time(Csp(:,non_ass_idx(ii)) >0)/1000;
     if ~isempty(s_t)
-       plot([s_t, s_t]', [(ones(size(s_t))*ii)-.5+offset, (ones(size(s_t))*ii)+.5+offset]', 'color', [.7 .7 .7], 'linewidth', 1)
+        plot([s_t, s_t]', [(ones(size(s_t))*ii)-.5+offset, (ones(size(s_t))*ii)+.5+offset]', 'color', [.7 .7 .7], 'linewidth', 1)
     end
 end
 xlim([ms_trk.time(1)/1000 ms_trk.time(end)/1000])
@@ -964,9 +1041,9 @@ ax(4) = subplot(7,1,7);
 cla
 hold on
 
-    plot(tvec, zscore(time_proj_pos_place(Ass_1,:)), 'color', c_ord(Ass_1,:))
+plot(tvec, zscore(time_proj_pos_place(Ass_1,:)), 'color', c_ord(Ass_1,:))
 
-    plot(tvec, zscore(time_proj_pos_place(Ass_2,:)), 'color', c_ord(Ass_2,:))
+plot(tvec, zscore(time_proj_pos_place(Ass_2,:)), 'color', c_ord(Ass_2,:))
 
 % view(0,  0)
 ylabel({'zscore'; 'react strength'})
@@ -992,7 +1069,7 @@ legend({['Assembly #' num2str(Ass_1)], ['Assembly #' num2str(Ass_2)]})
 % plot(ms.time/1000, nanmean(all_shuff) - shuff_sd*3,'--',  'color', [.8 .8 .8 .3], 'linewidth',.5)
 % plot(ms.time/1000, nanmean(all_shuff) + shuff_sd*3,'--', 'color', [.8 .8 .8 .3], 'linewidth',.5)
 % plot(ms.time/1000, nanmean(all_shuff), 'color', [.8 .8 .8 .3], 'linewidth', 1)
-% 
+%
 % ylabel('pop activity')
 
 
@@ -1000,75 +1077,77 @@ linkaxes(ax, 'x')
 xlim([ms.time(1)/1000 ms.time(end)/1000])
 
 % save the over all
-   exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_wake.pdf'], 'ContentType', 'vector');
+exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_wake.pdf'], 'ContentType', 'vector');
 
 subplot(7,1,2:3)
 ylim([0.5 offset+.5])
 xlim([0 60])
-   exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_wake_zoom.pdf'], 'ContentType', 'vector');
-   
-   close(900)
-%% Get the wake stem and place plots for the example assemblies. 
+
+pause(5) % give it some time to catch up 
+exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_wake_zoom.pdf'], 'ContentType', 'vector');
+
+close(900)
+%% Get the wake stem and place plots for the example assemblies.
 
 for iA = [Ass_1, Ass_2]
-
-    Ass_t_maps = Ass_map{iA}; 
-
     
-l = 1:12; 
-
-m = 1:2:l(end)*2;
-
-n = 2:2:l(end)*2;
-
-figure(iA);clf;
-subplot(l(end), 2, m)
-
-hold on
-hold on
-stem(Ass_pos(:,iA), 'color',[0 0 0])
-view(90,90)
-
-
-p_ord = parula(size(Ass_t_maps,1)); 
-
-for ii = 1:size(Ass_t_maps,1)
+    Ass_t_maps = Ass_map{iA};
+    
+    
+    l = 1:12;
+    
+    m = 1:2:l(end)*2;
+    
+    n = 2:2:l(end)*2;
+    
+    figure(iA);clf;
     subplot(l(end), 2, m)
-
-    stem(Ass_pos_cells_place{iA}(ii), Ass_pos(Ass_pos_cells_place{iA}(ii),iA),'o','MarkerSize', 15,  'color', p_ord(ii,:), 'Markerfacecolor', p_ord(ii,:))
-
     
-    subplot(l(end), 2, n(ii))
-    area(p_bins_int, Ass_t_maps(ii,:), 'facecolor', p_ord(ii,:), 'edgecolor', p_ord(ii,:))
-    xlim([p_bins(1) p_bins(end)])
-    set(gca, 'xtick', [], 'ytick', [0 1])
+    hold on
+    hold on
+    stem(Ass_pos(:,iA), 'color',[0 0 0])
+    view(90,90)
     
-%     ylim([.5 size(this_ass_map,1)+.5])
-end
+    
+    p_ord = parula(size(Ass_t_maps,1));
+    
+    for ii = 1:size(Ass_t_maps,1)
+        subplot(l(end), 2, m)
+        
+        stem(Ass_pos_cells_place{iA}(ii), Ass_pos(Ass_pos_cells_place{iA}(ii),iA),'o','MarkerSize', 15,  'color', p_ord(ii,:), 'Markerfacecolor', p_ord(ii,:))
+        
+        
+        subplot(l(end), 2, n(ii))
+        area(p_bins_int, Ass_t_maps(ii,:), 'facecolor', p_ord(ii,:), 'edgecolor', p_ord(ii,:))
+        xlim([p_bins(1) p_bins(end)])
+        set(gca, 'xtick', [], 'ytick', [0 1])
+        
+        %     ylim([.5 size(this_ass_map,1)+.5])
+    end
     subplot(l(end), 2, n(end))
     area(p_bins_int, mean(Ass_t_maps), 'facecolor', c_ord(iA,:), 'edgecolor', c_ord(iA,:))
     xlim([p_bins(1) p_bins(end)])
     ylim([0 1])
     set(gca, 'xtick', [], 'ytick', [0 1])
-
+    
     
     subplot(l(end), 2, m)
-
-stem(Ass_pos(:,iA), 'color', c_ord(iA,:))
-view(90,90)
-
-
-stem(Ass_pos_cells_place{iA}, Ass_pos(Ass_pos_cells_place{iA},iA), 'color', c_ord(iA,:), 'MarkerFaceColor', c_ord(iA,:))
-xlim([0 length(Ass_pos(:,iA))])
-set(gca, 'XDir', 'normal')
-title(['Assembly #' num2str(iA)])
-        
-
-   exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_Asb_' num2str(iA) '.pdf'], 'ContentType', 'vector');
-% close(iA)
+    
+    stem(Ass_pos(:,iA), 'color', c_ord(iA,:))
+    view(90,90)
+    
+    
+    stem(Ass_pos_cells_place{iA}, Ass_pos(Ass_pos_cells_place{iA},iA), 'color', c_ord(iA,:), 'MarkerFaceColor', c_ord(iA,:))
+    xlim([0 length(Ass_pos(:,iA))])
+    set(gca, 'XDir', 'normal')
+    title(['Assembly #' num2str(iA)])
+    
+    
+    exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_Asb_' num2str(iA) '.pdf'], 'ContentType', 'vector');
+    % close(iA)
 end
-
-%% REM reactivation plot for example assemblies and overall 
+close all
+%% REM reactivation plot for example assemblies and overall
 
 
 figure(999)
@@ -1096,26 +1175,26 @@ hold on
 for ii = size(Ass_1_ids, 1):-1:1
     s_t = rem_time(all_binary_post_REM(:,Ass_1_ids(ii)) >0);
     if ~isempty(s_t)
-       plot([s_t; s_t], [(ones(size(s_t))*ii)-.5; (ones(size(s_t))*ii)+.5], 'color', c_ord(Ass_1,:), 'linewidth', 1)
+        plot([s_t; s_t], [(ones(size(s_t))*ii)-.5; (ones(size(s_t))*ii)+.5], 'color', c_ord(Ass_1,:), 'linewidth', 1)
     end
 end
 % assembly 2
 for ii = size(Ass_2_ids, 1):-1:1
     s_t = rem_time(all_binary_post_REM(:,Ass_2_ids(ii)) >0);
     if ~isempty(s_t)
-       plot([s_t; s_t], [(ones(size(s_t))*ii)-.5+size(Ass_1_ids, 1); (ones(size(s_t))*ii)+.5+size(Ass_1_ids, 1)], 'color', c_ord(Ass_2,:), 'linewidth', 2)
+        plot([s_t; s_t], [(ones(size(s_t))*ii)-.5+size(Ass_1_ids, 1); (ones(size(s_t))*ii)+.5+size(Ass_1_ids, 1)], 'color', c_ord(Ass_2,:), 'linewidth', 2)
     end
 end
 
-non_ass_idx = 1:size(all_binary_post_REM, 2); 
-rm_idx = (ismember(non_ass_idx, Ass_1_ids)) | (ismember(non_ass_idx, Ass_2_ids)); 
-non_ass_idx(Ass_1_ids) = []; 
+non_ass_idx = 1:size(all_binary_post_REM, 2);
+rm_idx = (ismember(non_ass_idx, Ass_1_ids)) | (ismember(non_ass_idx, Ass_2_ids));
+non_ass_idx(Ass_1_ids) = [];
 offset = size(Ass_1_ids, 1) + size(Ass_2_ids, 1);
 
 for ii = size(non_ass_idx, 2):-1:1
     s_t = rem_time(all_binary_post_REM(:,non_ass_idx(ii)) >0);
     if ~isempty(s_t)
-       plot([s_t; s_t], [(ones(size(s_t))*ii)-.5+offset; (ones(size(s_t))*ii)+.5+offset], 'color', [.7 .7 .7], 'linewidth', 1)
+        plot([s_t; s_t], [(ones(size(s_t))*ii)-.5+offset; (ones(size(s_t))*ii)+.5+offset], 'color', [.7 .7 .7], 'linewidth', 1)
     end
 end
 xlim([rem_time(1) rem_time(end)])
@@ -1149,12 +1228,12 @@ ax(4) = subplot(7,1,7);
 cla
 hold on
 
-    this_proj = (wake_time_proj_rem(Ass_1,:) - mean(time_proj_pos_place(Ass_1,:)))/std(time_proj_pos_place(Ass_1,:)); 
-    plot(tvec_rem, this_proj, 'color', c_ord(Ass_1,:))
-    
-    this_proj = (wake_time_proj_rem(Ass_2,:) - mean(time_proj_pos_place(Ass_2,:)))/std(time_proj_pos_place(Ass_2,:)); 
-    plot(tvec_rem, this_proj, 'color', c_ord(Ass_2,:))
-    
+this_proj = (wake_time_proj_rem(Ass_1,:) - mean(time_proj_pos_place(Ass_1,:)))/std(time_proj_pos_place(Ass_1,:));
+plot(tvec_rem, this_proj, 'color', c_ord(Ass_1,:))
+
+this_proj2 = (wake_time_proj_rem(Ass_2,:) - mean(time_proj_pos_place(Ass_2,:)))/std(time_proj_pos_place(Ass_2,:));
+plot(tvec_rem, this_proj2, 'color', c_ord(Ass_2,:))
+
 ylabel({'zscore (to wake)'; 'react strength'})
 xlabel('time (s)')
 
@@ -1165,30 +1244,32 @@ legend({['Assembly #' num2str(Ass_1)], ['Assembly #' num2str(Ass_2)]})
 
 
 linkaxes(ax, 'x')
-xlim([rem_time(1) rem_time(end)])
+xlim([tvec_rem(1) tvec_rem(end)])
 
 % save the over all
-   exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_REM.pdf'], 'ContentType', 'vector');
+exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_REM.pdf'], 'ContentType', 'vector');
 
 subplot(7,1,2:3)
 ylim([0.5 offset+.5])
-[~, idx] = max(this_proj); 
-xlim([rem_time(idx) - 30 rem_time(idx)+30])
-   exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_REM_zoom.pdf'], 'ContentType', 'vector');
-   
-   close(999)
+[~, idx] = max(max([this_proj; this_proj2]));
+xlim([tvec_rem(idx) - 60 tvec_rem(idx)+60])
+
+pause(5) % give it some time to catch up 
+exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_REM_zoom.pdf'], 'ContentType', 'vector');
+
+close(999)
 
 %% collect the REM_react
-   rem_z.all = []; rem_z.close = []; rem_z.open = []; rem_z.isopen = []; 
-   for ii =  size(wake_time_proj_rem,1):-1:1
-       
-           rem_z.all(ii,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
-           
-           if sum(ismember(close_idx, ii)) > 0
-              rem_z.close(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
-              rem_z.isopen(ii) = 0;
-           elseif sum(ismember(open_idx, ii)) > 0
-              rem_z.open(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
-                            rem_z.isopen(ii) = 1;
-           end
-   end
+rem_z.all = []; rem_z.close = []; rem_z.open = []; rem_z.isopen = [];
+for ii =  size(wake_time_proj_rem,1):-1:1
+    
+    rem_z.all(ii,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+    
+    if sum(ismember(close_idx, ii)) > 0
+        rem_z.close(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+        rem_z.isopen(ii) = 0;
+    elseif sum(ismember(open_idx, ii)) > 0
+        rem_z.open(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+        rem_z.isopen(ii) = 1;
+    end
+end

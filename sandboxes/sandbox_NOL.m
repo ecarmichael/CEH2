@@ -29,13 +29,9 @@ save_dir = [pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/N
 
 
 
-
+cd(save_dir)
 %%
 out = Master_NOL_preprocess([], kilo_dir, OE_dir, DLC_dir, save_dir)
-
-
-
-
 save([save_dir filesep strrep([out.meta.subject '_' out.meta.date '_' out.meta.session], '-', '_') '.mat'],'out');  
 
 
@@ -82,3 +78,33 @@ maps_r = MS_get_place_field([], restrict(out.Recall.S, out.Recall.trials(1,:), o
 %% compare maps across encoding/recall
 
 map_overlap = MS_map_overlap(maps_e, maps_r, 1, {'Encoding', 'Recall'}); 
+
+
+%% Raster plot
+
+out_r.S = restrict(out.S, 0, 300); 
+out_r.csc = restrict(out.csc, 0, 300); 
+out_r.pos = restrict(out.pos, 0 , 300); 
+
+
+
+
+out_r.csc.data = out_r.csc.data(1,:); 
+
+cfg = [];
+cfg.lfp = out_r.csc; 
+cfg.spkColor = parula(length(out_r.S.t));
+cfg.LineWidth = 2;
+MultiRaster(cfg, out_r.S)
+
+% xlim([192 193])
+xlim([237.5 238.5])
+maximize
+exportgraphics(gcf, ['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\CIHR_2023_September' filesep 'Radial' filesep   'Raster_LFP.pdf'], 'ContentType', 'vector');
+
+%% Try the assembly analysis for Ephys
+
+
+MS_PCA_ICA([], out_r.S, out_r.pos, out_r.csc)
+
+
