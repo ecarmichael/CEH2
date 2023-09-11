@@ -78,6 +78,21 @@ for ii = length(session):-1:1
         nWake_open(ii) = sum(W_open_peaks >0);
         
         
+        %mid assemblies
+        mid_peaks = []; W_mid_peaks = [];
+        for jj = size(out.REM_z{ii}.mid,1):-1:1
+            [~, idx] = findpeaks(out.REM_z{ii}.mid(jj,:), 'MinPeakHeight', 2, 'MinPeakDistance', 10);
+            mid_peaks(jj) = length(idx);
+            
+            this_z = zscore(out.wake{ii}(jj,:));
+            [~, idx] = findpeaks(this_z, 'MinPeakHeight', 2, 'MinPeakDistance', 10);
+            W_mid_peaks(jj) = length(idx);
+            
+        end
+        nREM_mid(ii) = sum(nWake_mid >0);
+        nWake_mid(ii) = sum(W_mid_peaks >0);
+        
+        
         
         % same thing for closed REM events
         closed_peaks = []; W_closed_peaks = [];
@@ -96,6 +111,8 @@ for ii = length(session):-1:1
         
         Wake_OC_idx(ii) = (nWake_open(ii) - nWake_close(ii)) / (nWake_open(ii) + nWake_close(ii));
         REM_OC_idx(ii) = (nREM_open(ii) - nREM_close(ii)) / size(out.REM_z{ii}.all,1);
+        REM_mid_OC_idx(ii) = (nWake_open(ii) - nWake_close(ii)) / (nWake_open(ii) + nWake_close(ii));
+
         
         nREM_Assemblies(ii) = nREM_open(ii) + nREM_close(ii);
         
@@ -104,8 +121,10 @@ for ii = length(session):-1:1
         nREM_Assemblies(ii) = NaN;
         nWake_open(ii) = NaN;
         nWake_close(ii) = NaN;
+        nWake_mid(ii) = NaN;
         nREM_close(ii) = NaN;
         nREM_open(ii) = NaN;
+        nREM_mid(ii) = NaN; 
         REM_OC_idx(ii) = NaN;
         Wake_OC_idx(ii) = NaN;
         
@@ -115,6 +134,11 @@ end
 non_react_idx = (nREM_open == 0) | (nREM_close==0);
 REM_OC_idx_act = REM_OC_idx;
 REM_OC_idx_act(non_react_idx) = NaN;
+
+pREM_open = (nREM_open./(length(nREM_open)))*100;
+pREM_mid = (nREM_mid./(length(nREM_open)))*100;
+pREM_close = (nREM_close./(length(nREM_open)))*100;
+
 
 Ass_tbl = table(session, novel_idx, anx_idx, nAssemblies_z, nPlace_Assemblies,nREM_Assemblies, nWake_open, nWake_close,Wake_OC_idx,  nREM_open, nREM_close, REM_OC_idx,'VariableNames', var_name );
 
@@ -132,7 +156,7 @@ p_ord = parula(9);
 
 figure(909)
 clf
-subplot(2,2,1)
+subplot(2,3,1)
 means_n_pA = [nanmean(nPlace_Assemblies(~anx_idx)); nanmean(nPlace_Assemblies(anx_idx)); nanmean(nPlace_Assemblies(novel_idx)); nanmean(nPlace_Assemblies(~novel_idx)), ; nanmean(nPlace_Assemblies(HS_idx))];
 sem_n_pA = [MS_SEM(nPlace_Assemblies(~anx_idx)); MS_SEM(nPlace_Assemblies(anx_idx)); MS_SEM(nPlace_Assemblies(novel_idx)); MS_SEM(nPlace_Assemblies(~novel_idx));  MS_SEM(nPlace_Assemblies(HS_idx))];
 hold on
@@ -148,7 +172,7 @@ ylabel({'number of wake' ; 'place assemblies'})
 
 
 
-subplot(2,2,3)
+subplot(2,3,4)
 means_n_RA = [nanmean(nREM_Assemblies(~anx_idx)); nanmean(nREM_Assemblies(anx_idx)); nanmean(nREM_Assemblies(novel_idx)); nanmean(nREM_Assemblies(~novel_idx)); nanmean(nREM_Assemblies(HS_idx))];
 sem_n_RA = [MS_SEM(nREM_Assemblies(~anx_idx)); MS_SEM(nREM_Assemblies(anx_idx)); MS_SEM(nREM_Assemblies(novel_idx)); MS_SEM(nREM_Assemblies(~novel_idx)); MS_SEM(nREM_Assemblies(HS_idx))];
 hold on
@@ -163,7 +187,7 @@ set(gca,'xtick', 1:5, 'XTickLabel', {'LT', 'HAT', 'Novel', 'Familiar', 'HATS'}, 
 ylabel({'number of REM' ; 'reactivations'})
 
 
-subplot(2,2,2)
+subplot(2,3,2)
 
 boxplot([Wake_OC_idx Wake_OC_idx Wake_OC_idx], [anx_idx   novel_idx+2 HS_idx+4])
 set(gca,'xtick', 1:5, 'XTickLabel', {'LT', 'HAT', 'Novel', 'Familiar', 'HATS'}, 'XTickLabelRotation', 45, 'ytick', -1:1, 'YTickLabel', {'closed', '0', 'open'})
@@ -171,14 +195,34 @@ ylabel({'Wake assembly bias'})
 xlim([.5 5.5])
 
 
-subplot(2,2,4)
-R_bias = [(REM_OC_idx(~anx_idx)), (REM_OC_idx(anx_idx)), (REM_OC_idx(novel_idx)), (REM_OC_idx(~novel_idx))];
+subplot(2,3,6)
 
-boxplot([REM_OC_idx REM_OC_idx REM_OC_idx],  [anx_idx   novel_idx+2 HS_idx+4])
-
-set(gca,'xtick', 1:5, 'XTickLabel', {'LT', 'HAT', 'Novel', 'Familiar', 'HATS'}, 'XTickLabelRotation', 45, 'ytick', -1:1, 'YTickLabel', {'closed', '0', 'open'})
-ylabel({'REM assembly bias'})
+means_n_RA = [nanmean(pREM_mid(~anx_idx)); nanmean(pREM_mid(anx_idx)); nanmean(pREM_mid(novel_idx)); nanmean(pREM_mid(~novel_idx)); nanmean(pREM_mid(HS_idx))];
+sem_n_RA = [MS_SEM(pREM_mid(~anx_idx)); MS_SEM(pREM_mid(anx_idx)); MS_SEM(pREM_mid(novel_idx)); MS_SEM(pREM_mid(~novel_idx)); MS_SEM(pREM_mid(HS_idx))];
+hold on
+%
+eb = errorbar(1:5,means_n_RA, sem_n_RA);
+eb.LineStyle = 'none';
+b = bar(1:5,means_n_RA);
+% boxplot([nPlace_Assemblies nPlace_Assemblies], [anx_idx   novel_idx+2])
+b.FaceColor = p_ord(5,:);
+b.EdgeColor = p_ord(5,:);
+set(gca,'xtick', 1:5, 'XTickLabel', {'LT', 'HAT', 'Novel', 'Familiar', 'HATS'}, 'XTickLabelRotation', 45)
+ylabel({'REM % mid track reactivations'})
 xlim([.5 5.5])
+
+
+
+
+% subplot(2,3,5)
+% % R_bias = [(REM_OC_idx(~anx_idx)), (REM_OC_idx(anx_idx)), (REM_OC_idx(novel_idx)), (REM_OC_idx(~novel_idx))];
+% 
+% boxplot([REM_OC_idx REM_OC_idx REM_OC_idx],  [anx_idx   novel_idx+2 HS_idx+4])
+% 
+% set(gca,'xtick', 1:5, 'XTickLabel', {'LT', 'HAT', 'Novel', 'Familiar', 'HATS'}, 'XTickLabelRotation', 45, 'ytick', -1:1, 'YTickLabel', {'closed', '0', 'open'})
+% ylabel({'REM assembly bias'})
+% xlim([.5 5.5])
+
 
 
 %%
