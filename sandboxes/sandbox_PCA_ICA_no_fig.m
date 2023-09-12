@@ -240,7 +240,7 @@ time_proj = assembly_activity(Ass_Temp,data_h');
 
 %% shuffle distribution for assemblies
 rng(123,'twister')
-nShuff = 200;
+nShuff = 10;
 
 Ass_shuff = NaN(1,nShuff);
 parfor iS = 1:nShuff
@@ -535,6 +535,38 @@ rng(123, 'twister')
 wake_time_proj_rem = assembly_activity(Ass_pos,data_h_rem');
 
 
+all_time_proj_rem = assembly_activity(Ass_Temp,data_h_rem');
+
+
+for ii = size(time_proj,1):-1:1
+ all_time_prog_rem_z(ii,:) = (all_time_proj_rem(ii,:) - mean(time_proj(ii,:)))/std(time_proj(ii,:));
+end
+
+%% get the REM react shuffle. 
+
+rng(123,'twister')
+nShuff = 100;
+
+shuff_time_prog_rem_z = cell(1,nShuff); 
+parfor iS = 1:nShuff
+    tic
+    shuff_data = NaN(size(data_h_rem));
+    for ic = 1:size(data_h_rem,2)
+        shuff_data(:,ic) = circshift(data_h_rem(:,ic), floor(MS_randn_range(1,1,1,size(data_h_rem,1))));
+    end
+    
+    all_time_proj_rem_s = assembly_activity(Ass_Temp,shuff_data');
+    
+
+    for ii = size(all_time_proj_rem_s,1):-1:1
+        shuff_time_prog_rem_z{iS}(ii,:) = (all_time_proj_rem_s(ii,:) - mean(time_proj(ii,:)))/std(time_proj(ii,:));
+    end
+
+
+%     fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(this_ass,2), toc)
+end
+
+rem_z.shuff_time_prog_rem_z = shuff_time_prog_rem_z; 
 
 %%
 all_proj_rem = [];
@@ -588,6 +620,10 @@ end
 
 %% collect the REM_react
 rem_z.all = []; rem_z.close = []; rem_z.open = []; rem_z.mid = []; rem_z.isopen = [];rem_z.ismid = [];
+rem_z.a_peak_map = Ass_mean_map; 
+rem_z.all_time_prog = all_time_proj_rem; 
+rem_z.all_time_prog_z = all_time_prog_rem_z; 
+
 for ii =  size(wake_time_proj_rem,1):-1:1
     
     rem_z.all(ii,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));

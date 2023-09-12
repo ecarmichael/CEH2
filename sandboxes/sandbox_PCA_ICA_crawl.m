@@ -54,15 +54,41 @@ end
 
 %% collect the output values
 warning off
-var_name = {'session', 'novel', 'anxiety', 'nAssemblies_z', 'nPlace_Assemblies','nREM_Assemblies', 'nWake_open', 'nWake_close','Wake_OC_idx', 'nREM_open', 'nREM_close', 'REM_OC_idx'};
+var_name = {'session', 'novel', 'anxiety', 'nAssemblies_z', 'nPlace_Assemblies','nREM_Assemblies', 'nWake_open', 'nWake_close','Wake_OC_idx', 'nREM_open', 'nREM_close','nREM_mid', 'REM_OC_idx'};
 
 for ii = length(session):-1:1
+    
+    
+    
+
+    
     nAssemblies_z = cell2mat(out.Az);
     
-    if isstruct(out.REM_z{ii})
+    if isstruct(out.REM_z{ii})  %&& isempty(strfind(session{ii}, '12')) && isempty(strfind(session{ii}, '11'))
         nPlace_Assemblies(ii) = size(out.REM_z{ii}.all,1);
         nWake_open(ii) = sum(out.REM_z{ii}.isopen);
         nWake_close(ii) = sum(~out.REM_z{ii}.isopen);
+        
+        
+        for iS = length(out.REM_z{ii}.shuff_time_prog_rem_z):-1:1
+            all_z_peaks = [];
+            for jj = size(out.REM_z{ii}.shuff_time_prog_rem_z{iS},1):-1:1
+                [~, idx] = findpeaks(out.REM_z{ii}.shuff_time_prog_rem_z{iS}(jj,:), 'MinPeakHeight', 2, 'MinPeakDistance', 10);
+                all_z_peaks(jj) = length(idx);
+                
+            end
+            REM_shuff(ii,iS) = sum(all_z_peaks >0);
+        end
+        
+        
+        % All wake assemblies detected and replayed during REM. 
+        all_a_peaks = [];
+        for jj = size(out.REM_z{ii}.all_time_prog,1):-1:1
+            [~, idx] = findpeaks(out.REM_z{ii}.all_time_prog_z(jj,:), 'MinPeakHeight', 2, 'MinPeakDistance', 10);
+            all_a_peaks(jj) = length(idx);
+            
+        end
+        nREM_all(ii) = (sum(all_a_peaks > 0) / size(out.REM_z{ii}.all_time_prog,1))*100; 
         
         open_peaks = []; W_open_peaks = [];
         for jj = size(out.REM_z{ii}.open,1):-1:1
@@ -89,7 +115,7 @@ for ii = length(session):-1:1
             W_mid_peaks(jj) = length(idx);
             
         end
-        nREM_mid(ii) = sum(nWake_mid >0);
+        nREM_mid(ii) = sum(mid_peaks >0);
         nWake_mid(ii) = sum(W_mid_peaks >0);
         
         
@@ -97,12 +123,12 @@ for ii = length(session):-1:1
         % same thing for closed REM events
         closed_peaks = []; W_closed_peaks = [];
         for jj = size(out.REM_z{ii}.close,1):-1:1
-            [~, idx] = findpeaks(out.REM_z{ii}.close(jj,:), 'MinPeakHeight', 2, 'MinPeakDistance', 10);
+            [~, idx] = findpeaks(out.REM_z{ii}.close(jj,:), 'MinPeakHeight', 1.96, 'MinPeakDistance', 10);
             closed_peaks(jj) = length(idx);
             
             
             this_z = zscore(out.wake{ii}(jj,:));
-            [~, idx] = findpeaks(this_z, 'MinPeakHeight', 2, 'MinPeakDistance', 10);
+            [~, idx] = findpeaks(this_z, 'MinPeakHeight', 1.96, 'MinPeakDistance', 10);
             W_closed_peaks(jj) = length(idx);
             
         end
@@ -110,8 +136,8 @@ for ii = length(session):-1:1
         nWake_close(ii) = sum(W_closed_peaks >0);
         
         Wake_OC_idx(ii) = (nWake_open(ii) - nWake_close(ii)) / (nWake_open(ii) + nWake_close(ii));
-        REM_OC_idx(ii) = (nREM_open(ii) - nREM_close(ii)) / size(out.REM_z{ii}.all,1);
-        REM_mid_OC_idx(ii) = (nWake_open(ii) - nWake_close(ii)) / (nWake_open(ii) + nWake_close(ii));
+        REM_OC_idx(ii) = (nREM_open(ii) - nREM_close(ii)) / (nREM_open(ii) + nREM_mid(ii) + nREM_close(ii));
+        REM_mid_OC_idx(ii) = (nWake_open(ii) - nWake_close(ii)) / (nREM_open(ii) - nREM_close(ii));
 
         
         nREM_Assemblies(ii) = nREM_open(ii) + nREM_close(ii);
@@ -119,6 +145,7 @@ for ii = length(session):-1:1
     else
         nPlace_Assemblies(ii) = NaN;
         nREM_Assemblies(ii) = NaN;
+         nREM_all(ii) =NaN; 
         nWake_open(ii) = NaN;
         nWake_close(ii) = NaN;
         nWake_mid(ii) = NaN;
@@ -135,18 +162,18 @@ non_react_idx = (nREM_open == 0) | (nREM_close==0);
 REM_OC_idx_act = REM_OC_idx;
 REM_OC_idx_act(non_react_idx) = NaN;
 
-pREM_open = (nREM_open./(length(nREM_open)))*100;
-pREM_mid = (nREM_mid./(length(nREM_open)))*100;
-pREM_close = (nREM_close./(length(nREM_open)))*100;
+pREM_open = (nREM_open./(nREM_open + nREM_mid + nREM_close))*100;
+pREM_mid = (nREM_mid./(nREM_open + nREM_mid + nREM_close))*100;
+pREM_close = (nREM_close./(nREM_open + nREM_mid + nREM_close))*100;
 
 
-Ass_tbl = table(session, novel_idx, anx_idx, nAssemblies_z, nPlace_Assemblies,nREM_Assemblies, nWake_open, nWake_close,Wake_OC_idx,  nREM_open, nREM_close, REM_OC_idx,'VariableNames', var_name );
+Ass_tbl = table(session, novel_idx, anx_idx, nAssemblies_z, nPlace_Assemblies,nREM_Assemblies, nWake_open, nWake_close,Wake_OC_idx,  nREM_open, nREM_close,nREM_mid, REM_OC_idx,'VariableNames', var_name );
 
-
-
-%%  plot some stuff
 anx_idx = logical(anx_idx);
 novel_idx = logical(novel_idx);
+
+%%  plot some stuff
+
 
 HS_idx = logical(HS_idx);
 
@@ -172,6 +199,15 @@ ylabel({'number of wake' ; 'place assemblies'})
 
 
 
+
+subplot(2,3,2)
+
+boxplot([Wake_OC_idx Wake_OC_idx Wake_OC_idx], [anx_idx   novel_idx+2 HS_idx+4])
+set(gca,'xtick', 1:5, 'XTickLabel', {'LT', 'HAT', 'Novel', 'Familiar', 'HATS'}, 'XTickLabelRotation', 45, 'ytick', -1:1, 'YTickLabel', {'closed', '0', 'open'})
+ylabel({'Wake assembly bias'})
+xlim([.5 5.5])
+
+
 subplot(2,3,4)
 means_n_RA = [nanmean(nREM_Assemblies(~anx_idx)); nanmean(nREM_Assemblies(anx_idx)); nanmean(nREM_Assemblies(novel_idx)); nanmean(nREM_Assemblies(~novel_idx)); nanmean(nREM_Assemblies(HS_idx))];
 sem_n_RA = [MS_SEM(nREM_Assemblies(~anx_idx)); MS_SEM(nREM_Assemblies(anx_idx)); MS_SEM(nREM_Assemblies(novel_idx)); MS_SEM(nREM_Assemblies(~novel_idx)); MS_SEM(nREM_Assemblies(HS_idx))];
@@ -187,12 +223,6 @@ set(gca,'xtick', 1:5, 'XTickLabel', {'LT', 'HAT', 'Novel', 'Familiar', 'HATS'}, 
 ylabel({'number of REM' ; 'reactivations'})
 
 
-subplot(2,3,2)
-
-boxplot([Wake_OC_idx Wake_OC_idx Wake_OC_idx], [anx_idx   novel_idx+2 HS_idx+4])
-set(gca,'xtick', 1:5, 'XTickLabel', {'LT', 'HAT', 'Novel', 'Familiar', 'HATS'}, 'XTickLabelRotation', 45, 'ytick', -1:1, 'YTickLabel', {'closed', '0', 'open'})
-ylabel({'Wake assembly bias'})
-xlim([.5 5.5])
 
 
 subplot(2,3,6)
@@ -225,6 +255,68 @@ xlim([.5 5.5])
 
 
 
-%%
+%% simple figure
+figure(102);
+ clf
+subplot(1,2,1)
+means_n_pA = [nanmean(nREM_all(novel_idx)); nanmean(nREM_all(~novel_idx))];
+sem_n_pA = [ MS_SEM(nREM_all(novel_idx)); MS_SEM(nREM_all(~novel_idx))];
+hold on
+%
+eb = errorbar(1:2,means_n_pA', sem_n_pA);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+
+b= bar(1:2,means_n_pA');
+
+% boxplot([nPlace_Assemblies nPlace_Assemblies], [anx_idx   novel_idx+2])
+b.FaceColor = p_ord(3,:);
+b.EdgeColor = p_ord(3,:);
+
+means_n_pA = [nanmean(nREM_all(anx_idx)); nanmean(nREM_all(~anx_idx))];
+sem_n_pA = [ MS_SEM(nREM_all(anx_idx)); MS_SEM(nREM_all(~anx_idx))];
+hold on
+%
+eb = errorbar(3:4,means_n_pA', sem_n_pA);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+b= bar(3:4,means_n_pA');
+
+% boxplot([nPlace_Assemblies nPlace_Assemblies], [anx_idx   novel_idx+2])
+b.FaceColor = p_ord(8,:);
+b.EdgeColor = p_ord(8,:);
+
+set(gca,'xtick', 1:4, 'XTickLabel', {'Novel', 'Familiar', 'Linear', 'Anxiety'}, 'XTickLabelRotation', 45)
+ylabel({'number of wake assemblies' ; ' Reactivated in REM '})
+% xlim([.5 2.5])
+axis square
+[h, p] = ttest2(nREM_Assemblies(~novel_idx), nREM_Assemblies(novel_idx))
+set(gca ,'Layer', 'Top')
+
+
+subplot(1,2,2)
+means_n_RA = [nanmean(pREM_mid(~anx_idx)); nanmean(pREM_mid(anx_idx))];
+sem_n_RA = [MS_SEM(pREM_mid(~anx_idx)); MS_SEM(pREM_mid(anx_idx))];
+hold on
+%
+eb = errorbar(1:2,means_n_RA, sem_n_RA);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+
+b = bar(1:2,means_n_RA);
+% boxplot([nPlace_Assemblies nPlace_Assemblies], [anx_idx   novel_idx+2])
+b.FaceColor = p_ord(6,:);
+b.EdgeColor = p_ord(6,:);
+set(gca,'xtick', 1:2, 'XTickLabel', {'Linear', 'Anxiety'}, 'XTickLabelRotation', 45)
+ylabel({'REM % mid track reactivations'})
+xlim([.5 2.5])
+axis square
 set(gcf, 'position', [1600 50 600 500])
+
+% [h, p] = ttest2(pREM_mid(~anx_idx), pREM_mid(anx_idx))
+% [p,t,stats] = anova1(nREM_mid, anx_idx);
+
+% f = 
+set(gca ,'Layer', 'Top')
+
 exportgraphics(gcf, ['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\CIHR_2023_September\Assembly' filesep 'Assembly_Session_summary.pdf'], 'ContentType', 'vector')
