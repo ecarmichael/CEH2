@@ -6,7 +6,7 @@
 evts = LoadEvents([]); 
 
 cfg =[];
-cfg.fc = {'CSC8.ncs'};
+cfg.fc = {'CSC6.ncs'};
 
 csc = MS_LoadCSC(cfg);
 
@@ -81,7 +81,7 @@ theta_csc.data = theta_csc.data(1,:);
 % filter the LFP in the theta band
 cfg_filt_t = [];
 cfg_filt_t.type = 'butter';%'fdesign'; %the type of filter I want to use via filterlfp
-cfg_filt_t.f  = [30 58]; % freq range to match Mizuseki et al. 2011
+cfg_filt_t.f  = [25 70]; % freq range to match Mizuseki et al. 2011
 cfg_filt_t.order = 4; %type filter order
 cfg_filt_t.display_filter = 0; % use this to see the fvtool
 

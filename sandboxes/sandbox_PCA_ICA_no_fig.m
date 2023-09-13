@@ -534,7 +534,7 @@ rng(123, 'twister')
 %using wake assemblies.
 wake_time_proj_rem = assembly_activity(Ass_pos,data_h_rem');
 
-
+rng(123, 'twister')
 all_time_proj_rem = assembly_activity(Ass_Temp,data_h_rem');
 
 

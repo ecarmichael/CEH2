@@ -89,7 +89,8 @@ for ii = length(session):-1:1
             
         end
         nREM_all(ii) = (sum(all_a_peaks > 0) / size(out.REM_z{ii}.all_time_prog,1))*100; 
-        
+        nREM_all_raw(ii) = sum(all_a_peaks > 0) ; 
+
         open_peaks = []; W_open_peaks = [];
         for jj = size(out.REM_z{ii}.open,1):-1:1
             [~, idx] = findpeaks(out.REM_z{ii}.open(jj,:), 'MinPeakHeight', 2, 'MinPeakDistance', 10);
@@ -145,6 +146,7 @@ for ii = length(session):-1:1
     else
         nPlace_Assemblies(ii) = NaN;
         nREM_Assemblies(ii) = NaN;
+        nREM_all_raw(ii) = NaN;
          nREM_all(ii) =NaN; 
         nWake_open(ii) = NaN;
         nWake_close(ii) = NaN;
@@ -171,6 +173,8 @@ Ass_tbl = table(session, novel_idx, anx_idx, nAssemblies_z, nPlace_Assemblies,nR
 
 anx_idx = logical(anx_idx);
 novel_idx = logical(novel_idx);
+
+fprintf('Chance level of Wake assemblies replayed in REM : %0.2f assemblies per session \n', nanmean(REM_shuff, 'all'))
 
 %%  plot some stuff
 
@@ -259,10 +263,11 @@ xlim([.5 5.5])
 figure(102);
  clf
 subplot(1,2,1)
-means_n_pA = [nanmean(nREM_all(novel_idx)); nanmean(nREM_all(~novel_idx))];
-sem_n_pA = [ MS_SEM(nREM_all(novel_idx)); MS_SEM(nREM_all(~novel_idx))];
+means_n_pA = [nanmean(nREM_all_raw(novel_idx)); nanmean(nREM_all_raw(~novel_idx))];
+sem_n_pA = [ MS_SEM(nREM_all_raw(novel_idx)); MS_SEM(nREM_all_raw(~novel_idx))];
 hold on
 %
+
 eb = errorbar(1:2,means_n_pA', sem_n_pA);
 eb.LineStyle = 'none';
 eb.Color = 'k';
@@ -273,8 +278,8 @@ b= bar(1:2,means_n_pA');
 b.FaceColor = p_ord(3,:);
 b.EdgeColor = p_ord(3,:);
 
-means_n_pA = [nanmean(nREM_all(anx_idx)); nanmean(nREM_all(~anx_idx))];
-sem_n_pA = [ MS_SEM(nREM_all(anx_idx)); MS_SEM(nREM_all(~anx_idx))];
+means_n_pA = [nanmean(nREM_all_raw(anx_idx)); nanmean(nREM_all_raw(~anx_idx))];
+sem_n_pA = [ MS_SEM(nREM_all_raw(anx_idx)); MS_SEM(nREM_all_raw(~anx_idx))];
 hold on
 %
 eb = errorbar(3:4,means_n_pA', sem_n_pA);
@@ -291,8 +296,10 @@ ylabel({'number of wake assemblies' ; ' Reactivated in REM '})
 % xlim([.5 2.5])
 axis square
 [h, p] = ttest2(nREM_Assemblies(~novel_idx), nREM_Assemblies(novel_idx))
-set(gca ,'Layer', 'Top')
+hline(4,'r', 'chance')
+set(gca,'children',flipud(get(gca,'children')))
 
+set(gca ,'Layer', 'Top')
 
 subplot(1,2,2)
 means_n_RA = [nanmean(pREM_mid(~anx_idx)); nanmean(pREM_mid(anx_idx))];
@@ -307,7 +314,7 @@ b = bar(1:2,means_n_RA);
 % boxplot([nPlace_Assemblies nPlace_Assemblies], [anx_idx   novel_idx+2])
 b.FaceColor = p_ord(6,:);
 b.EdgeColor = p_ord(6,:);
-set(gca,'xtick', 1:2, 'XTickLabel', {'Linear', 'Anxiety'}, 'XTickLabelRotation', 45)
+set(gca,'xtick', 1:4, 'XTickLabel', {'Linear', 'Anxiety'}, 'XTickLabelRotation', 45)
 ylabel({'REM % mid track reactivations'})
 xlim([.5 2.5])
 axis square
