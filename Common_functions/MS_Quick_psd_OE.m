@@ -22,7 +22,8 @@ function psd = MS_Quick_psd_OE(Chan_to_use, type, save_dir)
 %% set up defaults. 
 
 if nargin == 0
-    Chan_to_use = {};
+    fname = dir('*_CH*'); 
+    for ii = 1:length(fname); Chan_to_use{ii} = fname(ii).name; end 
     type = 'fast';
     save_dir = cd;
     disp('''Chan_to_use'' not specified.  Using all .continuous files')

@@ -105,7 +105,7 @@ for ii = 1:length(S.t)
     spk_x = interp1(pos.tvec,pos.data(1,:),S.t{ii},'linear');
     spk_y = interp1(pos.tvec,pos.data(2,:),S.t{ii},'linear');
     if ip >= (n*m)/2
-        figure(102+ii)
+        figure(get(gcf, 'Number')+1)
         ip = 1;
     else
         ip = ip+1;
