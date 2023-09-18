@@ -223,7 +223,14 @@ end
 
 
 % get the HD
-if sum(contains(fields, 'R')) > 0 && sum(contains(fields, 'L')) > 0 && sum(contains(fields, 'LED')) > 0
+
+if length(fields) ==1 && sum(contains(fields, 'LED'))>0
+    ear_mid(:, 1) = data_out.LED(:,1); 
+    ear_mid(:,2) = data_out.LED(:,2); 
+    
+    HD = nan(length(ear_mid), 1); 
+
+elseif sum(contains(fields, 'R')) > 0 && sum(contains(fields, 'L')) > 0 && sum(contains(fields, 'LED')) > 0
     
     ear_mid(:,1) = (data_out.(fields{contains(fields, 'R')})(:,1) + data_out.(fields{contains(fields, 'L') & ~contains(fields, 'LED')})(:,1))/2; % get x mid
     ear_mid(:,2) = (data_out.(fields{contains(fields, 'R')})(:,2) + data_out.(fields{contains(fields, 'L') & ~contains(fields, 'LED')})(:,2))/2; % get x mid
@@ -248,6 +255,7 @@ elseif sum(contains(fields, 'nose'))>0 && sum(contains(fields, 'body'))>0
     ear_mid(:,2) = data_out.body(:,2);
     
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.nose(:,2),ear_mid(:,1) - data_out.nose(:,1)));
+
 end
 
 % get the speed from the mid-ear position

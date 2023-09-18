@@ -116,7 +116,7 @@ all_off_m = mean(all_ppx_off,2);
 
 figure(101)
 clf
-subplot(1,2,1)
+subplot(2,2,1)
 cla
 hold on
 plot(f, 10*log10(all_LED_m), 'color', [0 .8 0.2])
@@ -126,9 +126,29 @@ xlim([0 100])
 
 
 
-subplot(1,2,2)
+subplot(2,2,3)
 cla
-b = bar(1:2,[mean(all_BP_LED)/mean(all_BP_norm_LED); mean(all_BP_off)/mean(all_BP_norm_off)])
+b = bar(1:2,[mean(all_BP_LED)/mean(all_BP_norm_LED); mean(all_BP_off)/mean(all_BP_norm_off)]); 
 b.FaceColor = 'flat';
 b.CData(1,:) = [0 .8 0.2];
 b.CData(2,:) = [0.8 .8 0.8];
+
+
+%% check the trajectory
+
+up_dir = fullfile(cd, '..')
+cd(up_dir)
+
+%% move up to the miniscope dir. 
+mini_dir = dir(fullfile(cd, '*minicam*'))
+cd([mini_dir.folder filesep mini_dir.name])
+
+
+%%
+pos = MS_DLC2TSD(cd);
+
+
+figure(101)
+subplot(2,2,[2 4])
+cla
+plot(pos.data(1,:), pos.data(2,:), '.')
