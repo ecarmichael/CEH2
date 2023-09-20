@@ -57,9 +57,17 @@ fprintf(fid, '%% ''This Meta.m was generated using %s.m on %s'';\n', mfilename, 
 
 fprintf(fid, ['Meta.version = ' num2str(1) ';\n']);
 fprintf(fid, 'Meta.species = ''mouse'';\n');
-fprintf(fid, 'Meta.experimenter = ''EC / MD'';\n');
+if contains(subject_id, 'PV')
+    fprintf(fid, 'Meta.experimenter = ''EC / JR'';\n');
+    fprintf(fid, ['Meta.probe = ''Shuttle 64LP '';\n']);
+
+else
+    fprintf(fid, 'Meta.experimenter = ''EC / MD'';\n');
+    fprintf(fid, ['Meta.probe = ''Shuttle 64 '';\n']);
+
+end
 fprintf(fid, 'Meta.behavior = ''NOL'';\n');
-fprintf(fid, ['Meta.probe = ''Shuttle 64 '';\n']);
+
 
 %% Get the flexible subject information
 fprintf(fid, '\n%%Subject information\n');
@@ -88,16 +96,23 @@ fprintf(fid, 'Meta.LFP_hemisphere = ''R/L'';\n');
 if strcmpi(subject_id, 'M30')
     fprintf(fid, 'Meta.EMG = ''CSC5.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
     fprintf(fid, 'Meta.EMG2 = ''CSC64.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
-    
+
     fprintf(fid, 'Meta.goodCSC = ''CSC21.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
     fprintf(fid, 'Meta.goodCSC2 = ''CSC54.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
-    
+
     fprintf(fid, 'Meta.OE_EMG = ''CH64''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
     fprintf(fid, 'Meta.OE_EMG2 = ''CH36''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
-    
+
     fprintf(fid, 'Meta.OE_goodCSC = ''CH49''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
     fprintf(fid, 'Meta.OE_goodCSC2 = ''CH29''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
-    
+
+elseif strcmpi(subject_id, 'PV1')
+
+    fprintf(fid, 'Meta.OE_EMG = ''CH26''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+
+    fprintf(fid, 'Meta.OE_goodCSC = ''CH63''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+    fprintf(fid, 'Meta.OE_goodCSC2 = ''CH56''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+    fprintf(fid, 'Meta.OE_acc= {''A1-AUX1'',''A1-AUX2'',''A1-AUX3''}; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
 end
 fprintf(fid, 'Meta.quality = ''NaN''; %%0 is poor, 1 means cell faded, 2 means ok, 3 means great!, NaN means not yet filled in\n');
 
@@ -106,7 +121,7 @@ fprintf(fid, 'Meta.quality = ''NaN''; %%0 is poor, 1 means cell faded, 2 means o
 %% experimental variables: NLX digital I/O
 % fprintf(fid, '\n%%NLX digital I/O codes\n');
 % fprintf(fid, 'Meta.event_off = ''TTL Input on AcqSystem1_0 board 0 port 3 value (0x0000).''; %% off signal for all events.  Might need to be updated.\n');
-% 
+%
 
 fclose(fid);
 disp('Meta written')

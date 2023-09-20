@@ -18,12 +18,11 @@ else
     addpath(genpath('C:\Users\ecarm\Documents\GitHub\npy-matlab'))
 end
 
-kilo_dir = [pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/M30_2023-06-27_NOL1/kilo_out', '/', filesep)];
+kilo_dir = [pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/Radial/Screening/PV1_2023-09-18_17-48-19_theta_20mw/kilosort3', '/', filesep)];
 
-OE_dir = [pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/M30_2023-06-27_NOL1/Record Node 120', '/', filesep)]; 
+OE_dir = [pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/Radial/Screening/PV1_2023-09-18_17-48-19_theta_20mw/Record Node 106', '/', filesep)]; 
 
-DLC_dir = {[pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/M30_2023-06-27_NOL1/2023_06_27/09_24_45/My_WebCam', '/', filesep)]; ...
-    [pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/M30_2023-06-27_NOL1/2023_06_27/14_14_54/My_WebCam', '/', filesep)]}; 
+DLC_dir = {[pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/Radial/Screening/PV1_2023-09-18_17-48-19_theta_20mw/17_48_24/minicam1', '/', filesep)]};
 
 save_dir = [pre_fix strrep('Williams Lab Dropbox/Williams Lab Team Folder/Eric/NOL/inter', '/', filesep)];
 

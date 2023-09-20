@@ -33,6 +33,7 @@ cfg_def.TTL_trig = '6';
 cfg_def.TTL_frame = '4'; 
 cfg_def.csc_chan = {'CH44'};
 cfg_def.emg_chan = {'CH18'}; 
+cfg_def.acc_chan = {'CH65', 'CH66', 'CH67'};
 
 
 cfg = ProcessConfig(cfg_def, cfg_in);
@@ -42,7 +43,7 @@ CSC = [];
 S = [];
 pos = [];
 evt = [];
-
+acc = [];
 
 %% get the meta or create it. 
 cd(OE_dir)
@@ -117,6 +118,26 @@ emg = OE_old_csc2TSD(cfg_csc);
 csc.data(end+1,:) = emg.data;
 csc.label{end+1} = 'EMG';
 csc.cfg.hdr{end+1} = emg.cfg.hdr{1}; 
+
+%% check for accel
+
+if isfield(meta, 'OE_acc')
+
+cfg_acc = [];
+cfg_acc.fc =  meta.OE_acc;%cfg.csc_chan;
+cfg_acc.desired_sampling_frequency = 2000;
+acc = OE_old_csc2TSD(cfg_acc);
+% fs = cfg_acc.desired_sampling_frequency; 
+% eulZYX_df_t(1,:) = conv2(diff(acc.data(1,:)),gausswin(fs, 3),'same'); 
+% eulZYX_df_t(2,:) = conv2(diff(acc.data(2,:)),gausswin(fs, 3),'same');
+% eulZYX_df_t(3,:) = conv2(diff(acc.data(3,:)),gausswin(fs, 3),'same');
+% 
+% eulZYX_df = [eulZYX_df_t, eulZYX_df_t(:,end)];
+
+acc.data(4,:) = sqrt(movmean(sum(abs(acc.data)).^ 2, cfg_acc.desired_sampling_frequency/4)); 
+
+end
+
 %%  Get the position data if it is there
 
 if ~isempty(DLC_dir)
@@ -192,9 +213,15 @@ csc_temp.label(2:end) = [];
 
 csc_temp.cfg.hdr(2:end) = [];
 
+if exist('acc', 'var')
+
+
+hypno = dSub_Sleep_screener(csc_temp, acc.data(4,:), []); 
+
+else
 
 hypno = dSub_Sleep_screener(csc_temp, emg, []); 
-
+end
 close(221)
 %% save it all for output
 

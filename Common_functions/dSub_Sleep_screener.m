@@ -58,9 +58,14 @@ end
 
 
 %% get the EMG RMS
-
+if isstruct(emg)
 emg_rms = sqrt(movmedian(emg.data.^2, csc.cfg.hdr{1}.SamplingFrequency*10));      % RMS Value Over ‘WinLen’ Samples
 emg_og = emg_rms;
+else
+
+emg_rms = emg; 
+emg_og = emg_rms; 
+end
 
 emg_rms(sat_idx) = NaN; 
 % emg_rms_z = zscore(emg_rms); 
