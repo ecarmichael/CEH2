@@ -62,8 +62,9 @@ if isstruct(emg)
 emg_rms = sqrt(movmedian(emg.data.^2, csc.cfg.hdr{1}.SamplingFrequency*10));      % RMS Value Over ‘WinLen’ Samples
 emg_og = emg_rms;
 else
+emg_rms_prctile = 50; 
 
-emg_rms = emg; 
+emg_rms = movmedian(emg, csc.cfg.hdr{1}.SamplingFrequency*10) ; 
 emg_og = emg_rms; 
 end
 
@@ -160,7 +161,7 @@ ax(1) = subplot(7,1,1:4);
 cla
 yyaxis right
 hold on
-plot((csc.tvec - csc.tvec(1)),  emg_og'*1000,  'color', [0.3 0.3 0.3]);
+% plot((csc.tvec - csc.tvec(1)),  emg_og'*1000,  'color', [0.3 0.3 0.3]);
 plot((csc.tvec - csc.tvec(1)),  emg_rms'*1000,  'color', cord(2,:));
 
 ylim([min(emg_rms*1000), 3*max(emg_rms*1000)])

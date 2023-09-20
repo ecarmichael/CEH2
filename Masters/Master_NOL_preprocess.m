@@ -27,7 +27,7 @@ function out = Master_NOL_preprocess(cfg_in, Kilo_dir, OE_dir, DLC_dir, save_dir
 %% initialize
 
 cfg_def = [];
-cfg_def.conv_fac = [6.6  5.8];
+cfg_def.conv_fac = [340/38  350/38];
 cfg_def.behav_label = 'Body';
 cfg_def.TTL_trig = '6'; 
 cfg_def.TTL_frame = '4'; 
@@ -204,11 +204,27 @@ pos.data = [enc.pos.data, rec.pos.data];
 % 
 % pos.tvec = pos.tvec + start_t; 
 
+%% restrict to encoding, sleep, recall
 
+enc.csc = restrict(csc, enc_t(1), enc_t(2)); 
+sleep.csc = restrict(csc, enc_t(2), rec_t(1)); 
+rec.csc = restrict(csc, rec_t(1), rec_t(2)); 
+
+enc.emg = restrict(emg, enc_t(1), enc_t(2)); 
+sleep.emg = restrict(emg, enc_t(2), rec_t(1)); 
+rec.emg = restrict(emg, rec_t(1), rec_t(2)); 
+
+enc.acc = restrict(acc, enc_t(1), enc_t(2)); 
+sleep.acc = restrict(acc, enc_t(2), rec_t(1)); 
+rec.acc = restrict(acc, rec_t(1), rec_t(2)); 
+% 
+% enc.S = restrict(S, enc_t(1), enc_t(2)); 
+% sleep.S = restrict(S, enc_t(2), rec_t(1)); 
+% rec.S = restrict(S, rec_t(1), rec_t(2)); 
 %% generate the hypnogram
 
-csc_temp = csc;
-csc_temp.data = csc.data(1,:); 
+csc_temp = sleep.csc;
+csc_temp.data = csc_temp.data(1,:); 
 csc_temp.label(2:end) = [];
 
 csc_temp.cfg.hdr(2:end) = [];
@@ -216,11 +232,11 @@ csc_temp.cfg.hdr(2:end) = [];
 if exist('acc', 'var')
 
 
-hypno = dSub_Sleep_screener(csc_temp, acc.data(4,:), []); 
+hypno = dSub_Sleep_screener(csc_temp, sleep.acc.data(4,:), []); 
 
 else
 
-hypno = dSub_Sleep_screener(csc_temp, emg, []); 
+hypno = dSub_Sleep_screener(csc_temp, sleep.emg, []); 
 end
 close(221)
 %% save it all for output
@@ -231,8 +247,8 @@ out.S = S;
 out.evts = evts;
 out.enc_t = enc_t;
 out.rec_t = rec_t; 
-out.csc = csc;
-out.pos = pos;
+% out.csc = csc;
+% out.pos = pos;
 out.hypno = hypno;
 out.history.function{1} = mfilename;
 out.history.date{1} = date;

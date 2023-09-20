@@ -104,6 +104,6 @@ exportgraphics(gcf, ['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\CIHR_2
 %% Try the assembly analysis for Ephys
 
 
-MS_PCA_ICA([], out_r.S, out_r.pos, out_r.csc)
+MS_PCA_ICA([], out.S, out.pos, out.csc)
 
 
