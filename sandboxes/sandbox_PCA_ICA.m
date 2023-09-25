@@ -46,7 +46,7 @@ oasis_setup
 
 addpath(genpath(ca_dir));
 addpath(genpath(codebase_dir))
-addpath(genpath(RnR_dir));
+% addpath(genpath(RnR_dir));
 
 addpath(code_dir)
 
@@ -59,6 +59,10 @@ rng default
 % load('ms_trk.mat')
 % load('behav_DLC.mat')
 this_sess = fname;
+sess = strsplit(this_sess, '_');
+sub = sess{1};
+sess = sess{2};
+
 
 load(this_sess)
 
@@ -446,10 +450,13 @@ for ii = size(Ass_pos,2):-1:1
     ylim([.5 size(Ass_map{ii},1)+.5])
     colormap(cmap)
     
-    title(['Assembly#' num2str(Ass_idx(ii))])
+    title(['Assembly#' num2str(ii)])
 end
 
-
+figure(303)
+exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_Assemblies_Stem.pdf'], 'ContentType', 'vector');
+figure(304)
+exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_Assemblies_place.pdf'], 'ContentType', 'vector');
 
 
 %% get the number of significant reactivations during wake for
@@ -565,17 +572,18 @@ linkaxes(ax, 'x')
 xlim([ms.time(1)/1000 ms.time(end)/1000])
 
 
-linkaxes(ax, 'x')
 
+exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_Assemblies_pop_act.pdf'], 'ContentType', 'vector');
 
+close(202)
 
 
 %% get the assembly triggered position average.
 win = floor(2.5 * mode(diff(behav.time)));
 figure(5)
 clf
-n = ceil(size(time_proj_pos_place,1)/2);
-m = 2;
+n = ceil(size(time_proj_pos_place,1)/3);
+m = 3;
 
 for ii = 1: size(time_proj_pos_place,1)
     subplot(m,n,ii)
@@ -594,8 +602,8 @@ for ii = 1: size(time_proj_pos_place,1)
     plot((-win:win)/mode(diff(behav.time)), mean(this_pos), 'color',[c_ord(ii+4,:) 1], 'linewidth', 3)
     xlim([-win/mode(diff(behav.time)) win/mode(diff(behav.time))]);
     %         set(gca, 'color', 'k')
-    title(['Assembly #' num2str(ii)])
-    plot(0, mean(this_pos(:,win)), 's','color',[c_ord(ii,:) 1], 'markersize', 20 )
+    title(['A#' num2str(ii)])
+    plot(0, mean(this_pos(:,win)), 's','color','k', 'markersize', 20 )
     
     if ii == n+1
         xlabel({'time from assembly' ;  'onset (s)'})
@@ -605,12 +613,11 @@ for ii = 1: size(time_proj_pos_place,1)
     end
 end
 
-
+exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_Assemblies_pos.pdf'], 'ContentType', 'vector');
+close(5)
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % grab the REM data
-sess = strsplit(this_sess, '_');
-sub = sess{1};
-sess = sess{2};
+
 cd(rem_dir )
 
 if strcmpi(sess, 'HATDSwitch')
@@ -863,7 +870,8 @@ ylabel('pop activity')
 linkaxes(ax, 'x')
 xlim([rem_time(1) rem_time(end)])
 
-
+exportgraphics(gcf, [data_dir filesep 'Assembly' filesep   sub '_' sess  '_REM_Assemblies_pop_act.pdf'], 'ContentType', 'vector');
+close(5)
 %% split the REM assemblies based on location on the track.
 
 
@@ -966,8 +974,8 @@ close all
 
 
 
-% Ass_1 = 8;
-% Ass_2 = 1;
+Ass_1 = 4;
+Ass_2 = ;
 
 Ass_1_ids = Ass_pos_cells_place{Ass_1};
 Ass_2_ids = Ass_pos_cells_place{Ass_2};
