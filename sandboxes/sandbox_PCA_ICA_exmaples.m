@@ -1,7 +1,7 @@
 %% sandbox_PCA_ICA_examples
 
 
-
+addpath('/home/williamslab/Documents/Github/Dos-Santos Assembly ICA/Dos-Santos Assembly ICA')
 %% %%%%% EPHYS %%%%%%%%%%%%
 load('/home/williamslab/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Radial/Inter/M30_2023_06_10_Rad5.mat')
 
@@ -15,8 +15,11 @@ out.Encode.pos = restrict(out.Encode.pos, iv_fast);
 %% get some assembly patterns
 
 
-
-[A_temp, T_proj] = MS_PCA_ICA([], out.Encode.S, out.Encode.pos, out.Encode.csc)
+cfg_pca = [];
+cfg_pca.plot = 1; 
+cfg_pca.pos_ass = 1;
+cfg_pca.bin_s = .005;
+[A_temp, T_proj] = MS_PCA_ICA(cfg_pca, out.Encode.S, out.Encode.pos, out.Encode.csc); 
 
 
 %% use Tingley Peyrache code
