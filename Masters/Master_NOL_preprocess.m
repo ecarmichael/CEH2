@@ -39,11 +39,6 @@ cfg_def.acc_chan = {'CH65', 'CH66', 'CH67'};
 cfg = ProcessConfig(cfg_def, cfg_in);
 
 
-CSC = [];
-S = [];
-pos = [];
-evt = [];
-acc = [];
 
 %% get the meta or create it. 
 cd(OE_dir)
@@ -214,13 +209,15 @@ enc.emg = restrict(emg, enc_t(1), enc_t(2));
 sleep.emg = restrict(emg, enc_t(2), rec_t(1)); 
 rec.emg = restrict(emg, rec_t(1), rec_t(2)); 
 
+if exist('acc', 'var')
 enc.acc = restrict(acc, enc_t(1), enc_t(2)); 
 sleep.acc = restrict(acc, enc_t(2), rec_t(1)); 
 rec.acc = restrict(acc, rec_t(1), rec_t(2)); 
+end
 % 
-% enc.S = restrict(S, enc_t(1), enc_t(2)); 
-% sleep.S = restrict(S, enc_t(2), rec_t(1)); 
-% rec.S = restrict(S, rec_t(1), rec_t(2)); 
+enc.S = restrict(S, enc_t(1), enc_t(2)); 
+sleep.S = restrict(S, enc_t(2), rec_t(1)); 
+rec.S = restrict(S, rec_t(1), rec_t(2)); 
 %% generate the hypnogram
 
 csc_temp = sleep.csc;
@@ -243,7 +240,10 @@ close(221)
 
 out = [];
 out.meta = meta; 
-out.S = S;
+% out.S = S;
+out.Encode = enc;
+out.Sleep = sleep;
+out.Recall = rec; 
 out.evts = evts;
 out.enc_t = enc_t;
 out.rec_t = rec_t; 
