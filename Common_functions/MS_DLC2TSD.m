@@ -136,10 +136,11 @@ end
 
 % apply simple smoothing over any points that are larger than a 3sd jump.
 for iFields = 1:length(fields)
-    nan_idx = zscore(abs(diff(data_out.(fields{iFields})(:,1)))) > 2;
+    nan_idx =abs(zscore(diff(data_out.(fields{iFields})(:,1)))) > 2;
+    
     data_out.(fields{iFields})(nan_idx,1) = NaN;
     data_out.(fields{iFields})(:,1) = fillmissing(data_out.(fields{iFields})(:,1), 'spline');
-    nan_idx = zscore(abs(diff(data_out.(fields{iFields})(:,2)))) > 2;
+    nan_idx = abs(zscore(diff(data_out.(fields{iFields})(:,2)))) > 2;
     data_out.(fields{iFields})(nan_idx,2) = NaN;
     data_out.(fields{iFields})(:,2) = fillmissing(data_out.(fields{iFields})(:,2), 'spline');
 end

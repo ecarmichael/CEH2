@@ -28,25 +28,68 @@ cfg_pos.conv_fac = [5.98 5.65];
 [~, rec_behav] = MS_DLC2TSD(r,[],  cfg_pos.conv_fac); 
 
 
+%% crop cells with centroids outside of the good range for dSub_g8_E
+figure(1001)
+clf
+imagesc(ms.CorrProj)
+hold on
+keep_idx = ones(1,size(ms.Binary,2)); 
+for ii = 1:size(ms.SFPs_sharp,3)
+    
+    if ms.Centroids(ii,1) < 100 || ms.Centroids(ii,1) > 185 
+        
+        x = 0; 
+    else
+        x = 1; 
+    end
+    
+     if ms.Centroids(ii,2) < 25 || ms.Centroids(ii,2) > 150 
+        
+        y = 0; 
+     else
+         y = 1; 
+     end
+    
+     keep_idx(ii) = x && y;
+%      if keep_idx(ii)
+%     plot(ms.Centroids(ii,2), ms.Centroids(ii,1), 'xb')
+%      else
+%              plot(ms.Centroids(ii,2), ms.Centroids(ii,1), 'xr')
+% 
+%      end
+    
+    
+end
+keep_idx = logical(keep_idx);
+
+keep_idx(end -floor(length(keep_idx)/4):end) = 0; 
+
+plot(ms.Centroids(~keep_idx,2), ms.Centroids(~keep_idx,1), 'xr'); 
+plot(ms.Centroids(keep_idx,2), ms.Centroids(keep_idx,1), 'xb'); 
+
 %% pull out the encoding and recall phases
 
 enc_idx = [1 length(ms.tvecs{1})]; 
 enc.time = ms.tvecs{1}; 
 
-enc.Binary = ms.Binary(enc_idx(1):enc_idx(2),:); 
-enc.RawTraces = ms.RawTraces(enc_idx(1):enc_idx(2),:); 
-enc.deconv = ms.deconv(enc_idx(1):enc_idx(2),:); 
-enc.denoise = ms.denoise(enc_idx(1):enc_idx(2),:); 
-
+enc.Binary = ms.Binary(enc_idx(1):enc_idx(2),keep_idx); 
+enc.RawTraces = ms.RawTraces(enc_idx(1):enc_idx(2),keep_idx); 
+enc.deconv = ms.deconv(enc_idx(1):enc_idx(2),keep_idx); 
+enc.denoise = ms.denoise(enc_idx(1):enc_idx(2),keep_idx);
+enc.Centroids = ms.Centroids(keep_idx,:); 
+enc.SPFs_sharp = ms.SFPs_sharp(:,:,keep_idx); 
 
 rec_idx = [length(ms.time)+1 - length(ms.tvecs{end}) length(ms.time)]; 
 rec.time = ms.tvecs{end}; 
-rec.RawTraces = ms.RawTraces(rec_idx(1):rec_idx(2),:); 
-rec.Binary = ms.Binary(rec_idx(1):rec_idx(2),:); 
-rec.deconv = ms.deconv(rec_idx(1):rec_idx(2),:); 
-rec.denoise = ms.denoise(rec_idx(1):rec_idx(2),:); 
+rec.RawTraces = ms.RawTraces(rec_idx(1):rec_idx(2),keep_idx); 
+rec.Binary = ms.Binary(rec_idx(1):rec_idx(2),keep_idx); 
+rec.deconv = ms.deconv(rec_idx(1):rec_idx(2),keep_idx); 
+rec.denoise = ms.denoise(rec_idx(1):rec_idx(2),keep_idx); 
+rec.Centroids = ms.Centroids(keep_idx,:); 
+rec.SPFs_sharp = ms.SFPs_sharp(:,:,keep_idx); 
 
 % algin behaviour
+rec_behav.time = rec_behav.time+rec.time(1); 
 enc_behav = MS_align_data(enc_behav, enc);
 rec_behav = MS_align_data(rec_behav, rec);
 
@@ -120,37 +163,38 @@ c_ord = parula(50);
 n = 46;
 figure(101)
 clf
-ax(1) = subplot(10,1,1);
+ax(1) = subplot(5,1,1);
 plot(enc_behav.time, enc_behav.position(:,1:2)); 
 yyaxis right
 plot(enc_behav.time, enc_behav.speed); 
 xlim([enc.time(1) enc.time(end)])
 
-ax(2) = subplot(10,1,2:4); 
+ax(2) = subplot(5,1,2:4); 
 hold on
 for ii = 1:n
-plot(enc.time, zscore(enc.RawTraces(:,ii))+ii*10, 'color', c_ord(ii,:)); 
-plot(enc.time, enc.Binary(:,ii)*4+ii*10, 'color', c_ord(ii,:)); 
+plot(enc.time, zscore(enc.denoise(:,ii))+ii*10, 'color', c_ord(ii,:)); 
+plot(enc.time, enc.deconv(:,ii)*4+ii*10, 'color', c_ord(ii,:)); 
 end
 xlim([enc.time(1) enc.time(end)])
 
-ax(3) = subplot(10, 1, 5);
+ax(3) = subplot(5, 1, 5);
 plot(tvec_e, time_proj_e)
 linkaxes(ax, 'x')
 xlim([enc.time(1) enc.time(end)])
 
-ar(1) = subplot(10,1,6);
+figure(102)
+ar(1) = subplot(5,1,1);
 plot(rec_behav.time, rec_behav.position(:,1:2)); 
 yyaxis right
 plot(rec_behav.time, rec_behav.speed); 
 
-ar(2) = subplot(10,1,7:9);
+ar(2) = subplot(5,1,2:4);
 hold on
 for ii = 1:n
-plot(rec.time, zscore(rec.RawTraces(:,ii))+ii*10, 'color', c_ord(ii,:)); 
-plot(rec.time, rec.Binary(:,ii)*4+ii*10, 'color', c_ord(ii,:)); 
+plot(rec.time, zscore(rec.denoise(:,ii))+ii*10, 'color', c_ord(ii,:)); 
+plot(rec.time, rec.deconv(:,ii)*4+ii*10, 'color', c_ord(ii,:)); 
 end
-ar(3) = subplot(10, 1, 10);
+ar(3) = subplot(5, 1, 5);
 plot(tvec_r, time_proj_r)
 
 linkaxes(ar, 'x')
@@ -187,7 +231,7 @@ time_proj_pos(~keep_idx,:) = [];
 %%
 %% stem plot ensembles
 figure(301);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-figure(302);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+% figure(302);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
 
 Ass_map = cell(size(Ass_pos,2),1);
 Ass_mean_map = [];
@@ -198,7 +242,12 @@ cmap = parula(256);
 cmap(1,:) = 0;
 for ii = size(Ass_pos,2):-1:1
     figure(301)
-    subplot(4, ceil(size(Ass_pos,2)/4),ii)
+    
+    if ii == 4
+        xlabel('PC weight')
+        ylabel('cell ID')
+    end
+    subplot(ceil(size(Ass_pos,2)/4),4,ii)
     hold on
     stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
     view(90,90)
@@ -256,7 +305,7 @@ y_bins = 0:2.5:80;
 kernel = gausskernel([1 1],2); % 2d gaussian in bins
 
 % compute occupancy encode
-occ_hist = histcn(rec_behav.position(rec_move_idx,1:2),x_bins,y_bins); % 2-D version of histc()
+occ_hist = histcn(rec_behav.position(:,1:2),x_bins,y_bins); % 2-D version of histc()
 occ_hist = conv2(occ_hist,kernel,'same');
 
 occ_hist = occ_hist .* (1/30); % convert samples to seconds using video frame rate (30 Hz)
@@ -266,10 +315,10 @@ occ_hist = occ_hist .* (1/30); % convert samples to seconds using video frame ra
 figure(5)
 clf
 n = 5;%ceil(size(time_proj_r,1)/2);
-m = 2;
+m = 3;
 
 nFig = 5; count = 0; 
-for ii = 1: size(time_proj_r,1)
+for ii = 1: size(time_proj_pos,1)
         count = count+1; 
 
     if count > nFig
@@ -278,7 +327,7 @@ for ii = 1: size(time_proj_r,1)
     end
     subplot(m,n,count)
     hold on
-    [~, p_idx] = findpeaks(zscore(time_proj_r(ii,:)),'MinPeakHeight', 1.96 ,'MinPeakDistance', 2*floor(mode(diff(rec.time))));
+    [~, p_idx] = findpeaks(zscore(time_proj_pos(ii,:)),'MinPeakHeight', 1.96 ,'MinPeakDistance', 2*floor(mode(diff(rec.time))));
     
     this_pos = [];
     plot(rec_behav.position(:, 1), rec_behav.position(:,2), '.k')
@@ -291,6 +340,10 @@ for ii = 1: size(time_proj_r,1)
 %             plot((-win:win)/mode(diff(behav.time)), this_pos(ip,:), 'color',[c_ord(ii+4,:) .5])
 %         end
     end
+        title(['Assembly #' num2str(ii)])
+
+    axis off
+    
     spk_x = interp1(rec_behav.time, rec_behav.position(:,1),tbin_centers_r(p_idx)','linear');
     spk_y = interp1(rec_behav.time, rec_behav.position(:,2),tbin_centers_r(p_idx)','linear');
     
@@ -298,20 +351,114 @@ for ii = 1: size(time_proj_r,1)
     spk_hist = histcn([spk_x, spk_y],x_bins,y_bins);
     spk_hist = conv2(spk_hist,kernel, 'same');
     tc{ii} = spk_hist./occ_hist;
+    
     subplot(m,n, count+n)
     imagesc(x_bins, y_bins, tc{ii})
     set(gca, 'YDir', 'normal')
-    
+    axis off
     
 %     plot((-win:win)/mode(diff(behav.time)), mean(this_pos), 'color',[c_ord(ii+4,:) 1], 'linewidth', 3)
 %     xlim([-win/mode(diff(behav.time)) win/mode(diff(behav.time))]);
 %     %         set(gca, 'color', 'k')
-    title(['Assembly #' num2str(ii)])
+
+    % plot the SFP for the assembly
+    
+%     for iC = 1:length(Ass_pos_cells)
+           subplot(m,n, count+n+n)
+            hold on
+            imagesc(ms.CorrProj); 
+            plot(rec.Centroids(Ass_pos_cells{ii}, 2), rec.Centroids(Ass_pos_cells{ii}, 1), 'ok', 'markersize', 10)
+            xlim([25 150])
+ylim([100 185])
+%             imagesc(mean(rec.SPFs_sharp(:,:,Ass_pos_cells{ii}), 3))
+%     end
 
 end
 
 %% Colorcode the assemblies 
-figure(401);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+plot_idx = 1:length(Ass_pos_cells);  
+A2plot = Ass_pos_cells(plot_idx); 
+
+c_ord = winter(length(plot_idx));
+
+figure(401);close(401); figure(401); hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+
+    clf
+    maximize
+    if ~isempty(rec_behav)
+        
+        ax(1) = subplot(7, 1, 1);
+        
+    end
+    hold on
+    plot(rec_behav.time,rec_behav.position(:,1:2));
+    xlim([rec_behav.time(1) rec_behav.time(end)])
+    ylabel('position on track (cm)')
+    set(gca, 'XTick', []);
+    
+    if ~isempty(rec_behav)
+        set(gca, 'xtick', [])
+        ax(2) = subplot(7,1,2:5);
+    else
+        ax(2) = subplot(7,1,1:5);
+    end
+    cla
+    hold on
+    off_set = 0; these_idx = [];
+    for iA = 1:size(A2plot,2)
+        
+        for ii = size(A2plot{iA}, 1):-1:1
+            iC = A2plot{iA}(ii);
+                this_idx = find(rec.Csp(:,iC)); 
+            plot([rec.time(this_idx), rec.time(this_idx)]', [(ones(size(rec.time(this_idx)))*ii)-.5+off_set, (ones(size(rec.time(this_idx)))*ii)+.5+off_set]', 'color', c_ord(iA,:), 'linewidth', 2)
+%               plot(rec.time, rec.Binary(:,iC)*ii +.5+off_set, 'color', c_ord(iA,:), 'linewidth', 2)
+        end
+        off_set = off_set+size(A2plot{iA}, 1);
+        these_idx = [these_idx, A2plot{iA}']; % keep track to avoid overlap;
+    end
+    non_ass_idx = 1:size(rec.Csp,2);
+    rm_idx = (ismember(non_ass_idx, these_idx));
+    non_ass_idx(rm_idx) = [];
+    
+    for ii = size(non_ass_idx, 2):-1:1
+        this_idx = find(rec.Csp(:,non_ass_idx(ii)));
+        
+        if ~isempty(this_idx)
+            plot([rec.time(this_idx), rec.time(this_idx)]', [(ones(size(rec.time(this_idx)))*ii)-.5+off_set, (ones(size(rec.time(this_idx)))*ii)+.5+off_set]', 'color', [.7 .7 .7 .7], 'linewidth', 2)
+        end
+    end
+    ylim([0 size(rec.Binary, 2)])
+    set(gca, 'XTick', [], 'YDir', 'normal', 'ytick', [])
+    ylabel('Cell activity')
+    
+%     if isempty(csc)
+        ax(3) = subplot(7,1,6:7);
+%     else
+%         ax(3) = subplot(7,1,6);
+%     end
+    cla
+    hold on
+    for iA = 1:size(plot_idx,2)
+        plot(tbin_centers_r, zscore(time_proj_r(plot_idx(iA),:)), 'color', c_ord(iA,:))
+        
+        leg_val{iA} = ['A' num2str(plot_idx(iA))];
+    end
+    
+    ylabel({'zscore'; 'react strength'})
+    xlabel('time (s)')
+    
+    legend(leg_val, 'Orientation', 'horizontal', 'Box', 'off')
+    
+    
+%     if ~isempty(csc)
+%         set(gca, 'xtick', [])
+%         ax(4) = subplot(7,1,7);
+%     end
+%     plot(csc.tvec, csc.data(cfg.lfp_idx,:)); 
+    
+    
+    linkaxes(ax, 'x')
+    xlim([rec.time(1) rec.time(end)])
 
 
 
