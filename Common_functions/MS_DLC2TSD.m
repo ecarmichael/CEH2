@@ -136,10 +136,10 @@ end
 
 % apply simple smoothing over any points that are larger than a 3sd jump.
 for iFields = 1:length(fields)
-    nan_idx = zscore(abs(diff(data_out.(fields{iFields})(:,1)))) > 3;
+    nan_idx = zscore(abs(diff(data_out.(fields{iFields})(:,1)))) > 2;
     data_out.(fields{iFields})(nan_idx,1) = NaN;
     data_out.(fields{iFields})(:,1) = fillmissing(data_out.(fields{iFields})(:,1), 'spline');
-    nan_idx = zscore(abs(diff(data_out.(fields{iFields})(:,2)))) > 3;
+    nan_idx = zscore(abs(diff(data_out.(fields{iFields})(:,2)))) > 2;
     data_out.(fields{iFields})(nan_idx,2) = NaN;
     data_out.(fields{iFields})(:,2) = fillmissing(data_out.(fields{iFields})(:,2), 'spline');
 end
@@ -172,7 +172,7 @@ else
     if contains(t_file.name, '.csv')
         TS = readtable(t_file.name);
         data_out.tvec = table2array(TS(:,2));
-        frameNum = TS(:,1);
+        frameNum = table2array(TS(:,1));
         maxBufferUsed =  max(table2array(TS(:,3)));
         
     elseif contains(t_file.name, '.dat')

@@ -38,7 +38,7 @@ for iF =1:length(fieldnames) % loop through thr fields that are the same length 
         fprintf('<strong>%s</strong>: interp on field: <strong>%s</strong>...\n', mfilename, fieldnames{iF})
         aligned_struct.(fieldnames{iF}) = [];
         
-        if strcmp(fieldnames{iF}, 'time')
+        if strcmp(fieldnames{iF}, 'time') 
             aligned_struct.(fieldnames{iF}) = struct2match.time;
             continue
         end
