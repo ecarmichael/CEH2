@@ -619,8 +619,7 @@ end
 
 
 %% collect the REM_react
-rem_z.all = []; rem_z.close = []; rem_z.open = []; rem_z.mid = []; rem_z.isopen = [];rem_z.ismid = [];
-rem_z.a_peak_map = Ass_mean_map; 
+rem_z.all = []; rem_z.close = []; rem_z.open = []; rem_z.mid = []; rem_z.isopen = [];rem_z.ismid = []; rem_z.close_z = []; rem_z.open_z = []; rem_z.mid_z = [];
 rem_z.all_time_prog = all_time_proj_rem; 
 rem_z.all_time_prog_z = all_time_prog_rem_z; 
 
@@ -629,17 +628,22 @@ for ii =  size(wake_time_proj_rem,1):-1:1
     rem_z.all(ii,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
     
     if sum(ismember(close_idx, ii)) > 0
-        rem_z.close(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+        rem_z.close(end+1,:) = wake_time_proj_rem(ii,:);
+        rem_z.close_z(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+
         rem_z.isopen(ii) = 0;
-                rem_z.ismid(ii) = 0;
+        rem_z.ismid(ii) = 0;
 
     elseif sum(ismember(open_idx, ii)) > 0
-        rem_z.open(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+        rem_z.open_z(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+        rem_z.open(end+1,:) = wake_time_proj_rem(ii,:);
         rem_z.isopen(ii) = 1;
         rem_z.ismid(ii) = 0;
 
     elseif sum(ismember(mid_idx, ii)) > 0
+        rem_z.mid_z(end+1,:) = wake_time_proj_rem(ii,:);
         rem_z.mid(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+
         rem_z.ismid(ii) = 1;
         rem_z.isopen(ii) = 0;
 

@@ -84,7 +84,7 @@ for ii = length(session):-1:1
         % All wake assemblies detected and replayed during REM. 
         all_a_peaks = [];
         for jj = size(out.REM_z{ii}.all_time_prog,1):-1:1
-            [~, idx] = findpeaks(out.REM_z{ii}.all_time_prog_z(jj,:), 'MinPeakHeight', 2, 'MinPeakDistance', 10);
+            [~, idx] = findpeaks(out.REM_z{ii}.all_time_prog_z(jj,:), 'MinPeakHeight', 5, 'MinPeakDistance', 10);
             all_a_peaks(jj) = length(idx);
             
         end
@@ -93,11 +93,11 @@ for ii = length(session):-1:1
 
         open_peaks = []; W_open_peaks = [];
         for jj = size(out.REM_z{ii}.open,1):-1:1
-            [~, idx] = findpeaks(out.REM_z{ii}.open(jj,:), 'MinPeakHeight', 2, 'MinPeakDistance', 10);
+            [~, idx] = findpeaks(out.REM_z{ii}.open(jj,:), 'MinPeakHeight', 5, 'MinPeakDistance', 10);
             open_peaks(jj) = length(idx);
             
-            this_z = zscore(out.wake{ii}(jj,:));
-            [~, idx] = findpeaks(this_z, 'MinPeakHeight', 2, 'MinPeakDistance', 10);
+%             this_z = zscore(out.wake{ii}(jj,:));
+            [~, idx] = findpeaks(out.wake{ii}(jj,:), 'MinPeakHeight', 5, 'MinPeakDistance', 10);
             W_open_peaks(jj) = length(idx);
             
         end
@@ -108,11 +108,11 @@ for ii = length(session):-1:1
         %mid assemblies
         mid_peaks = []; W_mid_peaks = [];
         for jj = size(out.REM_z{ii}.mid,1):-1:1
-            [~, idx] = findpeaks(out.REM_z{ii}.mid(jj,:), 'MinPeakHeight', 2, 'MinPeakDistance', 10);
+            [~, idx] = findpeaks(out.REM_z{ii}.mid(jj,:), 'MinPeakHeight', 5, 'MinPeakDistance', 10);
             mid_peaks(jj) = length(idx);
             
-            this_z = zscore(out.wake{ii}(jj,:));
-            [~, idx] = findpeaks(this_z, 'MinPeakHeight', 2, 'MinPeakDistance', 10);
+%             this_z = zscore();
+            [~, idx] = findpeaks(out.wake{ii}(jj,:), 'MinPeakHeight', 5, 'MinPeakDistance', 10);
             W_mid_peaks(jj) = length(idx);
             
         end
@@ -124,12 +124,12 @@ for ii = length(session):-1:1
         % same thing for closed REM events
         closed_peaks = []; W_closed_peaks = [];
         for jj = size(out.REM_z{ii}.close,1):-1:1
-            [~, idx] = findpeaks(out.REM_z{ii}.close(jj,:), 'MinPeakHeight', 1.96, 'MinPeakDistance', 10);
+            [~, idx] = findpeaks(out.REM_z{ii}.close(jj,:), 'MinPeakHeight', 5, 'MinPeakDistance', 10);
             closed_peaks(jj) = length(idx);
             
             
-            this_z = zscore(out.wake{ii}(jj,:));
-            [~, idx] = findpeaks(this_z, 'MinPeakHeight', 1.96, 'MinPeakDistance', 10);
+            this_z = (out.wake{ii}(jj,:)); %zscore
+            [~, idx] = findpeaks(this_z, 'MinPeakHeight', 5, 'MinPeakDistance', 10);
             W_closed_peaks(jj) = length(idx);
             
         end
@@ -326,4 +326,4 @@ set(gcf, 'position', [1600 50 600 500])
 % f = 
 set(gca ,'Layer', 'Top')
 
-exportgraphics(gcf, ['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\CIHR_2023_September\Assembly' filesep 'Assembly_Session_summary.pdf'], 'ContentType', 'vector')
+% exportgraphics(gcf, ['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\CIHR_2023_September\Assembly' filesep 'Assembly_Session_summary.pdf'], 'ContentType', 'vector')
