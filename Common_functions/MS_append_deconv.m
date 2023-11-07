@@ -13,7 +13,7 @@ end
 ms = msExtractBinary_detrendTraces(ms);
 total_t = tic;
 if ~exist('deconvolveCa.m', 'file') == 2
-    error('OASIS deconvolveCa.m not found. Check that OASIS is in the path and oasis_setup has been run')'
+    error('OASIS deconvolveCa.m not found. Check that OASIS is in the path and oasis_setup has been run')
 else
     fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
     

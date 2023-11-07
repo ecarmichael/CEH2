@@ -39,7 +39,7 @@ figure(1919)
 % colormap(colorMap);
     c_ord = parula(length(cell_ids)*2);
     
-    subplot(2,2,2)
+    subplot(2,3,3)
     cla
     MS_plot_all_SFPs(ms.SFPs_sharp); 
 %     imagesc(max(ms.SFPs_sharp(:,:,:),[],3));
@@ -50,30 +50,42 @@ figure(1919)
 
     for ii = 1:length(cell_ids)
         [row, col] = find(ms.SFPs_sharp(:,:,cell_ids(ii)) == max(max(ms.SFPs_sharp(:,:,cell_ids(ii)))));
-        text(col, row, num2str(cell_ids(ii)), 'FontSize', 10, 'FontWeight', 'bold', 'Color', 'k');
+        text(col, row, num2str(cell_ids(ii)), 'FontSize', 10, 'FontWeight', 'bold', 'Color', 'g');
 %         scatter(col, row,50,'o',  'MarkerEdgeColor',c_ord(ii,:) , 'LineWidth', 1);% c_ord(ii,:)
     end
     title(['nCells: ' num2str(ms.numNeurons)]);
 %     xlim([min(ms.Centroids(:,1))-min(ms.Centroids(:,1))*.2  max(ms.Centroids(:,1))+max(ms.Centroids(:,1))*.2])
 %     ylim([min(ms.Centroids(:,2))-min(ms.Centroids(:,2))*.2  max(ms.Centroids(:,2))+max(ms.Centroids(:,2))*.2])
 
-    subplot(2,2,4)
+    subplot(2,3,6)
     cla
-    imagesc( ms.time,1:ms.numNeurons,  zscore(ms.Binary)'); set(gca, 'YDir', 'normal'); 
+        binsize = 0.1; % in seconds, so everything else should be seconds too
+        gauss_window = 1./binsize; % 1 second window
+        gauss_SD = 0.5./binsize; % 0.02 seconds (20ms) SD
+        gk = gausskernel(gauss_window,gauss_SD); gk = gk./binsize; % normalize by binsize
+        gau_sdf = conv2((ms.deconv./ms.denoise)>0.01,gk,'same'); % convolve with gaussian window
+        gau_z = zscore(gau_sdf, [], 2);
+        
+        
+    imagesc( ms.time,1:ms.numNeurons,  gau_z);  set(gca, 'YDir', 'normal'); 
       c_val = caxis; 
     caxis([0 c_val(2)*.2])
+%     caxis([0 .01])
+
 %     all_cord = parula(floor(ms.numNeurons*1.2));%zeros(length(ms.units),3);%repmat(linspecer(5), 100, 1); 
 %     hold on
 %     mult_fac = .05; 
 %     for ii = 1:ms.numNeurons
-%         plot(ms.time, zscore(ms.denoise(:,ii))+ii*mult_fac,  'color', all_cord(ii,:), 'linewidth', 1.5)
+%         this_spk = find((ms.deconv(:,ii)./ms.denoise(:,ii))>0.01);
+%         plot([ms.time(this_spk) ms.time(this_spk)]', [ones(length(this_spk),1)*ii-0.5 ones(length(this_spk),1)*ii+0.5]', 'color', all_cord(ii,:))
+% %         plot(ms.time, zscore(ms.denoise(:,ii))+ii*mult_fac,  'color', all_cord(ii,:), 'linewidth', 1.5)
 % 
 % %         plot(ms.frame*(1/30), zscore(ms.Deconv(:,ii))+ii*10,'color', all_cord(ii,:), 'linewidth', 1)
 % %         plot(ms.frame*(1/30), (ms.Spikes(:,ii)*5)+ii*10,'color', 'k')
 %         
 %     end
 %        set(gca, 'color', 'k')
-    title('zscored deconvolved traces')
+    title('zCsp traces')
 
     ylabel('cell ID')
     xlabel('time (s)')
@@ -86,7 +98,7 @@ figure(1919)
 
     
     
-    subplot(2,2,[1 3])
+    subplot(2,3,[1 2 4 5])
     cla
     hold on
     fact = 2.5; 
@@ -112,7 +124,7 @@ figure(1919)
         set(gca,'xtick', [round(abs(ms.time(1))) round(ms.time(end),0)], 'xTickLabel', [round(abs(ms.time(1))) round(ms.time(end),0)], 'TickDir', 'out')
 
     ylim([0 (length(cell_ids)+2)*fact])
-    xlim([ms.time(1) ms.time(end)])
+    xlim([round(abs(ms.time(1))) round(ms.time(end),0)])
     legend({'Raw', 'Denoise', 'Deconv'}, 'Location', 'north', 'Orientation', 'horizontal', 'box', 'off')
     
 
