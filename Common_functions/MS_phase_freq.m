@@ -111,7 +111,7 @@ for iP = length(Phi_f):-1:1
         
         
         CoMo(iP, iA) =MS_ModIdx(phi_amp);
-        
+%         amp_val(iA) = 
     end
     
     
