@@ -19,13 +19,13 @@ end
 cd('C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter')
 % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
 
-f_list = dir('pv*');
+f_list = dir('*data*');
 
 out = [];
 session = []; novel_idx = []; anx_idx = []; HS_idx = [];
 for ii = 1:length(f_list)
     session{ii} = f_list(ii).name;
-        [out.REM_z{ii}, out.Az{ii}, out.wake{ii}, out.rem{ii}] = sandbox_PCA_ICA_no_fig(f_list(ii).name);
+        [out.REM{ii}, out.A{ii}, out.wake{ii}, out.rem{ii}] = MS_PCA_ICA_no_fig(f_list(ii).name);
     
     if ~isempty(strfind(f_list(ii).name, 'HATDS'))
         HS_idx(ii) = 1;
