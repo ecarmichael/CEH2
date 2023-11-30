@@ -63,7 +63,7 @@ for ii = length(ca_dir):-1:1
         cfc_csc.desired_sampling_frequency = 2000;
         Ca{ii}.ms.nlx.csc = MS_LoadCSC(cfg_csc);
         Ca{ii}.ms.nlx.labels = {'Contra1', 'Ipsi1', 'Ipsi2'}; 
-        
+        Ca{ii}.ms.nlx.csc = restrict(Ca{ii}.ms.nlx.csc,Ca{ii}.ms.nlx.tvec(1), Ca{ii}.ms.nlx.tvec(end));  
         
         
     elseif strcmpi(Ca{ii}.ms.info.subject, '1827')
@@ -73,7 +73,8 @@ for ii = length(ca_dir):-1:1
         cfc_csc.desired_sampling_frequency = 2000;
         Ca{ii}.ms.nlx.csc = MS_LoadCSC(cfg_csc);
         Ca{ii}.ms.nlx.labels = {'Contra1', 'Ipsi1', 'Ipsi2'}; 
-        
+        Ca{ii}.ms.nlx.csc = restrict(Ca{ii}.ms.nlx.csc,Ca{ii}.ms.nlx.tvec(1), Ca{ii}.ms.nlx.tvec(end));  
+
     end
     
 end
@@ -81,14 +82,30 @@ end
 warning on
 
 %% Check the TS from the Ca
+% jump = 5; % max expected jump before assuming a gap in recording
 
 for ii = 1:length(Ca)
     
-        fprintf('<strong>%s %s</strong>  (%d samples)\n', Ca{ii}.ms.info.subject, Ca{ii}.ms.info.sess, length(Ca{ii}.ms.time))
+        fprintf('<strong>%s %s</strong>  %d frames | %d evts  Diff = %d\n', Ca{ii}.ms.info.subject, Ca{ii}.ms.info.sess, length(Ca{ii}.ms.time),length(Ca{ii}.ms.nlx.tvec),length(Ca{ii}.ms.time) - length(Ca{ii}.ms.nlx.tvec) )
+        fprintf('<strong>%s %s</strong>  %d sec | %d nlx sec  Diff = %d\n', Ca{ii}.ms.info.subject, Ca{ii}.ms.info.sess,...
+            Ca{ii}.ms.time(end)-Ca{ii}.ms.time(1),Ca{ii}.ms.nlx.csc.tvec(end) -Ca{ii}.ms.nlx.csc.tvec(1),...
+            (Ca{ii}.ms.time(end)-Ca{ii}.ms.time(1)) - (Ca{ii}.ms.nlx.csc.tvec(end) -Ca{ii}.ms.nlx.csc.tvec(1)) )
+
+% temp_nlx_t = Ca{ii}.ms.nlx.tvec - Ca{ii}.ms.nlx.tvec(1); 
+% 
+% tvec_idx = nearest_idx3(Ca{ii}.ms.time,temp_nlx_t); 
+% 
+% odd_idx = tvec_idx ~=1; 
+% 
+% fillmissing(
         
 end
 
 % align the nlx to the Ca frames by filling in missing values. 
+
+% try using the nearest value 
+
+% this_ts = Ca{ii}.ms.time
 
 %% simplify the ms 
 

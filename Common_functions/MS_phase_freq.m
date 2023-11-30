@@ -72,7 +72,9 @@ for iP = length(Phi_f):-1:1
     
     for iA = length(Amp_f):-1:1
         
-        fprintf('Processing: Phi %.1f Amp %.1f\n',Phi_f(iP), Amp_f(iA))
+        
+        
+        %fprintf('Processing: Phi %.1f Amp %.1f\n',Phi_f(iP), Amp_f(iA))
         
         
         this_f = Amp_f(iA)+cfg.A_win;
@@ -111,7 +113,7 @@ for iP = length(Phi_f):-1:1
         
         
         CoMo(iP, iA) =MS_ModIdx(phi_amp);
-        
+%         amp_val(iA) = 
     end
     
     

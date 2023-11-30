@@ -1,4 +1,4 @@
-function [rem_z, Ass_z, time_proj_pos_place, wake_time_proj_rem, behav_his] = sandbox_PCA_ICA_no_fig(fname)
+function [rem_out, Ass_out, time_proj_pos_place, wake_time_proj_rem, behav_his] = MS_PCA_ICA_no_fig(fname)
 % sandbox_PCA/ICA
 
 
@@ -14,10 +14,7 @@ if strcmp(computer, 'GLNXA64')
     
     % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
     data_dir = '/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter';
-    rem_dir = '/home/williamslab/Williams Lab Dropbox/Eric Carmichael/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter';
-    decode_dir = [data_dir filesep 'decoding'];
     
-    this_process_dir ='/home/williamslab/Williams Lab Dropbox/Eric Carmichael/JisooProject2020/2020_Results_aftercutting/';
     
     
 else
@@ -32,9 +29,6 @@ else
     
     % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
     data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter';
-    rem_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter';
-    decode_dir = [data_dir filesep 'decoding'];
-    this_process_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael';
     
 end
 
@@ -55,7 +49,7 @@ cd(data_dir)
 rng(123, 'twister')
 
 %%
-
+plot_flag = 1; 
 % load('ms_trk.mat')
 % load('behav_DLC.mat')
 this_sess = fname;
@@ -78,12 +72,16 @@ end
 subject = parts{1};
 
 
-if exist([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'], 'file')
-    load([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'])
-elseif exist([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'], 'file')
-    load([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'])
+if exist([subject '_' task '_PCs.mat'])
+    load([subject '_' task '_PCs.mat'])
 else
-    rem_z = NaN; Ass_z = NaN;  time_proj_pos_place = NaN; wake_time_proj_rem = NaN;
+% 
+% if exist([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'], 'file')
+%     load([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'])
+% elseif exist([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'], 'file')
+%     load([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'])
+% else
+    rem_out = NaN; Ass_out = NaN;  time_proj_pos_place = NaN; wake_time_proj_rem = NaN;
     return
 end
 %%
@@ -97,44 +95,38 @@ remove_cell_id = find(~keep_idx);
 cfg_rem = [];
 cfg_rem.remove_idx = find(~keep_idx);
 cfg_rem.data_type = 'RawTraces';
-ms_trk_rem = MS_Remove_trace(cfg_rem, ms_trk);
+ms_trk_cut = MS_Remove_trace(cfg_rem, ms_trk);
 
 if ~isfield(ms_trk, 'deconv') % get the deconvolved trace if not already present. 
-    ms_trk_rem = MS_append_deconv(ms_trk_rem, 1);
+    ms_trk_cut = MS_append_deconv(ms_trk_cut, 1);
 end
 % remove inactive cells
 
-keep_idx = sum(ms_trk_rem.deconv, 1) >0;
+keep_idx = sum(ms_trk_cut.deconv, 1) >0;
 
 remove_cell_id_decon = find(~keep_idx);
 
 cfg_rem = [];
 cfg_rem.remove_idx = find(~keep_idx);
 cfg_rem.data_type = 'deconv';
-ms_trk_rem = MS_Remove_trace(cfg_rem, ms_trk_rem);
+ms_trk_cut = MS_Remove_trace(cfg_rem, ms_trk_cut);
 
 %% grab the spatial tuning properties.
 
-% if contains(task, 'HATD')% workaround for naming of HAT + D
-%     load([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'])
-% %     load([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'SA.mat'])
-% else
-%     load([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'])
-% end
 
 place = [];
-for iC = length(spatial_analysis.bin):-1:1
-    if iscell(spatial_analysis.bin{iC,1}.PlaceFieldCentroid)
-        temp = cell2mat(spatial_analysis.bin{iC,1}.PlaceFieldCentroid);
-    else
-        temp = spatial_analysis.bin{iC,1}.PlaceFieldCentroid;
-    end
-    place.centroids(iC) = temp(1);
+for iC = length(PCs_properties.peak_loc):-1:1
+   
+    place.centroids(iC) = PCs_properties.peak_loc(iC);
     
     % is it a place cell?
-    place.is(iC) = spatial_analysis.bin{iC,1}.IsPlaceCell;
+    place.is(iC) = PCs_properties.isPC(iC);
     
-    place.map(iC,:) = mean(spatial_analysis.bin{iC,1}.PlaceField,1)/max(mean(spatial_analysis.bin{iC,1}.PlaceField,1)); % get the 1d place field and normalize.
+    bin_vect = 0:2.5:100; 
+    p_idx = find(bin_vect == place.centroids(iC));
+    
+    place.map(iC,:) = zeros(length(bin_vect),1); %mean(spatial_analysis.bin{iC,1}.PlaceField,1)/max(mean(spatial_analysis.bin{iC,1}.PlaceField,1)); % get the 1d place field and normalize.
+    place.map(iC,p_idx) = 1; 
 end
 
 place.centroids(remove_cell_id)= [];
@@ -153,9 +145,9 @@ p_bins = p_bins(1:end-1)+bin/2;
 
 
 %% follow grosmark et al. method of deconv preprocessing
-Csp = ms_trk_rem.deconv./ms_trk_rem.denoise;
+Csp = ms_trk_cut.deconv./ms_trk_cut.denoise;
 Csp = Csp > 0.01;
-ms_trk_rem.Csp = Csp;
+ms_trk_cut.Csp = Csp;
 
 % cfg_plot.Ca_type = 'RawTraces';
 % cfg_plot.plot_type = '2d';
@@ -240,10 +232,10 @@ time_proj = assembly_activity(Ass_Temp,data_h');
 
 %% shuffle distribution for assemblies
 rng(123,'twister')
-nShuff = 10;
+nShuff = 50;
 
 Ass_shuff = NaN(1,nShuff);
-parfor iS = 1:nShuff
+for iS = 1:nShuff
     tic
     shuff_data = NaN(size(data_h));
     for ic = 1:size(data_h,2)
@@ -304,33 +296,40 @@ Ass_idx = find(keep_idx);
 time_proj_pos = time_proj;
 time_proj_pos(~keep_idx,:) = [];
 
-Ass_z = (size(Ass_pos,2) - mean(Ass_shuff))/std(Ass_shuff);
-fprintf('%.0f Positive Assemblies detected. Chance level is %.1f. zscore = %.1fSD\n', size(Ass_pos,2), mean(Ass_shuff), Ass_z)
+Ass_out = (size(Ass_pos,2) - mean(Ass_shuff))/std(Ass_shuff);
+fprintf('%.0f Positive Assemblies detected. Chance level is %.1f. zscore = %.1fSD\n', size(Ass_pos,2), mean(Ass_shuff), Ass_out)
 %% stem plot ensembles
-% figure(301);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-% figure(302);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
 
 Ass_map = cell(size(Ass_pos,2),1);
 Ass_mean_map = [];
 Ass_pcells = Ass_map;
 c_ord = parula(size(Ass_pos,2)+2);
 %
-% cmap = parula(256);
-% cmap(1,:) = 0;
+
+
+if plot_flag 
+figure(301);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+cmap = parula(256);
+cmap(1,:) = 0;
+end
+
+
 for ii = size(Ass_pos,2):-1:1
-    %     figure(301)
-    %     subplot(4, ceil(size(Ass_pos,2)/4),ii)
-    %     hold on
-    %     stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
-    %     view(90,90)
-    
-    %     stem(Ass_pos_cells{ii}, Ass_pos(Ass_pos_cells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
-    %         title(['Assembly #' num2str(ii)])
-    
-    
-    %     figure(302)
-    %         subplot(4, ceil(size(Ass_pos,2)/4),ii)
-    %     hold on
+    if plot_flag
+            figure(301)
+            subplot(4, ceil(size(Ass_pos,2)/4),ii)
+            hold on
+            stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
+            view(90,90)
+        
+            stem(Ass_pos_cells{ii}, Ass_pos(Ass_pos_cells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
+                title(['Assembly #' num2str(ii)])
+        
+        
+%             figure(302)
+%                 subplot(4, ceil(size(Ass_pos,2)/4),ii)
+%             hold on
+    end
     this_ass_map = []; these_place = zeros(size(Ass_pos_cells{ii}));
     fprintf('Assembly # %.0f had %.0f place cells\n', ii, sum(place.is(Ass_pos_cells{ii})))
     for jj = 1:length(Ass_pos_cells{ii})
@@ -344,11 +343,14 @@ for ii = size(Ass_pos,2):-1:1
     end
     
     if ~isempty(this_ass_map)
-        %         imagesc(p_bins(1):1:p_bins(end), 1:length(sum(these_place)),  this_ass_map)
-        %         set(gca,'ytick',1:size(this_ass_map,1), 'YTickLabel',  Ass_pos_cells{ii}(logical(these_place))');
-        %         xlim([p_bins(1) p_bins(end)])
-        %         ylim([.5 size(this_ass_map,1)+.5])
-        %         colormap(cmap)
+%         if plot_flag
+%             imagesc(p_bins(1):1:p_bins(end), 1:length(sum(these_place)),  this_ass_map)
+%             set(gca,'ytick',1:size(this_ass_map,1), 'YTickLabel',  Ass_pos_cells{ii}(logical(these_place))');
+%             xlim([p_bins(1) p_bins(end)])
+%             ylim([.5 size(this_ass_map,1)+.5])
+%             colormap(cmap)
+%         end
+        
         Ass_map{ii} = this_ass_map;
         Ass_pcells{ii} = Ass_pos_cells{ii}(logical(these_place));
         Ass_mean_map(ii,:) = mean(this_ass_map,1);
@@ -358,14 +360,13 @@ for ii = size(Ass_pos,2):-1:1
         Ass_pcells{ii} = NaN;
         Ass_mean_map(ii,:) = NaN(size(p_bins(1):1:p_bins(end)));
     end
-    %     title(['Assembly #' num2str(ii)])
     
+%     if plot_flag
+%         title(['Assembly #' num2str(ii)])
+%         ms_t = MS_append_sharp_SFPs(ms_trk);
+%         MS_plot_all_SFPs(imgaussfilt(ms_t.SFPs_sharp(:,:, Ass_pos_cells{ii}),2))
+%     end
     
-    
-    %     ms_t = MS_append_sharp_SFPs(ms_trk);
-    
-    
-    %     MS_plot_all_SFPs(imgaussfilt(ms_t.SFPs_sharp(:,:, Ass_pos_cells{ii}),2))
     
 end
 nan_idx = isnan(max(Ass_mean_map, [], 2));
@@ -416,74 +417,76 @@ Ass_pcells(rm_idx) = [];
 Ass_pos_cells_place(rm_idx) = [];
 time_proj_pos_place(rm_idx,:) = [];
 
+%% plot the remaining assembly maps; 
 
+if plot_flag
+    
+    figure(302);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+    
+    for ii = size(Ass_pos,2):-1:1
+            figure(302)
+            subplot(4, ceil(size(Ass_pos,2)/4),ii)
+            hold on
+            stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
+            view(90,90)
+            
+            stem(Ass_pos_cells_place{ii}, Ass_pos(Ass_pos_cells_place{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
+            title(['Assembly #' num2str(ii)])
+            ylim([-0.1 0.4])
+            
+
+        fprintf('Assembly # %.0f had %.0f place cells\n', ii, sum(place.is(Ass_pos_cells_place{ii})))
+%         for jj = 1:length(Ass_pos_cells_place{ii})
+%             
+%             if place.is(Ass_pos_cells_place{ii}(jj))
+%                 these_place(jj) = 1;
+%                 place_int = interp1(p_bins,place.map(Ass_pos_cells_place{ii}(jj),:),  p_bins(1):1:p_bins(end));
+%             end
+%         end
+    end
+end
 
 %% get the number of significant reactivations during wake for
 
+c_ord = MS_linspecer(size(time_proj_pos_place,1)+4);
 
-c_ord = cool(size(time_proj_pos_place,1)+4);
+Wake_react = []; 
 
+for ii = size(time_proj_pos_place,1):-1:1
+    
+    [this_rec, this_idx] = findpeaks(time_proj_pos_place(ii,:), 'MinPeakHeight', 5); 
+    fprintf('Assembly #%d - %.0f sig reactivations (%0.2f/min)\n', ii, length(this_rec), length(this_rec)/((tvec(end)- tvec(1))/60))
+    
+    
+end
+
+
+if plot_flag
+    figure(303);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+    ax(1) = subplot(4,1,1);
+    scatter(behav.time/1000, behav.position(:,1),ones(size(behav.time)), behav.speed) 
+    xlim([behav.time(1) behav.time(end)]/1000)
+    colorbar('northoutside')
+    
+    ax(2) = subplot(4,1,2:4);
+    hold on
+   for  ii = size(time_proj_pos_place,1):-1:1
+       plot(tvec, time_proj_pos_place(ii,:), 'color', c_ord(ii,:))
+       
+   end
+   linkaxes(ax, 'x') 
+end
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % grab the REM data
-sess = strsplit(this_sess, '_');
-sub = sess{1};
-sess = sess{2};
-cd(rem_dir )
-
-if strcmpi(sess, 'HATDSwitch')
-    sess = 'HATSwitch';
-end
-
-sub_list = dir('PV*');
-keep_idx = [];
-for ii = 1:length(sub_list)
-    if strfind(lower(sub_list(ii).name), lower(sub))
-        keep_idx(ii) = 1;
-    else
-        keep_idx(ii) = 0;
-    end
-end
-
-cd([rem_dir filesep sub_list(find(keep_idx)).name])
-
-sess_list = dir('*T*');
-keep_idx = [];
-for ii = 1:length(sess_list)
-    if strfind(lower(sess_list(ii).name), lower(sess))
-        keep_idx(ii) = 1;
-    else
-        keep_idx(ii) = 0;
-    end
-end
-
-cd(sess_list(find(keep_idx)).name)
-
-% if exist('all_binary_post_REM.mat', 'file')
-%     load('all_detrendRaw_post_REM.mat')
-%     load('all_RawTraces_post_REM.mat')
-%     load('all_binary_post_REM.mat')
-% else
-%     rem_z = NaN; wake_time_proj_rem = NaN;
-%     return
-% end
-
-
-%remove cells that were excluded in the awake set.
-
-% all_detrendRaw_post_REM(:, remove_cell_id) = [];
-% all_detrendRaw_post_REM(:, remove_cell_id_decon) = [];
-
-% all_RawTraces_post_REM(:, remove_cell_id) = [];
-% all_RawTraces_post_REM(:, remove_cell_id_decon) = [];
 
 all_binary_post_REM(:, remove_cell_id) = [];
 all_binary_post_REM(:, remove_cell_id_decon) = [];
-% load the decoding as well
 
 
-
+all_binary_pre_REM(:, remove_cell_id) = [];
+all_binary_pre_REM(:, remove_cell_id_decon) = [];
 
 
 %% deconvolve
@@ -566,7 +569,7 @@ parfor iS = 1:nShuff
 %     fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(this_ass,2), toc)
 end
 
-rem_z.shuff_time_prog_rem_z = shuff_time_prog_rem_z; 
+rem_out.shuff_time_prog_rem_z = shuff_time_prog_rem_z; 
 
 %%
 all_proj_rem = [];
@@ -607,7 +610,7 @@ if ~isempty(Ass_map_peak)
 % [~, idx] = max(close_peaks);
 % Ass_2 = close_idx(idx(1));
 else
-     rem_z = NaN; 
+     rem_out = NaN; 
     return
 end
 
@@ -619,33 +622,33 @@ end
 
 
 %% collect the REM_react
-rem_z.all = []; rem_z.close = []; rem_z.open = []; rem_z.mid = []; rem_z.isopen = [];rem_z.ismid = []; rem_z.close_z = []; rem_z.open_z = []; rem_z.mid_z = [];
-rem_z.all_time_prog = all_time_proj_rem; 
-rem_z.all_time_prog_z = all_time_prog_rem_z; 
+rem_out.all = []; rem_out.close = []; rem_out.open = []; rem_out.mid = []; rem_out.isopen = [];rem_out.ismid = []; rem_out.close_z = []; rem_out.open_z = []; rem_out.mid_z = [];
+rem_out.all_time_prog = all_time_proj_rem; 
+rem_out.all_time_prog_z = all_time_prog_rem_z; 
 
 for ii =  size(wake_time_proj_rem,1):-1:1
     
-    rem_z.all(ii,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+    rem_out.all(ii,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
     
     if sum(ismember(close_idx, ii)) > 0
-        rem_z.close(end+1,:) = wake_time_proj_rem(ii,:);
-        rem_z.close_z(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+        rem_out.close(end+1,:) = wake_time_proj_rem(ii,:);
+        rem_out.close_z(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
 
-        rem_z.isopen(ii) = 0;
-        rem_z.ismid(ii) = 0;
+        rem_out.isopen(ii) = 0;
+        rem_out.ismid(ii) = 0;
 
     elseif sum(ismember(open_idx, ii)) > 0
-        rem_z.open_z(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
-        rem_z.open(end+1,:) = wake_time_proj_rem(ii,:);
-        rem_z.isopen(ii) = 1;
-        rem_z.ismid(ii) = 0;
+        rem_out.open_z(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+        rem_out.open(end+1,:) = wake_time_proj_rem(ii,:);
+        rem_out.isopen(ii) = 1;
+        rem_out.ismid(ii) = 0;
 
     elseif sum(ismember(mid_idx, ii)) > 0
-        rem_z.mid_z(end+1,:) = wake_time_proj_rem(ii,:);
-        rem_z.mid(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+        rem_out.mid_z(end+1,:) = wake_time_proj_rem(ii,:);
+        rem_out.mid(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
 
-        rem_z.ismid(ii) = 1;
-        rem_z.isopen(ii) = 0;
+        rem_out.ismid(ii) = 1;
+        rem_out.isopen(ii) = 0;
 
     end
 end
