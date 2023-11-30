@@ -1,14 +1,17 @@
 %% sandbox_BC_sleep_scoring 
 
 data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Bryan_DropBox\CHRNA2_NOVEL_OBJECT\raw_data\NOPR\BC1602\BC1602_2023_06_30_D1_hab_failed';
-
+data_dir_mac= strrep(data_dir, '\','/');
+data_dir_mac(1:2)= [];
+data_dir_mac= strrep(data_dir_mac, 'ecarm','bryancontrerasmercado');
+cd(data_dir_mac)
 emg_chan = 'CSC1.ncs';
-lfp_chan = 'CSC3.ncs';
+lfp_chan = 'CSC2.ncs';
 
 
 %% load some data
 
-cd(data_dir)
+cd(data_dir_mac)
 cfg = [];
 cfg.fc = {lfp_chan}; 
 

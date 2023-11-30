@@ -50,6 +50,7 @@ d_t_ratio = 1;
 emg_rms_prctile = 90; 
 
 %% mark out wake periods from the EMG; 
+%This 
 sat_idx = false(1, length(csc.data));%(abs(csc.data) >= prctile(abs(csc.data), 90));% | (csc.data <= prctile(csc.data, 5));
 for ii = 1:size(wake_idx,1)
    sat_idx(wake_idx(ii, 1):wake_idx(ii, 2)) = 1; 
@@ -63,7 +64,6 @@ emg_rms = sqrt(movmedian(emg.data.^2, csc.cfg.hdr{1}.SamplingFrequency*10));    
 emg_og = emg_rms;
 else
 emg_rms_prctile = 50; 
-
 emg_rms = movmedian(emg, csc.cfg.hdr{1}.SamplingFrequency*10) ; 
 emg_og = emg_rms; 
 end
@@ -195,18 +195,20 @@ set(gca, 'xtick', [])
 ax(3) = subplot(7,1,7);
 cla
 hold on
-vec = zeros(size(hypno_out)); 
+vec = zeros(size(hypno_out));
 plot((csc.tvec(hypno_out == 2) - csc.tvec(1)), vec(hypno_out == 2)+2,'s','MarkerEdgeColor', cord(2,:),'MarkerFaceColor',cord(2,:), 'linewidth', 1)
 plot((csc.tvec(hypno_out == 3) - csc.tvec(1)), vec(hypno_out == 3)+3,'s','MarkerEdgeColor', cord(3,:),'MarkerFaceColor',cord(3,:), 'linewidth', 1)
 plot((csc.tvec(hypno_out == 1) - csc.tvec(1)), vec(hypno_out == 1)+1,'s','MarkerEdgeColor', cord(1,:),'MarkerFaceColor',cord(1,:), 'linewidth', 1)
 
-    % imagesc((csc.tvec - csc.tvec(1)), 1, hypno_init')
-    set(gca, 'YTickLabel', {'Wake', 'SWS', 'REM'})
-% colormap(linspecer(3)); 
+% imagesc((csc.tvec - csc.tvec(1)), 1, hypno_init')
+ytickValues = [1, 2, 3];  % Specify the values where you want tick marks
+yticks(ytickValues);
+set(gca, 'YTickLabel', labels)
+% colormap(linspecer(3));
 % cb=colorbar;
 % cb.Position(1) = cb.Position(1) + 1e-1;
-% cb.Ticks = [1:3]; 
-% cb.TickLabels = {'Wake', 'SWS', 'REM'}; 
+% cb.Ticks = [1:3];
+% cb.TickLabels = {'Wake', 'SWS', 'REM'};
 xlabel('time (s)')
 
 % legend('SWS', 'REM', 'Awake')
