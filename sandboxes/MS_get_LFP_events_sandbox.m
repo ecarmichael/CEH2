@@ -100,7 +100,7 @@ if isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
             case 'zscore'
             cfg.artif_det.threshold = std(csc_artif.data(1,:))*cfg.artif_det.threshold;
             case 'raw'
-            cfg.artif_det.threshold = max(csc_artif.data(iChan,:))*.95; 
+            cfg.artif_det.threshold = max(amp_artif.data(iChan,:))*.95; 
         end
     
     
@@ -134,7 +134,7 @@ end
 
 % plot
 if cfg.check
-    %     plot(114)
+        plot(114)
     hold on
     plot(amp_filt.tvec, csc_filt.data(1,:),'g');
     %     hline(cfg.artif_det.threshold, '--g')
