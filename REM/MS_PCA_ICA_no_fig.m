@@ -122,11 +122,13 @@ for iC = length(PCs_properties.peak_loc):-1:1
     % is it a place cell?
     place.is(iC) = PCs_properties.isPC(iC);
     
-    bin_vect = 0:2.5:100; 
-    p_idx = find(bin_vect == place.centroids(iC));
+    place.map(iC,:) = PCs_properties.tuning_curve_data(:,iC)'; 
     
-    place.map(iC,:) = zeros(length(bin_vect),1); %mean(spatial_analysis.bin{iC,1}.PlaceField,1)/max(mean(spatial_analysis.bin{iC,1}.PlaceField,1)); % get the 1d place field and normalize.
-    place.map(iC,p_idx) = 1; 
+%     bin_vect = 0:2.5:100; 
+%     p_idx = find(bin_vect == place.centroids(iC));
+%     
+%     place.map(iC,:) = zeros(length(bin_vect),1); %mean(spatial_analysis.bin{iC,1}.PlaceField,1)/max(mean(spatial_analysis.bin{iC,1}.PlaceField,1)); % get the 1d place field and normalize.
+%     place.map(iC,p_idx) = 1; 
 end
 
 place.centroids(remove_cell_id)= [];
@@ -143,7 +145,18 @@ p_bins = 10:bin:90;
 p_bins = p_bins(1:end-1)+bin/2;
 % see if there are any anxiety cells
 
+[~,p_sort] = sort(place.centroids);
 
+if plot_flag
+    subplot(5,1,1)
+    histogram(place.centroids, 1.5:3:100.5, 'Normalization', 'probability')
+    xlim([1.5 100.5])
+    subplot(5,1,2:5)
+    
+    imagesc(1.5:3:100.5, 1:length(place.centroids),  place.map(p_sort,:)./max(place.map(p_sort,:),[],2))
+    xlabel('Location on track (cm)')
+    ylabel('Cell ID')
+end
 %% follow grosmark et al. method of deconv preprocessing
 Csp = ms_trk_cut.deconv./ms_trk_cut.denoise;
 Csp = Csp > 0.01;
