@@ -464,13 +464,12 @@ end
 c_ord = MS_linspecer(size(time_proj_pos_place,1)+4);
 
 Wake_react = []; 
-
+Ass_rect_idx = []; 
 for ii = size(time_proj_pos_place,1):-1:1
     
-    [this_rec, this_idx] = findpeaks(time_proj_pos_place(ii,:), 'MinPeakHeight', 5); 
+    [this_rec, Ass_rect_idx{ii}] = findpeaks(time_proj_pos_place(ii,:), 'MinPeakHeight', 5, 'MinPeakDistance', 2/binsize); 
     fprintf('Assembly #%d - %.0f sig reactivations (%0.2f/min)\n', ii, length(this_rec), length(this_rec)/((tvec(end)- tvec(1))/60))
-    
-    
+
 end
 
 
@@ -488,6 +487,25 @@ if plot_flag
        
    end
    linkaxes(ax, 'x') 
+   
+     figure(304);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+     
+     t_win = ceil(2/behav.dt); 
+     
+     for ii = length(Ass_rect_idx):-1:1
+         subplot(4, ceil(size(Ass_rect_idx,2)/4),ii)
+         hold on
+         
+         this_idx = nearest_idx(tbin_centers(Ass_rect_idx{ii}), behav.time/1000);
+        
+         for jj = length(this_idx):-1:1
+        	plot((behav.time(this_idx(jj)-t_win:this_idx(jj)+t_win,1) - behav.time(this_idx(jj)-t_win))/1000, behav.position(this_idx(jj)-t_win:this_idx(jj)+t_win,1)', 'color', c_ord(ii,:))
+         
+         end
+         
+         
+     end
+     
 end
 
 
@@ -496,6 +514,8 @@ end
 
 all_binary_post_REM(:, remove_cell_id) = [];
 all_binary_post_REM(:, remove_cell_id_decon) = [];
+
+% all_deconv_post_REM = 
 
 
 all_binary_pre_REM(:, remove_cell_id) = [];
@@ -553,33 +573,44 @@ wake_time_proj_rem = assembly_activity(Ass_pos,data_h_rem');
 rng(123, 'twister')
 all_time_proj_rem = assembly_activity(Ass_Temp,data_h_rem');
 
-
-for ii = size(time_proj,1):-1:1
- all_time_prog_rem_z(ii,:) = (all_time_proj_rem(ii,:) - mean(time_proj(ii,:)))/std(time_proj(ii,:));
+sig_REM_react = []; 
+for ii = size(wake_time_proj_rem,1):-1:1
+    if sum(wake_time_proj_rem(ii,:) > 5) >1
+        sig_REM_react(ii) = 1;
+    else
+        sig_REM_react(ii) = 0;
+    end
 end
 
+if plot_flag
+   figure(304);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+
+    
+    
+    
+end
 %% get the REM react shuffle. 
 
 rng(123,'twister')
 nShuff = 100;
 
 shuff_time_prog_rem_z = cell(1,nShuff); 
-parfor iS = 1:nShuff
+for iS = 1:nShuff
     tic
     shuff_data = NaN(size(data_h_rem));
     for ic = 1:size(data_h_rem,2)
         shuff_data(:,ic) = circshift(data_h_rem(:,ic), floor(MS_randn_range(1,1,1,size(data_h_rem,1))));
     end
     
-    all_time_proj_rem_s = assembly_activity(Ass_Temp,shuff_data');
+    wake_time_proj_rem_s = assembly_activity(Ass_pos,shuff_data');
     
 
-    for ii = size(all_time_proj_rem_s,1):-1:1
-        shuff_time_prog_rem_z{iS}(ii,:) = (all_time_proj_rem_s(ii,:) - mean(time_proj(ii,:)))/std(time_proj(ii,:));
-    end
+%     for ii = size(all_time_proj_rem_s,1):-1:1
+%         shuff_time_prog_rem_z{iS}(ii,:) = (all_time_proj_rem_s(ii,:) - mean(time_proj(ii,:)))/std(time_proj(ii,:));
+%     end
 
 
-%     fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(this_ass,2), toc)
+    fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(wake_time_proj_rem_s,2), toc)
 end
 
 rem_out.shuff_time_prog_rem_z = shuff_time_prog_rem_z; 
