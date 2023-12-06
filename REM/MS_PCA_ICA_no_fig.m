@@ -147,13 +147,18 @@ p_bins = p_bins(1:end-1)+bin/2;
 
 [~,p_sort] = sort(place.centroids);
 
+
 if plot_flag
+    figure(300);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+
     subplot(5,1,1)
-    histogram(place.centroids, 1.5:3:100.5, 'Normalization', 'probability')
+    histogram(place.centroids(logical(place.is)), 1.5:3:100.5, 'Normalization', 'probability')
     xlim([1.5 100.5])
     subplot(5,1,2:5)
     
-    imagesc(1.5:3:100.5, 1:length(place.centroids),  place.map(p_sort,:)./max(place.map(p_sort,:),[],2))
+    this_map = place.map(p_sort,:); 
+    this_map(~place.is,:) = []; 
+    imagesc(1.5:3:100.5, 1:length(place.centroids(logical(place.is))),  this_map./max(this_map,[],2))
     xlabel('Location on track (cm)')
     ylabel('Cell ID')
 end
@@ -215,8 +220,9 @@ tbin_centers = tbin_edges(1:end-1)+binsize/2; % vector of time bin centers (for 
 data_h = [];
 for ii = size(Csp,2):-1:1
     
-    this_cell = ms.time(find(Csp(: ,ii) & move_idx))/1000;
-    
+%     this_cell = ms.time(find(Csp(: ,ii) & move_idx))/1000;
+    this_cell = ms.time(find(ms_trk_cut.Binary(: ,ii) & move_idx))/1000;
+
     spk_count = histc(this_cell,tbin_edges); % get spike counts for each bin
     spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
     
@@ -310,7 +316,7 @@ time_proj_pos = time_proj;
 time_proj_pos(~keep_idx,:) = [];
 
 Ass_out = (size(Ass_pos,2) - mean(Ass_shuff))/std(Ass_shuff);
-fprintf('%.0f Positive Assemblies detected. Chance level is %.1f. zscore = %.1fSD\n', size(Ass_pos,2), mean(Ass_shuff), Ass_out)
+fprintf('%.0f Positive Assemblies detected. Chance level is %.1f zscore = %.1fSD\n', size(Ass_pos,2), mean(Ass_shuff), Ass_out)
 %% stem plot ensembles
 
 Ass_map = cell(size(Ass_pos,2),1);
@@ -337,6 +343,7 @@ for ii = size(Ass_pos,2):-1:1
         
             stem(Ass_pos_cells{ii}, Ass_pos(Ass_pos_cells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
                 title(['Assembly #' num2str(ii)])
+                ylim([-.2 .4])
         
         
 %             figure(302)
@@ -366,7 +373,12 @@ for ii = size(Ass_pos,2):-1:1
         
         Ass_map{ii} = this_ass_map;
         Ass_pcells{ii} = Ass_pos_cells{ii}(logical(these_place));
-        Ass_mean_map(ii,:) = mean(this_ass_map,1);
+        Ass_mean_map(ii,:) = mean(this_ass_map./max(this_ass_map,[],2),1);
+        
+         figure(302)
+            subplot(4, ceil(size(Ass_pos,2)/4),ii)
+                    imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii}),  Ass_map{ii}./max(Ass_map{ii},[],2))
+
     else
         
         Ass_map{ii} = NaN(size(p_bins(1):1:p_bins(end)));
@@ -382,6 +394,7 @@ for ii = size(Ass_pos,2):-1:1
     
     
 end
+%%
 nan_idx = isnan(max(Ass_mean_map, [], 2));
 Ass_idx(nan_idx) = [];
 Ass_pos(:,nan_idx) = [];
@@ -433,9 +446,12 @@ time_proj_pos_place(rm_idx,:) = [];
 %% plot the remaining assembly maps; 
 
 if plot_flag
-    
+    cmap = parula(64);
+cmap(1,:) = 0;
+
     figure(302);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-    
+        figure(3021);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+
     for ii = size(Ass_pos,2):-1:1
             figure(302)
             subplot(4, ceil(size(Ass_pos,2)/4),ii)
@@ -443,19 +459,23 @@ if plot_flag
             stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
             view(90,90)
             
-            stem(Ass_pos_cells_place{ii}, Ass_pos(Ass_pos_cells_place{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
+            stem(Ass_pcells{ii}, Ass_pos(Ass_pcells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
             title(['Assembly #' num2str(ii)])
             ylim([-0.1 0.4])
             
 
-        fprintf('Assembly # %.0f had %.0f place cells\n', ii, sum(place.is(Ass_pos_cells_place{ii})))
-%         for jj = 1:length(Ass_pos_cells_place{ii})
-%             
-%             if place.is(Ass_pos_cells_place{ii}(jj))
-%                 these_place(jj) = 1;
-%                 place_int = interp1(p_bins,place.map(Ass_pos_cells_place{ii}(jj),:),  p_bins(1):1:p_bins(end));
-%             end
-%         end
+            fprintf('Assembly # %.0f had %.0f place cells\n', ii, sum(place.is(Ass_pos_cells_place{ii})))
+            figure(3021)
+            
+            subplot(4, ceil(size(Ass_pos,2)/4),ii)
+%             imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii})+1,  [Ass_map{ii}; nan(size(ass Ass_mean_map(ii,:)] )
+            imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii}),  Ass_map{ii})
+
+            set(gca,'ytick',1:length(Ass_pcells{ii}), 'YTickLabel',  Ass_pcells{ii}');
+            xlim([p_bins(1) p_bins(end)])
+            ylim([.5 size(Ass_map{ii},1)+.5])
+            colormap(cmap)
+   
     end
 end
 
@@ -488,23 +508,23 @@ if plot_flag
    end
    linkaxes(ax, 'x') 
    
-     figure(304);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-     
-     t_win = ceil(2/behav.dt); 
-     
-     for ii = length(Ass_rect_idx):-1:1
-         subplot(4, ceil(size(Ass_rect_idx,2)/4),ii)
-         hold on
-         
-         this_idx = nearest_idx(tbin_centers(Ass_rect_idx{ii}), behav.time/1000);
-        
-         for jj = length(this_idx):-1:1
-        	plot((behav.time(this_idx(jj)-t_win:this_idx(jj)+t_win,1) - behav.time(this_idx(jj)-t_win))/1000, behav.position(this_idx(jj)-t_win:this_idx(jj)+t_win,1)', 'color', c_ord(ii,:))
-         
-         end
-         
-         
-     end
+%      figure(304);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+%      
+%      t_win = ceil(2/behav.dt); 
+%      
+%      for ii = length(Ass_rect_idx):-1:1
+%          subplot(4, ceil(size(Ass_rect_idx,2)/4),ii)
+%          hold on
+%          
+%          this_idx = nearest_idx(tbin_centers(Ass_rect_idx{ii}), behav.time/1000);
+%         
+%          for jj = length(this_idx):-1:1
+%         	plot((behav.time(this_idx(jj)-t_win:this_idx(jj)+t_win,1) - behav.time(this_idx(jj)-t_win))/1000, behav.position(this_idx(jj)-t_win:this_idx(jj)+t_win,1)', 'color', c_ord(ii,:))
+%          
+%          end
+%          
+%          
+%      end
      
 end
 
@@ -523,22 +543,26 @@ all_binary_pre_REM(:, remove_cell_id_decon) = [];
 
 
 %% deconvolve
-% addpath(genpath(oasis_dir))
-% fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
-% for iChan = size(all_detrendRaw_post_REM,2):-1:1
-%     tic;
-%     [denoise,deconv] = deconvolveCa(all_detrendRaw_post_REM(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
-%     toc;
-%     all_denoise(:,iChan) = denoise;    all_deconv(:,iChan) = deconv;
-% end
-% rmpath(genpath(oasis_dir))
-% 
-% 
-% % follow grosmark et al. method of deconv preprocessing
-% Csp_rem = all_deconv./all_denoise;
-% Csp_rem = Csp_rem > 0.01;
+if exist('all_detrendRaw_post_REM')
+    all_detrendRaw_post_REM(:, remove_cell_id) = [];
+all_detrendRaw_post_REM(:, remove_cell_id_decon) = [];
+    
+addpath(genpath(oasis_dir))
+fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
+for iChan = size(all_detrendRaw_post_REM,2):-1:1
+    tic;
+    [denoise,deconv] = deconvolveCa(all_detrendRaw_post_REM(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
+    toc;
+    all_denoise(:,iChan) = denoise;    all_deconv(:,iChan) = deconv;
+end
+rmpath(genpath(oasis_dir))
 
 
+% follow grosmark et al. method of deconv preprocessing
+Csp_rem = all_deconv./all_denoise;
+Csp_rem = Csp_rem > 0.01;
+
+end
 %%
 rem_time =  0:1/mode(diff(ms.time)):(length(all_binary_post_REM)/mode(diff(ms.time)));
 rem_time = rem_time(1:end-1);
@@ -550,7 +574,11 @@ tbin_centers_rem = tbin_edges_rem(1:end-1)+binsize/2; % vector of time bin cente
 data_h_rem = [];
 for ii = size(all_binary_post_REM,2):-1:1
     
-    this_cell = rem_time(find(all_binary_post_REM(:,ii)));
+    if exist('all_detrendRaw_post_REM', 'var')
+        this_cell = rem_time(find(Csp_rem(: ,ii)));
+    else
+        this_cell = rem_time(find(all_binary_post_REM(:,ii)));
+    end
     
     spk_count = histc(this_cell,tbin_edges_rem); % get spike counts for each bin
     spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
