@@ -585,62 +585,81 @@ if plot_flag
     win = floor(2.5 * mode(diff(behav.time)));
 
       n = ceil(size(time_proj_pos_place,1)/3);
-      m = 7;
+      m = 4;
+      l = 5; 
+      c_ii = 0; 
+      f_n = 0; 
+      s_plot_max = reshape(1:(l*m), m, l)';
       
       for ii = 1: size(time_proj_pos_place,1)
+          if c_ii+1 > l
+              f_n = f_n+1;
+                   figure(3000+f_n);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+                   c_ii = 1; 
+          else
+                        c_ii = c_ii+1;
+          end
           
-          subplot(5,m,[ii ii+m])
-            hold on
-            stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
-            view(90,90)
-            
-            stem(Ass_pcells{ii}, Ass_pos(Ass_pcells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
-            title(['Assembly #' num2str(ii) ' (' num2str(length(Ass_pcells{ii})) ' place cells)'])
-            ylim([-0.1 0.4])
-            ylabel('cell ID')
-            
-            
-            subplot(5, m,[ii+m*2 ii+m*3])
-%             imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii})+1,  [Ass_map{ii}; nan(size(ass Ass_mean_map(ii,:)] )
-            imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii}),  Ass_map{ii}./max(Ass_map{ii}, [],2))
-
-            set(gca,'ytick',1:length(Ass_pcells{ii}), 'YTickLabel',  Ass_pcells{ii}', 'XTickLabel', [] );
-            xlim([p_bins(1) p_bins(end)])
-            ylim([.5 size(Ass_map{ii},1)+.5])
-            colormap(cmap)
-            ylabel('place cell ID')
+          s_idx = s_plot_max(c_ii,1); 
           
-            subplot(5, m,ii+m*4)
-            imagesc(p_bins(1):1:p_bins(end), 1,  Ass_mean_map(ii,:))
-            set(gca, 'YTick', 1)
-            xlim([p_bins(1) p_bins(end)])
-            ylabel('Mean place map')
-            colormap(cmap)
+          subplot(l,m,s_idx)
+          hold on
+          stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
+          view(90,90)
+          
+          stem(Ass_pcells{ii}, Ass_pos(Ass_pcells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
+          title(['Assembly #' num2str(ii) ' (' num2str(length(Ass_pcells{ii})) ' place cells)'])
+          ylim([-0.1 0.4])
+          ylabel('cell ID')
+          xlim([0 length(Ass_pos(:,ii))])
+          
+          
+           subplot(l,m,s_idx+1)          
+          hold on
+          [p_val, p_idx] = findpeaks((time_proj_pos_place(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2*floor(mode(diff(ms.time))));
+          
+          this_pos = [];
+          for ip = 1:length(p_idx)
+              this_idx = nearest_idx(tbin_centers(p_idx(ip)), behav.time/1000);
+              if ((this_idx - win) >=0) && ((this_idx + win)<= length(behav.time))
+                  this_pos(ip,:) = behav.position(this_idx - win:this_idx+win,1);
+                  plot((-win:win)/mode(diff(behav.time)), this_pos(ip,:), 'color',[c_ord(ii,:) .5], 'linewidth',  2*(p_val(ip)./max(p_val)))
+              end
+          end
             
-            
-            subplot(m, 5,[ii+m*5 ii+m*6])
-
-            hold on
-            [p_val, p_idx] = findpeaks((time_proj_pos_place(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2*floor(mode(diff(ms.time))));
-            
-            this_pos = [];
-            for ip = 1:length(p_idx)
-                this_idx = nearest_idx(tbin_centers(p_idx(ip)), behav.time/1000);
-                if ((this_idx - win) >=0) && ((this_idx + win)<= length(behav.time))
-                    this_pos(ip,:) = behav.position(this_idx - win:this_idx+win,1);
-                    plot((-win:win)/mode(diff(behav.time)), this_pos(ip,:), 'color',[c_ord(ii,:) .5], 'linewidth',  2*(p_val(ip)./max(p_val)))
-                end
-            end
-            
-            plot((-win:win)/mode(diff(behav.time)), mean(this_pos), 'color',[c_ord(ii,:) 1], 'linewidth', 3)
+            plot((-win:win)/mode(diff(behav.time)), median(this_pos), 'color',[c_ord(ii,:) 1], 'linewidth', 3)
             xlim([-win/mode(diff(behav.time)) win/mode(diff(behav.time))]);
             %         set(gca, 'color', 'k')
-            title(['A#' num2str(ii)])
-            plot(0, mean(this_pos(:,win)), 's','color','k', 'markersize', 20 )
+            plot(0, median(this_pos(:,win)), 's','color','k', 'markersize', 20 )
             xlabel('time from ReAct (s)')
             ylabel('position on track (cm)')
-    
-    
+            
+            
+            subplot(l,m,s_idx+2)    
+            cla
+            hold on
+            [N, edges] = histcounts(this_pos, p_bins(1):3:p_bins(end));
+
+            area(p_bins(1):1:p_bins(end),Ass_mean_map(ii,:)./max( Ass_mean_map(ii,:)), 'facecolor',c_ord(ii,:) )
+            plot(edges(1:end-1)+mode(diff(edges))/2, N./max(N),'--', 'color', [0.7 .7 .7], 'linewidth', 1)
+            set(gca, 'YTick',[0 1], 'yticklabel', {'0' 'max'}, 'xdir', 'reverse')
+            xlim([p_bins(1) p_bins(end)])
+            ylabel('Mean place map')
+            view(90, 90)
+            legend({'Mean place field', 'ReAct location'}, 'Location', 'northeast', 'Box', 'off')
+
+            
+            
+           subplot(l,m,s_idx+3)          
+%             imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii})+1,  [Ass_map{ii}; nan(size(ass Ass_mean_map(ii,:)] )
+            imagesc(1:length(Ass_pcells{ii}),p_bins(1):1:p_bins(end),  (Ass_map{ii}./max(Ass_map{ii}, [],2))')
+
+            set(gca,'xtick',1:length(Ass_pcells{ii}), 'xTickLabel',  Ass_pcells{ii}','ydir', 'normal');
+            ylim([p_bins(1) p_bins(end)])
+            xlim([.5 size(Ass_map{ii},1)+.5])
+            colormap(cmap)
+            xlabel('place cell ID')
+      end
 end
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -659,27 +678,27 @@ all_binary_pre_REM(:, remove_cell_id_decon) = [];
 %% deconvolve
 if exist('all_detrendRaw_post_REM')
     all_detrendRaw_post_REM(:, remove_cell_id) = [];
-all_detrendRaw_post_REM(:, remove_cell_id_decon) = [];
+    all_detrendRaw_post_REM(:, remove_cell_id_decon) = [];
     
-addpath(genpath(oasis_dir))
-fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
-for iChan = size(all_detrendRaw_post_REM,2):-1:1
-    tic;
-    [denoise,deconv] = deconvolveCa(all_detrendRaw_post_REM(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
-    toc;
-    all_denoise(:,iChan) = denoise;    all_deconv(:,iChan) = deconv;
+    addpath(genpath(oasis_dir))
+    fprintf('\n<strong>%s</strong>: deconvolving traces...\n', mfilename)
+    for iChan = size(all_detrendRaw_post_REM,2):-1:1
+        tic;
+        [denoise,deconv] = deconvolveCa(all_detrendRaw_post_REM(:,iChan), 'foopsi', 'ar2', 'smin', -2.5, 'optimize_pars', true, 'optimize_b', true);
+        toc;
+        all_denoise(:,iChan) = denoise;    all_deconv(:,iChan) = deconv;
+    end
+    rmpath(genpath(oasis_dir))
+    
+    
+    % follow grosmark et al. method of deconv preprocessing
+    Csp_rem = all_deconv./all_denoise;
+    Csp_rem = Csp_rem > 0.01;
+    
 end
-rmpath(genpath(oasis_dir))
-
-
-% follow grosmark et al. method of deconv preprocessing
-Csp_rem = all_deconv./all_denoise;
-Csp_rem = Csp_rem > 0.01;
-
-end
-%%
-rem_time =  0:1/mode(diff(ms.time)):(length(all_binary_post_REM)/mode(diff(ms.time)));
-rem_time = rem_time(1:end-1);
+%% Get the Post REM activity
+this_time =  0:1/mode(diff(ms.time)):(length(all_binary_post_REM)/mode(diff(ms.time)));
+this_time = this_time(1:end-1);
 
 binsize = .5;
 tbin_edges_rem = 0:binsize:(length(all_binary_post_REM)/mode(diff(ms.time))); % vector of time bin edges (for histogram)
@@ -689,20 +708,37 @@ data_h_rem = [];
 for ii = size(all_binary_post_REM,2):-1:1
     
     if exist('all_detrendRaw_post_REM', 'var')
-        this_cell = rem_time(find(Csp_rem(: ,ii)));
+        this_cell = this_time(find(Csp_rem(: ,ii)));
     else
-        this_cell = rem_time(find(all_binary_post_REM(:,ii)));
+        this_cell = this_time(find(all_binary_post_REM(:,ii)));
     end
-    
     spk_count = histc(this_cell,tbin_edges_rem); % get spike counts for each bin
     spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
-    
     data_h_rem(:,ii) = spk_count;
 end
-
-
-
 tvec_rem = tbin_centers_rem;
+
+%% Get the Pre REM activity
+this_time =  0:1/mode(diff(ms.time)):(length(all_binary_pre_REM)/mode(diff(ms.time)));
+this_time = this_time(1:end-1);
+
+binsize = .5;
+tbin_edges_rem = 0:binsize:(length(all_binary_pre_REM)/mode(diff(ms.time))); % vector of time bin edges (for histogram)
+tbin_centers_rem = tbin_edges_rem(1:end-1)+binsize/2; % vector of time bin centers (for plotting)
+
+data_h_rem_pre = [];
+for ii = size(all_binary_pre_REM,2):-1:1
+    
+    if exist('all_detrendRaw_post_REM', 'var')
+        this_cell = this_time(find(Csp_rem(: ,ii)));
+    else
+        this_cell = this_time(find(all_binary_pre_REM(:,ii)));
+    end
+    spk_count = histc(this_cell,tbin_edges_rem); % get spike counts for each bin
+    spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
+    data_h_rem_pre(:,ii) = spk_count;
+end
+tvec_rem_pre = tbin_centers_rem;
 
 %% try the assembly code
 rng(123, 'twister')
@@ -712,25 +748,26 @@ rng(123, 'twister')
 %using wake assemblies.
 wake_time_proj_rem = assembly_activity(Ass_pos,data_h_rem');
 
+% PRE using wake assemblies.
+rng(123, 'twister')
+wake_time_proj_rem_pre = assembly_activity(Ass_pos,data_h_rem_pre');
+
 rng(123, 'twister')
 all_time_proj_rem = assembly_activity(Ass_Temp,data_h_rem');
 
 sig_REM_react = []; 
 for ii = size(wake_time_proj_rem,1):-1:1
-    if sum(wake_time_proj_rem(ii,:) > 5) >1
-        sig_REM_react(ii) = 1;
-    else
-        sig_REM_react(ii) = 0;
-    end
+       [~, p_idx] = findpeaks((wake_time_proj_rem(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
+    
+       if ~isempty(p_idx)
+           sig_REM_react(ii) = length(p_idx);
+       else
+           sig_REM_react(ii) = NaN; 
+       end
+
 end
 
-if plot_flag
-   figure(304);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
 
-    
-    
-    
-end
 %% get the REM react shuffle. 
 
 rng(123,'twister')
@@ -746,10 +783,17 @@ for iS = 1:nShuff
     
     wake_time_proj_rem_s = assembly_activity(Ass_pos,shuff_data');
     
-
-%     for ii = size(all_time_proj_rem_s,1):-1:1
-%         shuff_time_prog_rem_z{iS}(ii,:) = (all_time_proj_rem_s(ii,:) - mean(time_proj(ii,:)))/std(time_proj(ii,:));
-%     end
+    shuff_react = []; 
+    for ii = size(wake_time_proj_rem_s,1):-1:1
+       [~, p_idx] = findpeaks((wake_time_proj_rem_s(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
+       if ~isempty(p_idx)
+           shuff_react(ii) = length(p_idx);
+           
+       else
+           shuff_react(ii) = NaN; 
+       end
+    end
+           shuff_sig_react(iS) = sum(~isnan(shuff_react)); 
 
 
     fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(wake_time_proj_rem_s,2), toc)
@@ -757,6 +801,41 @@ end
 
 rem_out.shuff_time_prog_rem_z = shuff_time_prog_rem_z; 
 
+
+if plot_flag
+   figure(310);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+
+   
+          subplot(6,1,1)
+     imagesc(tvec_rem,1:size(data_h_rem_pre,2),   data_h_rem_pre')
+     
+     subplot(6,1,2)
+     plot(tvec_rem_pre, wake_time_proj_rem_pre)
+     ylim([0 50])
+     xlim([tvec_rem_pre(1) tvec_rem_pre(end)])
+     ylabel('Pre REM Reactivation')
+   
+   
+    subplot(6,1,3)
+     imagesc(tvec_rem,1:size(data_h_rem,2),   data_h_rem')
+     
+     subplot(6,1,4)
+     plot(tvec_rem, wake_time_proj_rem)
+     ylim([0 50])
+     xlim([tvec_rem(1) tvec_rem(end)])
+     ylabel('Post REM Reactivation')
+
+     subplot(6,1,5)
+          imagesc(tvec_rem,1:size(shuff_data,2),   shuff_data')
+
+      subplot(6,1,6)
+     plot(tvec_rem, wake_time_proj_rem_s)
+     ylim([0 50])
+     xlim([tvec_rem(1) tvec_rem(end)])
+     ylabel('Shuff postReactivation')
+    
+    
+end
 %%
 all_proj_rem = [];
 for ii = size(wake_time_proj_rem, 1):-1:1
