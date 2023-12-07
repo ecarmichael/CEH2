@@ -140,9 +140,9 @@ place.is(remove_cell_id_decon)= [];
 place.map(remove_cell_id,:)= [];
 place.map(remove_cell_id_decon,:)= [];
 
-bin = 80/size(place.map,2);
-p_bins = 10:bin:90;
-p_bins = p_bins(1:end-1)+bin/2;
+bin = 3; %80/size(place.map,2);
+p_bins = 0:bin:100;
+p_bins = p_bins(1:end)+bin/2;
 % see if there are any anxiety cells
 
 [~,p_sort] = sort(place.centroids);
@@ -152,13 +152,19 @@ if plot_flag
     figure(300);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
 
     subplot(5,1,1)
-    histogram(place.centroids(logical(place.is)), 1.5:3:100.5, 'Normalization', 'probability')
-    xlim([1.5 100.5])
-    subplot(5,1,2:5)
+    histogram(behav.position(:,1),p_bins, 'Normalization', 'probability')
+    xlim([p_bins(1) p_bins(end)]); title('Occupancy'); 
     
+    subplot(5,1,2)
+    histogram(place.centroids(logical(place.is)),p_bins,'Normalization', 'probability', 'FaceColor', 'r')
+    xlim([p_bins(1) p_bins(end)]); title('Centroids');
+    
+    
+    subplot(5,1,3:5)
     this_map = place.map(p_sort,:); 
     this_map(~place.is,:) = []; 
-    imagesc(1.5:3:100.5, 1:length(place.centroids(logical(place.is))),  this_map./max(this_map,[],2))
+    imagesc(p_bins, 1:length(place.centroids(logical(place.is))),  this_map./max(this_map,[],2))
+    xlim([p_bins(1) p_bins(end)]);
     xlabel('Location on track (cm)')
     ylabel('Cell ID')
 end
@@ -171,14 +177,14 @@ ms_trk_cut.Csp = Csp;
 % cfg_plot.plot_type = '2d';
 % MS_plot_ca(cfg_plot, ms_trk_rem)
 
-%% bin and convolve
-binsize = 0.1; % in seconds, so everything else should be seconds too
-gauss_window = 1./binsize; % 1 second window
-gauss_SD = 0.5./binsize; % 0.02 seconds (20ms) SD
-gk = gausskernel(gauss_window,gauss_SD); gk = gk./binsize; % normalize by binsize
-gau_sdf = conv2(Csp,gk,'same'); % convolve with gaussian window
-
-gau_z = zscore(gau_sdf, [], 2);
+% %% bin and convolve
+% binsize = 0.1; % in seconds, so everything else should be seconds too
+% gauss_window = 1./binsize; % 1 second window
+% gauss_SD = 0.5./binsize; % 0.02 seconds (20ms) SD
+% gk = gausskernel(gauss_window,gauss_SD); gk = gk./binsize; % normalize by binsize
+% gau_sdf = conv2(Csp,gk,'same'); % convolve with gaussian window
+% 
+% gau_z = zscore(gau_sdf, [], 2);
 %% plot the gaussian smoothed Csp
 % figure(101)
 % ax(1)= subplot(5,1,1);
@@ -357,7 +363,7 @@ for ii = size(Ass_pos,2):-1:1
         if place.is(Ass_pos_cells{ii}(jj))
             these_place(jj) = 1;
             place_int = interp1(p_bins,place.map(Ass_pos_cells{ii}(jj),:),  p_bins(1):1:p_bins(end));
-            
+%             place_int = place.map(Ass_pos_cells{ii}(jj),:); 
             this_ass_map = [this_ass_map ; place_int];
         end
     end
@@ -443,41 +449,7 @@ Ass_pcells(rm_idx) = [];
 Ass_pos_cells_place(rm_idx) = [];
 time_proj_pos_place(rm_idx,:) = [];
 
-%% plot the remaining assembly maps; 
 
-if plot_flag
-    cmap = parula(64);
-cmap(1,:) = 0;
-
-    figure(302);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-        figure(3021);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-
-    for ii = size(Ass_pos,2):-1:1
-            figure(302)
-            subplot(4, ceil(size(Ass_pos,2)/4),ii)
-            hold on
-            stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
-            view(90,90)
-            
-            stem(Ass_pcells{ii}, Ass_pos(Ass_pcells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
-            title(['Assembly #' num2str(ii)])
-            ylim([-0.1 0.4])
-            
-
-            fprintf('Assembly # %.0f had %.0f place cells\n', ii, sum(place.is(Ass_pos_cells_place{ii})))
-            figure(3021)
-            
-            subplot(4, ceil(size(Ass_pos,2)/4),ii)
-%             imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii})+1,  [Ass_map{ii}; nan(size(ass Ass_mean_map(ii,:)] )
-            imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii}),  Ass_map{ii})
-
-            set(gca,'ytick',1:length(Ass_pcells{ii}), 'YTickLabel',  Ass_pcells{ii}');
-            xlim([p_bins(1) p_bins(end)])
-            ylim([.5 size(Ass_map{ii},1)+.5])
-            colormap(cmap)
-   
-    end
-end
 
 %% get the number of significant reactivations during wake for
 
@@ -528,6 +500,148 @@ if plot_flag
      
 end
 
+%% get the assembly triggered position average.
+%% plot the remaining assembly maps; 
+
+if plot_flag
+    cmap = parula(64);
+cmap(1,:) = 0;
+
+    figure(302);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+        figure(3021);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+
+    for ii = size(Ass_pos,2):-1:1
+            figure(302)
+            subplot(4, ceil(size(Ass_pos,2)/4),ii)
+            hold on
+            stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
+            view(90,90)
+            
+            stem(Ass_pcells{ii}, Ass_pos(Ass_pcells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
+            title(['Assembly #' num2str(ii)])
+            ylim([-0.1 0.4])
+            
+
+            fprintf('Assembly # %.0f had %.0f place cells\n', ii, sum(place.is(Ass_pos_cells_place{ii})))
+            figure(3021)
+            
+            subplot(4, ceil(size(Ass_pos,2)/4),ii)
+%             imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii})+1,  [Ass_map{ii}; nan(size(ass Ass_mean_map(ii,:)] )
+            imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii}),  Ass_map{ii}./max(Ass_map{ii}, [],2))
+
+            set(gca,'ytick',1:length(Ass_pcells{ii}), 'YTickLabel',  Ass_pcells{ii}');
+            xlim([p_bins(1) p_bins(end)])
+            ylim([.5 size(Ass_map{ii},1)+.5])
+            colormap(cmap)
+   
+    end
+end
+
+
+
+if plot_flag
+    
+    win = floor(2.5 * mode(diff(behav.time)));
+    figure(305);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+    clf
+    maximize
+    n = ceil(size(time_proj_pos_place,1)/3);
+    m = 3;
+    c_ord = MS_linspecer(size(time_proj_pos_place,1)); 
+    
+    for ii = 1: size(time_proj_pos_place,1)
+        subplot(m,n,ii)
+        hold on
+        [p_val, p_idx] = findpeaks((time_proj_pos_place(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2*floor(mode(diff(ms.time))));
+        
+        this_pos = [];
+        for ip = 1:length(p_idx)
+            this_idx = nearest_idx(tbin_centers(p_idx(ip)), behav.time/1000);
+            if ((this_idx - win) >=0) && ((this_idx + win)<= length(behav.time))
+                this_pos(ip,:) = behav.position(this_idx - win:this_idx+win,1);
+                plot((-win:win)/mode(diff(behav.time)), this_pos(ip,:), 'color',[c_ord(ii,:) .5], 'linewidth',  2*(p_val(ip)./max(p_val)))
+            end
+        end
+        
+        plot((-win:win)/mode(diff(behav.time)), mean(this_pos), 'color',[c_ord(ii,:) 1], 'linewidth', 3)
+        xlim([-win/mode(diff(behav.time)) win/mode(diff(behav.time))]);
+        %         set(gca, 'color', 'k')
+        title(['A#' num2str(ii)])
+        plot(0, mean(this_pos(:,win)), 's','color','k', 'markersize', 20 )
+        
+        if ii == n+1
+            xlabel({'time from assembly' ;  'onset (s)'})
+        end
+        if ii == 1 || ii== n+1
+            ylabel('position on track (cm)')
+        end
+    end
+end
+%% summary figure
+
+
+if plot_flag
+     figure(3000);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+    win = floor(2.5 * mode(diff(behav.time)));
+
+      n = ceil(size(time_proj_pos_place,1)/3);
+      m = 7;
+      
+      for ii = 1: size(time_proj_pos_place,1)
+          
+          subplot(5,m,[ii ii+m])
+            hold on
+            stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
+            view(90,90)
+            
+            stem(Ass_pcells{ii}, Ass_pos(Ass_pcells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
+            title(['Assembly #' num2str(ii) ' (' num2str(length(Ass_pcells{ii})) ' place cells)'])
+            ylim([-0.1 0.4])
+            ylabel('cell ID')
+            
+            
+            subplot(5, m,[ii+m*2 ii+m*3])
+%             imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii})+1,  [Ass_map{ii}; nan(size(ass Ass_mean_map(ii,:)] )
+            imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii}),  Ass_map{ii}./max(Ass_map{ii}, [],2))
+
+            set(gca,'ytick',1:length(Ass_pcells{ii}), 'YTickLabel',  Ass_pcells{ii}', 'XTickLabel', [] );
+            xlim([p_bins(1) p_bins(end)])
+            ylim([.5 size(Ass_map{ii},1)+.5])
+            colormap(cmap)
+            ylabel('place cell ID')
+          
+            subplot(5, m,ii+m*4)
+            imagesc(p_bins(1):1:p_bins(end), 1,  Ass_mean_map(ii,:))
+            set(gca, 'YTick', 1)
+            xlim([p_bins(1) p_bins(end)])
+            ylabel('Mean place map')
+            colormap(cmap)
+            
+            
+            subplot(m, 5,[ii+m*5 ii+m*6])
+
+            hold on
+            [p_val, p_idx] = findpeaks((time_proj_pos_place(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2*floor(mode(diff(ms.time))));
+            
+            this_pos = [];
+            for ip = 1:length(p_idx)
+                this_idx = nearest_idx(tbin_centers(p_idx(ip)), behav.time/1000);
+                if ((this_idx - win) >=0) && ((this_idx + win)<= length(behav.time))
+                    this_pos(ip,:) = behav.position(this_idx - win:this_idx+win,1);
+                    plot((-win:win)/mode(diff(behav.time)), this_pos(ip,:), 'color',[c_ord(ii,:) .5], 'linewidth',  2*(p_val(ip)./max(p_val)))
+                end
+            end
+            
+            plot((-win:win)/mode(diff(behav.time)), mean(this_pos), 'color',[c_ord(ii,:) 1], 'linewidth', 3)
+            xlim([-win/mode(diff(behav.time)) win/mode(diff(behav.time))]);
+            %         set(gca, 'color', 'k')
+            title(['A#' num2str(ii)])
+            plot(0, mean(this_pos(:,win)), 's','color','k', 'markersize', 20 )
+            xlabel('time from ReAct (s)')
+            ylabel('position on track (cm)')
+    
+    
+end
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % grab the REM data
