@@ -500,7 +500,6 @@ if plot_flag
      
 end
 
-%% get the assembly triggered position average.
 %% plot the remaining assembly maps; 
 
 if plot_flag
@@ -640,8 +639,8 @@ if plot_flag
             hold on
             [N, edges] = histcounts(this_pos, p_bins(1):3:p_bins(end));
 
-            area(p_bins(1):1:p_bins(end),Ass_mean_map(ii,:)./max( Ass_mean_map(ii,:)), 'facecolor',c_ord(ii,:) )
-            plot(edges(1:end-1)+mode(diff(edges))/2, N./max(N),'--', 'color', [0.7 .7 .7], 'linewidth', 1)
+            area(p_bins(1):1:p_bins(end),Ass_mean_map(ii,:)./max( Ass_mean_map(ii,:)), 'facecolor',c_ord(ii,:), 'EdgeAlpha', 0 )
+            plot(edges(1:end-1)+mode(diff(edges))/2, N./max(N),'-', 'color', [0.3 .3 .3], 'linewidth', 1)
             set(gca, 'YTick',[0 1], 'yticklabel', {'0' 'max'}, 'xdir', 'reverse')
             xlim([p_bins(1) p_bins(end)])
             ylabel('Mean place map')
@@ -801,40 +800,48 @@ end
 
 rem_out.shuff_time_prog_rem_z = shuff_time_prog_rem_z; 
 
-
+%%
 if plot_flag
+    A_idx = 1:size(Ass_pos,2); 
+    A_idx = [3, 4, 9 12 13];
    figure(310);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
 
    
-          subplot(6,1,1)
-     imagesc(tvec_rem,1:size(data_h_rem_pre,2),   data_h_rem_pre')
-     
-     subplot(6,1,2)
-     plot(tvec_rem_pre, wake_time_proj_rem_pre)
+         ar(1)= subplot(6,1,1);
+     imagesc(tvec_rem_pre,1:size(data_h_rem_pre,2),   data_h_rem_pre')
+          xlim([tvec_rem_pre(1) tvec_rem_pre(end)])
+
+     ar(2) = subplot(6,1,2);
+     plot(tvec_rem_pre, wake_time_proj_rem_pre(A_idx,:))
      ylim([0 50])
      xlim([tvec_rem_pre(1) tvec_rem_pre(end)])
      ylabel('Pre REM Reactivation')
+    legend(num2str(A_idx'),'location',  'northeast', 'box', 'off')
    
-   
-    subplot(6,1,3)
+    ap(1) = subplot(6,1,3);
      imagesc(tvec_rem,1:size(data_h_rem,2),   data_h_rem')
-     
-     subplot(6,1,4)
-     plot(tvec_rem, wake_time_proj_rem)
+          xlim([tvec_rem(1) tvec_rem(end)])
+
+     ap(2) = subplot(6,1,4);
+     plot(tvec_rem, wake_time_proj_rem(A_idx,:))
      ylim([0 50])
      xlim([tvec_rem(1) tvec_rem(end)])
      ylabel('Post REM Reactivation')
 
-     subplot(6,1,5)
-          imagesc(tvec_rem,1:size(shuff_data,2),   shuff_data')
+     as(1) = subplot(6,1,5);
+     imagesc(tvec_rem,1:size(shuff_data,2),   shuff_data')
+     xlim([tvec_rem(1) tvec_rem(end)])
 
-      subplot(6,1,6)
-     plot(tvec_rem, wake_time_proj_rem_s)
+     as(2) = subplot(6,1,6);
+     plot(tvec_rem, wake_time_proj_rem_s(A_idx,:))
      ylim([0 50])
      xlim([tvec_rem(1) tvec_rem(end)])
      ylabel('Shuff postReactivation')
     
-    
+    linkaxes(ar, 'x');
+    linkaxes(ap, 'x');
+    linkaxes(as, 'x');
+
 end
 %%
 all_proj_rem = [];
