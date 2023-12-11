@@ -49,7 +49,7 @@ cd(data_dir)
 rng(123, 'twister')
 
 %%
-plot_flag = 1; 
+plot_flag = 1;
 % load('ms_trk.mat')
 % load('behav_DLC.mat')
 this_sess = fname;
@@ -61,7 +61,7 @@ behav = MS_align_data(behav,ms);
 move_idx = behav.speed > 2.5;
 
 
-behav_his = histcounts(behav.position(move_idx,1), 5:5:95); 
+behav_his = histcounts(behav.position(move_idx,1), 5:5:95);
 %% check for place cell metrics
 dir_parts = strsplit(this_sess, filesep);
 parts = strsplit(dir_parts{end}, '_');
@@ -75,12 +75,12 @@ subject = parts{1};
 if exist([subject '_' task '_PCs.mat'])
     load([subject '_' task '_PCs.mat'])
 else
-% 
-% if exist([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'], 'file')
-%     load([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'])
-% elseif exist([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'], 'file')
-%     load([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'])
-% else
+    %
+    % if exist([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'], 'file')
+    %     load([this_process_dir filesep '4.PlaceCell' filesep subject filesep task filesep 'spatial_analysis.mat'])
+    % elseif exist([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'], 'file')
+    %     load([this_process_dir filesep '4.PlaceCell' filesep subject filesep strrep(task, 'HAT', 'HATD') filesep 'spatial_analysis.mat'])
+    % else
     rem_out = NaN; Ass_out = NaN;  time_proj_pos_place = NaN; wake_time_proj_rem = NaN;
     return
 end
@@ -97,7 +97,7 @@ cfg_rem.remove_idx = find(~keep_idx);
 cfg_rem.data_type = 'RawTraces';
 ms_trk_cut = MS_Remove_trace(cfg_rem, ms_trk);
 
-if ~isfield(ms_trk, 'deconv') % get the deconvolved trace if not already present. 
+if ~isfield(ms_trk, 'deconv') % get the deconvolved trace if not already present.
     ms_trk_cut = MS_append_deconv(ms_trk_cut, 1);
 end
 % remove inactive cells
@@ -116,19 +116,19 @@ ms_trk_cut = MS_Remove_trace(cfg_rem, ms_trk_cut);
 
 place = [];
 for iC = length(PCs_properties.peak_loc):-1:1
-   
+    
     place.centroids(iC) = PCs_properties.peak_loc(iC);
     
     % is it a place cell?
     place.is(iC) = PCs_properties.isPC(iC);
     
-    place.map(iC,:) = PCs_properties.tuning_curve_data(:,iC)'; 
+    place.map(iC,:) = PCs_properties.tuning_curve_data(:,iC)';
     
-%     bin_vect = 0:2.5:100; 
-%     p_idx = find(bin_vect == place.centroids(iC));
-%     
-%     place.map(iC,:) = zeros(length(bin_vect),1); %mean(spatial_analysis.bin{iC,1}.PlaceField,1)/max(mean(spatial_analysis.bin{iC,1}.PlaceField,1)); % get the 1d place field and normalize.
-%     place.map(iC,p_idx) = 1; 
+    %     bin_vect = 0:2.5:100;
+    %     p_idx = find(bin_vect == place.centroids(iC));
+    %
+    %     place.map(iC,:) = zeros(length(bin_vect),1); %mean(spatial_analysis.bin{iC,1}.PlaceField,1)/max(mean(spatial_analysis.bin{iC,1}.PlaceField,1)); % get the 1d place field and normalize.
+    %     place.map(iC,p_idx) = 1;
 end
 
 place.centroids(remove_cell_id)= [];
@@ -150,10 +150,10 @@ p_bins = p_bins(1:end)+bin/2;
 
 if plot_flag
     figure(300);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-
+    
     subplot(5,1,1)
     histogram(behav.position(:,1),p_bins, 'Normalization', 'probability')
-    xlim([p_bins(1) p_bins(end)]); title('Occupancy'); 
+    xlim([p_bins(1) p_bins(end)]); title('Occupancy');
     
     subplot(5,1,2)
     histogram(place.centroids(logical(place.is)),p_bins,'Normalization', 'probability', 'FaceColor', 'r')
@@ -161,8 +161,8 @@ if plot_flag
     
     
     subplot(5,1,3:5)
-    this_map = place.map(p_sort,:); 
-    this_map(~place.is,:) = []; 
+    this_map = place.map(p_sort,:);
+    this_map(~place.is,:) = [];
     imagesc(p_bins, 1:length(place.centroids(logical(place.is))),  this_map./max(this_map,[],2))
     xlim([p_bins(1) p_bins(end)]);
     xlabel('Location on track (cm)')
@@ -183,7 +183,7 @@ ms_trk_cut.Csp = Csp;
 % gauss_SD = 0.5./binsize; % 0.02 seconds (20ms) SD
 % gk = gausskernel(gauss_window,gauss_SD); gk = gk./binsize; % normalize by binsize
 % gau_sdf = conv2(Csp,gk,'same'); % convolve with gaussian window
-% 
+%
 % gau_z = zscore(gau_sdf, [], 2);
 %% plot the gaussian smoothed Csp
 % figure(101)
@@ -226,9 +226,9 @@ tbin_centers = tbin_edges(1:end-1)+binsize/2; % vector of time bin centers (for 
 data_h = [];
 for ii = size(Csp,2):-1:1
     
-%     this_cell = ms.time(find(Csp(: ,ii) & move_idx))/1000;
+    %     this_cell = ms.time(find(Csp(: ,ii) & move_idx))/1000;
     this_cell = ms.time(find(ms_trk_cut.Binary(: ,ii) & move_idx))/1000;
-
+    
     spk_count = histc(this_cell,tbin_edges); % get spike counts for each bin
     spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
     
@@ -332,29 +332,29 @@ c_ord = parula(size(Ass_pos,2)+2);
 %
 
 
-if plot_flag 
-figure(301);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-cmap = parula(256);
-cmap(1,:) = 0;
+if plot_flag
+    figure(301);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+    cmap = parula(256);
+    cmap(1,:) = 0;
 end
 
 
 for ii = size(Ass_pos,2):-1:1
     if plot_flag
-            figure(301)
-            subplot(4, ceil(size(Ass_pos,2)/4),ii)
-            hold on
-            stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
-            view(90,90)
+        figure(301)
+        subplot(4, ceil(size(Ass_pos,2)/4),ii)
+        hold on
+        stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
+        view(90,90)
         
-            stem(Ass_pos_cells{ii}, Ass_pos(Ass_pos_cells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
-                title(['Assembly #' num2str(ii)])
-                ylim([-.2 .4])
+        stem(Ass_pos_cells{ii}, Ass_pos(Ass_pos_cells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
+        title(['Assembly #' num2str(ii)])
+        ylim([-.2 .4])
         
         
-%             figure(302)
-%                 subplot(4, ceil(size(Ass_pos,2)/4),ii)
-%             hold on
+        %             figure(302)
+        %                 subplot(4, ceil(size(Ass_pos,2)/4),ii)
+        %             hold on
     end
     this_ass_map = []; these_place = zeros(size(Ass_pos_cells{ii}));
     fprintf('Assembly # %.0f had %.0f place cells\n', ii, sum(place.is(Ass_pos_cells{ii})))
@@ -363,28 +363,28 @@ for ii = size(Ass_pos,2):-1:1
         if place.is(Ass_pos_cells{ii}(jj))
             these_place(jj) = 1;
             place_int = interp1(p_bins,place.map(Ass_pos_cells{ii}(jj),:),  p_bins(1):1:p_bins(end));
-%             place_int = place.map(Ass_pos_cells{ii}(jj),:); 
+            %             place_int = place.map(Ass_pos_cells{ii}(jj),:);
             this_ass_map = [this_ass_map ; place_int];
         end
     end
     
     if ~isempty(this_ass_map)
-%         if plot_flag
-%             imagesc(p_bins(1):1:p_bins(end), 1:length(sum(these_place)),  this_ass_map)
-%             set(gca,'ytick',1:size(this_ass_map,1), 'YTickLabel',  Ass_pos_cells{ii}(logical(these_place))');
-%             xlim([p_bins(1) p_bins(end)])
-%             ylim([.5 size(this_ass_map,1)+.5])
-%             colormap(cmap)
-%         end
+        %         if plot_flag
+        %             imagesc(p_bins(1):1:p_bins(end), 1:length(sum(these_place)),  this_ass_map)
+        %             set(gca,'ytick',1:size(this_ass_map,1), 'YTickLabel',  Ass_pos_cells{ii}(logical(these_place))');
+        %             xlim([p_bins(1) p_bins(end)])
+        %             ylim([.5 size(this_ass_map,1)+.5])
+        %             colormap(cmap)
+        %         end
         
         Ass_map{ii} = this_ass_map;
         Ass_pcells{ii} = Ass_pos_cells{ii}(logical(these_place));
         Ass_mean_map(ii,:) = mean(this_ass_map./max(this_ass_map,[],2),1);
         
-         figure(302)
-            subplot(4, ceil(size(Ass_pos,2)/4),ii)
-                    imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii}),  Ass_map{ii}./max(Ass_map{ii},[],2))
-
+        figure(302)
+        subplot(4, ceil(size(Ass_pos,2)/4),ii)
+        imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii}),  Ass_map{ii}./max(Ass_map{ii},[],2))
+        
     else
         
         Ass_map{ii} = NaN(size(p_bins(1):1:p_bins(end)));
@@ -392,11 +392,11 @@ for ii = size(Ass_pos,2):-1:1
         Ass_mean_map(ii,:) = NaN(size(p_bins(1):1:p_bins(end)));
     end
     
-%     if plot_flag
-%         title(['Assembly #' num2str(ii)])
-%         ms_t = MS_append_sharp_SFPs(ms_trk);
-%         MS_plot_all_SFPs(imgaussfilt(ms_t.SFPs_sharp(:,:, Ass_pos_cells{ii}),2))
-%     end
+    %     if plot_flag
+    %         title(['Assembly #' num2str(ii)])
+    %         ms_t = MS_append_sharp_SFPs(ms_trk);
+    %         MS_plot_all_SFPs(imgaussfilt(ms_t.SFPs_sharp(:,:, Ass_pos_cells{ii}),2))
+    %     end
     
     
 end
@@ -455,84 +455,84 @@ time_proj_pos_place(rm_idx,:) = [];
 
 c_ord = MS_linspecer(size(time_proj_pos_place,1)+4);
 
-Wake_react = []; 
-Ass_rect_idx = []; 
+Wake_react = [];
+Ass_rect_idx = [];
 for ii = size(time_proj_pos_place,1):-1:1
     
-    [this_rec, Ass_rect_idx{ii}] = findpeaks(time_proj_pos_place(ii,:), 'MinPeakHeight', 5, 'MinPeakDistance', 2/binsize); 
+    [this_rec, Ass_rect_idx{ii}] = findpeaks(time_proj_pos_place(ii,:), 'MinPeakHeight', 5, 'MinPeakDistance', 2/binsize);
     fprintf('Assembly #%d - %.0f sig reactivations (%0.2f/min)\n', ii, length(this_rec), length(this_rec)/((tvec(end)- tvec(1))/60))
-
+    
 end
 
 
 if plot_flag
     figure(303);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
     ax(1) = subplot(4,1,1);
-    scatter(behav.time/1000, behav.position(:,1),ones(size(behav.time)), behav.speed) 
+    scatter(behav.time/1000, behav.position(:,1),ones(size(behav.time)), behav.speed)
     xlim([behav.time(1) behav.time(end)]/1000)
     colorbar('northoutside')
     
     ax(2) = subplot(4,1,2:4);
     hold on
-   for  ii = size(time_proj_pos_place,1):-1:1
-       plot(tvec, time_proj_pos_place(ii,:), 'color', c_ord(ii,:))
-       
-   end
-   linkaxes(ax, 'x') 
-   
-%      figure(304);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-%      
-%      t_win = ceil(2/behav.dt); 
-%      
-%      for ii = length(Ass_rect_idx):-1:1
-%          subplot(4, ceil(size(Ass_rect_idx,2)/4),ii)
-%          hold on
-%          
-%          this_idx = nearest_idx(tbin_centers(Ass_rect_idx{ii}), behav.time/1000);
-%         
-%          for jj = length(this_idx):-1:1
-%         	plot((behav.time(this_idx(jj)-t_win:this_idx(jj)+t_win,1) - behav.time(this_idx(jj)-t_win))/1000, behav.position(this_idx(jj)-t_win:this_idx(jj)+t_win,1)', 'color', c_ord(ii,:))
-%          
-%          end
-%          
-%          
-%      end
-     
+    for  ii = size(time_proj_pos_place,1):-1:1
+        plot(tvec, time_proj_pos_place(ii,:), 'color', c_ord(ii,:))
+        
+    end
+    linkaxes(ax, 'x')
+    
+    %      figure(304);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+    %
+    %      t_win = ceil(2/behav.dt);
+    %
+    %      for ii = length(Ass_rect_idx):-1:1
+    %          subplot(4, ceil(size(Ass_rect_idx,2)/4),ii)
+    %          hold on
+    %
+    %          this_idx = nearest_idx(tbin_centers(Ass_rect_idx{ii}), behav.time/1000);
+    %
+    %          for jj = length(this_idx):-1:1
+    %         	plot((behav.time(this_idx(jj)-t_win:this_idx(jj)+t_win,1) - behav.time(this_idx(jj)-t_win))/1000, behav.position(this_idx(jj)-t_win:this_idx(jj)+t_win,1)', 'color', c_ord(ii,:))
+    %
+    %          end
+    %
+    %
+    %      end
+    
 end
 
-%% plot the remaining assembly maps; 
+%% plot the remaining assembly maps;
 
 if plot_flag
     cmap = parula(64);
-cmap(1,:) = 0;
-
+    cmap(1,:) = 0;
+    
     figure(302);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-        figure(3021);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-
+    figure(3021);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+    
     for ii = size(Ass_pos,2):-1:1
-            figure(302)
-            subplot(4, ceil(size(Ass_pos,2)/4),ii)
-            hold on
-            stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
-            view(90,90)
-            
-            stem(Ass_pcells{ii}, Ass_pos(Ass_pcells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
-            title(['Assembly #' num2str(ii)])
-            ylim([-0.1 0.4])
-            
-
-            fprintf('Assembly # %.0f had %.0f place cells\n', ii, sum(place.is(Ass_pos_cells_place{ii})))
-            figure(3021)
-            
-            subplot(4, ceil(size(Ass_pos,2)/4),ii)
-%             imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii})+1,  [Ass_map{ii}; nan(size(ass Ass_mean_map(ii,:)] )
-            imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii}),  Ass_map{ii}./max(Ass_map{ii}, [],2))
-
-            set(gca,'ytick',1:length(Ass_pcells{ii}), 'YTickLabel',  Ass_pcells{ii}');
-            xlim([p_bins(1) p_bins(end)])
-            ylim([.5 size(Ass_map{ii},1)+.5])
-            colormap(cmap)
-   
+        figure(302)
+        subplot(4, ceil(size(Ass_pos,2)/4),ii)
+        hold on
+        stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
+        view(90,90)
+        
+        stem(Ass_pcells{ii}, Ass_pos(Ass_pcells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
+        title(['Assembly #' num2str(ii)])
+        ylim([-0.1 0.4])
+        
+        
+        fprintf('Assembly # %.0f had %.0f place cells\n', ii, sum(place.is(Ass_pos_cells_place{ii})))
+        figure(3021)
+        
+        subplot(4, ceil(size(Ass_pos,2)/4),ii)
+        %             imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii})+1,  [Ass_map{ii}; nan(size(ass Ass_mean_map(ii,:)] )
+        imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii}),  Ass_map{ii}./max(Ass_map{ii}, [],2))
+        
+        set(gca,'ytick',1:length(Ass_pcells{ii}), 'YTickLabel',  Ass_pcells{ii}');
+        xlim([p_bins(1) p_bins(end)])
+        ylim([.5 size(Ass_map{ii},1)+.5])
+        colormap(cmap)
+        
     end
 end
 
@@ -546,7 +546,7 @@ if plot_flag
     maximize
     n = ceil(size(time_proj_pos_place,1)/3);
     m = 3;
-    c_ord = MS_linspecer(size(time_proj_pos_place,1)); 
+    c_ord = MS_linspecer(size(time_proj_pos_place,1));
     
     for ii = 1: size(time_proj_pos_place,1)
         subplot(m,n,ii)
@@ -580,85 +580,85 @@ end
 
 
 if plot_flag
-     figure(3000);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+    figure(3000);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
     win = floor(2.5 * mode(diff(behav.time)));
-
-      n = ceil(size(time_proj_pos_place,1)/3);
-      m = 4;
-      l = 5; 
-      c_ii = 0; 
-      f_n = 0; 
-      s_plot_max = reshape(1:(l*m), m, l)';
-      
-      for ii = 1: size(time_proj_pos_place,1)
-          if c_ii+1 > l
-              f_n = f_n+1;
-                   figure(3000+f_n);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-                   c_ii = 1; 
-          else
-                        c_ii = c_ii+1;
-          end
-          
-          s_idx = s_plot_max(c_ii,1); 
-          
-          subplot(l,m,s_idx)
-          hold on
-          stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
-          view(90,90)
-          
-          stem(Ass_pcells{ii}, Ass_pos(Ass_pcells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
-          title(['Assembly #' num2str(ii) ' (' num2str(length(Ass_pcells{ii})) ' place cells)'])
-          ylim([-0.1 0.4])
-          ylabel('cell ID')
-          xlim([0 length(Ass_pos(:,ii))])
-          
-          
-           subplot(l,m,s_idx+1)          
-          hold on
-          [p_val, p_idx] = findpeaks((time_proj_pos_place(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2*floor(mode(diff(ms.time))));
-          
-          this_pos = [];
-          for ip = 1:length(p_idx)
-              this_idx = nearest_idx(tbin_centers(p_idx(ip)), behav.time/1000);
-              if ((this_idx - win) >=0) && ((this_idx + win)<= length(behav.time))
-                  this_pos(ip,:) = behav.position(this_idx - win:this_idx+win,1);
-                  plot((-win:win)/mode(diff(behav.time)), this_pos(ip,:), 'color',[c_ord(ii,:) .5], 'linewidth',  2*(p_val(ip)./max(p_val)))
-              end
-          end
-            
-            plot((-win:win)/mode(diff(behav.time)), median(this_pos), 'color',[c_ord(ii,:) 1], 'linewidth', 3)
-            xlim([-win/mode(diff(behav.time)) win/mode(diff(behav.time))]);
-            %         set(gca, 'color', 'k')
-            plot(0, median(this_pos(:,win)), 's','color','k', 'markersize', 20 )
-            xlabel('time from ReAct (s)')
-            ylabel('position on track (cm)')
-            
-            
-            subplot(l,m,s_idx+2)    
-            cla
-            hold on
-            [N, edges] = histcounts(this_pos, p_bins(1):3:p_bins(end));
-
-            area(p_bins(1):1:p_bins(end),Ass_mean_map(ii,:)./max( Ass_mean_map(ii,:)), 'facecolor',c_ord(ii,:), 'EdgeAlpha', 0 )
-            plot(edges(1:end-1)+mode(diff(edges))/2, N./max(N),'-', 'color', [0.3 .3 .3], 'linewidth', 1)
-            set(gca, 'YTick',[0 1], 'yticklabel', {'0' 'max'}, 'xdir', 'reverse')
-            xlim([p_bins(1) p_bins(end)])
-            ylabel('Mean place map')
-            view(90, 90)
-            legend({'Mean place field', 'ReAct location'}, 'Location', 'northeast', 'Box', 'off')
-
-            
-            
-           subplot(l,m,s_idx+3)          
-%             imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii})+1,  [Ass_map{ii}; nan(size(ass Ass_mean_map(ii,:)] )
-            imagesc(1:length(Ass_pcells{ii}),p_bins(1):1:p_bins(end),  (Ass_map{ii}./max(Ass_map{ii}, [],2))')
-
-            set(gca,'xtick',1:length(Ass_pcells{ii}), 'xTickLabel',  Ass_pcells{ii}','ydir', 'normal');
-            ylim([p_bins(1) p_bins(end)])
-            xlim([.5 size(Ass_map{ii},1)+.5])
-            colormap(cmap)
-            xlabel('place cell ID')
-      end
+    
+    n = ceil(size(time_proj_pos_place,1)/3);
+    m = 4;
+    l = 5;
+    c_ii = 0;
+    f_n = 0;
+    s_plot_max = reshape(1:(l*m), m, l)';
+    
+    for ii = 1: size(time_proj_pos_place,1)
+        if c_ii+1 > l
+            f_n = f_n+1;
+            figure(3000+f_n);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+            c_ii = 1;
+        else
+            c_ii = c_ii+1;
+        end
+        
+        s_idx = s_plot_max(c_ii,1);
+        
+        subplot(l,m,s_idx)
+        hold on
+        stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
+        view(90,90)
+        
+        stem(Ass_pcells{ii}, Ass_pos(Ass_pcells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
+        title(['Assembly #' num2str(ii) ' (' num2str(length(Ass_pcells{ii})) ' place cells)'])
+        ylim([-0.1 0.4])
+        ylabel('cell ID')
+        xlim([0 length(Ass_pos(:,ii))])
+        
+        
+        subplot(l,m,s_idx+1)
+        hold on
+        [p_val, p_idx] = findpeaks((time_proj_pos_place(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2*floor(mode(diff(ms.time))));
+        
+        this_pos = [];
+        for ip = 1:length(p_idx)
+            this_idx = nearest_idx(tbin_centers(p_idx(ip)), behav.time/1000);
+            if ((this_idx - win) >=0) && ((this_idx + win)<= length(behav.time))
+                this_pos(ip,:) = behav.position(this_idx - win:this_idx+win,1);
+                plot((-win:win)/mode(diff(behav.time)), this_pos(ip,:), 'color',[c_ord(ii,:) .5], 'linewidth',  2*(p_val(ip)./max(p_val)))
+            end
+        end
+        
+        plot((-win:win)/mode(diff(behav.time)), median(this_pos), 'color',[c_ord(ii,:) 1], 'linewidth', 3)
+        xlim([-win/mode(diff(behav.time)) win/mode(diff(behav.time))]);
+        %         set(gca, 'color', 'k')
+        plot(0, median(this_pos(:,win)), 's','color','k', 'markersize', 20 )
+        xlabel('time from ReAct (s)')
+        ylabel('position on track (cm)')
+        
+        
+        subplot(l,m,s_idx+2)
+        cla
+        hold on
+        [N, edges] = histcounts(this_pos, p_bins(1):3:p_bins(end));
+        
+        area(p_bins(1):1:p_bins(end),Ass_mean_map(ii,:)./max( Ass_mean_map(ii,:)), 'facecolor',c_ord(ii,:), 'EdgeAlpha', 0 )
+        plot(edges(1:end-1)+mode(diff(edges))/2, N./max(N),'-', 'color', [0.3 .3 .3], 'linewidth', 1)
+        set(gca, 'YTick',[0 1], 'yticklabel', {'0' 'max'}, 'xdir', 'reverse')
+        xlim([p_bins(1) p_bins(end)])
+        ylabel('Mean place map')
+        view(90, 90)
+        legend({'Mean place field', 'ReAct location'}, 'Location', 'northeast', 'Box', 'off')
+        
+        
+        
+        subplot(l,m,s_idx+3)
+        %             imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii})+1,  [Ass_map{ii}; nan(size(ass Ass_mean_map(ii,:)] )
+        imagesc(1:length(Ass_pcells{ii}),p_bins(1):1:p_bins(end),  (Ass_map{ii}./max(Ass_map{ii}, [],2))')
+        
+        set(gca,'xtick',1:length(Ass_pcells{ii}), 'xTickLabel',  Ass_pcells{ii}','ydir', 'normal');
+        ylim([p_bins(1) p_bins(end)])
+        xlim([.5 size(Ass_map{ii},1)+.5])
+        colormap(cmap)
+        xlabel('place cell ID')
+    end
 end
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -667,7 +667,7 @@ end
 all_binary_post_REM(:, remove_cell_id) = [];
 all_binary_post_REM(:, remove_cell_id_decon) = [];
 
-% all_deconv_post_REM = 
+% all_deconv_post_REM =
 
 
 all_binary_pre_REM(:, remove_cell_id) = [];
@@ -754,25 +754,35 @@ wake_time_proj_rem_pre = assembly_activity(Ass_pos,data_h_rem_pre');
 rng(123, 'twister')
 all_time_proj_rem = assembly_activity(Ass_Temp,data_h_rem');
 
-sig_REM_react = []; 
+sig_REM_react = [];
 for ii = size(wake_time_proj_rem,1):-1:1
-       [~, p_idx] = findpeaks((wake_time_proj_rem(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
+    [~, p_idx] = findpeaks((wake_time_proj_rem(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
     
-       if ~isempty(p_idx)
-           sig_REM_react(ii) = length(p_idx);
-       else
-           sig_REM_react(ii) = NaN; 
-       end
-
+    if ~isempty(p_idx)
+        sig_REM_react(ii) = length(p_idx);
+    else
+        sig_REM_react(ii) = NaN;
+    end
+    
 end
 
 
-%% get the REM react shuffle. 
+for ii = 1:size(Ass_pos,2)
+        
+        
+        % pre assembly react mean
+        [~, pre_idx] = findpeaks(wake_time_proj_rem_pre(ii,:),'MinPeakHeight', 20 ,'MinPeakDistance', 2/(mode(diff(tvec_rem_pre))));
+        [~, post_idx] = findpeaks(wake_time_proj_rem(ii,:),'MinPeakHeight', 20 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
+
+        fprintf('Assembly # %f had PRE %f  & POST %f sig reactivations (threst > 20)\n', ii, length(pre_idx), length(post_idx))
+end
+
+%% get the REM react shuffle.
 
 rng(123,'twister')
 nShuff = 100;
 
-shuff_time_prog_rem_z = cell(1,nShuff); 
+shuff_time_prog_rem_z = cell(1,nShuff);
 for iS = 1:nShuff
     tic
     shuff_data = NaN(size(data_h_rem));
@@ -782,85 +792,161 @@ for iS = 1:nShuff
     
     wake_time_proj_rem_s = assembly_activity(Ass_pos,shuff_data');
     
-    shuff_react = []; 
+    shuff_react = [];
     for ii = size(wake_time_proj_rem_s,1):-1:1
-       [~, p_idx] = findpeaks((wake_time_proj_rem_s(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
-       if ~isempty(p_idx)
-           shuff_react(ii) = length(p_idx);
-           
-       else
-           shuff_react(ii) = NaN; 
-       end
+        [~, p_idx] = findpeaks((wake_time_proj_rem_s(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
+        if ~isempty(p_idx)
+            shuff_react(ii) = length(p_idx);
+            
+        else
+            shuff_react(ii) = NaN;
+        end
     end
-           shuff_sig_react(iS) = sum(~isnan(shuff_react)); 
-
-
+    shuff_sig_react(iS) = sum(~isnan(shuff_react));
+    
+    
     fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(wake_time_proj_rem_s,2), toc)
 end
 
-rem_out.shuff_time_prog_rem_z = shuff_time_prog_rem_z; 
+rem_out.shuff_time_prog_rem_z = shuff_time_prog_rem_z;
 
 %%
 if plot_flag
-    A_idx = 1:size(Ass_pos,2); 
-    A_idx = [3, 4, 9 12 13];
-   figure(310);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-
-   
-         ar(1)= subplot(6,1,1);
-     imagesc(tvec_rem_pre,1:size(data_h_rem_pre,2),   data_h_rem_pre')
-          xlim([tvec_rem_pre(1) tvec_rem_pre(end)])
-
-     ar(2) = subplot(6,1,2);
-     plot(tvec_rem_pre, wake_time_proj_rem_pre(A_idx,:))
-     ylim([0 50])
-     xlim([tvec_rem_pre(1) tvec_rem_pre(end)])
-     ylabel('Pre REM Reactivation')
+    A_idx = 1:size(Ass_pos,2);
+    %     A_idx = [3, 4, 9 12 13];
+    figure(310);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+    
+    ar(1)= subplot(6,1,1);
+    
+    imagesc(tvec_rem_pre,1:size(data_h_rem_pre,2),   data_h_rem_pre')
+    xlim([tvec_rem_pre(1) tvec_rem_pre(end)])
+    title([subject ' ' task])
+    set(gca, 'xtick', [])
+    
+    
+    ar(2) = subplot(6,1,2);
+    plot(tvec_rem_pre, wake_time_proj_rem_pre(A_idx,:))
+    ylim([0 50])
+    xlim([tvec_rem_pre(1) tvec_rem_pre(end)])
+    ylabel('Pre REM Reactivation')
     legend(num2str(A_idx'),'location',  'northeast', 'box', 'off')
-   
+    
     ap(1) = subplot(6,1,3);
-     imagesc(tvec_rem,1:size(data_h_rem,2),   data_h_rem')
-          xlim([tvec_rem(1) tvec_rem(end)])
+    imagesc(tvec_rem,1:size(data_h_rem,2),   data_h_rem')
+    xlim([tvec_rem(1) tvec_rem(end)])
+        set(gca, 'xtick', [])
 
-     ap(2) = subplot(6,1,4);
-     plot(tvec_rem, wake_time_proj_rem(A_idx,:))
-     ylim([0 50])
-     xlim([tvec_rem(1) tvec_rem(end)])
-     ylabel('Post REM Reactivation')
+    ap(2) = subplot(6,1,4);
+    plot(tvec_rem, wake_time_proj_rem(A_idx,:))
+    ylim([0 50])
+    xlim([tvec_rem(1) tvec_rem(end)])
+    ylabel('Post REM Reactivation')
+    
+    as(1) = subplot(6,1,5);
+    imagesc(tvec_rem,1:size(shuff_data,2),   shuff_data')
+    xlim([tvec_rem(1) tvec_rem(end)])
+        set(gca, 'xtick', [])
 
-     as(1) = subplot(6,1,5);
-     imagesc(tvec_rem,1:size(shuff_data,2),   shuff_data')
-     xlim([tvec_rem(1) tvec_rem(end)])
-
-     as(2) = subplot(6,1,6);
-     plot(tvec_rem, wake_time_proj_rem_s(A_idx,:))
-     ylim([0 50])
-     xlim([tvec_rem(1) tvec_rem(end)])
-     ylabel('Shuff postReactivation')
+    as(2) = subplot(6,1,6);
+    plot(tvec_rem, wake_time_proj_rem_s(A_idx,:))
+    ylim([0 50])
+    xlim([tvec_rem(1) tvec_rem(end)])
+    ylabel('Shuff postReactivation')
+    xlabel('time (s)')
+    
     
     linkaxes(ar, 'x');
     linkaxes(ap, 'x');
     linkaxes(as, 'x');
+    
+end
+% %%
+% all_proj_rem = [];
+% for ii = size(wake_time_proj_rem, 1):-1:1
+%
+%     %    nan_idx = time_proj_pos(ii,:) < prctile(time_proj_pos(ii,:), 10);
+%     %    plot3(ms_trk.time(~nan_idx)/1000, zscore(time_proj_pos(ii,~nan_idx)),ones(1, sum(~nan_idx))*100* ii, '.', 'color', c_ord(ii,:))
+%     %        plot3(tvec, zscore(time_proj_pos(ii,:)),ones(1, length(time_proj_pos(ii,:)))*100* ii, 'color', c_ord(ii,:))
+%
+%     this_proj = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
+%     all_proj_rem(ii,:) =  this_proj;
+%
+% end
+%% react triggered spike patterns
+if plot_flag
+    figure(311);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+    
+    m = 4; n = 6;  % for subplots
+    c = repelem(1:2:(n*m)/2, 2);
+    %     win = floor(.2 * mode(diff(behav.time)));
+    win = 1;
+    for ii = 1:size(Ass_pos,2)
+        
+        
+        % pre assembly react mean
+        [~, pre_idx] = findpeaks(wake_time_proj_rem_pre(ii,:),'MinPeakHeight', 20 ,'MinPeakDistance', 2/(mode(diff(tvec_rem_pre))));
+        
+        subplot(m, n, c(ii))
+        if ~isempty(pre_idx)
+            this_mat = nan(length(-win:win), size(data_h_rem_pre,2), length(pre_idx));
+            for jj = length(pre_idx):-1:1
+                
+                if min(pre_idx(jj)-win:pre_idx(jj)+win) <1
+                    z_idx = find(pre_idx(jj)-win:pre_idx(jj)+win ==1);
+                    l = length(-win:win);
+                    this_mat(z_idx:l,:,jj) = data_h_rem_pre(pre_idx(jj)-(win-z_idx+1):pre_idx(jj)+win,:);
+                    
+                elseif max(pre_idx(jj)-win:pre_idx(jj)+win) > size(data_h_rem_pre,1)
+                    z_idx = find(pre_idx(jj)-win:pre_idx(jj)+win ==size(data_h_rem_pre,1));
+                    l = length(-win:win);
+                    this_mat(z_idx:l,:,jj) = data_h_rem_pre(pre_idx(jj)-win:pre_idx(jj)+win,:);
+                else
+                    this_mat(:,:,jj) = data_h_rem_pre(pre_idx(jj)-win:pre_idx(jj)+win,:);
+                end
+            end
+            
+            imagesc((-win:win)/mode(diff(behav.time)), 1:size(this_mat,2), nanmean(this_mat, 3)');
+            set(gca, 'ydir', 'normal')
+            title(['Assembly ' num2str(ii) ' Pre'])
+        end
+        
+        
+        
+        % post assembly react mean
+        [~, post_idx] = findpeaks(wake_time_proj_rem(ii,:),'MinPeakHeight', 20 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
+        
+        subplot(m, n, c(ii)+1)
+        if ~isempty(post_idx)
+            this_mat = nan(length(-win:win), size(data_h_rem,2), length(post_idx));
+            for jj = length(post_idx):-1:1
+                
+                if min(post_idx(jj)-win:post_idx(jj)+win) <1
+                    z_idx = find(post_idx(jj)-win:post_idx(jj)+win ==1);
+                    l = length(-win:win);
+                    this_mat(z_idx:l,:,jj) = data_h_rem(post_idx(jj)-(win-z_idx+1):post_idx(jj)+win,:);
+                    
+                elseif max(post_idx(jj)-win:post_idx(jj)+win) > size(data_h_rem,1)
+                    z_idx = find(post_idx(jj)-win:post_idx(jj)+win ==size(data_h_rem,1));
+                    l = length(-win:win);
+                    this_mat(end-z_idx+1:end,:,jj) = data_h_rem(post_idx(jj)-win:end,:);
+                else
+                    this_mat(:,:,jj) = data_h_rem(post_idx(jj)-win:post_idx(jj)+win,:);
+                end
+            end
+            imagesc((-win:win)/mode(diff(behav.time)), 1:size(this_mat,2), nanmean(this_mat, 3)');
+            set(gca, 'ydir', 'normal')
+            title(['Assembly ' num2str(ii) ' Post'])
+        end
+        
+    end
+end
 
-end
-%%
-all_proj_rem = [];
-for ii = size(wake_time_proj_rem, 1):-1:1
-    
-    %    nan_idx = time_proj_pos(ii,:) < prctile(time_proj_pos(ii,:), 10);
-    %    plot3(ms_trk.time(~nan_idx)/1000, zscore(time_proj_pos(ii,~nan_idx)),ones(1, sum(~nan_idx))*100* ii, '.', 'color', c_ord(ii,:))
-    %        plot3(tvec, zscore(time_proj_pos(ii,:)),ones(1, length(time_proj_pos(ii,:)))*100* ii, 'color', c_ord(ii,:))
-    
-    this_proj = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
-    all_proj_rem(ii,:) =  this_proj;
-    
-end
 
 %% split the REM assemblies based on location on the track.
 if ~isempty(Ass_map_peak)
-
     
-    if strcmpi(sess, 'HATDS')
+    
+    if strcmpi(task, 'HATDS')
         close_idx = find(Ass_map_peak < 40);
         mid_idx = find((40 <= Ass_map_peak) & (Ass_map_peak<=60));
         open_idx = find(Ass_map_peak >60);
@@ -870,19 +956,19 @@ if ~isempty(Ass_map_peak)
         
         open_idx = find(Ass_map_peak <40);
     end
-
-
-% close_peaks = sum(all_proj_rem(close_idx,:) > .4,2);
-% open_peaks = sum(all_proj_rem(open_idx,:) > .4,2);
-
-% if sum(open_peaks == max(open_peaks)) ==1
-% [~, idx] = max(open_peaks);
-% Ass_1 = open_idx(idx(1));
-% 
-% [~, idx] = max(close_peaks);
-% Ass_2 = close_idx(idx(1));
+    
+    
+    % close_peaks = sum(all_proj_rem(close_idx,:) > .4,2);
+    % open_peaks = sum(all_proj_rem(open_idx,:) > .4,2);
+    
+    % if sum(open_peaks == max(open_peaks)) ==1
+    % [~, idx] = max(open_peaks);
+    % Ass_1 = open_idx(idx(1));
+    %
+    % [~, idx] = max(close_peaks);
+    % Ass_2 = close_idx(idx(1));
 else
-     rem_out = NaN; 
+    rem_out = NaN;
     return
 end
 
@@ -895,8 +981,8 @@ end
 
 %% collect the REM_react
 rem_out.all = []; rem_out.close = []; rem_out.open = []; rem_out.mid = []; rem_out.isopen = [];rem_out.ismid = []; rem_out.close_z = []; rem_out.open_z = []; rem_out.mid_z = [];
-rem_out.all_time_prog = all_time_proj_rem; 
-rem_out.all_time_prog_z = all_time_prog_rem_z; 
+rem_out.all_time_prog = all_time_proj_rem;
+rem_out.all_time_prog_z = all_time_prog_rem_z;
 
 for ii =  size(wake_time_proj_rem,1):-1:1
     
@@ -905,22 +991,22 @@ for ii =  size(wake_time_proj_rem,1):-1:1
     if sum(ismember(close_idx, ii)) > 0
         rem_out.close(end+1,:) = wake_time_proj_rem(ii,:);
         rem_out.close_z(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
-
+        
         rem_out.isopen(ii) = 0;
         rem_out.ismid(ii) = 0;
-
+        
     elseif sum(ismember(open_idx, ii)) > 0
         rem_out.open_z(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
         rem_out.open(end+1,:) = wake_time_proj_rem(ii,:);
         rem_out.isopen(ii) = 1;
         rem_out.ismid(ii) = 0;
-
+        
     elseif sum(ismember(mid_idx, ii)) > 0
         rem_out.mid_z(end+1,:) = wake_time_proj_rem(ii,:);
         rem_out.mid(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
-
+        
         rem_out.ismid(ii) = 1;
         rem_out.isopen(ii) = 0;
-
+        
     end
 end
