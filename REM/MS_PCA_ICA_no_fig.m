@@ -780,7 +780,8 @@ end
 %% get the REM react shuffle.
 
 rng(123,'twister')
-nShuff = 100;
+nShuff = 500;
+shuff_mat = []; 
 
 shuff_time_prog_rem_z = cell(1,nShuff);
 for iS = 1:nShuff
@@ -792,21 +793,41 @@ for iS = 1:nShuff
     
     wake_time_proj_rem_s = assembly_activity(Ass_pos,shuff_data');
     
-    shuff_react = [];
-    for ii = size(wake_time_proj_rem_s,1):-1:1
-        [~, p_idx] = findpeaks((wake_time_proj_rem_s(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
-        if ~isempty(p_idx)
-            shuff_react(ii) = length(p_idx);
-            
-        else
-            shuff_react(ii) = NaN;
-        end
-    end
-    shuff_sig_react(iS) = sum(~isnan(shuff_react));
     
+    shuff_mat = [shuff_mat; wake_time_proj_rem_s];
+
     
-    fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(wake_time_proj_rem_s,2), toc)
+%     p_val = sum(shuffle > actual)/nShuff; % GE p val solution
+    
+   
 end
+
+
+
+% shuff_react = [];
+% for ii = size(wake_time_proj_rem_s,1):-1:1
+%     [~, p_idx] = findpeaks((wake_time_proj_rem_s(ii,:)),'MinPeakHeight', 20 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
+%     if ~isempty(p_idx)
+%         shuff_react(ii) = length(p_idx);
+%         
+%     else
+%         shuff_react(ii) = NaN;
+%     end
+% end
+% shuff_sig_react(iS) = sum(~isnan(shuff_react));
+% 
+% fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, shuff_react(ii), toc)
+
+
+
+if plot_flag
+    figure(999); clf; 
+    histogram(shuff_mat); 
+    
+    
+    
+end
+
 
 rem_out.shuff_time_prog_rem_z = shuff_time_prog_rem_z;
 
@@ -927,7 +948,6 @@ if plot_flag
                     
                 elseif max(post_idx(jj)-win:post_idx(jj)+win) > size(data_h_rem,1)
                     z_idx = find(post_idx(jj)-win:post_idx(jj)+win ==size(data_h_rem,1));
-                    l = length(-win:win);
                     this_mat(end-z_idx+1:end,:,jj) = data_h_rem(post_idx(jj)-win:end,:);
                 else
                     this_mat(:,:,jj) = data_h_rem(post_idx(jj)-win:post_idx(jj)+win,:);
