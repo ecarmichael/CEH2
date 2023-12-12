@@ -782,24 +782,63 @@ end
 rng(123,'twister')
 nShuff = 500;
 shuff_mat = []; 
+shuff_mat_pre = []; 
 
-shuff_time_prog_rem_z = cell(1,nShuff);
 for iS = 1:nShuff
     tic
-    shuff_data = NaN(size(data_h_rem));
+    shuff_data = NaN(size(data_h_rem_pre));
+    for ic = 1:size(data_h_rem_pre,2)
+        shuff_data(:,ic) = circshift(data_h_rem_pre(:,ic), floor(MS_randn_range(1,1,1,size(data_h_rem_pre,1))));
+    end
+    
+    wake_time_proj_rem_s = assembly_activity(Ass_pos,shuff_data');
+    
+    shuff_mat_pre = [shuff_mat_pre; wake_time_proj_rem_s];
+    
+    
+   shuff_data = NaN(size(data_h_rem));
     for ic = 1:size(data_h_rem,2)
         shuff_data(:,ic) = circshift(data_h_rem(:,ic), floor(MS_randn_range(1,1,1,size(data_h_rem,1))));
     end
     
     wake_time_proj_rem_s = assembly_activity(Ass_pos,shuff_data');
     
-    
     shuff_mat = [shuff_mat; wake_time_proj_rem_s];
 
+end
+
+R_threshold = prctile(shuff_mat(shuff_mat >0), 99, 'all'); 
+
+%% loop over assemblies to see what the range of reactivations would be. 
+Ass_p_val_pre = []; 
+ReAct_rate_pre = []; 
+ReAct_rate_p_pre = []; 
+
+
+Ass_p_val_post = []; 
+ReAct_rate_post = []; 
+ReAct_rate_p_post = []; 
+
+
+for ii = size(Ass_pos,2):-1:1    
+    Ass_p_val_pre(ii) = sum(sum(shuff_mat_pre(1:1000,:)>R_threshold) >sum(wake_time_proj_rem_pre(ii,:) > R_threshold))/ numel(shuff_mat_pre(1:1000,:));
     
-%     p_val = sum(shuffle > actual)/nShuff; % GE p val solution
+    ReAct_rate_pre(ii) = sum(wake_time_proj_rem_pre(ii,:) > R_threshold) / ((tvec_rem_pre(end) - tvec_rem(1))/60); 
+
+    Shuff_rate_pre = sum(shuff_mat_pre(1:1000,:) > R_threshold,2)./ ((tvec_rem_pre(end) - tvec_rem_pre(1))/60); 
     
-   
+    ReAct_rate_p_pre(ii) = sum(Shuff_rate_pre > ReAct_rate_pre(ii)) / length(Shuff_rate_pre); 
+    
+    
+    
+    Ass_p_val_post(ii) = sum(sum(shuff_mat(1:1000,:)>R_threshold) >sum(wake_time_proj_rem(ii,:) > R_threshold))/ numel(shuff_mat(1:1000,:));
+    
+    ReAct_rate_post(ii) = sum(wake_time_proj_rem(ii,:) > R_threshold) / ((tvec_rem(end) - tvec_rem(1))/60); 
+
+    Shuff_rate_post = sum(shuff_mat(1:1000,:) > R_threshold,2)./ ((tvec_rem(end) - tvec_rem(1))/60); 
+    
+    ReAct_rate_p_post(ii) = sum(Shuff_rate_post > ReAct_rate_post(ii)) / length(Shuff_rate_post); 
+
 end
 
 
@@ -823,9 +862,7 @@ end
 if plot_flag
     figure(999); clf; 
     histogram(shuff_mat); 
-    
-    
-    
+
 end
 
 
