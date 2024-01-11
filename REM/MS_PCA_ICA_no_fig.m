@@ -232,7 +232,7 @@ for ii = size(Csp,2):-1:1
     spk_count = histc(this_cell,tbin_edges); % get spike counts for each bin
     spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
     
-    data_h(:,ii) = spk_count;
+    data_h(:,ii) = zscore(spk_count);
 end
 
 
@@ -713,7 +713,7 @@ for ii = size(all_binary_post_REM,2):-1:1
     end
     spk_count = histc(this_cell,tbin_edges_rem); % get spike counts for each bin
     spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
-    data_h_rem(:,ii) = spk_count;
+    data_h_rem(:,ii) = zscore(spk_count);
 end
 tvec_rem = tbin_centers_rem;
 
@@ -735,7 +735,7 @@ for ii = size(all_binary_pre_REM,2):-1:1
     end
     spk_count = histc(this_cell,tbin_edges_rem); % get spike counts for each bin
     spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
-    data_h_rem_pre(:,ii) = spk_count;
+    data_h_rem_pre(:,ii) = zscore(spk_count);
 end
 tvec_rem_pre = tbin_centers_rem;
 
