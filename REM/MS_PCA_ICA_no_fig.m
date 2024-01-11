@@ -754,29 +754,6 @@ wake_time_proj_rem_pre = assembly_activity(Ass_pos,data_h_rem_pre');
 rng(123, 'twister')
 all_time_proj_rem = assembly_activity(Ass_Temp,data_h_rem');
 
-sig_REM_react = [];
-for ii = size(wake_time_proj_rem,1):-1:1
-    [~, p_idx] = findpeaks((wake_time_proj_rem(ii,:)),'MinPeakHeight', 10 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
-    
-    if ~isempty(p_idx)
-        sig_REM_react(ii) = length(p_idx);
-    else
-        sig_REM_react(ii) = NaN;
-    end
-    
-end
-
-
-for ii = 1:size(Ass_pos,2)
-        
-        
-        % pre assembly react mean
-        [~, pre_idx] = findpeaks(wake_time_proj_rem_pre(ii,:),'MinPeakHeight', 20 ,'MinPeakDistance', 2/(mode(diff(tvec_rem_pre))));
-        [~, post_idx] = findpeaks(wake_time_proj_rem(ii,:),'MinPeakHeight', 20 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
-
-        fprintf('Assembly # %f had PRE %f  & POST %f sig reactivations (threst > 20)\n', ii, length(pre_idx), length(post_idx))
-end
-
 %% get the REM react shuffle.
 
 rng(123,'twister')
@@ -808,6 +785,29 @@ for iS = 1:nShuff
 end
 
 R_threshold = prctile(shuff_mat(shuff_mat >0), 99, 'all'); 
+
+%% check for sig reactivations
+sig_REM_react = [];
+for ii = size(wake_time_proj_rem,1):-1:1
+    [~, p_idx] = findpeaks((wake_time_proj_rem(ii,:)),'MinPeakHeight', R_threshold ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
+    
+    if ~isempty(p_idx)
+        sig_REM_react(ii) = length(p_idx);
+    else
+        sig_REM_react(ii) = NaN;
+    end
+    
+end
+
+
+for ii = 1:size(Ass_pos,2)
+        
+        % pre assembly reactivations
+        [~, pre_idx] = findpeaks(wake_time_proj_rem_pre(ii,:),'MinPeakHeight', R_threshold ,'MinPeakDistance', 2/(mode(diff(tvec_rem_pre))));
+        [~, post_idx] = findpeaks(wake_time_proj_rem(ii,:),'MinPeakHeight', R_threshold ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
+
+        fprintf('Assembly # %2.0f had PRE %2.0f & POST %2.0f sig reactivations (>99th (%2.2f) of %2.0f shuff)\n', ii, length(pre_idx), length(post_idx), R_threshold, nShuff)
+end
 
 %% loop over assemblies to see what the range of reactivations would be. 
 Ass_p_val_pre = []; 
@@ -866,7 +866,7 @@ if plot_flag
 end
 
 
-rem_out.shuff_time_prog_rem_z = shuff_time_prog_rem_z;
+% rem_out.shuff_time_prog_rem_z = shuff_time_prog_rem_z;
 
 %%
 if plot_flag
