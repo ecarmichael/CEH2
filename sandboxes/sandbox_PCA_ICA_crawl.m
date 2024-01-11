@@ -25,7 +25,8 @@ out = [];
 session = []; novel_idx = []; anx_idx = []; HS_idx = [];
 for ii = 1:length(f_list)
     session{ii} = f_list(ii).name;
-        [out.REM{ii}, out.A{ii}, out.wake{ii}, out.rem{ii}] = MS_PCA_ICA_no_fig(f_list(ii).name);
+        [A_out{ii}, ~, REM_A_pre{ii}, REM_A_post{ii}] = MS_PCA_ICA_no_fig(f_list(ii).name);
+        close all
     
     if ~isempty(strfind(f_list(ii).name, 'HATDS'))
         HS_idx(ii) = 1;
