@@ -29,7 +29,8 @@ set(h,'PaperPositionMode','auto')
 set(gca,'DefaultTextFontSize',cfg.ft_size)
 set(0, 'DefaulttextInterpreter', 'none')
 if cfg.resize == 1
-    set(gcf, 'position', [600 50 560*1.4 420*1.4]);
+%     set(gcf, 'position', [600 50 560*1.4 420*1.4]);
+    set(gcf,'units','normalized','outerposition',[0 0 1 1])
 end
 % H = get(gcf, 'children');
 H = findobj(gcf,'type','axes','-not','Tag','legend','-not','Tag','Colorbar');

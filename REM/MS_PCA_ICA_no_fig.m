@@ -615,7 +615,7 @@ if plot_flag
         
         subplot(l,m,s_idx+1)
         hold on
-        [p_val, p_idx] = findpeaks((time_proj_pos_place(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2*floor(mode(diff(ms.time))));
+        [p_val, p_idx] = findpeaks((time_proj_pos_place(ii,:)),'MinPeakHeight', 10 ,'MinPeakDistance', 2*floor(mode(diff(ms.time))));
         
         this_pos = [];
         for ip = 1:length(p_idx)
@@ -756,7 +756,7 @@ all_time_proj_rem = assembly_activity(Ass_Temp,data_h_rem');
 
 sig_REM_react = [];
 for ii = size(wake_time_proj_rem,1):-1:1
-    [~, p_idx] = findpeaks((wake_time_proj_rem(ii,:)),'MinPeakHeight', 5 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
+    [~, p_idx] = findpeaks((wake_time_proj_rem(ii,:)),'MinPeakHeight', 10 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
     
     if ~isempty(p_idx)
         sig_REM_react(ii) = length(p_idx);
