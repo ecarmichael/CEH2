@@ -53,6 +53,156 @@ for ii = 1:length(f_list)
     %    close all
 end
 
+%% collect output
+c_ord = MS_linspecer(5); 
+
+HS_idx = logical(HS_idx(1:length(A_out))); 
+n_idx = logical(novel_idx(1:length(A_out))); 
+a_idx = logical(anx_idx(1:length(A_out))); 
+
+n_idx = n_idx & ~HS_idx; 
+a_idx = a_idx & ~HS_idx; 
+
+% get the length of the assemblies in each recording. 
+for ii =length(A_out):-1:1
+    A_l(ii) = length(A_out{ii}.ReAct_rate_pre);
+    
+end
+
+Pre_A_rate = NaN(length(A_out), max(A_l)); 
+Post_A_rate = NaN(length(A_out), max(A_l)); 
+Pre_A_sig = []; Post_A_sig = [];
+C_pre_idx = []; C_post_idx = [];
+O_pre_idx = []; O_post_idx = [];
+M_pre_idx = []; M_pre_idx = [];
+
+for ii = length(A_out):-1:1
+    Pre_A_sig(ii) = sum(A_out{ii}.Ass_p_val_pre < 0.05);
+    Post_A_sig(ii) = sum(A_out{ii}.Ass_p_val_post < 0.05);
+    
+    Pre_A_rate(ii,1:sum(A_out{ii}.Ass_p_val_pre < 0.05)) = A_out{ii}.ReAct_rate_pre(A_out{ii}.Ass_p_val_pre < 0.05); 
+    Post_A_rate(ii,1:sum(A_out{ii}.Ass_p_val_post < 0.05)) = A_out{ii}.ReAct_rate_post(A_out{ii}.Ass_p_val_post < 0.05);
+
+    
+    C_pre_idx(ii) = sum(ismember(find(A_out{ii}.Ass_p_val_pre < 0.05),A_out{ii}.close_idx))/length(A_out{ii}.Ass_p_val_pre); 
+    O_pre_idx(ii) = sum(ismember(find(A_out{ii}.Ass_p_val_pre < 0.05),A_out{ii}.open_idx))/length(A_out{ii}.Ass_p_val_pre); 
+    M_pre_idx(ii) = sum(ismember(find(A_out{ii}.Ass_p_val_pre < 0.05),A_out{ii}.mid_idx))/length(A_out{ii}.Ass_p_val_pre); 
+    
+    C_post_idx(ii) = sum(ismember(find(A_out{ii}.Ass_p_val_post < 0.05),A_out{ii}.close_idx))/length(A_out{ii}.Ass_p_val_post); 
+    O_post_idx(ii) = sum(ismember(find(A_out{ii}.Ass_p_val_post < 0.05),A_out{ii}.open_idx))/length(A_out{ii}.Ass_p_val_post); 
+    M_post_idx(ii) = sum(ismember(find(A_out{ii}.Ass_p_val_post < 0.05),A_out{ii}.mid_idx))/length(A_out{ii}.Ass_p_val_post); 
+end
+
+
+figure(1010)
+subplot(2,5,1)
+cla
+bar([mean(Pre_A_sig(n_idx)), mean(Post_A_sig(~n_idx))], 'FaceColor', c_ord(1,:), 'EdgeColor', c_ord(1,:));
+hold on
+e = errorbar([mean(Pre_A_sig(n_idx)), mean(Post_A_sig(n_idx))], [MS_SEM(Pre_A_sig(n_idx)) ,MS_SEM(Post_A_sig(n_idx))]);
+e.LineStyle = 'none';
+e.Color = 'k';
+set(gca,'xtick', 1:2, 'XTickLabel', {'Pre', 'Post'}, 'XTickLabelRotation', 45)
+title('Novel')
+ylabel('# assemblies')
+
+
+subplot(2,5,2)
+cla
+bar([mean(Pre_A_sig(~n_idx)), mean(Post_A_sig(~n_idx))], 'FaceColor', c_ord(4,:), 'EdgeColor', c_ord(4,:));
+hold on
+e = errorbar([mean(Pre_A_sig(~n_idx)), mean(Post_A_sig(~n_idx))], [MS_SEM(Pre_A_sig(~n_idx)) ,MS_SEM(Post_A_sig(~n_idx))]);
+e.LineStyle = 'none';
+e.Color = 'k';
+set(gca,'xtick', 1:2, 'XTickLabel', {'Pre', 'Post'}, 'XTickLabelRotation', 45)
+title('Familiar')
+% ylabel('# assemblies')
+
+subplot(2,5,3)
+cla
+bar([mean(Pre_A_sig(~a_idx)), mean(Post_A_sig(~a_idx))], 'FaceColor', c_ord(3,:), 'EdgeColor', c_ord(3,:));
+hold on
+e = errorbar([mean(Pre_A_sig(~a_idx)), mean(Post_A_sig(~a_idx))], [MS_SEM(Pre_A_sig(~a_idx)) ,MS_SEM(Post_A_sig(~a_idx))]);
+e.LineStyle = 'none';
+e.Color = 'k';
+set(gca,'xtick', 1:2, 'XTickLabel', {'Pre', 'Post'}, 'XTickLabelRotation', 45)
+title('Linear Track')
+
+subplot(2,5,4)
+cla
+bar([mean(Pre_A_sig(a_idx)), mean(Post_A_sig(a_idx))], 'FaceColor', c_ord(2,:), 'EdgeColor', c_ord(2,:));
+hold on
+e = errorbar([mean(Pre_A_sig(a_idx)), mean(Post_A_sig(a_idx))], [MS_SEM(Pre_A_sig(a_idx)) ,MS_SEM(Post_A_sig(a_idx))]);
+e.LineStyle = 'none';
+e.Color = 'k';
+set(gca,'xtick', 1:2, 'XTickLabel', {'Pre', 'Post'}, 'XTickLabelRotation', 45)
+title('Half-Anxiety')
+
+subplot(2,5,5)
+cla
+bar([mean(Pre_A_sig(HS_idx)), mean(Post_A_sig(HS_idx))], 'FaceColor', c_ord(5,:), 'EdgeColor', c_ord(5,:));
+hold on
+e = errorbar([mean(Pre_A_sig(HS_idx)), mean(Post_A_sig(HS_idx))], [MS_SEM(Pre_A_sig(HS_idx)) ,MS_SEM(Post_A_sig(HS_idx))]);
+e.LineStyle = 'none';
+e.Color = 'k';
+set(gca,'xtick', 1:2, 'XTickLabel', {'Pre', 'Post'}, 'XTickLabelRotation', 45)
+title('Half-Anxiety Switch')
+
+
+% reactivation rate plots
+subplot(2,5,6)
+cla
+bar([nanmean(Pre_A_rate(n_idx,:), 'all'), nanmean(Post_A_rate(n_idx,:), 'all')], 'FaceColor', c_ord(1,:), 'EdgeColor', c_ord(1,:));
+hold on
+e = errorbar([nanmean(Pre_A_rate(n_idx,:), 'all'), nanmean(Post_A_rate(n_idx,:), 'all')], [MS_SEM(Pre_A_rate(n_idx)) ,MS_SEM(Post_A_rate(n_idx))]);
+e.LineStyle = 'none';
+e.Color = 'k';
+set(gca,'xtick', 1:2, 'XTickLabel', {'Pre', 'Post'}, 'XTickLabelRotation', 45)
+title('Novel')
+ylabel('ReAct rate /min)')
+
+
+subplot(2,5,7)
+cla
+bar([nanmean(Pre_A_rate(~n_idx,:), 'all'), nanmean(Post_A_rate(~n_idx,:), 'all')], 'FaceColor', c_ord(4,:), 'EdgeColor', c_ord(4,:));
+hold on
+e = errorbar([nanmean(Pre_A_rate(~n_idx,:), 'all'), nanmean(Post_A_rate(~n_idx,:), 'all')], [MS_SEM(Pre_A_rate(~n_idx)) ,MS_SEM(Post_A_rate(~n_idx))]);
+e.LineStyle = 'none';
+e.Color = 'k';
+set(gca,'xtick', 1:2, 'XTickLabel', {'Pre', 'Post'}, 'XTickLabelRotation', 45)
+title('Familiar')
+
+
+subplot(2,5,8)
+cla
+bar([nanmean(Pre_A_rate(a_idx,:), 'all'), nanmean(Post_A_rate(a_idx,:), 'all')], 'FaceColor', c_ord(3,:), 'EdgeColor', c_ord(3,:));
+hold on
+e = errorbar([nanmean(Pre_A_rate(a_idx,:), 'all'), nanmean(Post_A_rate(a_idx,:), 'all')], [MS_SEM(Pre_A_rate(a_idx)) ,MS_SEM(Post_A_rate(a_idx))]);
+e.LineStyle = 'none';
+e.Color = 'k';
+set(gca,'xtick', 1:2, 'XTickLabel', {'Pre', 'Post'}, 'XTickLabelRotation', 45)
+title('Linear Track')
+
+
+subplot(2,5,9)
+cla
+bar([nanmean(Pre_A_rate(~a_idx,:), 'all'), nanmean(Post_A_rate(~a_idx,:), 'all')], 'FaceColor', c_ord(2,:), 'EdgeColor', c_ord(2,:));
+hold on
+e = errorbar([nanmean(Pre_A_rate(~a_idx,:), 'all'), nanmean(Post_A_rate(~a_idx,:), 'all')], [MS_SEM(Pre_A_rate(~a_idx)) ,MS_SEM(Post_A_rate(~a_idx))]);
+e.LineStyle = 'none';
+e.Color = 'k';
+set(gca,'xtick', 1:2, 'XTickLabel', {'Pre', 'Post'}, 'XTickLabelRotation', 45)
+title('Half-Anxiety')
+
+subplot(2,5,10)
+cla
+bar([nanmean(Pre_A_rate(HS_idx)), nanmean(Post_A_rate(HS_idx))], 'FaceColor', c_ord(5,:), 'EdgeColor', c_ord(5,:));
+hold on
+e = errorbar([nanmean(Pre_A_rate(HS_idx)), nanmean(Post_A_rate(HS_idx))], [MS_SEM(Pre_A_rate(HS_idx)) ,MS_SEM(Post_A_rate(HS_idx))]);
+e.LineStyle = 'none';
+e.Color = 'k';
+set(gca,'xtick', 1:2, 'XTickLabel', {'Pre', 'Post'}, 'XTickLabelRotation', 45)
+title('Half-Anxiety Switch')
 %% collect the output values
 warning off
 var_name = {'session', 'novel', 'anxiety', 'nAssemblies_z', 'nPlace_Assemblies','nREM_Assemblies', 'nWake_open', 'nWake_close','Wake_OC_idx', 'nREM_open', 'nREM_close','nREM_mid', 'REM_OC_idx'};
