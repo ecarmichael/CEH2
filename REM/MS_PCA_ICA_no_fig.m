@@ -869,21 +869,21 @@ out.ReAct_rate_p_post = [];
 
 
 for ii = size(Ass_pos,2):-1:1
-    out.Ass_p_val_pre(ii) = sum(sum(shuff_mat_pre(1:1000,:)>R_threshold) >sum(wake_time_proj_rem_pre(ii,:) > R_threshold))/ size(shuff_mat_pre(1:1000,:),2);
+    out.Ass_p_val_pre(ii) = sum(sum(shuff_mat_pre>R_threshold,2) >sum(wake_time_proj_rem_pre(ii,:) > R_threshold))/ size(shuff_mat_pre,1);
     
     out.ReAct_rate_pre(ii) = sum(wake_time_proj_rem_pre(ii,:) > R_threshold) / ((tvec_rem_pre(end) - tvec_rem(1))/60);
     
-    Shuff_rate_pre = sum(shuff_mat_pre(1:1000,:) > R_threshold,2)./ ((tvec_rem_pre(end) - tvec_rem_pre(1))/60);
+    Shuff_rate_pre = sum(shuff_mat_pre > R_threshold,2)./ ((tvec_rem_pre(end) - tvec_rem_pre(1))/60);
     
     out.ReAct_rate_p_pre(ii) = sum(Shuff_rate_pre > out.ReAct_rate_pre(ii)) / length(Shuff_rate_pre);
     
     
     
-    out.Ass_p_val_post(ii) = sum(sum(shuff_mat(1:1000,:)>R_threshold) >sum(wake_time_proj_rem(ii,:) > R_threshold))/ size(shuff_mat(1:1000,:),2);
+    out.Ass_p_val_post(ii) = sum(sum(shuff_mat>R_threshold,2) >sum(wake_time_proj_rem(ii,:) > R_threshold))/ size(shuff_mat,1);
     
     out.ReAct_rate_post(ii) = sum(wake_time_proj_rem(ii,:) > R_threshold) / ((tvec_rem(end) - tvec_rem(1))/60);
     
-    Shuff_rate_post = sum(shuff_mat(1:1000,:) > R_threshold,2)./ ((tvec_rem(end) - tvec_rem(1))/60);
+    Shuff_rate_post = sum(shuff_mat > R_threshold,2)./ ((tvec_rem(end) - tvec_rem(1))/60);
     
     out.ReAct_rate_p_post(ii) = sum(Shuff_rate_post > out.ReAct_rate_post(ii)) / length(Shuff_rate_post);
     
@@ -972,6 +972,8 @@ if plot_flag
     xlim(x_val)
     ylabel('Post REM Reactivation')
     yline(R_threshold)
+        legend(num2str(A_idx'),'location',  'northeast', 'box', 'off', 'orientation', 'horizontal')
+
     
     as(1) = subplot(10,1,9);
     c = imagesc(tvec_rem,1:size(shuff_data,2),   shuff_data');
