@@ -1,4 +1,4 @@
-function [out, Ass_out, wake_time_proj_rem_pre, wake_time_proj_rem] = MS_PCA_ICA_no_fig(fname)
+function [out, Ass_out, wake_time_proj_rem_pre, wake_time_proj_rem] = MS_PCA_ICA_no_fig(fname, fig_dir)
 % sandbox_PCA/ICA
 
 
@@ -44,6 +44,15 @@ addpath(genpath(RnR_dir));
 
 addpath(code_dir)
 
+if nargin <2
+    save_fig = 0;
+elseif nargin == 2
+    save_fig = 1;
+    if ~exist(fig_dir)
+        mkdir(fig_dir)
+    end
+end
+
 cd(data_dir)
 
 rng(123, 'twister')
@@ -59,7 +68,6 @@ load(this_sess)
 behav = MS_align_data(behav,ms);
 
 move_idx = behav.speed > 2.5;
-
 
 behav_his = histcounts(behav.position(move_idx,1), 5:5:95);
 %% check for place cell metrics
@@ -167,6 +175,9 @@ if plot_flag
     xlim([p_bins(1) p_bins(end)]);
     xlabel('Location on track (cm)')
     ylabel('Cell ID')
+    if save_fig
+        saveas(300, [fig_dir filesep subject '_' task '_pos_place.png'])
+    end
 end
 %% follow grosmark et al. method of deconv preprocessing
 Csp = ms_trk_cut.deconv./ms_trk_cut.denoise;
@@ -257,7 +268,7 @@ time_proj = assembly_activity(Ass_Temp,data_h');
 
 %% shuffle distribution for assemblies
 rng(123,'twister')
-nShuff = 500;
+nShuff = 100;
 wake_shuff_mat = [];
 
 Ass_shuff = NaN(1,nShuff);
@@ -269,11 +280,15 @@ for iS = nShuff:-1:1
     end
     
     this_ass = assembly_patterns(shuff_data');
-    
-    wake_time_proj_s = assembly_activity(this_ass,shuff_data');
-    
-    wake_shuff_mat(iS,:) =  wake_time_proj_s(1,:);
-    
+    if ~isempty(this_ass)
+        wake_time_proj_s = assembly_activity(this_ass,shuff_data');
+        
+        wake_shuff_mat(iS,:) =  wake_time_proj_s(1,:);
+        keep_idx(iS) = 1;
+    else
+        wake_shuff_mat(iS,:) = NaN;
+        keep_idx(iS) = 0;
+    end
     %     for ii = size(this_ass,2):-1:1
     
     if sum(max(this_ass) > 0.2) >0
@@ -333,7 +348,7 @@ for ii = size(Ass_Temp,2):-1:1
         
         z_weight = zscore(Ass_Temp(:,ii));
         
-        Ass_pos_cells{ii} = find(z_weight > 2);
+        Ass_pos_cells{ii} = find(z_weight > 1.96);
         
     end
     
@@ -506,6 +521,9 @@ if plot_flag
         
     end
     linkaxes(ax, 'x')
+    if save_fig
+       saveas(303, [fig_dir filesep subject '_' task '_Wake_A.png']);  
+    end
     
     %      figure(304);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
     %
@@ -684,6 +702,10 @@ if plot_flag
         xlim([.5 size(Ass_map{ii},1)+.5])
         colormap(cmap)
         xlabel('place cell ID')
+        
+        if save_fig
+            saveas(gcf, [fig_dir filesep subject '_' task '_Wake_A_summery_' num2str(f_n+1) '.png']);  
+        end
     end
 end
 
@@ -853,7 +875,7 @@ for ii = size(Ass_pos,2):-1:1
     
     Shuff_rate_pre = sum(shuff_mat_pre(1:1000,:) > R_threshold,2)./ ((tvec_rem_pre(end) - tvec_rem_pre(1))/60);
     
-    out.ReAct_rate_p_pre(ii) = sum(Shuff_rate_pre > ReAct_rate_pre(ii)) / length(Shuff_rate_pre);
+    out.ReAct_rate_p_pre(ii) = sum(Shuff_rate_pre > out.ReAct_rate_pre(ii)) / length(Shuff_rate_pre);
     
     
     
@@ -863,7 +885,7 @@ for ii = size(Ass_pos,2):-1:1
     
     Shuff_rate_post = sum(shuff_mat(1:1000,:) > R_threshold,2)./ ((tvec_rem(end) - tvec_rem(1))/60);
     
-    out.ReAct_rate_p_post(ii) = sum(Shuff_rate_post > ReAct_rate_post(ii)) / length(Shuff_rate_post);
+    out.ReAct_rate_p_post(ii) = sum(Shuff_rate_post > out.ReAct_rate_post(ii)) / length(Shuff_rate_post);
     
 end
 
@@ -957,12 +979,12 @@ if plot_flag
     xlim([tvec_rem(1) tvec_rem(end)])
     set(gca, 'xtick', [])
     
-    g_ord = [linspace(0.3, .9, 11); linspace(0.3, .9, 11); linspace(0.3, .9, 11)]';
+    g_ord = [linspace(0.3, .9, length(A_idx)) ; linspace(0.3, .9, length(A_idx)) ; linspace(0.3, .9, length(A_idx))]';
     as(2) = subplot(10,1,10);
     cla;
     hold on
     for ii = A_idx
-        plot(tvec_rem, wake_time_proj_rem_s(ii,:), 'color', g_ord(ii,:))
+        plot(tvec_rem, wake_time_proj_rem_s(ii,:), 'color', g_ord(find(ii == A_idx),:))
     end
     ylim([0 50])
     %     xlim([tvec_rem(1) tvec_rem(end)])
@@ -974,6 +996,10 @@ if plot_flag
     linkaxes(ar, 'x');
     linkaxes(ap, 'x');
     linkaxes(as, 'x');
+    
+        if save_fig
+            saveas(gcf, [fig_dir filesep subject '_' task '_REM_A_summary.png']);  
+        end
     
 end
 % %%
@@ -989,70 +1015,70 @@ end
 %
 % end
 %% react triggered spike patterns
-if plot_flag
-    figure(311);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-    
-    m = 4; n = 6;  % for subplots
-    c = repelem(1:2:(n*m)/2, 2);
-    %     win = floor(.2 * mode(diff(behav.time)));
-    win = 1;
-    for ii = 1:size(Ass_pos,2)
-        % pre assembly react mean
-        [~, pre_idx] = findpeaks(wake_time_proj_rem_pre(ii,:),'MinPeakHeight', R_threshold ,'MinPeakDistance', 2/(mode(diff(tvec_rem_pre))));
-        
-        subplot(m, n, c(ii))
-        if ~isempty(pre_idx)
-            this_mat = nan(length(-win:win), size(data_h_rem_pre,2), length(pre_idx));
-            for jj = length(pre_idx):-1:1
-                
-                if min(pre_idx(jj)-win:pre_idx(jj)+win) <1
-                    z_idx = find(pre_idx(jj)-win:pre_idx(jj)+win ==1);
-                    l = length(-win:win);
-                    this_mat(z_idx:l,:,jj) = data_h_rem_pre(pre_idx(jj)-(win-z_idx+1):pre_idx(jj)+win,:);
-                    
-                elseif max(pre_idx(jj)-win:pre_idx(jj)+win) > size(data_h_rem_pre,1)
-                    z_idx = find(pre_idx(jj)-win:pre_idx(jj)+win ==size(data_h_rem_pre,1));
-                    l = length(-win:win);
-                    this_mat(z_idx:l,:,jj) = data_h_rem_pre(pre_idx(jj)-win:pre_idx(jj)+win,:);
-                else
-                    this_mat(:,:,jj) = data_h_rem_pre(pre_idx(jj)-win:pre_idx(jj)+win,:);
-                end
-            end
-            
-            imagesc((-win:win)/mode(diff(behav.time)), 1:size(this_mat,2), nanmean(this_mat, 3)');
-            set(gca, 'ydir', 'normal')
-            title(['Assembly ' num2str(ii) ' Pre'])
-        end
-        
-        
-        
-        % post assembly react mean
-        [~, post_idx] = findpeaks(wake_time_proj_rem(ii,:),'MinPeakHeight', 20 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
-        
-        subplot(m, n, c(ii)+1)
-        if ~isempty(post_idx)
-            this_mat = nan(length(-win:win), size(data_h_rem,2), length(post_idx));
-            for jj = length(post_idx):-1:1
-                
-                if min(post_idx(jj)-win:post_idx(jj)+win) <1
-                    z_idx = find(post_idx(jj)-win:post_idx(jj)+win ==1);
-                    l = length(-win:win);
-                    this_mat(z_idx:l,:,jj) = data_h_rem(post_idx(jj)-(win-z_idx+1):post_idx(jj)+win,:);
-                    
-                elseif max(post_idx(jj)-win:post_idx(jj)+win) > size(data_h_rem,1)
-                    z_idx = find(post_idx(jj)-win:post_idx(jj)+win ==size(data_h_rem,1));
-                    this_mat(end-z_idx+1:end,:,jj) = data_h_rem(post_idx(jj)-win:end,:);
-                else
-                    this_mat(:,:,jj) = data_h_rem(post_idx(jj)-win:post_idx(jj)+win,:);
-                end
-            end
-            imagesc((-win:win)/mode(diff(behav.time)), 1:size(this_mat,2), nanmean(this_mat, 3)');
-            set(gca, 'ydir', 'normal')
-            title(['Assembly ' num2str(ii) ' Post'])
-        end
-        
-    end
-end
+% if plot_flag
+%     figure(311);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+%     
+%     m = 4; n = 6;  % for subplots
+%     c = repelem(1:2:(n*m)/2, 2);
+%     %     win = floor(.2 * mode(diff(behav.time)));
+%     win = 1;
+%     for ii = 1:size(Ass_pos,2)
+%         % pre assembly react mean
+%         [~, pre_idx] = findpeaks(wake_time_proj_rem_pre(ii,:),'MinPeakHeight', R_threshold ,'MinPeakDistance', 2/(mode(diff(tvec_rem_pre))));
+%         
+%         subplot(m, n, c(ii))
+%         if ~isempty(pre_idx)
+%             this_mat = nan(length(-win:win), size(data_h_rem_pre,2), length(pre_idx));
+%             for jj = length(pre_idx):-1:1
+%                 
+%                 if min(pre_idx(jj)-win:pre_idx(jj)+win) <1
+%                     z_idx = find(pre_idx(jj)-win:pre_idx(jj)+win ==1);
+%                     l = length(-win:win);
+%                     this_mat(z_idx:l,:,jj) = data_h_rem_pre(pre_idx(jj)-(win-z_idx+1):pre_idx(jj)+win,:);
+%                     
+%                 elseif max(pre_idx(jj)-win:pre_idx(jj)+win) > size(data_h_rem_pre,1)
+%                     z_idx = find(pre_idx(jj)-win:pre_idx(jj)+win ==size(data_h_rem_pre,1));
+%                     l = length(-win:win);
+%                     this_mat(z_idx:l,:,jj) = data_h_rem_pre(pre_idx(jj)-win:pre_idx(jj)+win,:);
+%                 else
+%                     this_mat(:,:,jj) = data_h_rem_pre(pre_idx(jj)-win:pre_idx(jj)+win,:);
+%                 end
+%             end
+%             
+%             imagesc((-win:win)/mode(diff(behav.time)), 1:size(this_mat,2), nanmean(this_mat, 3)');
+%             set(gca, 'ydir', 'normal')
+%             title(['Assembly ' num2str(ii) ' Pre'])
+%         end
+%         
+%         
+%         
+%         % post assembly react mean
+%         [~, post_idx] = findpeaks(wake_time_proj_rem(ii,:),'MinPeakHeight', 20 ,'MinPeakDistance', 2/(mode(diff(tvec_rem))));
+%         
+%         subplot(m, n, c(ii)+1)
+%         if ~isempty(post_idx)
+%             this_mat = nan(length(-win:win), size(data_h_rem,2), length(post_idx));
+%             for jj = length(post_idx):-1:1
+%                 
+%                 if min(post_idx(jj)-win:post_idx(jj)+win) <1
+%                     z_idx = find(post_idx(jj)-win:post_idx(jj)+win ==1);
+%                     l = length(-win:win);
+%                     this_mat(z_idx:l,:,jj) = data_h_rem(post_idx(jj)-(win-z_idx+1):post_idx(jj)+win,:);
+%                     
+%                 elseif max(post_idx(jj)-win:post_idx(jj)+win) > size(data_h_rem,1)
+%                     z_idx = find(post_idx(jj)-win:post_idx(jj)+win ==size(data_h_rem,1));
+%                     this_mat(end-z_idx+1:end,:,jj) = data_h_rem(post_idx(jj)-win:end,:);
+%                 else
+%                     this_mat(:,:,jj) = data_h_rem(post_idx(jj)-win:post_idx(jj)+win,:);
+%                 end
+%             end
+%             imagesc((-win:win)/mode(diff(behav.time)), 1:size(this_mat,2), nanmean(this_mat, 3)');
+%             set(gca, 'ydir', 'normal')
+%             title(['Assembly ' num2str(ii) ' Post'])
+%         end
+%         
+%     end
+% end
 
 
 %% split the REM assemblies based on location on the track.
@@ -1107,7 +1133,7 @@ end
 %         rem_out.close_z(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));
 %
 %         rem_out.isopen(ii) = 0;
-%         rem_out.ismid(ii) = 0;
+%         rem_out.ismid(ii) = 0;s
 %
 %     elseif sum(ismember(open_idx, ii)) > 0
 %         rem_out.open_z(end+1,:) = (wake_time_proj_rem(ii,:) - mean(time_proj_pos_place(ii,:)))/std(time_proj_pos_place(ii,:));

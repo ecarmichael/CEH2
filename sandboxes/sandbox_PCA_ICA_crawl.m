@@ -17,15 +17,16 @@ end
 
 
 cd('C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter')
+fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\checks'; 
 % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
 
 f_list = dir('*data*');
 
 out = [];
 session = []; novel_idx = []; anx_idx = []; HS_idx = [];
-for ii = 1:length(f_list)
+for ii = 8:length(f_list)
     session{ii} = f_list(ii).name;
-        [A_out{ii}, ~, REM_A_pre{ii}, REM_A_post{ii}] = MS_PCA_ICA_no_fig(f_list(ii).name);
+        [A_out{ii}, ~, REM_A_pre{ii}, REM_A_post{ii}] = MS_PCA_ICA_no_fig(f_list(ii).name, fig_dir);
         close all
     
     if ~isempty(strfind(f_list(ii).name, 'HATDS'))
