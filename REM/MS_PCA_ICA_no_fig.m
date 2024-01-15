@@ -398,7 +398,7 @@ for ii = size(Ass_pos,2):-1:1
         %                 subplot(4, ceil(size(Ass_pos,2)/4),ii)
         %             hold on
     end
-    this_ass_map = []; these_place = zeros(size(Ass_pos_cells{ii}));
+    this_ass_map = []; these_place = zeros(size(Ass_pos_cells{ii})); this_cent = []; 
     fprintf('Assembly # %.0f had %.0f place cells\n', ii, sum(place.is(Ass_pos_cells{ii})))
     for jj = 1:length(Ass_pos_cells{ii})
         
@@ -407,6 +407,7 @@ for ii = size(Ass_pos,2):-1:1
             place_int = interp1(p_bins,place.map(Ass_pos_cells{ii}(jj),:),  p_bins(1):1:p_bins(end));
             %             place_int = place.map(Ass_pos_cells{ii}(jj),:);
             this_ass_map = [this_ass_map ; place_int];
+            this_cent = [this_cent , place.centroids(Ass_pos_cells{ii}(jj))]; 
         end
     end
     
@@ -422,6 +423,7 @@ for ii = size(Ass_pos,2):-1:1
         Ass_map{ii} = this_ass_map;
         Ass_pcells{ii} = Ass_pos_cells{ii}(logical(these_place));
         Ass_mean_map(ii,:) = mean(this_ass_map./max(this_ass_map,[],2),1);
+        Ass_cent{ii} = this_cent;
         
         figure(302)
         subplot(4, ceil(size(Ass_pos,2)/4),ii)
@@ -432,6 +434,7 @@ for ii = size(Ass_pos,2):-1:1
         Ass_map{ii} = NaN(size(p_bins(1):1:p_bins(end)));
         Ass_pcells{ii} = NaN;
         Ass_mean_map(ii,:) = NaN(size(p_bins(1):1:p_bins(end)));
+        Ass_cent{ii}  = NaN; 
     end
     
     %     if plot_flag
@@ -448,6 +451,7 @@ Ass_idx(nan_idx) = [];
 Ass_pos(:,nan_idx) = [];
 Ass_mean_map(nan_idx,:) = [];
 Ass_map(nan_idx) = [];
+Ass_cent(nan_idx) = []; 
 Ass_pcells(nan_idx) = [];
 
 Ass_pos_cells_place = Ass_pos_cells;
@@ -475,6 +479,7 @@ Ass_idx = Ass_idx(s_idx);
 Ass_pos = Ass_pos(:,s_idx);
 Ass_mean_map = Ass_mean_map(s_idx,:);
 Ass_map = Ass_map(s_idx);
+Ass_cent = Ass_cent(s_idx);
 Ass_pcells = Ass_pcells(s_idx);
 Ass_pos_cells_place = Ass_pos_cells_place(s_idx);
 time_proj_pos_place = time_proj_pos_place(s_idx,:);
@@ -487,6 +492,7 @@ Ass_idx(rm_idx) = [];
 Ass_pos(:,rm_idx) = [];
 Ass_mean_map(rm_idx,:) = [];
 Ass_map(rm_idx) = [];
+Ass_cent(rm_idx) = []; 
 Ass_pcells(rm_idx) = [];
 Ass_pos_cells_place(rm_idx) = [];
 time_proj_pos_place(rm_idx,:) = [];
@@ -621,6 +627,47 @@ if plot_flag
         end
     end
 end
+
+%% look at within assembly place map correlations
+
+% check against random place cell correlation distribution
+S_corr = []; 
+i_c = 0; 
+for ii = find(place.is)
+   i_c = i_c +1; 
+   j_c = 0;
+    for jj = find(place.is)
+        j_c = j_c+1; 
+        p_i = interp1(p_bins,place.map(ii,:),  p_bins(1):1:p_bins(end));
+        p_j = interp1(p_bins,place.map(jj,:),  p_bins(1):1:p_bins(end));
+        
+        [R P] =  corrcoef(p_i, p_j); 
+        S_corr(i_c, j_c) = R(1,2);
+        SP_corr(i_c, j_c) = P(1,2); 
+        
+    end
+end
+
+
+
+
+R_mean = []; R_corr = []; P_corr = [];
+for ii = length(Ass_map):-1:1
+    R_corr{ii} = [];  P_corr{ii} = []; 
+    for jj = size(Ass_map{ii},1):-1:1
+        for kk = size(Ass_map{ii},1):-1:1
+            [R, P] =  corrcoef(Ass_map{ii}(jj,:), Ass_map{ii}(kk,:));
+            R_corr{ii}(jj, kk) = R(1,2);
+            P_corr{ii}(jj, kk) = P(1,2);
+        end
+    end
+    R_p(ii) = sum(P_corr{ii}(logical(triu(ones(size(P_corr{ii})),1))) < 0.05)/length(P_corr{ii}(logical(triu(ones(size(P_corr{ii})),1))));
+    R_mean(ii) = mean(R_corr{ii}(logical(triu(ones(size(R_corr{ii})),1))), 'all'); 
+    C_mean(ii) = var(Ass_cent{ii});
+end
+
+
+C_threshold = prctile(S_corr(logical(triu(ones(size(S_corr)),1))), 95);
 %% summary figure
 if plot_flag
     figure(3000);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
@@ -650,7 +697,7 @@ if plot_flag
         view(90,90)
         
         stem(Ass_pcells{ii}, Ass_pos(Ass_pcells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
-        title(['Assembly #' num2str(ii) ' (' num2str(length(Ass_pcells{ii})) ' place cells)'])
+        title(['Assembly #' num2str(ii) ' (' num2str(length(Ass_pcells{ii})) ' place cells R = ' num2str(R_mean(ii),2) ' %' num2str(R_p(ii)*100) ')'])
         ylim([-0.1 0.4])
         ylabel('cell ID')
         xlim([0 length(Ass_pos(:,ii))])
