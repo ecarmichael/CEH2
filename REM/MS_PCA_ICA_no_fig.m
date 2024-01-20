@@ -1,4 +1,4 @@
-function [out, Ass_out, wake_time_proj_rem_pre, wake_time_proj_rem] = MS_PCA_ICA_no_fig(fname, fig_dir)
+function [All_A, Ass_out] = MS_PCA_ICA_no_fig(fname, fig_dir)
 % sandbox_PCA/ICA
 
 
@@ -386,7 +386,7 @@ for ii = size(Ass_pos,2):-1:1
         figure(301)
         subplot(4, ceil(size(Ass_pos,2)/4),ii)
         hold on
-        stem(Ass_pos(:,ii), 'color', c_ord(ii,:))
+        stem(Ass_pos(:,ii), 'color',[ 0.3 .3 .3],  'MarkerFaceColor',[0.3 .3 .3], 'MarkerSize', 5)
         view(90,90)
         
         stem(Ass_pos_cells{ii}, Ass_pos(Ass_pos_cells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
@@ -399,17 +399,17 @@ for ii = size(Ass_pos,2):-1:1
         %             hold on
     end
     
-    % create a place map for the assembly; 
+    % create a place map for the assembly;
     Ass_map{ii} = []; these_place = zeros(size(Ass_pos_cells{ii})); this_cent = [];
     fprintf('Assembly # %.0f had %.0f place cells\n', ii, sum(place.is(Ass_pos_cells{ii})))
     for jj = 1:length(Ass_pos_cells{ii})
         
-%         if place.is(Ass_pos_cells{ii}(jj))
-%             place_idx(jj) = 0;
-%         else
-%             place_idx(jj) = 1;
-%         end
-%         these_place(jj) = 1;
+        %         if place.is(Ass_pos_cells{ii}(jj))
+        %             place_idx(jj) = 0;
+        %         else
+        %             place_idx(jj) = 1;
+        %         end
+        %         these_place(jj) = 1;
         place_int = interp1(p_bins,place.map(Ass_pos_cells{ii}(jj),:),  p_bins(1):1:p_bins(end));
         %             place_int = place.map(Ass_pos_cells{ii}(jj),:);
         Ass_map{ii}(jj,:) =  place_int;
@@ -417,11 +417,21 @@ for ii = size(Ass_pos,2):-1:1
     end
     
     if plot_flag
-       figure(3021)
+        figure(3021)
         subplot(4, ceil(size(Ass_pos,2)/4),ii)
         imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii}),  Ass_map{ii})%./max(Ass_map{ii},[],2))
-        [~, p] = chi2gof(this_cent); 
-        title(['X^2 p: ' num2str(p, 4)])
+        for iS = 500:-1:1
+            shuff_var(iS) = var(randsample(place.centroids, length(this_cent), 1));
+        end
+        
+        Ass_var(ii) = (var(this_cent) - mean(shuff_var))/std(shuff_var);
+        
+        %         [~, p] = chi2gof(this_cent);
+        if Ass_var(ii) < -2
+            title(['Var Z= ' num2str(round(Ass_var(ii),2))], 'FontWeight', 'bold')
+        else
+            title(['Var Z= ' num2str(Ass_var(ii),2)], 'FontWeight', 'normal')
+        end
     end
     
     if sum(place.is(Ass_pos_cells{ii})) >0
@@ -436,23 +446,23 @@ for ii = size(Ass_pos,2):-1:1
         Ass_p_map{ii} = Ass_map{ii}(logical(place.is(Ass_pos_cells{ii})), :);
         Ass_p_mean_map(ii,:) = mean(Ass_p_map{ii}./max(Ass_p_map{ii},[],2),1);
         Ass_p_cent{ii} = this_cent(logical(place.is(Ass_pos_cells{ii})));
-
+        
         figure(302)
         subplot(4, ceil(size(Ass_pos,2)/4),ii)
         imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii}),  Ass_p_map{ii}./max(Ass_p_map{ii},[],2))
         
     else
-        Place_A_idx(ii) = 0; 
+        Place_A_idx(ii) = 0;
     end
-%         Ass_map{ii} = NaN(size(p_bins(1):1:p_bins(end)));
-%         Ass_pcells{ii} = NaN;
-%         Ass_mean_map(ii,:) = NaN(size(p_bins(1):1:p_bins(end)));
-%         Ass_cent{ii}  = NaN;
-%     end
-
-        Ass_mean_map(ii,:) = mean(Ass_map{ii}./max(Ass_map{ii},[],2),1);
-        Ass_pcells{ii} = Ass_pos_cells{ii}(logical(place.is(Ass_pos_cells{ii})));
-        Ass_cent{ii} = this_cent;
+    %         Ass_map{ii} = NaN(size(p_bins(1):1:p_bins(end)));
+    %         Ass_pcells{ii} = NaN;
+    %         Ass_mean_map(ii,:) = NaN(size(p_bins(1):1:p_bins(end)));
+    %         Ass_cent{ii}  = NaN;
+    %     end
+    
+    Ass_mean_map(ii,:) = mean(Ass_map{ii}./max(Ass_map{ii},[],2),1);
+    Ass_pcells{ii} = Ass_pos_cells{ii}(logical(place.is(Ass_pos_cells{ii})));
+    Ass_cent{ii} = this_cent;
     
     %     if plot_flag
     %         title(['Assembly #' num2str(ii)])
@@ -483,8 +493,15 @@ time_proj_pos_place(nan_idx,:) = [];
 All_A = [];
 
 All_A.idx = Ass_idx;
-All_A.Temp = Ass_Temp;
-All_A.Prog = time_proj;
+All_A.All_templates = Ass_Temp;
+All_A.All_projections = time_proj;
+All_A.Pos_templates = Ass_pos;
+All_A.Pos_projections = time_proj_pos;
+All_A.Pos_cells = Ass_pos_cells; 
+All_A.z_var = Ass_var; 
+
+
+
 
 
 
@@ -624,7 +641,7 @@ if plot_flag
     maximize
     n = ceil(size(time_proj_pos_place,1)/3);
     m = 3;
-    c_ord = MS_linspecer(size(time_proj_pos_place,1));
+    c_ord = MS_linspecer(size(time_proj_pos,1));
     
     for ii = 1: size(time_proj_pos_place,1)
         subplot(m,n,ii)
@@ -867,14 +884,29 @@ Ass_Temp_rem = assembly_patterns(data_h_rem');
 
 rng(123, 'twister')
 %using wake assemblies.
-wake_time_proj_rem = assembly_activity(Ass_pos,data_h_rem');
+wake_time_proj_rem = assembly_activity(All_A.Pos_templates ,data_h_rem');
+
+wake_time_proj_rem_place = assembly_activity(Ass_Temp ,data_h_rem');
+
+
 
 % PRE using wake assemblies.
 rng(123, 'twister')
-wake_time_proj_rem_pre = assembly_activity(Ass_pos,data_h_rem_pre');
+wake_time_proj_rem_pre = assembly_activity(All_A.Pos_templates,data_h_rem_pre');
+wake_time_proj_rem__pre_place = assembly_activity(Ass_Temp ,data_h_rem_pre');
 
 rng(123, 'twister')
 all_time_proj_rem = assembly_activity(Ass_Temp,data_h_rem');
+
+
+%% compute the reactivation strength
+ReAct_S = [];
+for ii = size(All_A.Pos_templates,2):-1:1
+    
+   ReAct_S(ii) = mean(wake_time_proj_rem(ii,:)) - mean(wake_time_proj_rem_pre(ii,:));
+    
+end
+
 
 %% get the REM react shuffle.
 
@@ -890,7 +922,7 @@ for iS = 1:nShuff
         shuff_data(:,ic) = circshift(data_h_rem_pre(:,ic), floor(MS_randn_range(1,1,1,size(data_h_rem_pre,1))));
     end
     
-    wake_time_proj_rem_s = assembly_activity(Ass_pos,shuff_data');
+    wake_time_proj_rem_s = assembly_activity(All_A.All_templates,shuff_data');
     
     shuff_mat_pre = [shuff_mat_pre; wake_time_proj_rem_s];
     
@@ -900,7 +932,7 @@ for iS = 1:nShuff
         shuff_data(:,ic) = circshift(data_h_rem(:,ic), floor(MS_randn_range(1,1,1,size(data_h_rem,1))));
     end
     
-    wake_time_proj_rem_s = assembly_activity(Ass_pos,shuff_data');
+    wake_time_proj_rem_s = assembly_activity(All_A.All_templates,shuff_data');
     
     shuff_mat = [shuff_mat; wake_time_proj_rem_s];
     
@@ -922,7 +954,7 @@ for ii = size(wake_time_proj_rem,1):-1:1
 end
 
 
-for ii = 1:size(Ass_pos,2)
+for ii = 1:size(All_A.Pos_templates,2)
     
     % pre assembly reactivations
     [~, pre_idx] = findpeaks(wake_time_proj_rem_pre(ii,:),'MinPeakHeight', R_threshold ,'MinPeakDistance', 2/(mode(diff(tvec_rem_pre))));
@@ -933,33 +965,33 @@ end
 
 %% loop over assemblies to see what the range of reactivations would be.
 
-out.Ass_p_val_pre = [];
-out.ReAct_rate_pre = [];
-out.ReAct_rate_p_pre = [];
+All_A.Ass_p_val_pre = [];
+All_A.ReAct_rate_pre = [];
+All_A.ReAct_rate_p_pre = [];
 
-out.Ass_p_val_post = [];
-out.ReAct_rate_post = [];
-out.ReAct_rate_p_post = [];
+All_A.Ass_p_val_post = [];
+All_A.ReAct_rate_post = [];
+All_A.ReAct_rate_p_post = [];
 
 
-for ii = size(Ass_pos,2):-1:1
-    out.Ass_p_val_pre(ii) = sum(sum(shuff_mat_pre>R_threshold,2) >sum(wake_time_proj_rem_pre(ii,:) > R_threshold))/ size(shuff_mat_pre,1);
+for ii = size(All_A.Pos_templates,2):-1:1
+    All_A.Ass_p_val_pre(ii) = sum(sum(shuff_mat_pre>R_threshold,2) >sum(wake_time_proj_rem_pre(ii,:) > R_threshold))/ size(shuff_mat_pre,1);
     
-    out.ReAct_rate_pre(ii) = sum(wake_time_proj_rem_pre(ii,:) > R_threshold) / ((tvec_rem_pre(end) - tvec_rem(1))/60);
+    All_A.ReAct_rate_pre(ii) = sum(wake_time_proj_rem_pre(ii,:) > R_threshold) / ((tvec_rem_pre(end) - tvec_rem(1))/60);
     
     Shuff_rate_pre = sum(shuff_mat_pre > R_threshold,2)./ ((tvec_rem_pre(end) - tvec_rem_pre(1))/60);
     
-    out.ReAct_rate_p_pre(ii) = sum(Shuff_rate_pre > out.ReAct_rate_pre(ii)) / length(Shuff_rate_pre);
+    All_A.ReAct_rate_p_pre(ii) = sum(Shuff_rate_pre > All_A.ReAct_rate_pre(ii)) / length(Shuff_rate_pre);
     
     
     
-    out.Ass_p_val_post(ii) = sum(sum(shuff_mat>R_threshold,2) >sum(wake_time_proj_rem(ii,:) > R_threshold))/ size(shuff_mat,1);
+    All_A.Ass_p_val_post(ii) = sum(sum(shuff_mat>R_threshold,2) >sum(wake_time_proj_rem(ii,:) > R_threshold))/ size(shuff_mat,1);
     
-    out.ReAct_rate_post(ii) = sum(wake_time_proj_rem(ii,:) > R_threshold) / ((tvec_rem(end) - tvec_rem(1))/60);
+    All_A.ReAct_rate_post(ii) = sum(wake_time_proj_rem(ii,:) > R_threshold) / ((tvec_rem(end) - tvec_rem(1))/60);
     
     Shuff_rate_post = sum(shuff_mat > R_threshold,2)./ ((tvec_rem(end) - tvec_rem(1))/60);
     
-    out.ReAct_rate_p_post(ii) = sum(Shuff_rate_post > out.ReAct_rate_post(ii)) / length(Shuff_rate_post);
+    All_A.ReAct_rate_p_post(ii) = sum(Shuff_rate_post > All_A.ReAct_rate_post(ii)) / length(Shuff_rate_post);
     
 end
 
@@ -995,7 +1027,7 @@ end
 x_val = [min([tvec_rem_pre(1) tvec_rem(1)]), max([tvec_rem_pre(end) tvec_rem(end)])];
 
 if plot_flag
-    A_idx = 1:size(Ass_pos,2);
+    A_idx = 1:size(All_A.Pos_templates,2);
     %     A_idx = [3, 4, 9 12 13];
     figure(310);clf; hold on; set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
     
@@ -1011,7 +1043,7 @@ if plot_flag
     cla;
     hold on
     for ii = A_idx
-        if out.Ass_p_val_pre(ii) <0.05
+        if All_A.Ass_p_val_pre(ii) <0.05
             plot(tvec_rem_pre, wake_time_proj_rem_pre(A_idx(ii),:), 'color', c_ord(ii,:), 'linewidth', 1)
         else
             plot(tvec_rem_pre, wake_time_proj_rem_pre(A_idx(ii),:),'--', 'color', c_ord(ii,:),'linewidth', 0.5)
@@ -1022,7 +1054,7 @@ if plot_flag
     xlim(x_val)
     ylabel('Pre REM Reactivation')
     yline(R_threshold)
-    legend(num2str(A_idx'),'location',  'northeast', 'box', 'off', 'orientation', 'horizontal')
+    legend(num2str(A_idx'),'location',  'northeast', 'box', 'off', 'orientation', 'vertical', 'NumColumns', ceil(length(A_idx)/2))
     
     
     ap(1) = subplot(10,1,5:6);
@@ -1035,7 +1067,7 @@ if plot_flag
     cla;
     hold on
     for ii = A_idx
-        if out.Ass_p_val_post(ii) <0.05
+        if All_A.Ass_p_val_post(ii) <0.05
             plot(tvec_rem, wake_time_proj_rem(A_idx(ii),:), 'color', c_ord(ii,:), 'linewidth', 1)
         else
             plot(tvec_rem, wake_time_proj_rem(A_idx(ii),:),'--', 'color', c_ord(ii,:), 'linewidth', .5)
@@ -1046,7 +1078,7 @@ if plot_flag
     xlim(x_val)
     ylabel('Post REM Reactivation')
     yline(R_threshold)
-    legend(num2str(A_idx'),'location',  'northeast', 'box', 'off', 'orientation', 'horizontal')
+%     legend(num2str(A_idx'),'location',  'northeast', 'box', 'off', 'orientation', 'horizontal')
     
     
     as(1) = subplot(10,1,9);
@@ -1162,13 +1194,13 @@ if ~isempty(Ass_map_peak)
     
     
     if strcmpi(task, 'HATDS')
-        out.close_idx = find(Ass_map_peak < 40);
-        out.mid_idx = find((40 <= Ass_map_peak) & (Ass_map_peak<=60));
-        out.open_idx = find(Ass_map_peak >60);
+        All_A.close_idx = find(Ass_map_peak < 33);
+        All_A.mid_idx = find((33 <= Ass_map_peak) & (Ass_map_peak<=66));
+        All_A.open_idx = find(Ass_map_peak >66);
     else
-        out.close_idx = find(Ass_map_peak > 60);
-        out.mid_idx = find((40 <= Ass_map_peak) & (Ass_map_peak<=60));
-        out.open_idx = find(Ass_map_peak <40);
+        All_A.close_idx = find(Ass_map_peak > 66);
+        All_A.mid_idx = find((33 <= Ass_map_peak) & (Ass_map_peak<=66));
+        All_A.open_idx = find(Ass_map_peak <33);
     end
     
     
@@ -1182,9 +1214,9 @@ if ~isempty(Ass_map_peak)
     % [~, idx] = max(close_peaks);
     % Ass_2 = close_idx(idx(1));
 else
-    out.close_idx = NaN;
-    out.mid_idx = NaN;
-    out.open_idx = NaN;
+    All_A.close_idx = NaN;
+    All_A.mid_idx = NaN;
+    All_A.open_idx = NaN;
     return
 end
 
