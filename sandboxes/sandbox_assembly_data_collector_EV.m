@@ -46,3 +46,29 @@ for iS = 1:length(sub_list)
         
     end
 end
+
+%% append deconv
+    oasis_dir = 'C:\Users\ecarm\Documents\GitHub\OASIS_matlab';
+cd(oasis_dir)
+addpath(genpath(oasis_dir));
+oasis_setup
+
+cd(inter_dir)
+f_list = dir('*data.mat');
+
+for ii = 1:length(f_list)
+    
+    load(f_list(ii).name)
+    
+    fprintf('Processing %s   %s ...\n', info.subject, info.session)
+    
+    if ~isfield(ms, 'deconv') % get the deconvolved trace if not already present.
+    ms = MS_append_deconv(ms, 1);
+    end
+    
+    fprintf('Saving %s   %s ...\n', info.subject, info.session)
+    save([inter_dir filesep info.subject '_' info.session '_data.mat'], 'ms', 'behav', 'all_binary_pre_REM', 'all_binary_post_REM','all_seg_idx', 'info')
+    
+    
+end
+
