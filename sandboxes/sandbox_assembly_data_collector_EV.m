@@ -25,6 +25,7 @@ for iS = 1:length(sub_list)
         
         ms.time = ms.time - ms.time(1); 
         
+        
         load('all_binary_pre_REM.mat')
         load('all_binary_post_REM.mat')
         
@@ -43,6 +44,14 @@ for iS = 1:length(sub_list)
         cd([behav_dir filesep sub_list{iS} filesep d_list(iD).name])
         
         load('behav.mat');
+        
+        nan_idx = (behav.position(:,1) < 0 ) | (behav.position(:,1) > 100);
+        behav.position(nan_idx,1) = NaN; 
+        behav.position(:,1) = fillmissing(behav.position(:,1), 'nearest');
+        
+        nan_idx = (behav.position(:,2) < 0 );
+        behav.position(nan_idx,2) = NaN; 
+        behav.position(:,2) = fillmissing(behav.position(:,2), 'nearest');
 
         fprintf('Saving %s   %s ...\n', info.subject, info.session)
         save([inter_dir filesep info.subject '_' info.session '_data.mat'], 'ms', 'behav', 'all_binary_pre_REM', 'all_binary_post_REM','all_seg_idx', 'info')
@@ -65,6 +74,8 @@ for ii = 1:length(f_list)
     load(f_list(ii).name)
     
     fprintf('Processing %s   %s ...\n', info.subject, info.session)
+    
+    ms.RawTraces = ms.RawTraces - mean(ms.RawTraces); 
     
     if ~isfield(ms, 'deconv') % get the deconvolved trace if not already present.
     ms = MS_append_deconv(ms, 1);

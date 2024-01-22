@@ -71,7 +71,7 @@ session = []; novel_idx = []; D3_idx = []; HS_idx = [];
 for ii = 1:length(j20_list)
     session{ii} = j20_list(ii).name;
     cd(data_dir)
-        [A_out{ii}] = MS_PCA_ICA_no_fig(j20_list(ii).name, fig_dir);
+        [J_out{ii}] = MS_PCA_ICA_no_fig(j20_list(ii).name, fig_dir);
         close all
     
 
@@ -97,6 +97,53 @@ for ii = 1:length(j20_list)
     %    clearvars -except f_list out ii
     %    close all
 end
+
+%% collect the output
+
+% get the length of the assemblies in each recording. 
+for ii =length(J_out):-1:1
+    A_l(ii) = length(J_out{ii}.ReAct_rate_pre);
+    W_l(ii) = size(J_out{ii}.Pos_templates,2);
+end
+
+Pre_A_rate = NaN(length(J_out), max(A_l)); 
+Post_A_rate = NaN(length(J_out), max(A_l)); 
+Wake_A_rate = NaN(length(J_out), max(W_l)); 
+
+Pre_A_sig = []; Post_A_sig = [];
+C_pre = []; C_post = [];
+O_pre = []; O_post = [];
+M_pre = []; M_post = [];
+
+for ii = length(J_out):-1:1
+    pre_sig_idx = logical(J_out{ii}.Ass_p_val_pre < 0.05); 
+    post_sig_idx = logical(J_out{ii}.Ass_p_val_post < 0.05); 
+
+    Pre_A_sig(ii) = sum(pre_sig_idx);
+    Post_A_sig(ii) = sum(post_sig_idx);
+    Wake_A_sig(ii) = size(J_out{ii}.Pos_templates,2); 
+    
+    ReAct_sig(ii) = mean(J_out{ii}.ReAct_S(pre_sig_idx & post_sig_idx)); 
+    
+    Pre_A_rate(ii,1:sum(pre_sig_idx)) = J_out{ii}.ReAct_rate_pre(pre_sig_idx); 
+    Post_A_rate(ii,1:sum(post_sig_idx)) = J_out{ii}.ReAct_rate_post(post_sig_idx);
+    
+    Wake_A_rate(ii,1:sum(pre_sig_idx)) = J_out{ii}.ReAct_rate_pre(pre_sig_idx); 
+   
+    C_pre(ii) = (sum(ismember(find(pre_sig_idx),J_out{ii}.close_idx))/length(pre_sig_idx))*100; 
+    O_pre(ii) = (sum(ismember(find(pre_sig_idx),J_out{ii}.open_idx))/length(pre_sig_idx))*100; 
+    M_pre(ii) = (sum(ismember(find(pre_sig_idx),J_out{ii}.mid_idx))/length(pre_sig_idx))*100; 
+    
+    C_post(ii) = (sum(ismember(find(post_sig_idx),J_out{ii}.close_idx))/length(post_sig_idx))*100; 
+    O_post(ii) = (sum(ismember(find(post_sig_idx),J_out{ii}.open_idx))/length(post_sig_idx))*100; 
+    M_post(ii) = (sum(ismember(find(post_sig_idx),J_out{ii}.mid_idx))/length(post_sig_idx))*100; 
+end
+
+% simple output
+
+figure(2001)
+subplot(2,2,1)
+% bar(
 
 
 %% collect output
