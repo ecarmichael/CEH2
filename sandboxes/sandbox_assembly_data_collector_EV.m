@@ -23,6 +23,8 @@ for iS = 1:length(sub_list)
         load('ms_trk.mat');
         ms = ms_trk; clear ms_trk;
         
+        ms.time = ms.time - ms.time(1); 
+        
         load('all_binary_pre_REM.mat')
         load('all_binary_post_REM.mat')
         
@@ -30,7 +32,9 @@ for iS = 1:length(sub_list)
         
         info = [];
         info.subject = sub_list{iS};
-        info.session = d_list(iD).name;
+        info.session = ['LTD' d_list(iD).name(end)];
+        
+        
         info.nCells = ms.numNeurons;
         info.dur_preREM = size(all_binary_pre_REM,1)/30/60;%min
         info.dur_postREM = size(all_binary_post_REM,1)/30/60;%min

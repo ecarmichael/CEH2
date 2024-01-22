@@ -179,9 +179,9 @@ if plot_flag
     end
 end
 %% follow grosmark et al. method of deconv preprocessing
-% Csp = ms_trk_cut.deconv./ms_trk_cut.denoise;
-% Csp = Csp > 0.01;
-% ms_trk_cut.Csp = Csp;
+Csp = ms_trk_cut.deconv./ms_trk_cut.denoise;
+Csp = Csp > 0.01;
+ms_trk_cut.Csp = Csp;
 
 % cfg_plot.Ca_type = 'RawTraces';
 % cfg_plot.plot_type = '2d';
