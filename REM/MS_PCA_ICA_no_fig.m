@@ -122,21 +122,19 @@ ms_trk_cut = MS_Remove_trace(cfg_rem, ms_trk_cut);
 
 
 place = [];
-for iC = length(PCs_properties.peak_loc):-1:1
-    
-    place.centroids(iC) = PCs_properties.peak_loc(iC);
-    
-    % is it a place cell?
-    place.is(iC) = PCs_properties.isPC(iC);
-    
-    place.map(iC,:) = PCs_properties.tuning_curve_data(:,iC)';
-    
-    %     bin_vect = 0:2.5:100;
-    %     p_idx = find(bin_vect == place.centroids(iC));
-    %
-    %     place.map(iC,:) = zeros(length(bin_vect),1); %mean(spatial_analysis.bin{iC,1}.PlaceField,1)/max(mean(spatial_analysis.bin{iC,1}.PlaceField,1)); % get the 1d place field and normalize.
-    %     place.map(iC,p_idx) = 1;
-end
+
+place.centroids = PCs_properties.peak_loc;
+
+% is it a place cell?
+place.is = PCs_properties.isPC;
+
+place.map = PCs_properties.tuning_curve_data';
+
+place.MI = PCs_properties.MI;
+
+place.peak_rate = PCs_properties.peak_rate;
+
+
 
 place.centroids(remove_cell_id)= [];
 place.centroids(remove_cell_id_decon)= [];
@@ -146,6 +144,12 @@ place.is(remove_cell_id_decon)= [];
 
 place.map(remove_cell_id,:)= [];
 place.map(remove_cell_id_decon,:)= [];
+
+place.MI(remove_cell_id)= [];
+place.MI(remove_cell_id_decon)= [];
+
+place.peak_rate(remove_cell_id)= [];
+place.peak_rate(remove_cell_id_decon)= [];
 
 bin = 3; %80/size(place.map,2);
 p_bins = 0:bin:100;
@@ -242,7 +246,9 @@ for ii = size(Csp,2):-1:1
     spk_count = histc(this_cell,tbin_edges); % get spike counts for each bin
     spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
     
-    data_h(:,ii) = zscore(spk_count);
+    data_h(:,ii) = spk_count;
+%     data_h(:,ii) = zscore(spk_count);
+
 end
 
 
@@ -743,7 +749,7 @@ if plot_flag
     win = floor(2.5 * mode(diff(behav.time)));
     
     n = ceil(size(All_A.Pos_projections,1)/3);
-    m = 4;
+    m = 5;
     l = 5;
     c_ii = 0;
     f_n = 0;
@@ -769,13 +775,22 @@ if plot_flag
 %         stem(n_idx,All_A.Pos_templates(n_idx,ii), 'color', c_ord(ii,:))
         view(90,90)
         
-        title(['Assembly #' num2str(ii) ' (' num2str(sum(place.is(All_A.Pos_cells{ii}))) ' place cells R = ' num2str(R_mean(ii),2) ' %' num2str(R_p(ii)*100) ')'])
+        title(['Assembly #' num2str(ii) ' (nPC:' num2str(sum(place.is(All_A.Pos_cells{ii}))) ' | map corr: ' num2str(R_mean(ii),2) '| %sig ' num2str(R_p(ii)*100,2) ')'])
         ylim([-0.1 0.5])
         ylabel('cell ID')
         xlim([0 length(All_A.Pos_templates(:,ii))])
         
         
         subplot(l,m,s_idx+1)
+        cla
+        hold on
+        P_idx = find(ismember(All_A.Pos_cells{ii}, find(place.is))); 
+        
+        scatter( All_A.Pos_templates(All_A.Pos_cells{ii},ii), place.MI(All_A.Pos_cells{ii}),35,c_ord(ii,:))
+        scatter(All_A.Pos_templates(All_A.Pos_cells{ii}(P_idx),ii),place.MI(All_A.Pos_cells{ii}(P_idx)), 35,c_ord(ii,:), 'filled')
+        xlabel('ICA weight'); ylabel('MI'); xlim([0 0.4]); 
+        
+        subplot(l,m,s_idx+2)
         hold on
         [p_val, p_idx] = findpeaks(All_A.Pos_projections(ii,:),'MinPeakHeight', 5 ,'MinPeakDistance', 2*floor(mode(diff(ms.time))));
         
@@ -788,6 +803,7 @@ if plot_flag
             end
         end
         
+        
         %         plot((-win:win)/mode(diff(behav.time)), median(this_pos), 'color',[c_ord(ii,:) 1], 'linewidth', 3)
         xlim([-win/mode(diff(behav.time)) win/mode(diff(behav.time))]);
         %         set(gca, 'color', 'k')
@@ -796,7 +812,7 @@ if plot_flag
         ylabel('position on track (cm)')
         
         
-        subplot(l,m,s_idx+2)
+        subplot(l,m,s_idx+3)
         cla
         hold on
         [N, edges] = histcounts(this_pos(:, win), length(p_bins(1):5:p_bins(end)));
@@ -815,7 +831,7 @@ if plot_flag
         
         
         
-        subplot(l,m,s_idx+3)
+        subplot(l,m,s_idx+4)
         %             imagesc(p_bins(1):1:p_bins(end), 1:length(Ass_pcells{ii})+1,  [Ass_map{ii}; nan(size(ass Ass_mean_map(ii,:)] )
         imagesc(1:size(All_A.Pos_map{ii},1),p_bins(1):1:p_bins(end),  (All_A.Pos_map{ii}./max(All_A.Pos_map{ii}, [],2))')
         hold on
@@ -835,14 +851,28 @@ if plot_flag
     end
 end
 
+%% get the position on the track of the assembly
+
+for ii = size(All_A.Pos_templates,2):-1:1
+    
+            [p_val, p_idx] = findpeaks(All_A.Pos_projections(ii,:),'MinPeakHeight', 5 ,'MinPeakDistance', 2*floor(mode(diff(ms.time))));
+
+     this_pos = [];
+        for ip = 1:length(p_idx)
+            this_idx = nearest_idx(tbin_centers(p_idx(ip)), behav.time/1000);
+                this_pos(ip,:) = behav.position(this_idx);
+        end
+        
+        All_A.ReAct_pos{ii} = this_pos; 
+        All_A.ReAct_pos_val{ii} = p_val; 
+end
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % grab the REM data
 
 all_binary_post_REM(:, remove_cell_id) = [];
 all_binary_post_REM(:, remove_cell_id_decon) = [];
 
-% all_deconv_post_REM =
-
+% all_deconv_post_REM 
 
 all_binary_pre_REM(:, remove_cell_id) = [];
 all_binary_pre_REM(:, remove_cell_id_decon) = [];
@@ -887,7 +917,9 @@ for ii = size(all_binary_post_REM,2):-1:1
     end
     spk_count = histc(this_cell,tbin_edges_rem); % get spike counts for each bin
     spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
-    data_h_rem(:,ii) = zscore(spk_count);
+%     data_h_rem(:,ii) = zscore(spk_count);
+    data_h_rem(:,ii) = spk_count;
+
 end
 tvec_rem = tbin_centers_rem;
 
@@ -909,7 +941,9 @@ for ii = size(all_binary_pre_REM,2):-1:1
     end
     spk_count = histc(this_cell,tbin_edges_rem); % get spike counts for each bin
     spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
-    data_h_rem_pre(:,ii) = zscore(spk_count);
+    data_h_rem_pre(:,ii) =spk_count;
+%         data_h_rem_pre(:,ii) = zscore(spk_count);
+
 end
 tvec_rem_pre = tbin_centers_rem;
 
