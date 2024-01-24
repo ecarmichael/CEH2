@@ -1,4 +1,4 @@
-function [A_temp, A_prog, data_h, tvec] =MS_PCA_ICA_only(ms, move_idx, binsize, method, opts)
+function [A_temp, A_proj, data_h, tvec] =MS_PCA_ICA_only(ms, move_idx, binsize, method, opts)
 
 if nargin < 3
     binsize = .5;
