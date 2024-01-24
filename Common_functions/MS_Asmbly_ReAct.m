@@ -1,4 +1,4 @@
-function [proj_out, data_h, tvec, R_threshold] = MS_Asmbly_ReAct(data_in, Temp_in,ms, bin_size);
+function [proj_out, data_h, tvec] = MS_Asmbly_ReAct(data_in, Temp_in,ms, bin_size);
 
 
 
@@ -27,29 +27,4 @@ tvec = tbin_centers;
 rng(123, 'twister')
 
 proj_out = assembly_activity(Temp_in ,data_h');
-
-%%
-rng(123,'twister')
-nShuff = 500;
-shuff_mat = [];
-
-for iS = 1:nShuff
-    tic
-    shuff_data = NaN(size(data_h));
-    for ic = 1:size(data_h,2)
-        
-        vals = (size(data_h,1)-1).*rand(1,1) + 1;
-
-        shuff_data(:,ic) = circshift(data_h(:,ic), floor(vals));
-    end
-    
-    shuff_proj = assembly_activity(Temp_in,shuff_data');
-    
-    shuff_mat = [shuff_mat; shuff_proj];
-    
-   
-    
-end
-
-R_threshold = prctile(shuff_mat(shuff_mat >0), 99, 'all');
 
