@@ -128,7 +128,7 @@ for ii = 1: size(A_cells,2)
         
 
         if ~isempty(fig_dir)
-            saveas(gcf, [fig_dir filesep info.subject '_' info.session '_Wake_A_summery_' num2str(f_n+1) 'bin size ' num2str(info.bin)  's.png']);
+            saveas(gcf, [fig_dir filesep info.subject '_' info.session '_Wake_A_summery_' num2str(f_n+1) '_' strrep(num2str(info.bin), '.', 'p')  's_bin.png']);
         end
     end
 end
