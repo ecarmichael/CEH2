@@ -134,7 +134,8 @@ for ii = 1:length(j20_list)
 
 end
 
-
+J_all = J_out;
+A_out = J_out; 
 %% collect the data
 
 Pre_n_Asmbly = []; Post_n_Asmbly = [];
@@ -196,14 +197,14 @@ end
 %% plot the number of Assemblies pre and post.
 
         max_n_A = max([mean(Pre_n_Asmbly) ; mean(Post_n_Asmbly) ]);
-        max_n_A = max_n_A*1.4; 
+        max_n_A = max_n_A*1.5; 
         max_r_A = max([mean(Pre_r_Asmbly) ; mean(Post_r_Asmbly) ]);
-        max_r_A = max_r_A*1.4; 
+        max_r_A = max_r_A*1.5; 
 
         max_n_SA = max([mean(S_Pre_n_Asmbly) ; mean(S_Post_n_Asmbly) ]);
-        max_n_SA = max_n_SA*1.4; 
+        max_n_SA = max_n_SA*1.5; 
         max_r_SA = max([mean(S_Pre_r_Asmbly) ; mean(S_Post_r_Asmbly) ]);
-        max_r_SA = max_r_SA*1.4; 
+        max_r_SA = max_r_SA*1.5; 
         
 
 c_ord = MS_linspecer(5); 
@@ -221,6 +222,11 @@ lt5_idx = ~n_idx & ~a_idx & ~HS_idx;
 
 H1_idx = n_idx & a_idx & ~HS_idx;  
 H5_idx = ~n_idx & a_idx & ~HS_idx;  
+
+% j20 = 
+n_idx = logical(novel_idx(1:length(A_out))); 
+a_idx = logical(novel_idx(1:length(A_out))); 
+n_idx = logical(J20_novel_idx); 
 
 
 
