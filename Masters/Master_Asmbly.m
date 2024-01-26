@@ -64,7 +64,7 @@ for ii = 1:length(f_list)
     session{ii} = f_list(ii).name;
     
     % compute assemblies and related ReActs
-%     A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh);
+    A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh);
     
     % Summary plots
     %     Pipline_Asmbly_plot(A_out{ii}, fig_dir);

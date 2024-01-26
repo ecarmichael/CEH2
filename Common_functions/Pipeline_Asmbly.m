@@ -183,6 +183,20 @@ for iB = length(bin_s):-1:1
     
 end
 
+
+%% get the cross correlation between assemblies
+xc_bin = 0.1; 
+t_max = 5; 
+
+for iB = length(bin_s):-1:1
+    
+    [wake_xcor] = MS_Asmbly_xcor(P_proj{iB},wake_tvec, 5, xc_bin, t_max)
+    
+    
+end
+
+
+
 %% reactivation strength
 
 for iB = length(bin_s):-1:1
