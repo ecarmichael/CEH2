@@ -115,6 +115,8 @@ for ii = 1:length(j20_list)
     
     % Summary plots
     %     Pipline_Asmbly_plot(J_out{ii}, fig_dir);
+    
+    
     close all
     
     if ~isempty(strfind(j20_list(ii).name, 'D1')) %|| ~isempty(strfind(f_list(ii).name, 'HATDS'))
@@ -135,7 +137,7 @@ for ii = 1:length(j20_list)
 end
 
 J_all = J_out;
-A_out = J_out;
+% A_out = J_out;
 %% collect the data
 
 Pre_n_Asmbly = []; Post_n_Asmbly = [];

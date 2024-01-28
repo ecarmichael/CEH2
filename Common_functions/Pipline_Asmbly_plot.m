@@ -26,3 +26,12 @@ for iB = size(A_out,2):-1:1
 
 end
 
+
+%% Plot the raw/raster in time
+
+for iB = size(A_out,2):-1:1
+
+    MS_Asmbly_plot_raster(A_out{iB}, fig_dir)
+    
+    
+end

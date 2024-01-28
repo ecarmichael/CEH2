@@ -1,11 +1,14 @@
-function[z_x_c] = MS_Asmbly_xcor(Proj_in, tvec, R_thresh, xc_bin, t_max)
+function[z_x_c, z_ac_max, mean_x_c, ac_max] = MS_Asmbly_xcor(Proj_in, tvec, R_thresh, xc_bin, t_max)
 
-
-if nargin <4
+if nargin < 3
+    R_thresh = 5;
+    xc_bin = 0.1; in seconds
+    t_max = 2.5;
+elseif nargin <4
     xc_bin = 0.1; in seconds
     t_max = 2.5;
 elseif nargin < 5
-    t_max = 2.5; 
+    t_max = 2.5;
 end
 
 cfg.binsize = xc_bin;
@@ -14,7 +17,7 @@ cfg.max_t = t_max;
 %% convert the data to timestamps; 
 
 for ii = size(Proj_in, 1):-1:1
-    [~, this_ts] = findpeaks(Proj_in(ii,:), 'MinPeakHeight', 5); 
+    [~, this_ts] = findpeaks(Proj_in(ii,:), 'MinPeakHeight', R_thresh); 
     
     TS{ii} = tvec(this_ts); 
 end
