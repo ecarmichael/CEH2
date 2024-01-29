@@ -53,8 +53,8 @@ for ii = size(Proj_in, 1):-1:1
 
         
         [x_c{ii, jj}, t_vec] = ccf(cfg, TS{ii}, TS{jj});
-        mean_x_c(ii, jj) = mean(x_c{ii,jj}); % as per wilson mcnaughton; 
-        z_x_c(ii, jj) = (mean_x_c(ii,jj) - mean(shuff_x_c)) / std(shuff_x_c);
+        mean_x_c(ii, jj) = nanmean(x_c{ii,jj}); % as per wilson mcnaughton; 
+        z_x_c(ii, jj) = (mean_x_c(ii,jj) - nanmean(shuff_x_c)) / nanstd(shuff_x_c);
         
         [ac, lag] = xcov(Proj_in(ii,:), Proj_in(jj,:),cfg.max_t/mode(diff(tvec)),  'coeff');
         if nansum(ac) == 0
@@ -64,7 +64,7 @@ for ii = size(Proj_in, 1):-1:1
             [ac_max(ii,jj),idx] = max(ac);
             lag_max(ii,jj) = lag(idx);
         end
-        z_ac_max(ii,jj) = (mean(ac_max(ii,jj)) - mean(s_ac_max)) / std(s_ac_max); 
+        z_ac_max(ii,jj) = (nanmean(ac_max(ii,jj)) - nanmean(s_ac_max)) / nanstd(s_ac_max); 
         
     end
 end

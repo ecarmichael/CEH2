@@ -701,7 +701,42 @@ ylabel('ReAct Str.')
 ylim([-1 1]);
 xlim([-5 5]);
 
-%% to do
+%% Collect the change in significant CCF
+pre_sig_cff = []; post_sig_cff = []; 
+J_pre_sig_cff = []; J_post_sig_cff = [];
+for iB = length(bin_size):-1:1
+    
+    for iS = size(A_out,2):-1:1
+        
+        pre_sig_cff(iS, iB) = A_out{iS}{iB}.REM_Pre_psig_cff;
+        post_sig_cff(iS, iB) = A_out{iS}{iB}.REM_Post_psig_cff;
+    end
+    
+    for iJ = size(J_out,2):-1:1
+        
+        J_pre_sig_cff(iJ, iB) = J_out{iJ}{iB}.REM_Pre_psig_cff;
+        J_post_sig_cff(iJ, iB) = J_out{iJ}{iB}.REM_Post_psig_cff;
+    end
+    
+        figure(10+iB)
+    c_ord = MS_linspecer(4); 
+    subplot(1,2,1)
+    cla
+    MS_bar_w_err(pre_sig_cff(:,iB), post_sig_cff(:,iB), c_ord(1,:));
+    set(gca, 'XTickLabel', {'pre', 'post'})
+    title(['CCF sig (bin: ' num2str(bin_size(iB)) ')'])
+    ylabel('% significant of wake')
+    
+        subplot(1,2,2)
+    cla
+    MS_bar_w_err(J_pre_sig_cff(:,iB), J_post_sig_cff(:,iB), c_ord(2,:))
+        set(gca, 'XTickLabel', {'pre', 'post'})
+    title('J20')
+end
 
-% work out the location of the reactivated assemblies. Is there a bias? 
+
+
+
+
+
 
