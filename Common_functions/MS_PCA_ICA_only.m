@@ -1,4 +1,4 @@
-function [A_temp, A_proj, data_h, tvec] =MS_PCA_ICA_only(ms, move_idx, binsize, method, opts)
+function [A_temp, A_proj, data_h, tvec, opts] =MS_PCA_ICA_only(ms, move_idx, binsize, method, opts)
 
 if nargin < 3
     binsize = .5;
@@ -21,33 +21,39 @@ if isempty(opts)
     opts.Patterns.number_of_iterations = 500;
 end
     
+if strcmpi(method, 'grosmark') && ~isfield(opts, 'binsize')
 
+    opts.binsize = 1/30; 
+end
 rng(123, 'twister')
 
 %%
 
 %% follow grosmark et al. method of deconv preprocessing
-if strcmp(method, 'grossmark')
-    Csp = ms.deconv./ms.denoise;
-    Csp = Csp > 0.01;
-    ms.Csp = Csp;
+if strcmp(method, 'grosmark')
+    fprintf('Using Deconv/Denoise ("Grosmark et al. 2021")  data as an input\n')
+    for ii = size(ms.detrendRaw,2):-1:1
+        m_ad(ii) = 1.5*mad([ms.denoise(:,ii)- ms.detrendRaw(:,ii)]);
+        Csp(:,ii) = (ms.deconv(:,ii)/m_ad(ii)) > 1.5;
+    end
+    
+%     Csp = Csp > 0.01;
+%     ms.Csp = Csp;
+%     
     data = Csp;
+%     if ~isempty(opts.binsize)
+%         opts.gauss_window = 1./opts.binsize; % 1 second window
+%         opts.gauss_SD = 0.1./opts.binsize; % 0.02 seconds (20ms) SD
+%         gk = gausskernel(opts.gauss_window,opts.gauss_SD); gk = gk./opts.binsize; % normalize by binsize
+%         data = conv2(Csp,gk,'same'); % convolve with gaussian window
+%         
+%     end
+    
 else
+        fprintf('Using Binarized data as an input\n')
     data = ms.Binary;
 end
 
-
-
-
-
-% %% bin and convolve
-% binsize = 0.1; % in seconds, so everything else should be seconds too
-% gauss_window = 1./binsize; % 1 second window
-% gauss_SD = 0.5./binsize; % 0.02 seconds (20ms) SD
-% gk = gausskernel(gauss_window,gauss_SD); gk = gk./binsize; % normalize by binsize
-% gau_sdf = conv2(Csp,gk,'same'); % convolve with gaussian window
-%
-% gau_z = zscore(gau_sdf, [], 2);
 
 %% try again with histc
 % binsize = .5;
@@ -58,7 +64,7 @@ data_h = [];
 for ii = size(ms.Binary,2):-1:1
     
     %     this_cell = ms.time(find(Csp(: ,ii) & move_idx))/1000;
-    this_cell = ms.time(find(ms.Binary(: ,ii) & move_idx))/1000;
+    this_cell = ms.time(find(data(: ,ii) & move_idx))/1000;
     
     spk_count = histc(this_cell,tbin_edges); % get spike counts for each bin
     spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.

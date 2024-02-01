@@ -12,6 +12,9 @@ elseif nargin == 2
     end
 end
 
+
+    p_idx = 1:4; 
+
 %% plot the summary for all positive cells
 
 for iB = size(A_out,2):-1:1
@@ -31,7 +34,19 @@ end
 
 for iB = size(A_out,2):-1:1
 
-    MS_Asmbly_plot_raster(A_out{iB}, fig_dir)
+    
+    MS_Asmbly_plot_raster(A_out{iB}, fig_dir,p_idx)
     
     
+end
+
+
+%% plot the raw/raster for the sleep periods
+for iB = size(A_out,2):-1:1
+    
+    MS_Asmbly_plot_raster_ReAct(A_out{iB},fig_dir,'REM_Pre_data',p_idx)
+    
+    
+    MS_Asmbly_plot_raster_ReAct(A_out{iB},fig_dir,'REM_Post_data',p_idx)
+
 end

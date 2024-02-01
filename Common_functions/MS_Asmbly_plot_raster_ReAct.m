@@ -1,22 +1,26 @@
-function MS_Asmbly_plot_raster(A_in, fig_dir,plot_idx, type)
+function MS_Asmbly_plot_raster_ReAct(A_in, fig_dir,sleep_phase,plot_idx, type)
 
-if nargin < 2
+if nargin < 3
     fig_dir = [];
     plot_idx = 1:length(A_in.P_pos);
     type = 'act_mat';
-elseif nargin < 3
+elseif nargin < 4
     plot_idx = 1:length(A_in.P_pos);
     type = 'act_mat';
-elseif nargin < 4
+elseif nargin < 5
     type = 'act_mat';
 end
 
+
+REM = strsplit(sleep_phase, 'data'); 
+    REM_tvec = [ REM{1} 'tvec'];
+    REM_proj = [REM{1} 'proj']; 
 %%
 
 c_ord = MS_linspecer(length(plot_idx)+ceil(length(plot_idx)/5));
 
 % make a colour coded activity array
-act_array = zeros(size(A_in.wake_data));
+act_array = zeros(size(A_in.(sleep_phase)));
 
 cnt = 0; c_list = []; c_map = [0 0 0]; c_step = 0;
 for iA = plot_idx
@@ -26,7 +30,7 @@ for iA = plot_idx
     cnt = cnt+length(A_range)+1;
     
     for ii = 1:length(c_idx)
-        act_array(logical(A_in.wake_data(:,c_idx(ii))),A_range(ii)) = find(iA ==plot_idx);
+        act_array(logical(A_in.(sleep_phase)(:,c_idx(ii))),A_range(ii)) = find(iA ==plot_idx);
     end
     
     
@@ -44,23 +48,14 @@ figure(900)
 clf
 maximize
 
-ax(1) = subplot(7, 1, 1);
-cla
-hold on
-scatter(A_in.behav.time(A_in.move_idx)/1000, A_in.behav.position((A_in.move_idx),1),ones(size(A_in.behav.time(A_in.move_idx)))*10, A_in.behav.speed(A_in.move_idx))
-%     plot(A_in.behav.time(A_in.move_idx)/1000, A_in.behav.position((A_in.move_idx),1));
-xlim([min(A_in.behav.time(A_in.move_idx)) max(A_in.behav.time(A_in.move_idx))]/1000)
-ylabel('position on track (cm)')
-set(gca, 'XTick', []);
-
 if isstr(type) == 1
-    ax(2) = subplot(7,1,2:5);
+    ax(1) = subplot(7,1,1:5);
     cla
     hold on
     off_set = 0; these_idx = [];
     
     if strcmpi(type, 'act_mat')
-        imagesc(A_in.wake_tvec, 1:size(act_array,2),  act_array')
+        imagesc(A_in.(REM_tvec), 1:size(act_array,2),  act_array')
         ylim([0 length(c_list)])
         set(gca, 'YTick', c_step(2:end) - diff(c_step)/2, 'YTickLabel',c_label)
     else
@@ -72,11 +67,11 @@ if isstr(type) == 1
                 off_set = off_set+1;
                 
                 if strcmpi(type, 'raw')
-                    plot(A_in.wake_tvec, ((A_in.wake_data(:,iC)./max(A_in.wake_data(:,iC)))*.8)+off_set,  'color', c_ord(iA,:), 'linewidth', 1)
+                    plot(A_in.(REM_tvec), ((A_in.(sleep_phase)(:,iC)./max(A_in.(sleep_phase)(:,iC)))*.8)+off_set,  'color', c_ord(iA,:), 'linewidth', 1)
                 elseif strcmpi(type, 'raster')
-                    this_idx = find(A_in.wake_data(:,iC) > 0);
-                    this_t = A_in.wake_tvec(this_idx);
-                    this_s = (ones(size(A_in.wake_tvec(this_idx)))*ii);
+                    this_idx = find(A_in.(sleep_phase)(:,iC) > 0);
+                    this_t = A_in.(REM_tvec)(this_idx);
+                    this_s = (ones(size(A_in.(REM_tvec)(this_idx)))*ii);
                     plot([this_t; this_t], [this_s-.5+off_set; this_s+.5+off_set], 'color', c_ord(iA,:), 'linewidth', 2)
                     %               plot(rec.time, rec.Binary(:,iC)*ii +.5+off_set, 'color', c_ord(iA,:), 'linewidth', 2)
                     %             plot([S.t{iC}, S.t{iC}]', [(ones(size(S.t{iC}))*ii)-.5+off_set, (ones(size(S.t{iC}))*ii)+.5+off_set]', 'color', c_ord(iA,:), 'linewidth', 2)
@@ -87,11 +82,11 @@ if isstr(type) == 1
     end
     
 else
-    ax(2) = subplot(7,1,2:3);
+    ax(1) = subplot(7,1,1:3);
     cla
     hold on
     
-        imagesc(A_in.wake_tvec, 1:size(act_array,2),  act_array')
+        imagesc(A_in.(REM_tvec), 1:size(act_array,2),  act_array')
         ylim([0 length(c_list)])
         set(gca, 'YTick', c_step(2:end) - diff(c_step)/2, 'YTickLabel',c_label)
         
@@ -106,7 +101,7 @@ else
                 iC = A_in.P_pos{iA}(ii);
                 off_set = off_set+1;
                 
-                    plot(A_in.wake_tvec, ((A_in.wake_data(:,iC)./max(A_in.wake_data(:,iC)))*.8)+off_set,  'color', c_ord(find(iA == plot_idx),:), 'linewidth', .5)
+                    plot(A_in.(REM_tvec), ((A_in.(sleep_phase)(:,iC)./max(A_in.wake_data(:,iC)))*.8)+off_set,  'color', c_ord(find(iA == plot_idx),:), 'linewidth', .5)
             
             end
             these_idx = [these_idx, A_in.P_pos{iA}']; % keep track to avoid overlap;
@@ -133,23 +128,24 @@ else
     hold on
     leg_val = [];
     for iA = plot_idx
-        plot(A_in.wake_tvec, A_in.P_proj(iA,:), 'color', c_ord(find(iA == plot_idx),:), 'linewidth', 2)
+        plot(A_in.(REM_tvec), A_in.(REM_proj)(iA,:), 'color', c_ord(find(iA == plot_idx),:), 'linewidth', 2)
         
         leg_val{find(iA == plot_idx)} = ['Assembly #' num2str(iA)];
     end
-    ylim([5 inf])
+    ylim([0 inf])
     ylabel({'assembly strength'})
     xlabel('time (s)')
     
     legend(leg_val, 'Orientation', 'horizontal', 'box', 'off')
     
+    yline(A_in.([REM{1} 'stats']).R_thresh); 
     
+    linkprop(ax,{'XLim'}); 
+    colormap(ax(1), c_map); 
+    colormap(ax(3),c_map); 
     
-    linkprop(ax,{'XLim'})
-    colormap(ax(1), 'parula')
-    colormap(ax(2),c_map)
-    
+    xlim([A_in.(REM_tvec)(1) A_in.(REM_tvec)(end)])
     %% save the figure
     if ~isempty(fig_dir)
-        saveas(gcf, [fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_wake_raster.png']);
+        saveas(gcf, [fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_' sleep_phase '_raster.png']);
     end

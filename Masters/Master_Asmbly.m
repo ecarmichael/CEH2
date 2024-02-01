@@ -49,25 +49,29 @@ cd(c_d)
 
 cd('C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter')
 fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\checks';
+
 % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
 
 f_list = dir('*data*');
 
 move_thresh  = 8;
-bin_size = [.25 .5];
+bin_size = [.5];
 
-out = [];
+A_out = [];
 session = []; novel_idx = []; anx_idx = []; HS_idx = [];
+method = 'grosmark';
 
 
-for ii = 1:length(f_list)
+
+
+for ii = 13:length(f_list)
     session{ii} = f_list(ii).name;
     
     % compute assemblies and related ReActs
-    A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh);
+    A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
     
     % Summary plots
-    %     Pipline_Asmbly_plot(A_out{ii}, fig_dir);
+    %         Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
     close all
     
     if ~isempty(strfind(f_list(ii).name, 'HATDS'))
@@ -93,8 +97,8 @@ for ii = 1:length(f_list)
 end
 
 A_all = A_out;
-A_out = A_out(1:11);
 
+save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
 
 %%  Run again but for EVV data
 data_dir = ('C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV');
@@ -103,18 +107,19 @@ fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Ass
 cd(data_dir);
 j20_list = dir('*data*');
 
+method = 'grosmark';
+fig_dir = ['C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV\checks\' method];
 
-
-out = [];
+J_out = [];
 J20_session = []; J20_novel_idx = []; D3_idx = [];
 for ii = 1:length(j20_list)
     J20_session{ii} = j20_list(ii).name;
     cd(data_dir)
     
-    J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh);
+    J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
     
     % Summary plots
-    %     Pipline_Asmbly_plot(J_out{ii}, fig_dir);
+    %         Pipline_Asmbly_plot(J_out{ii}, fig_dir);
     
     
     close all
@@ -138,6 +143,118 @@ end
 
 J_all = J_out;
 % A_out = J_out;
+save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\J_out_' method '.mat'], 'J_out')
+%%  Run again but for EVV data
+data_dir = ('C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV');
+fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV\checks';
+% cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
+cd(data_dir);
+j20_list = dir('*data*');
+
+method = 'binary';
+
+J_out = []; JP_out = [];
+J20_session = []; J20_novel_idx = []; D3_idx = [];
+for ii = 1:length(j20_list)
+    J20_session{ii} = j20_list(ii).name;
+    cd(data_dir)
+    
+    %     J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
+    JP_out{ii} = Pipeline_Asmbly_place(j20_list(ii).name,bin_size, move_thresh, method);
+    
+    % Summary plots
+    %     Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method]);
+    %     close all
+    Pipline_Asmbly_plot(JP_out{ii}, [fig_dir filesep method filesep 'place']);
+    close all
+    
+    if ~isempty(strfind(j20_list(ii).name, 'D1')) %|| ~isempty(strfind(f_list(ii).name, 'HATDS'))
+        J20_novel_idx(ii) = 1;
+        D3_idx(ii) = 0;
+    end
+    
+    if ~isempty(strfind(j20_list(ii).name, 'D3'))
+        D3_idx(ii) = 1;
+        J20_novel_idx(ii) = 0;
+    end
+    
+    if ~isempty(strfind(j20_list(ii).name, 'D5'))
+        J20_novel_idx(ii) = 0;
+        D3_idx(ii) = 0;
+    end
+    
+end
+D3_idx = logical(D3_idx);
+
+if ~isempty(J_out)
+save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\J_out_' method '.mat'], 'J_out')
+end
+if ~isempty(JP_out)
+save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\JP_out_' method '.mat'], 'JP_out')
+end
+%%
+cd('C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter')
+fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\checks';
+% cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
+
+f_list = dir('*data*');
+
+move_thresh  = 8;
+bin_size = [.5];
+
+A_out = []; P_out = [];
+session = []; novel_idx = []; anx_idx = []; HS_idx = [];
+method = 'binary';
+
+for ii = 1:length(f_list)
+    session{ii} = f_list(ii).name;
+    
+    % compute assemblies and related ReActs
+    %     A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
+    P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
+    
+    % Summary plots
+    %             Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
+    Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
+    
+    close all
+    
+    if ~isempty(strfind(f_list(ii).name, 'HATDS'))
+        HS_idx(ii) = 1;
+    else
+        HS_idx(ii) = 0;
+    end
+    
+    if ~isempty(strfind(f_list(ii).name, 'D1')) %|| ~isempty(strfind(f_list(ii).name, 'HATDS'))
+        novel_idx(ii) = 1;
+    end
+    
+    if ~isempty(strfind(f_list(ii).name, 'D5'))
+        novel_idx(ii) = 0;
+    end
+    
+    if ~isempty(strfind(f_list(ii).name, 'HAT'))
+        anx_idx(ii) = 1;
+    else
+        anx_idx(ii) = 0;
+    end
+    
+end
+
+lt1_idx = n_idx & ~a_idx & ~HS_idx;
+lt5_idx = ~n_idx & ~a_idx & ~HS_idx;
+
+H1_idx = n_idx & a_idx & ~HS_idx;
+H5_idx = ~n_idx & a_idx & ~HS_idx;
+
+% A_all = A_out;
+% A_out = A_out(1:11);
+if ~isempty(A_out)
+    save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
+end
+if ~isempty(P_out)
+    save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\P_out_' method '.mat'], 'P_out')
+end
 %% collect the data
 
 Pre_n_Asmbly = []; Post_n_Asmbly = [];
@@ -198,14 +315,14 @@ end
 
 %% plot the number of Assemblies pre and post.
 
-max_n_A = max([mean(Pre_n_Asmbly) ; mean(Post_n_Asmbly) ]);
+max_n_A = max([nanmean(Pre_n_Asmbly) ; nanmean(Post_n_Asmbly) ]);
 max_n_A = max_n_A*1.5;
-max_r_A = max([mean(Pre_r_Asmbly) ; mean(Post_r_Asmbly) ]);
+max_r_A = max([nanmean(Pre_r_Asmbly) ; nanmean(Post_r_Asmbly) ]);
 max_r_A = max_r_A*1.5;
 
-max_n_SA = max([mean(S_Pre_n_Asmbly) ; mean(S_Post_n_Asmbly) ]);
+max_n_SA = max([nanmean(S_Pre_n_Asmbly) ; nanmean(S_Post_n_Asmbly) ]);
 max_n_SA = max_n_SA*1.5;
-max_r_SA = max([mean(S_Pre_r_Asmbly) ; mean(S_Post_r_Asmbly) ]);
+max_r_SA = max([nanmean(S_Pre_r_Asmbly) ; nanmean(S_Post_r_Asmbly) ]);
 max_r_SA = max_r_SA*1.5;
 
 
@@ -218,7 +335,7 @@ a_idx = logical(anx_idx(1:length(A_out)));
 
 n_idx = n_idx & ~HS_idx;
 a_idx = a_idx & ~HS_idx;
-f_idx = ~n_idx & ~HS_idx; 
+f_idx = ~n_idx & ~HS_idx;
 
 lt1_idx = n_idx & ~a_idx & ~HS_idx;
 lt5_idx = ~n_idx & ~a_idx & ~HS_idx;
@@ -227,9 +344,8 @@ H1_idx = n_idx & a_idx & ~HS_idx;
 H5_idx = ~n_idx & a_idx & ~HS_idx;
 
 % j20 =
-n_idx = logical(novel_idx(1:length(A_out)));
-a_idx = logical(novel_idx(1:length(A_out)));
-n_idx = logical(J20_novel_idx);
+
+J_n_idx = logical(J20_novel_idx);
 
 
 
@@ -326,7 +442,6 @@ for iB = length(bin_size):-1:1
     subplot(n,m,(m*2)+1)
     cla
     MS_bar_w_err(S_Pre_n_Asmbly(n_idx,iB), S_Post_n_Asmbly(n_idx,iB),c_ord_s(1,:))
-    
     set(gca,'xtick', 1:2, 'XTickLabel', {'Pre', 'Post'}, 'XTickLabelRotation', 45)
     title(['Novel (' num2str(bin_size(iB)) 's bins)'])
     ylabel('# assemblies')
@@ -409,34 +524,33 @@ for iB = length(bin_size):-1:1
     
 end
 %% collect j20 and control reactivation strength
-A_out = A_all(1:11); 
 
 A_Pre_n = []; A_Post_n = [];
 A_Pre_r = []; A_Post_r = [];
-A_cent = []; A_peak = []; 
-A_ReAct_all = []; 
+A_cent = []; A_peak = [];
+A_ReAct_all = [];
 
 SA_Pre_n = []; SA_Post_n = [];
 SA_Pre_r = []; SA_Post_r = [];
-SA_cent = []; SA_peak = []; 
+SA_cent = []; SA_peak = [];
 
 J_Pre_n = []; J_Post_n = [];
 J_Pre_r = []; J_Post_r = [];
-J_cent = []; J_peak = []; 
-J_ReAct_all = []; 
+J_cent = []; J_peak = [];
+J_ReAct_all = [];
 
 SJ_Pre_n = []; SJ_Post_n = [];
 SJ_Pre_r = []; SJ_Post_r = [];
-SJ_cent = []; SJ_peak = []; 
+SJ_cent = []; SJ_peak = [];
 
-A_ReAct = []; J_ReAct = []; 
-SA_ReAct = []; SJ_ReAct = []; 
+A_ReAct = []; J_ReAct = [];
+SA_ReAct = []; SJ_ReAct = [];
 
 A_sub_list = []; J_sub_list = [];
 
 
 for iB = length(bin_size):-1:1
-%     all_cent = 
+    %     all_cent =
     for iA = size(A_out,2):-1:1
         
         % pre
@@ -454,10 +568,10 @@ for iB = length(bin_size):-1:1
         keep_idx = logical(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05) & (A_out{iA}{iB}.REM_Post_stats.p_val <0.05);
         A_ReAct(iA, iB) = mean(A_out{iA}{iB}.ReAct(keep_idx));
         
-                A_ReAct_all{iB}{iA} = mean(A_out{iA}{iB}.REM_Post_proj,2) - mean(A_out{iA}{iB}.REM_Pre_proj,2); 
-
-% Coherent spatial maps
-these_z_cent = []; these_z_peak = [];
+        A_ReAct_all{iB}{iA} = mean(A_out{iA}{iB}.REM_Post_proj,2) - mean(A_out{iA}{iB}.REM_Pre_proj,2);
+        
+        % Coherent spatial maps
+        these_z_cent = []; these_z_peak = [];
         for ii = length(A_out{iA}{iB}.map):-1:1
             these_z_cent(ii) = A_out{iA}{iB}.map{ii}.cent_z;
             these_z_peak(ii) = A_out{iA}{iB}.map{ii}.peak_z;
@@ -465,7 +579,7 @@ these_z_cent = []; these_z_peak = [];
             A_peak{iB}{iA}(ii) = A_out{iA}{iB}.map{ii}.peak_z;
         end
         
-
+        
         these_sig = A_out{iA}{iB}.REM_Pre_stats.p_val;
         
         SA_Pre_n(iA,iB) = sum((these_sig <0.05) & (these_z_cent < -1.96));
@@ -502,7 +616,7 @@ for iB = length(bin_size):-1:1
         keep_idx = logical(J_out{iA}{iB}.REM_Pre_stats.p_val <0.05) & (J_out{iA}{iB}.REM_Post_stats.p_val <0.05);
         J_ReAct(iA, iB) = mean(J_out{iA}{iB}.ReAct(keep_idx));
         
-        J_ReAct_all{iB}{iA} = mean(J_out{iA}{iB}.REM_Post_proj,2) - mean(J_out{iA}{iB}.REM_Pre_proj,2); 
+        J_ReAct_all{iB}{iA} = mean(J_out{iA}{iB}.REM_Post_proj,2) - mean(J_out{iA}{iB}.REM_Pre_proj,2);
         
         % Coherent spatial maps
         these_z_cent = []; these_z_peak = [];
@@ -527,28 +641,120 @@ for iB = length(bin_size):-1:1
         keep_idx = logical(J_out{iA}{iB}.REM_Pre_stats.p_val <0.05) & (J_out{iA}{iB}.REM_Post_stats.p_val <0.05);
         SJ_ReAct(iA, iB) = mean(J_out{iA}{iB}.ReAct(keep_idx & (these_z_cent < -1.96)));
         
-%         SJ_cent{iB}{iA} = J_cent{iB}(keep_idx); 
+        %         SJ_cent{iB}{iA} = J_cent{iB}(keep_idx);
         
     end
 end
-%% plot the J20 vs control novel VS familiar 
-A_out = A_all(1:11); 
+%% plot the J20 vs control novel VS familiar
+% A_out = A_all(1:11);
 
 HS_idx = logical(HS_idx(1:length(A_out)));
 n_idx = logical(novel_idx(1:length(A_out)));
 a_idx = logical(anx_idx(1:length(A_out)));
+lt1_idx = logical(lt1_idx(1:length(A_out)));
+lt5_idx = logical(lt5_idx(1:length(A_out)));
+H1_idx = logical(H1_idx(1:length(A_out)));
+H5_idx = logical(H5_idx(1:length(A_out)));
 
-J_n_idx = logical(J20_novel_idx); 
+
+n_idx = n_idx & ~HS_idx;
+a_idx = a_idx & ~HS_idx;
+f_idx = ~n_idx & ~HS_idx;
+
+
+J_n_idx = logical(J20_novel_idx);
+J_f_idx = D3_idx | D5_idx;
+
+% wider colours
+p_cord = MS_linspecer(16);
+c_ord = MS_linspecer(5);
 
 figure(4000)
+clf
+y_lim = [-.12 .12];
 
+subplot(2,4,1)
+data_a = A_ReAct(lt1_idx | H1_idx, iB);
+data_b = A_ReAct(lt5_idx | H5_idx, iB);
 
-hb = bar([nanmean(A_ReAct(n_idx, iB)), nanmean(J_ReAct(J_n_idx, iB))]', 'FaceColor', c_ord(1,:), 'EdgeColor', c_ord(1,:));
+hb = bar([nanmean(data_a), nanmean(data_b)]', 'FaceColor', c_ord(1,:), 'EdgeColor', 'k');
+hb.FaceColor = 'flat';
+hb.CData(2,:) = c_ord(2,:);
 hold on
 eb = errorbar([nanmean(data_a), nanmean(data_b)], [MS_SEM(data_a) ,MS_SEM(data_b)]);
 eb.LineStyle = 'none';
 eb.Color = 'k';
+set(gca,'xtick', 1:2, 'XTickLabel', {'novel', 'familiar'}, 'XTickLabelRotation', 45)
+ylabel('ReActivation Strength')
+ylim(y_lim);
+title('Control')
 
+subplot(2,4,2)
+data_a = A_ReAct(lt1_idx | lt5_idx, iB);
+data_b = A_ReAct(H1_idx | H5_idx, iB);
+data_c = A_ReAct(HS_idx, iB);
+
+hb = bar([nanmean(data_a), nanmean(data_b),nanmean(data_c)]', 'FaceColor', c_ord(1,:), 'EdgeColor', 'k');
+hb.FaceColor = 'flat';
+hb.CData(2,:) = c_ord(2,:);
+hb.CData(3,:) = c_ord(4,:);
+hold on
+eb = errorbar([nanmean(data_a), nanmean(data_b), nanmean(data_c)], [MS_SEM(data_a) ,MS_SEM(data_b), MS_SEM(data_c)]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca,'xtick', 1:3, 'XTickLabel', {'Linear', 'anxiety', 'switch'}, 'XTickLabelRotation', 45)
+ylim(y_lim);
+title('Control')
+
+% across conditions
+subplot(2,4,3)
+data_a = A_ReAct(lt1_idx, iB);
+data_b = A_ReAct(lt5_idx, iB);
+data_c = A_ReAct(H1_idx, iB);
+data_d = A_ReAct(H5_idx, iB);
+data_e = A_ReAct(HS_idx, iB);
+
+
+hb = bar([nanmean(data_a), nanmean(data_b),nanmean(data_c) nanmean(data_d),nanmean(data_e)]', 'FaceColor', p_cord(1,:), 'EdgeColor', 'k');
+hb.FaceColor = 'flat';
+hb.CData(2,:) = p_cord(2,:);
+hb.CData(3,:) = p_cord(end-2,:);
+hb.CData(4,:) = p_cord(end-1,:);
+hb.CData(5,:) = p_cord(end-5,:);
+hold on
+eb = errorbar([nanmean(data_a), nanmean(data_b), nanmean(data_c) nanmean(data_d),nanmean(data_e)], [MS_SEM(data_a) ,MS_SEM(data_b), MS_SEM(data_c), MS_SEM(data_d), MS_SEM(data_e)]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca,'xtick', 1:5, 'XTickLabel', {'LT1', 'LT5', 'H1' , 'H5', 'switch'}, 'XTickLabelRotation', 45)
+ylim(y_lim);
+title('Control')
+
+
+% same but J20
+subplot(2,4,4)
+data_a = J_ReAct(J_n_idx, iB);
+data_b = J_ReAct(D3_idx, iB);
+data_c = J_ReAct(D5_idx, iB);
+J_cord = summer(3);
+
+hb = bar([nanmean(data_a), nanmean(data_b),nanmean(data_c)]', 'FaceColor', J_cord(1,:), 'EdgeColor', 'k');
+hb.FaceColor = 'flat';
+hb.CData(2,:) = J_cord(2,:);
+hb.CData(3,:) = J_cord(3,:);
+hold on
+eb = errorbar([nanmean(data_a), nanmean(data_b), nanmean(data_c)], [MS_SEM(data_a) ,MS_SEM(data_b), MS_SEM(data_c)]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca,'xtick', 1:3, 'XTickLabel', {'LT1', 'LT3', 'LT5'}, 'XTickLabelRotation', 45)
+ylim(y_lim);
+title('J20')
+
+
+% Square_subplots
+
+SetFigure([],gcf)
+
+saveas(gcf,[fig_dir filesep 'ReAct_summary_p' num2str(bin_size(iB)) '.png'])
 
 %% check the assmbly reactivation strength against centorid Z
 % control
@@ -558,7 +764,7 @@ a_idx = logical(anx_idx(1:length(A_out)));
 
 n_idx = n_idx & ~HS_idx;
 a_idx = a_idx & ~HS_idx;
-f_idx = ~n_idx & ~HS_idx; 
+f_idx = ~n_idx & ~HS_idx;
 
 lt1_idx = n_idx & ~a_idx & ~HS_idx;
 lt5_idx = ~n_idx & ~a_idx & ~HS_idx;
@@ -613,11 +819,11 @@ for ii = 1:length(J_out)
     
 end
 %%
- % control
+% control
 figure(5000)
 subplot(2,2,1)
 scatter(A_n_cent, A_n_ReAct, 35, c_ord(1,:), 'filled');
-[c, p] = corrcoef(A_n_cent, A_n_ReAct); 
+[c, p] = corrcoef(A_n_cent, A_n_ReAct);
 text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
 xlabel('(<- coherent) Z Map centroid')
 ylabel('ReAct Str.')
@@ -628,7 +834,7 @@ lsline
 
 subplot(2,2,2)
 scatter(A_f_cent, A_f_ReAct, 35, c_ord(2,:), 'filled');
-[c, p] = corrcoef(A_f_cent, A_f_ReAct); 
+[c, p] = corrcoef(A_f_cent, A_f_ReAct);
 text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
 xlabel('(<- coherent) Z Map centroid')
 ylabel('ReAct Str.')
@@ -639,7 +845,7 @@ lsline
 
 subplot(2,2,3)
 scatter(A_n_peak, A_n_ReAct, 35, c_ord(1,:), 'filled');
-[c, p] = corrcoef(A_n_peak, A_n_ReAct); 
+[c, p] = corrcoef(A_n_peak, A_n_ReAct);
 text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
 ylabel('ReAct Str.')
 xlabel('(<- coherent) Z Map peak')
@@ -649,7 +855,7 @@ lsline
 
 subplot(2,2,4)
 scatter(A_f_peak, A_f_ReAct, 35, c_ord(2,:), 'filled');
-[c, p] = corrcoef(A_f_peak, A_f_ReAct); 
+[c, p] = corrcoef(A_f_peak, A_f_ReAct);
 text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
 xlabel('(<- coherent) Z Map peak')
 ylabel('ReAct Str.')
@@ -661,7 +867,7 @@ lsline
 figure(5001)
 subplot(2,2,1)
 scatter(J_n_cent, J_n_ReAct, 35, c_ord_s(1,:), 'filled');
-[c, p] = corrcoef(J_n_cent, J_n_ReAct); 
+[c, p] = corrcoef(J_n_cent, J_n_ReAct);
 text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
 xlabel('(<- coherent) Z Map centroid')
 ylabel('ReAct Str.')
@@ -672,7 +878,7 @@ lsline
 
 subplot(2,2,2)
 scatter(J_f_cent, J_f_ReAct, 35, c_ord_s(2,:), 'filled');
-[c, p] = corrcoef(J_f_cent, J_f_ReAct); 
+[c, p] = corrcoef(J_f_cent, J_f_ReAct);
 text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
 xlabel('(<- coherent) Z Map centroid')
 ylabel('ReAct Str.')
@@ -683,7 +889,7 @@ lsline
 
 subplot(2,2,3)
 scatter(J_n_peak, J_n_ReAct, 35, c_ord_s(1,:), 'filled');
-[c, p] = corrcoef(J_n_peak, J_n_ReAct); 
+[c, p] = corrcoef(J_n_peak, J_n_ReAct);
 text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
 ylabel('ReAct Str.')
 xlabel('(<- coherent) Z Map peak')
@@ -694,7 +900,7 @@ lsline
 subplot(2,2,4)
 ax = scatter(J_f_peak, J_f_ReAct, 35, c_ord_s(2,:), 'filled');
 lsline
-[c, p] = corrcoef(J_f_peak, J_f_ReAct); 
+[c, p] = corrcoef(J_f_peak, J_f_ReAct);
 text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
 xlabel('(<- coherent) Z Map peak')
 ylabel('ReAct Str.')
@@ -702,7 +908,7 @@ ylim([-1 1]);
 xlim([-5 5]);
 
 %% Collect the change in significant CCF
-pre_sig_cff = []; post_sig_cff = []; 
+pre_sig_cff = []; post_sig_cff = [];
 J_pre_sig_cff = []; J_post_sig_cff = [];
 for iB = length(bin_size):-1:1
     
@@ -718,25 +924,100 @@ for iB = length(bin_size):-1:1
         J_post_sig_cff(iJ, iB) = J_out{iJ}{iB}.REM_Post_psig_cff;
     end
     
-        figure(10+iB)
-    c_ord = MS_linspecer(4); 
-    subplot(1,2,1)
+    figure(10+iB)
+    %     c_ord = MS_linspecer(4);
+    ax(1) = subplot(2,5,1);
     cla
-    MS_bar_w_err(pre_sig_cff(:,iB), post_sig_cff(:,iB), c_ord(1,:));
+    MS_bar_w_err(pre_sig_cff(n_idx,iB), post_sig_cff(n_idx,iB), c_ord(1,:));
     set(gca, 'XTickLabel', {'pre', 'post'})
-    title(['CCF sig (bin: ' num2str(bin_size(iB)) ')'])
-    ylabel('% significant of wake')
+    title('novel');
+    %     title(['CCF sig (bin: ' num2str(bin_size(iB)) ')'])
+    ylabel({'Cross correlation'; '% significant of wake'})
     
-        subplot(1,2,2)
+    ax(2) = subplot(2,5,2);
     cla
-    MS_bar_w_err(J_pre_sig_cff(:,iB), J_post_sig_cff(:,iB), c_ord(2,:))
-        set(gca, 'XTickLabel', {'pre', 'post'})
-    title('J20')
+    MS_bar_w_err(pre_sig_cff(f_idx,iB), post_sig_cff(f_idx,iB), c_ord(2,:))
+    set(gca, 'XTickLabel', {'pre', 'post'})
+    title('familiar');
+    
+    
+    ax(3) = subplot(2,5,3);
+    cla
+    MS_bar_w_err(pre_sig_cff(lt1_idx | lt5_idx,iB), post_sig_cff(lt1_idx | lt5_idx,iB), c_ord(3,:))
+    set(gca, 'XTickLabel', {'pre', 'post'})
+    title('Linear');
+    
+    
+    ax(4) = subplot(2,5,4);
+    cla
+    MS_bar_w_err(pre_sig_cff(H1_idx | H5_idx,iB), post_sig_cff(H1_idx | H5_idx,iB), c_ord(4,:))
+    set(gca, 'XTickLabel', {'pre', 'post'})
+    title('Anxiety');
+    
+    ax(5) =  subplot(2,5,5);
+    cla
+    MS_bar_w_err(pre_sig_cff(H1_idx | H5_idx,iB), post_sig_cff(H1_idx | H5_idx,iB), c_ord(5,:))
+    set(gca, 'XTickLabel', {'pre', 'post'})
+    title('switch');
+    
+    linkprop(ax, 'ylim')
+    %     Square_subplots;
+    SetFigure([], gcf)
+    %     title('J20')
+    saveas(gcf,[fig_dir filesep 'cff_summary_p' num2str(bin_size(iB)) '.png'])
+    
 end
 
 
+%% qualitfy reactivation saptial biases
 
+data_in = JP_out;
+Pre_hist = []; Post_hist = [];
 
+for ii = length(data_in):-1:1
+    
+    for iB = length(data_in{ii}):-1:1
+        
+        % data shorthand
+        this_A = data_in{ii}{iB};
+        
+        % make arrays to accrue reactivation locations;
+        Pre_ReAct_mat = []; Post_ReAct_mat = [];
+        
+        cent_z = []; peak_z = []; M_cent = [];
+        
+        Pre_cnt = sum((this_A.REM_Pre_proj > this_A.REM_Pre_stats.R_thresh), 2);
+        Post_cnt = sum((this_A.REM_Post_proj > this_A.REM_Post_stats.R_thresh),2);
+        
+        for iA = length(this_A.P_pos):-1:1
+            
+            cent_z(iA) = this_A.map{iA}.cent_z;
+            peak_z(iA) = this_A.map{iA}.peak_z;
+            
+            M_cent(iA) = mean(this_A.map{iA}.cent);
+            if cent_z(iA) < -1.96
+                Pre_ReAct_mat = [Pre_ReAct_mat repmat(M_cent(iA),1, Pre_cnt(iA))];
+                Post_ReAct_mat = [Post_ReAct_mat repmat(M_cent(iA),1, Post_cnt(iA))];
+            end
+        end
+        p_bins = 0:3:100;
+        [Pre_hist{ii, iB}] = histc(Pre_ReAct_mat, p_bins(1:end)+3/2);
+        [Post_hist{ii, iB}] = histc(Post_ReAct_mat, p_bins(1:end)+3/2);
+        
+        if ~isempty(Pre_hist{ii, iB})
+            Pre_hist{ii, iB} = Pre_hist{ii, iB}./((this_A.REM_Pre_tvec(end) - this_A.REM_Pre_tvec(1))/60);
+        else
+            Pre_hist{ii, iB} = NaN(1,length(p_bins(1:end)));
+        end
+        
+        if ~isempty(Post_hist{ii, iB})
+            Post_hist{ii, iB} = Post_hist{ii, iB}./((this_A.REM_Post_tvec(end) - this_A.REM_Post_tvec(1))/60);
+        else
+            Post_hist{ii, iB} = NaN(1,length(p_bins(1:end)));
+        end
+        
+    end
+    
+end
 
-
-
+% bar(nanmean([Post_hist{1,1}; Post_hist{4,1}; Post_hist{7,1}])

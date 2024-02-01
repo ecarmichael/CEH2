@@ -1,4 +1,4 @@
-function out = Pipeline_Asmbly(fname,bin_s, move_thresh, method)
+function out = Pipeline_Asmbly_place(fname,bin_s, move_thresh, method)
 %% Pipeline_Asmbly: provides a wrapper for running assembly and reactivation analyses using calcium data.
 
 
@@ -169,6 +169,22 @@ place.p_bins = p_bins(1:end)+bin/2;
 % see if there are any anxiety cells
 
 % [~,p_sort] = sort(place.centroids);
+
+%% remove non-place cells from the analyses
+
+REM_pre_data_in(:, ~place.is) = [];
+REM_post_data_in(:, ~place.is) = [];
+
+cfg_rem = [];
+cfg_rem.remove_idx = find(~place.is);
+cfg_rem.data_type = 'deconv';
+ms_trk_cut = MS_Remove_trace(cfg_rem, ms_trk_cut);
+
+place.MI(~place.is) = []; 
+place.map(~place.is,:) = []; 
+place.centroids(~place.is) = []; 
+place.peak_rate(~place.is) = []; 
+place.is(~place.is) = []; 
 
 %% get the initial assemblies
 
