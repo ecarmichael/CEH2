@@ -32,9 +32,9 @@ end
 
 restoredefaultpath
 c_d = cd;
-cd(oasis_dir)
-addpath(genpath(oasis_dir));
-oasis_setup
+% cd(oasis_dir)
+% addpath(genpath(oasis_dir));
+% oasis_setup
 
 addpath(genpath(ca_dir));
 addpath(genpath(codebase_dir))
@@ -47,8 +47,8 @@ cd(c_d)
 
 %%
 
-cd('C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter')
-fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\checks';
+cd('C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9')
+fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\PC9\checks';
 
 % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
 
@@ -71,7 +71,7 @@ for ii = 13:length(f_list)
     A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
     
     % Summary plots
-    %         Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
+            Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
     close all
     
     if ~isempty(strfind(f_list(ii).name, 'HATDS'))
@@ -154,19 +154,19 @@ j20_list = dir('*data*');
 method = 'binary';
 
 J_out = []; JP_out = [];
-J20_session = []; J20_novel_idx = []; D3_idx = [];
+J20_session = []; J20_novel_idx = []; D3_idx = []; D5_idx = []; 
 for ii = 1:length(j20_list)
     J20_session{ii} = j20_list(ii).name;
     cd(data_dir)
-    
-    %     J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
-    JP_out{ii} = Pipeline_Asmbly_place(j20_list(ii).name,bin_size, move_thresh, method);
-    
-    % Summary plots
-    %     Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method]);
-    %     close all
-    Pipline_Asmbly_plot(JP_out{ii}, [fig_dir filesep method filesep 'place']);
-    close all
+%     
+%         J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
+%     JP_out{ii} = Pipeline_Asmbly_place(j20_list(ii).name,bin_size, move_thresh, method);
+%     
+%     % Summary plots
+%         Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method]);
+%         close all
+%     Pipline_Asmbly_plot(JP_out{ii}, [fig_dir filesep method filesep 'place']);
+%     close all
     
     if ~isempty(strfind(j20_list(ii).name, 'D1')) %|| ~isempty(strfind(f_list(ii).name, 'HATDS'))
         J20_novel_idx(ii) = 1;
@@ -185,6 +185,8 @@ for ii = 1:length(j20_list)
     
 end
 D3_idx = logical(D3_idx);
+D5_idx = logical(D5_idx);
+
 
 if ~isempty(J_out)
 save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\J_out_' method '.mat'], 'J_out')
@@ -193,9 +195,11 @@ if ~isempty(JP_out)
 save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\JP_out_' method '.mat'], 'JP_out')
 end
 %%
-cd('C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter')
-fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\checks';
+inter_dir = ('C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9'); 
+fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\PC9\checks';
 % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
+
+cd(inter_dir); 
 
 f_list = dir('*data*');
 
@@ -210,11 +214,11 @@ for ii = 1:length(f_list)
     session{ii} = f_list(ii).name;
     
     % compute assemblies and related ReActs
-    %     A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
+        A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
     P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
     
     % Summary plots
-    %             Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
+                Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
     Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
     
     close all

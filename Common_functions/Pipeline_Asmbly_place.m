@@ -274,24 +274,25 @@ end
 
 
 %% get the cross correlation between assemblies
-xc_bin = 0.1; 
-t_max = 2; 
-
-for iB = length(bin_s):-1:1
-    
-    [wake_zxcor{iB}, wake_zxcov{iB}, wake_xcor{iB},wake_xcov{iB}] = MS_Asmbly_xcor(P_proj{iB},wake_tvec{iB}, 5, xc_bin, t_max);
-    
-    [REM_pre_zxcor{iB}, REM_pre_zxcov{iB},REM_pre_xcor{iB},REM_pre_xcov{iB}] = MS_Asmbly_xcor(REM_pre_proj{iB},REM_pre_tvec{iB},REM_pre_stats{iB}.R_thresh , xc_bin, t_max);
-    
-    [REM_post_zxcor{iB}, REM_post_zxcov{iB},REM_post_xcor{iB}, REM_post_xcov{iB}] = MS_Asmbly_xcor(REM_post_proj{iB},REM_post_tvec{iB}, REM_post_stats{iB}.R_thresh, xc_bin, t_max);
-
-    [REM_Pre_sig_CoOc{iB}, wake_sig_CoOc{iB}] = MS_Asmbly_CoAct_count(wake_zxcor{iB},REM_pre_zxcor{iB}, 1.96); 
-    fprintf('Pre had %.0f (%.0f%%) significant assembly pairs using xcor of the %0.0f sig pairs found in wake \n', REM_Pre_sig_CoOc{iB}, (REM_Pre_sig_CoOc{iB} / wake_sig_CoOc{iB})*100, wake_sig_CoOc{iB})
-    
-    [REM_Post_sig_CoOc{iB}] = MS_Asmbly_CoAct_count(wake_zxcor{iB},REM_post_zxcor{iB}, 1.96); 
-    fprintf('Post had %.0f (%.0f%%) significant assembliy pairs using xcor of the %0.0f sig pairs found in wake \n', REM_Post_sig_CoOc{iB}, (REM_Post_sig_CoOc{iB} / wake_sig_CoOc{iB})*100, wake_sig_CoOc{iB})
-
-end
+% xc_bin = 0.1; 
+% t_max = 2; 
+% 
+% for iB = length(bin_s):-1:1
+% 
+% %     if 
+%     [wake_zxcor{iB}, wake_zxcov{iB}, wake_xcor{iB},wake_xcov{iB}] = MS_Asmbly_xcor(P_proj{iB},wake_tvec{iB}, 5, xc_bin, t_max);
+%     
+%     [REM_pre_zxcor{iB}, REM_pre_zxcov{iB},REM_pre_xcor{iB},REM_pre_xcov{iB}] = MS_Asmbly_xcor(REM_pre_proj{iB},REM_pre_tvec{iB},REM_pre_stats{iB}.R_thresh , xc_bin, t_max);
+%     
+%     [REM_post_zxcor{iB}, REM_post_zxcov{iB},REM_post_xcor{iB}, REM_post_xcov{iB}] = MS_Asmbly_xcor(REM_post_proj{iB},REM_post_tvec{iB}, REM_post_stats{iB}.R_thresh, xc_bin, t_max);
+% 
+%     [REM_Pre_sig_CoOc{iB}, wake_sig_CoOc{iB}] = MS_Asmbly_CoAct_count(wake_zxcor{iB},REM_pre_zxcor{iB}, 1.96); 
+%     fprintf('Pre had %.0f (%.0f%%) significant assembly pairs using xcor of the %0.0f sig pairs found in wake \n', REM_Pre_sig_CoOc{iB}, (REM_Pre_sig_CoOc{iB} / wake_sig_CoOc{iB})*100, wake_sig_CoOc{iB})
+%     
+%     [REM_Post_sig_CoOc{iB}] = MS_Asmbly_CoAct_count(wake_zxcor{iB},REM_post_zxcor{iB}, 1.96); 
+%     fprintf('Post had %.0f (%.0f%%) significant assembliy pairs using xcor of the %0.0f sig pairs found in wake \n', REM_Post_sig_CoOc{iB}, (REM_Post_sig_CoOc{iB} / wake_sig_CoOc{iB})*100, wake_sig_CoOc{iB})
+% 
+% end
 
 
 %% reactivation strength
@@ -341,10 +342,10 @@ for iB = length(bin_s):-1:1
     out{iB}.REM_Pre_data = REM_pre_data{iB};
     out{iB}.REM_Pre_tvec = REM_pre_tvec{iB};
     out{iB}.REM_Pre_shuff = REM_Pre_shuff{iB};
-    out{iB}.REM_Pre_cff = REM_pre_xcor{iB};
-    out{iB}.REM_Pre_cffz = REM_pre_zxcor{iB};
-    out{iB}.REM_Pre_nsig_cff = REM_Pre_sig_CoOc{iB}; 
-    out{iB}.REM_Pre_psig_cff = (REM_Pre_sig_CoOc{iB}/wake_sig_CoOc{iB})*100;  
+%     out{iB}.REM_Pre_cff = REM_pre_xcor{iB};
+%     out{iB}.REM_Pre_cffz = REM_pre_zxcor{iB};
+%     out{iB}.REM_Pre_nsig_cff = REM_Pre_sig_CoOc{iB}; 
+%     out{iB}.REM_Pre_psig_cff = (REM_Pre_sig_CoOc{iB}/wake_sig_CoOc{iB})*100;  
 
     
     out{iB}.REM_Post_proj = REM_post_proj{iB};
@@ -352,10 +353,10 @@ for iB = length(bin_s):-1:1
     out{iB}.REM_Post_data = REM_post_data{iB};
     out{iB}.REM_Post_tvec = REM_post_tvec{iB};
     out{iB}.REM_Post_shuff = REM_Post_shuff{iB};
-    out{iB}.REM_Post_cff = REM_post_xcor{iB};
-    out{iB}.REM_Post_cffz = REM_post_zxcor{iB};
-    out{iB}.REM_Post_nsig_cff = REM_Post_sig_CoOc{iB}; 
-    out{iB}.REM_Post_psig_cff = (REM_Post_sig_CoOc{iB}/wake_sig_CoOc{iB})*100;  
+%     out{iB}.REM_Post_cff = REM_post_xcor{iB};
+%     out{iB}.REM_Post_cffz = REM_post_zxcor{iB};
+%     out{iB}.REM_Post_nsig_cff = REM_Post_sig_CoOc{iB}; 
+%     out{iB}.REM_Post_psig_cff = (REM_Post_sig_CoOc{iB}/wake_sig_CoOc{iB})*100;  
 end
 
 
