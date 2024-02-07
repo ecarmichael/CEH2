@@ -45,105 +45,107 @@ addpath(code_dir)
 
 cd(c_d)
 
-%%
 
-cd('C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9')
-fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\PC9\checks';
-
-% cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
-
-f_list = dir('*data*');
-
-move_thresh  = 8;
+move_thresh  = 9;
 bin_size = [.5];
+%%
+% 
+% cd('C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9')
+% fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\PC9\checks';
+% 
+% % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
+% 
+% f_list = dir('*data*');
+% 
 
-A_out = [];
-session = []; novel_idx = []; anx_idx = []; HS_idx = [];
-method = 'grosmark';
-
-
-
-
-for ii = 13:length(f_list)
-    session{ii} = f_list(ii).name;
-    
-    % compute assemblies and related ReActs
-    A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
-    
-    % Summary plots
-            Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
-    close all
-    
-    if ~isempty(strfind(f_list(ii).name, 'HATDS'))
-        HS_idx(ii) = 1;
-    else
-        HS_idx(ii) = 0;
-    end
-    
-    if ~isempty(strfind(f_list(ii).name, 'D1')) %|| ~isempty(strfind(f_list(ii).name, 'HATDS'))
-        novel_idx(ii) = 1;
-    end
-    
-    if ~isempty(strfind(f_list(ii).name, 'D5'))
-        novel_idx(ii) = 0;
-    end
-    
-    if ~isempty(strfind(f_list(ii).name, 'HAT'))
-        anx_idx(ii) = 1;
-    else
-        anx_idx(ii) = 0;
-    end
-    
-end
-
-A_all = A_out;
-
-save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
-
-%%  Run again but for EVV data
-data_dir = ('C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV');
-fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV\checks';
-% cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
-cd(data_dir);
-j20_list = dir('*data*');
-
-method = 'grosmark';
-fig_dir = ['C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV\checks\' method];
-
-J_out = [];
-J20_session = []; J20_novel_idx = []; D3_idx = [];
-for ii = 1:length(j20_list)
-    J20_session{ii} = j20_list(ii).name;
-    cd(data_dir)
-    
-    J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
-    
-    % Summary plots
-    %         Pipline_Asmbly_plot(J_out{ii}, fig_dir);
-    
-    
-    close all
-    
-    if ~isempty(strfind(j20_list(ii).name, 'D1')) %|| ~isempty(strfind(f_list(ii).name, 'HATDS'))
-        J20_novel_idx(ii) = 1;
-        D3_idx(ii) = 0;
-    end
-    
-    if ~isempty(strfind(j20_list(ii).name, 'D3'))
-        D3_idx(ii) = 1;
-        J20_novel_idx(ii) = 0;
-    end
-    
-    if ~isempty(strfind(j20_list(ii).name, 'D5'))
-        J20_novel_idx(ii) = 0;
-        D3_idx(ii) = 0;
-    end
-    
-end
-
-J_all = J_out;
-% A_out = J_out;
-save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\J_out_' method '.mat'], 'J_out')
+% 
+% A_out = [];
+% session = []; novel_idx = []; anx_idx = []; HS_idx = [];
+% method = 'grosmark';
+% 
+% 
+% 
+% 
+% for ii = 13:length(f_list)
+%     session{ii} = f_list(ii).name;
+%     
+%     % compute assemblies and related ReActs
+%     A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
+%     
+%     % Summary plots
+%             Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
+%     close all
+%     
+%     if ~isempty(strfind(f_list(ii).name, 'HATDS'))
+%         HS_idx(ii) = 1;
+%     else
+%         HS_idx(ii) = 0;
+%     end
+%     
+%     if ~isempty(strfind(f_list(ii).name, 'D1')) %|| ~isempty(strfind(f_list(ii).name, 'HATDS'))
+%         novel_idx(ii) = 1;
+%     end
+%     
+%     if ~isempty(strfind(f_list(ii).name, 'D5'))
+%         novel_idx(ii) = 0;
+%     end
+%     
+%     if ~isempty(strfind(f_list(ii).name, 'HAT'))
+%         anx_idx(ii) = 1;
+%     else
+%         anx_idx(ii) = 0;
+%     end
+%     
+% end
+% 
+% A_all = A_out;
+% 
+% save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
+% 
+% %%  Run again but for EVV data
+% data_dir = ('C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV');
+% fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV\checks';
+% % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
+% cd(data_dir);
+% j20_list = dir('*data*');
+% 
+% method = 'grosmark';
+% fig_dir = ['C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV\checks\' method];
+% 
+% J_out = [];
+% J20_session = []; J20_novel_idx = []; D3_idx = [];
+% for ii = 1:length(j20_list)
+%     J20_session{ii} = j20_list(ii).name;
+%     cd(data_dir)
+%     
+%     J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
+%     
+%     % Summary plots
+%     %         Pipline_Asmbly_plot(J_out{ii}, fig_dir);
+%     
+%     
+%     close all
+%     
+%     if ~isempty(strfind(j20_list(ii).name, 'D1')) %|| ~isempty(strfind(f_list(ii).name, 'HATDS'))
+%         J20_novel_idx(ii) = 1;
+%         D3_idx(ii) = 0;
+%     end
+%     
+%     if ~isempty(strfind(j20_list(ii).name, 'D3'))
+%         D3_idx(ii) = 1;
+%         J20_novel_idx(ii) = 0;
+%     end
+%     
+%     if ~isempty(strfind(j20_list(ii).name, 'D5'))
+%         J20_novel_idx(ii) = 0;
+%         D3_idx(ii) = 0;
+%     end
+%     
+% end
+% 
+% J_all = J_out;
+% % A_out = J_out;
+% save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\J_out_' method '.mat'], 'J_out')
 %%  Run again but for EVV data
 data_dir = ('C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV');
 fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV\checks';
@@ -159,8 +161,8 @@ for ii = 1:length(j20_list)
     J20_session{ii} = j20_list(ii).name;
     cd(data_dir)
 %     
-%         J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
-%     JP_out{ii} = Pipeline_Asmbly_place(j20_list(ii).name,bin_size, move_thresh, method);
+        J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
+    JP_out{ii} = Pipeline_Asmbly_place(j20_list(ii).name,bin_size, move_thresh, method);
 %     
 %     % Summary plots
 %         Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method]);
@@ -184,8 +186,9 @@ for ii = 1:length(j20_list)
     end
     
 end
+J20_novel_idx = logical(J20_novel_idx);
 D3_idx = logical(D3_idx);
-D5_idx = logical(D5_idx);
+D5_idx = logical(~D3_idx & ~J20_novel_idx);
 
 
 if ~isempty(J_out)
@@ -203,9 +206,6 @@ cd(inter_dir);
 
 f_list = dir('*data*');
 
-move_thresh  = 8;
-bin_size = [.5];
-
 A_out = []; P_out = [];
 session = []; novel_idx = []; anx_idx = []; HS_idx = [];
 method = 'binary';
@@ -218,8 +218,8 @@ for ii = 1:length(f_list)
     P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
     
     % Summary plots
-                Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
-    Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
+%                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
+%     Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
     
     close all
     
@@ -244,12 +244,15 @@ for ii = 1:length(f_list)
     end
     
 end
+novel_idx = logical(novel_idx); 
+anx_idx = logical(anx_idx); 
+HS_idx = logical(HS_idx); 
 
-lt1_idx = n_idx & ~a_idx & ~HS_idx;
-lt5_idx = ~n_idx & ~a_idx & ~HS_idx;
+lt1_idx = novel_idx & ~anx_idx & ~HS_idx;
+lt5_idx = ~novel_idx & ~anx_idx & ~HS_idx;
 
-H1_idx = n_idx & a_idx & ~HS_idx;
-H5_idx = ~n_idx & a_idx & ~HS_idx;
+H1_idx = novel_idx & anx_idx & ~HS_idx;
+H5_idx = ~novel_idx & anx_idx & ~HS_idx;
 
 % A_all = A_out;
 % A_out = A_out(1:11);
@@ -270,6 +273,10 @@ S_Pre_r_Asmbly = []; S_Post_r_Asmbly = [];
 for iB = length(bin_size):-1:1
     
     for iA = size(A_out,2):-1:1
+        
+        
+        wake_n_Asmbly(iA, iB) = size(A_out{iA}{iB}.P_proj,1); 
+        
         
         % pre
         Pre_n_Asmbly(iA,iB) = sum(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05);
@@ -527,6 +534,24 @@ for iB = length(bin_size):-1:1
     
     
 end
+
+fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
+    'overall', nanmean(wake_n_Asmbly(:, iB)), std(wake_n_Asmbly(:,iB)), nanmean(Pre_n_Asmbly(:, iB)), std(Pre_n_Asmbly(:,iB)), nanmean(Post_n_Asmbly(:, iB)), std(Post_n_Asmbly(:,iB)))
+
+fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
+    'Novel', nanmean(wake_n_Asmbly(novel_idx, iB)), std(wake_n_Asmbly(novel_idx,iB)), nanmean(Pre_n_Asmbly(novel_idx, iB)), std(Pre_n_Asmbly(novel_idx,iB)), nanmean(Post_n_Asmbly(novel_idx, iB)), std(Post_n_Asmbly(novel_idx,iB)))
+
+fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
+    'Familiar', nanmean(wake_n_Asmbly(~novel_idx, iB)), std(wake_n_Asmbly(~novel_idx,iB)), nanmean(Pre_n_Asmbly(~novel_idx, iB)), std(Pre_n_Asmbly(~novel_idx,iB)), nanmean(Post_n_Asmbly(~novel_idx, iB)), std(Post_n_Asmbly(~novel_idx,iB)))
+
+
+fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
+    'LT', nanmean(wake_n_Asmbly(~anx_idx, iB)), std(wake_n_Asmbly(~anx_idx,iB)), nanmean(Pre_n_Asmbly(~anx_idx, iB)), std(Pre_n_Asmbly(~anx_idx,iB)), nanmean(Post_n_Asmbly(~anx_idx, iB)), std(Post_n_Asmbly(~anx_idx,iB)))
+
+fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
+    'HAT', nanmean(wake_n_Asmbly(anx_idx, iB)), std(wake_n_Asmbly(anx_idx,iB)), nanmean(Pre_n_Asmbly(anx_idx, iB)), std(Pre_n_Asmbly(anx_idx,iB)), nanmean(Post_n_Asmbly(anx_idx, iB)), std(Post_n_Asmbly(anx_idx,iB)))
+
+
 %% collect j20 and control reactivation strength
 
 A_Pre_n = []; A_Post_n = [];
@@ -556,6 +581,9 @@ A_sub_list = []; J_sub_list = [];
 for iB = length(bin_size):-1:1
     %     all_cent =
     for iA = size(A_out,2):-1:1
+        
+        % wake
+        
         
         % pre
         A_Pre_n(iA,iB) = sum(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05);
@@ -605,6 +633,8 @@ end
 for iB = length(bin_size):-1:1
     for iA = size(J_out,2):-1:1
         
+%         wake
+        J_wake_n(iA,iB) = size(J_out{iA}{iB}.P_proj,1); 
         % pre
         J_Pre_n(iA,iB) = sum(J_out{iA}{iB}.REM_Pre_stats.p_val <0.05);
         
@@ -649,6 +679,17 @@ for iB = length(bin_size):-1:1
         
     end
 end
+
+
+fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
+    'J20 overall', nanmean(J_wake_n(:, iB)), std(J_wake_n(:,iB)), nanmean(J_Pre_n(:, iB)), std(J_Pre_n(:,iB)), nanmean(J_Post_a(:, iB)), std(J_Post_a(:,iB)))
+
+fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
+    'J20 Novel', nanmean(J_wake_n(J20_novel_idx, iB)), std(J_wake_n(J20_novel_idx,iB)), nanmean(J_Pre_n(J20_novel_idx, iB)), std(J_Pre_n(J20_novel_idx,iB)), nanmean(J_Post_a(J20_novel_idx, iB)), std(J_Post_a(J20_novel_idx,iB)))
+
+fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
+    'J20 D5', nanmean(J_wake_n(D5_idx, iB)), std(J_wake_n(D5_idx,iB)), nanmean(J_Pre_n(D5_idx, iB)), std(J_Pre_n(D5_idx,iB)), nanmean(J_Post_a(D5_idx, iB)), std(J_Post_a(D5_idx,iB)))
+
 %% plot the J20 vs control novel VS familiar
 % A_out = A_all(1:11);
 
@@ -965,10 +1006,11 @@ for iB = length(bin_size):-1:1
     title('switch');
     
     linkprop(ax, 'ylim')
+    ylim([0 40])
     %     Square_subplots;
     SetFigure([], gcf)
     %     title('J20')
-    saveas(gcf,[fig_dir filesep 'cff_summary_p' num2str(bin_size(iB)) '.png'])
+    saveas(gcf,[fig_dir filesep 'cff_summary_p' num2str(strrep(bin_size(iB), '.', 'p')) '.png'])
     
 end
 
@@ -977,51 +1019,129 @@ end
 
 data_in = JP_out;
 Pre_hist = []; Post_hist = [];
-
-for ii = length(data_in):-1:1
+A_hist_pre = []; A_hist_post = []; 
+J20_hist_pre = []; J20_hist_post = []; 
+for kk = 1:2
+    if kk == 1
+        data_in = P_out;
+    elseif kk == 2
+        data_in = JP_out;
+    end
     
     for iB = length(data_in{ii}):-1:1
         
-        % data shorthand
-        this_A = data_in{ii}{iB};
-        
-        % make arrays to accrue reactivation locations;
-        Pre_ReAct_mat = []; Post_ReAct_mat = [];
-        
-        cent_z = []; peak_z = []; M_cent = [];
-        
-        Pre_cnt = sum((this_A.REM_Pre_proj > this_A.REM_Pre_stats.R_thresh), 2);
-        Post_cnt = sum((this_A.REM_Post_proj > this_A.REM_Post_stats.R_thresh),2);
-        
-        for iA = length(this_A.P_pos):-1:1
+        all_cnt_prct = []; 
+        for ii = length(data_in):-1:1
             
-            cent_z(iA) = this_A.map{iA}.cent_z;
-            peak_z(iA) = this_A.map{iA}.peak_z;
+            % data shorthand
+            this_A = data_in{ii}{iB};
             
-            M_cent(iA) = mean(this_A.map{iA}.cent);
-            if cent_z(iA) < -1.96
-                Pre_ReAct_mat = [Pre_ReAct_mat repmat(M_cent(iA),1, Pre_cnt(iA))];
-                Post_ReAct_mat = [Post_ReAct_mat repmat(M_cent(iA),1, Post_cnt(iA))];
+            % make arrays to accrue reactivation locations;
+            Pre_ReAct_mat = []; Post_ReAct_mat = [];
+            
+            cent_z = []; peak_z = []; M_cent = [];
+            
+            Pre_cnt = sum((this_A.REM_Pre_proj > this_A.REM_Pre_stats.R_thresh), 2);
+            Post_cnt = sum((this_A.REM_Post_proj > this_A.REM_Post_stats.R_thresh),2);
+            
+
+            
+            for iA = length(this_A.P_pos):-1:1
+                
+                cent_z(iA) = this_A.map{iA}.cent_z;
+                peak_z(iA) = this_A.map{iA}.peak_z;
+                
+                M_cent(iA) = mean(this_A.map{iA}.cent);
+                if cent_z(iA) < -1.96
+                    Pre_ReAct_mat = [Pre_ReAct_mat repmat(M_cent(iA),1, Pre_cnt(iA))];
+                    Post_ReAct_mat = [Post_ReAct_mat repmat(M_cent(iA),1, Post_cnt(iA))];
+                end
             end
-        end
-        p_bins = 0:3:100;
-        [Pre_hist{ii, iB}] = histc(Pre_ReAct_mat, p_bins(1:end)+3/2);
-        [Post_hist{ii, iB}] = histc(Post_ReAct_mat, p_bins(1:end)+3/2);
-        
-        if ~isempty(Pre_hist{ii, iB})
-            Pre_hist{ii, iB} = Pre_hist{ii, iB}./((this_A.REM_Pre_tvec(end) - this_A.REM_Pre_tvec(1))/60);
-        else
-            Pre_hist{ii, iB} = NaN(1,length(p_bins(1:end)));
-        end
-        
-        if ~isempty(Post_hist{ii, iB})
-            Post_hist{ii, iB} = Post_hist{ii, iB}./((this_A.REM_Post_tvec(end) - this_A.REM_Post_tvec(1))/60);
-        else
-            Post_hist{ii, iB} = NaN(1,length(p_bins(1:end)));
+                        all_cnt_prct(ii) = sum(cent_z < -1.96) / length(cent_z); 
+
+            p_bins = 0:10:100;
+            [Pre_hist{ii, iB}] = histcounts(Pre_ReAct_mat, p_bins);
+            [Post_hist{ii, iB}] = histcounts(Post_ReAct_mat, p_bins);
+            
+            if ~isempty(Pre_hist{ii, iB})
+                Pre_hist{ii, iB} = Pre_hist{ii, iB}./((this_A.REM_Pre_tvec(end) - this_A.REM_Pre_tvec(1))/60);
+            else
+                Pre_hist{ii, iB} = NaN(1,length(p_bins(1:end)));
+            end
+            
+            if ~isempty(Post_hist{ii, iB})
+                Post_hist{ii, iB} = Post_hist{ii, iB}./((this_A.REM_Post_tvec(end) - this_A.REM_Post_tvec(1))/60);
+            else
+                Post_hist{ii, iB} = NaN(1,length(p_bins(1:end)));
+            end
+            
+            if kk == 1
+                A_hist_pre(ii,:) = Pre_hist{ii,iB};
+                A_hist_post(ii,:) = Post_hist{ii,iB};
+            elseif kk == 2
+                J20_hist_pre(ii,:) = Pre_hist{ii,iB};
+                J20_hist_post(ii,:) = Post_hist{ii,iB};
+            end
+            
         end
         
     end
     
+       if kk == 1
+A_cnt_prct = all_cnt_prct; 
+       elseif kk == 2
+J_cnt_prct = all_cnt_prct; 
+    end
 end
+
+p_centr = p_bins(1:end-1)+3/2; 
+
+figure(300)
+clf
+subplot(5,1,1)
+hold on
+area(p_centr, nanmean(A_hist_pre(lt1_idx,:)), 'facecolor', c_ord(2,:), 'FaceAlpha', .6); 
+area(p_centr, nanmean(A_hist_post(lt1_idx,:)), 'facecolor', c_ord(1,:), 'FaceAlpha', .6); 
+
+subplot(5,1,2)
+hold on
+area(p_centr, nanmean(A_hist_pre(lt5_idx,:)), 'facecolor', c_ord(2,:), 'FaceAlpha', .6); 
+area(p_centr, nanmean(A_hist_post(lt5_idx,:)), 'facecolor', c_ord(1,:), 'FaceAlpha', .6); 
+
+subplot(5,1,3)
+hold on
+area(p_centr, nanmean(A_hist_pre(H1_idx,:)), 'facecolor', c_ord(2,:), 'FaceAlpha', .6); 
+area(p_centr, nanmean(A_hist_post(H1_idx,:)), 'facecolor', c_ord(1,:), 'FaceAlpha', .6); 
+
+
+subplot(5,1,4)
+hold on
+area(p_centr, nanmean(A_hist_pre(H5_idx,:)), 'facecolor', c_ord(2,:), 'FaceAlpha', .6); 
+area(p_centr, nanmean(A_hist_post(H5_idx,:)), 'facecolor', c_ord(1,:), 'FaceAlpha', .6); 
+
+subplot(5,1,5)
+hold on
+area(p_centr, nanmean(A_hist_pre(HS_idx,:)), 'facecolor', c_ord(2,:), 'FaceAlpha', .6); 
+area(p_centr, nanmean(A_hist_post(HS_idx,:)), 'facecolor', c_ord(1,:), 'FaceAlpha', .6); 
+
+
+
+ 
+figure(301)
+clf
+subplot(3,1,1)
+hold on
+area(p_centr, nanmean(J20_hist_pre(J20_novel_idx,:)), 'facecolor', c_ord(3,:), 'FaceAlpha', .6); 
+area(p_centr, nanmean(J20_hist_post(J20_novel_idx,:)), 'facecolor', c_ord(4,:), 'FaceAlpha', .6); 
+
+subplot(3,1,2)
+hold on
+area(p_centr, nanmean(J20_hist_pre(D3_idx,:)), 'facecolor', c_ord(3,:), 'FaceAlpha', .6); 
+area(p_centr, nanmean(J20_hist_post(D3_idx,:)), 'facecolor', c_ord(4,:), 'FaceAlpha', .6); 
+subplot(3,1,3)
+hold on
+area(p_centr, nanmean(J20_hist_pre(D5_idx,:)), 'facecolor', c_ord(3,:), 'FaceAlpha', .6); 
+area(p_centr, nanmean(J20_hist_post(D5_idx,:)), 'facecolor', c_ord(4,:), 'FaceAlpha', .6); 
+
 
 % bar(nanmean([Post_hist{1,1}; Post_hist{4,1}; Post_hist{7,1}])
