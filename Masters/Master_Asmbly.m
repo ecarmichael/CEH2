@@ -1023,14 +1023,14 @@ A_hist_pre = []; A_hist_post = [];
 J20_hist_pre = []; J20_hist_post = []; 
 for kk = 1:2
     if kk == 1
-        data_in = P_out;
+        data_in = A_out;
     elseif kk == 2
-        data_in = JP_out;
+        data_in = J_out;
     end
     
     for iB = length(data_in{ii}):-1:1
         
-        all_cnt_prct = []; 
+        all_cnt_prct = []; Pre_cnt_prct = []; Post_cnt_prct = []; 
         for ii = length(data_in):-1:1
             
             % data shorthand
@@ -1058,6 +1058,8 @@ for kk = 1:2
                 end
             end
                         all_cnt_prct(ii) = sum(cent_z < -1.96) / length(cent_z); 
+                        Pre_cnt_prct(ii) = sum((cent_z < -1.96) & (this_A.REM_Pre_stats.p_val < 0.05))/sum(cent_z < -1.96); 
+                        Post_cnt_prct(ii) = sum((cent_z < -1.96) & (this_A.REM_Post_stats.p_val < 0.05))/sum(cent_z < -1.96);
 
             p_bins = 0:10:100;
             [Pre_hist{ii, iB}] = histcounts(Pre_ReAct_mat, p_bins);
@@ -1087,10 +1089,15 @@ for kk = 1:2
         
     end
     
-       if kk == 1
+if kk == 1
 A_cnt_prct = all_cnt_prct; 
+A_Pre_cnt_prct = Pre_cnt_prct; 
+A_Post_cnt_prct = Post_cnt_prct; 
+
        elseif kk == 2
 J_cnt_prct = all_cnt_prct; 
+J_Pre_cnt_prct = Pre_cnt_prct; 
+J_Post_cnt_prct = Post_cnt_prct; 
     end
 end
 
