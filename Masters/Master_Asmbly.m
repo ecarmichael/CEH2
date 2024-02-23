@@ -216,10 +216,12 @@ for ii = 1:length(f_list)
     % compute assemblies and related ReActs
         A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
     P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
+            B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
+
     
     % Summary plots
-%                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
-%     Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
+                Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
+    Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
     
     close all
     
