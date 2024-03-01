@@ -27,9 +27,9 @@ behav = MS_align_data(behav,ms);
 move_idx = behav.speed > move_thresh;
 
 %% load the selected neurons h5
-h5_dir = dir('*.h5'); 
+h5_dir = dir('selected*.h5'); 
 for ii = length(h5_dir):-1:1
-    if  contains(h5_dir(ii).name, this_sess(1:6)) && contains(h5_dir(ii).name,this_sess(8:11))
+    if  contains(h5_dir(ii).name, this_sess(1:6)) && contains(h5_dir(ii).name,this_sess(8:12))
         keep_idx(ii) = true; 
     else
         keep_idx(ii) = false;
@@ -39,7 +39,7 @@ end
 h5_idx = find(keep_idx); 
 fprintf('session: <strong>%s</strong> found h5 <strong>%s</strong>\n', this_sess, h5_dir(h5_idx).name); 
 
-S_neurons  = h5read(h5_dir(h5_idx).name, '/most_active'); 
+S_neurons  = h5read(h5_dir(h5_idx).name, '/place_cells'); 
 
 
 %% remove questionable cells
@@ -154,30 +154,27 @@ end
 
 
 %% load the place information
-
-% dir_parts = strsplit(this_sess, filesep);
-% parts = strsplit(dir_parts{end}, '_');
-% info.task = parts{2};
-% if contains(info.task, 'HATD6')
-%     info.task = 'HATDSwitch';
-% end
-% info.subject = parts{1};
+t_h5_dir = dir('tuning_*.h5');
 
 
-load([info.subject '_' info.session '_PCs.mat'])
+PCs_properties = MS_h5_to_stuct(t_h5_dir(h5_idx).name); 
 
-place = [];
 
-place.centroids = PCs_properties.peak_loc;
+
+
+% load([info.subject '_' info.session '_PCs.mat'])
+
+
+place.centroids = double(PCs_properties.peak_loc)'; 
 
 % is it a place cell?
-place.is = PCs_properties.isPC;
+place.is = PCs_properties.p_value < 0.05;
 
-place.map = PCs_properties.tuning_curve_data';
+place.map = PCs_properties.tuning_curves';
 
-place.MI = PCs_properties.MI;
+place.MI = PCs_properties.info;
 
-place.peak_rate = PCs_properties.peak_rate;
+place.peak_rate = PCs_properties.peak_val;
 
 
 
@@ -186,6 +183,7 @@ place.centroids =place.centroids(s_idx);
 
 place.is(remove_cell_id)= [];
 place.is = place.is(s_idx); 
+
 
 place.map(remove_cell_id,:)= [];
 place.map =place.map(s_idx,:);
@@ -196,9 +194,13 @@ place.MI = place.MI(s_idx);
 place.peak_rate(remove_cell_id)= [];
 place.peak_rate = place.peak_rate(s_idx); 
 
-bin = 3; %80/size(place.map,2);
-p_bins = 0:bin:100;
-place.p_bins = p_bins(1:end)+bin/2;
+% bin = 3; %80/size(place.map,2);
+% p_bins = 0:bin:100;
+% place.p_bins = p_bins(1:end)+bin/2;
+
+place.bins = PCs_properties.bins; 
+place.p_bins = PCs_properties.bins(1:end-1)+(mode(diff(PCs_properties.bins)))/2;
+
 % see if there are any anxiety cells
 
 % [~,p_sort] = sort(place.centroids);
