@@ -1,4 +1,4 @@
-function out = Pipeline_Asmbly(fname,bin_s, move_thresh, method)
+function out = Pipeline_Asmbly_top_cells(fname,bin_s, move_thresh, method)
 %% Pipeline_Asmbly: provides a wrapper for running assembly and reactivation analyses using calcium data.
 
 
@@ -26,67 +26,82 @@ behav = MS_align_data(behav,ms);
 
 move_idx = behav.speed > move_thresh;
 
+%% load the selected neurons h5
+h5_dir = dir('selected*.h5'); 
+for ii = length(h5_dir):-1:1
+    if  contains(h5_dir(ii).name, this_sess(1:6)) && contains(h5_dir(ii).name,this_sess(8:12))
+        keep_idx(ii) = true; 
+    else
+        keep_idx(ii) = false;
+    end
+
+end
+h5_idx = find(keep_idx); 
+fprintf('session: <strong>%s</strong> found h5 <strong>%s</strong>\n', this_sess, h5_dir(h5_idx).name); 
+
+S_neurons  = h5read(h5_dir(h5_idx).name, '/place_cells'); 
+
+
 %% remove questionable cells
 
 ms_trk = ms;
-keep_idx = zeros(1,size(ms_trk.RawTraces,2));
-keep_idx(1:floor(size(ms_trk.RawTraces,2)*.66)) = 1;
 
-remove_cell_id = find(~keep_idx);
+rm_idx = 1:ms_trk.numNeurons; 
+remove_cell_id = find(~ismember(rm_idx,double(S_neurons)));
+
 
 cfg_rem = [];
-cfg_rem.remove_idx = find(~keep_idx);
+cfg_rem.remove_idx = remove_cell_id;
 cfg_rem.data_type = 'RawTraces';
 ms_trk_cut = MS_Remove_trace(cfg_rem, ms_trk);
+ms_trk_cut.cell_id = find(ismember(rm_idx,double(S_neurons))); 
+
+
+% super hack way to sort based on h5 criteria b/c I can't remember how to
+% sort this stuff. 
+s_idx = []; 
+for ii = length(S_neurons):-1:1
+   s_idx(ii) = find(S_neurons(ii) == ms_trk_cut.cell_id);
+end
+
+
 
 if  strcmpi(method, 'grosmark')
     if ~isfield(ms_trk, 'deconv') % get the deconvolved trace if not already present.
         ms_trk_cut = MS_append_deconv(ms_trk_cut, 1);
     end
-    % remove inactive cells
-        keep_idx = sum(ms_trk_cut.deconv, 1) >0;
-else
-    keep_idx = sum(ms_trk_cut.Binary, 1) >0;
 end
-
-remove_cell_id_decon = find(~keep_idx);
-
-cfg_rem = [];
-cfg_rem.remove_idx = find(~keep_idx);
-cfg_rem.data_type = 'deconv';
-ms_trk_cut = MS_Remove_trace(cfg_rem, ms_trk_cut);
-
 
 % trim the REM data as well
 all_binary_post_REM(:, remove_cell_id) = [];
-all_binary_post_REM(:, remove_cell_id_decon) = [];
+all_binary_post_REM = all_binary_post_REM(:, s_idx); 
+
 
 all_binary_pre_REM(:, remove_cell_id) = [];
-all_binary_pre_REM(:, remove_cell_id_decon) = [];
+all_binary_pre_REM = all_binary_pre_REM(:, s_idx); 
 
 % if using 'grosmark 2021' method, create the Csp 
 if strcmpi(method, 'grosmark')
     % trim the REM data as well
     all_deconv_pre_REM(:, remove_cell_id) = [];
-    all_deconv_pre_REM(:, remove_cell_id_decon) = [];
-
+    all_deconv_pre_REM = all_deconv_pre_REM(:, s_idx);
+    
     all_denoise_pre_REM(:, remove_cell_id) = [];
-    all_denoise_pre_REM(:, remove_cell_id_decon) = [];
-
+    all_denoise_pre_REM = all_denoise_pre_REM(:, s_idx);
+    
     % all_deconv_post_REM
     
     all_deconv_post_REM(:, remove_cell_id) = [];
-    all_deconv_post_REM(:, remove_cell_id_decon) = [];
-
+    all_deconv_post_REM = all_deconv_post_REM(:, s_idx);
+    
     all_denoise_post_REM(:, remove_cell_id) = [];
-    all_denoise_post_REM(:, remove_cell_id_decon) = [];
+    all_denoise_post_REM = all_denoise_post_REM(:, s_idx);
     
     all_detrendRaw_pre_REM(:, remove_cell_id) = [];
-    all_detrendRaw_pre_REM(:, remove_cell_id_decon) = [];
-
-    all_detrendRaw_post_REM(:, remove_cell_id) = [];
-    all_detrendRaw_post_REM(:, remove_cell_id_decon) = [];
+    all_detrendRaw_pre_REM = all_detrendRaw_pre_REM(:, s_idx);
     
+    all_detrendRaw_post_REM(:, remove_cell_id) = [];
+    all_detrendRaw_post_REM = all_detrendRaw_post_REM(:, s_idx);
     
     % run the CSP extraction. 
     fprintf('Using Deconv/Denoise ("Grosmark et al. 2021")  data as an input\n')
@@ -96,7 +111,7 @@ if strcmpi(method, 'grosmark')
         m_ad(ii) = 1.5*mad([all_denoise_pre_REM(:,ii)- all_detrendRaw_pre_REM(:,ii)]);
         REM_pre_data_in(:,ii) = (all_deconv_pre_REM(:,ii)/m_ad(ii)) > 1.25;
     end
-    
+    REM_pre_data_in = REM_pre_data_in(:, s_idx); 
     
     % post
     REM_post_data_in = []; 
@@ -104,7 +119,8 @@ if strcmpi(method, 'grosmark')
         m_ad(ii) = 1.5*mad([all_denoise_post_REM(:,ii)- all_detrendRaw_post_REM(:,ii)]);
         REM_post_data_in(:,ii) = (all_deconv_post_REM(:,ii)/m_ad(ii)) > 1.25;
     end
-%     
+    REM_post_data_in = REM_post_data_in(:, s_idx); 
+    
 %     Csp =all_deconv_pre_REM./all_denoise_pre_REM;
 %     Csp = Csp > 0.01;
 %     REM_pre_data_in = Csp;
@@ -120,52 +136,71 @@ else
     REM_post_data_in = all_binary_post_REM; 
 end
 
+% sort the ms_trk_cut
+
+f_list = fieldnames(ms_trk_cut); 
+
+for ii = length(f_list):-1:1
+    if size(ms_trk_cut.(f_list{ii}), 2) == length(S_neurons)
+        disp(f_list{ii})
+        ms_trk_cut.(f_list{ii}) = ms_trk_cut.(f_list{ii})(:, s_idx);
+    elseif size(ms_trk_cut.(f_list{ii}), 3) == length(S_neurons)
+        disp(['! ' f_list{ii}])
+        ms_trk_cut.(f_list{ii}) = ms_trk_cut.(f_list{ii})(:,:, s_idx);
+    end
+    
+end
+
+
+
 %% load the place information
-
-% dir_parts = strsplit(this_sess, filesep);
-% parts = strsplit(dir_parts{end}, '_');
-% info.task = parts{2};
-% if contains(info.task, 'HATD6')
-%     info.task = 'HATDSwitch';
-% end
-% info.subject = parts{1};
+t_h5_dir = dir('tuning_*.h5');
 
 
-load([info.subject '_' info.session '_PCs.mat'])
+PCs_properties = MS_h5_to_stuct(t_h5_dir(h5_idx).name); 
 
-place = [];
 
-place.centroids = PCs_properties.peak_loc;
+
+
+% load([info.subject '_' info.session '_PCs.mat'])
+
+
+place.centroids = double(PCs_properties.peak_loc)'; 
 
 % is it a place cell?
-place.is = PCs_properties.isPC;
+place.is = PCs_properties.p_value < 0.05;
 
-place.map = PCs_properties.tuning_curve_data';
+place.map = PCs_properties.tuning_curves';
 
-place.MI = PCs_properties.MI;
+place.MI = PCs_properties.info;
 
-place.peak_rate = PCs_properties.peak_rate;
+place.peak_rate = PCs_properties.peak_val;
 
 
 
 place.centroids(remove_cell_id)= [];
-place.centroids(remove_cell_id_decon)= [];
+place.centroids =place.centroids(s_idx); 
 
 place.is(remove_cell_id)= [];
-place.is(remove_cell_id_decon)= [];
+place.is = place.is(s_idx); 
+
 
 place.map(remove_cell_id,:)= [];
-place.map(remove_cell_id_decon,:)= [];
+place.map =place.map(s_idx,:);
 
 place.MI(remove_cell_id)= [];
-place.MI(remove_cell_id_decon)= [];
+place.MI = place.MI(s_idx); 
 
 place.peak_rate(remove_cell_id)= [];
-place.peak_rate(remove_cell_id_decon)= [];
+place.peak_rate = place.peak_rate(s_idx); 
 
-bin = 3; %80/size(place.map,2);
-p_bins = 0:bin:100;
-place.p_bins = p_bins(1:end)+bin/2;
+% bin = 3; %80/size(place.map,2);
+% p_bins = 0:bin:100;
+% place.p_bins = p_bins(1:end)+bin/2;
+
+place.bins = PCs_properties.bins; 
+place.p_bins = PCs_properties.bins(1:end-1)+(mode(diff(PCs_properties.bins)))/2;
+
 % see if there are any anxiety cells
 
 % [~,p_sort] = sort(place.centroids);
