@@ -40,7 +40,7 @@ h5_idx = find(keep_idx);
 fprintf('session: <strong>%s</strong> found h5 <strong>%s</strong>\n', this_sess, h5_dir(h5_idx).name); 
 
 S_neurons  = h5read(h5_dir(h5_idx).name, '/place_cells'); 
-
+S_neurons = S_neurons+1; 
 
 %% remove questionable cells
 
