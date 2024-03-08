@@ -94,15 +94,15 @@ if strcmpi(subject_id, '1260')
     fprintf(fid, 'Meta.goodCSC = ''CSC1.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
     fprintf(fid, 'Meta.goodCSC2 = ''CSC4.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
 
-elseif strcmpi(subject_id, 'PV1')
+elseif strcmpi(subject_id, '1242')
 
     fprintf(fid, 'Meta.EMG = ''NA''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
 
     fprintf(fid, 'Meta.goodCSC = ''CSC1.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
-    fprintf(fid, 'Meta.goodCSC2 = ''CSC2.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+    fprintf(fid, 'Meta.goodCSC2 = ''CSC3.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
 
 end
-fprintf(fid, 'Meta.quality = ''NaN''; %%0 is poor, 1 means cell faded, 2 means ok, 3 means great!, NaN means not yet filled in\n');
+fprintf(fid, 'Meta.quality = ''3''; %%0 is poor, 1 means cell faded, 2 means ok, 3 means great!, NaN means not yet filled in\n');
 
 
 

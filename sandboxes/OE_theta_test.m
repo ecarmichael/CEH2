@@ -12,7 +12,7 @@ csc_dir = dir([data_dir '\**\*.continuous']);
 
 for ii = 1:length(csc_dir)
    
-    if contains(csc_dir(ii).name, ['CH' chan])
+    if contains(csc_dir(ii).name, ['CH' chan '.continuous'])
         keep_idx(ii) = 1; 
     else
         keep_idx(ii) = 0; 
@@ -20,7 +20,7 @@ for ii = 1:length(csc_dir)
 end
 
 fprintf('Using channel <strong>%s</strong>...\n', csc_dir(find(keep_idx)).name)
-
+cd(csc_dir(find(keep_idx)).folder)
 
 cfg.fc = {csc_dir(find(keep_idx)).name}; 
 cfg.desired_sampling_frequency = 2000;
@@ -42,6 +42,8 @@ ttl_iv = iv(t_start, t_end);
 
 %% compute the psd for each on periods (assuming you started with on
 hann_win = 2^12; 
+Pxx_on = []; 
+Pxx_off = []; 
 
 for ii = 1:2:length(evts.t{evt_idx})
     
@@ -74,6 +76,7 @@ clf
 subplot(4,2,1:4)
 plot(csc)
 hold on
+plot(evts.t{evt_idx}, max(csc.data)*ones(length([evts.t{evt_idx}]),1), '*r')
 for ii = 1:2:length(evts.t{evt_idx})
    rectangle('Position', [ evts.t{evt_idx}(ii), max(csc.data), evts.t{evt_idx}(ii+1) - evts.t{evt_idx}(ii), max(csc.data)/20], 'FaceColor', 'g', 'EdgeColor', 'g')
    
