@@ -24,7 +24,6 @@ function [hypno, csc, emg] = dSub_Sleep_screener(csc, emg, wake_idx)
 %
 %
 % EC 2022-08-22   initial version 
-%
 %% initialize
 
 if nargin < 1
