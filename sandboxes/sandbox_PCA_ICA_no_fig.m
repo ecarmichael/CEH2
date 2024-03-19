@@ -99,9 +99,9 @@ cfg_rem.remove_idx = find(~keep_idx);
 cfg_rem.data_type = 'RawTraces';
 ms_trk_rem = MS_Remove_trace(cfg_rem, ms_trk);
 
-
-ms_trk_rem = MS_append_deconv(ms_trk_rem, 1);
-
+if ~isfield(ms_trk, 'deconv') % get the deconvolved trace if not already present. 
+    ms_trk_rem = MS_append_deconv(ms_trk_rem, 1);
+end
 % remove inactive cells
 
 keep_idx = sum(ms_trk_rem.deconv, 1) >0;

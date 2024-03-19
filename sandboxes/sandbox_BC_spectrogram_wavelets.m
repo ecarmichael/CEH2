@@ -3,7 +3,7 @@
 
 %% load some data
 
-cd('C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Bryan_DropBox\CHRNA2_LINEAR_TRACK\raw\BC1807_07_12_2023_D4_INHIBITION');
+cd('C:\Users\bcont\Williams Lab Dropbox\Williams Lab Team Folder\Bryan_DropBox\CHRNA2_LINEAR_TRACK\raw\BC1807_07_12_2023_D4_INHIBITION');
 
 cfg_csc = [];
 cfg_csc.fc = {'CSC4.ncs'};
@@ -62,7 +62,7 @@ end
 % will let you put the EMG and raw LFP on top. but you can also open it up
 % and pull parts from it. 
 
-
+ cwt(csc.data, fs);
 [cfs, frq] = cwt(csc.data, fs); 
 %  xlabels = get(gca, 'xtick'); 
 %  set(gca, 'xticks', xlabels/60)
@@ -74,17 +74,50 @@ end
         AX.YTickLabelMode = 'auto';
         AX.YTick = freq;
 ylim([1 140])
+%% Color gradient
+numColors = 256;
+
+% Define the colormap with three columns for Red, Green, and Blue
+customMap = zeros(numColors, 3);
+
+% Define the range of colors
+darkBlue = [0, 0, 0.1];
+brightYellow = [1, 1, 0];
+
+% Generate the gradient from dark blue to bright yellow
+for i = 1:numColors
+    customMap(i, :) = (1 - (i - 1) / (numColors - 1)) * darkBlue + ((i - 1) / (numColors - 1)) * brightYellow;
+end
+colormap(customMap);
 %% wavelet for the whole thing. 
 
 figure
-[cfs, frq]=cwt(csc_r.data, fs);
+cwt(csc.data, fs);
+[cfs, frq]=cwt(csc.data, fs);
      AX = gca;
-        [minf,maxf] = cwtfreqbounds(numel(csc_r.data),fs);
+        [minf,maxf] = cwtfreqbounds(numel(csc.data),fs);
         
         freq = 2.^(round(log2(minf)):round(log2(maxf)));
         AX.YTickLabelMode = 'auto';
         AX.YTick = freq;
 ylim([1 140])
+iv_inhb_min=BC_iv2min(iv_inhb);
+iv_noInhb_min=BC_iv2min(iv_noInhb);
+
+h01=LTplotIvBarsScalogram(iv_inhb_min,BC_color_genertor('Archt_green'),0.2)
+h02=LTplotIvBarsScalogram(iv_noInhb_min,BC_color_genertor('Web_orange'),0.2)
+
+%Aesthetics
+leg=legend([h01;h02],{'Silencing','Running no silencing'});
+legendFontSize = 12;         % Adjust the font size as needed
+leg.Position=[0.732 0.935 0.09047 0.0487];
+set(leg, 'FontSize', legendFontSize);
+box off;
+legend boxon ;
+set(gca, 'TickDir', 'out');
+fig = gcf;                   % Get current figure handle
+fig.Color = [1 1 1];         % Set background color to white
+fig.Position = [100, 100, 1200, 700];  % [x, y, width, height]
 %% event sepcific
 
 for ii = 1:length(laser_on)

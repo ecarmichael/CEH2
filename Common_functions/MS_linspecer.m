@@ -24,3 +24,13 @@ c_ord = linspecer(n_colours+y_range);
 
 
 c_ord(floor(n_colours/2)-ceil(y_range/2)+1:floor(n_colours/2)+ceil(y_range/2),:) = [];
+
+if size(c_ord,1) < n_colours
+    c_ord = linspecer(n_colours+y_range+1);
+
+
+c_ord(floor(n_colours/2)-ceil(y_range/2)+1:floor(n_colours/2)+ceil(y_range/2),:) = [];
+    
+    
+    
+end
