@@ -50,7 +50,7 @@ fprintf('\n<strong>Session data appears to be Subject %s, on %s, with task: %s</
 % numTT = length(dir('*.ntt'));
 
 % open the file to write
-fid = fopen([dir_name '_meta.m'], 'w');
+fid = fopen(['m' dir_name '_meta.m'], 'w');
 
 %% fill in the consistent information
 fprintf(fid, '%% ''This Meta.m was generated using %s.m on %s'';\n', mfilename, date);
@@ -88,21 +88,21 @@ fprintf(fid, 'Meta.task_order = {''Pre'', ''Track'', ''Post''};\n');
 fprintf(fid, 'Meta.LFP_hemisphere = ''R/L'';\n');
 % fprintf(fid, ['Meta.tetrodeDepths = ' num2str(depth) ';\n']);
 
-if strcmpi(subject_id, '1260')
-    fprintf(fid, 'Meta.EMG = ''NA''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
-
-    fprintf(fid, 'Meta.goodCSC = ''CSC1.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
-    fprintf(fid, 'Meta.goodCSC2 = ''CSC4.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
-
-elseif strcmpi(subject_id, 'PV1')
-
+if strcmpi(subject_id, '1860')
     fprintf(fid, 'Meta.EMG = ''NA''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
 
     fprintf(fid, 'Meta.goodCSC = ''CSC1.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
     fprintf(fid, 'Meta.goodCSC2 = ''CSC2.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
 
+elseif strcmpi(subject_id, '1842')
+
+    fprintf(fid, 'Meta.EMG = ''NA''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+
+    fprintf(fid, 'Meta.goodCSC = ''CSC1.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+    fprintf(fid, 'Meta.goodCSC2 = ''CSC3.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+
 end
-fprintf(fid, 'Meta.quality = ''NaN''; %%0 is poor, 1 means cell faded, 2 means ok, 3 means great!, NaN means not yet filled in\n');
+fprintf(fid, 'Meta.quality = ''3''; %%0 is poor, 1 means cell faded, 2 means ok, 3 means great!, NaN means not yet filled in\n');
 
 
 

@@ -48,7 +48,10 @@ if strcmp(method, 'grosmark')
 %         data = conv2(Csp,gk,'same'); % convolve with gaussian window
 %         
 %     end
-    
+elseif strcmp(method, 'Raw')
+    data = ms.RawTraces; 
+
+
 else
         fprintf('Using Binarized data as an input\n')
     data = ms.Binary;

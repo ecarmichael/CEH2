@@ -1,11 +1,12 @@
-function [hypno, csc, emg] = dSub_Sleep_screener(csc, emg, wake_idx)
+function [hypno, csc, emg] = dSub_Sleep_screener(plot_flag,csc, emg, wake_idx)
 %% dSub_Sleep_screener: run an intial screening of sleep ephys data to classify data as movement or rough sleep stages. 
 %
 %
 %
 %    Inputs: 
+%    - plot_flag: [boolean] 00 for not plotting the sleepnogram
 %    - csc: [struct] LFP data for the channel of interest. in the TSD
-
+%
 %    format from MS_LoadCSC; 
 %    
 %     - emg: [struct] emg data for the channel of interest. in the TSD
@@ -24,9 +25,12 @@ function [hypno, csc, emg] = dSub_Sleep_screener(csc, emg, wake_idx)
 %
 %
 % EC 2022-08-22   initial version 
+% BC 2024-03-19   added the plot input in case you don't need to visualize
+%                 sleepnogram
 %% initialize
 
 if nargin < 1
+    plot_flag=1;
         Meta = MS_Load_meta;
     cfg_csc.fc = {Meta.goodCSC};%, 'CSC3.ncs'};  % pick the channels to load
     csc = LoadCSC(cfg_csc); % load the csc data
@@ -34,6 +38,13 @@ if nargin < 1
     cfg_csc.fc = {Meta.EMG};%, 'CSC3.ncs'};  % pick the channels to load
     emg = LoadCSC(cfg_csc); % load the csc data
 elseif nargin < 2
+        Meta = MS_Load_meta;
+    cfg_csc.fc = {Meta.goodCSC};%, 'CSC3.ncs'};  % pick the channels to load
+    csc = LoadCSC(cfg_csc); % load the csc data
+    
+    cfg_csc.fc = {Meta.EMG};%, 'CSC3.ncs'};  % pick the channels to load
+    emg = LoadCSC(cfg_csc); % load the csc data
+elseif nargin < 3
         Meta = MS_Load_meta;
     cfg_csc.fc = {Meta.EMG};%, 'CSC3.ncs'};  % pick the channels to load
     emg = LoadCSC(cfg_csc); % load the csc data
@@ -154,69 +165,72 @@ end
 
 
 %% check figure
-figure(221)
-clf
-ax(1) = subplot(7,1,1:4);
-cla
-yyaxis right
-hold on
-% plot((csc.tvec - csc.tvec(1)),  emg_og'*1000,  'color', [0.3 0.3 0.3]);
-plot((csc.tvec - csc.tvec(1)),  emg_rms'*1000,  'color', cord(2,:));
 
-ylim([min(emg_rms*1000), 3*max(emg_rms*1000)])
-yline(move_thresh*1000)
-set(gca, 'xtick', [])
-ylabel('EMG voltage (mV)')
+if plot_flag
+    figure(221)
+    clf
+    ax(1) = subplot(7,1,1:4);
+    cla
+    yyaxis right
+    hold on
+    % plot((csc.tvec - csc.tvec(1)),  emg_og'*1000,  'color', [0.3 0.3 0.3]);
+    plot((csc.tvec - csc.tvec(1)),  emg_rms'*1000,  'color', cord(2,:));
 
-% ylim([0 50])
-yyaxis left
-plot((csc.tvec - csc.tvec(1)), csc.data*1000, 'color', cord(1,:));
-legend({'Raw LFP', 'smooth EMG-rms'});
-% xlim([min((csc.tvec - csc.tvec(1))/60/60) max((csc.tvec - csc.tvec(1))/60/60)])
-ylim([.75*min(csc.data*1000), 1.25*max(csc.data*1000)])
-ylabel('LFP voltage')
+    ylim([min(emg_rms*1000), 3*max(emg_rms*1000)])
+    yline(move_thresh*1000)
+    set(gca, 'xtick', [])
+    ylabel('EMG voltage (mV)')
 
-set(gca, 'xtick', [])
-% ylabel('LFP voltage')
+    % ylim([0 50])
+    yyaxis left
+    plot((csc.tvec - csc.tvec(1)), csc.data*1000, 'color', cord(1,:));
+    legend({'Raw LFP', 'smooth EMG-rms'});
+    % xlim([min((csc.tvec - csc.tvec(1))/60/60) max((csc.tvec - csc.tvec(1))/60/60)])
+    ylim([.75*min(csc.data*1000), 1.25*max(csc.data*1000)])
+    ylabel('LFP voltage')
 
-ax(2) = subplot(7,1,5:6);
-cla
-hold on
-plot((csc.tvec - csc.tvec(1)),  ~move_idx & z_ratio > .5, 'k');
-plot((csc.tvec - csc.tvec(1)), ratio.data,  'color', cord(3,:));
-% plot((csc.tvec - csc.tvec(1)), sat_idx - 2,  'color', cord(5,:));
-ylabel('Theta-delta ratio')
-legend({'REM idx', 'theta/delta z'});
+    set(gca, 'xtick', [])
+    % ylabel('LFP voltage')
 
-% yline(.5); 
-set(gca, 'xtick', [])
+    ax(2) = subplot(7,1,5:6);
+    cla
+    hold on
+    plot((csc.tvec - csc.tvec(1)),  ~move_idx & z_ratio > .5, 'k');
+    plot((csc.tvec - csc.tvec(1)), ratio.data,  'color', cord(3,:));
+    % plot((csc.tvec - csc.tvec(1)), sat_idx - 2,  'color', cord(5,:));
+    ylabel('Theta-delta ratio')
+    legend({'REM idx', 'theta/delta z'});
 
-ax(3) = subplot(7,1,7);
-cla
-hold on
-vec = zeros(size(hypno_out));
-plot((csc.tvec(hypno_out == 2) - csc.tvec(1)), vec(hypno_out == 2)+2,'s','MarkerEdgeColor', cord(2,:),'MarkerFaceColor',cord(2,:), 'linewidth', 1)
-plot((csc.tvec(hypno_out == 3) - csc.tvec(1)), vec(hypno_out == 3)+3,'s','MarkerEdgeColor', cord(3,:),'MarkerFaceColor',cord(3,:), 'linewidth', 1)
-plot((csc.tvec(hypno_out == 1) - csc.tvec(1)), vec(hypno_out == 1)+1,'s','MarkerEdgeColor', cord(1,:),'MarkerFaceColor',cord(1,:), 'linewidth', 1)
+    % yline(.5);
+    set(gca, 'xtick', [])
 
-% imagesc((csc.tvec - csc.tvec(1)), 1, hypno_init')
-ytickValues = [1, 2, 3];  % Specify the values where you want tick marks
-yticks(ytickValues);
-set(gca, 'YTickLabel', labels)
-% colormap(linspecer(3));
-% cb=colorbar;
-% cb.Position(1) = cb.Position(1) + 1e-1;
-% cb.Ticks = [1:3];
-% cb.TickLabels = {'Wake', 'SWS', 'REM'};
-xlabel('time (s)')
+    ax(3) = subplot(7,1,7);
+    cla
+    hold on
+    vec = zeros(size(hypno_out));
+    plot((csc.tvec(hypno_out == 2) - csc.tvec(1)), vec(hypno_out == 2)+2,'s','MarkerEdgeColor', cord(2,:),'MarkerFaceColor',cord(2,:), 'linewidth', 1)
+    plot((csc.tvec(hypno_out == 3) - csc.tvec(1)), vec(hypno_out == 3)+3,'s','MarkerEdgeColor', cord(3,:),'MarkerFaceColor',cord(3,:), 'linewidth', 1)
+    plot((csc.tvec(hypno_out == 1) - csc.tvec(1)), vec(hypno_out == 1)+1,'s','MarkerEdgeColor', cord(1,:),'MarkerFaceColor',cord(1,:), 'linewidth', 1)
 
-% legend('SWS', 'REM', 'Awake')
+    % imagesc((csc.tvec - csc.tvec(1)), 1, hypno_init')
+    ytickValues = [1, 2, 3];  % Specify the values where you want tick marks
+    yticks(ytickValues);
+    set(gca, 'YTickLabel', labels)
+    % colormap(linspecer(3));
+    % cb=colorbar;
+    % cb.Position(1) = cb.Position(1) + 1e-1;
+    % cb.Ticks = [1:3];
+    % cb.TickLabels = {'Wake', 'SWS', 'REM'};
+    xlabel('time (s)')
 
-linkaxes(ax, 'x')
-xlim([min((csc.tvec - csc.tvec(1))) max((csc.tvec - csc.tvec(1)))])
+    % legend('SWS', 'REM', 'Awake')
 
-% SetFigure([], gcf);
-maximize
+    linkaxes(ax, 'x')
+    xlim([min((csc.tvec - csc.tvec(1))) max((csc.tvec - csc.tvec(1)))])
+
+    % SetFigure([], gcf);
+    maximize
+end
 %% collect the values
 
 cfg_hypno = [];

@@ -214,13 +214,17 @@ for ii = 1:length(f_list)
     session{ii} = f_list(ii).name;
     
     % compute assemblies and related ReActs
-        A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
-    P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
+%         A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
+%     P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
+
+            B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
+
     
     % Summary plots
 %                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
 %     Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
-    
+        Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
+
     close all
     
     if ~isempty(strfind(f_list(ii).name, 'HATDS'))
@@ -256,12 +260,12 @@ H5_idx = ~novel_idx & anx_idx & ~HS_idx;
 
 % A_all = A_out;
 % A_out = A_out(1:11);
-if ~isempty(A_out)
-    save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
-end
-if ~isempty(P_out)
-    save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\P_out_' method '.mat'], 'P_out')
-end
+% % if ~isempty(A_out)
+% %     save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
+% % end
+% % if ~isempty(P_out)
+% %     save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\P_out_' method '.mat'], 'P_out')
+% % end
 %% collect the data
 
 Pre_n_Asmbly = []; Post_n_Asmbly = [];
