@@ -105,7 +105,6 @@ for iF  = 1:length(file_list)
         bd_idx = find(contains(DLC_labels, 'body_center')); 
         DLC_labels{bd_idx(1)} = 'body';
                 fields{bd_idx(1)} = 'body';
-
     end
     fields(contains(DLC_labels, '_')) = [];
     %     fields = unique(DLC_labels); % get the parts
