@@ -217,13 +217,13 @@ for ii = 1:length(f_list)
 %         A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
 %     P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
 
-            B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
+%             B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
 
     
     % Summary plots
 %                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
 %     Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
-        Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
+%         Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
 
     close all
     
@@ -1156,3 +1156,36 @@ area(p_centr, nanmean(J20_hist_post(D5_idx,:)), 'facecolor', c_ord(4,:), 'FaceAl
 
 
 % bar(nanmean([Post_hist{1,1}; Post_hist{4,1}; Post_hist{7,1}])
+
+
+%% convert to HD5
+
+
+for ii = 1:length(A_out)
+    
+
+
+fname = ['assembly_' A_out{ii}{1}.info.session '_' A_out{ii}{1}.info.subject '.h5']; 
+
+if exist(fname, 'file')
+    delete(fname)
+end
+
+hdf5write(fname, '/mouse', string(A_out{ii}{1}.info.subject)); 
+hdf5write(fname, '/condition', string(A_out{ii}{1}.info.session),'WriteMode', 'append'); 
+
+
+hdf5write(fname, '/wake_proj', (A_out{ii}{1}.P_proj),'WriteMode', 'append'); 
+hdf5write(fname, '/pre_rem_proj', (A_out{ii}{1}.REM_Pre_proj),'WriteMode', 'append'); 
+hdf5write(fname, '/post_rem_proj', (A_out{ii}{1}.REM_Post_proj),'WriteMode', 'append'); 
+
+hdf5write(fname, '/ReAct_str', (A_out{ii}{1}.ReAct),'WriteMode', 'append'); 
+
+hdf5write(fname, '/pre_rem_Rthresh', (A_out{ii}{1}.REM_Pre_stats.R_thresh),'WriteMode', 'append'); 
+hdf5write(fname, '/post_rem_Rthresh',(A_out{ii}{1}.REM_Post_stats.R_thresh),'WriteMode', 'append'); 
+
+
+end
+
+%% read it back
+MS_h5_to_stuct('Ass_example.h5')
