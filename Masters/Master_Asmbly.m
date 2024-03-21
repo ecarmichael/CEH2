@@ -161,8 +161,8 @@ for ii = 1:length(j20_list)
     J20_session{ii} = j20_list(ii).name;
     cd(data_dir)
 %     
-        J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
-    JP_out{ii} = Pipeline_Asmbly_place(j20_list(ii).name,bin_size, move_thresh, method);
+%         J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
+%     JP_out{ii} = Pipeline_Asmbly_place(j20_list(ii).name,bin_size, move_thresh, method);
 %     
 %     % Summary plots
 %         Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method]);
