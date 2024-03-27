@@ -339,7 +339,9 @@ for iB = length(bin_s):-1:1
     % all templates
     out{iB}.A_temp = A_temp{iB};
     out{iB}.A_proj = A_proj{iB};
-    
+    out{iB}.REM_pre_in = REM_pre_data_in;
+    out{iB}.REM_post_in = REM_post_data_in;
+
     % positive templates
     out{iB}.P_temp = P_temp{iB};
     out{iB}.P_proj = P_proj{iB};
