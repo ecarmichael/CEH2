@@ -11,10 +11,22 @@ if strcmp(computer, 'GLNXA64')
     RnR_dir = '/home/williamslab/Documents/Github/RnR_methods';
     
     % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
-    data_dir = '/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter';
+    main_dir = '/home/williamslab';
     
     
+elseif strcmp(computer, 'MACA64')
     
+    codebase_dir = '/Users/ecar/Documents/Github/vandermeerlab/code-matlab/shared';
+    ca_dir = '/Users/ecar/Documents/Github/CEH2';
+    oasis_dir = '/Users/ecar/Documents/Github/OASIS_matlab';
+    
+    code_dir = '/Users/ecar/Documents/Github/Cell-Assembly-Detection';
+    
+    RnR_dir = '//Users/ecar/Documents/Github/RnR_methods';
+    
+    % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
+    main_dir = '/Users/ecar/';
+
 else
     
     codebase_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared';
@@ -26,7 +38,7 @@ else
     RnR_dir = 'C:\Users\ecarm\Documents\GitHub\RnR_methods';
     
     % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
-    data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter';
+    main_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter';
     
 end
 
@@ -198,8 +210,8 @@ if ~isempty(JP_out)
 save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\JP_out_' method '.mat'], 'JP_out')
 end
 %%
-inter_dir = ('C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9'); 
-fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\PC9\checks';
+inter_dir = strrep([main_dir 'Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9'], '\', filesep); 
+fig_dir = [inter_dir filesep 'checks'];
 % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
 
 cd(inter_dir); 
@@ -212,18 +224,18 @@ method = 'binary';
 
 for ii = 1:length(f_list)
     session{ii} = f_list(ii).name;
-    
+    tic
     % compute assemblies and related ReActs
 %         A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
 %     P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
 
-%             B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
+            B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
 
-    
+    toc
     % Summary plots
 %                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
 %     Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
-%         Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
+        Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
 
     close all
     

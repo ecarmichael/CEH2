@@ -44,9 +44,10 @@ end
 %%
 
 
-figure(900)
+f = figure(900); 
+f.WindowState = 'maximized'; 
+pause(.5)
 clf
-maximize
 
 if isstr(type) == 1
     ax(1) = subplot(7,1,1:5);
