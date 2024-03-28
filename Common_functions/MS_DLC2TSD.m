@@ -243,6 +243,12 @@ elseif sum(contains(fields, 'body'))>0 && sum(contains(fields, 'head'))>0
     
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.head(:,2),ear_mid(:,1) - data_out.head(:,1)));
     
+elseif sum(contains(fields, 'LED'))>0 && sum(contains(fields, 'Tail'))>0
+    ear_mid(:,1) = data_out.Tail(:,1);
+    ear_mid(:,2) = data_out.Tail(:,2);
+    
+    HD = rad2deg(atan2(ear_mid(:,2) - data_out.LED(:,2),ear_mid(:,1) - data_out.LED(:,1)));
+    
 elseif sum(contains(fields, 'Body'))>0 && sum(contains(fields, 'LED'))>0
     ear_mid(:,1) = data_out.Body(:,1);
     ear_mid(:,2) = data_out.Body(:,2);

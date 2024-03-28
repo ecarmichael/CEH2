@@ -40,9 +40,11 @@ end
 %%
 
 
-figure(900)
+f = figure(900); 
+f.WindowState = 'maximized'; 
 clf
-maximize
+% maximize
+pause(.5)
 
 ax(1) = subplot(7, 1, 1);
 cla
