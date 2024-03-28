@@ -217,7 +217,7 @@ for ii = 1:length(f_list)
 %         A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
 %     P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
 
-%             B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
+            B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
 
     
     % Summary plots
@@ -264,7 +264,7 @@ H5_idx = ~novel_idx & anx_idx & ~HS_idx;
 % %     save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
 % % end
 % % if ~isempty(P_out)
-% %     save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\P_out_' method '.mat'], 'P_out')
+    save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_' method '.mat'], 'A_out')
 % % end
 %% collect the data
 
