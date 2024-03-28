@@ -224,7 +224,6 @@ method = 'binary';
 
 for ii = 1:length(f_list)
     session{ii} = f_list(ii).name;
-    tic
     % compute assemblies and related ReActs
 %         A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
 %     P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
@@ -237,7 +236,6 @@ for ii = 1:length(f_list)
     
     B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
     
-    toc
     % Summary plots
     %                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
     %     Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
@@ -282,7 +280,7 @@ H5_idx = ~novel_idx & anx_idx & ~HS_idx;
 % %     save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
 % % end
 % % if ~isempty(P_out)
-    save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_' method '.mat'], 'A_out')
+    save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_' method '.mat'], 'B_out')
 % % end
 %% collect the data
 
@@ -1179,7 +1177,7 @@ area(p_centr, nanmean(J20_hist_post(D5_idx,:)), 'facecolor', c_ord(4,:), 'FaceAl
 %% convert to HD5
 
 
-for ii = length(A_out):1
+for ii = length(A_out):-1:1
     
     
     
@@ -1198,32 +1196,46 @@ for ii = length(A_out):1
    this_post_rem_t = 0:1/33:(length(A_out{ii}{1}.REM_post_in)/33);
     this_post_rem_t = this_post_rem_t(1:end-1);
 
-    pre_React = NaN(size( A_out{ii}{1}.REM_Pre_proj,1),100);
-    post_React = pre_React;
+    pre_React = []; pre_ID = []; pre_sig = []; pre_str = []; 
     
-    for aa = size( A_out{ii}{1}.REM_Pre_proj,1):-1:1
-        this_R_t  =  A_out{ii}{1}.REM_Pre_tvec(find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh)); 
-        pre_React(aa, 1:length(this_R_t)) = (nearest_idx3(this_R_t, this_pre_rem_t))'; 
-                        pre_len(aa) = length(this_R_t); 
-
+    post_React = []; post_ID = []; post_sig = []; post_str = []; 
+    
+    for aa = 1:size( A_out{ii}{1}.REM_Pre_proj,1)
+        this_R_t  =  A_out{ii}{1}.REM_Pre_tvec(find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh));
+        pre_React  = [pre_React, (nearest_idx3(this_R_t, this_pre_rem_t))'];
+        pre_str = [pre_str, A_out{ii}{1}.REM_Pre_proj(aa, find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh))]; 
+        pre_ID = [pre_ID repmat(aa,1,length(this_R_t))];
+        if A_out{ii}{1}.REM_Pre_stats.p_val(aa) < 0.05
+            pre_sig = [pre_sig, ones(1, length(this_R_t))];
+        else
+            pre_sig = [pre_sig, zeros(1, length(this_R_t))];
+        end
+        
         this_R_t  =  A_out{ii}{1}.REM_Post_tvec(find(A_out{ii}{1}.REM_Post_proj(aa, :) > A_out{ii}{1}.REM_Post_stats.R_thresh));
-        post_React(aa,1:length(this_R_t)) = (nearest_idx3(this_R_t, this_post_rem_t))'; 
-                post_len(aa) = length(this_R_t); 
+        post_React  = [post_React, (nearest_idx3(this_R_t, this_post_rem_t))'];
+        post_str = [post_str, A_out{ii}{1}.REM_Post_proj(aa, find(A_out{ii}{1}.REM_Post_proj(aa, :) > A_out{ii}{1}.REM_Post_stats.R_thresh))];
+
+        post_ID = [post_ID repmat(aa,1,length(this_R_t))];
+        if A_out{ii}{1}.REM_Post_stats.p_val(aa) < 0.05
+            post_sig = [post_sig, ones(1, length(this_R_t))];
+        else
+            post_sig = [post_sig, zeros(1, length(this_R_t))];
+        end
                 
     end
     
-    pre_React(:,max(pre_len)+1:end) = [];
-    post_React(:,max(post_len)+1:end) = []; 
-
     
     
-    hdf5write(fname, '/pre_rem_react_idx', int64(pre_React),'WriteMode', 'append');
-    hdf5write(fname, '/pre_rem_sig_assmblies', int8(A_out{ii}{1}.REM_Pre_stats.p_val < 0.05),'WriteMode', 'append');
+    hdf5write(fname, '/pre_rem_A_react_idx', int16(pre_React),'WriteMode', 'append');
+    hdf5write(fname, '/pre_rem_A_ID', int8(pre_ID),'WriteMode', 'append');
+    hdf5write(fname, '/pre_rem_A_sig', int8(pre_sig),'WriteMode', 'append');
+    hdf5write(fname, '/pre_rem_A_str', pre_str,'WriteMode', 'append');
 
-    hdf5write(fname, '/post_rem_react_idx',int64(post_React),'WriteMode', 'append');
-    hdf5write(fname, '/post_rem_sig_assmblies', int8(A_out{ii}{1}.REM_Post_stats.p_val < 0.05),'WriteMode', 'append');
+    hdf5write(fname, '/post_rem_react_idx',int16(post_React),'WriteMode', 'append');
+    hdf5write(fname, '/post_rem_A_ID', int8(post_ID),'WriteMode', 'append');
+    hdf5write(fname, '/post_rem_A_sig', int8(post_sig),'WriteMode', 'append');
+    hdf5write(fname, '/post_rem_A_str', post_str,'WriteMode', 'append');
 
-    
 %     
 %     hdf5write(fname, '/wake_proj', (A_out{ii}{1}.P_proj),'WriteMode', 'append');
 %     hdf5write(fname, '/pre_rem_proj', (A_out{ii}{1}.REM_Pre_proj),'WriteMode', 'append');
@@ -1238,4 +1250,4 @@ for ii = length(A_out):1
 end
 
 %% read it back
-MS_h5_to_stuct('assembly_LTD5_pv1254.h5')
+MS_h5_to_stuct(fname)
