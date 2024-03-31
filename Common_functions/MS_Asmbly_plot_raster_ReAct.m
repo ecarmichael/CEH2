@@ -141,7 +141,7 @@ else
     
     yline(A_in.([REM{1} 'stats']).R_thresh); 
     
-    linkprop(ax,{'XLim'}); 
+    linkaxes(ax,'x'); 
     colormap(ax(1), c_map); 
     colormap(ax(3),c_map); 
     
