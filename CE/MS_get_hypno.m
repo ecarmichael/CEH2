@@ -150,13 +150,21 @@ rem_cfg.minlen = 10;
 rem_cfg.merge_thr = 5;
 REM_iv = TSDtoIV(rem_cfg, REM_tsd);
 
+SWS_tsd = tsd(csc.tvec, (hypno_init == 3)', 'SWS');
+
+sws_cfg.threshold = 0;
+sws_cfg.dcn = '>';
+sws_cfg.minlen = 10;
+sws_cfg.merge_thr = 5;
+SWS_iv = TSDtoIV(sws_cfg, SWS_tsd);
+
 % cfg = [];
 % cfg.display = 'iv';
 % PlotTSDfromIV(cfg, REM_iv, csc)
 
 % rebuild hypno_init with cut REM
 
-hypno_out = ones(size(csc.tvec))*2; % set everything to wake;
+hypno_out = ones(size(csc.tvec))*2; % set everything to SWS;
 
 for ii = 1:length(wake_iv.tstart)
     hypno_out(nearest_idx3(wake_iv.tstart(ii), csc.tvec):  nearest_idx3(wake_iv.tend(ii), csc.tvec)) = 1;
@@ -181,7 +189,7 @@ deci_fact = 10;
         csc_plot.tvec = csc.tvec(1:deci_fact:end);
         csc_plot.cfg.hdr{1}.SamplingFrequency = csc.cfg.hdr{1}.SamplingFrequency./deci_fact;
 
-        emg_plot = decimate(emg_rms,deci_fact);
+        emg_plot = emg_rms(1:deci_fact:end); % subsamples instead of decimate due to NaNs from saturations. 
         move_plot = move_idx(1:deci_fact:end); 
         z_ratio_plot= decimate(z_ratio,deci_fact);
         ratio_plot.data = decimate(ratio.data,deci_fact);
@@ -262,6 +270,8 @@ cfg_hypno.cfg_con_d = cfg_con_d;
 cfg_hypno.cfg_con_t = cfg_con_t;
 cfg_hypno.wake = wake_iv;
 cfg_hypno.REM = REM_iv;
+cfg_hypno.SWS = SWS_iv;
+
 
 hypno = [];
 hypno.data = hypno_out;
