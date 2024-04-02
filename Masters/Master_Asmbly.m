@@ -20,7 +20,7 @@ elseif strcmp(computer, 'MACA64')
     ca_dir = '/Users/ecar/Documents/Github/CEH2';
     oasis_dir = '/Users/ecar/Documents/Github/OASIS_matlab';
     
-    code_dir = '/Users/ecar/Documents/Github/Cell-Assembly-Detection';
+    code_dir = '/Users/ecar/Documents/Github/Dos-Santos Assembly ICA/Dos-Santos Assembly ICA';
     
     RnR_dir = '//Users/ecar/Documents/Github/RnR_methods';
     
@@ -52,7 +52,7 @@ addpath(genpath(ca_dir));
 addpath(genpath(codebase_dir))
 addpath(genpath(RnR_dir));
 
-addpath(code_dir)
+addpath(genpath(code_dir))
 
 
 cd(c_d)
