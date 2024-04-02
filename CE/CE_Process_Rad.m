@@ -43,11 +43,11 @@ ttl_rec = sort(unique([evt_rec.t{3}, evt_rec.t{4}]));
 
 
 %% load the concatenated ms file
-
-
-load([Ca_dir filesep 'ms.mat'])
-
-
+warning off
+tic
+load([Ca_dir filesep 'ms.mat'], 'ms')
+toc
+warning on
 %% align the nlx tvecs
 
 if length(ttl_enc) - length(ms.tvecs{1}) > 0
@@ -108,19 +108,19 @@ close(gcf);
 clear sleep_motion 
 
 %% cut the ms struct into REM SWS
-temp_raw = ms.RawTraces(1:ms.timestamps(1)+1,:);
-temp_bin = ms.Binary(1:ms.timestamps(1)+1,:);
+temp_raw = ms.RawTraces(1:ms.timestamps(2)+1,:);
+temp_bin = ms.Binary(1:ms.timestamps(2)+1,:);
 
 REM.RawTraces = []; REM.tvec = []; 
 REM.Binary = []; 
 for ii =  1:length(hypno.cfg.REM.tstart)
-    s_idx = nearest_idx(hypno.cfg.REM.tstart(ii)-csc_enc.tvec(1), ms.tvecs{1}); 
-    e_idx = nearest_idx(hypno.cfg.REM.tend(ii)-csc_enc.tvec(1), ms.tvecs{1}); 
+    s_idx = nearest_idx3(hypno.cfg.REM.tstart(ii)-csc_sleep.tvec(1), ms.tvecs{2} - ms.tvecs{2}(1)); 
+    e_idx = nearest_idx3(hypno.cfg.REM.tend(ii)-csc_sleep.tvec(1), ms.tvecs{2} - ms.tvecs{2}(1)); 
 
     REM.RawTraces = [REM.RawTraces;  temp_raw(s_idx:e_idx,:)];
     REM.Binary = [REM.Binary;  temp_bin(s_idx:e_idx,:)];
 
-    REM.tvec = [REM.tvec; ms.tvecs{1}(s_idx:e_idx)];
+    REM.tvec = [REM.tvec; ms.tvecs{2}(s_idx:e_idx)];
     
     REM.split_idx(ii) = length(s_idx:e_idx); 
 
@@ -131,8 +131,8 @@ end
 SWS.RawTraces = []; SWS.tvec = []; 
 SWS.Binary = []; 
 for ii =  1:length(hypno.cfg.SWS.tstart)
-    s_idx = nearest_idx(hypno.cfg.SWS.tstart(ii)-csc_enc.tvec(1), ms.tvecs{1}); 
-    e_idx = nearest_idx(hypno.cfg.SWS.tend(ii)-csc_enc.tvec(1), ms.tvecs{1}); 
+    s_idx = nearest_idx(hypno.cfg.SWS.tstart(ii)-csc_sleep.tvec(1), ms.tvecs{2}); 
+    e_idx = nearest_idx(hypno.cfg.SWS.tend(ii)-csc_sleep.tvec(1), ms.tvecs{2}); 
 
     SWS.RawTraces = [SWS.RawTraces;  temp_raw(s_idx:e_idx,:)];
     SWS.Binary = [SWS.Binary;  temp_bin(s_idx:e_idx,:)];

@@ -49,6 +49,12 @@ fprintf('\n<strong>Session data appears to be Subject %s, on %s, with task: %s</
 
 % numTT = length(dir('*.ntt'));
 
+% check if the file exists already and remove it. (Workaround for bug where
+% macs don't overwrite with the 'w' flag in fopen'
+if exist(['m' dir_name '_meta.m'], 'file')
+    delete(['m' dir_name '_meta.m'])
+end
+
 % open the file to write
 fid = fopen(['m' dir_name '_meta.m'], 'w');
 
