@@ -150,11 +150,11 @@ rem_cfg.minlen = 10;
 rem_cfg.merge_thr = 5;
 REM_iv = TSDtoIV(rem_cfg, REM_tsd);
 
-SWS_tsd = tsd(csc.tvec, (hypno_init == 3)', 'SWS');
+SWS_tsd = tsd(csc.tvec, (hypno_init == 2)', 'SWS');
 
 sws_cfg.threshold = 0;
 sws_cfg.dcn = '>';
-sws_cfg.minlen = 10;
+sws_cfg.minlen = 30;
 sws_cfg.merge_thr = 5;
 SWS_iv = TSDtoIV(sws_cfg, SWS_tsd);
 

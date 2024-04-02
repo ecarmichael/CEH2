@@ -131,13 +131,13 @@ end
 SWS.RawTraces = []; SWS.tvec = []; 
 SWS.Binary = []; 
 for ii =  1:length(hypno.cfg.SWS.tstart)
-    s_idx = nearest_idx(hypno.cfg.SWS.tstart(ii)-csc_sleep.tvec(1), ms.tvecs{2}); 
-    e_idx = nearest_idx(hypno.cfg.SWS.tend(ii)-csc_sleep.tvec(1), ms.tvecs{2}); 
+    s_idx = nearest_idx(hypno.cfg.SWS.tstart(ii)-csc_sleep.tvec(1), ms.tvecs{2}- ms.tvecs{2}(1)); 
+    e_idx = nearest_idx(hypno.cfg.SWS.tend(ii)-csc_sleep.tvec(1), ms.tvecs{2}- ms.tvecs{2}(1)); 
 
     SWS.RawTraces = [SWS.RawTraces;  temp_raw(s_idx:e_idx,:)];
     SWS.Binary = [SWS.Binary;  temp_bin(s_idx:e_idx,:)];
 
-    SWS.tvec = [SWS.tvec; ms.tvecs{1}(s_idx:e_idx)];
+    SWS.tvec = [SWS.tvec; ms.tvecs{2}(s_idx:e_idx)];
     
     SWS.split_idx(ii) = length(s_idx:e_idx); 
 
