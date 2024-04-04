@@ -320,3 +320,42 @@ for iSub = length(sub_list):-1:1
         end
     end
 end
+
+%% append the SWS data
+
+inter_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9';
+data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Inter';
+
+cd(inter_dir)
+f_list = dir('*data.mat');
+
+for iF = length(f_list):-1:1
+    
+    load([inter_dir filesep f_list(iF).name]);
+    
+    sub = info.subject;
+    sess = info.session;
+    
+    cd([data_dir filesep lower(sub)])
+    
+    s_dir = dir(['*' sess]);
+    
+    cd([data_dir filesep upper(sub) filesep s_dir.name]);
+    
+    
+    %append the deconv REM data
+    load('all_binary_pre_SW.mat')
+    load('all_binary_post_SW.mat')
+   
+    
+    fprintf('Saving %s   %s ...\n', info.subject, info.session)
+    save([inter_dir filesep info.subject '_' info.session '_data.mat'], 'ms', 'behav',...
+        'all_deconv_pre_REM', 'all_deconv_post_REM',...
+        'all_denoise_pre_REM', 'all_denoise_post_REM',...
+        'all_binary_pre_REM', 'all_binary_post_REM',...
+        'all_detrendRaw_pre_REM', 'all_detrendRaw_post_REM',...
+        'all_binary_pre_SW', 'all_binary_post_SW',...
+        'all_seg_idx', 'info')
+
+    clear all_* ms behav info
+end

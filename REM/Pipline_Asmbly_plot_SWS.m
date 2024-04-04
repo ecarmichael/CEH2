@@ -1,4 +1,4 @@
-function Pipline_Asmbly_plot(A_out, fig_dir);
+function Pipline_Asmbly_plot_SWS(A_out, fig_dir);
 
 
 %% initialize
@@ -16,22 +16,15 @@ end
 
 %% plot the summary for all positive cells
 
-for iB = size(A_out,2):-1:1
-    MS_Asmbly_plot(A_out{iB}.P_temp, A_out{iB}.P_pos, A_out{iB}.map, A_out{iB}.P_loc, fig_dir, A_out{iB}.info);
-    close all;
-end
-
 %% summarize the reactivations
 
 for iB = size(A_out,2):-1:1
-    MS_Asmbly_ReAct_plot(A_out{iB}, fig_dir);
+    MS_Asmbly_ReAct_plot(A_out{iB}, fig_dir, 'SWS');
     
 end
 
 
 %% Plot the raw/raster in time
-
-
 
 for iB = size(A_out,2):-1:1
     if length(A_out{iB}.P_pos) >3
@@ -59,9 +52,9 @@ for iB = size(A_out,2):-1:1
         p_idx = 1:length(A_out{iB});
     end
     
-    MS_Asmbly_plot_raster_ReAct(A_out{iB},fig_dir,'REM_Pre_data',p_idx)
+    MS_Asmbly_plot_raster_ReAct(A_out{iB},fig_dir,'SWS_Pre_data',p_idx)
     
     
-    MS_Asmbly_plot_raster_ReAct(A_out{iB},fig_dir,'REM_Post_data',p_idx)
+    MS_Asmbly_plot_raster_ReAct(A_out{iB},fig_dir,'SWS_Post_data',p_idx)
     
 end

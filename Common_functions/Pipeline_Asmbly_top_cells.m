@@ -39,7 +39,8 @@ end
 h5_idx = find(keep_idx); 
 fprintf('session: <strong>%s</strong> found h5 <strong>%s</strong>\n', this_sess, h5_dir(h5_idx).name); 
 
-S_neurons  = h5read(h5_dir(h5_idx).name, '/place_cells'); 
+S_type = 'place_cells'; 
+S_neurons  = h5read(h5_dir(h5_idx).name, ['/' S_type]); 
 S_neurons = S_neurons+1; 
 
 %% remove questionable cells
@@ -328,9 +329,13 @@ for iB = length(bin_s):-1:1
     info.bin = bin_s(iB);
     info.move_thresh = move_thresh;
     info.method = method; 
+    info.S_neurons = S_neurons; 
+    info.S_type = S_type; 
+    info.ms_fs = mode(diff(ms_trk_cut.time)); 
     
     out{iB}.info = info;
     out{iB}.bins = bin_s(iB);
+    out{iB}.place = place; 
     % data
     out{iB}.behav = behav;
     out{iB}.move_idx = move_idx; 

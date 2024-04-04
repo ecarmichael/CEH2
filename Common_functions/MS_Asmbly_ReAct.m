@@ -7,15 +7,25 @@ function [proj_out,ReAct_stats, data_h, tvec, shuff] = MS_Asmbly_ReAct(cfg, data
 if isempty(cfg)
     cfg.nShuff = 500;
     cfg.thresh = 99; % in percentile
+    cfg.ms_fs = []; 
+end
+
+if ~isfield(cfg, 'ms_fs') || isempty(cfg.ms_fs)
+    
+    ms_fs = mode(diff(ms.time)); 
+    
+else
+    
+ms_fs = cfg.ms_fs; 
     
 end
 
 %% coner the data into binned data
 
-this_time =  0:1/mode(diff(ms.time)):(length(data_in)/mode(diff(ms.time)));
+this_time =  0:1/ms_fs:(length(data_in)/ms_fs);
 this_time = this_time(1:end-1);
 
-tbin_edges = 0:bin_size:(length(data_in)/mode(diff(ms.time))); % vector of time bin edges (for histogram)
+tbin_edges = 0:bin_size:(length(data_in)/ms_fs); % vector of time bin edges (for histogram)
 tbin_centers = tbin_edges(1:end-1)+bin_size/2; % vector of time bin centers (for plotting)
 
 

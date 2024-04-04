@@ -229,17 +229,16 @@ for ii = 1:length(f_list)
 %     P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
 
             B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
+            
+            B_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, B_out{ii});
 
-    %         A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
-    %     P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
-
-    
-    B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
-    
     % Summary plots
     %                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
     %     Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
     Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
+    
+    Pipline_Asmbly_plot_SWS(B_out{ii}, [fig_dir filesep method filesep 'best_SWS']);
+
     
     close all
     
