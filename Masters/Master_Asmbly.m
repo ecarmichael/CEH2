@@ -1197,7 +1197,7 @@ for ii = length(A_out):-1:1
 
     pre_React = []; pre_ID = []; pre_sig = []; pre_str = []; 
     
-    post_React = []; post_ID = []; post_sig = []; post_str = []; 
+    post_React = []; post_ID = []; post_sig = []; post_str = []; map_loc = []; wake_rate = []; 
     
     for aa = 1:size( A_out{ii}{1}.REM_Pre_proj,1)
         this_R_t  =  A_out{ii}{1}.REM_Pre_tvec(find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh));
@@ -1220,6 +1220,12 @@ for ii = length(A_out):-1:1
         else
             post_sig = [post_sig, zeros(1, length(this_R_t))];
         end
+        
+        % get the mean place field for the assembly
+        [~, idx] = max(A_out{ii}{1}.map{aa}.map_mean);
+        map_loc(aa) = A_out{ii}{1}.map{aa}.bins(idx); 
+        
+        wake_rate(aa) = length(A_out{ii}{1}.P_loc{aa}.loc); 
                 
     end
     
@@ -1234,6 +1240,10 @@ for ii = length(A_out):-1:1
     hdf5write(fname, '/post_rem_A_ID', int8(post_ID),'WriteMode', 'append');
     hdf5write(fname, '/post_rem_A_sig', int8(post_sig),'WriteMode', 'append');
     hdf5write(fname, '/post_rem_A_str', post_str,'WriteMode', 'append');
+    
+    hdf5write(fname, '/wake_rate', int8(wake_rate),'WriteMode', 'append');
+    hdf5write(fname, '/map_loc', map_loc,'WriteMode', 'append');
+
 
 %     
 %     hdf5write(fname, '/wake_proj', (A_out{ii}{1}.P_proj),'WriteMode', 'append');
