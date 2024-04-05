@@ -48,6 +48,12 @@ tic
 load([Ca_dir filesep 'ms.mat'], 'ms')
 toc
 warning on
+
+%% load the behaviour
+
+load('behav_enc.mat')
+load('behav_rec.mat')
+
 %% align the nlx tvecs
 
 if length(ttl_enc) - length(ms.tvecs{1}) > 0
@@ -155,18 +161,68 @@ trl = Rad.(['D' rad_name.name(17:end-2)]).(['m' rad_name.name(12:15)]);
 
 % Encoding trials
 
-Enc_iv = iv(trl.encode.tstart+sync_ttl(start_idx(1)), trl.encode.tend+sync_ttl(start_idx(1)));
-Enc_iti_iv = iv(trl.encode.tstart-60+sync_ttl(start_idx(1)), trl.encode.tstart+sync_ttl(start_idx(1)));
+Enc_iv = iv(trl.encode.tstart(1:4)+sync_ttl(start_idx(1)), trl.encode.tend(1:4)+sync_ttl(start_idx(1)));
+
+iti_s = [trl.encode.tstart(1:4)-60+sync_ttl(start_idx(1)), trl.encode.tstart(5)+sync_ttl(start_idx(1))]; 
+iti_e = [trl.encode.tstart(1:4)+sync_ttl(start_idx(1)), trl.encode.tend(5)+sync_ttl(start_idx(1))]; 
+
+Enc_iti_iv = iv(iti_s, iti_e);
 
 
-csc_enc_trl = restrict(csc_enc, Enc_iv);
-enc_tstart = csc_enc_trl.tvec(1); 
-csc_enc_trl.tvec = csc_enc_trl.tvec - enc_tstart; 
+csc_Enc_trl = restrict(csc_enc, Enc_iv);
+enc_tstart = csc_Enc_trl.tvec(1); 
+csc_Enc_trl.tvec = csc_Enc_trl.tvec - Enc_tstart; 
 
-csc_enc_iti = restrict(csc_enc, Enc_iti_iv);
-csc_enc_iti.tvec = csc_enc_iti.tvec - enc_tstart; 
+csc_Enc_iti = restrict(csc_Enc, Enc_iti_iv);
+csc_Enc_iti.tvec = csc_Enc_iti.tvec - Enc_tstart; 
 
 
+
+% Encoding trials
+
+Rec_iv = iv(trl.recall.tstart(1:4)+sync_ttl(start_idx(3)), trl.recall.tend(1:4)+sync_ttl(start_idx(3)));
+
+iti_s = [trl.recall.tstart(1:4)-60+sync_ttl(start_idx(3)), trl.recall.tstart(5)+sync_ttl(start_idx(3))]; 
+iti_e = [trl.recall.tstart(1:4)+sync_ttl(start_idx(3)), trl.recall.tend(5)+sync_ttl(start_idx(3))]; 
+
+Rec_iti_iv = iv(iti_s, iti_e);
+
+
+csc_Rec_trl = restrict(csc_rec, Rec_iv);
+Rec_tstart = csc_Rec_trl.tvec(1); 
+csc_Rec_trl.tvec = csc_Rec_trl.tvec - Rec_tstart; 
+
+csc_Rec_iti = restrict(csc_rec, Rec_iti_iv);
+csc_Rec_iti.tvec = csc_Rec_iti.tvec - Rec_tstart; 
+
+
+% figure(1010)
+% subplot(2,1,1)
+% pl_cfg = [];
+% PlotTSDfromIV(pl_cfg, Enc_iv, csc_enc)
+% ylabel('Trials')
+% 
+% subplot(2,1,2)
+% pl_cfg = [];
+% PlotTSDfromIV(pl_cfg, Enc_iti_iv, csc_enc)
+% ylabel('Trials')
+%% restrict the behaviour to trials
+
+pos_enc = tsd(behav_enc.time, behav_enc.position(:,1), behav_enc.position(:,2)); 
+pos_enc.cfg.hdr{1} = behav_enc.json; 
+
+pos_rec = tsd(behav_rec.time, behav_rec.position(:,1), behav_rec.position(:,2)); 
+pos_rec.cfg.hdr{1} = behav_rec.json; 
+
+
+pos_Rec_trl = restrict(pos_rec, Rec_iv);
+Rec_tstart = csc_Rec_trl.tvec(1); 
+csc_Rec_trl.tvec = csc_Rec_trl.tvec - Rec_tstart; 
+
+csc_Rec_iti = restrict(csc_rec, Rec_iti_iv);
+csc_Rec_iti.tvec = csc_Rec_iti.tvec - Rec_tstart; 
+
+%% restrict the calcium data to the trial time
 
 
 
