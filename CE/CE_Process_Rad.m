@@ -323,8 +323,22 @@ for ii = 1:length(c_idx)
     keep_idx = nearest_idx3(bin_Enc_trl.tvec(logical(bin_Enc_trl.data(c_idx(ii),:))), pos_Enc_trl.tvec); 
     plot(pos_Enc_trl.data(1,keep_idx), pos_Enc_trl.data(2,keep_idx), '.r')
     title(num2str(c_idx(ii)))
-
+    
 
 end
+
+
+
+for ii = 1:length(c_idx)
+    
+    
+    
+    
+end
+
+%% try to plot the power of different lfp elemets
+
+figure(99)
+subplot
 
 %% save for later. 
