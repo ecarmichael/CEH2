@@ -43,6 +43,13 @@ for ii = size(P_proj,1):-1:1
             
             out{ii}.loc_mat(ip,:) = NaN((win*2)+1,1);
         end
+        [p, S] = polyfit(1:length(out{ii}.loc_mat(ip,:)), out{ii}.loc_mat(ip,:),1);
+         polyval(p,1:length(out{ii}.loc_mat(ip,:)),S);
+         
+         out{ii}.loc_dir(ip) = sign(p(1)); 
+%         figure(ip)
+%         plot(out{ii}.win_time, out{ii}.loc_mat(ip,:))
+%         title(num2str(p))
     end
     
     out{ii}.peak_val = p_val;

@@ -46,7 +46,7 @@ clf
 % maximize
 pause(.5)
 
-ax(1) = subplot(7, 1, 1);
+ax(1) = subplot(9, 1, 1);
 cla
 hold on
 scatter(A_in.behav.time(A_in.move_idx)/1000, A_in.behav.position((A_in.move_idx),1),ones(size(A_in.behav.time(A_in.move_idx)))*10, A_in.behav.speed(A_in.move_idx))
@@ -56,14 +56,14 @@ ylabel('position on track (cm)')
 set(gca, 'XTick', []);
 
 if isstr(type) == 1
-    ax(2) = subplot(7,1,2:5);
+    ax(2) = subplot(9,1,2:5);
     cla
     hold on
     off_set = 0; these_idx = [];
     
     if strcmpi(type, 'act_mat')
         imagesc(A_in.wake_tvec, 1:size(act_array,2),  act_array')
-        ylim([0 length(c_list)])
+        ylim([0.5 length(c_list)+0.5])
         set(gca, 'YTick', c_step(2:end) - diff(c_step)/2, 'YTickLabel',c_label)
     else
         
@@ -86,10 +86,12 @@ if isstr(type) == 1
             end
             these_idx = [these_idx, A_in.P_pos{iA}']; % keep track to avoid overlap;
         end
+            ylim([0.5 off_set+0.5])
+
     end
     
 else
-    ax(2) = subplot(7,1,2:3);
+    ax(2) = subplot(9,1,2:3);
     cla
     hold on
     
@@ -98,7 +100,7 @@ else
         set(gca, 'YTick', c_step(2:end) - diff(c_step)/2, 'YTickLabel',c_label)
         
         
-        ax(4) = subplot(7,1,4:5);
+        ax(4) = subplot(9,1,4:5);
         cla
         hold on
         off_set = 0; these_idx = [];
@@ -130,28 +132,40 @@ else
     %     set(gca, 'XTick', [], 'YDir', 'normal', 'ytick', [])
     %     ylabel('Cell activity')
     
-    ax(3) = subplot(7,1,6:7);
+    ax(3) = subplot(9,1,6:7);
     cla
     hold on
     leg_val = [];
     for iA = plot_idx
-        plot(A_in.wake_tvec, A_in.P_proj(iA,:), 'color', c_ord(find(iA == plot_idx),:), 'linewidth', 2)
+        this_proj = A_in.P_proj(iA,:); 
+%         this_proj(this_proj <=0) =NaN; 
+        plot(A_in.wake_tvec, log10(this_proj), 'color', c_ord(find(iA == plot_idx),:), 'linewidth', 2)
         
         leg_val{find(iA == plot_idx)} = ['Assembly #' num2str(iA)];
     end
-    ylim([5 inf])
-    ylabel({'assembly strength'})
+    ylim([0 inf])
+    ylabel({'log10 assembly strength'})
     xlabel('time (s)')
+    yline(log10(10), '--', 'color', [.7 .7 .7])
     
-    legend(leg_val, 'Orientation', 'horizontal', 'box', 'off')
+    legend([leg_val 'R thresh'], 'Orientation', 'horizontal', 'box', 'off')
     
     
     
     linkprop(ax,{'XLim'})
     colormap(ax(1), 'parula')
     colormap(ax(2),c_map)
+    if length(ax) == 4
+            colormap(ax(4),c_map)
+
+    end
     
     %% save the figure
+    set(gcf,'PaperOrientation','landscape');
+
+set(gcf,'PaperUnits','normalized');
+set(gcf,'PaperPosition', [0 0 1 .75]);
+    
     if ~isempty(fig_dir)
-        saveas(gcf, [fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_wake_raster.png']);
+        saveas(gcf, [fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_wake_' type '.png']);
     end

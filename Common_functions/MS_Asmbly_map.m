@@ -66,7 +66,8 @@ for ii = length(P_cells):-1:1
       map_out{ii}.place_idx = place.is(P_cells{ii}); 
       map_out{ii}.MI = place.MI(P_cells{ii});
       map_out{ii}.rate = place.peak_rate(P_cells{ii}); 
-      
+      map_out{ii}.bin_size = place.bin_s; 
+
       place_idx(ii) = logical(sum(map_out{ii}.place_idx) >= min_N_place);
 
 end

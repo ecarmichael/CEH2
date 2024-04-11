@@ -164,7 +164,7 @@ PCs_properties = MS_h5_to_stuct(t_h5_dir(h5_idx).name);
 
 
 % load([info.subject '_' info.session '_PCs.mat'])
-
+place.bin_s = mode(diff(PCs_properties.bins)); 
 
 place.centroids = double(PCs_properties.peak_loc)'; 
 
