@@ -41,7 +41,7 @@ end
 
 
 f = figure(900); 
-f.WindowState = 'maximized'; 
+% f.WindowState = 'maximized'; 
 clf
 % maximize
 pause(.5)
@@ -161,11 +161,18 @@ else
     end
     
     %% save the figure
-    set(gcf,'PaperOrientation','landscape');
 
-set(gcf,'PaperUnits','normalized');
-set(gcf,'PaperPosition', [0 0 1 .75]);
-    
     if ~isempty(fig_dir)
         saveas(gcf, [fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_wake_' type '.png']);
     end
+    
+    %% format for figure panels
+    
+        set(gcf,'PaperOrientation','landscape');
+
+set(gcf,'PaperUnits','inches');
+set(gcf,'PaperPosition', [0 0 1.5 1]);
+    
+cfg.ft_size= 7; 
+cfg.resize = 0; 
+SetFigure(cfg, gcf)

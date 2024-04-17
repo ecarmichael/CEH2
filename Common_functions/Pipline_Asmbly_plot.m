@@ -61,6 +61,8 @@ for iB = size(A_out,2):-1:1
     
     MS_Asmbly_plot_raster(A_out{iB}, fig_dir,p_idx)
     
+    MS_Asmbly_plot_raster_figure(A_out{iB}, fig_dir,p_idx); 
+    
     
 end
 
