@@ -19,6 +19,7 @@ cfg_def.font = 'helvetica';
 % cfg_def.fontweight = 'normal';
 cfg_def.grid = 'off';
 cfg_def.resize = 1;
+cfg_def.re_line = 0; 
 
 cfg = ProcessConfig2(cfg_def, cfg_in);
 
@@ -38,6 +39,16 @@ H = findobj(gcf,'type','axes','-not','Tag','legend','-not','Tag','Colorbar');
 for iH = 1:length(H)
     set(H(iH), 'fontsize', cfg.ft_size, 'fontname', cfg.font, 'TickDir', 'out', 'fontweight', 'normal')
 end
+
+if cfg.re_line ~= 0
+    for iH = 1:length(H)
+        
+        set(H(iH), 'linewidth', cfg.re_line)
+    end
+    
+    
+end
+
 box off
 g = get(gca, 'XLabel');
 set(g, 'fontsize', cfg.ft_size);

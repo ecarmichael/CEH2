@@ -231,6 +231,7 @@ for ii = 1:length(f_list)
             B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
             
             B_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, B_out{ii});
+            
 
     % Summary plots
     %                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
@@ -250,6 +251,7 @@ for ii = 1:length(f_list)
     
     if ~isempty(strfind(f_list(ii).name, 'D1')) %|| ~isempty(strfind(f_list(ii).name, 'HATDS'))
         novel_idx(ii) = 1;
+
     end
     
     if ~isempty(strfind(f_list(ii).name, 'D5'))
@@ -260,6 +262,11 @@ for ii = 1:length(f_list)
         anx_idx(ii) = 1;
     else
         anx_idx(ii) = 0;
+    end
+   
+    if anx_idx(ii)== 0 && novel_idx(ii)==1
+        B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii});
+
     end
     
 end
@@ -1197,7 +1204,7 @@ for ii = length(A_out):-1:1
 
     pre_React = []; pre_ID = []; pre_sig = []; pre_str = []; 
     
-    post_React = []; post_ID = []; post_sig = []; post_str = []; map_loc = []; wake_rate = []; 
+    post_React = []; post_ID = []; post_sig = []; post_str = []; map_loc = []; wake_rate = []; Asmbly_dir = []; 
     
     for aa = 1:size( A_out{ii}{1}.REM_Pre_proj,1)
         this_R_t  =  A_out{ii}{1}.REM_Pre_tvec(find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh));
@@ -1226,9 +1233,14 @@ for ii = length(A_out):-1:1
         map_loc(aa) = A_out{ii}{1}.map{aa}.bins(idx); 
         
         wake_rate(aa) = length(A_out{ii}{1}.P_loc{aa}.loc); 
+        
+        Asmbly_dir(aa) = mean(A_out{ii}{1}.P_loc{aa}.loc_dir); 
+       
+            
                 
     end
     
+
     
     
     hdf5write(fname, '/pre_rem_A_react_idx', int16(pre_React),'WriteMode', 'append');
@@ -1243,6 +1255,18 @@ for ii = length(A_out):-1:1
     
     hdf5write(fname, '/wake_rate', int8(wake_rate),'WriteMode', 'append');
     hdf5write(fname, '/map_loc', map_loc,'WriteMode', 'append');
+    
+    hdf5write(fname, '/wake_a_dir', int8(Asmbly_dir),'WriteMode', 'append');
+    
+    if strcmp(A_out{ii}{1}.info.session, 'LTD1')
+        Pre_REM_nA = size(A_out{ii}{1}.REM_temp,2);
+        
+        Pre_REM_wAct = sum(A_out{ii}{1}.REM_Wake_proj > 8, 2);
+        
+            hdf5write(fname, '/pre_rem_nA', int8(Pre_REM_nA),'WriteMode', 'append');
+    hdf5write(fname, '/pre_rem_nWake_A', int8(Pre_REM_wAct),'WriteMode', 'append');
+    end
+    
 
 
 %     

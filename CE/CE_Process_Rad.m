@@ -5,6 +5,10 @@ function CE_Process_Rad(Ca_dir, nlx_dir)
 %% load the NLX data
 
 cd(nlx_dir)
+m_dir = dir('*meta.m'); 
+if isempty(m_dir)
+    MS_Write_meta_CA_Rad;
+end
 Meta = MS_Load_meta; 
 
 cfg_csc = [];
@@ -49,6 +53,14 @@ load([Ca_dir filesep 'ms.mat'], 'ms')
 toc
 warning on
 
+
+if exist([Ca_dir    filesep 'keep_idx.mat'], 'file')
+    load([Ca_dir    filesep 'keep_idx.mat'], 'keep_idx')
+    cfg_ms = [];
+    cfg_ms.remove_idx = ~keep_idx;
+    ms = MS_Remove_trace(cfg_ms, ms);
+
+end
 %% load the behaviour
 
 load([Ca_dir filesep 'behav_enc.mat'])
