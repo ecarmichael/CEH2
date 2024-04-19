@@ -236,6 +236,7 @@ for ii = 1:length(f_list)
     % Summary plots
     %                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
     %     Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
+    
     Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
     
     Pipline_Asmbly_plot_SWS(B_out{ii}, [fig_dir filesep method filesep 'best_SWS']);
@@ -1204,7 +1205,13 @@ for ii = length(A_out):-1:1
 
     pre_React = []; pre_ID = []; pre_sig = []; pre_str = []; 
     
-    post_React = []; post_ID = []; post_sig = []; post_str = []; map_loc = []; wake_rate = []; Asmbly_dir = []; 
+    post_React = []; post_ID = []; post_sig = []; post_str = []; 
+    
+    map_loc = []; wake_rate = []; Asmbly_dir = []; 
+    
+    weights = A_out{ii}{1}.P_temp;
+            
+    A_cell_id = []; 
     
     for aa = 1:size( A_out{ii}{1}.REM_Pre_proj,1)
         this_R_t  =  A_out{ii}{1}.REM_Pre_tvec(find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh));
@@ -1235,7 +1242,10 @@ for ii = length(A_out):-1:1
         wake_rate(aa) = length(A_out{ii}{1}.P_loc{aa}.loc); 
         
         Asmbly_dir(aa) = mean(A_out{ii}{1}.P_loc{aa}.loc_dir); 
-       
+        
+        % weights
+        
+       A_cell_id(:,aa) = ismember(1:length(A_out{ii}{1}.P_temp),A_out{ii}{1}.P_pos{aa})'; 
             
                 
     end
@@ -1266,7 +1276,11 @@ for ii = length(A_out):-1:1
             hdf5write(fname, '/pre_rem_nA', int8(Pre_REM_nA),'WriteMode', 'append');
     hdf5write(fname, '/pre_rem_nWake_A', int8(Pre_REM_wAct),'WriteMode', 'append');
     end
-    
+
+    %weights
+        hdf5write(fname, '/weights', weights,'WriteMode', 'append');
+        hdf5write(fname, '/A_sig_cells', int8(A_cell_id),'WriteMode', 'append');
+
 
 
 %     

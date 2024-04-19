@@ -12,7 +12,7 @@ elseif nargin < 4
 end
 
 %%
-ft_size = 21
+ft_size = 14; 
 % c_ord = MS_linspecer(length(plot_idx)+ceil(length(plot_idx)/5));
 c_ord = [67, 127, 151; 132 147 35; 255 179 13; 253 22 26]/255;
 % make a colour coded activity array
@@ -23,7 +23,7 @@ for iA = plot_idx
     c_idx = A_in.P_pos{iA};
     A_range = 1:length(c_idx);
     A_range = A_range+cnt;
-    cnt = cnt+length(A_range)+1;
+    cnt = cnt+length(A_range);
     
     for ii = 1:length(c_idx)
         act_array(logical(A_in.wake_data(:,c_idx(ii))),A_range(ii)) = find(iA ==plot_idx);
@@ -43,7 +43,7 @@ end
 f = figure(109); 
 % f.WindowState = 'maximized';
 clf
-set(gcf, 'units','inches', 'position',[0 0 6 4], 'innerposition',[0 0 6 4],'outerposition',[0 0 6 4])
+set(gcf, 'units','inches', 'position',[0 0 1.5 1]*6, 'innerposition',[0 0 1.5 1]*6,'outerposition',[0 0 1.5 1]*6)
 % set(gcf,  'PaperPosition', [0 0 6 3])
 % axes('Units', 'normalized', 'Position', [0 0 1 1])
 
@@ -54,7 +54,8 @@ ax(1) = subplot(3, 1, 1);
 cla
 hold on
 plot(A_in.behav.time/1000, A_in.behav.position(:,1), '-', 'color', [.5 .5 .5], 'linewidth', 0.3)
-scatter(A_in.behav.time(A_in.move_idx)/1000, A_in.behav.position((A_in.move_idx),1),ones(size(A_in.behav.time(A_in.move_idx)))*1, A_in.behav.speed(A_in.move_idx), 'Marker', '.')
+s = scatter(A_in.behav.time(A_in.move_idx)/1000, A_in.behav.position((A_in.move_idx),1),ones(size(A_in.behav.time(A_in.move_idx)))*4, A_in.behav.speed(A_in.move_idx), 'Marker', '.'); 
+s.MarkerFaceColor = s.MarkerEdgeColor; 
 %     plot(A_in.behav.time(A_in.move_idx)/1000, A_in.behav.position((A_in.move_idx),1));
 xlim([min(A_in.behav.time(A_in.move_idx)) max(A_in.behav.time(A_in.move_idx))]/1000)
 % ylabel({'position (cm)'})
@@ -163,7 +164,7 @@ xlabel('time (s)')
 y_val = get(gca, 'YTick'); 
 set(gca, 'YTickLabel', 10.^y_val, 'linewidth', 1); 
 
-legend(['R thresh'], 'Orientation', 'horizontal', 'box', 'off')
+% text('R thresh'
 
 
 
@@ -176,9 +177,9 @@ if length(ax) == 4
 end
 
 %% save the figure
-cfg.ft_size= 21;
-cfg.resize = 0;
-SetFigure(cfg, gcf)
+% cfg.ft_size= ft_size;
+% cfg.resize = 0;
+% SetFigure(cfg, gcf)
 % set(gcf,'PaperOrientation','landscape');
 % 
 % set(gcf,'PaperUnits','inches', 'Units', 'inches');
