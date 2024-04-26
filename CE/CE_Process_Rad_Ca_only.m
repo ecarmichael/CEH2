@@ -21,11 +21,11 @@ end
 
 % split into encoding and recall
 
-ms_enc = MS_restrict(ms, ms.time(1), ms.time(ms.timestamps(1)+1)); 
-ms_rec = MS_restrict(ms, ms.time(ms.timestamps(1)+2), ms.time(end)); 
+ms_Enc = MS_restrict(ms, ms.time(1), ms.time(ms.timestamps(1)+1)); 
+ms_Rec = MS_restrict(ms, ms.time(ms.timestamps(1)+2), ms.time(end)); 
 
-ms_rec_tstart = ms_rec.time(1); 
-ms_rec.time = ms_rec.time - ms_rec.time(1); 
+ms_rec_tstart = ms_Rec.time(1); 
+ms_Rec.time = ms_Rec.time - ms_Rec.time(1); 
 
 %% load the behaviour
 
@@ -36,8 +36,23 @@ load([Ca_dir filesep 'behav_rec.mat'])
 %% align the behaviour to the Ca time
 
 % encoding
-behav_enc_a = MS_align_data(behav_enc, ms_enc); 
-behav_rec_a = MS_align_data(behav_rec, ms_rec); 
+behav_enc_a = MS_align_data(behav_enc, ms_Enc); 
+behav_rec_a = MS_align_data(behav_rec, ms_Rec); 
+
+
+%% convert to tsd for restricting data
+
+pos_Enc = tsd(behav_enc_a.time, behav_enc_a.position');  
+pos_Enc.cfg.hdr{1} = behav_enc_a.json; 
+
+pos_Rec = tsd(behav_rec_a.time, behav_rec_a.position');
+pos_Rec.cfg.hdr{1} = behav_rec_a.json; 
+
+ms_Enc = tsd(ms_Enc.time, ms_Enc.Binary');
+ms_Enc.cfg.hdr{1} = ms.Exp_json{1}; 
+
+ms_Rec = tsd(ms_Rec.time, ms_Rec.Binary');
+ms_Rec.cfg.hdr{1} = ms.Exp_json{2}; 
 
 
 
@@ -51,75 +66,32 @@ trl = Rad.(['D' rad_name.name(17:end-2)]).(['m' rad_name.name(12:15)]);
 
 % Encoding trials
 
-Enc_iv = iv(trl.encode.tstart(1:4)+sync_ttl(start_idx(1)), trl.encode.tend(1:4)+sync_ttl(start_idx(1)));
+Enc_iv = iv(trl.encode.tstart(1:4), trl.encode.tend(1:4));
 
-iti_s = [trl.encode.tstart(1:4)-60+sync_ttl(start_idx(1)), trl.encode.tstart(5)+sync_ttl(start_idx(1))]; 
-iti_e = [trl.encode.tstart(1:4)+sync_ttl(start_idx(1)), trl.encode.tend(5)+sync_ttl(start_idx(1))]; 
+iti_s = [trl.encode.tstart(1:4)-60, trl.encode.tstart(5)]; 
+iti_e = [trl.encode.tstart(1:4), trl.encode.tend(5)]; 
 
 Enc_iti_iv = iv(iti_s, iti_e);
 
 % Recall trials
 
-Rec_iv = iv(trl.recall.tstart(1:4)+sync_ttl(start_idx(3)), trl.recall.tend(1:4)+sync_ttl(start_idx(3)));
+Rec_iv = iv(trl.recall.tstart(1:4), trl.recall.tend(1:4));
 
-iti_s = [trl.recall.tstart(1:4)-60+sync_ttl(start_idx(3)), trl.recall.tstart(5)+sync_ttl(start_idx(3))]; 
-iti_e = [trl.recall.tstart(1:4)+sync_ttl(start_idx(3)), trl.recall.tend(5)+sync_ttl(start_idx(3))]; 
+iti_s = [trl.recall.tstart(1:4)-60, trl.recall.tstart(5)]; 
+iti_e = [trl.recall.tstart(1:4), trl.recall.tend(5)]; 
 
 Rec_iti_iv = iv(iti_s, iti_e);
 
-enc_t0 = sync_ttl(start_idx(1));
-rec_t0 = sync_ttl(start_idx(3));
 
-%% restrict the lfp data
-
-% csc encoding
-csc_Enc_trl = restrict(csc_enc, Enc_iv);
-csc_Enc_trl.tvec = csc_Enc_trl.tvec - enc_t0; 
-
-%enc iti
-csc_Enc_iti = restrict(csc_enc, Enc_iti_iv);
-csc_Enc_iti.tvec = csc_Enc_iti.tvec - enc_t0; 
-
-
-% csc recall
-csc_Rec_trl = restrict(csc_rec, Rec_iv);
-csc_Rec_trl.tvec = csc_Rec_trl.tvec - rec_t0; 
-
-%rec iti
-csc_Rec_iti = restrict(csc_rec, Rec_iti_iv);
-csc_Rec_iti.tvec = csc_Rec_iti.tvec - rec_t0; 
-
-
-% figure(1010)
-% subplot(2,1,1)
-% pl_cfg = [];
-% PlotTSDfromIV(pl_cfg, Enc_iv, csc_enc)
-% ylabel('Trials')
-% 
-% subplot(2,1,2)
-% pl_cfg = [];
-% PlotTSDfromIV(pl_cfg, Enc_iti_iv, csc_enc)
-% ylabel('Trials')
 %% restrict the behaviour to trials
 
-pos_enc = tsd(behav_enc.time+sync_ttl(start_idx(1)), [behav_enc.position(:,1), behav_enc.position(:,2)]'); 
-pos_enc.cfg.hdr{1} = behav_enc.json; 
+pos_Enc_trl = restrict(pos_Enc, Enc_iv);
 
-pos_rec = tsd(behav_rec.time+sync_ttl(start_idx(3)), [behav_rec.position(:,1), behav_rec.position(:,2)]'); 
-pos_rec.cfg.hdr{1} = behav_rec.json; 
+pos_Enc_iti = restrict(pos_Enc, Enc_iti_iv);
 
+pos_Rec_trl = restrict(pos_Rec, Rec_iv);
 
-pos_Enc_trl = restrict(pos_enc, Enc_iv);
-pos_Enc_trl.tvec = pos_Enc_trl.tvec - enc_t0; 
-
-pos_Enc_iti = restrict(pos_enc, Enc_iti_iv);
-pos_Enc_iti.tvec = pos_Enc_iti.tvec - enc_t0; 
-
-pos_Rec_trl = restrict(pos_rec, Rec_iv);
-pos_Rec_trl.tvec = pos_Rec_trl.tvec - rec_t0; 
-
-pos_Rec_iti = restrict(pos_rec, Rec_iti_iv);
-pos_Rec_iti.tvec = pos_Rec_iti.tvec - rec_t0; 
+pos_Rec_iti = restrict(pos_Rec, Rec_iti_iv);
 
 %% restrict the calcium data to the trial time
 
@@ -129,22 +101,48 @@ pos_Rec_iti.tvec = pos_Rec_iti.tvec - rec_t0;
 % bin_rec = tsd(ms.tvecs{3}+sync_ttl(start_idx(3)), ms.Binary((length(ms.tvecs{1})+length(ms.tvecs{2}))+1:end,:)'); 
 % bin_rec.cfg.hdr{1} = ms.Exp_json{3}; 
 
-bin_tsd =  tsd(ms.time+sync_ttl(start_idx(1)), ms.Binary'); 
 
 
-bin_Enc_trl = restrict(bin_tsd, Enc_iv);
-bin_Enc_trl.tvec = bin_Enc_trl.tvec - enc_t0; 
+bin_Enc_trl = restrict(ms_Enc, Enc_iv);
 
-bin_Enc_iti = restrict(bin_tsd, Enc_iti_iv);
-bin_Enc_iti.tvec = bin_Enc_iti.tvec - enc_t0; 
+bin_Enc_iti = restrict(ms_Enc, Enc_iti_iv);
 
 
-bin_Rec_trl = restrict(bin_tsd, Rec_iv);
-bin_Rec_trl.tvec = bin_Rec_trl.tvec - rec_t0; 
+bin_Rec_trl = restrict(ms_Rec, Rec_iv);
 
-bin_Rec_iti = restrict(bin_tsd, Rec_iti_iv);
-bin_Rec_iti.tvec = bin_Rec_iti.tvec - rec_t0; 
+bin_Rec_iti = restrict(ms_Rec, Rec_iti_iv);
 
+
+
+%% assembly dectection. screening
+Enc_ts = ts; 
+
+for ii = size(bin_Enc_trl.data,1):-1:1
+Enc_ts.t{ii} = bin_Enc_trl.tvec(bin_Enc_trl.data(ii,:) ==1); 
+Enc_ts.label{ii} = num2str(ii); 
+end
+
+cfg_pca = [];
+cfg_pca.plot = 1;
+cfg_pca.mov = 1;
+cfg_pca.bin_s = 0.5; 
+
+[A_Temp, time_proj] = MS_PCA_ICA(cfg_pca, Enc_ts, pos_Enc_trl); 
+
+
+figure(999)
+for ii = 1:size(time_proj, 1)
+    
+  
+    plot(pos_Enc_trl.data(1,:), pos_Enc_trl.data(2,:), '.k')
+    hold
+        keep_idx = time_proj(1,:)> 8; 
+    plot(pos_Enc_trl.data(1,keep_idx), pos_Enc_trl.data(2,keep_idx), '.r')
+    title(num2str(ii))
+    
+    
+    
+end
 
 %% check aligment
 
@@ -155,10 +153,6 @@ plot(pos_Enc_trl.tvec, pos_Enc_trl.data(1,:), 'b')
 hold on
 plot(pos_Enc_iti.tvec, pos_Enc_iti.data(1,:), 'r')
 
-ax(2) = subplot(4,2,3); 
-plot(csc_Enc_trl.tvec, csc_Enc_trl.data(1,:), 'b')
-hold on
-plot(csc_Enc_iti.tvec, csc_Enc_iti.data(1,:), 'r')
 
 ax(3) = subplot(4,2,5);
 scatter(pos_Enc_trl.tvec, pos_Enc_trl.data(1,:), 'b')
@@ -179,11 +173,6 @@ plot(pos_Rec_trl.tvec, pos_Rec_trl.data(1,:), 'b')
 hold on
 plot(pos_Rec_iti.tvec, pos_Rec_iti.data(1,:), 'r')
 
-ax2(2) = subplot(4,2,4); 
-plot(csc_Rec_trl.tvec, csc_Rec_trl.data(1,:), 'b')
-hold on
-plot(csc_Rec_iti.tvec, csc_Rec_iti.data(1,:), 'r')
-
 ax2(3) = subplot(4,2,6);
 scatter(pos_Rec_trl.tvec, pos_Rec_trl.data(1,:), 'b')
 hold on
@@ -203,7 +192,7 @@ xlim([bin_Rec_iti.tvec(1) bin_Rec_iti.tvec(end)])
 figure(199)
 clf
 
-c_idx = 230:246; 
+c_idx = 110:120; 
 
 for ii = 1:length(c_idx)
     subplot(4,4,ii)
@@ -226,9 +215,5 @@ for ii = 1:length(c_idx)
     
 end
 
-%% try to plot the power of different lfp elemets
-
-figure(99)
-subplot
 
 %% save for later. 

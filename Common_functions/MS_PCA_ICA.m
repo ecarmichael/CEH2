@@ -159,6 +159,7 @@ if cfg.plot
 
 
         title(['Assembly#' num2str(A_idx(ii))])
+        ylim([-0.2 .5])
     end
 
 end
@@ -243,8 +244,9 @@ if cfg.plot
         set(gca, 'xtick', [])
         ax(4) = subplot(7,1,7);
     end
+    if ~isempty(csc)
     plot(csc.tvec, csc.data(cfg.lfp_idx,:));
-
+    end
 
     linkaxes(ax, 'x')
     xlim([pos.tvec(1) pos.tvec(end)])
