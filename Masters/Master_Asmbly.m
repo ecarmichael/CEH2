@@ -232,6 +232,7 @@ for ii = 1:length(f_list)
             
             B_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, B_out{ii});
             
+            B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii}); 
 
     % Summary plots
     %                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
