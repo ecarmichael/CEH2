@@ -36,6 +36,7 @@ for ii = 1:ms.numNeurons
         plot(ms.time, ((this_deconv*5) - 1/4),'color','k', 'linewidth',1)
 
     end
+    ylim([-0.5 1.5])
 
     subplot(2,3,4)
 
@@ -52,6 +53,7 @@ for ii = 1:ms.numNeurons
 
     end
     xlim([ms.time(s_idx(1)) ms.time(s_idx(2))])
+    ylim([-0.5 1.5])
 
     subplot(2,3,5)
 
@@ -68,10 +70,13 @@ for ii = 1:ms.numNeurons
 
     end
     xlim([ms.time(e_idx(1)) ms.time(e_idx(2))])
+    ylim([-0.5 1.5])
 
 
     subplot(2,3,3)
-
+    cla    
+        imagesc(ms.CorrProj)
+hold on
     [row, col] = find(ms.SFPs_sharp(:,:,ii) == max(max(ms.SFPs_sharp(:,:,ii))));
     t =  scatter(col, row,50,'o','MarkerEdgeColor', 'g');
     %         scatter(col, row,50,'o',  'MarkerEdgeColor',c_ord(ii,:) , 'LineWidth', 1);% c_ord(ii,:)
@@ -97,6 +102,11 @@ for ii = 1:ms.numNeurons
     elseif strcmp(key_hit, 'return') || strcmp(key_hit, 'space')
         keep_idx(ii) = 1;
         fprintf('Cell <strong>%0.0f</strong>/%0.0f : %s\n', ii, ms.numNeurons, 'accepted')
+    elseif strcmp(key_hit, 'leftarrow')
+        fprintf('Redo Cell <strong>%0.0f</strong>/%0.0f : %s\n', ii)
+
+        ii = ii - 2;
+        continue
     else
 
 
