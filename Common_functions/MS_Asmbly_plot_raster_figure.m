@@ -12,11 +12,7 @@ elseif nargin < 4
 end
 
 %%
-<<<<<<< HEAD
-ft_size = 14
-=======
 ft_size = 14; 
->>>>>>> 636299af5603ebdd14a485ffb7eb0f21e95f376e
 % c_ord = MS_linspecer(length(plot_idx)+ceil(length(plot_idx)/5));
 c_ord = [67, 127, 151; 132 147 35; 255 179 13; 253 22 26]/255;
 % make a colour coded activity array
