@@ -24,18 +24,40 @@ for iB = size(A_out,2):-1:1
 end
 
 
+%% find the assemblies with the most spatial tuning and frequent activity
+
+p_rank = []; 
+
+for iB = size(A_out,2):-1:1
+    p_cent = []; p_rate = [];
+
+    for ii = length(A_out{iB}.P_pos):-1:1
+        p_cent(ii) = A_out{iB}.map{ii}.cent_z;
+        p_rate(ii) = length(A_out{iB}.P_loc{ii}.loc_time);
+    end
+    
+    p_rate(p_cent > -1.95) = 0; 
+    [~, s_idx] = sort(p_rate, 'descend');
+    
+    p_rank{iB} = s_idx; 
+    
+end
 %% Plot the raw/raster in time
+
+
 
 for iB = size(A_out,2):-1:1
     if length(A_out{iB}.P_pos) >3
-        p_idx = 1:4;
+        p_idx = p_rank{iB}(1:4);
     elseif (isempty(A_out{iB}.P_pos) || ~isfield(A_out{iB}, 'P_pos'))
         continue
     else
-        p_idx = 1:length(A_out{iB}.P_pos);
+        p_idx = p_rank{iB}(1:length(A_out{iB}.P_pos));
     end
     
     MS_Asmbly_plot_raster(A_out{iB}, fig_dir,p_idx)
+    
+    MS_Asmbly_plot_raster_figure(A_out{iB}, fig_dir,p_idx); 
     
     
 end

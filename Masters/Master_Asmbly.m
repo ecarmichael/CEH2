@@ -1201,7 +1201,7 @@ for ii = length(A_out):-1:1
     this_pre_rem_t = 0:1/33:(length(A_out{ii}{1}.REM_pre_in)/33);
     this_pre_rem_t = this_pre_rem_t(1:end-1);
     
-   this_post_rem_t = 0:1/33:(length(A_out{ii}{1}.REM_post_in)/33);
+    this_post_rem_t = 0:1/33:(length(A_out{ii}{1}.REM_post_in)/33);
     this_post_rem_t = this_post_rem_t(1:end-1);
 
     pre_React = []; pre_ID = []; pre_sig = []; pre_str = []; 
@@ -1225,6 +1225,7 @@ for ii = length(A_out):-1:1
             pre_sig = [pre_sig, zeros(1, length(this_R_t))];
         end
         
+        
         this_R_t  =  A_out{ii}{1}.REM_Post_tvec(find(A_out{ii}{1}.REM_Post_proj(aa, :) > A_out{ii}{1}.REM_Post_stats.R_thresh));
         post_React  = [post_React, (nearest_idx3(this_R_t, this_post_rem_t))'];
         post_str = [post_str, A_out{ii}{1}.REM_Post_proj(aa, find(A_out{ii}{1}.REM_Post_proj(aa, :) > A_out{ii}{1}.REM_Post_stats.R_thresh))];
@@ -1235,7 +1236,7 @@ for ii = length(A_out):-1:1
         else
             post_sig = [post_sig, zeros(1, length(this_R_t))];
         end
-        
+
         % get the mean place field for the assembly
         [~, idx] = max(A_out{ii}{1}.map{aa}.map_mean);
         map_loc(aa) = A_out{ii}{1}.map{aa}.bins(idx); 
@@ -1251,6 +1252,45 @@ for ii = length(A_out):-1:1
                 
     end
     
+    REM_Pre_nSigA = sum(A_out{ii}{1}.REM_Pre_stats.p_val <0.05);
+    
+    REM_Post_nSigA = sum(A_out{ii}{1}.REM_Post_stats.p_val <0.05);
+    
+    SWS_Pre_nSigA = sum(A_out{ii}{1}.SWS_Pre_stats.p_val <0.05);
+    
+    SWS_Post_nSigA = sum(A_out{ii}{1}.SWS_Post_stats.p_val <0.05);
+
+    
+    p_wake_react = []; 
+    
+    % wake assemblies projected from Pre REM data.
+%     for aa = 1:size( A_out{ii}{1}.REM_Wake_proj,1)
+%         this_R_t  =  A_out{ii}{1}.wake_tvec(find(A_out{ii}{1}.REM_Wake_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh));
+%         p_wake_react  = [p_wake_react,this_R_t'];
+%         
+%         pre_str = [pre_str, A_out{ii}{1}.REM_Pre_proj(aa, find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh))];
+%         pre_ID = [pre_ID repmat(aa,1,length(this_R_t))];
+%         if A_out{ii}{1}.REM_Pre_stats.p_val(aa) < 0.05
+%             pre_sig = [pre_sig, ones(1, length(this_R_t))];
+%         else
+%             pre_sig = [pre_sig, zeros(1, length(this_R_t))];
+%         end
+%         
+       
+%         % get the mean place field for the assembly
+%         [~, idx] = max(A_out{ii}{1}.map{aa}.map_mean);
+%         map_loc(aa) = A_out{ii}{1}.map{aa}.bins(idx);
+%         
+%         wake_rate(aa) = length(A_out{ii}{1}.P_loc{aa}.loc);
+%         
+%         Asmbly_dir(aa) = mean(A_out{ii}{1}.P_loc{aa}.loc_dir);
+%         
+%         % weights
+%         
+%         A_cell_id(:,aa) = ismember(1:length(A_out{ii}{1}.P_temp),A_out{ii}{1}.P_pos{aa})';
+%         
+        
+%     end
 
     
     
@@ -1258,25 +1298,38 @@ for ii = length(A_out):-1:1
     hdf5write(fname, '/pre_rem_A_ID', int8(pre_ID),'WriteMode', 'append');
     hdf5write(fname, '/pre_rem_A_sig', int8(pre_sig),'WriteMode', 'append');
     hdf5write(fname, '/pre_rem_A_str', pre_str,'WriteMode', 'append');
+    hdf5write(fname, '/pre_rem_A_sig_react', int8(REM_Pre_nSigA),'WriteMode', 'append');
 
     hdf5write(fname, '/post_rem_react_idx',int16(post_React),'WriteMode', 'append');
     hdf5write(fname, '/post_rem_A_ID', int8(post_ID),'WriteMode', 'append');
     hdf5write(fname, '/post_rem_A_sig', int8(post_sig),'WriteMode', 'append');
     hdf5write(fname, '/post_rem_A_str', post_str,'WriteMode', 'append');
+    hdf5write(fname, '/post_rem_A_sig_react', int8(REM_Post_nSigA),'WriteMode', 'append');
     
+    % sws
+        hdf5write(fname, '/pre_sws_A_sig_react', int8(SWS_Pre_nSigA),'WriteMode', 'append');
+    hdf5write(fname, '/post_sws_A_sig_react', int8(SWS_Post_nSigA),'WriteMode', 'append');
+
+
     hdf5write(fname, '/wake_rate', int8(wake_rate),'WriteMode', 'append');
     hdf5write(fname, '/map_loc', map_loc,'WriteMode', 'append');
     
     hdf5write(fname, '/wake_a_dir', int8(Asmbly_dir),'WriteMode', 'append');
     
-    if strcmp(A_out{ii}{1}.info.session, 'LTD1')
+%     if strcmp(A_out{ii}{1}.info.session, 'LTD1')
         Pre_REM_nA = size(A_out{ii}{1}.REM_temp,2);
         
-        Pre_REM_wAct = sum(A_out{ii}{1}.REM_Wake_proj > 8, 2);
+        if Pre_REM_nA == 0
+            Pre_REM_wAct = 0; 
+        else
+            Pre_REM_wAct = sum(A_out{ii}{1}.REM_Wake_proj > 8, 2);
+        end
         
-            hdf5write(fname, '/pre_rem_nA', int8(Pre_REM_nA),'WriteMode', 'append');
-    hdf5write(fname, '/pre_rem_nWake_A', int8(Pre_REM_wAct),'WriteMode', 'append');
-    end
+        fprintf('%s: Pre-ReM_nA = %0.0f | Pre_REM_wAct = %0.0f\n', fname(1:end-3), Pre_REM_nA, sum(Pre_REM_wAct >0))
+        
+        hdf5write(fname, '/pre_rem_nA', int8(Pre_REM_nA),'WriteMode', 'append');
+        hdf5write(fname, '/pre_rem_nWake_A', int8(Pre_REM_wAct),'WriteMode', 'append');
+%     end
 
     %weights
         hdf5write(fname, '/weights', weights,'WriteMode', 'append');
@@ -1299,3 +1352,116 @@ end
 
 %% read it back
 MS_h5_to_stuct(fname)
+
+
+%% get some basic stats
+h_idx = dir('assembly*');
+
+conds  = {'LTD1 ', 'LTD5 ', 'HATD1 ', 'HATD5 ', 'HATDSwitch '}; 
+mice = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252', 'pv1254'}; 
+Cond = []; Sub = []; nWake_A = []; nPre_A = []; nPre_Act = []; 
+
+nPre_sig = []; nPost_sig = []; 
+for hh = length(h_idx):-1:1
+    disp(h_idx(hh).name)
+    this_h5 = MS_h5_to_stuct(h_idx(hh).name);
+    
+    Cond(hh) = find(contains(conds, this_h5.condition{1,1}(1:end-1))); 
+    Sub(hh) = find(contains(mice, this_h5.mouse{1,1}(1:end-1))); 
+    
+    nWake_A(hh) = size(this_h5.A_sig_cells,2); 
+    nPre_A(hh) = this_h5.pre_rem_nA; 
+    nPre_Act(hh) = sum(this_h5.pre_rem_nWake_A > 0); 
+    nPre_A_prct(hh) = (nPre_Act(hh)/nPre_A(hh))*100; 
+    nPre_sig(hh) = this_h5.pre_rem_A_sig_react;
+    nPost_sig(hh) = this_h5.post_rem_A_sig_react;
+
+
+end
+
+
+% LTD1_Pre_A = mean(
+
+%% plot number of significant assemblies 
+c_ord = MS_linspecer(14);
+
+y_lim = [0 max([nWake_A, nPre_A])]; 
+
+
+figure(99)
+clf
+set(gcf, 'Units', 'centimeters', 'Position', [0 0  30 20])
+subplot(2,4,1)
+MS_bar_w_err(nPre_A(Cond==1), nPre_A(Cond ==2), c_ord(12,:))
+set(gca, 'XTickLabel', {'Novel', 'Familiar'})
+ylim(y_lim); 
+title('Pre Assemblies in Wake')
+
+ylabel('Number of assemblies')
+
+subplot(2,4,3)
+MS_bar_w_err(nWake_A(Cond==1), nWake_A(Cond ==2), c_ord(3,:))
+set(gca, 'XTickLabel', {'Novel', 'Familiar'})
+ylim(y_lim); 
+
+title('Wake Assemblies in Wake')
+
+
+subplot(2,4,2)
+MS_bar_w_err(nPre_sig(Cond==1), nPre_sig(Cond ==2), c_ord(6,:))
+set(gca, 'XTickLabel', {'Novel', 'Familiar'})
+ylim(y_lim); 
+
+title('Wake Assemblies in Pre REM')
+
+subplot(2,4,4)
+MS_bar_w_err(nPost_sig(Cond==1), nPost_sig(Cond ==2), c_ord(2,:))
+set(gca, 'XTickLabel', {'Novel', 'Familiar'})
+ylim(y_lim); 
+
+title('Wake Assemblies in Post REM')
+
+
+%% same plot but as a % of awake assemblies
+
+
+%% plot number of significant assemblies 
+
+y_lim = [0 100]; 
+
+
+
+subplot(2,4,5)
+MS_bar_w_err(nPre_A(Cond==1)./nWake_A(Cond==1)*100, nPre_A(Cond ==2)./nWake_A(Cond==2)*100, c_ord(12,:))
+set(gca, 'XTickLabel', {'Novel', 'Familiar'})
+ylim(y_lim); 
+title('Pre Assemblies in Wake')
+
+ylabel('% of wake assemblies')
+
+subplot(2,4,7)
+MS_bar_w_err(nWake_A(Cond==1)./nWake_A(Cond==1)*100, nWake_A(Cond ==2)./nWake_A(Cond==2)*100, c_ord(3,:))
+set(gca, 'XTickLabel', {'Novel', 'Familiar'})
+ylim(y_lim); 
+
+title('Wake Assemblies in Wake')
+
+
+subplot(2,4,6)
+MS_bar_w_err(nPre_sig(Cond==1)./nWake_A(Cond==1)*100, nPre_sig(Cond ==2)./nWake_A(Cond==2)*100, c_ord(6,:))
+set(gca, 'XTickLabel', {'Novel', 'Familiar'})
+ylim(y_lim); 
+
+title('Wake Assemblies in Pre REM')
+
+subplot(2,4,8)
+MS_bar_w_err(nPost_sig(Cond==1)./nWake_A(Cond==1)*100, nPost_sig(Cond ==2)./nWake_A(Cond==2)*100, c_ord(2,:))
+set(gca, 'XTickLabel', {'Novel', 'Familiar'})
+ylim(y_lim); 
+
+title('Wake Assemblies in Post REM')
+
+cfg_set= [];
+cfg_set.resize = 0;
+cfg_set.ft_size = 10;
+SetFigure(cfg_set, gcf)
