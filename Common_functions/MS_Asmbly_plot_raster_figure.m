@@ -177,9 +177,9 @@ if length(ax) == 4
 end
 
 %% save the figure
-% cfg.ft_size= ft_size;
-% cfg.resize = 0;
-% SetFigure(cfg, gcf)
+cfg.ft_size= ft_size;
+cfg.resize = 0;
+SetFigure(cfg, gcf)
 % set(gcf,'PaperOrientation','landscape');
 % 
 % set(gcf,'PaperUnits','inches', 'Units', 'inches');

@@ -1260,6 +1260,10 @@ for ii = length(A_out):-1:1
     
     SWS_Post_nSigA = sum(A_out{ii}{1}.SWS_Post_stats.p_val <0.05);
 
+    pREM_map = []; 
+    for pp = length(A_out{ii}{1}.pREM_Place_map):-1:1
+    pREM_map = [pREM_map; A_out{ii}{1}.pREM_Place_map{pp}.map]; 
+    end
     
     p_wake_react = []; 
     
@@ -1359,7 +1363,7 @@ h_idx = dir('assembly*');
 
 conds  = {'LTD1 ', 'LTD5 ', 'HATD1 ', 'HATD5 ', 'HATDSwitch '}; 
 mice = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252', 'pv1254'}; 
-Cond = []; Sub = []; nWake_A = []; nPre_A = []; nPre_Act = []; 
+Cond = []; Sub = []; nWake_A = []; nPre_A = []; nPre_Act = []; nPre_SWS_A = []; nPost_SWS_A = []; 
 
 nPre_sig = []; nPost_sig = []; 
 for hh = length(h_idx):-1:1
@@ -1375,6 +1379,9 @@ for hh = length(h_idx):-1:1
     nPre_A_prct(hh) = (nPre_Act(hh)/nPre_A(hh))*100; 
     nPre_sig(hh) = this_h5.pre_rem_A_sig_react;
     nPost_sig(hh) = this_h5.post_rem_A_sig_react;
+
+    nPre_SWS_A(hh) = double(this_h5.pre_sws_A_sig_react); 
+        nPost_SWS_A(hh) = double(this_h5.post_sws_A_sig_react); 
 
 
 end
@@ -1465,3 +1472,61 @@ cfg_set= [];
 cfg_set.resize = 0;
 cfg_set.ft_size = 10;
 SetFigure(cfg_set, gcf)
+
+%% SWS
+
+c_idx = (Cond ==2 | Cond == 1); 
+
+y_lim = [0 max([nPre_sig(c_idx), nPost_sig(c_idx), nPre_SWS_A(c_idx), nPost_SWS_A(c_idx)])]; 
+
+
+figure(99)
+clf
+set(gcf, 'Units', 'centimeters', 'Position', [0 0  30 20])
+subplot(2,2,1)
+% hb = bar([nanmean(nPre_A(Cond==1)),nanmean(nPre_sig(Cond==1)), nanmean(nPost_sig(Cond==1)), nanmean(nPre_SWS_A(Cond==1)), nanmean(nPost_SWS_A(Cond==1)); nanmean(nPre_A(Cond==2)),nanmean(nPre_sig(Cond==2)), nanmean(nPost_sig(Cond==2)), nanmean(nPre_SWS_A(Cond==2)), nanmean(nPost_SWS_A(Cond==1))]);
+% hold on
+% eb = errorbar([nanmean(nPre_A(Cond==1)),nanmean(nPre_sig(Cond==1)), nanmean(nPost_sig(Cond==1)), nanmean(nPre_SWS_A(Cond==1)), nanmean(nPost_SWS_A(Cond==1)); nanmean(nPre_A(Cond==2)),nanmean(nPre_sig(Cond==2)), nanmean(nPost_sig(Cond==2)), nanmean(nPre_SWS_A(Cond==2)), nanmean(nPost_SWS_A(Cond==1))],...
+%     [MS_SEM(nPre_A(Cond==1)),MS_SEM(nPre_sig(Cond==1)), MS_SEM(nPost_sig(Cond==1)), MS_SEM(nPre_SWS_A(Cond==1)), MS_SEM(nPost_SWS_A(Cond==1)); MS_SEM(nPre_A(Cond==2)),MS_SEM(nPre_sig(Cond==2)), MS_SEM(nPost_sig(Cond==2)), MS_SEM(nPre_SWS_A(Cond==2)), MS_SEM(nPost_SWS_A(Cond==1))]);
+% eb.LineStyle = 'none';
+% 
+% set(gca, 'XTickLabel', {'Novel', 'Familiar'})
+% legend({'Pre A in wake', 'Pre REM', 'Post REM', 'Pre SWS', 'Post SWS'}, 'Box', 'off', 'orientation', 'horizontal')
+% hb(1).FaceColor = c_ord(12,:); 
+% hb(2).FaceColor = c_ord(6,:); 
+% hb(3).FaceColor = c_ord(3,:); 
+% hb(4).FaceColor = c_ord(9,:); 
+% hb(5).FaceColor = c_ord(10,:); 
+
+
+
+MS_bar_w_err(nPre_sig(Cond==1), nPre_sig(Cond ==2), c_ord(12,:))
+set(gca, 'XTickLabel', {'Novel', 'Familiar'})
+ylim(y_lim); 
+title('Wake assemblies in Pre REM')
+
+ylabel('Number of assemblies')
+
+subplot(2,2,3)
+
+MS_bar_w_err(nPost_sig(Cond==1), nPost_sig(Cond ==2), c_ord(10,:))
+set(gca, 'XTickLabel', {'Novel', 'Familiar'})
+ylim(y_lim); 
+
+title('Wake Assemblies in Post REM')
+
+
+
+subplot(2,2,2)
+MS_bar_w_err(nPre_SWS_A(Cond==1), nPre_SWS_A(Cond ==2), c_ord(3,:))
+set(gca, 'XTickLabel', {'Novel', 'Familiar'})
+ylim(y_lim); 
+
+title('Wake assemblies in Pre SWS')
+
+subplot(2,2,4)
+MS_bar_w_err(nPost_SWS_A(Cond==1), nPost_SWS_A(Cond ==2), c_ord(4,:))
+set(gca, 'XTickLabel', {'Novel', 'Familiar'})
+ylim(y_lim); 
+
+title('Wake Assemblies in Post SWS')

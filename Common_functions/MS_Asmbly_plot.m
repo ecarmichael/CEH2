@@ -38,7 +38,7 @@ for ii = 1: size(A_cells,2)
     stem(A_cells{ii}, A_temp(A_cells{ii},ii), 'color', c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
     view(90,90)
     
-    title(['Assembly #' num2str(ii) ' (nPC: ' num2str(sum(map_out{ii}.place_idx))  '/' num2str(length(map_out{ii}.place_idx)) ' = ' num2str(sum(map_out{ii}.place_idx)/length(map_out{ii}.place_idx)*100,2) '%)'])
+    title(['Assembly #' num2str(ii) ' (nPC: ' num2str(sum(map_out{ii}.place_idx))  '/' num2str(length(map_out{ii}.place_idx)) ' = ' num2str(sum(map_out{ii}.place_idx)/length(map_out{ii}.place_idx)*100, '%0.1f') '%)'])
     ylim([-0.1 0.5])
     xlabel('cell ID')
     xlim([0 length(A_temp(:,ii))])
