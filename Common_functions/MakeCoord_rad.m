@@ -151,6 +151,9 @@ y = roi.Center(2) + roi.Radius*sin(theta);
 P = polyshape(x,y);
 
 %%
+Rad = []; 
+labels = {'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'}; 
+
 fprintf('Draw a line from the ''top/north'' arm end to the center\n')
 c_ord = linspecer(8); 
 X = []; Y = []; 
@@ -217,7 +220,14 @@ for ii =1:8
     plot(Coord(2,end),Coord(1,end),'*r'); %end
     
     
-    
+    % format
+    Rad{ii}.coord = Coord;
+    Rad{ii}.units = tsd_in.units;
+    Rad{ii}.run_dist = run_dist;
+    Rad{ii}.nPoints = size(Coord,2);
+    Rad{ii}.pointDist = pdist(Coord(:,1:2)','euclidean');
+    Rad{ii}.standardized = 0;
+    Rad.label{ii} = labels{ii}; 
 end
 
 

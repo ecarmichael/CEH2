@@ -1,4 +1,4 @@
-function MS_Ca_check(ms, cell_ids)
+function MS_Ca_check(ms, cell_ids, fact)
 %% MS_Ca_check: Quick plot to check traces, deconv, and SFPs in ms file. 
 %
 %
@@ -25,6 +25,9 @@ if nargin < 2
      if ms.numNeurons < 20
         cell_ids  = 1:ms.numNeurons;
      end
+         fact = 1; 
+elseif nargin < 3
+        fact = 1; 
 end
 
 if ~isfield(ms, 'time') && isfield(ms, 'tvec')
@@ -101,7 +104,6 @@ figure(1919)
     subplot(2,3,[1 2 4 5])
     cla
     hold on
-    fact = 2.5; 
     for ii = 1:length(cell_ids)
         this_deconv = ms.deconv(:,cell_ids(ii)); 
         this_deconv(this_deconv==0) = NaN; 
