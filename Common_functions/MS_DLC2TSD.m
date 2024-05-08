@@ -293,9 +293,21 @@ else
 end
 
 pos.cfg.json = Exp_json;
+pos.cfg.conv_fac = conv_fac; 
 
 if isfield(pos.cfg.json, 'recordingStartTime') && ~isfield(pos.cfg.json, 'msecSinceEpoch')
     pos.cfg.json.msecSinceEpoch = pos.cfg.json.recordingStartTime.msecSinceEpoch;
+end
+
+%% grab a video for a mean frame. 
+avi_dir = dir([dir_in filesep '*.avi']);
+if ~isempty(avi_dir)
+    vidObj = VideoReader([avi_dir(1).folder filesep avi_dir(1).name]);   
+    
+    F=read(vidObj);                             
+    pos.mean_frame=median(F,4);
+else
+    pos.mean_frame = []; 
 end
 
 %% convert to behav format
@@ -315,6 +327,7 @@ behav.position = data_out.(fields{1})(:,1:2);
 behav.speed = sqrt(vx.^2+vy.^2)';
 behav.HD = HD;
 behav.json = Exp_json;
+behav.conv_fac = conv_fac; 
 
 %% test out the HD.
 if plot_flag

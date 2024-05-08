@@ -117,34 +117,34 @@ bin_Rec_iti = restrict(ms_Rec, Rec_iti_iv);
 
 
 %% assembly dectection. screening
-Enc_ts = ts; 
-
-for ii = size(bin_Enc_trl.data,1):-1:1
-Enc_ts.t{ii} = bin_Enc_trl.tvec(bin_Enc_trl.data(ii,:) ==1); 
-Enc_ts.label{ii} = num2str(ii); 
-end
-
-cfg_pca = [];
-cfg_pca.plot = 1;
-cfg_pca.mov = 1;
-cfg_pca.bin_s = 0.5; 
-
-[A_Temp, time_proj] = MS_PCA_ICA(cfg_pca, Enc_ts, pos_Enc_trl); 
-
-
-figure(999)
-for ii = 1:size(time_proj, 1)
-    
-  
-    plot(pos_Enc_trl.data(1,:), pos_Enc_trl.data(2,:), '.k')
-    hold
-        keep_idx = time_proj(1,:)> 8; 
-    plot(pos_Enc_trl.data(1,keep_idx), pos_Enc_trl.data(2,keep_idx), '.r')
-    title(num2str(ii))
-    
-    
-    
-end
+% Enc_ts = ts; 
+% 
+% for ii = size(bin_Enc_trl.data,1):-1:1
+% Enc_ts.t{ii} = bin_Enc_trl.tvec(bin_Enc_trl.data(ii,:) ==1); 
+% Enc_ts.label{ii} = num2str(ii); 
+% end
+% 
+% cfg_pca = [];
+% cfg_pca.plot = 1;
+% cfg_pca.mov = 1;
+% cfg_pca.bin_s = 0.5; 
+% 
+% [A_Temp, time_proj] = MS_PCA_ICA(cfg_pca, Enc_ts, pos_Enc_trl); 
+% 
+% 
+% figure(999)
+% for ii = 1:size(time_proj, 1)
+%     
+%   
+%     plot(pos_Enc_trl.data(1,:), pos_Enc_trl.data(2,:), '.k')
+%     hold
+%         keep_idx = time_proj(1,:)> 8; 
+%     plot(pos_Enc_trl.data(1,keep_idx), pos_Enc_trl.data(2,keep_idx), '.r')
+%     title(num2str(ii))
+%     
+%     
+%     
+% end
 
 %% check aligment
 
