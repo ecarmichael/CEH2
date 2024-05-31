@@ -22,7 +22,7 @@ c_ord = MS_linspecer(length(plot_idx)+ceil(length(plot_idx)/5));
 % make a colour coded activity array
 act_array = zeros(size(A_in.(sleep_phase)));
 
-cnt = 0; c_list = []; c_map = [0 0 0]; c_step = 0;
+cnt = 0; c_list = []; c_map = [1 1 1]; c_step = 0;
 for iA = plot_idx
     c_idx = A_in.P_pos{iA};
     A_range = 1:length(c_idx);
@@ -37,7 +37,7 @@ for iA = plot_idx
     c_list = [c_list; c_idx];
     c_map = [c_map; c_ord(find(iA ==plot_idx),:)];
     c_step = [c_step cnt];
-    c_label{find(iA ==plot_idx)} = ['A# ' num2str(iA)];
+    c_label{find(iA ==plot_idx)} = [num2str(iA)];
 end
 
 
@@ -45,7 +45,7 @@ end
 
 
 f = figure(900); 
-f.WindowState = 'maximized'; 
+% f.WindowState = 'maximized'; 
 pause(.5)
 clf
 
@@ -108,6 +108,7 @@ else
             these_idx = [these_idx, A_in.P_pos{iA}']; % keep track to avoid overlap;
         end
         ylim([0 length(c_list)+1])
+    set(gca, 'YTick', c_step(2:end) - diff(c_step)/2, 'YTickLabel',c_label)
         
     end
     %%
@@ -129,17 +130,20 @@ else
     hold on
     leg_val = [];
     for iA = plot_idx
-        plot(A_in.(REM_tvec), A_in.(REM_proj)(iA,:), 'color', c_ord(find(iA == plot_idx),:), 'linewidth', 2)
+        plot(A_in.(REM_tvec), log10(A_in.(REM_proj)(iA,:)), 'color', c_ord(find(iA == plot_idx),:), 'linewidth', 2)
         
         leg_val{find(iA == plot_idx)} = ['Assembly #' num2str(iA)];
     end
-    ylim([0 inf])
-    ylabel({'assembly strength'})
-    xlabel('time (s)')
+   ylim([0 inf])
+ylabel({'assembly strength'})
+xlabel('time (s)')
+y_val = get(gca, 'YTick'); 
+set(gca, 'YTickLabel', 10.^y_val, 'linewidth', 1); 
+
+        yline(log10(A_in.([REM{1} 'stats']).R_thresh), '--', 'color', [.7 .7 .7]); 
+
+    legend([leg_val 'Sig thresh.'], 'Orientation', 'horizontal', 'box', 'off')
     
-    legend(leg_val, 'Orientation', 'horizontal', 'box', 'off')
-    
-    yline(A_in.([REM{1} 'stats']).R_thresh); 
     
     linkaxes(ax,'x'); 
     colormap(ax(1), c_map); 
@@ -148,5 +152,21 @@ else
     xlim([A_in.(REM_tvec)(1) A_in.(REM_tvec)(end)])
     %% save the figure
     if ~isempty(fig_dir)
+        pause(.5)
         saveas(gcf, [fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_' sleep_phase '_raster.png']);
+       pause(.5)
+            set(gcf,'Units','Inches');
+            pos = get(gcf,'Position');
+            set(gcf, 'Position', [pos(1) pos(2) pos(4) pos(4)])
+            set(gcf,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(4), pos(4)])
+            ft_size = 14;
+
+            subplot(7,1,1:5)
+            set(gca, 'YTick', c_step(2:end) - diff(c_step)/2, 'YTickLabel',[])
+            for ii = 2:length(c_step)
+                text(0, c_step(ii) - diff(c_step(ii-1:ii))/2, c_label{ii-1},'HorizontalAlignment', 'right', 'Color', c_map(ii,:), 'FontSize', ft_size )
+            end
+
+        print(gcf,  [fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_' sleep_phase '_raster.pdf'], '-dpdf','-r0')
+
     end

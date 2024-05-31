@@ -44,6 +44,7 @@ figure(1919)
     
     subplot(2,3,3)
     cla
+    if isfield(ms, 'SFPs_sharp')
     MS_plot_all_SFPs(ms.SFPs_sharp); 
 %     imagesc(max(ms.SFPs_sharp(:,:,:),[],3));
 %     c_val = caxis; 
@@ -59,7 +60,7 @@ figure(1919)
     title(['nCells: ' num2str(ms.numNeurons)]);
 %     xlim([min(ms.Centroids(:,1))-min(ms.Centroids(:,1))*.2  max(ms.Centroids(:,1))+max(ms.Centroids(:,1))*.2])
 %     ylim([min(ms.Centroids(:,2))-min(ms.Centroids(:,2))*.2  max(ms.Centroids(:,2))+max(ms.Centroids(:,2))*.2])
-
+    end
     subplot(2,3,6)
     cla
         binsize = 0.1; % in seconds, so everything else should be seconds too
@@ -107,11 +108,14 @@ figure(1919)
     for ii = 1:length(cell_ids)
         this_deconv = ms.deconv(:,cell_ids(ii)); 
         this_deconv(this_deconv==0) = NaN; 
+
         plot(ms.time, (ms.RawTraces(:,cell_ids(ii)))+ii*fact,'color', [0.6 0.6 0.6], 'linewidth', 1)
         plot(ms.time, (ms.denoise(:,cell_ids(ii)))+ii*fact,'color', [c_ord(ii,:) .5], 'linewidth', 1)
         plot(ms.time, ((this_deconv*5) - fact/4)+ii*fact,'color','k', 'linewidth',1)
         if isfield(ms, 'Binary')
-        plot(ms.time, ((this_deconv*5) - fact/4)+ii*fact,'color','k', 'linewidth',1)
+            this_binary = ms.Binary(:,cell_ids(ii))/10; 
+             this_binary(this_binary>1) = NaN; 
+        plot(ms.time, ((this_binary)- fact/4)+ii*fact,'color','k', 'linewidth',1)
         end
 %         plot(ms.time, ((this_deconv*5) - fact/4)+ii*fact,'color', c_ord(ii,:), 'linewidth', 1)
 %         plot(ms.time, (ms.Spikes(:,ii)*5)+ii*10,'color', 'k')

@@ -21,7 +21,7 @@ for iB = size(A_out,2):-1:1
     close all;
     if ~isempty(A_out{iB}.REM_temp)
         MS_Asmbly_plot(A_out{iB}.REM_temp, A_out{iB}.REM_A_pos, A_out{iB}.pREM_Place_map, A_out{iB}.pREM_wake_P_loc, [fig_dir filesep 'preREM'], A_out{iB}.info);
-close all;
+        close all;
     end
 end
 

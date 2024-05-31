@@ -26,6 +26,46 @@ for ii = 1:length(A_in)
         A_in{ii}.REM_A_pos = REM_pos;
         
         fprintf('[%.0f/%.0f = %.0f%%] Pre REM Assemblies had cells with positive weights (%.2fs binsize)\n',size(REM_temp,2),size(REM_temp_all,2),  (size(REM_temp,2)/size(REM_temp_all,2))*100, A_in{ii}.info.bin)
+   
+        % 
+        % rng(123,'twister')
+        % nShuff = 100;
+        % wake_shuff_mat = [];
+        % 
+        % Ass_shuff = NaN(1,nShuff);
+        % for iS = nShuff:-1:1
+        %     tic
+        %     shuff_data = NaN(size(A_in{ii}.REM_Pre_data));
+        %     for ic = 1:size(A_in{ii}.REM_Pre_data,2)
+        %         shuff_data(:,ic) = circshift(A_in{ii}.REM_Pre_data(:,ic), floor(MS_randn_range(1,1,1,size(A_in{ii}.REM_Pre_data,1))));
+        %     end
+        % 
+        %     this_ass = assembly_patterns(shuff_data');
+        %     if ~isempty(this_ass)
+        %         S_prog = assembly_activity(this_ass,shuff_data');
+        % 
+        %         wake_shuff_mat(iS,:) =  S_prog(1,:);
+        %         keep_idx(iS) = 1;
+        %     else
+        %         wake_shuff_mat(iS,:) = NaN;
+        %         keep_idx(iS) = 0;
+        %     end
+        %     %     for ii = size(this_ass,2):-1:1
+        % 
+        %     if sum(max(this_ass) > 0.2) >0
+        %         Ass_shuff(iS) = sum(max(this_ass) > 0.2);
+        %     else
+        %         Ass_shuff(iS) = 0;
+        %     end
+        %     %     end
+        %     fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(this_ass,2), toc)
+        % end
+        % 
+        % W_threshold = prctile(wake_shuff_mat(wake_shuff_mat >0), 99, 'all');
+        % 
+        % 
+    
+    
     end
     
     
