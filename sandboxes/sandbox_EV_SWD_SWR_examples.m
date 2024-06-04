@@ -1,8 +1,8 @@
 %% sandbox_EV_SWD_SWR_examples
 addpath(genpath('C:\Users\ecarm\Documents\GitHub\CEH2'));
 
-inter_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\EV_inter\'; % where to save everything.
-data_dir = 'C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eva\final_analysis';
+inter_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\EV_inter\'; % where to save everything.
+data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eva\final_analysis';
 
 ft_dir = 'C:\Users\ecarm\Documents\GitHub\fieldtrip';
 
