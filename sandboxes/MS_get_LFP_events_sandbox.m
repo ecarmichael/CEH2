@@ -183,7 +183,7 @@ if cfg.check
     cfg_plot.mode = 'center';
     cfg_plot.width = 0.2;
     cfg_plot.target = csc.label{1};
-    cfg_plot.title = 'var';
+    cfg_plot.title = 'mean_filt';
     PlotTSDfromIV(cfg_plot,events_out,csc);
     pause(2); close all;
 end
@@ -225,6 +225,16 @@ if isfield(cfg, 'min_len') && ~isempty(cfg.min_len)
 
     fprintf('\n<strong>MS_SWR_Ca2</strong>:: %d events remain after event length cutoff (%s %d ms removed).\n',length(events_out.tstart), cfg_min_len.operation, (cfg_min_len.threshold)*1000);
 end
+
+%% check for evnts with high raw varience. 'mean_filt' is added as a events_out.usr field in CountCycles
+if isfield(cfg, 'mean_filt') && ~isempty(cfg.mean_filt)
+    % cfg.var = [];
+    % cfg.var.operation = '<';
+    % cfg.var.threshold = 1;
+    events_out = SelectIV(cfg.mean_filt,events_out,'mean_filt');
+    fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after raw varience thresholding (''mean_filt'' %s %f removed).\n',length(events_out.tstart),cfg.var.operation, cfg.var.threshold);
+end
+
 
 %% check for evnts with high raw varience. 'var_raw' is added as a events_out.usr field in CountCycles
 if isfield(cfg, 'var') && ~isempty(cfg.var)
