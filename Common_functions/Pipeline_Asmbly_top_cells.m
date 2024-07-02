@@ -324,6 +324,16 @@ for iB = length(bin_s):-1:1
     end
 end
 
+
+%% count the instances of each cell per reactivation
+for iB = length(bin_s):-1:1
+    
+    
+    REM_pre_part = MS_Asmbly_participation(REM_pre_proj{iB},P_temp{iB}, REM_pre_data{iB},REM_pre_stats{iB}.R_thresh);
+end
+
+
+
 %% collect the outputs
 for iB = length(bin_s):-1:1
     info.bin = bin_s(iB);
