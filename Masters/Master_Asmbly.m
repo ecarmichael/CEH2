@@ -172,15 +172,21 @@ J20_session = []; J20_novel_idx = []; D3_idx = []; D5_idx = [];
 for ii = 1:length(j20_list)
     J20_session{ii} = j20_list(ii).name;
     cd(data_dir)
-    %
-    %         J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
-    %     JP_out{ii} = Pipeline_Asmbly_place(j20_list(ii).name,bin_size, move_thresh, method);
-    %
-    %     % Summary plots
-    %         Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method]);
-    %         close all
-    %     Pipline_Asmbly_plot(JP_out{ii}, [fig_dir filesep method filesep 'place']);
-    %     close all
+    
+%             J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
+%         JP_out{ii} = Pipeline_Asmbly_place(j20_list(ii).name,bin_size, move_thresh, method);
+        
+                    J_out{ii} = Pipeline_Asmbly_top_cells(j20_list(ii).name,bin_size, move_thresh, method);
+                                J_out{ii} = Pipeline_Asmbly_append_preA(J_out{ii}); 
+
+    Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method filesep 'best']);
+
+    
+        % Summary plots
+            Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method]);
+            close all
+        Pipline_Asmbly_plot(JP_out{ii}, [fig_dir filesep method filesep 'place']);
+        close all
     
     if ~isempty(strfind(j20_list(ii).name, 'D1')) %|| ~isempty(strfind(f_list(ii).name, 'HATDS'))
         J20_novel_idx(ii) = 1;
@@ -232,7 +238,7 @@ for ii = 1:length(f_list)
     % 
     %         B_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, B_out{ii});
     % 
-    %         B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii}); 
+            B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii}); 
     % 
     % % Summary plots
     % %                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);

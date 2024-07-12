@@ -29,10 +29,20 @@ move_idx = behav.speed > move_thresh;
 %% load the selected neurons h5
 h5_dir = dir('selected*.h5'); 
 for ii = length(h5_dir):-1:1
-    if  contains(h5_dir(ii).name, this_sess(1:6)) && contains(h5_dir(ii).name,this_sess(8:12))
-        keep_idx(ii) = true; 
+    
+    if contains(this_sess, {'535', '537', '540'})
+        if  contains(h5_dir(ii).name, this_sess(1:3)) && contains(h5_dir(ii).name,this_sess(5:8))
+            keep_idx(ii) = true;
+        else
+            keep_idx(ii) = false;
+        end
+        
     else
-        keep_idx(ii) = false;
+        if  contains(h5_dir(ii).name, this_sess(1:6)) && contains(h5_dir(ii).name,this_sess(8:12))
+            keep_idx(ii) = true;
+        else
+            keep_idx(ii) = false;
+        end
     end
 
 end
@@ -159,8 +169,6 @@ t_h5_dir = dir('tuning_*.h5');
 
 
 PCs_properties = MS_h5_to_stuct(t_h5_dir(h5_idx).name); 
-
-
 
 
 % load([info.subject '_' info.session '_PCs.mat'])
@@ -326,11 +334,11 @@ end
 
 
 %% count the instances of each cell per reactivation
-for iB = length(bin_s):-1:1
-    
-    
-    REM_pre_part = MS_Asmbly_participation(REM_pre_proj{iB},P_temp{iB}, REM_pre_data{iB},REM_pre_stats{iB}.R_thresh);
-end
+% for iB = length(bin_s):-1:1
+%     
+%     
+%     REM_pre_part = MS_Asmbly_participation(REM_pre_proj{iB},P_temp{iB}, REM_pre_data{iB},REM_pre_stats{iB}.R_thresh);
+% end
 
 
 
