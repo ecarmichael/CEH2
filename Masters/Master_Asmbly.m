@@ -189,10 +189,10 @@ for ii = 1:length(j20_list)
         %             J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
         %         JP_out{ii} = Pipeline_Asmbly_place(j20_list(ii).name,bin_size, move_thresh, method);
         
-        J_out{ii} = Pipeline_Asmbly_top_cells(j20_list(ii).name,bin_size, move_thresh, method);
-        J_out{ii} = Pipeline_Asmbly_append_preA(J_out{ii});
+%         J_out{ii} = Pipeline_Asmbly_top_cells(j20_list(ii).name,bin_size, move_thresh, method);
+%         J_out{ii} = Pipeline_Asmbly_append_preA(J_out{ii});
         
-        Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method filesep 'best']);
+%         Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method filesep 'best']);
         
         
         % Summary plots
