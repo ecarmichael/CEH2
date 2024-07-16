@@ -149,3 +149,91 @@ for iS = 1:length(f_list)
         
         clear all_* ms behav info
 end
+
+
+%% copy and format the data in -v7 for pycaan Seq
+
+data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eva\RAW Calcium\Inter' ;
+behav_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eva\final_analysis';
+inter_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV\data';
+% oasis_dir = 'C:\Users\ecarm\Documents\GitHub\OASIS_matlab';
+% 
+% cd(oasis_dir)
+% addpath(genpath(oasis_dir));
+% oasis_setup
+
+sub_list = {'535', '537', '540'};
+warning off; 
+for iS = 1:length(sub_list)
+    cd(data_dir);
+    
+    d = dir(['*' sub_list{iS} '*']);
+    
+    
+    cd([data_dir filesep  d.name])
+    
+    d_list = dir('*day*');
+    
+    for iD = 1:length(d_list)
+        cd([d_list(iD).folder filesep  d_list(iD).name])
+        
+          info = [];
+        info.subject = sub_list{iS};
+        info.session = ['LTD' d_list(iD).name(end)];
+        fprintf('%s   %s ...Loading...', info.subject, info.session)
+
+        load('ms_trk.mat');
+        ms = ms_trk; clear ms_trk;
+        
+        ms.time = ms.time - ms.time(1); 
+       
+        ms.RawTraces = ms.RawTraces - mean(ms.RawTraces);
+        
+%         if ~isfield(ms, 'deconv') % get the deconvolved trace if not already present.
+%             ms = MS_append_deconv(ms, 1);
+%         end
+            
+        load('all_binary_pre_REM.mat')
+        load('all_binary_post_REM.mat')
+        
+                
+        load('all_binary_pre_SW.mat')
+        load('all_binary_post_SW.mat')
+        
+
+        
+        load('all_seg_idx.mat');
+        
+      
+        % move over to the behaviour folder.
+        cd([behav_dir filesep sub_list{iS} filesep d_list(iD).name])
+        
+        load('behav.mat');
+        
+        nan_idx = (behav.position(:,1) < 0 ) | (behav.position(:,1) > 100);
+        behav.position(nan_idx,1) = NaN; 
+        behav.position(:,1) = fillmissing(behav.position(:,1), 'nearest');
+        
+        nan_idx = (behav.position(:,2) < 0 );
+        behav.position(nan_idx,2) = NaN; 
+        behav.position(:,2) = fillmissing(behav.position(:,2), 'nearest');
+
+%         
+%         % save each to the new location using the -v7 format. 
+        fprintf('Saving ...\n')
+        
+        if ~exist([inter_dir filesep info.subject filesep info.session], 'dir')
+            mkdir([inter_dir filesep info.subject filesep info.session]); 
+        end
+pause(1)
+        save([inter_dir filesep info.subject filesep info.session filesep 'ms.mat'], 'ms', '-v7')
+        pause(1)
+        save([inter_dir filesep info.subject filesep info.session filesep 'behav.mat'], 'behav', '-v7')
+        save([inter_dir filesep info.subject filesep info.session filesep 'all_binary_pre_REM.mat'], 'all_binary_pre_REM', '-v7')
+        save([inter_dir filesep info.subject filesep info.session filesep 'all_binary_post_REM.mat'], 'all_binary_post_REM', '-v7')
+        save([inter_dir filesep info.subject filesep info.session filesep 'all_binary_pre_SW.mat'], 'all_binary_pre_SW', '-v7')
+        save([inter_dir filesep info.subject filesep info.session filesep 'all_binary_post_SW.mat'], 'all_binary_post_SW', '-v7')
+
+    end
+end
+warning on
