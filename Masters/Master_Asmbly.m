@@ -195,7 +195,7 @@ for ii = 1:length(j20_list)
         
 %         Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method filesep 'best']);
         
-        J_out{ii} = Pipeline_Asmbly_append_SWD(J_out{ii}, data_dir)
+%         J_out{ii} = Pipeline_Asmbly_append_SWD(J_out{ii}, data_dir);
         
         % Summary plots
 %         Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method]);
