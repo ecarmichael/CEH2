@@ -189,7 +189,7 @@ for ii = 1:length(j20_list)
         %             J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
         %         JP_out{ii} = Pipeline_Asmbly_place(j20_list(ii).name,bin_size, move_thresh, method);
         
-%         J_out{ii} = Pipeline_Asmbly_top_cells(j20_list(ii).name,bin_size, move_thresh, method);
+        J_out{ii} = Pipeline_Asmbly_top_cells(j20_list(ii).name,bin_size, move_thresh, method);
 %         J_out{ii} = Pipeline_Asmbly_append_preA(J_out{ii});
 %         J_out{ii} = Pipeline_Asmbly_append_SWS(j20_list(ii).name, J_out{ii});
         
@@ -250,17 +250,17 @@ for ii = 1:length(f_list)
     %         A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
     %     P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
     %
-    B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
+    %B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
     %
     %         B_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, B_out{ii});
     %
-    B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii});
+    %B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii});
     %
     % % Summary plots
     % %                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
     % %     Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
     %
-    Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
+    %Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
     %
     % Pipline_Asmbly_plot_SWS(B_out{ii}, [fig_dir filesep method filesep 'best_SWS']);
     
@@ -289,7 +289,7 @@ for ii = 1:length(f_list)
     end
     
     if anx_idx(ii)== 0 && novel_idx(ii)==1
-        B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii});
+%         B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii});
         
     end
     
@@ -691,7 +691,7 @@ for iB = length(bin_size):-1:1
         J_Pre_r(iA,iB) = mean(J_out{iA}{iB}.REM_Pre_stats.rate(J_out{iA}{iB}.REM_Pre_stats.p_val <0.05));
         
         % post
-        J_Post_a(iA,iB) = sum(J_out{iA}{iB}.REM_Post_stats.p_val <0.05);
+        J_Post_n(iA,iB) = sum(J_out{iA}{iB}.REM_Post_stats.p_val <0.05);
         
         J_Post_r(iA,iB) = mean(J_out{iA}{iB}.REM_Post_stats.rate(J_out{iA}{iB}.REM_Post_stats.p_val <0.05));
         
@@ -732,13 +732,13 @@ end
 
 
 fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
-    'J20 overall', nanmean(J_wake_n(:, iB)), std(J_wake_n(:,iB)), nanmean(J_Pre_n(:, iB)), std(J_Pre_n(:,iB)), nanmean(J_Post_a(:, iB)), std(J_Post_a(:,iB)))
+    'J20 overall', nanmean(J_wake_n(:, iB)), std(J_wake_n(:,iB)), nanmean(J_Pre_n(:, iB)), std(J_Pre_n(:,iB)), nanmean(J_Post_n(:, iB)), std(J_Post_n(:,iB)))
 
 fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
-    'J20 Novel', nanmean(J_wake_n(J20_novel_idx, iB)), std(J_wake_n(J20_novel_idx,iB)), nanmean(J_Pre_n(J20_novel_idx, iB)), std(J_Pre_n(J20_novel_idx,iB)), nanmean(J_Post_a(J20_novel_idx, iB)), std(J_Post_a(J20_novel_idx,iB)))
+    'J20 Novel', nanmean(J_wake_n(J20_novel_idx, iB)), std(J_wake_n(J20_novel_idx,iB)), nanmean(J_Pre_n(J20_novel_idx, iB)), std(J_Pre_n(J20_novel_idx,iB)), nanmean(J_Post_n(J20_novel_idx, iB)), std(J_Post_n(J20_novel_idx,iB)))
 
 fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
-    'J20 D5', nanmean(J_wake_n(D5_idx, iB)), std(J_wake_n(D5_idx,iB)), nanmean(J_Pre_n(D5_idx, iB)), std(J_Pre_n(D5_idx,iB)), nanmean(J_Post_a(D5_idx, iB)), std(J_Post_a(D5_idx,iB)))
+    'J20 D5', nanmean(J_wake_n(D5_idx, iB)), std(J_wake_n(D5_idx,iB)), nanmean(J_Pre_n(D5_idx, iB)), std(J_Pre_n(D5_idx,iB)), nanmean(J_Post_n(D5_idx, iB)), std(J_Post_n(D5_idx,iB)))
 
 %% plot the J20 vs control novel VS familiar
 % A_out = A_all(1:11);
@@ -825,6 +825,8 @@ ylim(y_lim);
 title('Control')
 
 
+
+
 % same but J20
 subplot(2,4,4)
 data_a = J_ReAct(J_n_idx, iB);
@@ -842,6 +844,24 @@ eb.LineStyle = 'none';
 eb.Color = 'k';
 set(gca,'xtick', 1:3, 'XTickLabel', {'LT1', 'LT3', 'LT5'}, 'XTickLabelRotation', 45)
 ylim(y_lim);
+title('J20')
+
+% same but J20
+subplot(2,4,8)
+data_a = J_Post_n(J_n_idx, iB);
+data_b = J_Post_n(D3_idx, iB);
+data_c = J_Post_n(D5_idx, iB);
+J_cord = summer(3);
+
+hb = bar([nanmean(data_a), nanmean(data_b),nanmean(data_c)]', 'FaceColor', J_cord(1,:), 'EdgeColor', 'k');
+hb.FaceColor = 'flat';
+hb.CData(2,:) = J_cord(2,:);
+hb.CData(3,:) = J_cord(3,:);
+hold on
+eb = errorbar([nanmean(data_a), nanmean(data_b), nanmean(data_c)], [MS_SEM(data_a) ,MS_SEM(data_b), MS_SEM(data_c)]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca,'xtick', 1:3, 'XTickLabel', {'LT1', 'LT3', 'LT5'}, 'XTickLabelRotation', 45)
 title('J20')
 
 
@@ -2144,24 +2164,124 @@ for ii = length(J_out):-1:1
     
     % load the LFP
     load([data_dir filesep J_out{ii}{1}.info.subject '_' J_out{ii}{1}.info.session '_LFP.mat'], 'this_LFP')
-    pre_evts = []; pre_csc.tvec = []; pre_csc.data = [];
-    post_evts = [];  post_csc.tvec = []; post_csc.data = []; 
+    pre_evts = []; pre_csc.tvec = [0]; pre_csc.data = []; pre_idx = []; 
+    pre_ca.time = 0; pre_ca.data = []; 
+    post_evts = [];  post_csc.tvec = [0]; post_csc.data = []; post_idx = []; 
+    post_ca.time = 0; post_ca.data = []; 
     for iR  = 1:length(this_LFP.SWD)
-        if strcmpi(this_LFP.pre_post{iR}, 'Pre')
-            pre_evts = [pre_evts, this_LFP.evts{iR}.t{end}]; 
-            pre_csc.tvec = [pre_csc.tvec; this_LFP.LFP{iR}.tvec]; 
+        if strcmpi(this_LFP.pre_post{iR}, 'Pre') && strcmpi(this_LFP.hypno{iR}, 'REM')
+            pre_evts = [pre_evts, (unique(this_LFP.evts{iR}.t{end}) - this_LFP.LFP{iR}.tvec(1))+pre_csc.tvec(end) + mode(diff(this_LFP.LFP{iR}.tvec))]; 
+            pre_csc.tvec = [pre_csc.tvec; (this_LFP.LFP{iR}.tvec - this_LFP.LFP{iR}.tvec(1))+pre_csc.tvec(end) + mode(diff(this_LFP.LFP{iR}.tvec))]; 
             pre_csc.data = [pre_csc.data, this_LFP.LFP{iR}.data(2,:)]; 
-        elseif strcmpi(this_LFP.pre_post{iR}, 'Post')
-            post_evts = [post_evts, this_LFP.evts{iR}.t{end}]; 
-            post_csc.tvec = [post_csc.tvec; this_LFP.LFP{iR}.tvec]; 
+            
+            pre_idx = [pre_idx, ones(1, length(this_LFP.evts{iR}.t{end}))*iR]; 
+            pre_ca.time = [pre_ca.time, (this_LFP.time{iR}' - this_LFP.time{iR}(1)) + pre_ca.time(end) + mode(diff(this_LFP.time{iR})) ]; 
+            pre_ca.data = [pre_ca.data; this_LFP.binary{iR}]; 
+        elseif strcmpi(this_LFP.pre_post{iR}, 'Post') && strcmpi(this_LFP.hypno{iR}, 'REM')
+            post_evts = [post_evts, (unique(this_LFP.evts{iR}.t{end}) - this_LFP.LFP{iR}.tvec(1))+post_csc.tvec(end)]; 
+            post_csc.tvec = [post_csc.tvec; (this_LFP.LFP{iR}.tvec - this_LFP.LFP{iR}.tvec(1))+pre_csc.tvec(end)]; 
             post_csc.data = [post_csc.data, this_LFP.LFP{iR}.data(2,:)]; 
+            
+            post_idx = [post_idx, ones(1, length(this_LFP.evts{iR}.t{end}))*iR]; 
+            post_ca.time = [post_ca.time, (this_LFP.time{iR}' - this_LFP.time{iR}(1)) + post_ca.time(end) ]; 
+            post_ca.data = [post_ca.data; this_LFP.binary{iR}]; 
         end
     end
     
-    pre_bin = J_out{ii}{1}.REM_pre_in; 
+    pre_csc.tvec = pre_csc.tvec(2:end); 
+    post_csc.tvec = post_csc.tvec(2:end); 
 
+    pre_ca.time = pre_ca.time(2:end); 
+    post_ca.time = post_ca.time(2:end); 
+    
+    pre_bin = J_out{ii}{1}.REM_pre_in; 
+    
+    pre_csc_a.data = interp1( pre_csc.tvec,pre_csc.data, pre_ca.time); 
+    pre_csc_a.tvec= interp1( pre_csc.tvec,pre_csc.tvec, pre_ca.time); 
+
+    this_pre_rem_t = 0:1/33:(length(J_out{ii}{1}.REM_pre_in)/33);
+    this_pre_rem_t = this_pre_rem_t(1:end-1);
+    
+    this_post_rem_t = 0:1/33:(length(J_out{ii}{1}.REM_post_in)/33);
+    this_post_rem_t = this_post_rem_t(1:end-1);
+    
+%      
+%     for aa = 1:size(J_out{ii}{1}.REM_Pre_proj,1)
+%         this_R_t  =  J_out{ii}{1}.REM_Pre_tvec(find(J_out{ii}{1}.REM_Pre_proj(aa, :) > J_out{ii}{1}.REM_Pre_stats.R_thresh));
+%         pre_React  = [pre_React, (nearest_idx3(this_R_t, this_pre_rem_t))'];
+%     
+%     
+    % check figure
+    figure(8819)
+    clf       
+    subplot(3,1,1)
+    hold on
+%     imagesc(J_out{ii}{1}.REM_Pre_tvec,1:256,J_out{ii}{1}.REM_pre_in')
+    imagesc(pre_ca.time/1000,1:size(pre_ca.data,2),pre_ca.data')
+    plot(pre_ca.time/1000, (sum(pre_ca.data')/size(pre_ca.data,2))*100, 'r')
+    xlim([0 pre_ca.time(end)/1000])
+    
+    subplot(3,1,2)
+    plot(J_out{ii}{1}.REM_Pre_tvec, J_out{ii}{1}.REM_Pre_proj)
+    
+    
+    
+    plot(pre_csc.tvec, (pre_csc.data*5000)+256, 'k')
+        xlim([0 pre_csc.tvec(end)])
+
+    subplot(2,1,2)
+        hold on
+    imagesc(this_post_rem_t,1:256,J_out{ii}{1}.REM_post_in')
+    plot((1:length(post_csc.data))*mode(diff(post_csc.tvec)), (post_csc.data*5000)+256, 'k')
 end
 
+%%
+for ii = length(J_out):-1:1
+        
+    fname = ['assembly_' J_out{ii}{1}.info.session '_' J_out{ii}{1}.info.subject '.h5'];
+    this_h5 = MS_h5_to_stuct(fname); 
+    
+    
+    % load the LFP
+    load([data_dir filesep J_out{ii}{1}.info.subject '_' J_out{ii}{1}.info.session '_LFP.mat'], 'this_LFP')
+    pre_evts = []; post_evts = []; pre_n_React = []; post_n_React = []; 
+    for iR  = 1:length(this_LFP.SWD)
+        if strcmpi(this_LFP.pre_post{iR}, 'Pre') && strcmpi(this_LFP.hypno{iR}, 'REM')
+            pre_evts(end+1) = length(this_LFP.SWD{iR}.tstart); 
+        elseif strcmpi(this_LFP.pre_post{iR}, 'Post') && strcmpi(this_LFP.hypno{iR}, 'REM')
+            post_evts(end+1) = length(this_LFP.SWD{iR}.tstart); 
+        end
+    end
+
+    
+    for aa = 1:size(J_out{ii}{1}.REM_Pre_proj,1)
+        this_R_t  =  find(J_out{ii}{1}.REM_Pre_proj(aa, :) > J_out{ii}{1}.REM_Pre_stats.R_thresh);
+        
+    end
+    
+    % check figure
+    figure(8819)
+    clf       
+    subplot(3,1,1)
+    hold on
+%     imagesc(J_out{ii}{1}.REM_Pre_tvec,1:256,J_out{ii}{1}.REM_pre_in')
+    imagesc(pre_ca.time/1000,1:size(pre_ca.data,2),pre_ca.data')
+    plot(pre_ca.time/1000, (sum(pre_ca.data')/size(pre_ca.data,2))*100, 'r')
+    xlim([0 pre_ca.time(end)/1000])
+    
+    subplot(3,1,2)
+    plot(J_out{ii}{1}.REM_Pre_tvec, J_out{ii}{1}.REM_Pre_proj)
+    
+    
+    
+    plot(pre_csc.tvec, (pre_csc.data*5000)+256, 'k')
+        xlim([0 pre_csc.tvec(end)])
+
+    subplot(2,1,2)
+        hold on
+    imagesc(this_post_rem_t,1:256,J_out{ii}{1}.REM_post_in')
+    plot((1:length(post_csc.data))*mode(diff(post_csc.tvec)), (post_csc.data*5000)+256, 'k')
+end
 %% ctrl j20 comp
 
 % alt

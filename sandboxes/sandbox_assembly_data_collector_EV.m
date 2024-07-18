@@ -290,6 +290,8 @@ for iS = 1:length(sub_list)
        this_LFP.evts = ms_seg_resize.NLX_evt;
        this_LFP.pre_post = ms_seg_resize.pre_post;
        this_LFP.hypno = ms_seg_resize.hypno_label;
+       [~, this_LFP.binary] = MS_append_filt_binary(ms_seg_resize); 
+       this_LFP.time = ms_seg_resize.time; 
         
         if isfield(ms_seg_resize, 'SWD_evts')
         

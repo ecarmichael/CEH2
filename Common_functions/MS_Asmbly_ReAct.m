@@ -20,7 +20,7 @@ ms_fs = cfg.ms_fs;
     
 end
 
-%% coner the data into binned data
+%% convert the data into binned data
 
 this_time =  0:1/ms_fs:(length(data_in)/ms_fs);
 this_time = this_time(1:end-1);
@@ -33,7 +33,7 @@ data_h= [];
 for ii = size(data_in,2):-1:1
     
 
-        this_cell = this_time(find(data_in(:,ii)));
+    this_cell = this_time(find(data_in(:,ii)));
         
     spk_count = histc(this_cell,tbin_edges); % get spike counts for each bin
     spk_count = spk_count(1:end-1); % ignore spikes falling exactly on edge of last bin.
