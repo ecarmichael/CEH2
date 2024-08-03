@@ -1,13 +1,19 @@
 % % sandbox_WM_split
 
-
+if ispc
 cd('C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\PoxR1\WM');
+
+elseif ismac
+    cd('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/WM');
+end
+
+
 
 
 POX_tbl = readtable("POX_WM - Sheet1.csv");
 
 M_idx = find(contains(POX_tbl.ID, 'Pox'));
-Days = POX_tbl.Properties.VariableNames(2:end);
+Days = POX_tbl.Properties.VariableNames(2:end-2);
 
 S_loc = {'N', 'E', 'S', 'W'};
 Fs = 30;
@@ -46,7 +52,7 @@ figure(101)
 clf
 for ii = 1:length(sub)
     %
-    for iD = 1:2; %sess
+    for iD = 1:
         %
         
         %         iD = 4;
