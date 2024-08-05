@@ -163,24 +163,46 @@ data_dir = ('C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\A
 fig_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Assembly_EV\checks';
 % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
 cd(data_dir);
-j20_list = dir('*data*');
+j20_list = dir('*data.mat*');
+keep_idx = []; 
+for ii = length(j20_list):-1:1
+   if contains(j20_list(ii).name, 'LTD3')
+       keep_idx(ii) = 0; 
+   else
+       keep_idx(ii) = 1; 
+   end
+    
+end
+
+j20_list(~keep_idx) = [];  
 
 method = 'binary';
 
 J_out = []; JP_out = [];
 J20_session = []; J20_novel_idx = []; D3_idx = []; D5_idx = [];
 for ii = 1:length(j20_list)
+    
+    
     J20_session{ii} = j20_list(ii).name;
     cd(data_dir)
-    %
-    %         J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
-    %     JP_out{ii} = Pipeline_Asmbly_place(j20_list(ii).name,bin_size, move_thresh, method);
-    %
-    %     % Summary plots
-    %         Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method]);
-    %         close all
-    %     Pipline_Asmbly_plot(JP_out{ii}, [fig_dir filesep method filesep 'place']);
-    %     close all
+        
+        %             J_out{ii} = Pipeline_Asmbly(j20_list(ii).name,bin_size, move_thresh, method);
+        %         JP_out{ii} = Pipeline_Asmbly_place(j20_list(ii).name,bin_size, move_thresh, method);
+        
+        J_out{ii} = Pipeline_Asmbly_top_cells(j20_list(ii).name,bin_size, move_thresh, method);
+%         J_out{ii} = Pipeline_Asmbly_append_preA(J_out{ii});
+%         J_out{ii} = Pipeline_Asmbly_append_SWS(j20_list(ii).name, J_out{ii});
+        
+%         Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method filesep 'best']);
+        
+%         J_out{ii} = Pipeline_Asmbly_append_SWD(J_out{ii}, data_dir);
+        
+        % Summary plots
+%         Pipline_Asmbly_plot(J_out{ii}, [fig_dir filesep method]);
+        close all
+
+        % Pipline_Asmbly_plot(JP_out{ii}, [fig_dir filesep method filesep 'place']);
+    % close all
     
     if ~isempty(strfind(j20_list(ii).name, 'D1')) %|| ~isempty(strfind(f_list(ii).name, 'HATDS'))
         J20_novel_idx(ii) = 1;
@@ -225,23 +247,23 @@ method = 'binary';
 for ii = 1:length(f_list)
     session{ii} = f_list(ii).name;
     % compute assemblies and related ReActs
-%         A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
-%     P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
-    % 
-            B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
-    % 
+    %         A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
+    %     P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
+    %
+    %B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
+    %
     %         B_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, B_out{ii});
-    % 
-    %         B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii}); 
-    % 
+    %
+    %B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii});
+    %
     % % Summary plots
     % %                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
     % %     Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
-    % 
-    Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
-    % 
+    %
+    %Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
+    %
     % Pipline_Asmbly_plot_SWS(B_out{ii}, [fig_dir filesep method filesep 'best_SWS']);
-
+    
     
     close all
     
@@ -253,7 +275,7 @@ for ii = 1:length(f_list)
     
     if ~isempty(strfind(f_list(ii).name, 'D1')) %|| ~isempty(strfind(f_list(ii).name, 'HATDS'))
         novel_idx(ii) = 1;
-
+        
     end
     
     if ~isempty(strfind(f_list(ii).name, 'D5'))
@@ -265,10 +287,10 @@ for ii = 1:length(f_list)
     else
         anx_idx(ii) = 0;
     end
-   
+    
     if anx_idx(ii)== 0 && novel_idx(ii)==1
-        B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii});
-
+%         B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii});
+        
     end
     
 end
@@ -288,7 +310,7 @@ H5_idx = ~novel_idx & anx_idx & ~HS_idx;
 % %     save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
 % % end
 % % if ~isempty(P_out)
-    % save([main_dir  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
+% save([main_dir  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
 % % end
 %% collect the data
 
@@ -669,7 +691,7 @@ for iB = length(bin_size):-1:1
         J_Pre_r(iA,iB) = mean(J_out{iA}{iB}.REM_Pre_stats.rate(J_out{iA}{iB}.REM_Pre_stats.p_val <0.05));
         
         % post
-        J_Post_a(iA,iB) = sum(J_out{iA}{iB}.REM_Post_stats.p_val <0.05);
+        J_Post_n(iA,iB) = sum(J_out{iA}{iB}.REM_Post_stats.p_val <0.05);
         
         J_Post_r(iA,iB) = mean(J_out{iA}{iB}.REM_Post_stats.rate(J_out{iA}{iB}.REM_Post_stats.p_val <0.05));
         
@@ -710,13 +732,13 @@ end
 
 
 fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
-    'J20 overall', nanmean(J_wake_n(:, iB)), std(J_wake_n(:,iB)), nanmean(J_Pre_n(:, iB)), std(J_Pre_n(:,iB)), nanmean(J_Post_a(:, iB)), std(J_Post_a(:,iB)))
+    'J20 overall', nanmean(J_wake_n(:, iB)), std(J_wake_n(:,iB)), nanmean(J_Pre_n(:, iB)), std(J_Pre_n(:,iB)), nanmean(J_Post_n(:, iB)), std(J_Post_n(:,iB)))
 
 fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
-    'J20 Novel', nanmean(J_wake_n(J20_novel_idx, iB)), std(J_wake_n(J20_novel_idx,iB)), nanmean(J_Pre_n(J20_novel_idx, iB)), std(J_Pre_n(J20_novel_idx,iB)), nanmean(J_Post_a(J20_novel_idx, iB)), std(J_Post_a(J20_novel_idx,iB)))
+    'J20 Novel', nanmean(J_wake_n(J20_novel_idx, iB)), std(J_wake_n(J20_novel_idx,iB)), nanmean(J_Pre_n(J20_novel_idx, iB)), std(J_Pre_n(J20_novel_idx,iB)), nanmean(J_Post_n(J20_novel_idx, iB)), std(J_Post_n(J20_novel_idx,iB)))
 
 fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblies | <strong> %0.02f</strong>\x00B1%0.2f pre | <strong> %0.02f</strong>\x00B1%0.2f post\n',...
-    'J20 D5', nanmean(J_wake_n(D5_idx, iB)), std(J_wake_n(D5_idx,iB)), nanmean(J_Pre_n(D5_idx, iB)), std(J_Pre_n(D5_idx,iB)), nanmean(J_Post_a(D5_idx, iB)), std(J_Post_a(D5_idx,iB)))
+    'J20 D5', nanmean(J_wake_n(D5_idx, iB)), std(J_wake_n(D5_idx,iB)), nanmean(J_Pre_n(D5_idx, iB)), std(J_Pre_n(D5_idx,iB)), nanmean(J_Post_n(D5_idx, iB)), std(J_Post_n(D5_idx,iB)))
 
 %% plot the J20 vs control novel VS familiar
 % A_out = A_all(1:11);
@@ -803,6 +825,8 @@ ylim(y_lim);
 title('Control')
 
 
+
+
 % same but J20
 subplot(2,4,4)
 data_a = J_ReAct(J_n_idx, iB);
@@ -820,6 +844,24 @@ eb.LineStyle = 'none';
 eb.Color = 'k';
 set(gca,'xtick', 1:3, 'XTickLabel', {'LT1', 'LT3', 'LT5'}, 'XTickLabelRotation', 45)
 ylim(y_lim);
+title('J20')
+
+% same but J20
+subplot(2,4,8)
+data_a = J_Post_n(J_n_idx, iB);
+data_b = J_Post_n(D3_idx, iB);
+data_c = J_Post_n(D5_idx, iB);
+J_cord = summer(3);
+
+hb = bar([nanmean(data_a), nanmean(data_b),nanmean(data_c)]', 'FaceColor', J_cord(1,:), 'EdgeColor', 'k');
+hb.FaceColor = 'flat';
+hb.CData(2,:) = J_cord(2,:);
+hb.CData(3,:) = J_cord(3,:);
+hold on
+eb = errorbar([nanmean(data_a), nanmean(data_b), nanmean(data_c)], [MS_SEM(data_a) ,MS_SEM(data_b), MS_SEM(data_c)]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca,'xtick', 1:3, 'XTickLabel', {'LT1', 'LT3', 'LT5'}, 'XTickLabelRotation', 45)
 title('J20')
 
 
@@ -1049,7 +1091,7 @@ data_in = B_out;
 Pre_hist = []; Post_hist = [];
 A_hist_pre = []; A_hist_post = [];
 J20_hist_pre = []; J20_hist_post = [];
-for kk = 1
+for kk = 1:2
     if kk == 1
         data_in = B_out;
     elseif kk == 2
@@ -1065,15 +1107,15 @@ for kk = 1
             this_A = data_in{ii}{iB};
             
             % make arrays to accrue reactivation locations;
-            Pre_ReAct_mat = []; Post_ReAct_mat = []; Wake_ReAct_mat = []; 
+            Pre_ReAct_mat = []; Post_ReAct_mat = []; Wake_ReAct_mat = [];
             
             cent_z = []; peak_z = []; M_cent = [];
             
             Pre_cnt = sum((this_A.REM_Pre_proj > this_A.REM_Pre_stats.R_thresh), 2);
             Post_cnt = sum((this_A.REM_Post_proj > this_A.REM_Post_stats.R_thresh),2);
             
-            Wake_cnt = sum((this_A.P_proj > 10), 2); 
-
+            Wake_cnt = sum((this_A.P_proj > 10), 2);
+            
             
             
             for iA = length(this_A.P_pos):-1:1
@@ -1086,19 +1128,19 @@ for kk = 1
                     Pre_ReAct_mat = [Pre_ReAct_mat repmat(M_cent(iA),1, Pre_cnt(iA))];
                     Post_ReAct_mat = [Post_ReAct_mat repmat(M_cent(iA),1, Post_cnt(iA))];
                     Wake_ReAct_mat = [Wake_ReAct_mat repmat(M_cent(iA),1, Wake_cnt(iA))];
-
+                    
                 end
             end
             all_cnt_prct(ii) = sum(cent_z < -1.96) / length(cent_z);
             Pre_cnt_prct(ii) = sum((cent_z < -1.96) & (this_A.REM_Pre_stats.p_val < 0.05))/sum(cent_z < -1.96);
             Post_cnt_prct(ii) = sum((cent_z < -1.96) & (this_A.REM_Post_stats.p_val < 0.05))/sum(cent_z < -1.96);
             disp(max(Pre_ReAct_mat))
-
+            
             p_bins = 0:5:100;
             [Pre_hist{ii, iB}] = histcounts(Pre_ReAct_mat*2.5, p_bins);
             [Post_hist{ii, iB}] = histcounts(Post_ReAct_mat*2.5, p_bins);
             [Wake_hist{ii, iB}] = histcounts(Wake_ReAct_mat*2.5, p_bins);
-
+            
             if ~isempty(Pre_hist{ii, iB})
                 Pre_hist{ii, iB} = Pre_hist{ii, iB}./((this_A.REM_Pre_tvec(end) - this_A.REM_Pre_tvec(1))/60);
             else
@@ -1114,10 +1156,12 @@ for kk = 1
             if kk == 1
                 A_hist_pre(ii,:) = Pre_hist{ii,iB};
                 A_hist_post(ii,:) = Post_hist{ii,iB};
-                A_hist_wake(ii,:) = Wake_hist{ii, iB}; 
+                A_hist_wake(ii,:) = Wake_hist{ii, iB};
             elseif kk == 2
                 J20_hist_pre(ii,:) = Pre_hist{ii,iB};
                 J20_hist_post(ii,:) = Post_hist{ii,iB};
+                J20_hist_wake(ii,:) = Wake_hist{ii, iB};
+
             end
             
         end
@@ -1137,7 +1181,7 @@ for kk = 1
 end
 
 p_centr = p_bins(1:end-1)+3/2;
-a_ord = MS_linspecer(2); 
+a_ord = MS_linspecer(2);
 
 figure(300)
 clf
@@ -1145,32 +1189,32 @@ subplot(5,1,1)
 hold on
 bar(p_centr, nanmean(A_hist_pre(lt1_idx,:))./max(nanmean(A_hist_pre(lt1_idx,:))), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
 bar(p_centr, nanmean(A_hist_post(lt1_idx,:))./max(nanmean(A_hist_post(lt1_idx,:))),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
-set(gca, 'XTickLabel', [], 'YTick', [0 1]); 
+set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 
 subplot(5,1,2)
 hold on
 bar(p_centr, nanmean(A_hist_pre(lt5_idx,:))./max(nanmean(A_hist_pre(lt5_idx,:))), 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
 bar(p_centr, nanmean(A_hist_post(lt5_idx,:))./max(nanmean(A_hist_post(lt5_idx,:))), 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
-set(gca, 'XTickLabel', [], 'YTick', [0 1]); 
+set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 
 subplot(5,1,3)
 hold on
 bar(p_centr, nanmean(A_hist_pre(H1_idx,:))./max(nanmean(A_hist_pre(H1_idx,:))), 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
 bar(p_centr, nanmean(A_hist_post(H1_idx,:))./max(nanmean(A_hist_post(H1_idx,:))), 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
-set(gca, 'XTickLabel', [], 'YTick', [0 1]); 
+set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 
 
 subplot(5,1,4)
 hold on
 bar(p_centr, nanmean(A_hist_pre(H5_idx,:))./max(nanmean(A_hist_pre(H5_idx,:))), 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
 bar(p_centr, nanmean(A_hist_post(H5_idx,:))./max(nanmean(A_hist_post(H5_idx,:))), 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
-set(gca, 'XTickLabel', [], 'YTick', [0 1]); 
+set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 
 subplot(5,1,5)
 hold on
 stem(p_centr, nanmean(A_hist_pre(HS_idx,:))./max(nanmean(A_hist_pre(HS_idx,:))), 'color', a_ord(2,:));
 stem(p_centr, nanmean(A_hist_post(HS_idx,:))./max(nanmean(A_hist_post(HS_idx,:))), 'color', a_ord(1,:));
-set(gca, 'YTick', [0 1], 'XTick', [0 100]); 
+set(gca, 'YTick', [0 1], 'XTick', [0 100]);
 xlabel('position on track (cm)')
 
 
@@ -1181,7 +1225,7 @@ xlabel('position on track (cm)')
 % hold on
 % area(p_centr, nanmean(J20_hist_pre(J20_novel_idx,:)), 'facecolor', c_ord(3,:), 'FaceAlpha', .6);
 % area(p_centr, nanmean(J20_hist_post(J20_novel_idx,:)), 'facecolor', c_ord(4,:), 'FaceAlpha', .6);
-% 
+%
 % subplot(3,1,2)
 % hold on
 % area(p_centr, nanmean(J20_hist_pre(D3_idx,:)), 'facecolor', c_ord(3,:), 'FaceAlpha', .6);
@@ -1190,8 +1234,8 @@ xlabel('position on track (cm)')
 % hold on
 % area(p_centr, nanmean(J20_hist_pre(D5_idx,:)), 'facecolor', c_ord(3,:), 'FaceAlpha', .6);
 % area(p_centr, nanmean(J20_hist_post(D5_idx,:)), 'facecolor', c_ord(4,:), 'FaceAlpha', .6);
-% 
-% 
+%
+%
 % % bar(nanmean([Post_hist{1,1}; Post_hist{4,1}; Post_hist{7,1}])
 
 
@@ -1216,23 +1260,23 @@ for ii = length(A_out):-1:1
     
     this_post_rem_t = 0:1/33:(length(A_out{ii}{1}.REM_post_in)/33);
     this_post_rem_t = this_post_rem_t(1:end-1);
-
-    pre_React = []; pre_ID = []; pre_sig = []; pre_str = []; 
     
-    post_React = []; post_ID = []; post_sig = []; post_str = []; 
+    pre_React = []; pre_ID = []; pre_sig = []; pre_str = [];
     
-    map_loc = []; wake_rate = []; Asmbly_dir = []; 
-
-    nWake_R = []; 
+    post_React = []; post_ID = []; post_sig = []; post_str = [];
+    
+    map_loc = []; wake_rate = []; Asmbly_dir = [];
+    
+    nWake_R = [];
     
     weights = A_out{ii}{1}.P_temp;
-            
-    A_cell_id = []; 
+    
+    A_cell_id = [];
     
     for aa = 1:size(A_out{ii}{1}.REM_Pre_proj,1)
         this_R_t  =  A_out{ii}{1}.REM_Pre_tvec(find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh));
         pre_React  = [pre_React, (nearest_idx3(this_R_t, this_pre_rem_t))'];
-        pre_str = [pre_str, A_out{ii}{1}.REM_Pre_proj(aa, find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh))]; 
+        pre_str = [pre_str, A_out{ii}{1}.REM_Pre_proj(aa, find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh))];
         pre_ID = [pre_ID repmat(aa,1,length(this_R_t))];
         if A_out{ii}{1}.REM_Pre_stats.p_val(aa) < 0.05
             pre_sig = [pre_sig, ones(1, length(this_R_t))];
@@ -1244,7 +1288,7 @@ for ii = length(A_out):-1:1
         this_R_t  =  A_out{ii}{1}.REM_Post_tvec(find(A_out{ii}{1}.REM_Post_proj(aa, :) > A_out{ii}{1}.REM_Post_stats.R_thresh));
         post_React  = [post_React, (nearest_idx3(this_R_t, this_post_rem_t))'];
         post_str = [post_str, A_out{ii}{1}.REM_Post_proj(aa, find(A_out{ii}{1}.REM_Post_proj(aa, :) > A_out{ii}{1}.REM_Post_stats.R_thresh))];
-
+        
         
         post_ID = [post_ID repmat(aa,1,length(this_R_t))];
         if A_out{ii}{1}.REM_Post_stats.p_val(aa) < 0.05
@@ -1252,34 +1296,34 @@ for ii = length(A_out):-1:1
         else
             post_sig = [post_sig, zeros(1, length(this_R_t))];
         end
-
+        
         % reactivation strength
-        ReAct_post(aa) = mean(A_out{ii}{1}.REM_Post_proj(aa,:)) - mean(A_out{ii}{1}.REM_Pre_proj(aa,:)); 
-
+        ReAct_post(aa) = mean(A_out{ii}{1}.REM_Post_proj(aa,:)) - mean(A_out{ii}{1}.REM_Pre_proj(aa,:));
+        
         % get the mean place field for the assembly
         [~, idx] = max(A_out{ii}{1}.map{aa}.map_mean);
-        map_loc(aa) = A_out{ii}{1}.map{aa}.bins(idx); 
+        map_loc(aa) = A_out{ii}{1}.map{aa}.bins(idx);
         
-        wake_rate(aa) = length(A_out{ii}{1}.P_loc{aa}.loc); 
+        wake_rate(aa) = length(A_out{ii}{1}.P_loc{aa}.loc);
         
-        Asmbly_dir(aa) = mean(A_out{ii}{1}.P_loc{aa}.loc_dir); 
+        Asmbly_dir(aa) = mean(A_out{ii}{1}.P_loc{aa}.loc_dir);
         
         % weights
         
-       A_cell_id(:,aa) = ismember(1:length(A_out{ii}{1}.P_temp),A_out{ii}{1}.P_pos{aa})'; 
-            
-
-       nWake_R(aa) = sum(A_out{ii}{1}.P_proj(aa,:) > 10) ./ (A_out{ii}{1}.wake_tvec(end) - A_out{ii}{1}.wake_tvec(1)); 
-                
+        A_cell_id(:,aa) = ismember(1:length(A_out{ii}{1}.P_temp),A_out{ii}{1}.P_pos{aa})';
+        
+        
+        nWake_R(aa) = sum(A_out{ii}{1}.P_proj(aa,:) > 10) ./ (A_out{ii}{1}.wake_tvec(end) - A_out{ii}{1}.wake_tvec(1));
+        
     end
     
-    ReAct_Str_all_post = mean(ReAct_post);  
-
-    Total_move = nansum(abs(diff(A_out{ii}{1}.behav.position(:,1)))); 
-
-        prct_move = sum(A_out{ii}{1}.move_idx)./length(A_out{ii}{1}.move_idx); 
-
-
+    ReAct_Str_all_post = mean(ReAct_post);
+    
+    Total_move = nansum(abs(diff(A_out{ii}{1}.behav.position(:,1))));
+    
+    prct_move = sum(A_out{ii}{1}.move_idx)./length(A_out{ii}{1}.move_idx);
+    
+    
     REM_Pre_nSigA = sum(A_out{ii}{1}.REM_Pre_stats.p_val <0.05);
     
     REM_Post_nSigA = sum(A_out{ii}{1}.REM_Post_stats.p_val <0.05);
@@ -1287,43 +1331,43 @@ for ii = length(A_out):-1:1
     SWS_Pre_nSigA = sum(A_out{ii}{1}.SWS_Pre_stats.p_val <0.05);
     
     SWS_Post_nSigA = sum(A_out{ii}{1}.SWS_Post_stats.p_val <0.05);
-
-    pREM_map = []; 
+    
+    pREM_map = [];
     for pp = length(A_out{ii}{1}.pREM_Place_map):-1:1
         pREM_map = [pREM_map; A_out{ii}{1}.pREM_Place_map{pp}.map];
     end
     
-    p_wake_react = []; 
+    p_wake_react = [];
     
     % wake assemblies projected from Pre REM data.
-%     for aa = 1:size( A_out{ii}{1}.REM_Wake_proj,1)
-%         this_R_t  =  A_out{ii}{1}.wake_tvec(find(A_out{ii}{1}.REM_Wake_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh));
-%         p_wake_react  = [p_wake_react,this_R_t'];
-%         
-%         pre_str = [pre_str, A_out{ii}{1}.REM_Pre_proj(aa, find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh))];
-%         pre_ID = [pre_ID repmat(aa,1,length(this_R_t))];
-%         if A_out{ii}{1}.REM_Pre_stats.p_val(aa) < 0.05
-%             pre_sig = [pre_sig, ones(1, length(this_R_t))];
-%         else
-%             pre_sig = [pre_sig, zeros(1, length(this_R_t))];
-%         end
-%         
-       
-%         % get the mean place field for the assembly
-%         [~, idx] = max(A_out{ii}{1}.map{aa}.map_mean);
-%         map_loc(aa) = A_out{ii}{1}.map{aa}.bins(idx);
-%         
-%         wake_rate(aa) = length(A_out{ii}{1}.P_loc{aa}.loc);
-%         
-%         Asmbly_dir(aa) = mean(A_out{ii}{1}.P_loc{aa}.loc_dir);
-%         
-%         % weights
-%         
-%         A_cell_id(:,aa) = ismember(1:length(A_out{ii}{1}.P_temp),A_out{ii}{1}.P_pos{aa})';
-%         
-        
-%     end
-
+    %     for aa = 1:size( A_out{ii}{1}.REM_Wake_proj,1)
+    %         this_R_t  =  A_out{ii}{1}.wake_tvec(find(A_out{ii}{1}.REM_Wake_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh));
+    %         p_wake_react  = [p_wake_react,this_R_t'];
+    %
+    %         pre_str = [pre_str, A_out{ii}{1}.REM_Pre_proj(aa, find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh))];
+    %         pre_ID = [pre_ID repmat(aa,1,length(this_R_t))];
+    %         if A_out{ii}{1}.REM_Pre_stats.p_val(aa) < 0.05
+    %             pre_sig = [pre_sig, ones(1, length(this_R_t))];
+    %         else
+    %             pre_sig = [pre_sig, zeros(1, length(this_R_t))];
+    %         end
+    %
+    
+    %         % get the mean place field for the assembly
+    %         [~, idx] = max(A_out{ii}{1}.map{aa}.map_mean);
+    %         map_loc(aa) = A_out{ii}{1}.map{aa}.bins(idx);
+    %
+    %         wake_rate(aa) = length(A_out{ii}{1}.P_loc{aa}.loc);
+    %
+    %         Asmbly_dir(aa) = mean(A_out{ii}{1}.P_loc{aa}.loc_dir);
+    %
+    %         % weights
+    %
+    %         A_cell_id(:,aa) = ismember(1:length(A_out{ii}{1}.P_temp),A_out{ii}{1}.P_pos{aa})';
+    %
+    
+    %     end
+    
     
     
     hdf5write(fname, '/pre_rem_A_react_idx', int16(pre_React),'WriteMode', 'append');
@@ -1331,65 +1375,65 @@ for ii = length(A_out):-1:1
     hdf5write(fname, '/pre_rem_A_sig', int8(pre_sig),'WriteMode', 'append');
     hdf5write(fname, '/pre_rem_A_str', pre_str,'WriteMode', 'append');
     hdf5write(fname, '/pre_rem_A_sig_react', int8(REM_Pre_nSigA),'WriteMode', 'append');
-
+    
     hdf5write(fname, '/post_rem_react_idx',int16(post_React),'WriteMode', 'append');
     hdf5write(fname, '/post_rem_A_ID', int8(post_ID),'WriteMode', 'append');
     hdf5write(fname, '/post_rem_A_sig', int8(post_sig),'WriteMode', 'append');
     hdf5write(fname, '/post_rem_A_str', post_str,'WriteMode', 'append');
     hdf5write(fname, '/post_rem_A_sig_react', int8(REM_Post_nSigA),'WriteMode', 'append');
-
-
-        hdf5write(fname, '/ReAct_Str_all_post', (ReAct_Str_all_post),'WriteMode', 'append');
-
-        hdf5write(fname, '/REM_pre_rThresh', A_out{ii}{1}.REM_Pre_stats.R_thresh,'WriteMode', 'append');
-        hdf5write(fname, '/REM_post_rThresh', A_out{ii}{1}.REM_Post_stats.R_thresh,'WriteMode', 'append');
-
-        hdf5write(fname, '/nWake_R', mean(nWake_R),'WriteMode', 'append');
-
-            hdf5write(fname, '/Total_move', mean(Total_move),'WriteMode', 'append');
-            hdf5write(fname, '/prct_move', mean(prct_move),'WriteMode', 'append');
-
-
+    
+    
+    hdf5write(fname, '/ReAct_Str_all_post', (ReAct_Str_all_post),'WriteMode', 'append');
+    
+    hdf5write(fname, '/REM_pre_rThresh', A_out{ii}{1}.REM_Pre_stats.R_thresh,'WriteMode', 'append');
+    hdf5write(fname, '/REM_post_rThresh', A_out{ii}{1}.REM_Post_stats.R_thresh,'WriteMode', 'append');
+    
+    hdf5write(fname, '/nWake_R', mean(nWake_R),'WriteMode', 'append');
+    
+    hdf5write(fname, '/Total_move', mean(Total_move),'WriteMode', 'append');
+    hdf5write(fname, '/prct_move', mean(prct_move),'WriteMode', 'append');
+    
+    
     % sws
-        hdf5write(fname, '/pre_sws_A_sig_react', int8(SWS_Pre_nSigA),'WriteMode', 'append');
+    hdf5write(fname, '/pre_sws_A_sig_react', int8(SWS_Pre_nSigA),'WriteMode', 'append');
     hdf5write(fname, '/post_sws_A_sig_react', int8(SWS_Post_nSigA),'WriteMode', 'append');
-
-
+    
+    
     hdf5write(fname, '/wake_rate', int8(wake_rate),'WriteMode', 'append');
     hdf5write(fname, '/map_loc', map_loc,'WriteMode', 'append');
     
     hdf5write(fname, '/wake_a_dir', int8(Asmbly_dir),'WriteMode', 'append');
     
-%     if strcmp(A_out{ii}{1}.info.session, 'LTD1')
-        Pre_REM_nA = size(A_out{ii}{1}.REM_temp,2);
-        
-        if Pre_REM_nA == 0
-            Pre_REM_wAct = 0; 
-        else
-            Pre_REM_wAct = sum(A_out{ii}{1}.REM_Wake_proj > 8, 2);
-        end
-        
-        fprintf('%s: Pre-ReM_nA = %0.0f | Pre_REM_wAct = %0.0f\n', fname(1:end-3), Pre_REM_nA, sum(Pre_REM_wAct >0))
-        
-        hdf5write(fname, '/pre_rem_nA', int8(Pre_REM_nA),'WriteMode', 'append');
-        hdf5write(fname, '/pre_rem_nWake_A', int8(Pre_REM_wAct),'WriteMode', 'append');
-%     end
-
+    %     if strcmp(A_out{ii}{1}.info.session, 'LTD1')
+    Pre_REM_nA = size(A_out{ii}{1}.REM_temp,2);
+    
+    if Pre_REM_nA == 0
+        Pre_REM_wAct = 0;
+    else
+        Pre_REM_wAct = sum(A_out{ii}{1}.REM_Wake_proj > 8, 2);
+    end
+    
+    fprintf('%s: Pre-ReM_nA = %0.0f | Pre_REM_wAct = %0.0f\n', fname(1:end-3), Pre_REM_nA, sum(Pre_REM_wAct >0))
+    
+    hdf5write(fname, '/pre_rem_nA', int8(Pre_REM_nA),'WriteMode', 'append');
+    hdf5write(fname, '/pre_rem_nWake_A', int8(Pre_REM_wAct),'WriteMode', 'append');
+    %     end
+    
     %weights
-        hdf5write(fname, '/weights', weights,'WriteMode', 'append');
-        hdf5write(fname, '/A_sig_cells', int8(A_cell_id),'WriteMode', 'append');
-
-
-
-%     
-%     hdf5write(fname, '/wake_proj', (A_out{ii}{1}.P_proj),'WriteMode', 'append');
-%     hdf5write(fname, '/pre_rem_proj', (A_out{ii}{1}.REM_Pre_proj),'WriteMode', 'append');
-%     hdf5write(fname, '/post_rem_proj', (A_out{ii}{1}.REM_Post_proj),'WriteMode', 'append');
-%     
-%     hdf5write(fname, '/ReAct_str', (A_out{ii}{1}.ReAct),'WriteMode', 'append');
-%     
-%     hdf5write(fname, '/pre_rem_Rthresh', (A_out{ii}{1}.REM_Pre_stats.R_thresh),'WriteMode', 'append');
-%     hdf5write(fname, '/post_rem_Rthresh',(A_out{ii}{1}.REM_Post_stats.R_thresh),'WriteMode', 'append');
+    hdf5write(fname, '/weights', weights,'WriteMode', 'append');
+    hdf5write(fname, '/A_sig_cells', int8(A_cell_id),'WriteMode', 'append');
+    
+    
+    
+    %
+    %     hdf5write(fname, '/wake_proj', (A_out{ii}{1}.P_proj),'WriteMode', 'append');
+    %     hdf5write(fname, '/pre_rem_proj', (A_out{ii}{1}.REM_Pre_proj),'WriteMode', 'append');
+    %     hdf5write(fname, '/post_rem_proj', (A_out{ii}{1}.REM_Post_proj),'WriteMode', 'append');
+    %
+    %     hdf5write(fname, '/ReAct_str', (A_out{ii}{1}.ReAct),'WriteMode', 'append');
+    %
+    %     hdf5write(fname, '/pre_rem_Rthresh', (A_out{ii}{1}.REM_Pre_stats.R_thresh),'WriteMode', 'append');
+    %     hdf5write(fname, '/post_rem_Rthresh',(A_out{ii}{1}.REM_Post_stats.R_thresh),'WriteMode', 'append');
     
     
 end
@@ -1401,64 +1445,64 @@ MS_h5_to_stuct(fname)
 %% get some basic stats
 h_idx = dir('assembly*');
 
-conds  = {'LTD1 ', 'LTD5 ', 'HATD1 ', 'HATD5 ', 'HATDSwitch '}; 
-mice = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252', 'pv1254'}; 
-Cond = []; Sub = []; nWake_A = [];nWake_R =[];  nPre_A = []; nPre_Act = []; nPre_SWS_A = []; nPost_SWS_A = []; 
+conds  = {'LTD1 ', 'LTD5 ', 'HATD1 ', 'HATD5 ', 'HATDSwitch '};
+mice = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252', 'pv1254'};
+Cond = []; Sub = []; nWake_A = [];nWake_R =[];  nPre_A = []; nPre_Act = []; nPre_SWS_A = []; nPost_SWS_A = [];
 PreA_str = []; PostA_str= [];
-nPre_sig = []; nPost_sig = []; 
-R_thresh = []; 
+nPre_sig = []; nPost_sig = [];
+R_thresh = [];
 
 for hh = length(h_idx):-1:1
     disp(h_idx(hh).name)
     this_h5 = MS_h5_to_stuct(h_idx(hh).name);
     
-    Cond(hh) = find(contains(conds, this_h5.condition{1,1}(1:end-1))); 
-    Sub(hh) = find(contains(mice, this_h5.mouse{1,1}(1:end-1))); 
+    Cond(hh) = find(contains(conds, this_h5.condition{1,1}(1:end-1)));
+    Sub(hh) = find(contains(mice, this_h5.mouse{1,1}(1:end-1)));
     
-    nWake_A(hh) = size(this_h5.A_sig_cells,2); 
+    nWake_A(hh) = size(this_h5.A_sig_cells,2);
     nWake_R(hh) = mean(this_h5.nWake_R);
     wake_move(hh) = this_h5.Total_move/100;
     wake_prct_move(hh) = this_h5.prct_move*100;
-
-    R_thresh = [R_thresh, this_h5.REM_pre_rThresh , this_h5.REM_post_rThresh]; 
-
-    nPre_A(hh) = this_h5.pre_rem_nA; 
-    nPre_Act(hh) = sum(this_h5.pre_rem_nWake_A > 0); 
-    nPre_A_prct(hh) = (nPre_Act(hh)/nPre_A(hh))*100; 
+    
+    R_thresh = [R_thresh, this_h5.REM_pre_rThresh , this_h5.REM_post_rThresh];
+    
+    nPre_A(hh) = this_h5.pre_rem_nA;
+    nPre_Act(hh) = sum(this_h5.pre_rem_nWake_A > 0);
+    nPre_A_prct(hh) = (nPre_Act(hh)/nPre_A(hh))*100;
     nPre_sig(hh) = this_h5.pre_rem_A_sig_react;
     nPost_sig(hh) = this_h5.post_rem_A_sig_react;
-
-ReAct_str(hh) = this_h5.ReAct_Str_all_post; 
-
-    nPre_SWS_A(hh) = double(this_h5.pre_sws_A_sig_react); 
-    nPost_SWS_A(hh) = double(this_h5.post_sws_A_sig_react); 
-
-
+    
+    ReAct_str(hh) = this_h5.ReAct_Str_all_post;
+    
+    nPre_SWS_A(hh) = double(this_h5.pre_sws_A_sig_react);
+    nPost_SWS_A(hh) = double(this_h5.post_sws_A_sig_react);
+    
+    
 end
 
 % table for stats
 
 tbl = table(Sub', Cond', nWake_A', nPre_A', nPre_Act', nPre_A_prct', nPre_sig', nPost_sig', nPre_SWS_A', nPost_SWS_A', ReAct_str',nWake_R',wake_move', ...
-    'VariableNames',{'Sub', 'Cond', 'nWake_A', 'nPre_A', 'nPre_Act', 'nPre_A_prct', 'nPre_sig', 'nPost_sig', 'nPre_SWS_A', 'nPost_SWS_A', 'ReAct_str', 'nWake_R', 'wake_move'}); 
+    'VariableNames',{'Sub', 'Cond', 'nWake_A', 'nPre_A', 'nPre_Act', 'nPre_A_prct', 'nPre_sig', 'nPost_sig', 'nPre_SWS_A', 'nPost_SWS_A', 'ReAct_str', 'nWake_R', 'wake_move'});
 
 tbl.Sub = nominal(tbl.Sub);
 tbl.Cond = nominal(tbl.Cond);
 
 
 
-%% plot number of significant assemblies 
+%% plot number of significant assemblies
 c_ord = MS_linspecer(14);
-f_ord = [[253, 22, 26];[255, 179, 13]; [132, 147, 35];[67, 127, 151]; [0, 42, 95]]/255; 
+f_ord = [[253, 22, 26];[255, 179, 13]; [132, 147, 35];[67, 127, 151]; [0, 42, 95]]/255;
 
-y_lim = [0 max([nWake_A, nPre_A])]; 
+y_lim = [0 max([nWake_A, nPre_A])];
 
 
 
 %%
 % alt
-f_ord = [[253, 22, 26];[255, 179, 13]; [132, 147, 35];[67, 127, 151]; [0, 42, 95]]/255; 
-f_post = [f_ord ,[.5, .5, .5, .5, .5]']; 
-off_set = 0:2:8; 
+f_ord = [[253, 22, 26];[255, 179, 13]; [132, 147, 35];[67, 127, 151]; [0, 42, 95]]/255;
+f_post = [f_ord ,[.5, .5, .5, .5, .5]'];
+off_set = 0:2:8;
 
 figure(888)
 clf
@@ -1468,21 +1512,21 @@ subplot(2,4,5)
 
 for ii = 1:5
     if ii == 1
-this_idx = lt1_idx;
+        this_idx = lt1_idx;
     elseif ii == 2
-this_idx = lt5_idx;
+        this_idx = lt5_idx;
     elseif ii == 3
-this_idx = H1_idx;
+        this_idx = H1_idx;
     elseif ii == 4
-this_idx = H5_idx;
+        this_idx = H5_idx;
     elseif ii == 5
-this_idx = HS_idx;
+        this_idx = HS_idx;
     end
-
-hold on
-norm_val= max([nanmean(A_hist_pre(this_idx,:)) nanmean(A_hist_post(this_idx,:))]); 
-plot((-nanmean(A_hist_pre(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
-plot((nanmean(A_hist_post(this_idx,:))./norm_val)+off_set(ii), p_centr,  'linewidth', 2, 'Color', [f_ord(ii,:) .5])
+    
+    hold on
+    norm_val= max([nanmean(A_hist_pre(this_idx,:)) nanmean(A_hist_post(this_idx,:))]);
+    plot((-nanmean(A_hist_pre(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
+    plot((nanmean(A_hist_post(this_idx,:))./norm_val)+off_set(ii), p_centr,  'linewidth', 2, 'Color', [f_ord(ii,:) .5])
 end
 set(gca, 'xtick', off_set, 'ytick', [0 100])
 set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
@@ -1496,20 +1540,20 @@ subplot(2,4,1)
 
 for ii = 1:5
     if ii == 1
-this_idx = lt1_idx;
+        this_idx = lt1_idx;
     elseif ii == 2
-this_idx = lt5_idx;
+        this_idx = lt5_idx;
     elseif ii == 3
-this_idx = H1_idx;
+        this_idx = H1_idx;
     elseif ii == 4
-this_idx = H5_idx;
+        this_idx = H5_idx;
     elseif ii == 5
-this_idx = HS_idx;
+        this_idx = HS_idx;
     end
-
-hold on
-norm_val= max([nanmean(A_hist_wake(this_idx,:))]); 
-plot((nanmean(A_hist_wake(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
+    
+    hold on
+    norm_val= max([nanmean(A_hist_wake(this_idx,:))]);
+    plot((nanmean(A_hist_wake(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
 end
 set(gca, 'xtick', off_set, 'ytick', [0 100])
 set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
@@ -1522,7 +1566,7 @@ title('Wake assembly tuning')
 
 
 
-% 
+%
 % figure(99)
 % clf
 set(gcf, 'Units', 'centimeters', 'Position', [0 0  30 20])
@@ -1530,14 +1574,14 @@ subplot(2,4,2)
 % MS_bar_w_err(nWake_A(Cond==1), nWake_A(Cond ==2), c_ord(3,:))
 hb = bar([nanmean(nWake_A(Cond==1)), nanmean(nWake_A(Cond ==2)), nanmean(nWake_A(Cond ==3)), nanmean(nWake_A(Cond ==4)), nanmean(nWake_A(Cond ==5))], 'FaceColor', 'flat');
 for ii = 1:5
-hb.CData(ii,:) = f_ord(ii,:); 
+    hb.CData(ii,:) = f_ord(ii,:);
 end
 hold on
 eb = errorbar([nanmean(nWake_A(Cond==1)), nanmean(nWake_A(Cond ==2)), nanmean(nWake_A(Cond ==3)), nanmean(nWake_A(Cond ==4)), nanmean(nWake_A(Cond ==5))], [MS_SEM(nWake_A(Cond==1)), MS_SEM(nWake_A(Cond ==2)), MS_SEM(nWake_A(Cond ==3)), MS_SEM(nWake_A(Cond ==4)), MS_SEM(nWake_A(Cond ==5))]);
 eb.LineStyle = 'none';
 eb.Color = 'k';
 set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
-ylim(y_lim); 
+ylim(y_lim);
 title('Wake Assemblies in Wake')
 axis('square')
 ylabel('Number of assemblies')
@@ -1546,7 +1590,7 @@ ylabel('Number of assemblies')
 subplot(2,4,6)
 hb = bar([nanmean(nPre_A(Cond==1)), nanmean(nPre_A(Cond ==2)), nanmean(nPre_A(Cond ==3)), nanmean(nPre_A(Cond ==4)), nanmean(nPre_A(Cond ==5))] , 'FaceColor', 'flat');
 for ii = 1:5
-hb.CData(ii,:) = f_ord(ii,:); 
+    hb.CData(ii,:) = f_ord(ii,:);
 end
 hold on
 
@@ -1554,7 +1598,7 @@ eb = errorbar([nanmean(nPre_A(Cond==1)), nanmean(nPre_A(Cond ==2)), nanmean(nPre
 eb.LineStyle = 'none';
 eb.Color = 'k';
 set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
-ylim(y_lim); 
+ylim(y_lim);
 title('Pre Assemblies in Wake')
 axis('square')
 
@@ -1563,30 +1607,30 @@ axis('square')
 % hb = bar([nanmean(nPre_sig(Cond==1)), nanmean(nPre_sig(Cond ==2)), nanmean(nPre_sig(Cond ==3)), nanmean(nPre_sig(Cond ==4)), nanmean(nPre_sig(Cond ==5))], 'FaceColor', 'flat');
 % hold on
 % for ii = 1:5
-% hb.CData(ii,:) = f_ord(ii,:); 
+% hb.CData(ii,:) = f_ord(ii,:);
 % end
 % eb = errorbar([nanmean(nPre_sig(Cond==1)), nanmean(nPre_sig(Cond ==2)), nanmean(nPre_sig(Cond ==3)), nanmean(nPre_sig(Cond ==4)), nanmean(nPre_sig(Cond ==5))], [MS_SEM(nPre_sig(Cond==1)), MS_SEM(nPre_sig(Cond ==2)), MS_SEM(nPre_sig(Cond ==3)), MS_SEM(nPre_sig(Cond ==4)), MS_SEM(nPre_sig(Cond ==5))]);
 % eb.LineStyle = 'none';
 % eb.Color = 'k';
 % set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
-% ylim(y_lim); 
+% ylim(y_lim);
 % title('Wake Assemblies in Pre REM')
 % axis('square')
-% 
-% 
+%
+%
 % subplot(1,4,3)
-% 
+%
 % % MS_bar_w_err(nPost_sig(Cond==1), nPost_sig(Cond ==2), c_ord(2,:))
 % hb = bar([nanmean(nPost_sig(Cond==1)), nanmean(nPost_sig(Cond ==2)), nanmean(nPost_sig(Cond ==3)), nanmean(nPost_sig(Cond ==4)), nanmean(nPost_sig(Cond ==5))], 'FaceColor', 'flat');
 % for ii = 1:5
-% hb.CData(ii,:) = f_ord(ii,:); 
+% hb.CData(ii,:) = f_ord(ii,:);
 % end
 % hold on
 % eb = errorbar([nanmean(nPost_sig(Cond==1)), nanmean(nPost_sig(Cond ==2)), nanmean(nPost_sig(Cond ==3)), nanmean(nPost_sig(Cond ==4)), nanmean(nPost_sig(Cond ==5))], [MS_SEM(nPost_sig(Cond==1)), MS_SEM(nPost_sig(Cond ==2)), MS_SEM(nPost_sig(Cond ==3)), MS_SEM(nPost_sig(Cond ==4)), MS_SEM(nPost_sig(Cond ==5))]);
 % eb.LineStyle = 'none';
 % eb.Color = 'k';
 % set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
-% ylim(y_lim); 
+% ylim(y_lim);
 % axis('square')
 % title('Wake Assemblies in Post REM')
 
@@ -1598,7 +1642,7 @@ post_mean = [nanmean(nPost_sig(Cond==1)), nanmean(nPost_sig(Cond ==2)), nanmean(
 pre_err = [MS_SEM(nPre_sig(Cond==1)), MS_SEM(nPre_sig(Cond ==2)), MS_SEM(nPre_sig(Cond ==3)), MS_SEM(nPre_sig(Cond ==4)), MS_SEM(nPre_sig(Cond ==5))];
 post_err = [MS_SEM(nPost_sig(Cond==1)), MS_SEM(nPost_sig(Cond ==2)), MS_SEM(nPost_sig(Cond ==3)), MS_SEM(nPost_sig(Cond ==4)), MS_SEM(nPost_sig(Cond ==5))];
 
-y = [pre_mean; post_mean]'; 
+y = [pre_mean; post_mean]';
 err = [pre_err; post_err]';
 subplot(2,4,7)
 cla;
@@ -1614,8 +1658,8 @@ errorbar(hb(1).XData + hb(1).XOffset, y(:,1), err(:,1), 'LineStyle', 'none', ...
 pause(.5)
 errorbar(hb(2).XData + hb(2).XOffset, y(:,2), err(:,2), 'LineStyle', 'none', ...
     'Color', 'k');
-    set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
-ylim(y_lim); 
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+ylim(y_lim);
 axis('square')
 title('Wake assemblies in Pre and Post REM')
 
@@ -1626,7 +1670,7 @@ subplot(2,4,8)
 cla
 hb = bar([nanmean(ReAct_str(Cond==1)), nanmean(ReAct_str(Cond ==2)), nanmean(ReAct_str(Cond ==3)), nanmean(ReAct_str(Cond ==4)), nanmean(ReAct_str(Cond ==5))], 'FaceColor', 'flat');
 for ii = 1:5
-hb.CData(ii,:) = f_ord(ii,:); 
+    hb.CData(ii,:) = f_ord(ii,:);
 end
 hold on
 eb = errorbar([nanmean(ReAct_str(Cond==1)), nanmean(ReAct_str(Cond ==2)), nanmean(ReAct_str(Cond ==3)), nanmean(ReAct_str(Cond ==4)), nanmean(ReAct_str(Cond ==5))],...
@@ -1634,7 +1678,7 @@ eb = errorbar([nanmean(ReAct_str(Cond==1)), nanmean(ReAct_str(Cond ==2)), nanmea
 eb.LineStyle = 'none';
 eb.Color = 'k';
 set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
-% ylim(y_lim); 
+% ylim(y_lim);
 axis('square')
 title('Post REM Reactivation Strength')
 
@@ -1648,7 +1692,7 @@ title('Post REM Reactivation Strength')
 % cla
 % hb = bar([nanmean(wake_move(Cond==1)), nanmean(wake_move(Cond ==2)), nanmean(wake_move(Cond ==3)), nanmean(wake_move(Cond ==4)), nanmean(wake_move(Cond ==5))], 'FaceColor', 'flat');
 % for ii = 1:5
-% hb.CData(ii,:) = f_ord(ii,:); 
+% hb.CData(ii,:) = f_ord(ii,:);
 % end
 % hold on
 % eb = errorbar([nanmean(wake_move(Cond==1)), nanmean(wake_move(Cond ==2)), nanmean(wake_move(Cond ==3)), nanmean(wake_move(Cond ==4)), nanmean(wake_move(Cond ==5))],...
@@ -1656,7 +1700,7 @@ title('Post REM Reactivation Strength')
 % eb.LineStyle = 'none';
 % eb.Color = 'k';
 % set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
-% % ylim(y_lim); 
+% % ylim(y_lim);
 % axis('square')
 % title('Total movement (m)')
 
@@ -1664,7 +1708,7 @@ title('Post REM Reactivation Strength')
 % cla
 % hb = bar([nanmean(wake_move(Cond==1)), nanmean(wake_move(Cond ==2)), nanmean(wake_move(Cond ==3)), nanmean(wake_move(Cond ==4)), nanmean(wake_move(Cond ==5))], 'FaceColor', 'flat');
 % for ii = 1:5
-% hb.CData(ii,:) = f_ord(ii,:); 
+% hb.CData(ii,:) = f_ord(ii,:);
 % end
 % hold on
 % eb = errorbar([nanmean(wake_move(Cond==1)), nanmean(wake_move(Cond ==2)), nanmean(wake_move(Cond ==3)), nanmean(wake_move(Cond ==4)), nanmean(wake_move(Cond ==5))],...
@@ -1672,7 +1716,7 @@ title('Post REM Reactivation Strength')
 % eb.LineStyle = 'none';
 % eb.Color = 'k';
 % set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
-% % ylim(y_lim); 
+% % ylim(y_lim);
 % axis('square')
 % title('Total movement (m)')
 
@@ -1681,7 +1725,7 @@ subplot(2,4,4)
 cla
 hb = bar([nanmean(nWake_R(Cond==1)), nanmean(nWake_R(Cond ==2)), nanmean(nWake_R(Cond ==3)), nanmean(nWake_R(Cond ==4)), nanmean(nWake_R(Cond ==5))], 'FaceColor', 'flat');
 for ii = 1:5
-hb.CData(ii,:) = f_ord(ii,:); 
+    hb.CData(ii,:) = f_ord(ii,:);
 end
 hold on
 eb = errorbar([nanmean(nWake_R(Cond==1)), nanmean(nWake_R(Cond ==2)), nanmean(nWake_R(Cond ==3)), nanmean(nWake_R(Cond ==4)), nanmean(nWake_R(Cond ==5))],...
@@ -1689,7 +1733,7 @@ eb = errorbar([nanmean(nWake_R(Cond==1)), nanmean(nWake_R(Cond ==2)), nanmean(nW
 eb.LineStyle = 'none';
 eb.Color = 'k';
 set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
-% ylim(y_lim); 
+% ylim(y_lim);
 axis('square')
 title('wake activation rate (Hz)')
 
@@ -1698,7 +1742,7 @@ subplot(2,4,3)
 cla
 hb = bar([nanmean(wake_prct_move(Cond==1)), nanmean(wake_prct_move(Cond ==2)), nanmean(wake_prct_move(Cond ==3)), nanmean(wake_prct_move(Cond ==4)), nanmean(wake_prct_move(Cond ==5))], 'FaceColor', 'flat');
 for ii = 1:5
-hb.CData(ii,:) = f_ord(ii,:); 
+    hb.CData(ii,:) = f_ord(ii,:);
 end
 hold on
 eb = errorbar([nanmean(wake_prct_move(Cond==1)), nanmean(wake_prct_move(Cond ==2)), nanmean(wake_prct_move(Cond ==3)), nanmean(wake_prct_move(Cond ==4)), nanmean(wake_prct_move(Cond ==5))],...
@@ -1706,14 +1750,14 @@ eb = errorbar([nanmean(wake_prct_move(Cond==1)), nanmean(wake_prct_move(Cond ==2
 eb.LineStyle = 'none';
 eb.Color = 'k';
 set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
-% ylim(y_lim); 
+% ylim(y_lim);
 axis('square')
 title('Percent of time moving')
 
 
-   set(gcf,'Units','Inches');
-            pos = get(gcf,'Position');
-            set(gcf,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
+set(gcf,'Units','Inches');
+pos = get(gcf,'Position');
+set(gcf,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
 
 print(gcf,  [fig_dir filesep   'Stats_summery_' strrep(num2str(B_out{1}{1}.info.bin), '.', 'p') 's_bin.pdf'], '-dpdf','-r0')
 
@@ -1721,12 +1765,12 @@ print(gcf,  [fig_dir filesep   'Stats_summery_' strrep(num2str(B_out{1}{1}.info.
 
 %%
 % try to get the pre and post REM assemblies in one plot
-pre_mean = [nanmean(nWake_R(Cond==1)), nanmean(nPre_sig(Cond ==2)), nanmean(nPre_sig(Cond ==3)), nanmean(nPre_sig(Cond ==4)), nanmean(nPre_sig(Cond ==5))];
+pre_mean = [nanmean(nPre_sig(Cond==1)), nanmean(nPre_sig(Cond ==2)), nanmean(nPre_sig(Cond ==3)), nanmean(nPre_sig(Cond ==4)), nanmean(nPre_sig(Cond ==5))];
 post_mean = [nanmean(nPost_sig(Cond==1)), nanmean(nPost_sig(Cond ==2)), nanmean(nPost_sig(Cond ==3)), nanmean(nPost_sig(Cond ==4)), nanmean(nPost_sig(Cond ==5))];
 pre_err = [MS_SEM(nPre_sig(Cond==1)), MS_SEM(nPre_sig(Cond ==2)), MS_SEM(nPre_sig(Cond ==3)), MS_SEM(nPre_sig(Cond ==4)), MS_SEM(nPre_sig(Cond ==5))];
 post_err = [MS_SEM(nPost_sig(Cond==1)), MS_SEM(nPost_sig(Cond ==2)), MS_SEM(nPost_sig(Cond ==3)), MS_SEM(nPost_sig(Cond ==4)), MS_SEM(nPost_sig(Cond ==5))];
 
-y = [pre_mean; post_mean]'; 
+y = [pre_mean; post_mean]';
 err = [pre_err; post_err]';
 subplot(1,4,3)
 cla;
@@ -1742,8 +1786,8 @@ errorbar(hb(1).XData + hb(1).XOffset, y(:,1), err(:,1), 'LineStyle', 'none', ...
 pause(.5)
 errorbar(hb(2).XData + hb(2).XOffset, y(:,2), err(:,2), 'LineStyle', 'none', ...
     'Color', 'k');
-    set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
-ylim(y_lim); 
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+ylim(y_lim);
 axis('square')
 title('Wake assemblies in Pre and Post REM')
 
@@ -1774,16 +1818,16 @@ fprintf('nWake_R: coef test p = %2.4f\n', coefTest(lme_wake_R))
 
 
 
-%% plot number of significant assemblies 
+%% plot number of significant assemblies
 
-y_lim = [0 100]; 
+y_lim = [0 100];
 
 
 
 subplot(2,4,5)
 MS_bar_w_err(nPre_A(Cond==1)./nWake_A(Cond==1)*100, nPre_A(Cond ==2)./nWake_A(Cond==2)*100, c_ord(12,:))
 set(gca, 'XTickLabel', {'Novel', 'Familiar'})
-ylim(y_lim); 
+ylim(y_lim);
 title('Pre Assemblies in Wake')
 
 ylabel('% of wake assemblies')
@@ -1791,7 +1835,7 @@ ylabel('% of wake assemblies')
 subplot(2,4,7)
 MS_bar_w_err(nWake_A(Cond==1)./nWake_A(Cond==1)*100, nWake_A(Cond ==2)./nWake_A(Cond==2)*100, c_ord(3,:))
 set(gca, 'XTickLabel', {'Novel', 'Familiar'})
-ylim(y_lim); 
+ylim(y_lim);
 
 title('Wake Assemblies in Wake')
 
@@ -1799,14 +1843,14 @@ title('Wake Assemblies in Wake')
 subplot(2,4,6)
 MS_bar_w_err(nPre_sig(Cond==1)./nWake_A(Cond==1)*100, nPre_sig(Cond ==2)./nWake_A(Cond==2)*100, c_ord(6,:))
 set(gca, 'XTickLabel', {'Novel', 'Familiar'})
-ylim(y_lim); 
+ylim(y_lim);
 
 title('Wake Assemblies in Pre REM')
 
 subplot(2,4,8)
 MS_bar_w_err(nPost_sig(Cond==1)./nWake_A(Cond==1)*100, nPost_sig(Cond ==2)./nWake_A(Cond==2)*100, c_ord(2,:))
 set(gca, 'XTickLabel', {'Novel', 'Familiar'})
-ylim(y_lim); 
+ylim(y_lim);
 
 title('Wake Assemblies in Post REM')
 
@@ -1817,9 +1861,9 @@ SetFigure(cfg_set, gcf)
 
 %% SWS
 
-c_idx = (Cond ==2 | Cond == 1); 
+c_idx = (Cond ==2 | Cond == 1);
 
-y_lim = [0 max([nPre_sig(c_idx), nPost_sig(c_idx), nPre_SWS_A(c_idx), nPost_SWS_A(c_idx)])]; 
+y_lim = [0 max([nPre_sig(c_idx), nPost_sig(c_idx), nPre_SWS_A(c_idx), nPost_SWS_A(c_idx)])];
 
 
 figure(99)
@@ -1831,20 +1875,20 @@ subplot(2,2,1)
 % eb = errorbar([nanmean(nPre_A(Cond==1)),nanmean(nPre_sig(Cond==1)), nanmean(nPost_sig(Cond==1)), nanmean(nPre_SWS_A(Cond==1)), nanmean(nPost_SWS_A(Cond==1)); nanmean(nPre_A(Cond==2)),nanmean(nPre_sig(Cond==2)), nanmean(nPost_sig(Cond==2)), nanmean(nPre_SWS_A(Cond==2)), nanmean(nPost_SWS_A(Cond==1))],...
 %     [MS_SEM(nPre_A(Cond==1)),MS_SEM(nPre_sig(Cond==1)), MS_SEM(nPost_sig(Cond==1)), MS_SEM(nPre_SWS_A(Cond==1)), MS_SEM(nPost_SWS_A(Cond==1)); MS_SEM(nPre_A(Cond==2)),MS_SEM(nPre_sig(Cond==2)), MS_SEM(nPost_sig(Cond==2)), MS_SEM(nPre_SWS_A(Cond==2)), MS_SEM(nPost_SWS_A(Cond==1))]);
 % eb.LineStyle = 'none';
-% 
+%
 % set(gca, 'XTickLabel', {'Novel', 'Familiar'})
 % legend({'Pre A in wake', 'Pre REM', 'Post REM', 'Pre SWS', 'Post SWS'}, 'Box', 'off', 'orientation', 'horizontal')
-% hb(1).FaceColor = c_ord(12,:); 
-% hb(2).FaceColor = c_ord(6,:); 
-% hb(3).FaceColor = c_ord(3,:); 
-% hb(4).FaceColor = c_ord(9,:); 
-% hb(5).FaceColor = c_ord(10,:); 
+% hb(1).FaceColor = c_ord(12,:);
+% hb(2).FaceColor = c_ord(6,:);
+% hb(3).FaceColor = c_ord(3,:);
+% hb(4).FaceColor = c_ord(9,:);
+% hb(5).FaceColor = c_ord(10,:);
 
 
 
 MS_bar_w_err(nPre_sig(Cond==1), nPre_sig(Cond ==2), c_ord(12,:))
 set(gca, 'XTickLabel', {'Novel', 'Familiar'})
-ylim(y_lim); 
+ylim(y_lim);
 title('Wake assemblies in Pre REM')
 
 ylabel('Number of assemblies')
@@ -1853,7 +1897,7 @@ subplot(2,2,3)
 
 MS_bar_w_err(nPost_sig(Cond==1), nPost_sig(Cond ==2), c_ord(10,:))
 set(gca, 'XTickLabel', {'Novel', 'Familiar'})
-ylim(y_lim); 
+ylim(y_lim);
 
 title('Wake Assemblies in Post REM')
 
@@ -1862,14 +1906,14 @@ title('Wake Assemblies in Post REM')
 subplot(2,2,2)
 MS_bar_w_err(nPre_SWS_A(Cond==1), nPre_SWS_A(Cond ==2), c_ord(3,:))
 set(gca, 'XTickLabel', {'Novel', 'Familiar'})
-ylim(y_lim); 
+ylim(y_lim);
 
 title('Wake assemblies in Pre SWS')
 
 subplot(2,2,4)
 MS_bar_w_err(nPost_SWS_A(Cond==1), nPost_SWS_A(Cond ==2), c_ord(4,:))
 set(gca, 'XTickLabel', {'Novel', 'Familiar'})
-ylim(y_lim); 
+ylim(y_lim);
 
 title('Wake Assemblies in Post SWS')
 
@@ -1888,13 +1932,13 @@ ylim([1 256]); xlim([0 120])
 axis('square')
 %%
 figure(919)
-w_ord = MS_linspecer(5); 
+w_ord = MS_linspecer(5);
 
 for ii = 1:5
     subplot(1,5,ii)
-cla
+    cla
     % stem(, A_out{ii}{1}.P_temp(:,ii))
-     hold on
+    hold on
     stem(1:256, A_out{ii}{1}.A_temp(:,ii+20), 'color', [.8 .8 .8 .2])
     % stem(A_out{ii}{1}.P_pos{ii}, A_out{ii}{1}.P_temp(A_out{ii}{1}.P_pos{ii},ii), 'color', w_ord(ii,:), 'MarkerFaceColor', w_ord(ii,:))
     view(90,90)
@@ -1905,3 +1949,581 @@ cla
 end
 
 exportgraphics(gcf,[fig_dir filesep  'ica_null.pdf'],'ContentType','vector')
+
+
+
+%% %%%%%%%%%%%%%%%%%%%%%% J20 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+for ii = length(J_out):-1:1
+    
+    
+    
+    fname = ['assembly_' J_out{ii}{1}.info.session '_' J_out{ii}{1}.info.subject '.h5'];
+    
+    if exist(fname, 'file')
+        delete(fname)
+    end
+    
+    hdf5write(fname, '/mouse', string(J_out{ii}{1}.info.subject));
+    hdf5write(fname, '/condition', string(J_out{ii}{1}.info.session),'WriteMode', 'append');
+    
+    this_pre_rem_t = 0:1/33:(length(J_out{ii}{1}.REM_pre_in)/33);
+    this_pre_rem_t = this_pre_rem_t(1:end-1);
+    
+    this_post_rem_t = 0:1/33:(length(J_out{ii}{1}.REM_post_in)/33);
+    this_post_rem_t = this_post_rem_t(1:end-1);
+    
+    pre_React = []; pre_ID = []; pre_sig = []; pre_str = [];
+    
+    post_React = []; post_ID = []; post_sig = []; post_str = [];
+    
+    map_loc = []; wake_rate = []; Asmbly_dir = [];
+    
+    nWake_R = [];
+    
+    weights = J_out{ii}{1}.P_temp;
+    
+    A_cell_id = [];
+    
+    for aa = 1:size(J_out{ii}{1}.REM_Pre_proj,1)
+        this_R_t  =  J_out{ii}{1}.REM_Pre_tvec(find(J_out{ii}{1}.REM_Pre_proj(aa, :) > J_out{ii}{1}.REM_Pre_stats.R_thresh));
+        pre_React  = [pre_React, (nearest_idx3(this_R_t, this_pre_rem_t))'];
+        pre_str = [pre_str, J_out{ii}{1}.REM_Pre_proj(aa, find(J_out{ii}{1}.REM_Pre_proj(aa, :) > J_out{ii}{1}.REM_Pre_stats.R_thresh))];
+        pre_ID = [pre_ID repmat(aa,1,length(this_R_t))];
+        if J_out{ii}{1}.REM_Pre_stats.p_val(aa) < 0.05
+            pre_sig = [pre_sig, ones(1, length(this_R_t))];
+        else
+            pre_sig = [pre_sig, zeros(1, length(this_R_t))];
+        end
+        
+        
+        this_R_t  =  J_out{ii}{1}.REM_Post_tvec(find(J_out{ii}{1}.REM_Post_proj(aa, :) > J_out{ii}{1}.REM_Post_stats.R_thresh));
+        post_React  = [post_React, (nearest_idx3(this_R_t, this_post_rem_t))'];
+        post_str = [post_str, J_out{ii}{1}.REM_Post_proj(aa, find(J_out{ii}{1}.REM_Post_proj(aa, :) > J_out{ii}{1}.REM_Post_stats.R_thresh))];
+        
+        
+        post_ID = [post_ID repmat(aa,1,length(this_R_t))];
+        if J_out{ii}{1}.REM_Post_stats.p_val(aa) < 0.05
+            post_sig = [post_sig, ones(1, length(this_R_t))];
+        else
+            post_sig = [post_sig, zeros(1, length(this_R_t))];
+        end
+        
+        % reactivation strength
+        ReAct_post(aa) = mean(J_out{ii}{1}.REM_Post_proj(aa,:)) - mean(J_out{ii}{1}.REM_Pre_proj(aa,:));
+        
+        % get the mean place field for the assembly
+        [~, idx] = max(J_out{ii}{1}.map{aa}.map_mean);
+        map_loc(aa) = J_out{ii}{1}.map{aa}.bins(idx);
+        
+        wake_rate(aa) = length(J_out{ii}{1}.P_loc{aa}.loc);
+        
+        Asmbly_dir(aa) = mean(J_out{ii}{1}.P_loc{aa}.loc_dir);
+        
+        % weights
+        
+        A_cell_id(:,aa) = ismember(1:length(J_out{ii}{1}.P_temp),J_out{ii}{1}.P_pos{aa})';
+        
+        
+        nWake_R(aa) = sum(J_out{ii}{1}.P_proj(aa,:) > 10) ./ (J_out{ii}{1}.wake_tvec(end) - J_out{ii}{1}.wake_tvec(1));
+        
+    end
+    
+    ReAct_Str_all_post = mean(ReAct_post);
+    
+    Total_move = nansum(abs(diff(J_out{ii}{1}.behav.position(:,1))));
+    
+    prct_move = sum(J_out{ii}{1}.move_idx)./length(J_out{ii}{1}.move_idx);
+    
+    
+    REM_Pre_nSigA = sum(J_out{ii}{1}.REM_Pre_stats.p_val <0.05);
+    
+    REM_Post_nSigA = sum(J_out{ii}{1}.REM_Post_stats.p_val <0.05);
+    
+%     SWS_Pre_nSigA = sum(J_out{ii}{1}.SWS_Pre_stats.p_val <0.05);
+%     
+%     SWS_Post_nSigA = sum(J_out{ii}{1}.SWS_Post_stats.p_val <0.05);
+    
+    pREM_map = [];
+    for pp = length(J_out{ii}{1}.pREM_Place_map):-1:1
+        pREM_map = [pREM_map; J_out{ii}{1}.pREM_Place_map{pp}.map];
+    end
+    
+    p_wake_react = [];
+    
+    % wake assemblies projected from Pre REM data.
+    %     for aa = 1:size( J_out{ii}{1}.REM_Wake_proj,1)
+    %         this_R_t  =  J_out{ii}{1}.wake_tvec(find(J_out{ii}{1}.REM_Wake_proj(aa, :) > J_out{ii}{1}.REM_Pre_stats.R_thresh));
+    %         p_wake_react  = [p_wake_react,this_R_t'];
+    %
+    %         pre_str = [pre_str, J_out{ii}{1}.REM_Pre_proj(aa, find(J_out{ii}{1}.REM_Pre_proj(aa, :) > J_out{ii}{1}.REM_Pre_stats.R_thresh))];
+    %         pre_ID = [pre_ID repmat(aa,1,length(this_R_t))];
+    %         if J_out{ii}{1}.REM_Pre_stats.p_val(aa) < 0.05
+    %             pre_sig = [pre_sig, ones(1, length(this_R_t))];
+    %         else
+    %             pre_sig = [pre_sig, zeros(1, length(this_R_t))];
+    %         end
+    %
+    
+    %         % get the mean place field for the assembly
+    %         [~, idx] = max(J_out{ii}{1}.map{aa}.map_mean);
+    %         map_loc(aa) = J_out{ii}{1}.map{aa}.bins(idx);
+    %
+    %         wake_rate(aa) = length(J_out{ii}{1}.P_loc{aa}.loc);
+    %
+    %         Asmbly_dir(aa) = mean(J_out{ii}{1}.P_loc{aa}.loc_dir);
+    %
+    %         % weights
+    %
+    %         A_cell_id(:,aa) = ismember(1:length(J_out{ii}{1}.P_temp),J_out{ii}{1}.P_pos{aa})';
+    %
+    
+    %     end
+    
+    
+    
+    hdf5write(fname, '/pre_rem_A_react_idx', int16(pre_React),'WriteMode', 'append');
+    hdf5write(fname, '/pre_rem_A_ID', int8(pre_ID),'WriteMode', 'append');
+    hdf5write(fname, '/pre_rem_A_sig', int8(pre_sig),'WriteMode', 'append');
+    hdf5write(fname, '/pre_rem_A_str', pre_str,'WriteMode', 'append');
+    hdf5write(fname, '/pre_rem_A_sig_react', int8(REM_Pre_nSigA),'WriteMode', 'append');
+    
+    hdf5write(fname, '/post_rem_react_idx',int16(post_React),'WriteMode', 'append');
+    hdf5write(fname, '/post_rem_A_ID', int8(post_ID),'WriteMode', 'append');
+    hdf5write(fname, '/post_rem_A_sig', int8(post_sig),'WriteMode', 'append');
+    hdf5write(fname, '/post_rem_A_str', post_str,'WriteMode', 'append');
+    hdf5write(fname, '/post_rem_A_sig_react', int8(REM_Post_nSigA),'WriteMode', 'append');
+    
+    
+    hdf5write(fname, '/ReAct_Str_all_post', (ReAct_Str_all_post),'WriteMode', 'append');
+    
+    hdf5write(fname, '/REM_pre_rThresh', J_out{ii}{1}.REM_Pre_stats.R_thresh,'WriteMode', 'append');
+    hdf5write(fname, '/REM_post_rThresh', J_out{ii}{1}.REM_Post_stats.R_thresh,'WriteMode', 'append');
+    
+    hdf5write(fname, '/nWake_R', mean(nWake_R),'WriteMode', 'append');
+    
+    hdf5write(fname, '/Total_move', mean(Total_move),'WriteMode', 'append');
+    hdf5write(fname, '/prct_move', mean(prct_move),'WriteMode', 'append');
+    
+    
+    % sws
+%     hdf5write(fname, '/pre_sws_A_sig_react', int8(SWS_Pre_nSigA),'WriteMode', 'append');
+%     hdf5write(fname, '/post_sws_A_sig_react', int8(SWS_Post_nSigA),'WriteMode', 'append');
+    
+    
+    hdf5write(fname, '/wake_rate', int8(wake_rate),'WriteMode', 'append');
+    hdf5write(fname, '/map_loc', map_loc,'WriteMode', 'append');
+    
+    hdf5write(fname, '/wake_a_dir', int8(Asmbly_dir),'WriteMode', 'append');
+    
+    %     if strcmp(J_out{ii}{1}.info.session, 'LTD1')
+    Pre_REM_nA = size(J_out{ii}{1}.REM_temp,2);
+    
+    if Pre_REM_nA == 0
+        Pre_REM_wAct = 0;
+    else
+        Pre_REM_wAct = sum(J_out{ii}{1}.REM_Wake_proj > 8, 2);
+    end
+    
+    fprintf('%s: Pre-ReM_nA = %0.0f | Pre_REM_wAct = %0.0f\n', fname(1:end-3), Pre_REM_nA, sum(Pre_REM_wAct >0))
+    
+    hdf5write(fname, '/pre_rem_nA', int8(Pre_REM_nA),'WriteMode', 'append');
+    hdf5write(fname, '/pre_rem_nWake_A', int8(Pre_REM_wAct),'WriteMode', 'append');
+    %     end
+    
+    %weights
+    hdf5write(fname, '/weights', weights,'WriteMode', 'append');
+    hdf5write(fname, '/A_sig_cells', int8(A_cell_id),'WriteMode', 'append');
+    
+    
+    
+    %
+    %     hdf5write(fname, '/wake_proj', (J_out{ii}{1}.P_proj),'WriteMode', 'append');
+    %     hdf5write(fname, '/pre_rem_proj', (J_out{ii}{1}.REM_Pre_proj),'WriteMode', 'append');
+    %     hdf5write(fname, '/post_rem_proj', (J_out{ii}{1}.REM_Post_proj),'WriteMode', 'append');
+    %
+    %     hdf5write(fname, '/ReAct_str', (J_out{ii}{1}.ReAct),'WriteMode', 'append');
+    %
+    %     hdf5write(fname, '/pre_rem_Rthresh', (J_out{ii}{1}.REM_Pre_stats.R_thresh),'WriteMode', 'append');
+    %     hdf5write(fname, '/post_rem_Rthresh',(J_out{ii}{1}.REM_Post_stats.R_thresh),'WriteMode', 'append');
+    
+    
+end
+
+%% check the co-oc with SWD
+
+for ii = length(J_out):-1:1
+    
+    
+    
+    fname = ['assembly_' J_out{ii}{1}.info.session '_' J_out{ii}{1}.info.subject '.h5'];
+    this_h5 = MS_h5_to_stuct(fname); 
+    
+    
+    
+    % load the LFP
+    load([data_dir filesep J_out{ii}{1}.info.subject '_' J_out{ii}{1}.info.session '_LFP.mat'], 'this_LFP')
+    pre_evts = []; pre_csc.tvec = [0]; pre_csc.data = []; pre_idx = []; 
+    pre_ca.time = 0; pre_ca.data = []; 
+    post_evts = [];  post_csc.tvec = [0]; post_csc.data = []; post_idx = []; 
+    post_ca.time = 0; post_ca.data = []; 
+    for iR  = 1:length(this_LFP.SWD)
+        if strcmpi(this_LFP.pre_post{iR}, 'Pre') && strcmpi(this_LFP.hypno{iR}, 'REM')
+            pre_evts = [pre_evts, (unique(this_LFP.evts{iR}.t{end}) - this_LFP.LFP{iR}.tvec(1))+pre_csc.tvec(end) + mode(diff(this_LFP.LFP{iR}.tvec))]; 
+            pre_csc.tvec = [pre_csc.tvec; (this_LFP.LFP{iR}.tvec - this_LFP.LFP{iR}.tvec(1))+pre_csc.tvec(end) + mode(diff(this_LFP.LFP{iR}.tvec))]; 
+            pre_csc.data = [pre_csc.data, this_LFP.LFP{iR}.data(2,:)]; 
+            
+            pre_idx = [pre_idx, ones(1, length(this_LFP.evts{iR}.t{end}))*iR]; 
+            pre_ca.time = [pre_ca.time, (this_LFP.time{iR}' - this_LFP.time{iR}(1)) + pre_ca.time(end) + mode(diff(this_LFP.time{iR})) ]; 
+            pre_ca.data = [pre_ca.data; this_LFP.binary{iR}]; 
+        elseif strcmpi(this_LFP.pre_post{iR}, 'Post') && strcmpi(this_LFP.hypno{iR}, 'REM')
+            post_evts = [post_evts, (unique(this_LFP.evts{iR}.t{end}) - this_LFP.LFP{iR}.tvec(1))+post_csc.tvec(end)]; 
+            post_csc.tvec = [post_csc.tvec; (this_LFP.LFP{iR}.tvec - this_LFP.LFP{iR}.tvec(1))+pre_csc.tvec(end)]; 
+            post_csc.data = [post_csc.data, this_LFP.LFP{iR}.data(2,:)]; 
+            
+            post_idx = [post_idx, ones(1, length(this_LFP.evts{iR}.t{end}))*iR]; 
+            post_ca.time = [post_ca.time, (this_LFP.time{iR}' - this_LFP.time{iR}(1)) + post_ca.time(end) ]; 
+            post_ca.data = [post_ca.data; this_LFP.binary{iR}]; 
+        end
+    end
+    
+    pre_csc.tvec = pre_csc.tvec(2:end); 
+    post_csc.tvec = post_csc.tvec(2:end); 
+
+    pre_ca.time = pre_ca.time(2:end); 
+    post_ca.time = post_ca.time(2:end); 
+    
+    pre_bin = J_out{ii}{1}.REM_pre_in; 
+    
+    pre_csc_a.data = interp1( pre_csc.tvec,pre_csc.data, pre_ca.time); 
+    pre_csc_a.tvec= interp1( pre_csc.tvec,pre_csc.tvec, pre_ca.time); 
+
+    this_pre_rem_t = 0:1/33:(length(J_out{ii}{1}.REM_pre_in)/33);
+    this_pre_rem_t = this_pre_rem_t(1:end-1);
+    
+    this_post_rem_t = 0:1/33:(length(J_out{ii}{1}.REM_post_in)/33);
+    this_post_rem_t = this_post_rem_t(1:end-1);
+    
+%      
+%     for aa = 1:size(J_out{ii}{1}.REM_Pre_proj,1)
+%         this_R_t  =  J_out{ii}{1}.REM_Pre_tvec(find(J_out{ii}{1}.REM_Pre_proj(aa, :) > J_out{ii}{1}.REM_Pre_stats.R_thresh));
+%         pre_React  = [pre_React, (nearest_idx3(this_R_t, this_pre_rem_t))'];
+%     
+%     
+    % check figure
+    figure(8819)
+    clf       
+    subplot(3,1,1)
+    hold on
+%     imagesc(J_out{ii}{1}.REM_Pre_tvec,1:256,J_out{ii}{1}.REM_pre_in')
+    imagesc(pre_ca.time/1000,1:size(pre_ca.data,2),pre_ca.data')
+    plot(pre_ca.time/1000, (sum(pre_ca.data')/size(pre_ca.data,2))*100, 'r')
+    xlim([0 pre_ca.time(end)/1000])
+    
+    subplot(3,1,2)
+    plot(J_out{ii}{1}.REM_Pre_tvec, J_out{ii}{1}.REM_Pre_proj)
+    
+    
+    
+    plot(pre_csc.tvec, (pre_csc.data*5000)+256, 'k')
+        xlim([0 pre_csc.tvec(end)])
+
+    subplot(2,1,2)
+        hold on
+    imagesc(this_post_rem_t,1:256,J_out{ii}{1}.REM_post_in')
+    plot((1:length(post_csc.data))*mode(diff(post_csc.tvec)), (post_csc.data*5000)+256, 'k')
+end
+
+%%
+for ii = length(J_out):-1:1
+        
+    fname = ['assembly_' J_out{ii}{1}.info.session '_' J_out{ii}{1}.info.subject '.h5'];
+    this_h5 = MS_h5_to_stuct(fname); 
+    
+    
+    % load the LFP
+    load([data_dir filesep J_out{ii}{1}.info.subject '_' J_out{ii}{1}.info.session '_LFP.mat'], 'this_LFP')
+    pre_evts = []; post_evts = []; pre_n_React = []; post_n_React = []; 
+    for iR  = 1:length(this_LFP.SWD)
+        if strcmpi(this_LFP.pre_post{iR}, 'Pre') && strcmpi(this_LFP.hypno{iR}, 'REM')
+            pre_evts(end+1) = length(this_LFP.SWD{iR}.tstart); 
+        elseif strcmpi(this_LFP.pre_post{iR}, 'Post') && strcmpi(this_LFP.hypno{iR}, 'REM')
+            post_evts(end+1) = length(this_LFP.SWD{iR}.tstart); 
+        end
+    end
+
+    
+    for aa = 1:size(J_out{ii}{1}.REM_Pre_proj,1)
+        this_R_t  =  find(J_out{ii}{1}.REM_Pre_proj(aa, :) > J_out{ii}{1}.REM_Pre_stats.R_thresh);
+        
+    end
+    
+    % check figure
+    figure(8819)
+    clf       
+    subplot(3,1,1)
+    hold on
+%     imagesc(J_out{ii}{1}.REM_Pre_tvec,1:256,J_out{ii}{1}.REM_pre_in')
+    imagesc(pre_ca.time/1000,1:size(pre_ca.data,2),pre_ca.data')
+    plot(pre_ca.time/1000, (sum(pre_ca.data')/size(pre_ca.data,2))*100, 'r')
+    xlim([0 pre_ca.time(end)/1000])
+    
+    subplot(3,1,2)
+    plot(J_out{ii}{1}.REM_Pre_tvec, J_out{ii}{1}.REM_Pre_proj)
+    
+    
+    
+    plot(pre_csc.tvec, (pre_csc.data*5000)+256, 'k')
+        xlim([0 pre_csc.tvec(end)])
+
+    subplot(2,1,2)
+        hold on
+    imagesc(this_post_rem_t,1:256,J_out{ii}{1}.REM_post_in')
+    plot((1:length(post_csc.data))*mode(diff(post_csc.tvec)), (post_csc.data*5000)+256, 'k')
+end
+%% ctrl j20 comp
+
+% alt
+f_ord = [[253, 22, 26];[255, 179, 13]; [132, 147, 35];[67, 127, 151]; [0, 42, 95]]/255;
+f_post = [f_ord ,[.5, .5, .5, .5, .5]'];
+off_set = 0:2:8;
+
+figure(889)
+clf
+set(gcf, 'Units', 'centimeters', 'Position', [0 0  30 20])
+
+subplot(2,4,5)
+
+for ii = 1:2
+    if ii == 1
+        this_idx = J20_novel_idx;
+    elseif ii == 2
+        this_idx = ~J20_novel_idx;
+    end
+    
+    hold on
+    norm_val= max([nanmean(J20_hist_pre(this_idx,:)) nanmean(J20_hist_post(this_idx,:))]);
+    plot((-nanmean(J20_hist_pre(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
+    plot((nanmean(J20_hist_post(this_idx,:))./norm_val)+off_set(ii), p_centr,  'linewidth', 2, 'Color', [f_ord(ii,:) .5])
+end
+set(gca, 'xtick', off_set, 'ytick', [0 100])
+set(gca, 'XTickLabel', {'Novel', 'Familiar'}, 'XTickLabelRotation', 45)
+ylabel('position (cm)')
+axis('square')
+
+
+
+
+subplot(2,4,1)
+
+for ii = 1:2
+    if ii == 1
+        this_idx = J20_novel_idx;
+    elseif ii == 2
+        this_idx = ~J20_novel_idx;
+    end
+    
+    hold on
+    norm_val= max([nanmean(J20_hist_wake(this_idx,:))]);
+    plot((nanmean(J20_hist_wake(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
+end
+set(gca, 'xtick', off_set, 'ytick', [0 100])
+set(gca, 'XTickLabel', {'Novel', 'Familiar'}, 'XTickLabelRotation', 45)
+ylabel('position (cm)')
+axis('square')
+title('Wake assembly tuning')
+
+
+set(gcf, 'Units', 'centimeters', 'Position', [0 0  30 20])
+subplot(2,4,2)
+% MS_bar_w_err(nWake_A(Cond==1), nWake_A(Cond ==2), c_ord(3,:))
+hb = bar([nanmean(nWake_A(Cond==1)), nanmean(nWake_A(Cond ==2)), nanmean(nWake_A(Cond ==3)), nanmean(nWake_A(Cond ==4)), nanmean(nWake_A(Cond ==5))], 'FaceColor', 'flat');
+for ii = 1:5
+    hb.CData(ii,:) = f_ord(ii,:);
+end
+hold on
+eb = errorbar([nanmean(nWake_A(Cond==1)), nanmean(nWake_A(Cond ==2)), nanmean(nWake_A(Cond ==3)), nanmean(nWake_A(Cond ==4)), nanmean(nWake_A(Cond ==5))], [MS_SEM(nWake_A(Cond==1)), MS_SEM(nWake_A(Cond ==2)), MS_SEM(nWake_A(Cond ==3)), MS_SEM(nWake_A(Cond ==4)), MS_SEM(nWake_A(Cond ==5))]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+ylim(y_lim);
+title('Wake Assemblies in Wake')
+axis('square')
+ylabel('Number of assemblies')
+
+
+subplot(2,4,6)
+hb = bar([nanmean(nPre_A(Cond==1)), nanmean(nPre_A(Cond ==2)), nanmean(nPre_A(Cond ==3)), nanmean(nPre_A(Cond ==4)), nanmean(nPre_A(Cond ==5))] , 'FaceColor', 'flat');
+for ii = 1:5
+    hb.CData(ii,:) = f_ord(ii,:);
+end
+hold on
+
+eb = errorbar([nanmean(nPre_A(Cond==1)), nanmean(nPre_A(Cond ==2)), nanmean(nPre_A(Cond ==3)), nanmean(nPre_A(Cond ==4)), nanmean(nPre_A(Cond ==5))], [MS_SEM(nPre_A(Cond==1)), MS_SEM(nPre_A(Cond ==2)), MS_SEM(nPre_A(Cond ==3)), MS_SEM(nPre_A(Cond ==4)), MS_SEM(nPre_A(Cond ==5))]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+ylim(y_lim);
+title('Pre Assemblies in Wake')
+axis('square')
+
+% subplot(1,4,2)
+% % MS_bar_w_err(nPre_sig(Cond==1), nPre_sig(Cond ==2), c_ord(6,:))
+% hb = bar([nanmean(nPre_sig(Cond==1)), nanmean(nPre_sig(Cond ==2)), nanmean(nPre_sig(Cond ==3)), nanmean(nPre_sig(Cond ==4)), nanmean(nPre_sig(Cond ==5))], 'FaceColor', 'flat');
+% hold on
+% for ii = 1:5
+% hb.CData(ii,:) = f_ord(ii,:);
+% end
+% eb = errorbar([nanmean(nPre_sig(Cond==1)), nanmean(nPre_sig(Cond ==2)), nanmean(nPre_sig(Cond ==3)), nanmean(nPre_sig(Cond ==4)), nanmean(nPre_sig(Cond ==5))], [MS_SEM(nPre_sig(Cond==1)), MS_SEM(nPre_sig(Cond ==2)), MS_SEM(nPre_sig(Cond ==3)), MS_SEM(nPre_sig(Cond ==4)), MS_SEM(nPre_sig(Cond ==5))]);
+% eb.LineStyle = 'none';
+% eb.Color = 'k';
+% set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+% ylim(y_lim);
+% title('Wake Assemblies in Pre REM')
+% axis('square')
+%
+%
+% subplot(1,4,3)
+%
+% % MS_bar_w_err(nPost_sig(Cond==1), nPost_sig(Cond ==2), c_ord(2,:))
+% hb = bar([nanmean(nPost_sig(Cond==1)), nanmean(nPost_sig(Cond ==2)), nanmean(nPost_sig(Cond ==3)), nanmean(nPost_sig(Cond ==4)), nanmean(nPost_sig(Cond ==5))], 'FaceColor', 'flat');
+% for ii = 1:5
+% hb.CData(ii,:) = f_ord(ii,:);
+% end
+% hold on
+% eb = errorbar([nanmean(nPost_sig(Cond==1)), nanmean(nPost_sig(Cond ==2)), nanmean(nPost_sig(Cond ==3)), nanmean(nPost_sig(Cond ==4)), nanmean(nPost_sig(Cond ==5))], [MS_SEM(nPost_sig(Cond==1)), MS_SEM(nPost_sig(Cond ==2)), MS_SEM(nPost_sig(Cond ==3)), MS_SEM(nPost_sig(Cond ==4)), MS_SEM(nPost_sig(Cond ==5))]);
+% eb.LineStyle = 'none';
+% eb.Color = 'k';
+% set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+% ylim(y_lim);
+% axis('square')
+% title('Wake Assemblies in Post REM')
+
+
+
+% try to get the pre and post REM assemblies in one plot
+pre_mean = [nanmean(nPre_sig(Cond==1)), nanmean(nPre_sig(Cond ==2)), nanmean(nPre_sig(Cond ==3)), nanmean(nPre_sig(Cond ==4)), nanmean(nPre_sig(Cond ==5))];
+post_mean = [nanmean(nPost_sig(Cond==1)), nanmean(nPost_sig(Cond ==2)), nanmean(nPost_sig(Cond ==3)), nanmean(nPost_sig(Cond ==4)), nanmean(nPost_sig(Cond ==5))];
+pre_err = [MS_SEM(nPre_sig(Cond==1)), MS_SEM(nPre_sig(Cond ==2)), MS_SEM(nPre_sig(Cond ==3)), MS_SEM(nPre_sig(Cond ==4)), MS_SEM(nPre_sig(Cond ==5))];
+post_err = [MS_SEM(nPost_sig(Cond==1)), MS_SEM(nPost_sig(Cond ==2)), MS_SEM(nPost_sig(Cond ==3)), MS_SEM(nPost_sig(Cond ==4)), MS_SEM(nPost_sig(Cond ==5))];
+
+y = [pre_mean; post_mean]';
+err = [pre_err; post_err]';
+subplot(2,4,7)
+cla;
+
+hb = bar(y, 1); % get the bar handles
+hold on;
+
+% xpos = ;
+pause(.5)
+
+errorbar(hb(1).XData + hb(1).XOffset, y(:,1), err(:,1), 'LineStyle', 'none', ...
+    'Color', 'k');
+pause(.5)
+errorbar(hb(2).XData + hb(2).XOffset, y(:,2), err(:,2), 'LineStyle', 'none', ...
+    'Color', 'k');
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+ylim(y_lim);
+axis('square')
+title('Wake assemblies in Pre and Post REM')
+
+
+% REACT Str mean(mean Post - mean Pre)
+% MS_bar_w_err(nWake_A(Cond==1), nWake_A(Cond ==2), c_ord(3,:))
+subplot(2,4,8)
+cla
+hb = bar([nanmean(ReAct_str(Cond==1)), nanmean(ReAct_str(Cond ==2)), nanmean(ReAct_str(Cond ==3)), nanmean(ReAct_str(Cond ==4)), nanmean(ReAct_str(Cond ==5))], 'FaceColor', 'flat');
+for ii = 1:5
+    hb.CData(ii,:) = f_ord(ii,:);
+end
+hold on
+eb = errorbar([nanmean(ReAct_str(Cond==1)), nanmean(ReAct_str(Cond ==2)), nanmean(ReAct_str(Cond ==3)), nanmean(ReAct_str(Cond ==4)), nanmean(ReAct_str(Cond ==5))],...
+    [MS_SEM(ReAct_str(Cond==1)), MS_SEM(ReAct_str(Cond ==2)), MS_SEM(ReAct_str(Cond ==3)), MS_SEM(ReAct_str(Cond ==4)), MS_SEM(ReAct_str(Cond ==5))]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+% ylim(y_lim);
+axis('square')
+title('Post REM Reactivation Strength')
+
+
+% SetFigure([], gcf)
+
+%  get the REM rate and space
+
+
+% subplot(1,4,2)
+% cla
+% hb = bar([nanmean(wake_move(Cond==1)), nanmean(wake_move(Cond ==2)), nanmean(wake_move(Cond ==3)), nanmean(wake_move(Cond ==4)), nanmean(wake_move(Cond ==5))], 'FaceColor', 'flat');
+% for ii = 1:5
+% hb.CData(ii,:) = f_ord(ii,:);
+% end
+% hold on
+% eb = errorbar([nanmean(wake_move(Cond==1)), nanmean(wake_move(Cond ==2)), nanmean(wake_move(Cond ==3)), nanmean(wake_move(Cond ==4)), nanmean(wake_move(Cond ==5))],...
+%     [MS_SEM(wake_move(Cond==1)), MS_SEM(wake_move(Cond ==2)), MS_SEM(wake_move(Cond ==3)), MS_SEM(wake_move(Cond ==4)), MS_SEM(wake_move(Cond ==5))]);
+% eb.LineStyle = 'none';
+% eb.Color = 'k';
+% set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+% % ylim(y_lim);
+% axis('square')
+% title('Total movement (m)')
+
+% subplot(2,4,3)
+% cla
+% hb = bar([nanmean(wake_move(Cond==1)), nanmean(wake_move(Cond ==2)), nanmean(wake_move(Cond ==3)), nanmean(wake_move(Cond ==4)), nanmean(wake_move(Cond ==5))], 'FaceColor', 'flat');
+% for ii = 1:5
+% hb.CData(ii,:) = f_ord(ii,:);
+% end
+% hold on
+% eb = errorbar([nanmean(wake_move(Cond==1)), nanmean(wake_move(Cond ==2)), nanmean(wake_move(Cond ==3)), nanmean(wake_move(Cond ==4)), nanmean(wake_move(Cond ==5))],...
+%     [MS_SEM(wake_move(Cond==1)), MS_SEM(wake_move(Cond ==2)), MS_SEM(wake_move(Cond ==3)), MS_SEM(wake_move(Cond ==4)), MS_SEM(wake_move(Cond ==5))]);
+% eb.LineStyle = 'none';
+% eb.Color = 'k';
+% set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+% % ylim(y_lim);
+% axis('square')
+% title('Total movement (m)')
+
+
+subplot(2,4,4)
+cla
+hb = bar([nanmean(nWake_R(Cond==1)), nanmean(nWake_R(Cond ==2)), nanmean(nWake_R(Cond ==3)), nanmean(nWake_R(Cond ==4)), nanmean(nWake_R(Cond ==5))], 'FaceColor', 'flat');
+for ii = 1:5
+    hb.CData(ii,:) = f_ord(ii,:);
+end
+hold on
+eb = errorbar([nanmean(nWake_R(Cond==1)), nanmean(nWake_R(Cond ==2)), nanmean(nWake_R(Cond ==3)), nanmean(nWake_R(Cond ==4)), nanmean(nWake_R(Cond ==5))],...
+    [MS_SEM(nWake_R(Cond==1)), MS_SEM(nWake_R(Cond ==2)), MS_SEM(nWake_R(Cond ==3)), MS_SEM(nWake_R(Cond ==4)), MS_SEM(nWake_R(Cond ==5))]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+% ylim(y_lim);
+axis('square')
+title('wake activation rate (Hz)')
+
+
+subplot(2,4,3)
+cla
+hb = bar([nanmean(wake_prct_move(Cond==1)), nanmean(wake_prct_move(Cond ==2)), nanmean(wake_prct_move(Cond ==3)), nanmean(wake_prct_move(Cond ==4)), nanmean(wake_prct_move(Cond ==5))], 'FaceColor', 'flat');
+for ii = 1:5
+    hb.CData(ii,:) = f_ord(ii,:);
+end
+hold on
+eb = errorbar([nanmean(wake_prct_move(Cond==1)), nanmean(wake_prct_move(Cond ==2)), nanmean(wake_prct_move(Cond ==3)), nanmean(wake_prct_move(Cond ==4)), nanmean(wake_prct_move(Cond ==5))],...
+    [MS_SEM(wake_prct_move(Cond==1)), MS_SEM(wake_prct_move(Cond ==2)), MS_SEM(wake_prct_move(Cond ==3)), MS_SEM(wake_prct_move(Cond ==4)), MS_SEM(wake_prct_move(Cond ==5))]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+% ylim(y_lim);
+axis('square')
+title('Percent of time moving')
+
+
+set(gcf,'Units','Inches');
+pos = get(gcf,'Position');
+set(gcf,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
+
+print(gcf,  [fig_dir filesep   'Stats_summery_J20_' strrep(num2str(B_out{1}{1}.info.bin), '.', 'p') 's_bin.pdf'], '-dpdf','-r0')
+
