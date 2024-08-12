@@ -70,6 +70,7 @@ OQ = [];
 
 sub = 1:length(M_ID); 
 sess = 1:4; 
+
 figure(101)
 clf
 for ii = 1:length(sub); 
@@ -222,21 +223,60 @@ end
 %% Convert to 'watermaze.csv' for PATHFINDER
 subs = fieldnames(all_data);
 
+target = {'Nose','Head'}; 
+
 
 for iS =  1:length(subs)
-    
-    days= fieldnames(all_data.(subs{iS}));
-    this_tbl = []; 
-    header = []; 
+    %%
+    days= fieldnames(all_data.(subs{iS})); 
+    tbl = table();  
+
+    % get the max number of data points for the table
+    max_d = []; 
+    for iD = length(days):-1:1
+        max_d(iD) = length(all_data.(subs{iS}).(days{iD}).pos_r.tvec); 
+    end
 
     for iD = 1:length(days)
-        header{end+1} = days{iD}; 
+
+        d_idx = strfind(all_data.(subs{iS}).(days{iD}).pos_r.cfg.fname{1}, '2024'); 
+        this_date = all_data.(subs{iS}).(days{iD}).pos_r.cfg.fname{1}(d_idx:d_idx+9);
+        this_date = datetime(this_date, 'InputFormat', 'yyyy_MM_dd', 'Format', 'yyyy/MM/dd'); 
+
+        this_x = fillmissing(mean(all_data.(subs{iS}).(days{iD}).pos_r.data([1, 3, 5 ],:))', 'spline','EndValues','extrap');
+        this_y = fillmissing(mean(all_data.(subs{iS}).(days{iD}).pos_r.data([2, 4, 6],:))', 'spline','EndValues','extrap');
+        this_t = all_data.(subs{iS}).(days{iD}).pos_r.tvec';
         
+        if length(this_x) <= max(max_d)
+            this_x(length(this_x)+1:max(max_d)) = NaN;
+            this_y(length(this_y)+1:max(max_d)) = NaN;
+            this_t(length(this_t)+1:max(max_d)) = NaN;
+        end
 
-
-
-
+        
+        tbl = addvars(tbl, [days{iD}; 'x'; num2cell(this_x)]); 
+        tbl = addvars(tbl, [char(this_date); 'y'; num2cell(this_y)]); 
+        tbl = addvars(tbl, [' '; 't'; num2cell(this_t)]); 
     end
+
+    % try replacing NaNs by converting to a cell arraty
+    c_tbl = table2cell(tbl); 
+
+    % mask = cellfun(@(C), )
+
+    for ii = size(c_tbl,1):-1:1
+        nan_idx = cell2mat(cellfun(@isnan, c_tbl(ii,:), 'UniformOutput',false));
+
+        % c_tbl(ii,3:end) = num2str(c_tbl(ii,3:end)); 
+        c_tbl(ii,nan_idx) = {' '};
+    end
+
+    tbl_out = cell2table(c_tbl); 
+
+% write a .csv per animal. 
+writetable(tbl, [subs{iS} '_WM.csv'], 'WriteVariableNames',1)
+tbl_in = readtable([subs{iS} '_WM.csv'])
+
 end
 
 
