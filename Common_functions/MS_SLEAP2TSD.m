@@ -150,13 +150,13 @@ elseif sum(contains(nodes, 'body', 'IgnoreCase', true))>0 && sum(contains(nodes,
     
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.(h)(:,2),ear_mid(:,1) - data_out.(h)(:,1)));
     
-elseif sum(contains(nodes, 'body', 'IgnoreCase', true))>0 && sum(contains(nodes, 'head', 'IgnoreCase', true))>0
-    b = nodes{contains(nodes, 'body', 'IgnoreCase', true)}; 
-    h = nodes{contains(nodes, 'head', 'IgnoreCase', true)};
-    ear_mid(:,1) = data_out.(b)(:,1);
-    ear_mid(:,2) = data_out.(b)(:,2);
-    
-    HD = rad2deg(atan2(ear_mid(:,2) - data_out.(h)(:,2),ear_mid(:,1) - data_out.(h)(:,1)));
+% elseif sum(contains(nodes, 'body', 'IgnoreCase', true))>0 && sum(contains(nodes, 'head', 'IgnoreCase', true))>0
+%     b = nodes{contains(nodes, 'body', 'IgnoreCase', true)}; 
+%     h = nodes{contains(nodes, 'head', 'IgnoreCase', true)};
+%     ear_mid(:,1) = data_out.(b)(:,1);
+%     ear_mid(:,2) = data_out.(b)(:,2);
+% 
+%     HD = rad2deg(atan2(ear_mid(:,2) - data_out.(h)(:,2),ear_mid(:,1) - data_out.(h)(:,1)));
     
 elseif sum(contains(nodes, 'LED'))>0 && sum(contains(nodes, 'Tail'))>0
     ear_mid(:,1) = data_out.Tail(:,1);
@@ -216,6 +216,9 @@ v_fname = v_fname{end};
 
 if exist(pos.cfg.vid{1}, 'file')
         vidObj = VideoReader(pos.cfg.vid{1}); 
+
+        f_sample = vidObj.NumFrames; 
+        
             F=read(vidObj);                             
     pos.mean_frame=median(F,4);
 elseif exist(v_fname, 'file')
