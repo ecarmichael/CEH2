@@ -2,9 +2,10 @@
 
 if ispc
     cd('C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\PoxR1\WM');
-    
 elseif ismac
     cd('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/WM');
+else
+    cd('/home/swlab/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/WM'); 
 end
 
 
@@ -39,7 +40,7 @@ for ii = length(M_idx):-1:1
             S_dir{ii}(iD) =find(contains(P_loc,Days{iD}(end-1:end))); % Start location index
             D_ID{ii}(iD) = 999; % day
         else
-            
+
             S_dir{ii}(iD) = find(contains(S_loc,Days{iD}(end))); % Start location index
             D_ID{ii}(iD) = str2double(Days{iD}(end-1)); % day
         end
