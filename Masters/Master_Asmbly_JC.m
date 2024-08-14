@@ -650,7 +650,7 @@ for ii = 1:length(A_out)
         A_n_cent = [A_n_cent A_cent{iB}{ii}];
         A_n_peak = [A_n_peak A_peak{iB}{ii}];
         A_n_ReAct = [A_n_ReAct A_ReAct_all{iB}{ii}'];
-        a_n_sub = [A_n_sub repmat(ii, 1, length(A_ReAct_all{iB}{ii}))];
+        A_n_sub = [A_n_sub repmat(ii, 1, length(A_ReAct_all{iB}{ii}))];
     end
     
     if ismember(ii, find(f_idx))
@@ -665,18 +665,18 @@ end
 % control
 figure(5000)
 subplot(2,2,1)
-scatter(A_n_cent, A_n_ReAct, 35, c_ord(1,:), 'filled');
+scatter(A_n_cent, A_n_ReAct, 35, A_n_sub, 'filled');
 [c, p] = corrcoef(A_n_cent, A_n_ReAct);
 text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
 xlabel('(<- coherent) Z Map centroid')
 ylabel('ReAct Str.')
-title('Control novel')
+title('Control novel (Color by subject)')
 ylim([-1 1]);
 xlim([-5 5]);
 lsline
 
 subplot(2,2,2)
-scatter(A_f_cent, A_f_ReAct, 35, c_ord(2,:), 'filled');
+scatter(A_f_cent, A_f_ReAct, 35, A_f_sub, 'filled', 'd');
 [c, p] = corrcoef(A_f_cent, A_f_ReAct);
 text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
 xlabel('(<- coherent) Z Map centroid')
@@ -687,7 +687,7 @@ xlim([-5 5]);
 lsline
 
 subplot(2,2,3)
-scatter(A_n_peak, A_n_ReAct, 35, c_ord(1,:), 'filled');
+scatter(A_n_peak, A_n_ReAct, 35, A_n_sub, 'filled');
 [c, p] = corrcoef(A_n_peak, A_n_ReAct);
 text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
 ylabel('ReAct Str.')
@@ -697,7 +697,7 @@ xlim([-5 5]);
 lsline
 
 subplot(2,2,4)
-scatter(A_f_peak, A_f_ReAct, 35, c_ord(2,:), 'filled');
+scatter(A_f_peak, A_f_ReAct, 35, A_f_sub, 'filled', 'd');
 [c, p] = corrcoef(A_f_peak, A_f_ReAct);
 text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
 xlabel('(<- coherent) Z Map peak')
@@ -709,7 +709,6 @@ lsline
 
 %% Collect the change in significant CCF
 pre_sig_cff = []; post_sig_cff = [];
-J_pre_sig_cff = []; J_post_sig_cff = [];
 for iB = length(bin_size):-1:1
     
     for iS = size(A_out,2):-1:1
@@ -718,17 +717,12 @@ for iB = length(bin_size):-1:1
         post_sig_cff(iS, iB) = A_out{iS}{iB}.REM_Post_psig_cff;
     end
     
-    for iJ = size(J_out,2):-1:1
-        
-        J_pre_sig_cff(iJ, iB) = J_out{iJ}{iB}.REM_Pre_psig_cff;
-        J_post_sig_cff(iJ, iB) = J_out{iJ}{iB}.REM_Post_psig_cff;
-    end
     
     figure(10+iB)
     %     c_ord = MS_linspecer(4);
     ax(1) = subplot(2,5,1);
     cla
-    MS_bar_w_err(pre_sig_cff(n_idx,iB), post_sig_cff(n_idx,iB), c_ord(1,:));
+    MS_bar_w_err(pre_sig_cff(n_idx,iB), post_sig_cff(n_idx,iB), c_ord(1,:), 1, s_test);
     set(gca, 'XTickLabel', {'pre', 'post'})
     title('novel');
     %     title(['CCF sig (bin: ' num2str(bin_size(iB)) ')'])
@@ -736,32 +730,32 @@ for iB = length(bin_size):-1:1
     
     ax(2) = subplot(2,5,2);
     cla
-    MS_bar_w_err(pre_sig_cff(f_idx,iB), post_sig_cff(f_idx,iB), c_ord(2,:))
+    MS_bar_w_err(pre_sig_cff(f_idx,iB), post_sig_cff(f_idx,iB), c_ord(2,:), 1, s_test);
     set(gca, 'XTickLabel', {'pre', 'post'})
     title('familiar');
     
     
     ax(3) = subplot(2,5,3);
     cla
-    MS_bar_w_err(pre_sig_cff(lt1_idx | lt5_idx,iB), post_sig_cff(lt1_idx | lt5_idx,iB), c_ord(3,:))
+    MS_bar_w_err(pre_sig_cff(lt1_idx | lt5_idx,iB), post_sig_cff(lt1_idx | lt5_idx,iB), c_ord(3,:), 1, s_test);
     set(gca, 'XTickLabel', {'pre', 'post'})
     title('Linear');
     
     
     ax(4) = subplot(2,5,4);
     cla
-    MS_bar_w_err(pre_sig_cff(H1_idx | H5_idx,iB), post_sig_cff(H1_idx | H5_idx,iB), c_ord(4,:))
+    MS_bar_w_err(pre_sig_cff(H1_idx | H5_idx,iB), post_sig_cff(H1_idx | H5_idx,iB), c_ord(4,:), 1, s_test);
     set(gca, 'XTickLabel', {'pre', 'post'})
     title('Anxiety');
     
     ax(5) =  subplot(2,5,5);
     cla
-    MS_bar_w_err(pre_sig_cff(H1_idx | H5_idx,iB), post_sig_cff(H1_idx | H5_idx,iB), c_ord(5,:))
+    MS_bar_w_err(pre_sig_cff(H1_idx | H5_idx,iB), post_sig_cff(H1_idx | H5_idx,iB), c_ord(5,:), 1, s_test);
     set(gca, 'XTickLabel', {'pre', 'post'})
     title('switch');
     
     linkprop(ax, 'ylim')
-    ylim([0 40])
+    ylim([0 max([pre_sig_cff,post_sig_cff], [], 'all')*1.1])
     %     Square_subplots;
     SetFigure([], gcf)
     %     title('J20')
@@ -772,16 +766,14 @@ end
 
 %% qualitfy reactivation saptial biases
 
-data_in = B_out;
+data_in = A_out;
 Pre_hist = []; Post_hist = [];
 A_hist_pre = []; A_hist_post = [];
-J20_hist_pre = []; J20_hist_post = [];
-for kk = 1:2
-    if kk == 1
-        data_in = B_out;
-    elseif kk == 2
-        data_in = J_out;
-    end
+
+for kk = 1
+    
+        data_in = A_out;
+
     
     for iB = length(data_in{ii}):-1:1
         
@@ -842,11 +834,6 @@ for kk = 1:2
                 A_hist_pre(ii,:) = Pre_hist{ii,iB};
                 A_hist_post(ii,:) = Post_hist{ii,iB};
                 A_hist_wake(ii,:) = Wake_hist{ii, iB};
-            elseif kk == 2
-                J20_hist_pre(ii,:) = Pre_hist{ii,iB};
-                J20_hist_post(ii,:) = Post_hist{ii,iB};
-                J20_hist_wake(ii,:) = Wake_hist{ii, iB};
-
             end
             
         end
@@ -857,11 +844,6 @@ for kk = 1:2
         A_cnt_prct = all_cnt_prct;
         A_Pre_cnt_prct = Pre_cnt_prct;
         A_Post_cnt_prct = Post_cnt_prct;
-        
-    elseif kk == 2
-        J_cnt_prct = all_cnt_prct;
-        J_Pre_cnt_prct = Pre_cnt_prct;
-        J_Post_cnt_prct = Post_cnt_prct;
     end
 end
 
@@ -1135,6 +1117,8 @@ mice = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252', 'pv1254'};
 Cond = []; Sub = []; nWake_A = [];nWake_R =[];  nPre_A = []; nPre_Act = []; nPre_SWS_A = []; nPost_SWS_A = [];
 PreA_str = []; PostA_str= [];
 nPre_sig = []; nPost_sig = [];
+nPre_A_prct = []; ReAct_str = []; 
+wake_move = []; wake_prct_move = []; 
 R_thresh = [];
 
 for hh = length(h_idx):-1:1
@@ -1195,6 +1179,7 @@ set(gcf, 'Units', 'centimeters', 'Position', [0 0  30 20])
 
 subplot(2,4,5)
 
+off_set = 0:2.5:10;
 for ii = 1:5
     if ii == 1
         this_idx = lt1_idx;
@@ -1207,7 +1192,13 @@ for ii = 1:5
     elseif ii == 5
         this_idx = HS_idx;
     end
-    
+           if ii == 1 || ii == 2
+        rectangle('position', [off_set(ii)-1, p_centr(1), 2, p_centr(end)- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    elseif ii == 3 || ii ==4
+        rectangle('position', [off_set(ii)-1, p_centr(ceil(length(p_centr)/2)), 2, p_centr(end)- p_centr(ceil(length(p_centr)/2))], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    elseif ii ==5
+        rectangle('position', [off_set(ii)-1, p_centr(1), 2, p_centr(ceil(length(p_centr)/2))- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+       end
     hold on
     norm_val= max([nanmean(A_hist_pre(this_idx,:)) nanmean(A_hist_post(this_idx,:))]);
     plot((-nanmean(A_hist_pre(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
@@ -1222,7 +1213,7 @@ axis('square')
 
 
 subplot(2,4,1)
-
+off_set = 0:2:8; 
 for ii = 1:5
     if ii == 1
         this_idx = lt1_idx;
@@ -1236,9 +1227,19 @@ for ii = 1:5
         this_idx = HS_idx;
     end
     
+       if ii == 1 || ii == 2
+        rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(end)- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    elseif ii == 3 || ii ==4
+        rectangle('position', [off_set(ii), p_centr(ceil(length(p_centr)/2)), mode(diff(off_set))*.75, p_centr(end)- p_centr(ceil(length(p_centr)/2))], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    elseif ii ==5
+        rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(ceil(length(p_centr)/2))- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+       end
+    
     hold on
     norm_val= max([nanmean(A_hist_wake(this_idx,:))]);
     plot((nanmean(A_hist_wake(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
+    
+
 end
 set(gca, 'xtick', off_set, 'ytick', [0 100])
 set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
@@ -1444,7 +1445,7 @@ set(gcf,'Units','Inches');
 pos = get(gcf,'Position');
 set(gcf,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
 
-print(gcf,  [fig_dir filesep   'Stats_summery_' strrep(num2str(B_out{1}{1}.info.bin), '.', 'p') 's_bin.pdf'], '-dpdf','-r0')
+print(gcf,  [fig_dir filesep   'Stats_summery_' strrep(num2str(A_out{1}{1}.info.bin), '.', 'p') 's_bin.pdf'], '-dpdf','-r0')
 
 
 
