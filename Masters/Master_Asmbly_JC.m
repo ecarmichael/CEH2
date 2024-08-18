@@ -1507,7 +1507,15 @@ for ii = 1:5
 %     norm_val= max([nanmean(A_hist_pre(this_idx,:)) nanmean(A_hist_post(this_idx,:))]);
 %     plot((-nanmean(A_hist_pre(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
 %     plot((nanmean(A_hist_post(this_idx,:))./norm_val)+off_set(ii), p_centr,  'linewidth', 2, 'Color', [f_ord(ii,:) .5])
-    post_pre = nanmean(A_hist_post(this_idx,:))./nanmean(A_hist_pre(this_idx,:));
+
+this_pre = A_hist_pre(this_idx,:); 
+this_pre(this_pre == 0) = inf; 
+this_post = A_hist_post(this_idx,:); 
+this_post(this_post == 0) = inf; 
+
+post_pre = mean(this_post./this_pre, 'omitnan'); 
+
+%     post_pre = nanmean(A_hist_post(this_idx,:)./A_hist_pre(this_idx,:));
     
     post_pre(isinf(post_pre)) = NaN; 
 
@@ -1717,14 +1725,49 @@ for iD = 1:2
     end
 
 
-this_h5
+subplot(2,3, [iD iD+2])
     
+% plot(this_h5.
     
     
     
     
 end
     
+
+%% plot a specific example
+N_idx = []; F_idx = []; 
+for ii = length(A_out):-1:1
+    
+    if strcmpi(A_out{ii}{1}.info.subject, 'pv1060') &&  strcmpi(A_out{ii}{1}.info.session, 'LTD1')
+        N_idx(ii) = true; 
+        F_idx(ii) = false; 
+    elseif strcmpi(A_out{ii}{1}.info.subject, 'pv1060') &&  strcmpi(A_out{ii}{1}.info.session, 'LTD5')
+        N_idx(ii) = false;
+        F_idx(ii) = true;
+    else
+        N_idx(ii) = false;
+        F_idx(ii) = false; 
+    end
+    
+end
+
+F_idx = find(F_idx); 
+N_idx = find(N_idx); 
+
+for iD = 1:2
+    
+    
+    
+    if iD == 1
+        this_data = A_out{N_idx}{1}; 
+    elseif iD ==2
+        this_data = A_out{F_idx}{1}; 
+    end
+
+
+end
+% A_out{
 %% %%%%%%%%%%%%  sample plots for PCA ICA methods. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(1111)
