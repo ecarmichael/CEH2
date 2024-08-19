@@ -906,6 +906,171 @@ xlabel('position on track (cm)')
 % % bar(nanmean([Post_hist{1,1}; Post_hist{4,1}; Post_hist{7,1}])
 
 
+%% quantify using whole spatial map averaging
+
+data_in = A_out;
+Pre_hist = []; Post_hist = [];
+A_hist_pre = []; A_hist_post = [];
+Diff_ReAct_map = []; 
+Pre_ReAct_mean_map = []; 
+Post_ReAct_mean_map = []; 
+
+% loop over window size
+for iB = length(data_in{ii}):-1:1
+    
+    all_cnt_prct = []; Pre_cnt_prct = []; Post_cnt_prct = [];
+    % loop over sessions
+    for ii = length(data_in):-1:1
+        
+        % data shorthand
+        this_A = data_in{ii}{iB};
+        
+        % make arrays to accrue reactivation locations;
+        Pre_ReAct_mat = []; Post_ReAct_mat = []; Wake_ReAct_mat = [];
+        Pre_ReAct_map = cell(length(data_in),1); Post_ReAct_map = cell(length(data_in),1); Wake_ReAct_map = cell(length(data_in),1);
+
+        cent_z = []; peak_z = []; M_cent = [];
+        
+        Pre_cnt = sum((this_A.REM_Pre_proj > this_A.REM_Pre_stats.R_thresh), 2);
+        Post_cnt = sum((this_A.REM_Post_proj > this_A.REM_Post_stats.R_thresh),2);
+        
+        Wake_cnt = sum((this_A.P_proj > 10), 2);
+        
+        
+        
+        for iA = length(this_A.P_pos):-1:1
+            
+            cent_z(iA) = this_A.map{iA}.cent_z;
+            peak_z(iA) = this_A.map{iA}.peak_z;
+            
+            M_cent(iA) = mean(this_A.map{iA}.cent);
+            
+            if cent_z(iA) < -1.96
+                Pre_ReAct_map{ii} = [Pre_ReAct_map{ii} ;repmat(this_A.map{iA}.map_mean./max(this_A.map{iA}.map_mean), Pre_cnt(iA),1)];
+                Post_ReAct_map{ii} = [Post_ReAct_map{ii} ;repmat(this_A.map{iA}.map_mean./max(this_A.map{iA}.map_mean), Post_cnt(iA),1)];
+                Wake_ReAct_map{ii} = [Wake_ReAct_map{ii} ;repmat(this_A.map{iA}.map_mean./max(this_A.map{iA}.map_mean), Wake_cnt(iA),1)];
+
+            end
+        end
+
+        if isempty(Pre_ReAct_map{ii})
+            Pre_ReAct_map{ii} = NaN(1,length(p_bins(1:end)));
+        end
+        
+        if isempty(Post_ReAct_map{ii})
+            Post_ReAct_map{ii} = NaN(1,length(p_bins(1:end)));
+        end
+
+        if isempty(Wake_ReAct_map{ii})
+            Wake_ReAct_map{ii} = NaN(1,length(p_bins(1:end)));
+        end
+
+               Pre_ReAct_mean_map(ii,:) = mean(Pre_ReAct_map{ii});
+                Post_ReAct_mean_map(ii,:) = mean(Post_ReAct_map{ii});
+        Diff_ReAct_map(ii,:) = Pre_ReAct_mean_map(ii,:)./Post_ReAct_mean_map(ii,:);
+                 Wake_ReAct_mean_map(ii,:) = mean(Wake_ReAct_map{ii});
+
+
+    end
+    
+end
+%%
+a_ord = MS_linspecer(2);
+
+figure(300)
+clf
+subplot(5,1,1)
+hold on
+bar(this_data.map{1}.bins, nanmean(Pre_ReAct_mean_map(lt1_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(this_data.map{1}.bins, nanmean(Post_ReAct_mean_map(lt1_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+plot(this_data.map{1}.bins, nanmean(Wake_ReAct_mean_map(lt1_idx,:)), 'color', 'k');
+legend({'pre', 'post', 'wake'}, 'box', 'off', 'Orientation', 'horizontal', 'Location', 'northwest')
+
+set(gca, 'XTickLabel', [], 'YTick', [0 1]);
+
+subplot(5,1,2)
+hold on
+bar(this_data.map{1}.bins, nanmean(Pre_ReAct_mean_map(lt5_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(this_data.map{1}.bins, nanmean(Post_ReAct_mean_map(lt5_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+plot(this_data.map{1}.bins, nanmean(Wake_ReAct_mean_map(lt5_idx,:)), 'color', 'k');
+
+set(gca, 'XTickLabel', [], 'YTick', [0 1]);
+
+subplot(5,1,3)
+hold on
+rectangle('position', [(this_data.map{1}.bins(end) - this_data.map{1}.bins(1) +this_data.map{1}.bin_size)/2, 0, (this_data.map{1}.bins(end) - this_data.map{1}.bins(1) +this_data.map{1}.bin_size)/2, max([nanmean(Pre_ReAct_mean_map(H1_idx,:)) nanmean(Post_ReAct_mean_map(H1_idx,:))])*1.3], ...
+    'FaceColor', [.8 .8 .8], 'EdgeColor', [1 1 1])
+bar(this_data.map{1}.bins, nanmean(Pre_ReAct_mean_map(H1_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(this_data.map{1}.bins, nanmean(Post_ReAct_mean_map(H1_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+plot(this_data.map{1}.bins, nanmean(Wake_ReAct_mean_map(H1_idx,:)), 'color', 'k');
+
+set(gca, 'XTickLabel', [], 'YTick', [0 1]);
+
+
+subplot(5,1,4); cla
+hold on
+rectangle('position', [(this_data.map{1}.bins(end) - this_data.map{1}.bins(1) +this_data.map{1}.bin_size)/2, 0, (this_data.map{1}.bins(end) - this_data.map{1}.bins(1) +this_data.map{1}.bin_size)/2, max([nanmean(Pre_ReAct_mean_map(H5_idx,:)) nanmean(Post_ReAct_mean_map(H5_idx,:))])*1.3], ...
+    'FaceColor', [.8 .8 .8], 'EdgeColor', [1 1 1])
+bar(this_data.map{1}.bins, nanmean(Pre_ReAct_mean_map(H5_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(this_data.map{1}.bins, nanmean(Post_ReAct_mean_map(H5_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+plot(this_data.map{1}.bins, nanmean(Wake_ReAct_mean_map(H5_idx,:)), 'color', 'k');
+set(gca, 'XTickLabel', [], 'YTick', [0 1]);
+
+subplot(5,1,5)
+hold on
+rectangle('position', [this_data.map{1}.bins(1) - this_data.map{1}.bin_size/2, 0, (this_data.map{1}.bins(end) - this_data.map{1}.bins(1) +this_data.map{1}.bin_size)/2, max([nanmean(Pre_ReAct_mean_map(HS_idx,:)) nanmean(Post_ReAct_mean_map(HS_idx,:))])*1.3], ...
+    'FaceColor', [.8 .8 .8], 'EdgeColor', [1 1 1]);
+bar(this_data.map{1}.bins, nanmean(Pre_ReAct_mean_map(HS_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(this_data.map{1}.bins, nanmean(Post_ReAct_mean_map(HS_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+plot(this_data.map{1}.bins, nanmean(Wake_ReAct_mean_map(HS_idx,:)), 'color', 'k');
+
+set(gca, 'XTickLabel', [], 'YTick', [0 1]);
+set(gca, 'YTick', [0 1], 'XTick', [0 100]);
+xlabel('position on track (cm)')
+
+
+figure(10101)
+clf
+off_set = 0:2.5:10;
+p_centr = this_data.map{1}.bins;
+for ii = 1:5
+    if ii == 1
+        this_idx = lt1_idx;
+    elseif ii == 2
+        this_idx = lt5_idx;
+    elseif ii == 3
+        this_idx = H1_idx;
+    elseif ii == 4
+        this_idx = H5_idx;
+    elseif ii == 5
+        this_idx = HS_idx;
+    end
+    % add 'walls'
+     if ii == 1 || ii == 2
+        rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(end)- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    elseif ii == 3 || ii ==4
+        rectangle('position', [off_set(ii), p_centr(ceil(length(p_centr)/2)), mode(diff(off_set))*.75, p_centr(end)- p_centr(ceil(length(p_centr)/2))], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    elseif ii ==5
+        rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(ceil(length(p_centr)/2))- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+       end
+    
+    hold on
+    norm_val= max([nanmean(Diff_ReAct_map(this_idx,:))]);
+    plot((nanmean(Diff_ReAct_map(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
+    xline(off_set(ii)-1)
+    if ii == 1
+%         text(off_set(ii)-.1, 97, '\leftarrow', 'HorizontalAlignment','right', 'Interpreter', 'TeX', 'fontsize', 8)
+        text(off_set(ii)-.1, p_centr(end), 'pre', 'HorizontalAlignment','right', 'Interpreter', 'TeX', 'fontsize', 8, 'VerticalAlignment', 'baseline')
+%         text(off_set(ii)+.1, 97, '\rightarrow', 'HorizontalAlignment','left', 'Interpreter', 'TeX', 'fontsize', 8)
+        text(off_set(ii)+.1, p_centr(end), 'post', 'HorizontalAlignment','left', 'Interpreter', 'TeX', 'fontsize', 8, 'VerticalAlignment', 'baseline')
+
+    end
+end
+set(gca, 'xtick', off_set, 'ytick', [0 100])
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+ylabel('position (cm)')
+axis('square')
+title('REM assembly tuning')
 %% convert to HD5
 
 
@@ -1755,19 +1920,118 @@ end
 F_idx = find(F_idx); 
 N_idx = find(N_idx); 
 
+
+figure(9909)
+clf
 for iD = 1:2
     
-    
-    
     if iD == 1
-        this_data = A_out{N_idx}{1}; 
+        this_data = A_out{N_idx}{1};
     elseif iD ==2
-        this_data = A_out{F_idx}{1}; 
+        this_data = A_out{F_idx}{1};
+    end
+    
+    p_cent = []; p_rate = [];
+    
+    for ii = length(this_data.P_pos):-1:1
+        p_cent(ii) = this_data.map{ii}.cent_z;
+        p_rate(ii) = length(this_data.P_loc{ii}.loc_time);
+    end
+    
+    p_rate(p_cent > -1.95) = 0;
+    [~, s_idx] = sort(p_rate, 'descend');
+    p_rank = s_idx;
+    
+    if length(this_data.P_pos) >3
+        p_idx = p_rank(1:4);
+    else
+        p_idx = p_rank(1:length(this_data.P_pos));
     end
 
+    c_ord = [67, 127, 151; 132 147 35; 255 179 13; 253 22 26]/255;
+    
+    ax(iD) = subplot(2,2,iD);
+%         yline(this_data.REM_Post_stats.R_thresh, '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
+        yline(log10(this_data.REM_Post_stats.R_thresh), '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
 
+    hold on
+    for ii = length(p_idx):-1:1
+        this_proj = this_data.REM_Post_proj(p_idx(ii),:);
+        plot(this_data.REM_Post_tvec, log10(this_proj), 'color', c_ord(ii,:), 'linewidth', .5)
+    end
+
+            ylim([0 inf])
+        y_val = get(gca, 'YTick');
+%         y_val = [0 1 2 2.3979];
+% yTick', [0 1 2 2.3979]
+        set(gca, 'YTickLabel', 10.^y_val, 'linewidth', 1);
+    
+    if iD == 1
+    ylabel({'assembly strength'})
+    end
+            set(gca, 'xtick', []); 
+    
+    if iD == 1
+        xlim([0 60]); 
+    elseif iD == 2
+%                 set(gca, 'xtick', 0:60:this_data.REM_Post_tvec(end))
+%         set(gca, 'xticklabel', get(gca, 'xtick') - 90)
+        xlim([90 150]); 
+    end
+    
+   ax2(iD) = subplot(2,2,iD+2);
+    for ii = length(p_idx):-1:1
+        this_proj_idx = find(this_data.REM_Post_proj(p_idx(ii),:) > this_data.REM_Post_stats.R_thresh);
+        line([this_data.REM_Post_tvec(this_proj_idx); this_data.REM_Post_tvec(this_proj_idx)] , [ii-.5; ii+.5], 'color', c_ord(ii,:), 'linewidth', .5)
+    end
+
+    set(gca, 'ytick', [])
+
+    if iD == 1
+        xlim([0 60]); 
+            xlabel('time (s)')
+                    set(gca, 'xtick', [0 60])
+
+    elseif iD == 2
+%         set(gca, 'xtick', 0:60:this_data.REM_Post_tvec(end))
+%         set(gca, 'xticklabel', get(gca, 'xtick') - 90)
+        xlim([90 150]); 
+%         x_lim = get(gca, 'xlim'); 
+        set(gca, 'xtick', [])
+%                             set(gca, 'xtick', [0 60])
+
+    end
+    
 end
-% A_out{
+linkaxes(ax, 'y')
+set(gcf,'PaperUnits','inches', 'Units', 'inches');
+set(gcf, 'position', [5 5 7 2])
+set(gcf,'PaperSize', [7, 2]);
+set(gca,'xlimmode','manual','ylimmode','manual')
+    print(gcf, '-dpdf', [fig_dir filesep 'Fig3_example.pdf'])
+
+% save an h5 with the data for plotting. 
+  fname = ['Fig3_assembly_.h5'];
+    
+    if exist(fname, 'file')
+        delete(fname)
+    end
+    
+    hdf5write(fname, '/mouse', string(A_out{F_idx}{1}.info.subject));
+    hdf5write(fname, '/N_condition', string(A_out{N_idx}{1}.info.session),'WriteMode', 'append');
+        hdf5write(fname, '/F_condition', string(A_out{F_idx}{1}.info.session),'WriteMode', 'append');
+
+    hdf5write(fname, '/N_REM_post_rThresh', A_out{N_idx}{1}.REM_Post_stats.R_thresh,'WriteMode', 'append');
+    hdf5write(fname, '/F_REM_post_rThresh', A_out{F_idx}{1}.REM_Post_stats.R_thresh,'WriteMode', 'append');
+    hdf5write(fname, '/N_REM_post_proj', A_out{N_idx}{1}.REM_Post_proj(p_idx,:),'WriteMode', 'append');
+    hdf5write(fname, '/F_REM_post_proj', A_out{F_idx}{1}.REM_Post_proj(p_idx,:),'WriteMode', 'append');
+        hdf5write(fname, '/N_REM_post_tvec', A_out{N_idx}{1}.REM_Post_tvec,'WriteMode', 'append');
+    hdf5write(fname, '/F_REM_post_tvec', A_out{F_idx}{1}.REM_Post_tvec,'WriteMode', 'append');
+    
+    hdf5write(fname, '/N_REM_post_xlim', int16([90 150]),'WriteMode', 'append');
+    hdf5write(fname, '/F_REM_post_xlim', int16([0 60]),'WriteMode', 'append');
+
+    
 %% %%%%%%%%%%%%  sample plots for PCA ICA methods. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(1111)
