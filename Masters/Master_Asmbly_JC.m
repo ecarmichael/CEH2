@@ -180,8 +180,23 @@ for iA = size(A_out,2):-1:1
     
 end
         
+
+%% remove pv1254 due to inconsistent running. 
         
+    exclude_mouse = {'pv1254'};
+
+for ii = length(A_out):-1:1
     
+   if contains(A_out{ii}{1}.info.subject, exclude_mouse)
+       fprintf('Removing sesson: <strong>%s</strong>\n', A_out{ii}{1}.info.subject);
+          rm_idx(ii) = true;
+   else
+       rm_idx(ii) = false;
+   end
+    
+end
+
+A_out(rm_idx) = []; 
 %% collect the data
 
 Pre_n_Asmbly = []; Post_n_Asmbly = [];
@@ -857,6 +872,8 @@ hold on
 bar(p_centr, nanmean(A_hist_pre(lt1_idx,:))./max(nanmean(A_hist_pre(lt1_idx,:))), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
 bar(p_centr, nanmean(A_hist_post(lt1_idx,:))./max(nanmean(A_hist_post(lt1_idx,:))),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
 set(gca, 'XTickLabel', [], 'YTick', [0 1]);
+legend({'pre', 'post'}, 'box', 'off', 'Orientation', 'horizontal', 'Location', 'northwest')
+
 
 subplot(5,1,2)
 hold on
@@ -879,8 +896,10 @@ set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 
 subplot(5,1,5)
 hold on
-stem(p_centr, nanmean(A_hist_pre(HS_idx,:))./max(nanmean(A_hist_pre(HS_idx,:))), 'color', a_ord(2,:));
-stem(p_centr, nanmean(A_hist_post(HS_idx,:))./max(nanmean(A_hist_post(HS_idx,:))), 'color', a_ord(1,:));
+bar(p_centr, nanmean(A_hist_pre(HS_idx,:))./max(nanmean(A_hist_pre(HS_idx,:))), 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(p_centr, nanmean(A_hist_post(HS_idx,:))./max(nanmean(A_hist_post(HS_idx,:))), 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+% stem(p_centr, nanmean(A_hist_pre(HS_idx,:))./max(nanmean(A_hist_pre(HS_idx,:))), 'color', a_ord(2,:));
+% stem(p_centr, nanmean(A_hist_post(HS_idx,:))./max(nanmean(A_hist_post(HS_idx,:))), 'color', a_ord(1,:));
 set(gca, 'YTick', [0 1], 'XTick', [0 100]);
 xlabel('position on track (cm)')
 
@@ -909,8 +928,6 @@ xlabel('position on track (cm)')
 %% quantify using whole spatial map averaging
 
 data_in = A_out;
-Pre_hist = []; Post_hist = [];
-A_hist_pre = []; A_hist_post = [];
 Diff_ReAct_map = []; 
 Pre_ReAct_mean_map = []; 
 Post_ReAct_mean_map = []; 
@@ -1028,7 +1045,7 @@ set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 set(gca, 'YTick', [0 1], 'XTick', [0 100]);
 xlabel('position on track (cm)')
 
-
+%%
 figure(10101)
 clf
 off_set = 0:2.5:10;
@@ -1046,31 +1063,33 @@ for ii = 1:5
         this_idx = HS_idx;
     end
     % add 'walls'
-     if ii == 1 || ii == 2
-        rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(end)- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
-    elseif ii == 3 || ii ==4
-        rectangle('position', [off_set(ii), p_centr(ceil(length(p_centr)/2)), mode(diff(off_set))*.75, p_centr(end)- p_centr(ceil(length(p_centr)/2))], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
-    elseif ii ==5
-        rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(ceil(length(p_centr)/2))- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
-       end
-    
+%      if ii == 1 || ii == 2
+%         rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(end)- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+%     elseif ii == 3 || ii ==4
+%         rectangle('position', [off_set(ii), p_centr(ceil(length(p_centr)/2)), mode(diff(off_set))*.75, p_centr(end)- p_centr(ceil(length(p_centr)/2))], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+%     elseif ii ==5
+%         rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(ceil(length(p_centr)/2))- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+%        end
+%     
     hold on
     norm_val= max([nanmean(Diff_ReAct_map(this_idx,:))]);
-    plot((nanmean(Diff_ReAct_map(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
-    xline(off_set(ii)-1)
+    plot(((nanmean(Diff_ReAct_map(this_idx,:))./norm_val)-1)*100+off_set(ii)*100, p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
+% stem(p_centr,(((nanmean(Diff_ReAct_map(this_idx,:))./norm_val)-1)*100)+off_set(ii)*100,  'linewidth', 2, 'Color', f_ord(ii,:))
+
+    xline(off_set(ii)*100)
     if ii == 1
 %         text(off_set(ii)-.1, 97, '\leftarrow', 'HorizontalAlignment','right', 'Interpreter', 'TeX', 'fontsize', 8)
-        text(off_set(ii)-.1, p_centr(end), 'pre', 'HorizontalAlignment','right', 'Interpreter', 'TeX', 'fontsize', 8, 'VerticalAlignment', 'baseline')
+        text((off_set(ii)-.1)*100, p_centr(end), 'pre', 'HorizontalAlignment','right', 'Interpreter', 'TeX', 'fontsize', 8, 'VerticalAlignment', 'baseline')
 %         text(off_set(ii)+.1, 97, '\rightarrow', 'HorizontalAlignment','left', 'Interpreter', 'TeX', 'fontsize', 8)
-        text(off_set(ii)+.1, p_centr(end), 'post', 'HorizontalAlignment','left', 'Interpreter', 'TeX', 'fontsize', 8, 'VerticalAlignment', 'baseline')
+        text((off_set(ii)+.1)*100, p_centr(end), 'post', 'HorizontalAlignment','left', 'Interpreter', 'TeX', 'fontsize', 8, 'VerticalAlignment', 'baseline')
 
     end
 end
-set(gca, 'xtick', off_set, 'ytick', [0 100])
-set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
-ylabel('position (cm)')
-axis('square')
-title('REM assembly tuning')
+% set(gca, 'xtick', off_set, 'ytick', [0 100])
+% set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+% ylabel('position (cm)')
+% axis('square')
+% title('REM assembly tuning')
 %% convert to HD5
 
 
@@ -1636,6 +1655,36 @@ set(gcf,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), po
 
 print(gcf,  [fig_dir filesep   'Stats_summery_' strrep(num2str(A_out{1}{1}.info.bin), '.', 'p') 's_bin.pdf'], '-dpdf','-r0')
 
+% stats
+for jj = length(A_hist_pre):-1:1
+    
+    A_hist_pre_n = A_hist_pre(jj,:)./max(A_hist_pre(jj,:));
+    A_hist_post_n = A_hist_post(jj,:)./max(A_hist_post(jj,:));
+
+    pre_open(jj) = nanmean(A_hist_pre_n(1:8));
+    pre_closed(jj) = nanmean(A_hist_pre_n(12:end));
+    
+    wake_open(jj) = nanmean(A_hist_wake(jj,1:8));
+    wake_closed(jj) = nanmean(A_hist_wake(jj,12:end));
+    
+    post_open(jj) = nanmean(A_hist_post_n(1:8));
+    post_closed(jj) = nanmean(A_hist_post_n(12:end));
+    
+    d_temp = A_hist_post_n./A_hist_pre_n; 
+    
+    diff_open(jj) = nanmean(d_temp(1,1:8)); 
+        diff_closed(jj) = nanmean(d_temp(12:end)); 
+
+    
+    
+end
+ReAct_tbl = table(Sub', Cond', pre_open', pre_closed', post_open', post_closed', ...
+    'VariableNames',{'Sub', 'Cond', 'pre_open', 'pre_closed', 'post_open', 'post_closed'});
+
+tbl.Sub = nominal(tbl.Sub);
+tbl.Cond = nominal(tbl.Cond);
+
+% rma_stats = ranova(
 
 %% normalized reactivation maps
 
@@ -1748,7 +1797,6 @@ fprintf('nWake_R: coef test p = %2.4f\n', coefTest(lme_wake_R))
 % stats = anova1(lme_wake_A);
 % multcompare(stats)
 
-%% quick plot of the reactivtion strength by condition
 
 
 
