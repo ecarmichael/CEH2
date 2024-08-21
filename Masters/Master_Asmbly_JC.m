@@ -154,6 +154,25 @@ load([main_dir  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Asse
 A_out = B_out; 
 clear B_out 
 
+% remove pv1254 due to inconsistent running. 
+
+        
+    exclude_mouse = {'pv1254'};
+
+for ii = length(A_out):-1:1
+    
+   if contains(A_out{ii}{1}.info.subject, exclude_mouse)
+       fprintf('Removing sesson: <strong>%s</strong>\n', A_out{ii}{1}.info.subject);
+          rm_idx(ii) = true;
+   else
+       rm_idx(ii) = false;
+   end
+    
+end
+
+A_out(rm_idx) = []; 
+
+
    novel_idx = []; anx_idx = []; HS_idx = []; 
 for iA = size(A_out,2):-1:1
     this_f = A_out{iA}{1}.info.session; 
@@ -181,22 +200,7 @@ for iA = size(A_out,2):-1:1
 end
         
 
-%% remove pv1254 due to inconsistent running. 
-        
-    exclude_mouse = {'pv1254'};
 
-for ii = length(A_out):-1:1
-    
-   if contains(A_out{ii}{1}.info.subject, exclude_mouse)
-       fprintf('Removing sesson: <strong>%s</strong>\n', A_out{ii}{1}.info.subject);
-          rm_idx(ii) = true;
-   else
-       rm_idx(ii) = false;
-   end
-    
-end
-
-A_out(rm_idx) = []; 
 %% collect the data
 
 Pre_n_Asmbly = []; Post_n_Asmbly = [];
@@ -479,7 +483,7 @@ fprintf('<strong> %s</strong> <strong> %0.02f</strong>\x00B1%0.2f wake assemblie
     'HAT', nanmean(wake_n_Asmbly(a_idx, iB)), std(wake_n_Asmbly(a_idx,iB)), nanmean(Pre_n_Asmbly(a_idx, iB)), std(Pre_n_Asmbly(a_idx,iB)), nanmean(Post_n_Asmbly(a_idx, iB)), std(Post_n_Asmbly(a_idx,iB)))
 
 
-%% collect j20 and control reactivation strength
+%% collect  control reactivation strength
 
 A_Pre_n = []; A_Post_n = [];
 A_Pre_r = []; A_Post_r = [];
@@ -991,56 +995,61 @@ for iB = length(data_in{ii}):-1:1
     end
     
 end
-%%
+%
 a_ord = MS_linspecer(2);
 
 figure(300)
 clf
 subplot(5,1,1)
 hold on
-bar(this_data.map{1}.bins, nanmean(Pre_ReAct_mean_map(lt1_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
-bar(this_data.map{1}.bins, nanmean(Post_ReAct_mean_map(lt1_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
-plot(this_data.map{1}.bins, nanmean(Wake_ReAct_mean_map(lt1_idx,:)), 'color', 'k');
+bar(this_A.map{1}.bins, nanmean(Pre_ReAct_mean_map(lt1_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(this_A.map{1}.bins, nanmean(Post_ReAct_mean_map(lt1_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+plot(this_A.map{1}.bins, nanmean(Wake_ReAct_mean_map(lt1_idx,:)), 'color', 'k');
 legend({'pre', 'post', 'wake'}, 'box', 'off', 'Orientation', 'horizontal', 'Location', 'northwest')
 
 set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 
 subplot(5,1,2)
 hold on
-bar(this_data.map{1}.bins, nanmean(Pre_ReAct_mean_map(lt5_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
-bar(this_data.map{1}.bins, nanmean(Post_ReAct_mean_map(lt5_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
-plot(this_data.map{1}.bins, nanmean(Wake_ReAct_mean_map(lt5_idx,:)), 'color', 'k');
+bar(this_A.map{1}.bins, nanmean(Pre_ReAct_mean_map(lt5_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(this_A.map{1}.bins, nanmean(Post_ReAct_mean_map(lt5_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+plot(this_A.map{1}.bins, nanmean(Wake_ReAct_mean_map(lt5_idx,:)), 'color', 'k');
 
 set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 
 subplot(5,1,3)
 hold on
-rectangle('position', [(this_data.map{1}.bins(end) - this_data.map{1}.bins(1) +this_data.map{1}.bin_size)/2, 0, (this_data.map{1}.bins(end) - this_data.map{1}.bins(1) +this_data.map{1}.bin_size)/2, max([nanmean(Pre_ReAct_mean_map(H1_idx,:)) nanmean(Post_ReAct_mean_map(H1_idx,:))])*1.3], ...
+rectangle('position', [(this_A.map{1}.bins(end) - this_A.map{1}.bins(1) +this_A.map{1}.bin_size)/2, 0, (this_A.map{1}.bins(end) - this_A.map{1}.bins(1) +this_A.map{1}.bin_size)/2, max([nanmean(Pre_ReAct_mean_map(H1_idx,:)) nanmean(Post_ReAct_mean_map(H1_idx,:))])*1.3], ...
     'FaceColor', [.8 .8 .8], 'EdgeColor', [1 1 1])
-bar(this_data.map{1}.bins, nanmean(Pre_ReAct_mean_map(H1_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
-bar(this_data.map{1}.bins, nanmean(Post_ReAct_mean_map(H1_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
-plot(this_data.map{1}.bins, nanmean(Wake_ReAct_mean_map(H1_idx,:)), 'color', 'k');
-
+bar(this_A.map{1}.bins, nanmean(Pre_ReAct_mean_map(H1_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(this_A.map{1}.bins, nanmean(Post_ReAct_mean_map(H1_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+plot(this_A.map{1}.bins, nanmean(Wake_ReAct_mean_map(H1_idx,:)), 'color', 'k');
+xlim([this_A.map{1}.bins(1)-.5 this_A.map{1}.bins(end)+0.5])
+ylim([0 max([nanmean(Pre_ReAct_mean_map(H1_idx,:)) nanmean(Post_ReAct_mean_map(H1_idx,:))])*1.1])
 set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 
 
 subplot(5,1,4); cla
 hold on
-rectangle('position', [(this_data.map{1}.bins(end) - this_data.map{1}.bins(1) +this_data.map{1}.bin_size)/2, 0, (this_data.map{1}.bins(end) - this_data.map{1}.bins(1) +this_data.map{1}.bin_size)/2, max([nanmean(Pre_ReAct_mean_map(H5_idx,:)) nanmean(Post_ReAct_mean_map(H5_idx,:))])*1.3], ...
+rectangle('position', [(this_A.map{1}.bins(end) - this_A.map{1}.bins(1) +this_A.map{1}.bin_size)/2, 0, (this_A.map{1}.bins(end) - this_A.map{1}.bins(1) +this_A.map{1}.bin_size)/2, max([nanmean(Pre_ReAct_mean_map(H5_idx,:)) nanmean(Post_ReAct_mean_map(H5_idx,:))])*1.3], ...
     'FaceColor', [.8 .8 .8], 'EdgeColor', [1 1 1])
-bar(this_data.map{1}.bins, nanmean(Pre_ReAct_mean_map(H5_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
-bar(this_data.map{1}.bins, nanmean(Post_ReAct_mean_map(H5_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
-plot(this_data.map{1}.bins, nanmean(Wake_ReAct_mean_map(H5_idx,:)), 'color', 'k');
+bar(this_A.map{1}.bins, nanmean(Pre_ReAct_mean_map(H5_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(this_A.map{1}.bins, nanmean(Post_ReAct_mean_map(H5_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+plot(this_A.map{1}.bins, nanmean(Wake_ReAct_mean_map(H5_idx,:)), 'color', 'k');
+xlim([this_A.map{1}.bins(1)-.5 this_A.map{1}.bins(end)+0.5])
+ylim([0 max([nanmean(Pre_ReAct_mean_map(H5_idx,:)) nanmean(Post_ReAct_mean_map(H5_idx,:))])*1.1])
 set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 
 subplot(5,1,5)
 hold on
-rectangle('position', [this_data.map{1}.bins(1) - this_data.map{1}.bin_size/2, 0, (this_data.map{1}.bins(end) - this_data.map{1}.bins(1) +this_data.map{1}.bin_size)/2, max([nanmean(Pre_ReAct_mean_map(HS_idx,:)) nanmean(Post_ReAct_mean_map(HS_idx,:))])*1.3], ...
+rectangle('position', [this_A.map{1}.bins(1) - this_A.map{1}.bin_size/2, 0, (this_A.map{1}.bins(end) - this_A.map{1}.bins(1) +this_A.map{1}.bin_size)/2, max([nanmean(Pre_ReAct_mean_map(HS_idx,:)) nanmean(Post_ReAct_mean_map(HS_idx,:))])*1.3], ...
     'FaceColor', [.8 .8 .8], 'EdgeColor', [1 1 1]);
-bar(this_data.map{1}.bins, nanmean(Pre_ReAct_mean_map(HS_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
-bar(this_data.map{1}.bins, nanmean(Post_ReAct_mean_map(HS_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
-plot(this_data.map{1}.bins, nanmean(Wake_ReAct_mean_map(HS_idx,:)), 'color', 'k');
+bar(this_A.map{1}.bins, nanmean(Pre_ReAct_mean_map(HS_idx,:)), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(this_A.map{1}.bins, nanmean(Post_ReAct_mean_map(HS_idx,:)),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+plot(this_A.map{1}.bins, nanmean(Wake_ReAct_mean_map(HS_idx,:)), 'color', 'k');
 
+xlim([this_A.map{1}.bins(1)-.5 this_A.map{1}.bins(end)+0.5])
+ylim([0 max([nanmean(Pre_ReAct_mean_map(HS_idx,:)) nanmean(Post_ReAct_mean_map(HS_idx,:))])*1.1])
 set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 set(gca, 'YTick', [0 1], 'XTick', [0 100]);
 xlabel('position on track (cm)')
@@ -1655,37 +1664,168 @@ set(gcf,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), po
 
 print(gcf,  [fig_dir filesep   'Stats_summery_' strrep(num2str(A_out{1}{1}.info.bin), '.', 'p') 's_bin.pdf'], '-dpdf','-r0')
 
-% stats
-for jj = length(A_hist_pre):-1:1
+%% stats
+bin_idx = nearest_idx([40 60], A_out{1}{1}.map{1}.bins); 
+
+for jj = size(A_hist_pre,1):-1:1
     
     A_hist_pre_n = A_hist_pre(jj,:)./max(A_hist_pre(jj,:));
     A_hist_post_n = A_hist_post(jj,:)./max(A_hist_post(jj,:));
 
-    pre_open(jj) = nanmean(A_hist_pre_n(1:8));
-    pre_closed(jj) = nanmean(A_hist_pre_n(12:end));
-    
-    wake_open(jj) = nanmean(A_hist_wake(jj,1:8));
-    wake_closed(jj) = nanmean(A_hist_wake(jj,12:end));
-    
-    post_open(jj) = nanmean(A_hist_post_n(1:8));
-    post_closed(jj) = nanmean(A_hist_post_n(12:end));
+    if Cond(jj) ~= 5
+        pre_open(jj) = nanmean(A_hist_pre_n(1:8));
+        pre_closed(jj) = nanmean(A_hist_pre_n(12:end));
+        
+        wake_open(jj) = nanmean(A_hist_wake(jj,1:8));
+        wake_closed(jj) = nanmean(A_hist_wake(jj,12:end));
+        
+        post_open(jj) = nanmean(A_hist_post_n(1:8));
+        post_closed(jj) = nanmean(A_hist_post_n(12:end));
+        
+        
+        pre_map_open(jj) = nanmean(Pre_ReAct_mean_map(jj,1:bin_idx(1)));
+        pre_map_closed(jj) = nanmean(Pre_ReAct_mean_map(jj,bin_idx:end));
+        
+        wake_map_open(jj) = nanmean(Wake_ReAct_mean_map(jj,1:bin_idx(1)));
+        wake_map_closed(jj) = nanmean(Wake_ReAct_mean_map(jj,bin_idx(2):end));
+        
+        post_map_open(jj) = nanmean(Post_ReAct_mean_map(jj,1:bin_idx(1)));
+        post_map_closed(jj) = nanmean(Post_ReAct_mean_map(jj,bin_idx(2):end));
+        
+    elseif Cond(jj) ==5
+        pre_closed(jj) = nanmean(A_hist_pre_n(1:8));
+        pre_open(jj) = nanmean(A_hist_pre_n(12:end));
+        
+        wake_closed(jj) = nanmean(A_hist_wake(jj,1:8));
+        wake_open(jj) = nanmean(A_hist_wake(jj,12:end));
+        
+        post_closed(jj) = nanmean(A_hist_post_n(1:8));
+        post_open(jj) = nanmean(A_hist_post_n(12:end));
+       
+        pre_map_open(jj) = nanmean(Pre_ReAct_mean_map(jj,1:bin_idx(1)));
+        pre_map_closed(jj) = nanmean(Pre_ReAct_mean_map(jj,bin_idx:end));
+        
+        wake_map_open(jj) = nanmean(Wake_ReAct_mean_map(jj,1:bin_idx(1)));
+        wake_map_closed(jj) = nanmean(Wake_ReAct_mean_map(jj,bin_idx(2):end));
+        
+        post_map_open(jj) = nanmean(Post_ReAct_mean_map(jj,1:bin_idx(1)));
+        post_map_closed(jj) = nanmean(Post_ReAct_mean_map(jj,bin_idx(2):end));
+        
+    end
     
     d_temp = A_hist_post_n./A_hist_pre_n; 
     
     diff_open(jj) = nanmean(d_temp(1,1:8)); 
         diff_closed(jj) = nanmean(d_temp(12:end)); 
+end
+ReAct_tbl = table(Sub', Cond', pre_open', pre_closed', post_open', post_closed',pre_map_open', pre_map_closed',wake_map_open', wake_map_closed',post_map_open', post_map_closed', ...
+    'VariableNames',{'Sub', 'Cond', 'pre_open', 'pre_closed', 'post_open', 'post_closed','pre_map_open', 'pre_map_closed','wake_map_open', 'wake_map_closed','post_map_open', 'post_map_closed'});
 
+ReAct_tbl.Sub = nominal(ReAct_tbl.Sub);
+ReAct_tbl.Cond = nominal(ReAct_tbl.Cond);
+
+
+% long form. 
+all_hist_O_C = []; all_map_O_C = []; Pre_Post = {};  O_C = {}; S_l = []; S_type = [];
+
+for jj = 1:length(ReAct_tbl.Sub)
     
+    all_hist_O_C(end+1) = ReAct_tbl.pre_open(jj);
+    all_hist_O_C(end+1) = ReAct_tbl.pre_closed(jj);
+    all_hist_O_C(end+1) = ReAct_tbl.post_open(jj);
+    all_hist_O_C(end+1) = ReAct_tbl.post_closed(jj);
+    
+    all_map_O_C(end+1) = ReAct_tbl.pre_map_open(jj);
+    all_map_O_C(end+1) = ReAct_tbl.pre_map_closed(jj);
+    all_map_O_C(end+1) = ReAct_tbl.post_map_open(jj);
+    all_map_O_C(end+1) = ReAct_tbl.post_map_closed(jj);
+    
+    Pre_Post{end+1} = 'pre'; 
+    Pre_Post{end+1} = 'pre'; 
+    Pre_Post{end+1} = 'post'; 
+    Pre_Post{end+1} = 'post'; 
+
+    O_C{end+1} = 'open'; 
+    O_C{end+1} = 'closed';
+    O_C{end+1} = 'open'; 
+    O_C{end+1} = 'closed'; 
+
+    S_l(end+1) = ReAct_tbl.Sub(jj); 
+    S_l(end+1) = ReAct_tbl.Sub(jj); 
+    S_l(end+1) = ReAct_tbl.Sub(jj); 
+    S_l(end+1) = ReAct_tbl.Sub(jj); 
+    
+    S_type(end+1) = ReAct_tbl.Cond(jj); 
+    S_type(end+1) = ReAct_tbl.Cond(jj); 
+    S_type(end+1) = ReAct_tbl.Cond(jj); 
+    S_type(end+1) = ReAct_tbl.Cond(jj); 
     
 end
-ReAct_tbl = table(Sub', Cond', pre_open', pre_closed', post_open', post_closed', ...
-    'VariableNames',{'Sub', 'Cond', 'pre_open', 'pre_closed', 'post_open', 'post_closed'});
+H1_idx = S_type == 3; 
+L5_idx = S_type == 2; 
 
-tbl.Sub = nominal(tbl.Sub);
-tbl.Cond = nominal(tbl.Cond);
+
+ReAct_long_tbl = table(S_l(L5_idx |H1_idx)', S_type(L5_idx |H1_idx)',Pre_Post(L5_idx |H1_idx)', O_C(L5_idx |H1_idx)',all_map_O_C(L5_idx |H1_idx)', all_hist_O_C(L5_idx |H1_idx)', 'VariableNames', {'Subject', 'Session','Pre_post', 'Open_Closed', 'Mean_map', 'Mean_hist'}); 
+ReAct_long_tbl.Subject = nominal(ReAct_long_tbl.Subject);
+ReAct_long_tbl.Session = categorical(ReAct_long_tbl.Session);
+ReAct_long_tbl.Open_Closed = categorical(ReAct_long_tbl.Open_Closed);
+ReAct_long_tbl.Pre_post = categorical(ReAct_long_tbl.Pre_post);
+
+LM_map = fitlme(ReAct_long_tbl, 'Mean_map ~ Session * Open_Closed * Pre_post + (1|Subject)')
+
+figure(8989); clf
+boxchart(ReAct_long_tbl.Session, ReAct_long_tbl.Mean_map, 'GroupbyColor', ReAct_long_tbl.Open_Closed)
+legend
+writetable(ReAct_long_tbl, [inter_dir filesep 'Map_ReAct_tbl.csv'])
+
+% same but with the difference between open and closed
+% long form. 
+all_hist_O_C = []; all_map_O_C = []; Pre_Post = {};  S_l = []; S_type = [];
+
+for jj = 1:length(ReAct_tbl.Sub)
+    
+    all_hist_O_C(end+1) = ReAct_tbl.pre_open(jj) - ReAct_tbl.pre_closed(jj);
+    all_hist_O_C(end+1) = ReAct_tbl.post_open(jj) - ReAct_tbl.post_closed(jj);
+    
+    all_map_O_C(end+1) = ReAct_tbl.pre_map_open(jj) - ReAct_tbl.pre_map_closed(jj);
+    all_map_O_C(end+1) = ReAct_tbl.post_map_open(jj) - ReAct_tbl.post_map_closed(jj);
+    
+    Pre_Post{end+1} = 'pre'; 
+    Pre_Post{end+1} = 'post'; 
+
+
+    S_l(end+1) = ReAct_tbl.Sub(jj); 
+    S_l(end+1) = ReAct_tbl.Sub(jj); 
+    
+    S_type(end+1) = ReAct_tbl.Cond(jj); 
+    S_type(end+1) = ReAct_tbl.Cond(jj); 
+    
+end
+H_idx = S_type == 3; 
+F_idx = S_type == 2; 
+
+% S_type(S_type == 2) = '
+
+
+Diff_tbl = table(S_l(F_idx |H_idx)', S_type(F_idx |H_idx)',Pre_Post(F_idx |H_idx)', all_map_O_C(F_idx |H_idx)', all_hist_O_C(F_idx |H_idx)', 'VariableNames', {'Subject', 'Session','Pre_post', 'Mean_map', 'Mean_hist'}); 
+Diff_tbl.Subject = nominal(Diff_tbl.Subject);
+Diff_tbl.Session = categorical(Diff_tbl.Session);
+Diff_tbl.Pre_post = categorical(Diff_tbl.Pre_post);
+
+
+diff_LM_map = fitlme(Diff_tbl, 'Mean_map ~ Session * Pre_post + (1|Subject)')
+anova(diff_LM_map)
+figure(8989); clf
+boxchart(Diff_tbl.Session, Diff_tbl.Mean_map, 'GroupbyColor', Diff_tbl.Pre_post)
+legend
+
+writetable(Diff_tbl, [inter_dir filesep 'diff_tbl.csv'])
+
+
 
 % rma_stats = ranova(
-
+% rm = fitrm(ReAct_tbl, 'c2_t1-c1_t0 ~ 1', 'WithinDesign', w);
+% ranova(rm, 'withinmodel', 'cond*time')
 %% normalized reactivation maps
 
 
@@ -1899,54 +2039,7 @@ set(gca, 'XTickLabel', {'Novel', 'Familiar'})
 ylim(y_lim);
 
 title('Wake Assemblies in Post SWS')
-%% LT  novel vs familiar top assemblies. for Fig 3b
 
-sub = '1060'; 
-LT1_idx = []; LT5 = []; 
-
-for ii = length(h_idx):-1:1
-    
-    if contains(h_idx(ii).name, sub) && contains(h_idx(ii).name, 'LTD1')
-        disp(h_idx(ii).name)
-        LT1_idx(ii) = true;
-    else
-        LT1_idx(ii) = false;
-    end
-    
-    if contains(h_idx(ii).name, sub) && contains(h_idx(ii).name, 'LTD5')
-        disp(h_idx(ii).name)
-        LT5_idx(ii) = true;
-    else
-        LT5_idx(ii) = false;
-    end
-    
-end
-
-LT1_idx = find(LT1_idx); 
-LT5_idx = find(LT5_idx); 
-
-
-figure(32)
-clf
-
-for iD = 1:2
-    
-    if iD == 1
-        this_h5 = MS_h5_to_stuct(h_idx(LT1_idx).name);
-    elseif iD == 2
-        this_h5 = MS_h5_to_stuct(h_idx(LT5_idx).name);
-    end
-
-
-subplot(2,3, [iD iD+2])
-    
-% plot(this_h5.
-    
-    
-    
-    
-end
-    
 
 %% plot a specific example
 N_idx = []; F_idx = []; 
