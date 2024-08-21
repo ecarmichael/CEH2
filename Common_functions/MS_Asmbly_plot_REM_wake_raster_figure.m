@@ -1,13 +1,29 @@
-function MS_Asmbly_plot_raster_figure(A_in, fig_dir,plot_idx, type)
+function MS_Asmbly_plot_REM_wake_raster_figure(A_in, REM, fig_dir,plot_idx, type)
 
-if nargin < 2
+    fprintf('Plotting <strong>%s</strong> assemblies in wake\n', REM); 
+
+if strcmpi(REM, 'Pre')
+    A_in.P_pos = A_in.pREM_A_pos; 
+        wake_proj = A_in.preREM_Wake_proj; 
+
+elseif strcmpi(REM, 'Post')
+    A_in.P_pos = A_in.postREM_A_pos; 
+    wake_proj = A_in.postREM_Wake_proj; 
+    
+end
+    
+
+
+
+
+if nargin < 3
     fig_dir = [];
     plot_idx = 1:length(A_in.P_pos);
     type = 'act_mat';
-elseif nargin < 3
+elseif nargin < 4
     plot_idx = 1:length(A_in.P_pos);
     type = 'act_mat';
-elseif nargin < 4
+elseif nargin < 5
     type = 'act_mat';
 end
 
@@ -158,7 +174,7 @@ leg_val = [];
 yline(log10(10), '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
 
 for iA = plot_idx
-    this_proj = A_in.P_proj(iA,:);
+    this_proj = wake_proj(iA,:);
     %         this_proj(this_proj <=0) =NaN;
     plot(A_in.wake_tvec, log10(this_proj), 'color', c_ord(find(iA == plot_idx),:), 'linewidth', .5)
     leg_val{find(iA == plot_idx)} = [ num2str(iA)];
@@ -196,7 +212,7 @@ if ~isempty(fig_dir)
 %         
 %         delete([fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_wake_raster.pdf'], 'file');
 %     end
-    print(gcf, '-dpdf', [fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_wake_raster.pdf'])
+    print(gcf, '-dpdf', [fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_' REM '_wake_raster.pdf'])
     linkprop(ax,{'XLim'});
 
     xlim([200 300])
@@ -204,7 +220,7 @@ if ~isempty(fig_dir)
     for ii = 2:length(c_step)
         text(200-4, c_step(ii) - diff(c_step(ii-1:ii))/2, c_label{ii-1},'HorizontalAlignment', 'right', 'Color', c_map(ii,:), 'FontSize', ft_size )
     end
-        print(gcf, '-dpdf', [fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_wake_raster_zoom.pdf'])
+        print(gcf, '-dpdf', [fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_' REM '_wake_raster_zoom.pdf'])
 
 end
 

@@ -121,7 +121,7 @@ for ii = 1:length(f_list)
     end
     
     if anx_idx(ii)== 0 && novel_idx(ii)==1
-%         B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii});
+        %         B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii});
         
     end
     
@@ -145,38 +145,42 @@ A_out = A_out(1:11);
 save([main_dir  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
 % end
 
-%% load data that has been processed. 
+%% load data that has been processed.
 
+method = 'binary';
 
 load([main_dir  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
 
-% rename due to progressive structure naming convention above. 
-A_out = B_out; 
-clear B_out 
+% rename due to progressive structure naming convention above.
+A_out = B_out;
+clear B_out
 
-% remove pv1254 due to inconsistent running. 
+% remove pv1254 due to inconsistent running.
 
-        
-    exclude_mouse = {'pv1254'};
+
+exclude_mouse = {'pv1254'};
 
 for ii = length(A_out):-1:1
     
-   if contains(A_out{ii}{1}.info.subject, exclude_mouse)
-       fprintf('Removing sesson: <strong>%s</strong>\n', A_out{ii}{1}.info.subject);
-          rm_idx(ii) = true;
-   else
-       rm_idx(ii) = false;
-   end
+    if contains(A_out{ii}{1}.info.subject, exclude_mouse)
+        fprintf('Removing sesson: <strong>%s</strong>\n', A_out{ii}{1}.info.subject);
+        rm_idx(ii) = true;
+    else
+        rm_idx(ii) = false;
+    end
     
 end
 
-A_out(rm_idx) = []; 
+A_out(rm_idx) = [];
 
 
-   novel_idx = []; anx_idx = []; HS_idx = []; 
+novel_idx = []; anx_idx = []; HS_idx = [];
 for iA = size(A_out,2):-1:1
-    this_f = A_out{iA}{1}.info.session; 
-    
+    this_f = A_out{iA}{1}.info.session;
+                
+    A_out{iA} = Pipeline_Asmbly_append_preA(A_out{iA});
+    A_out{iA} = Pipeline_Asmbly_append_postA(A_out{iA});
+
     if contains(this_f, 'HATDS')
         HS_idx(iA) = 1;
     else
@@ -198,7 +202,7 @@ for iA = size(A_out,2):-1:1
     end
     
 end
-        
+
 
 
 %% collect the data
@@ -262,7 +266,7 @@ end
 
 %% plot the number of Assemblies pre and post.
 
-s_test = 'ttest'; 
+s_test = 'ttest';
 
 max_n_A = max([(Pre_n_Asmbly) ; (Post_n_Asmbly) ]);
 max_n_A = max_n_A*1.5;
@@ -791,8 +795,8 @@ A_hist_pre = []; A_hist_post = [];
 
 for kk = 1
     
-        data_in = A_out;
-
+    data_in = A_out;
+    
     
     for iB = length(data_in{ii}):-1:1
         
@@ -932,9 +936,9 @@ xlabel('position on track (cm)')
 %% quantify using whole spatial map averaging
 
 data_in = A_out;
-Diff_ReAct_map = []; 
-Pre_ReAct_mean_map = []; 
-Post_ReAct_mean_map = []; 
+Diff_ReAct_map = [];
+Pre_ReAct_mean_map = [];
+Post_ReAct_mean_map = [];
 
 % loop over window size
 for iB = length(data_in{ii}):-1:1
@@ -949,7 +953,7 @@ for iB = length(data_in{ii}):-1:1
         % make arrays to accrue reactivation locations;
         Pre_ReAct_mat = []; Post_ReAct_mat = []; Wake_ReAct_mat = [];
         Pre_ReAct_map = cell(length(data_in),1); Post_ReAct_map = cell(length(data_in),1); Wake_ReAct_map = cell(length(data_in),1);
-
+        
         cent_z = []; peak_z = []; M_cent = [];
         
         Pre_cnt = sum((this_A.REM_Pre_proj > this_A.REM_Pre_stats.R_thresh), 2);
@@ -970,10 +974,10 @@ for iB = length(data_in{ii}):-1:1
                 Pre_ReAct_map{ii} = [Pre_ReAct_map{ii} ;repmat(this_A.map{iA}.map_mean./max(this_A.map{iA}.map_mean), Pre_cnt(iA),1)];
                 Post_ReAct_map{ii} = [Post_ReAct_map{ii} ;repmat(this_A.map{iA}.map_mean./max(this_A.map{iA}.map_mean), Post_cnt(iA),1)];
                 Wake_ReAct_map{ii} = [Wake_ReAct_map{ii} ;repmat(this_A.map{iA}.map_mean./max(this_A.map{iA}.map_mean), Wake_cnt(iA),1)];
-
+                
             end
         end
-
+        
         if isempty(Pre_ReAct_map{ii})
             Pre_ReAct_map{ii} = NaN(1,length(p_bins(1:end)));
         end
@@ -981,17 +985,17 @@ for iB = length(data_in{ii}):-1:1
         if isempty(Post_ReAct_map{ii})
             Post_ReAct_map{ii} = NaN(1,length(p_bins(1:end)));
         end
-
+        
         if isempty(Wake_ReAct_map{ii})
             Wake_ReAct_map{ii} = NaN(1,length(p_bins(1:end)));
         end
-
-               Pre_ReAct_mean_map(ii,:) = mean(Pre_ReAct_map{ii});
-                Post_ReAct_mean_map(ii,:) = mean(Post_ReAct_map{ii});
+        
+        Pre_ReAct_mean_map(ii,:) = mean(Pre_ReAct_map{ii});
+        Post_ReAct_mean_map(ii,:) = mean(Post_ReAct_map{ii});
         Diff_ReAct_map(ii,:) = Pre_ReAct_mean_map(ii,:)./Post_ReAct_mean_map(ii,:);
-                 Wake_ReAct_mean_map(ii,:) = mean(Wake_ReAct_map{ii});
-
-
+        Wake_ReAct_mean_map(ii,:) = mean(Wake_ReAct_map{ii});
+        
+        
     end
     
 end
@@ -1072,26 +1076,26 @@ for ii = 1:5
         this_idx = HS_idx;
     end
     % add 'walls'
-%      if ii == 1 || ii == 2
-%         rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(end)- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
-%     elseif ii == 3 || ii ==4
-%         rectangle('position', [off_set(ii), p_centr(ceil(length(p_centr)/2)), mode(diff(off_set))*.75, p_centr(end)- p_centr(ceil(length(p_centr)/2))], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
-%     elseif ii ==5
-%         rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(ceil(length(p_centr)/2))- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
-%        end
-%     
+    %      if ii == 1 || ii == 2
+    %         rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(end)- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    %     elseif ii == 3 || ii ==4
+    %         rectangle('position', [off_set(ii), p_centr(ceil(length(p_centr)/2)), mode(diff(off_set))*.75, p_centr(end)- p_centr(ceil(length(p_centr)/2))], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    %     elseif ii ==5
+    %         rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(ceil(length(p_centr)/2))- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    %        end
+    %
     hold on
     norm_val= max([nanmean(Diff_ReAct_map(this_idx,:))]);
     plot(((nanmean(Diff_ReAct_map(this_idx,:))./norm_val)-1)*100+off_set(ii)*100, p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
-% stem(p_centr,(((nanmean(Diff_ReAct_map(this_idx,:))./norm_val)-1)*100)+off_set(ii)*100,  'linewidth', 2, 'Color', f_ord(ii,:))
-
+    % stem(p_centr,(((nanmean(Diff_ReAct_map(this_idx,:))./norm_val)-1)*100)+off_set(ii)*100,  'linewidth', 2, 'Color', f_ord(ii,:))
+    
     xline(off_set(ii)*100)
     if ii == 1
-%         text(off_set(ii)-.1, 97, '\leftarrow', 'HorizontalAlignment','right', 'Interpreter', 'TeX', 'fontsize', 8)
+        %         text(off_set(ii)-.1, 97, '\leftarrow', 'HorizontalAlignment','right', 'Interpreter', 'TeX', 'fontsize', 8)
         text((off_set(ii)-.1)*100, p_centr(end), 'pre', 'HorizontalAlignment','right', 'Interpreter', 'TeX', 'fontsize', 8, 'VerticalAlignment', 'baseline')
-%         text(off_set(ii)+.1, 97, '\rightarrow', 'HorizontalAlignment','left', 'Interpreter', 'TeX', 'fontsize', 8)
+        %         text(off_set(ii)+.1, 97, '\rightarrow', 'HorizontalAlignment','left', 'Interpreter', 'TeX', 'fontsize', 8)
         text((off_set(ii)+.1)*100, p_centr(end), 'post', 'HorizontalAlignment','left', 'Interpreter', 'TeX', 'fontsize', 8, 'VerticalAlignment', 'baseline')
-
+        
     end
 end
 % set(gca, 'xtick', off_set, 'ytick', [0 100])
@@ -1265,12 +1269,12 @@ for ii = length(A_out):-1:1
     hdf5write(fname, '/wake_a_dir', int8(Asmbly_dir),'WriteMode', 'append');
     
     %     if strcmp(A_out{ii}{1}.info.session, 'LTD1')
-    Pre_REM_nA = size(A_out{ii}{1}.REM_temp,2);
+    Pre_REM_nA = size(A_out{ii}{1}.pREM_temp,2);
     
     if Pre_REM_nA == 0
         Pre_REM_wAct = 0;
     else
-        Pre_REM_wAct = sum(A_out{ii}{1}.REM_Wake_proj > 8, 2);
+        Pre_REM_wAct = sum(A_out{ii}{1}.pREM_Wake_proj > 8, 2);
     end
     
     fprintf('%s: Pre-ReM_nA = %0.0f | Pre_REM_wAct = %0.0f\n', fname(1:end-3), Pre_REM_nA, sum(Pre_REM_wAct >0))
@@ -1309,10 +1313,10 @@ exclude_mouse = {'pv1254'};
 
 for ii = length(h_idx):-1:1
     
-   if contains(h_idx(ii).name, exclude_mouse)
-       fprintf('Removing sesson: <strong>%s</strong>\n', h_idx(ii).name);
-          h_idx(ii) = []; 
-   end
+    if contains(h_idx(ii).name, exclude_mouse)
+        fprintf('Removing sesson: <strong>%s</strong>\n', h_idx(ii).name);
+        h_idx(ii) = [];
+    end
     
 end
 
@@ -1322,8 +1326,8 @@ mice = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252', 'pv1254'};
 Cond = []; Sub = []; nWake_A = [];nWake_R =[];  nPre_A = []; nPre_Act = []; nPre_SWS_A = []; nPost_SWS_A = [];
 PreA_str = []; PostA_str= [];
 nPre_sig = []; nPost_sig = [];
-nPre_A_prct = []; ReAct_str = []; 
-wake_move = []; wake_prct_move = []; 
+nPre_A_prct = []; ReAct_str = [];
+wake_move = []; wake_prct_move = [];
 R_thresh = [];
 
 for hh = length(h_idx):-1:1
@@ -1383,7 +1387,7 @@ clf
 set(gcf, 'Units', 'centimeters', 'Position', [0 0  30 20])
 
 
-% plot the pre and post REM assembly centroid reactivations. 
+% plot the pre and post REM assembly centroid reactivations.
 subplot(2,4,5)
 off_set = 0:2.5:10;
 for ii = 1:5
@@ -1411,13 +1415,13 @@ for ii = 1:5
     norm_val= max([nanmean(A_hist_pre(this_idx,:)) nanmean(A_hist_post(this_idx,:))]);
     plot((-nanmean(A_hist_pre(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
     plot((nanmean(A_hist_post(this_idx,:))./norm_val)+off_set(ii), p_centr,  'linewidth', 2, 'Color', [f_ord(ii,:) .5])
-
+    
     if ii == 1
-%         text(off_set(ii)-.1, 97, '\leftarrow', 'HorizontalAlignment','right', 'Interpreter', 'TeX', 'fontsize', 8)
+        %         text(off_set(ii)-.1, 97, '\leftarrow', 'HorizontalAlignment','right', 'Interpreter', 'TeX', 'fontsize', 8)
         text(off_set(ii)-.1, p_centr(end), 'pre', 'HorizontalAlignment','right', 'Interpreter', 'TeX', 'fontsize', 8, 'VerticalAlignment', 'baseline')
-%         text(off_set(ii)+.1, 97, '\rightarrow', 'HorizontalAlignment','left', 'Interpreter', 'TeX', 'fontsize', 8)
+        %         text(off_set(ii)+.1, 97, '\rightarrow', 'HorizontalAlignment','left', 'Interpreter', 'TeX', 'fontsize', 8)
         text(off_set(ii)+.1, p_centr(end), 'post', 'HorizontalAlignment','left', 'Interpreter', 'TeX', 'fontsize', 8, 'VerticalAlignment', 'baseline')
-
+        
     end
 end
 set(gca, 'xtick', off_set, 'ytick', [0 100])
@@ -1430,7 +1434,7 @@ title('REM assembly tuning')
 
 
 subplot(2,4,1)
-off_set = 0:2:8; 
+off_set = 0:2:8;
 for ii = 1:5
     if ii == 1
         this_idx = lt1_idx;
@@ -1444,19 +1448,19 @@ for ii = 1:5
         this_idx = HS_idx;
     end
     
-       if ii == 1 || ii == 2
+    if ii == 1 || ii == 2
         rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(end)- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
     elseif ii == 3 || ii ==4
         rectangle('position', [off_set(ii), p_centr(ceil(length(p_centr)/2)), mode(diff(off_set))*.75, p_centr(end)- p_centr(ceil(length(p_centr)/2))], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
     elseif ii ==5
         rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(ceil(length(p_centr)/2))- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
-       end
+    end
     
     hold on
     norm_val= max([nanmean(A_hist_wake(this_idx,:))]);
     plot((nanmean(A_hist_wake(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
     
-
+    
 end
 set(gca, 'xtick', off_set, 'ytick', [0 100])
 set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
@@ -1665,13 +1669,13 @@ set(gcf,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), po
 print(gcf,  [fig_dir filesep   'Stats_summery_' strrep(num2str(A_out{1}{1}.info.bin), '.', 'p') 's_bin.pdf'], '-dpdf','-r0')
 
 %% stats
-bin_idx = nearest_idx([40 60], A_out{1}{1}.map{1}.bins); 
+bin_idx = nearest_idx([40 60], A_out{1}{1}.map{1}.bins);
 
 for jj = size(A_hist_pre,1):-1:1
     
     A_hist_pre_n = A_hist_pre(jj,:)./max(A_hist_pre(jj,:));
     A_hist_post_n = A_hist_post(jj,:)./max(A_hist_post(jj,:));
-
+    
     if Cond(jj) ~= 5
         pre_open(jj) = nanmean(A_hist_pre_n(1:8));
         pre_closed(jj) = nanmean(A_hist_pre_n(12:end));
@@ -1701,7 +1705,7 @@ for jj = size(A_hist_pre,1):-1:1
         
         post_closed(jj) = nanmean(A_hist_post_n(1:8));
         post_open(jj) = nanmean(A_hist_post_n(12:end));
-       
+        
         pre_map_open(jj) = nanmean(Pre_ReAct_mean_map(jj,1:bin_idx(1)));
         pre_map_closed(jj) = nanmean(Pre_ReAct_mean_map(jj,bin_idx:end));
         
@@ -1713,10 +1717,10 @@ for jj = size(A_hist_pre,1):-1:1
         
     end
     
-    d_temp = A_hist_post_n./A_hist_pre_n; 
+    d_temp = A_hist_post_n./A_hist_pre_n;
     
-    diff_open(jj) = nanmean(d_temp(1,1:8)); 
-        diff_closed(jj) = nanmean(d_temp(12:end)); 
+    diff_open(jj) = nanmean(d_temp(1,1:8));
+    diff_closed(jj) = nanmean(d_temp(12:end));
 end
 ReAct_tbl = table(Sub', Cond', pre_open', pre_closed', post_open', post_closed',pre_map_open', pre_map_closed',wake_map_open', wake_map_closed',post_map_open', post_map_closed', ...
     'VariableNames',{'Sub', 'Cond', 'pre_open', 'pre_closed', 'post_open', 'post_closed','pre_map_open', 'pre_map_closed','wake_map_open', 'wake_map_closed','post_map_open', 'post_map_closed'});
@@ -1725,7 +1729,7 @@ ReAct_tbl.Sub = nominal(ReAct_tbl.Sub);
 ReAct_tbl.Cond = nominal(ReAct_tbl.Cond);
 
 
-% long form. 
+% long form.
 all_hist_O_C = []; all_map_O_C = []; Pre_Post = {};  O_C = {}; S_l = []; S_type = [];
 
 for jj = 1:length(ReAct_tbl.Sub)
@@ -1740,32 +1744,32 @@ for jj = 1:length(ReAct_tbl.Sub)
     all_map_O_C(end+1) = ReAct_tbl.post_map_open(jj);
     all_map_O_C(end+1) = ReAct_tbl.post_map_closed(jj);
     
-    Pre_Post{end+1} = 'pre'; 
-    Pre_Post{end+1} = 'pre'; 
-    Pre_Post{end+1} = 'post'; 
-    Pre_Post{end+1} = 'post'; 
-
-    O_C{end+1} = 'open'; 
-    O_C{end+1} = 'closed';
-    O_C{end+1} = 'open'; 
-    O_C{end+1} = 'closed'; 
-
-    S_l(end+1) = ReAct_tbl.Sub(jj); 
-    S_l(end+1) = ReAct_tbl.Sub(jj); 
-    S_l(end+1) = ReAct_tbl.Sub(jj); 
-    S_l(end+1) = ReAct_tbl.Sub(jj); 
+    Pre_Post{end+1} = 'pre';
+    Pre_Post{end+1} = 'pre';
+    Pre_Post{end+1} = 'post';
+    Pre_Post{end+1} = 'post';
     
-    S_type(end+1) = ReAct_tbl.Cond(jj); 
-    S_type(end+1) = ReAct_tbl.Cond(jj); 
-    S_type(end+1) = ReAct_tbl.Cond(jj); 
-    S_type(end+1) = ReAct_tbl.Cond(jj); 
+    O_C{end+1} = 'open';
+    O_C{end+1} = 'closed';
+    O_C{end+1} = 'open';
+    O_C{end+1} = 'closed';
+    
+    S_l(end+1) = ReAct_tbl.Sub(jj);
+    S_l(end+1) = ReAct_tbl.Sub(jj);
+    S_l(end+1) = ReAct_tbl.Sub(jj);
+    S_l(end+1) = ReAct_tbl.Sub(jj);
+    
+    S_type(end+1) = ReAct_tbl.Cond(jj);
+    S_type(end+1) = ReAct_tbl.Cond(jj);
+    S_type(end+1) = ReAct_tbl.Cond(jj);
+    S_type(end+1) = ReAct_tbl.Cond(jj);
     
 end
-H1_idx = S_type == 3; 
-L5_idx = S_type == 2; 
+H1_idx = S_type == 3;
+L5_idx = S_type == 2;
 
 
-ReAct_long_tbl = table(S_l(L5_idx |H1_idx)', S_type(L5_idx |H1_idx)',Pre_Post(L5_idx |H1_idx)', O_C(L5_idx |H1_idx)',all_map_O_C(L5_idx |H1_idx)', all_hist_O_C(L5_idx |H1_idx)', 'VariableNames', {'Subject', 'Session','Pre_post', 'Open_Closed', 'Mean_map', 'Mean_hist'}); 
+ReAct_long_tbl = table(S_l(L5_idx |H1_idx)', S_type(L5_idx |H1_idx)',Pre_Post(L5_idx |H1_idx)', O_C(L5_idx |H1_idx)',all_map_O_C(L5_idx |H1_idx)', all_hist_O_C(L5_idx |H1_idx)', 'VariableNames', {'Subject', 'Session','Pre_post', 'Open_Closed', 'Mean_map', 'Mean_hist'});
 ReAct_long_tbl.Subject = nominal(ReAct_long_tbl.Subject);
 ReAct_long_tbl.Session = categorical(ReAct_long_tbl.Session);
 ReAct_long_tbl.Open_Closed = categorical(ReAct_long_tbl.Open_Closed);
@@ -1779,7 +1783,7 @@ legend
 writetable(ReAct_long_tbl, [inter_dir filesep 'Map_ReAct_tbl.csv'])
 
 % same but with the difference between open and closed
-% long form. 
+% long form.
 all_hist_O_C = []; all_map_O_C = []; Pre_Post = {};  S_l = []; S_type = [];
 
 for jj = 1:length(ReAct_tbl.Sub)
@@ -1790,24 +1794,24 @@ for jj = 1:length(ReAct_tbl.Sub)
     all_map_O_C(end+1) = ReAct_tbl.pre_map_open(jj) - ReAct_tbl.pre_map_closed(jj);
     all_map_O_C(end+1) = ReAct_tbl.post_map_open(jj) - ReAct_tbl.post_map_closed(jj);
     
-    Pre_Post{end+1} = 'pre'; 
-    Pre_Post{end+1} = 'post'; 
-
-
-    S_l(end+1) = ReAct_tbl.Sub(jj); 
-    S_l(end+1) = ReAct_tbl.Sub(jj); 
+    Pre_Post{end+1} = 'pre';
+    Pre_Post{end+1} = 'post';
     
-    S_type(end+1) = ReAct_tbl.Cond(jj); 
-    S_type(end+1) = ReAct_tbl.Cond(jj); 
+    
+    S_l(end+1) = ReAct_tbl.Sub(jj);
+    S_l(end+1) = ReAct_tbl.Sub(jj);
+    
+    S_type(end+1) = ReAct_tbl.Cond(jj);
+    S_type(end+1) = ReAct_tbl.Cond(jj);
     
 end
-H_idx = S_type == 3; 
-F_idx = S_type == 2; 
+H_idx = S_type == 3;
+F_idx = S_type == 2;
 
 % S_type(S_type == 2) = '
 
 
-Diff_tbl = table(S_l(F_idx |H_idx)', S_type(F_idx |H_idx)',Pre_Post(F_idx |H_idx)', all_map_O_C(F_idx |H_idx)', all_hist_O_C(F_idx |H_idx)', 'VariableNames', {'Subject', 'Session','Pre_post', 'Mean_map', 'Mean_hist'}); 
+Diff_tbl = table(S_l(F_idx |H_idx)', S_type(F_idx |H_idx)',Pre_Post(F_idx |H_idx)', all_map_O_C(F_idx |H_idx)', all_hist_O_C(F_idx |H_idx)', 'VariableNames', {'Subject', 'Session','Pre_post', 'Mean_map', 'Mean_hist'});
 Diff_tbl.Subject = nominal(Diff_tbl.Subject);
 Diff_tbl.Session = categorical(Diff_tbl.Session);
 Diff_tbl.Pre_post = categorical(Diff_tbl.Pre_post);
@@ -1834,7 +1838,7 @@ clf
 set(gcf, 'Units', 'centimeters', 'Position', [0 0  30 20])
 
 
-% plot the pre and post REM assembly centroid reactivations. 
+% plot the pre and post REM assembly centroid reactivations.
 off_set = 0:2.5:10;
 for ii = 1:5
     if ii == 1
@@ -1858,24 +1862,24 @@ for ii = 1:5
     end
     
     hold on
-%     norm_val= max([nanmean(A_hist_pre(this_idx,:)) nanmean(A_hist_post(this_idx,:))]);
-%     plot((-nanmean(A_hist_pre(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
-%     plot((nanmean(A_hist_post(this_idx,:))./norm_val)+off_set(ii), p_centr,  'linewidth', 2, 'Color', [f_ord(ii,:) .5])
-
-this_pre = A_hist_pre(this_idx,:); 
-this_pre(this_pre == 0) = inf; 
-this_post = A_hist_post(this_idx,:); 
-this_post(this_post == 0) = inf; 
-
-post_pre = mean(this_post./this_pre, 'omitnan'); 
-
-%     post_pre = nanmean(A_hist_post(this_idx,:)./A_hist_pre(this_idx,:));
+    %     norm_val= max([nanmean(A_hist_pre(this_idx,:)) nanmean(A_hist_post(this_idx,:))]);
+    %     plot((-nanmean(A_hist_pre(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
+    %     plot((nanmean(A_hist_post(this_idx,:))./norm_val)+off_set(ii), p_centr,  'linewidth', 2, 'Color', [f_ord(ii,:) .5])
     
-    post_pre(isinf(post_pre)) = NaN; 
-
-    post_pre = post_pre./max(post_pre); 
+    this_pre = A_hist_pre(this_idx,:);
+    this_pre(this_pre == 0) = inf;
+    this_post = A_hist_post(this_idx,:);
+    this_post(this_post == 0) = inf;
     
-    post_pre(isnan(post_pre)) =0; 
+    post_pre = mean(this_post./this_pre, 'omitnan');
+    
+    %     post_pre = nanmean(A_hist_post(this_idx,:)./A_hist_pre(this_idx,:));
+    
+    post_pre(isinf(post_pre)) = NaN;
+    
+    post_pre = post_pre./max(post_pre);
+    
+    post_pre(isnan(post_pre)) =0;
     
     plot(post_pre+off_set(ii), p_centr,'linewidth', 2, 'Color', f_ord(ii,:))
     xline(off_set(ii)+1)
@@ -2042,24 +2046,24 @@ title('Wake Assemblies in Post SWS')
 
 
 %% plot a specific example
-N_idx = []; F_idx = []; 
+N_idx = []; F_idx = [];
 for ii = length(A_out):-1:1
     
     if strcmpi(A_out{ii}{1}.info.subject, 'pv1060') &&  strcmpi(A_out{ii}{1}.info.session, 'LTD1')
-        N_idx(ii) = true; 
-        F_idx(ii) = false; 
+        N_idx(ii) = true;
+        F_idx(ii) = false;
     elseif strcmpi(A_out{ii}{1}.info.subject, 'pv1060') &&  strcmpi(A_out{ii}{1}.info.session, 'LTD5')
         N_idx(ii) = false;
         F_idx(ii) = true;
     else
         N_idx(ii) = false;
-        F_idx(ii) = false; 
+        F_idx(ii) = false;
     end
     
 end
 
-F_idx = find(F_idx); 
-N_idx = find(N_idx); 
+F_idx = find(F_idx);
+N_idx = find(N_idx);
 
 
 figure(9909)
@@ -2088,59 +2092,59 @@ for iD = 1:2
     else
         p_idx = p_rank(1:length(this_data.P_pos));
     end
-
+    
     c_ord = [67, 127, 151; 132 147 35; 255 179 13; 253 22 26]/255;
     
     ax(iD) = subplot(2,2,iD);
-%         yline(this_data.REM_Post_stats.R_thresh, '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
-        yline(log10(this_data.REM_Post_stats.R_thresh), '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
-
+    %         yline(this_data.REM_Post_stats.R_thresh, '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
+    yline(log10(this_data.REM_Post_stats.R_thresh), '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
+    
     hold on
     for ii = length(p_idx):-1:1
         this_proj = this_data.REM_Post_proj(p_idx(ii),:);
         plot(this_data.REM_Post_tvec, log10(this_proj), 'color', c_ord(ii,:), 'linewidth', .5)
     end
-
-            ylim([0 inf])
-        y_val = get(gca, 'YTick');
-%         y_val = [0 1 2 2.3979];
-% yTick', [0 1 2 2.3979]
-        set(gca, 'YTickLabel', 10.^y_val, 'linewidth', 1);
+    
+    ylim([0 inf])
+    y_val = get(gca, 'YTick');
+    %         y_val = [0 1 2 2.3979];
+    % yTick', [0 1 2 2.3979]
+    set(gca, 'YTickLabel', 10.^y_val, 'linewidth', 1);
     
     if iD == 1
-    ylabel({'assembly strength'})
+        ylabel({'assembly strength'})
     end
-            set(gca, 'xtick', []); 
+    set(gca, 'xtick', []);
     
     if iD == 1
-        xlim([0 60]); 
+        xlim([0 60]);
     elseif iD == 2
-%                 set(gca, 'xtick', 0:60:this_data.REM_Post_tvec(end))
-%         set(gca, 'xticklabel', get(gca, 'xtick') - 90)
-        xlim([90 150]); 
+        %                 set(gca, 'xtick', 0:60:this_data.REM_Post_tvec(end))
+        %         set(gca, 'xticklabel', get(gca, 'xtick') - 90)
+        xlim([90 150]);
     end
     
-   ax2(iD) = subplot(2,2,iD+2);
+    ax2(iD) = subplot(2,2,iD+2);
     for ii = length(p_idx):-1:1
         this_proj_idx = find(this_data.REM_Post_proj(p_idx(ii),:) > this_data.REM_Post_stats.R_thresh);
         line([this_data.REM_Post_tvec(this_proj_idx); this_data.REM_Post_tvec(this_proj_idx)] , [ii-.5; ii+.5], 'color', c_ord(ii,:), 'linewidth', .5)
     end
-
+    
     set(gca, 'ytick', [])
-
+    
     if iD == 1
-        xlim([0 60]); 
-            xlabel('time (s)')
-                    set(gca, 'xtick', [0 60])
-
+        xlim([0 60]);
+        xlabel('time (s)')
+        set(gca, 'xtick', [0 60])
+        
     elseif iD == 2
-%         set(gca, 'xtick', 0:60:this_data.REM_Post_tvec(end))
-%         set(gca, 'xticklabel', get(gca, 'xtick') - 90)
-        xlim([90 150]); 
-%         x_lim = get(gca, 'xlim'); 
+        %         set(gca, 'xtick', 0:60:this_data.REM_Post_tvec(end))
+        %         set(gca, 'xticklabel', get(gca, 'xtick') - 90)
+        xlim([90 150]);
+        %         x_lim = get(gca, 'xlim');
         set(gca, 'xtick', [])
-%                             set(gca, 'xtick', [0 60])
-
+        %                             set(gca, 'xtick', [0 60])
+        
     end
     
 end
@@ -2149,30 +2153,67 @@ set(gcf,'PaperUnits','inches', 'Units', 'inches');
 set(gcf, 'position', [5 5 7 2])
 set(gcf,'PaperSize', [7, 2]);
 set(gca,'xlimmode','manual','ylimmode','manual')
-    print(gcf, '-dpdf', [fig_dir filesep 'Fig3_example.pdf'])
+print(gcf, '-dpdf', [fig_dir filesep 'Fig3_example.pdf'])
 
-% save an h5 with the data for plotting. 
-  fname = ['Fig3_assembly_.h5'];
+% save an h5 with the data for plotting.
+fname = ['Fig3_assembly_.h5'];
+
+if exist(fname, 'file')
+    delete(fname)
+end
+
+hdf5write(fname, '/mouse', string(A_out{F_idx}{1}.info.subject));
+hdf5write(fname, '/N_condition', string(A_out{N_idx}{1}.info.session),'WriteMode', 'append');
+hdf5write(fname, '/F_condition', string(A_out{F_idx}{1}.info.session),'WriteMode', 'append');
+
+hdf5write(fname, '/N_REM_post_rThresh', A_out{N_idx}{1}.REM_Post_stats.R_thresh,'WriteMode', 'append');
+hdf5write(fname, '/F_REM_post_rThresh', A_out{F_idx}{1}.REM_Post_stats.R_thresh,'WriteMode', 'append');
+hdf5write(fname, '/N_REM_post_proj', A_out{N_idx}{1}.REM_Post_proj(p_idx,:),'WriteMode', 'append');
+hdf5write(fname, '/F_REM_post_proj', A_out{F_idx}{1}.REM_Post_proj(p_idx,:),'WriteMode', 'append');
+hdf5write(fname, '/N_REM_post_tvec', A_out{N_idx}{1}.REM_Post_tvec,'WriteMode', 'append');
+hdf5write(fname, '/F_REM_post_tvec', A_out{F_idx}{1}.REM_Post_tvec,'WriteMode', 'append');
+
+hdf5write(fname, '/N_REM_post_xlim', int16([90 150]),'WriteMode', 'append');
+hdf5write(fname, '/F_REM_post_xlim', int16([0 60]),'WriteMode', 'append');
+
+
+
+%% Fig4 'Pre REM' example
+
+P_idx = []; 
+for ii = length(A_out):-1:1
     
-    if exist(fname, 'file')
-        delete(fname)
+    if strcmpi(A_out{ii}{1}.info.subject, 'pv1060') &&  strcmpi(A_out{ii}{1}.info.session, 'LTD1')
+        P_idx(ii) = true;
+    else
+        P_idx(ii) = false;
     end
     
-    hdf5write(fname, '/mouse', string(A_out{F_idx}{1}.info.subject));
-    hdf5write(fname, '/N_condition', string(A_out{N_idx}{1}.info.session),'WriteMode', 'append');
-        hdf5write(fname, '/F_condition', string(A_out{F_idx}{1}.info.session),'WriteMode', 'append');
+end
 
-    hdf5write(fname, '/N_REM_post_rThresh', A_out{N_idx}{1}.REM_Post_stats.R_thresh,'WriteMode', 'append');
-    hdf5write(fname, '/F_REM_post_rThresh', A_out{F_idx}{1}.REM_Post_stats.R_thresh,'WriteMode', 'append');
-    hdf5write(fname, '/N_REM_post_proj', A_out{N_idx}{1}.REM_Post_proj(p_idx,:),'WriteMode', 'append');
-    hdf5write(fname, '/F_REM_post_proj', A_out{F_idx}{1}.REM_Post_proj(p_idx,:),'WriteMode', 'append');
-        hdf5write(fname, '/N_REM_post_tvec', A_out{N_idx}{1}.REM_Post_tvec,'WriteMode', 'append');
-    hdf5write(fname, '/F_REM_post_tvec', A_out{F_idx}{1}.REM_Post_tvec,'WriteMode', 'append');
-    
-    hdf5write(fname, '/N_REM_post_xlim', int16([90 150]),'WriteMode', 'append');
-    hdf5write(fname, '/F_REM_post_xlim', int16([0 60]),'WriteMode', 'append');
+P_idx = find(P_idx);
+
+
+
 
     
+this_data = A_out{P_idx}{1};
+
+
+MS_Asmbly_plot_raster_ReAct(this_data,[], 'pREM_data',[1 2 5 6])
+
+
+xlim([1 90])
+set(gcf,'PaperUnits','inches', 'Units', 'inches');
+set(gcf, 'position', [5 5 7 2])
+set(gcf,'PaperSize', [7, 2]);
+set(gca,'xlimmode','manual','ylimmode','manual')
+print(gcf, '-dpdf', [fig_dir filesep 'Fig4_example.pdf'])
+
+% post ASBMLY in wake
+
+MS_Asmbly_plot_REM_wake_raster_figure(this_data,'Post',[])
+
 %% %%%%%%%%%%%%  sample plots for PCA ICA methods. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(1111)

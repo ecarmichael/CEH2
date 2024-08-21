@@ -1,4 +1,4 @@
-function A_in = Pipeline_Asmbly_append_preA(A_in)
+function A_in = Pipeline_Asmbly_append_postA(A_in)
 %% check the pre_rem for assemblies, remove assemblies without positive weights, apply assemblies to the wake track data
 
 for ii = 1:length(A_in)
@@ -11,36 +11,36 @@ end
 %% get the pre REM templates
 for ii = 1:length(A_in)
     
-    if size(A_in{ii}.REM_Pre_data, 1) < size(A_in{ii}.REM_Pre_data, 2)
+    if size(A_in{ii}.REM_Post_data, 1) < size(A_in{ii}.REM_Post_data, 2)
         fprintf('<strong>Pre REM data has less samples (%0.0f) than cells (%0.0f)</strong> \n',size(A_in{ii}.REM_Pre_data, 1), size(A_in{ii}.REM_Pre_data, 2))
-        A_in{ii}.pREM_temp = [];
-        A_in{ii}.pREM_proj = [];
-        A_in{ii}.pREM_Wake_proj = [];
-        A_in{ii}.pREM_A_pos = [];
+        A_in{ii}.postREM_temp = [];
+        A_in{ii}.postREM_proj = [];
+        A_in{ii}.postREM_Wake_proj = [];
+        A_in{ii}.postREM_A_pos = [];
         continue
     else
         
-        REM_temp_all = assembly_patterns(A_in{ii}.REM_Pre_data);
+        REM_temp_all = assembly_patterns(A_in{ii}.REM_Post_data);
         
-        pREM_proj = assembly_activity(REM_temp_all, A_in{ii}.REM_Pre_data');
+        postREM_proj = assembly_activity(REM_temp_all, A_in{ii}.REM_Post_data');
 
         
         Wake_proj = assembly_activity(REM_temp_all, A_in{ii}.wake_data');
         
         [REM_temp, Wake_proj, REM_pos]=  MS_Asmbly_select(REM_temp_all, Wake_proj, 2);
         
-        [~, pREM_proj, ~]=  MS_Asmbly_select(REM_temp_all, pREM_proj, 2);
+        [~, postREM_proj, ~]=  MS_Asmbly_select(REM_temp_all, postREM_proj, 2);
 
         
-        A_in{ii}.pREM_temp = REM_temp;
-        A_in{ii}.pREM_proj = pREM_proj;
-        A_in{ii}.pREM_Wake_proj = Wake_proj;
-        A_in{ii}.pREM_A_pos = REM_pos;
+        A_in{ii}.postREM_temp = REM_temp;
+        A_in{ii}.postREM_proj = postREM_proj;
+        A_in{ii}.postREM_Wake_proj = Wake_proj;
+        A_in{ii}.postREM_A_pos = REM_pos;
         
-        fprintf('[%.0f/%.0f = %.0f%%] Pre REM Assemblies had cells with positive weights (%.2fs binsize)\n',size(REM_temp,2),size(REM_temp_all,2),  (size(REM_temp,2)/size(REM_temp_all,2))*100, A_in{ii}.info.bin)
+        fprintf('[%.0f/%.0f = %.0f%%] Post REM Assemblies had cells with positive weights (%.2fs binsize)\n',size(REM_temp,2),size(REM_temp_all,2),  (size(REM_temp,2)/size(REM_temp_all,2))*100, A_in{ii}.info.bin)
    
         
-        [A_in{ii}.pREM_stats, A_in{ii}.pREM_shuff.data, A_in{ii}.pREM_shuff.proj] = MS_Asmbly_proj_thresh(A_in{ii}.REM_Pre_data, REM_temp, 500, 99); 
+        [A_in{ii}.postREM_stats, A_in{ii}.postREM_shuff.data, A_in{ii}.postREM_shuff.proj] = MS_Asmbly_proj_thresh(A_in{ii}.REM_Post_data, REM_temp, 500, 99); 
 
         
         
@@ -97,17 +97,17 @@ min_N_place = 3;
 
 Place_temp = []; Place_proj = []; Place_map = [];
 for iB = length(A_in):-1:1
-    if isempty(A_in{ii}.pREM_A_pos)
-        A_in{iB}.pREM_Place_map = [];
+    if isempty(A_in{ii}.postREM_A_pos)
+        A_in{iB}.postREM_Place_map = [];
         continue
     else
         %     if
-        [map_out, place_idx] = MS_Asmbly_map(A_in{iB}.pREM_A_pos, A_in{iB}.place, min_N_place);
+        [map_out, place_idx] = MS_Asmbly_map(A_in{iB}.postREM_A_pos, A_in{iB}.place, min_N_place);
         
         Place_map = map_out;
         Place_map(~place_idx) = [];
         
-        A_in{iB}.pREM_Place_map = Place_map;
+        A_in{iB}.postREM_Place_map = Place_map;
     end
     %
     %     Place_temp{iB} = P_temp{iB}(:,place_idx{iB});
@@ -122,6 +122,6 @@ win_s = 2;
 thresh = 10;
 for iB = length(A_in):-1:1
     
-    [A_in{ii}.pREM_wake_P_loc] = MS_Asmbly_act_loc(A_in{ii}.pREM_Wake_proj, A_in{ii}.wake_tvec, A_in{ii}.behav, win_s, thresh, 2/A_in{1}.bins);
+    [A_in{ii}.postREM_wake_P_loc] = MS_Asmbly_act_loc(A_in{ii}.postREM_Wake_proj, A_in{ii}.wake_tvec, A_in{ii}.behav, win_s, thresh, 2/A_in{1}.bins);
     
 end
