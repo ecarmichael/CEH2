@@ -2214,6 +2214,9 @@ print(gcf, '-dpdf', [fig_dir filesep 'Fig4_example.pdf'])
 
 MS_Asmbly_plot_REM_wake_raster_figure(this_data,'Post',[])
 
+
+MS_Asmnbly_overlap(this_data, {'pREM', 'postREM'}); 
+
 %% %%%%%%%%%%%%  sample plots for PCA ICA methods. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(1111)
