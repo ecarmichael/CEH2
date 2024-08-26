@@ -2214,8 +2214,127 @@ print(gcf, '-dpdf', [fig_dir filesep 'Fig4_example.pdf'])
 
 MS_Asmbly_plot_REM_wake_raster_figure(this_data,'Post',[])
 
+%% ReActivation stats across training/testing sets
+nReAct = NaN(3,3,length(A_out)); 
+nA_ReAct = nReAct;
+nReAct_Rate = nReAct;
+A_ReAct_Rate = nReAct;
 
-MS_Asmnbly_overlap(this_data, {'pREM', 'postREM'}); 
+d_list = {'LTD1','LTD5', 'HATD1', 'HATD5', 'HATDSwitch'}; 
+sub_list = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252'}; 
+for iA = length(A_out):-1:1
+    
+    D_idx = find(contains(d_list,A_out{iA}{1}.info.session)); 
+%     fprintf('%s\n', d_list{D_idx}); 
+     S_idx = find(contains(sub_list,A_out{iA}{1}.info.subject)); 
+%     fprintf('%s - %s\n', A_out{iA}{1}.info.subject, sub_list{S_idx}); 
+   this_ReAct = MS_Asmbly_ReAct_Matrix(A_out{iA}{1}); 
+   
+   
+    nReAct(:,:,iA) = this_ReAct.nReAct./max(this_ReAct.nReAct, [], 'all'); 
+    nA_ReAct(:,:,iA) = this_ReAct.nA_ReAct./max(this_ReAct.nA_ReAct, [], 'all'); 
+    nReAct_Rate(:,:,iA) = this_ReAct.nReAct_Rate./max(this_ReAct.nReAct_Rate, [], 'all'); 
+    A_ReAct_Rate(:,:,iA) = this_ReAct.A_ReAct_Rate./max(this_ReAct.A_ReAct_Rate, [], 'all'); 
+labels = this_ReAct.info.labels; 
+    
+
+    
+end
+
+figure(7778)
+    m = 4; 
+    subplot(m,4,1)
+    imagesc(nanmean(nReAct(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    title('number of reactivations'); colorbar;caxis([0 1]);
+            ylabel({'LTD1'; 'Training'});
+
+    subplot(m,4,2)
+    imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    title('number of assemblies reactivated'); colorbar;caxis([0 1]);
+    
+    subplot(m,4,3)
+    imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    title('Rate(nA ./ length of recording)');colorbar; caxis([0 1]);
+    
+    subplot(m,4,4)
+    imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    title('ReAct Rate per assembly');     colorbar; caxis([0 1]);
+
+    
+    % LTD5
+    subplot(m,4,5)
+    imagesc(nanmean(nReAct(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    colorbar; caxis([0 1]);
+        ylabel({'LTD5'; 'Training'});
+
+    
+    subplot(m,4,6)
+    imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    colorbar; caxis([0 1]);
+    
+    subplot(m,4,7)
+    imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    colorbar; caxis([0 1]);
+    
+    subplot(m,4,8)
+    imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    colorbar; caxis([0 1]);
+    
+       
+    % HAT1
+    subplot(m,4,9)
+    
+    imagesc(nanmean(nReAct(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    colorbar; caxis([0 1]);
+    ylabel({'HAT1'; 'Training'});
+    
+    subplot(m,4,10)
+    imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    colorbar; caxis([0 1]);
+    
+    subplot(m,4,11)
+    imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    colorbar; caxis([0 1]);
+    
+    subplot(m,4,12)
+    imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    colorbar; caxis([0 1]);
+    
+        % HAT5
+    subplot(m,4,13)
+    
+    imagesc(nanmean(nReAct(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    colorbar; caxis([0 1]);
+    ylabel({'HAT5'; 'Training'});
+    
+    subplot(m,4,14)
+    imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    colorbar; caxis([0 1]);
+    
+    subplot(m,4,15)
+    imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    colorbar; caxis([0 1]);
+    
+    subplot(m,4,16)
+    imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
+    set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+    colorbar; caxis([0 1]);
+    
 
 %% %%%%%%%%%%%%  sample plots for PCA ICA methods. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
