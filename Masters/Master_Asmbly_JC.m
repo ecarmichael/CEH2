@@ -2335,7 +2335,34 @@ figure(7778)
     set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
     colorbar; caxis([0 1]);
     
+%% check the bias in assemblies
 
+
+for iA = length(A_out):-1:1
+   
+    for ii = length(A_out{iA}{1}):-1:1
+        
+        this_map = A_out{iA}{1}.map{ii};
+        
+        if this_map.cent_z > -1.95
+%             p = polyshape(this_map.bins, this_map.map_mean); 
+%             cent = centroid(p); 
+            
+           c_mean = mean(this_map.bins(this_map.peak)*this_map.bin_size); 
+           
+           c_group = this_map.bins(this_map.peak)*this_map.bin_size; 
+           
+           % get the acitvity of each cell in the assembly. 
+           
+           
+        end
+        
+    
+    
+    
+    
+    end
+end
 %% %%%%%%%%%%%%  sample plots for PCA ICA methods. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(1111)
