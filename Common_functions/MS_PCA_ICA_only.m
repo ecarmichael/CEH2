@@ -1,4 +1,4 @@
-function [A_temp, A_proj, data_h, tvec, opts] =MS_PCA_ICA_only(ms, move_idx, binsize, method, opts)
+function [A_temp, A_proj, data_h, tvec, opts, w_thresh] =MS_PCA_ICA_only(ms, move_idx, binsize, method, opts)
 
 if nargin < 3
     binsize = .5;
@@ -99,38 +99,38 @@ A_proj = assembly_activity(A_temp,data_h');
 
 
 %% shuffle distribution for assemblies
-% rng(123,'twister')
-% nShuff = 100;
-% wake_shuff_mat = [];
-% 
-% Ass_shuff = NaN(1,nShuff);
-% for iS = nShuff:-1:1
-%     tic
-%     shuff_data = NaN(size(data_h));
-%     for ic = 1:size(data_h,2)
-%         shuff_data(:,ic) = circshift(data_h(:,ic), floor(MS_randn_range(1,1,1,size(data_h,1))));
-%     end
-%     
-%     this_ass = assembly_patterns(shuff_data');
-%     if ~isempty(this_ass)
-%         S_prog = assembly_activity(this_ass,shuff_data');
-%         
-%         wake_shuff_mat(iS,:) =  S_prog(1,:);
-%         keep_idx(iS) = 1;
-%     else
-%         wake_shuff_mat(iS,:) = NaN;
-%         keep_idx(iS) = 0;
-%     end
-%     %     for ii = size(this_ass,2):-1:1
-%     
-%     if sum(max(this_ass) > 0.2) >0
-%         Ass_shuff(iS) = sum(max(this_ass) > 0.2);
-%     else
-%         Ass_shuff(iS) = 0;
-%     end
-%     %     end
-%     fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(this_ass,2), toc)
-% end
-% 
-% W_threshold = prctile(wake_shuff_mat(wake_shuff_mat >0), 99, 'all');
+rng(123,'twister')
+nShuff = 100;
+wake_shuff_mat = [];
+
+Ass_shuff = NaN(1,nShuff);
+for iS = nShuff:-1:1
+    tic
+    shuff_data = NaN(size(data_h));
+    for ic = 1:size(data_h,2)
+        shuff_data(:,ic) = circshift(data_h(:,ic), floor(MS_randn_range(1,1,1,size(data_h,1))));
+    end
+    
+    this_ass = assembly_patterns(shuff_data');
+    if ~isempty(this_ass)
+        S_prog = assembly_activity(this_ass,shuff_data');
+        
+        wake_shuff_mat(iS,:) =  S_prog(1,:);
+        keep_idx(iS) = 1;
+    else
+        wake_shuff_mat(iS,:) = NaN;
+        keep_idx(iS) = 0;
+    end
+    %     for ii = size(this_ass,2):-1:1
+    
+    if sum(max(this_ass) > 0.2) >0
+        Ass_shuff(iS) = sum(max(this_ass) > 0.2);
+    else
+        Ass_shuff(iS) = 0;
+    end
+    %     end
+    fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(this_ass,2), toc)
+end
+
+w_thresh = prctile(wake_shuff_mat(wake_shuff_mat >0), 99, 'all');
 

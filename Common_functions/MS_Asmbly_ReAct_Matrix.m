@@ -79,34 +79,43 @@ for ii = 1:length(states)
         ReAct_mat(jj, ii) = sum(this_nReact(this_nReact >0));
         
         ReAct_n(jj, ii) = length(this_nReact(this_nReact >0));
-        
+
+        ReAct_pA(jj, ii) = sum(this_nReact >0)./length(this_nReact);
+
         ReAct_nA_ep(jj, ii) = sum(this_nReact(this_nReact >0))./ (length(data.(states{ii}).(states{jj}).proj)*this_data.bins);
         
         ReAct_rate(jj, ii) = mean(this_nReact(this_nReact >0)./ (length(data.(states{ii}).(states{jj}).proj)*this_data.bins));
         
-        labels{jj, ii} = [states{ii} '_' states{jj}];
+        labels{jj, ii} = ['tar-' states{jj} ' : ref-' states{ii}];
     end
 end
 
 
 if plot_flag
     figure(767)
-    subplot(1,4,1)
+    subplot(1,5,1)
     imagesc(ReAct_mat);
     set(gca, 'xtick', 1:3, 'xticklabels', states, 'ytick', 1:3, 'yticklabels', states)
     title('number of reactivations'); colorbar;
+    ylabel('Target')
+    xlabel('Reference')
     
-    subplot(1,4,2)
+    subplot(1,5,2)
     imagesc(ReAct_n);
     set(gca, 'xtick', 1:3, 'xticklabels', states, 'ytick', 1:3, 'yticklabels', states)
     title('number of assemblies reactivated'); colorbar;
     
-    subplot(1,4,3)
+        subplot(1,5,3)
+    imagesc(ReAct_pA);
+    set(gca, 'xtick', 1:3, 'xticklabels', states, 'ytick', 1:3, 'yticklabels', states)
+    title('number of assemblies reactivated'); colorbar;
+    
+    subplot(1,5,4)
     imagesc(ReAct_nA_ep);
     set(gca, 'xtick', 1:3, 'xticklabels', states, 'ytick', 1:3, 'yticklabels', states)
     title('Rate(nA ./ length of recording)'); colorbar;
     
-    subplot(1,4,4)
+    subplot(1,5,5)
     imagesc(ReAct_rate);
     set(gca, 'xtick', 1:3, 'xticklabels', states, 'ytick', 1:3, 'yticklabels', states)
     title('ReAct Rate per assembly'); colorbar;
