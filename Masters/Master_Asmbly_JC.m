@@ -2422,8 +2422,6 @@ for iA = length(A_out):-1:1
     end
 end
 
-% now what? Quantify the spatial bias? Plot things to see what might be
-% changing? 
 %% %%%%%%%%%%%%  sample plots for PCA ICA methods. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(1111)
