@@ -2422,6 +2422,28 @@ for iA = length(A_out):-1:1
     end
 end
 
+
+%% get the range of REM R thresholds
+pre_R = []; 
+post_R = []; 
+
+for iA = length(A_out):-1:1
+    
+        
+        pre_R(end+1) = A_out{iA}{1}.REM_Pre_stats.R_thresh;
+        
+        
+                post_R(end+1) = A_out{iA}{1}.REM_Post_stats.R_thresh;
+
+
+end
+
+fprintf(['Pre R Thresh: %0.2f (' char(177) '%0.2f)\n'], mean(pre_R), std(pre_R))
+fprintf(['Pre R Thresh: %0.2f (' char(177) '%0.2f)\n'], mean(post_R), std(post_R))
+fprintf(['All R Thresh: %0.2f (' char(177) '%0.2f)\n'], mean([pre_R post_R]), std([pre_R post_R]))
+
+% now what? Quantify the spatial bias? Plot things to see what might be
+% changing? 
 %% %%%%%%%%%%%%  sample plots for PCA ICA methods. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(1111)
