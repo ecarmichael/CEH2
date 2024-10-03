@@ -1,4 +1,4 @@
-function [hb, eb] =  MS_bar_w_err(data_a, data_b, color, data_flag, stats)
+function [hb, eb, p] =  MS_bar_w_err(data_a, data_b, color, data_flag, stats)
 
 if nargin < 4
     data_flag = 0; 

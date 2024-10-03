@@ -1141,6 +1141,7 @@ for ii = length(A_out):-1:1
         this_R_t  =  A_out{ii}{1}.REM_Pre_tvec(find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh));
         pre_React  = [pre_React, (nearest_idx3(this_R_t, this_pre_rem_t))'];
         pre_str = [pre_str, A_out{ii}{1}.REM_Pre_proj(aa, find(A_out{ii}{1}.REM_Pre_proj(aa, :) > A_out{ii}{1}.REM_Pre_stats.R_thresh))];
+        
         pre_ID = [pre_ID repmat(aa,1,length(this_R_t))];
         if A_out{ii}{1}.REM_Pre_stats.p_val(aa) < 0.05
             pre_sig = [pre_sig, ones(1, length(this_R_t))];
@@ -1152,7 +1153,6 @@ for ii = length(A_out):-1:1
         this_R_t  =  A_out{ii}{1}.REM_Post_tvec(find(A_out{ii}{1}.REM_Post_proj(aa, :) > A_out{ii}{1}.REM_Post_stats.R_thresh));
         post_React  = [post_React, (nearest_idx3(this_R_t, this_post_rem_t))'];
         post_str = [post_str, A_out{ii}{1}.REM_Post_proj(aa, find(A_out{ii}{1}.REM_Post_proj(aa, :) > A_out{ii}{1}.REM_Post_stats.R_thresh))];
-        
         
         post_ID = [post_ID repmat(aa,1,length(this_R_t))];
         if A_out{ii}{1}.REM_Post_stats.p_val(aa) < 0.05
@@ -2426,6 +2426,7 @@ end
 %% get the range of REM R thresholds
 pre_R = []; 
 post_R = []; 
+pREM_R = []; 
 
 for iA = length(A_out):-1:1
     
@@ -2433,14 +2434,17 @@ for iA = length(A_out):-1:1
         pre_R(end+1) = A_out{iA}{1}.REM_Pre_stats.R_thresh;
         
         
-                post_R(end+1) = A_out{iA}{1}.REM_Post_stats.R_thresh;
+        post_R(end+1) = A_out{iA}{1}.REM_Post_stats.R_thresh;
 
-
+        if isfield( A_out{iA}{1}, 'pREM_stats')
+        pREM_R(end+1) = A_out{iA}{1}.pREM_stats.R_thresh; 
+        end
 end
 
 fprintf(['Pre R Thresh: %0.2f (' char(177) '%0.2f)\n'], mean(pre_R), std(pre_R))
-fprintf(['Pre R Thresh: %0.2f (' char(177) '%0.2f)\n'], mean(post_R), std(post_R))
-fprintf(['All R Thresh: %0.2f (' char(177) '%0.2f)\n'], mean([pre_R post_R]), std([pre_R post_R]))
+fprintf(['Post R Thresh: %0.2f (' char(177) '%0.2f)\n'], mean(post_R), std(post_R))
+fprintf(['Pre & post R Thresh: %0.2f (' char(177) '%0.2f)\n'], mean([pre_R post_R]), std([pre_R post_R]))
+fprintf(['All R Thresh: %0.2f (' char(177) '%0.2f)\n'], mean(pREM_R), std([pre_R post_R]))
 
 % now what? Quantify the spatial bias? Plot things to see what might be
 % changing? 
@@ -2475,3 +2479,470 @@ for ii = 1:5
 end
 
 exportgraphics(gcf,[fig_dir filesep  'ica_null.pdf'],'ContentType','vector')
+
+
+%% SFN poster plots
+
+
+%% Specific example for Anxiety
+
+%% bar graph of reactivations
+
+% f_ord = [[253, 22, 26];[255, 179, 13]; [132, 147, 35];; [0, 42, 95]]/255;
+f_ord = [0.2627 0.4980 0.5922; .7 .7 .7; 0.9922 0.0863 0.1020;1.0000 0.7020 0.0510; 0.5176 0.5765 0.1373]; 
+f_post = [f_ord ,[.5, .5, .5, .5, .5]'];
+off_set = 0:2:8;
+
+figure(8118)
+clf
+set(gcf, 'Units', 'centimeters', 'Position', [0 0  30 20])
+
+
+% plot the pre and post REM assembly centroid reactivations.
+subplot(2,4,5)
+off_set = 0:2.5:10;
+for ii = 1:5
+    if ii == 1
+        this_idx = lt1_idx;
+    elseif ii == 2
+        this_idx = lt5_idx;
+    elseif ii == 3
+        this_idx = H1_idx;
+    elseif ii == 4
+        this_idx = H5_idx;
+    elseif ii == 5
+        this_idx = HS_idx;
+    end
+    % add 'walls'
+    if ii == 1 || ii == 2
+        rectangle('position', [off_set(ii)-1, p_centr(1), 2, p_centr(end)- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    elseif ii == 3 || ii ==4
+        rectangle('position', [off_set(ii)-1, p_centr(ceil(length(p_centr)/2)), 2, p_centr(end)- p_centr(ceil(length(p_centr)/2))], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    elseif ii ==5
+        rectangle('position', [off_set(ii)-1, p_centr(1), 2, p_centr(ceil(length(p_centr)/2))- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    end
+    
+    hold on
+    norm_val= max([nanmean(A_hist_pre(this_idx,:)) nanmean(A_hist_post(this_idx,:))]);
+    plot((-nanmean(A_hist_pre(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
+    plot((nanmean(A_hist_post(this_idx,:))./norm_val)+off_set(ii), p_centr,  'linewidth', 2, 'Color', [f_ord(ii,:) .5])
+    
+    if ii == 1
+        %         text(off_set(ii)-.1, 97, '\leftarrow', 'HorizontalAlignment','right', 'Interpreter', 'TeX', 'fontsize', 8)
+        text(off_set(ii)-.1, p_centr(end), 'pre', 'HorizontalAlignment','right', 'Interpreter', 'TeX', 'fontsize', 8, 'VerticalAlignment', 'baseline')
+        %         text(off_set(ii)+.1, 97, '\rightarrow', 'HorizontalAlignment','left', 'Interpreter', 'TeX', 'fontsize', 8)
+        text(off_set(ii)+.1, p_centr(end), 'post', 'HorizontalAlignment','left', 'Interpreter', 'TeX', 'fontsize', 8, 'VerticalAlignment', 'baseline')
+        
+    end
+end
+set(gca, 'xtick', off_set, 'ytick', [0 100])
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+ylabel('position (cm)')
+axis('square')
+title('REM assembly tuning')
+
+
+
+
+subplot(2,4,1)
+off_set = 0:2:8;
+for ii = 1:5
+    if ii == 1
+        this_idx = lt1_idx;
+    elseif ii == 2
+        this_idx = lt5_idx;
+    elseif ii == 3
+        this_idx = H1_idx;
+    elseif ii == 4
+        this_idx = H5_idx;
+    elseif ii == 5
+        this_idx = HS_idx;
+    end
+    
+    if ii == 1 || ii == 2
+        rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(end)- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    elseif ii == 3 || ii ==4
+        rectangle('position', [off_set(ii), p_centr(ceil(length(p_centr)/2)), mode(diff(off_set))*.75, p_centr(end)- p_centr(ceil(length(p_centr)/2))], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    elseif ii ==5
+        rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(ceil(length(p_centr)/2))- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
+    end
+    
+    hold on
+    norm_val= max([nanmean(A_hist_wake(this_idx,:))]);
+    plot((nanmean(A_hist_wake(this_idx,:))./norm_val)+off_set(ii), p_centr,   'linewidth', 2, 'Color', f_ord(ii,:))
+    
+    
+end
+set(gca, 'xtick', off_set, 'ytick', [0 100])
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+ylabel('position (cm)')
+axis('square')
+title('Wake assembly tuning')
+
+
+
+%
+% figure(99)
+% clf
+set(gcf, 'Units', 'centimeters', 'Position', [0 0  30 20])
+subplot(2,4,2)
+% MS_bar_w_err(nWake_A(Cond==1), nWake_A(Cond ==2), c_ord(3,:))
+hb = bar([nanmean(nWake_A(Cond==1)), nanmean(nWake_A(Cond ==2)), nanmean(nWake_A(Cond ==3)), nanmean(nWake_A(Cond ==4)), nanmean(nWake_A(Cond ==5))], 'FaceColor', 'flat');
+for ii = 1:5
+    hb.CData(ii,:) = f_ord(ii,:);
+end
+hold on
+eb = errorbar([nanmean(nWake_A(Cond==1)), nanmean(nWake_A(Cond ==2)), nanmean(nWake_A(Cond ==3)), nanmean(nWake_A(Cond ==4)), nanmean(nWake_A(Cond ==5))], [MS_SEM(nWake_A(Cond==1)), MS_SEM(nWake_A(Cond ==2)), MS_SEM(nWake_A(Cond ==3)), MS_SEM(nWake_A(Cond ==4)), MS_SEM(nWake_A(Cond ==5))]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+ylim(y_lim);
+title('Wake Assemblies in Wake')
+axis('square')
+ylabel('Number of assemblies')
+
+
+subplot(2,4,6)
+hb = bar([nanmean(nPre_A(Cond==1)), nanmean(nPre_A(Cond ==2)), nanmean(nPre_A(Cond ==3)), nanmean(nPre_A(Cond ==4)), nanmean(nPre_A(Cond ==5))] , 'FaceColor', 'flat');
+for ii = 1:5
+    hb.CData(ii,:) = f_ord(ii,:);
+end
+hold on
+
+eb = errorbar([nanmean(nPre_A(Cond==1)), nanmean(nPre_A(Cond ==2)), nanmean(nPre_A(Cond ==3)), nanmean(nPre_A(Cond ==4)), nanmean(nPre_A(Cond ==5))], [MS_SEM(nPre_A(Cond==1)), MS_SEM(nPre_A(Cond ==2)), MS_SEM(nPre_A(Cond ==3)), MS_SEM(nPre_A(Cond ==4)), MS_SEM(nPre_A(Cond ==5))]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+ylim(y_lim);
+title('Pre Assemblies in Wake')
+axis('square')
+
+
+% try to get the pre and post REM assemblies in one plot
+wake_mean = [nanmean(nWake_A(Cond==1)), nanmean(nWake_A(Cond ==2)), nanmean(nWake_A(Cond ==3)), nanmean(nWake_A(Cond ==4)), nanmean(nWake_A(Cond ==5))]; 
+pre_mean = [nanmean(nPre_sig(Cond==1)), nanmean(nPre_sig(Cond ==2)), nanmean(nPre_sig(Cond ==3)), nanmean(nPre_sig(Cond ==4)), nanmean(nPre_sig(Cond ==5))];
+post_mean = [nanmean(nPost_sig(Cond==1)), nanmean(nPost_sig(Cond ==2)), nanmean(nPost_sig(Cond ==3)), nanmean(nPost_sig(Cond ==4)), nanmean(nPost_sig(Cond ==5))];
+wake_err = [MS_SEM(nWake_A(Cond==1)), MS_SEM(nWake_A(Cond ==2)), MS_SEM(nWake_A(Cond ==3)), MS_SEM(nWake_A(Cond ==4)), MS_SEM(nWake_A(Cond ==5))];
+pre_err = [MS_SEM(nPre_sig(Cond==1)), MS_SEM(nPre_sig(Cond ==2)), MS_SEM(nPre_sig(Cond ==3)), MS_SEM(nPre_sig(Cond ==4)), MS_SEM(nPre_sig(Cond ==5))];
+post_err = [MS_SEM(nPost_sig(Cond==1)), MS_SEM(nPost_sig(Cond ==2)), MS_SEM(nPost_sig(Cond ==3)), MS_SEM(nPost_sig(Cond ==4)), MS_SEM(nPost_sig(Cond ==5))];
+
+y = [pre_mean; wake_mean; post_mean]';
+err = [pre_err; wake_err; post_err]';
+
+subplot(2,4,7)
+cla;
+hb = bar(y, 1); % get the bar handles
+hold on;
+% xpos = ;
+pause(.5)
+
+errorbar(hb(1).XData + hb(1).XOffset, y(:,1), err(:,1), 'LineStyle', 'none', ...
+    'Color', 'k');
+pause(.5)
+errorbar(hb(2).XData + hb(2).XOffset, y(:,2), err(:,2), 'LineStyle', 'none', ...
+    'Color', 'k');
+pause(.5)
+errorbar(hb(3).XData + hb(3).XOffset, y(:,3), err(:,3), 'LineStyle', 'none', ...
+    'Color', 'k');
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+% ylim(y_lim);
+axis('square')
+title('Wake assemblies in Pre/Wake/Post REM')
+legend({'pre','wake', 'post'}, 'box', 'off')
+axis tight
+% color
+
+for ii = 1:3
+            hb(ii).FaceColor ='flat';
+            hb(ii).EdgeColor ='none';
+
+    for jj = 1:5
+        hb(ii).CData(jj,:) = f_ord(jj,:);
+
+        % set the alpha for the pre and post. 
+        if ii == 1
+            hb(ii).FaceAlpha = .7;
+        elseif ii == 3
+            hb(ii).FaceAlpha = .3;
+        end
+    end
+end
+
+% REACT Str mean(mean Post - mean Pre)
+% MS_bar_w_err(nWake_A(Cond==1), nWake_A(Cond ==2), c_ord(3,:))
+subplot(2,4,8)
+cla
+hb = bar([nanmean(ReAct_str(Cond==1)), nanmean(ReAct_str(Cond ==2)), nanmean(ReAct_str(Cond ==3)), nanmean(ReAct_str(Cond ==4)), nanmean(ReAct_str(Cond ==5))], 'FaceColor', 'flat');
+for ii = 1:5
+    hb.CData(ii,:) = f_ord(ii,:);
+end
+hold on
+eb = errorbar([nanmean(ReAct_str(Cond==1)), nanmean(ReAct_str(Cond ==2)), nanmean(ReAct_str(Cond ==3)), nanmean(ReAct_str(Cond ==4)), nanmean(ReAct_str(Cond ==5))],...
+    [MS_SEM(ReAct_str(Cond==1)), MS_SEM(ReAct_str(Cond ==2)), MS_SEM(ReAct_str(Cond ==3)), MS_SEM(ReAct_str(Cond ==4)), MS_SEM(ReAct_str(Cond ==5))]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+% ylim(y_lim);
+axis('square')
+title('Post REM Reactivation Strength')
+
+
+subplot(2,4,4)
+cla
+hb = bar([nanmean(nWake_R(Cond==1)), nanmean(nWake_R(Cond ==2)), nanmean(nWake_R(Cond ==3)), nanmean(nWake_R(Cond ==4)), nanmean(nWake_R(Cond ==5))], 'FaceColor', 'flat');
+for ii = 1:5
+    hb.CData(ii,:) = f_ord(ii,:);
+end
+hold on
+eb = errorbar([nanmean(nWake_R(Cond==1)), nanmean(nWake_R(Cond ==2)), nanmean(nWake_R(Cond ==3)), nanmean(nWake_R(Cond ==4)), nanmean(nWake_R(Cond ==5))],...
+    [MS_SEM(nWake_R(Cond==1)), MS_SEM(nWake_R(Cond ==2)), MS_SEM(nWake_R(Cond ==3)), MS_SEM(nWake_R(Cond ==4)), MS_SEM(nWake_R(Cond ==5))]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+% ylim(y_lim);
+axis('square')
+title('wake activation rate (Hz)')
+
+
+subplot(2,4,3)
+cla
+hb = bar([nanmean(wake_prct_move(Cond==1)), nanmean(wake_prct_move(Cond ==2)), nanmean(wake_prct_move(Cond ==3)), nanmean(wake_prct_move(Cond ==4)), nanmean(wake_prct_move(Cond ==5))], 'FaceColor', 'flat');
+for ii = 1:5
+    hb.CData(ii,:) = f_ord(ii,:);
+end
+hold on
+eb = errorbar([nanmean(wake_prct_move(Cond==1)), nanmean(wake_prct_move(Cond ==2)), nanmean(wake_prct_move(Cond ==3)), nanmean(wake_prct_move(Cond ==4)), nanmean(wake_prct_move(Cond ==5))],...
+    [MS_SEM(wake_prct_move(Cond==1)), MS_SEM(wake_prct_move(Cond ==2)), MS_SEM(wake_prct_move(Cond ==3)), MS_SEM(wake_prct_move(Cond ==4)), MS_SEM(wake_prct_move(Cond ==5))]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
+% ylim(y_lim);
+axis('square')
+title('Percent of time moving')
+
+
+set(gcf,'Units','Inches');
+pos = get(gcf,'Position');
+set(gcf,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
+
+print(gcf,  [fig_dir filesep   'Stats_summery_SfN_' strrep(num2str(A_out{1}{1}.info.bin), '.', 'p') 's_bin.pdf'], '-dpdf','-r0')
+
+%% only two
+figure(88181)
+subplot(2,4,7)
+% try to get the pre and post REM assemblies in one plot
+wake_mean = [nanmean(nWake_A(Cond==1)), nanmean(nWake_A(Cond ==2))]; 
+pre_mean = [nanmean(nPre_sig(Cond==1)), nanmean(nPre_sig(Cond ==2))];
+post_mean = [nanmean(nPost_sig(Cond==1)), nanmean(nPost_sig(Cond ==2))];
+wake_err = [MS_SEM(nWake_A(Cond==1)), MS_SEM(nWake_A(Cond ==2))];
+pre_err = [MS_SEM(nPre_sig(Cond==1)), MS_SEM(nPre_sig(Cond ==2))];
+post_err = [MS_SEM(nPost_sig(Cond==1)), MS_SEM(nPost_sig(Cond ==2))];
+
+y = [pre_mean;  post_mean]';
+err = [pre_err;  post_err]';
+
+cla;
+hb = bar(y, 1); % get the bar handles
+hold on;
+% xpos = ;
+pause(.5)
+
+errorbar(hb(1).XData + hb(1).XOffset, y(:,1), err(:,1), 'LineStyle', 'none', ...
+    'Color', 'k');
+pause(.5)
+errorbar(hb(2).XData + hb(2).XOffset, y(:,2), err(:,2), 'LineStyle', 'none', ...
+    'Color', 'k');
+
+set(gca, 'XTickLabel', {'Novel', 'Familiar'}, 'XTickLabelRotation', 45)
+% ylim(y_lim);
+axis('square')
+title('Wake assemblies in Pre/Post REM')
+legend({'pre' 'post'}, 'box', 'off')
+axis tight
+% color
+
+for ii = 1:2
+    hb(ii).FaceColor ='flat';
+    hb(ii).EdgeColor ='none';
+    
+    for jj = 1:2
+        if jj == 1
+            hb(ii).CData(jj,:) = f_ord(4,:);
+        elseif jj ==2
+            hb(ii).CData(jj,:) = f_ord(2,:);
+        end
+        % set the alpha for the pre and post.
+        if ii == 1
+            hb(ii).FaceAlpha = .7;
+        elseif ii == 2
+            hb(ii).FaceAlpha = .3;
+        end
+    end
+end
+
+hold on
+
+set(gca, 'XTickLabel', {'Novel', 'Familiar'}, 'XTickLabelRotation', 45)
+ylim([0 25])%max(y, [], 'all')+max(err, [], 'all')*1.5]);
+title('wake assemblies in REM')
+axis('square')
+
+
+subplot(2,4,4)
+cla
+hb = bar([nanmean(nWake_R(Cond==1)), nanmean(nWake_R(Cond ==2))], 'FaceColor', 'flat');
+for ii = 1:2
+    hb.CData(ii,:) = f_ord(ii,:);
+end
+hold on
+eb = errorbar([nanmean(nWake_R(Cond==1)), nanmean(nWake_R(Cond ==2))],...
+    [MS_SEM(nWake_R(Cond==1)), MS_SEM(nWake_R(Cond ==2))]);
+eb.LineStyle = 'none';
+eb.Color = 'k';
+set(gca, 'XTickLabel', {'Novel', 'Familiar'}, 'XTickLabelRotation', 45)
+ylim([0  max([nanmean(nWake_R(Cond==1)), nanmean(nWake_R(Cond ==2))])+max([MS_SEM(nWake_R(Cond==1)), MS_SEM(nWake_R(Cond ==2))])*1.5]);
+axis('square')
+title('wake activation rate (Hz)')
+
+
+set(gcf,'Units','Inches');
+pos = get(gcf,'Position');
+set(gcf,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
+
+print(gcf,  [fig_dir filesep   'Stats_summery_SfN_pre_' strrep(num2str(A_out{1}{1}.info.bin), '.', 'p') 's_bin.pdf'], '-dpdf','-r0')
+
+%% plot a specific example
+N_idx = []; F_idx = [];
+for ii = length(A_out):-1:1
+    
+    if strcmpi(A_out{ii}{1}.info.subject, 'pv1060') &&  strcmpi(A_out{ii}{1}.info.session, 'HATD1')
+        N_idx(ii) = true;
+        F_idx(ii) = false;
+    elseif strcmpi(A_out{ii}{1}.info.subject, 'pv1060') &&  strcmpi(A_out{ii}{1}.info.session, 'HATD5')
+        N_idx(ii) = false;
+        F_idx(ii) = true;
+    else
+        N_idx(ii) = false;
+        F_idx(ii) = false;
+    end
+    
+end
+
+F_idx = find(F_idx);
+N_idx = find(N_idx);
+
+x_1 = [30 90];
+x_2 = [0 60]; 
+figure(9908)
+clf
+for iD = 1:2
+    
+    if iD == 1
+        this_data = A_out{N_idx}{1};
+    elseif iD ==2
+        this_data = A_out{F_idx}{1};
+    end
+    
+    p_cent = []; p_rate = [];
+    
+    for ii = length(this_data.P_pos):-1:1
+        p_cent(ii) = this_data.map{ii}.cent_z;
+        p_rate(ii) = length(this_data.P_loc{ii}.loc_time);
+    end
+    
+    p_rate(p_cent > -1.95) = 0;
+    [~, s_idx] = sort(p_rate, 'descend');
+    p_rank = s_idx;
+    
+    if length(this_data.P_pos) >3
+        p_idx = p_rank(1:4);
+    else
+        p_idx = p_rank(1:length(this_data.P_pos));
+    end
+    
+    c_ord = [67, 127, 151; 132 147 35; 255 179 13; 253 22 26]/255;
+    
+    bx(iD) = subplot(2,2,iD);
+    %         yline(this_data.REM_Post_stats.R_thresh, '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
+    yline(log10(this_data.REM_Post_stats.R_thresh), '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
+    
+    hold on
+    for ii = length(p_idx):-1:1
+        this_proj = this_data.REM_Post_proj(p_idx(ii),:);
+        plot(this_data.REM_Post_tvec, log10(this_proj), 'color', c_ord(ii,:), 'linewidth', .5)
+        M_max(iD,ii) = max(this_proj);
+        
+    end
+    
+    ylim([0 inf])
+    y_val = get(gca, 'YTick');
+    %         y_val = [0 1 2 2.3979];
+    % yTick', [0 1 2 2.3979]
+    set(gca, 'YTickLabel', 10.^y_val, 'linewidth', 1);
+    
+    if iD == 1
+        ylabel({'assembly strength'})
+    end
+    set(gca, 'xtick', []);
+    
+    if iD == 1
+        xlim(x_1);
+    elseif iD == 2
+        %                 set(gca, 'xtick', 0:60:this_data.REM_Post_tvec(end))
+        %         set(gca, 'xticklabel', get(gca, 'xtick') - 90)
+        xlim(x_2);
+    end
+    
+    ax2(iD) = subplot(2,2,iD+2);
+    for ii = length(p_idx):-1:1
+        this_proj_idx = find(this_data.REM_Post_proj(p_idx(ii),:) > this_data.REM_Post_stats.R_thresh);
+        line([this_data.REM_Post_tvec(this_proj_idx); this_data.REM_Post_tvec(this_proj_idx)] , [ii-.5; ii+.5], 'color', c_ord(ii,:), 'linewidth', .5)
+    end
+    
+    set(gca, 'ytick', [])
+    
+    if iD == 1
+        xlim(x_1);
+        xlabel('time (s)')
+        set(gca, 'xtick', [0 60])
+        
+    elseif iD == 2
+        %         set(gca, 'xtick', 0:60:this_data.REM_Post_tvec(end))
+        %         set(gca, 'xticklabel', get(gca, 'xtick') - 90)
+        xlim(x_2);
+        %         x_lim = get(gca, 'xlim');
+        set(gca, 'xtick', [])
+                                    set(gca, 'xtick', [0 60])
+        
+    end
+    
+end
+subplot(2,2,1)
+linkaxes(bx, 'y')
+ylim([0 3])
+set(gcf,'PaperUnits','inches', 'Units', 'inches');
+set(gcf, 'position', [5 5 7 2])
+set(gcf,'PaperSize', [7, 2]);
+set(gca,'xlimmode','manual','ylimmode','manual')
+print(gcf, '-dpdf', [fig_dir filesep 'Fig3_example.pdf'])
+
+% save an h5 with the data for plotting.
+fname = ['SFN_Anx_assembly_.h5'];
+
+if exist(fname, 'file')
+    delete(fname)
+end
+
+hdf5write(fname, '/mouse', string(A_out{F_idx}{1}.info.subject));
+hdf5write(fname, '/N_condition', string(A_out{N_idx}{1}.info.session),'WriteMode', 'append');
+hdf5write(fname, '/F_condition', string(A_out{F_idx}{1}.info.session),'WriteMode', 'append');
+
+hdf5write(fname, '/N_REM_post_rThresh', A_out{N_idx}{1}.REM_Post_stats.R_thresh,'WriteMode', 'append');
+hdf5write(fname, '/F_REM_post_rThresh', A_out{F_idx}{1}.REM_Post_stats.R_thresh,'WriteMode', 'append');
+hdf5write(fname, '/N_REM_post_proj', A_out{N_idx}{1}.REM_Post_proj(p_idx,:),'WriteMode', 'append');
+hdf5write(fname, '/F_REM_post_proj', A_out{F_idx}{1}.REM_Post_proj(p_idx,:),'WriteMode', 'append');
+hdf5write(fname, '/N_REM_post_tvec', A_out{N_idx}{1}.REM_Post_tvec,'WriteMode', 'append');
+hdf5write(fname, '/F_REM_post_tvec', A_out{F_idx}{1}.REM_Post_tvec,'WriteMode', 'append');
+
+hdf5write(fname, '/N_REM_post_xlim', int16([90 150]),'WriteMode', 'append');
+hdf5write(fname, '/F_REM_post_xlim', int16([0 60]),'WriteMode', 'append');
