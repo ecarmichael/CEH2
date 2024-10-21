@@ -115,6 +115,37 @@ end
         fnum = [fnum , 1:length(tvec{iF})];
     end
 
+    %% use the real timestamps if they exist. 
+    
+if exist('timestamps.csv', 'file')
+   
+        t_file = dir('timestamps.csv');
+    
+    if contains(t_file.name, '.csv')
+        TS = readtable(t_file.name);
+        data_out.tvec = table2array(TS(:,2));
+        frameNum = table2array(TS(:,1));
+        maxBufferUsed =  max(table2array(TS(:,3)));
+        
+    elseif contains(t_file.name, '.dat')
+        cfg_ts = [];
+        cfg_ts.correct_time = 0;
+        
+        TS = MS_Load_TS(cfg_ts);
+        for ii = length(TS{1}.system_clock):-1:1
+            TS_len(ii) = length(TS{1}.system_clock{ii});
+        end
+        this_cam_idx = nearest_idx(length(data_out.(nodes{1})), TS_len); % get the nearest timestamps.
+        data_out.tvec = TS{1}.system_clock{this_cam_idx};
+        data_out.tvec(1) = 0;
+        frameNum = TS{1}.framenumber{this_cam_idx};
+        maxBufferUsed = TS{1}.buffer{this_cam_idx};
+        
+    end
+    data_out.tvec = data_out.tvec./1000; % convert to seconds
+    
+end
+
 %% apply simple smoothing over any points that are larger than a 3sd jump.
 % for iN = 1:length(nodes)
 %     nan_idx =abs(zscore(diff(data_out.(nodes{iN})(:,1)))) > 2;
@@ -179,8 +210,8 @@ elseif sum(contains(nodes, 'nose'))>0 && sum(contains(nodes, 'body'))>0
 end
 
 % get the speed from the mid-ear position
-vx = dxdt(data_out.tvec,ear_mid(:,1));
-vy = dxdt(data_out.tvec,ear_mid(:,2));
+vx = dxdt(data_out.tvec,ear_mid(:,1), 'verbose', false);
+vy = dxdt(data_out.tvec,ear_mid(:,2), 'verbose', false);
 
 
 
