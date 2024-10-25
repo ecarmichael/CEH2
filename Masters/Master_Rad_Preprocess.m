@@ -333,6 +333,48 @@ rec.TRL_iv.tend = Rec_iv.tend+ rec.csc.tvec(1);
 rec.ITI_iv = Rec_iti_iv; 
 rec.ITI_iv.tstart = Rec_iti_iv.tstart+ rec.csc.tvec(1); 
 rec.ITI_iv.tend = Rec_iti_iv.tend+ rec.csc.tvec(1); 
+
+%% check the tracking and trial intervals
+figure(99)
+clf
+subplot(3,4,1:2)
+hold on
+plot(enc.pos.tvec, enc.pos.data(1:2,:), 'k')
+vline(enc.TRL_iv.tstart, '.-r');
+vline(enc.TRL_iv.tend, '.-k');
+vline(enc.ITI_iv.tstart, '--g'); 
+vline(enc.ITI_iv.tend, '--m');
+
+
+subplot(3,4,3:4)
+hold on
+plot(rec.pos.tvec, rec.pos.data(1:2,:), 'k')
+vline(rec.TRL_iv.tstart, '.-r');
+vline(rec.TRL_iv.tend, '.-k');
+vline(rec.ITI_iv.tstart, '--g'); 
+vline(rec.ITI_iv.tend, '--m');
+
+for ii = 1:4
+    this_e = restrict(enc.pos, enc.TRL_iv.tstart(ii), enc.TRL_iv.tend(ii)); 
+    this_e_iti = restrict(enc.pos, enc.ITI_iv.tstart(ii), enc.ITI_iv.tend(ii)); 
+    
+    this_r = restrict(rec.pos, rec.TRL_iv.tstart(ii), rec.TRL_iv.tend(ii));
+    this_r_iti = restrict(rec.pos, rec.ITI_iv.tstart(ii), rec.ITI_iv.tend(ii)); 
+    
+    subplot(3,4,ii+4)
+    hold on
+    plot(this_e.data(1,:), this_e.data(2,:), '.r')
+    plot(this_e_iti.data(1,:), this_e_iti.data(2,:), '.k')
+
+    subplot(3,4,ii+8)
+    hold on
+    plot(this_r.data(1,:), this_r.data(2,:), '.r')
+    plot(this_r_iti.data(1,:), this_r_iti.data(2,:), '.k')
+    
+    if ii ==1 
+        legend({'TRL', 'ITI'})
+    end
+end
 %% generate the hypnogram
 
 csc_temp = sleep.csc;
