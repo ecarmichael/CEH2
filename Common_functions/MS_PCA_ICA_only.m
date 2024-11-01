@@ -1,4 +1,4 @@
-function [A_temp, A_proj, data_h, tvec, opts, w_thresh] =MS_PCA_ICA_only(ms, move_idx, binsize, method, opts)
+function [A_temp, A_proj, data_h, tvec, opts, w_thresh, shuff_stats] =MS_PCA_ICA_only(ms, move_idx, binsize, method, opts)
 
 if nargin < 3
     binsize = .5;
@@ -16,9 +16,12 @@ if isempty(method)
 end
 
 if isempty(opts)
-    opts.threshold.method = 'MarcenkoPastur';
+    % opts.threshold.method = 'MarcenkoPastur';
+    opts.threshold.method = 'circularshift';
     opts.Patterns.method = 'ICA';
     opts.Patterns.number_of_iterations = 500;
+    opts.threshold.number_of_permutations = 500; 
+    opts.threshold.permutations_percentile = 95;
 end
     
 if strcmpi(method, 'grosmark') && ~isfield(opts, 'binsize')
@@ -129,8 +132,16 @@ for iS = nShuff:-1:1
         Ass_shuff(iS) = 0;
     end
     %     end
-    fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(this_ass,2), toc)
+    % fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(this_ass,2), toc)
 end
+
+shuff_stats.shuff_n = Ass_shuff; 
+shuff_stats.mean = mean(Ass_shuff); 
+shuff_stats.sd = std(Ass_shuff); 
+shuff_stats.p95 = prctile(Ass_shuff, 95, 'all');
+shuff_stats.p99 = prctile(Ass_shuff, 99, 'all');
+
+
 
 w_thresh = prctile(wake_shuff_mat(wake_shuff_mat >0), 99, 'all');
 

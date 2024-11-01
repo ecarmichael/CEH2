@@ -1,4 +1,4 @@
-%% MASTER_Asmbly
+function MASTER_Asmbly_Multi(nNeurons)
 
 if strcmp(computer, 'GLNXA64')
 
@@ -84,7 +84,7 @@ for ii = 1:length(f_list)
     % A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
     % P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
 
-    B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
+    B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method, nNeurons);
 
     B_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, B_out{ii});
 
@@ -97,7 +97,10 @@ for ii = 1:length(f_list)
     Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
 
     Pipline_Asmbly_plot_SWS(B_out{ii}, [fig_dir filesep method filesep 'best_SWS']);
+end
 
+for ii = 1:length(f_list)
+    session{ii} = f_list(ii).name;
     
     close all
     
@@ -138,13 +141,13 @@ lt5_idx = ~novel_idx & ~anx_idx & ~HS_idx;
 H1_idx = novel_idx & anx_idx & ~HS_idx;
 H5_idx = ~novel_idx & anx_idx & ~HS_idx;
 
-A_all = A_out;
-A_out = A_out(1:11);
+% A_all = A_out;
+% A_out = A_out(1:11);
 % if ~isempty(A_out)
 %     save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
 % end
 % if ~isempty(P_out)
-save([main_dir  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
+save([main_dir  strrep(['Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\' nuNeurons '\B_out_'], '\', filesep) method '.mat'], 'B_out')
 % end
 
 %% load data that has been processed.

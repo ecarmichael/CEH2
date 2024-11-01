@@ -1,12 +1,16 @@
-function out = Pipeline_Asmbly_top_cells(fname,bin_s, move_thresh, method)
+function out = Pipeline_Asmbly_top_cells(fname,bin_s, move_thresh, method, nNeurons)
 %% Pipeline_Asmbly: provides a wrapper for running assembly and reactivation analyses using calcium data.
 
 
 if nargin <2
     bin_s = .5;
     move_thresh = 5;
+    nNeurons = [];
 elseif nargin <3
     move_thresh = 5;
+    nNeurons = [];
+elseif nargin < 4
+    nNeurons = [];
 end
 
 
@@ -52,6 +56,10 @@ fprintf('session: <strong>%s</strong> found h5 <strong>%s</strong>\n', this_sess
 S_type = 'place_cells'; 
 S_neurons  = h5read(h5_dir(h5_idx).name, ['/' S_type]); 
 S_neurons = S_neurons+1; 
+
+if ~isempty(nNeurons)
+    S_neurons = S_neurons(1:nNeurons); 
+end
 
 %% remove questionable cells
 
@@ -216,16 +224,16 @@ place.p_bins = PCs_properties.bins(1:end-1)+(mode(diff(PCs_properties.bins)))/2;
 
 %% get the initial assemblies
 
-%     opts.threshold.method = 'binshuffling';
-%     opts.Patterns.method = 'ICA';
-%     opts.Patterns.number_of_iterations = 500;
-%     opts.threshold.permutations_percentile= 95;
-%     opts.threshold.number_of_permutations= 500;
+    opts.threshold.method = 'circularshift';
+    opts.Patterns.method = 'ICA';
+    opts.Patterns.number_of_iterations = 500;
+    opts.threshold.permutations_percentile= 95;
+    opts.threshold.number_of_permutations= 500;
 
 A_temp = []; A_prog = []; wake_data = []; wake_tvec = [];
 for iB = length(bin_s):-1:1
     
-    [A_temp{iB}, A_proj{iB}, wake_data{iB}, wake_tvec{iB}, A_opts{iB}] = MS_PCA_ICA_only(ms_trk_cut, move_idx, bin_s(iB),method);
+    [A_temp{iB}, A_proj{iB}, wake_data{iB}, wake_tvec{iB}, A_opts{iB}] = MS_PCA_ICA_only(ms_trk_cut, move_idx, bin_s(iB),method, opts);
 end
 
 
@@ -306,16 +314,16 @@ xc_bin = 1;
 t_max = 2; 
 
 for iB = length(bin_s):-1:1
-    
+
     [wake_zxcor{iB}, wake_zxcov{iB}, wake_xcor{iB},wake_xcov{iB}] = MS_Asmbly_xcor(P_proj{iB},wake_tvec{iB}, 5, xc_bin, t_max);
-    
+
     [REM_pre_zxcor{iB}, REM_pre_zxcov{iB},REM_pre_xcor{iB},REM_pre_xcov{iB}] = MS_Asmbly_xcor(REM_pre_proj{iB},REM_pre_tvec{iB},REM_pre_stats{iB}.R_thresh , xc_bin, t_max);
-    
+
     [REM_post_zxcor{iB}, REM_post_zxcov{iB},REM_post_xcor{iB}, REM_post_xcov{iB}] = MS_Asmbly_xcor(REM_post_proj{iB},REM_post_tvec{iB}, REM_post_stats{iB}.R_thresh, xc_bin, t_max);
 
     [REM_Pre_sig_CoOc{iB}, wake_sig_CoOc{iB}] = MS_Asmbly_CoAct_count(wake_zxcor{iB},REM_pre_zxcor{iB}, 1.96); 
     fprintf('Pre had %.0f (%.0f%%) significant assembly pairs using xcor of the %0.0f sig pairs found in wake \n', REM_Pre_sig_CoOc{iB}, (REM_Pre_sig_CoOc{iB} / wake_sig_CoOc{iB})*100, wake_sig_CoOc{iB})
-    
+
     [REM_Post_sig_CoOc{iB}] = MS_Asmbly_CoAct_count(wake_zxcor{iB},REM_post_zxcor{iB}, 1.96); 
     fprintf('Post had %.0f (%.0f%%) significant assembliy pairs using xcor of the %0.0f sig pairs found in wake \n', REM_Post_sig_CoOc{iB}, (REM_Post_sig_CoOc{iB} / wake_sig_CoOc{iB})*100, wake_sig_CoOc{iB})
 
