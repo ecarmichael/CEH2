@@ -16,7 +16,7 @@ v_num =[];
 for ii = 1:length(fnames)
 
     p_idx = strfind(fnames(ii).name, '.')+1;
-    n_idx(1) = strfind(fnames(ii).name(p_idx(1):p_idx(2)), '_')+p_idx(1);
+    n_idx(1) = strfind(fnames(ii).name(p_idx(1):p_idx(end)), '_')+p_idx(1);
     n_idx(2) = strfind(fnames(ii).name, '.analysis.h5');
     v_num(ii) = str2double(fnames(ii).name(n_idx(1):n_idx(2)-1));
     
@@ -34,4 +34,4 @@ tsd = MS_SLEAP2TSD(lab_list_s, 30, [],[1, 1], 1)
 %% plot to checl
 
 
-plot(tsd.data(1,:), '.', tsd.data(2,:), '.')
+plot(tsd.data(3,:), tsd.data(4,:), '.')

@@ -290,11 +290,18 @@ behav.conv_fac = conv_fac;
 %% test out the HD.
 if plot_flag
     figure(797)
+    c_ord = parula(length(nodes)); 
+    s_ord = {'o', 's', 'd', '+', 'x', 'o', 's', 'd', '+', 'x'}; 
     clf
     hold on
     for iF =1:floor(length(pos.data)/20)
-        plot(pos.data(1,iF), pos.data(2,iF), 'or')
-        plot(pos.data(3,iF), pos.data(4,iF), 'sb')
+        c = 0;
+        for ii = 1:length(nodes)
+            plot(pos.data(0+ii+c,iF), pos.data(1+ii+c,iF),'.', 'color', c_ord(ii,:), 'marker', s_ord{ii} )
+%             plot(pos.data(3,iF), pos.data(4,iF), 'sb')
+                    c = c+1;
+
+        end
         plot([pos.data(3,iF), pos.data(1,iF)],[pos.data(4,iF), pos.data(2,iF)], 'k')
         
         %     plot(behav.position(iF,1), behav.position(iF,2), 'or')
