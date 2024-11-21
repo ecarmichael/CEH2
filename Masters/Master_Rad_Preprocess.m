@@ -1,4 +1,4 @@
-[data_out] = Master_OE_Preprocess(data_dir, type)
+function [data_out] = Master_OE_Preprocess(data_dir, type)
 %% Master_OE_Preprocess: Loads and preprocesses the Radial/NOL maze data recorded using a combination of OE ephys with miniscope video tracking
 %
 %
@@ -110,20 +110,27 @@ evts = OE_LoadEvents;
 if sum(contains(evts.label, meta.TTL_rec)) == 1
     evts.label{(contains(evts.label,  meta.TTL_miniscope_frame))} = 'TTL_frame'; 
     evts.label{(contains(evts.label,  meta.TTL_rec))} = 'TTL_rec'; 
-    evts.label{(contains(evts.label,  meta.TTL_LED))} = 'TTL_LED'; 
-
+    
+    % add lasers if present. 
+    if sum(contains(evts.label,  meta.TTL_LED)) > 0
+        evts.label{(contains(evts.label,  meta.TTL_LED))} = 'TTL_LED';
+        LED_idx = find(contains(evts.label, 'TTL_LED'));
+        
+        % convert laser TTLs into blocks
+        keep_idx = diff(evts.t{LED_idx}) > 4;
+        keep_idx = [1 ; find(keep_idx(1:end))+1]';
+        
+        
+        laser_on = evts.t{LED_idx}(keep_idx);
+        laser_off = evts.t{LED_idx}([keep_idx(2:end)-1 length(evts.t{LED_idx})]);
+        
+        LED_IV = iv(laser_on, laser_off);
+    end
+    
+    
     frame_idx = find(contains(evts.label, 'TTL_frame'));
     trig_idx = find(contains(evts.label, 'TTL_rec'));
-    LED_idx = find(contains(evts.label, 'TTL_LED'));
     
-    % convert laser TTLs into blocks
-    keep_idx = diff(evts.t{LED_idx}) > 4;
-    keep_idx = [1 ; find(keep_idx(1:end))+1]';
-    
-    laser_on = evts.t{LED_idx}(keep_idx); 
-    laser_off = evts.t{LED_idx}([keep_idx(2:end)-1 length(evts.t{LED_idx})]); 
-
-    LED_IV = iv(laser_on, laser_off);
 
 
     for ii = 1:length(evts.label)
@@ -144,7 +151,7 @@ if sum(contains(evts.label, meta.TTL_rec)) == 1
     sleep_idx = find(contains(mess.label, 'sleep')); 
     sleep_end_idx = find(contains(mess.label, 'sleep end')); 
     
-    if length(sleep_t) <1
+    if length(sleep_idx) >1
         sleep_idx = sleep_idx(1); 
     end
     
@@ -169,7 +176,7 @@ end
 
 fprintf('<strong>%s</strong>: OE frame TTL (<strong>''%s''</strong>), duration = %.0fsec (%2.1fhr)\n', mfilename,evts.label{max_TTL}, end_t - start_t, (end_t - start_t)/60/60)
 fprintf('<strong>%s</strong>: Encode duration = %.0fsec (%2.1fmin)\n', mfilename,diff(enc_t), diff(enc_t)/60);
-fprintf('<strong>%s</strong>: Sleep duration = %.0fsec (%2.1fmin)\n', mfilename,sleep_IV.tend - sleep_IV.tstart, (sleep_IV.tend - sleep_IV.tstart)/60)
+fprintf('<strong>%s</strong>: Sleep duration = %.0fsec (%2.1fmin = %2.1fhrs)\n', mfilename,sleep_IV.tend - sleep_IV.tstart, (sleep_IV.tend - sleep_IV.tstart)/60, ((sleep_IV.tend - sleep_IV.tstart)/60)/60)
 fprintf('<strong>%s</strong>: Recall duration = %.0fsec (%2.1fmin)\n', mfilename,diff(rec_t), diff(rec_t)/60)
 
 
@@ -222,7 +229,7 @@ acc = OE_old_csc2TSD(cfg_acc);
 % 
 % eulZYX_df = [eulZYX_df_t, eulZYX_df_t(:,end)];
 
-acc.data(4,:) = sqrt(movmean(sum(abs(acc.data)).^ 2, cfg_acc.desired_sampling_frequency/4)); 
+acc.data(4,:) = movmean(sqrt((acc.data(1,:).^2) + (acc.data(2,:).^2) + (acc.data(3,:).^2)),cfg_acc.desired_sampling_frequency/4);  %   sqrt(movmean(sum(abs(acc.data)).^ 2, cfg_acc.desired_sampling_frequency/4)); 
 acc.label = {'AUX1', 'AUX2', 'AUX3', 'RMS'};
 acc.cfg.hdr{1} = rmfield(acc.cfg.hdr{1}, {'ts', 'nsamples', 'recNum'});
 
@@ -275,8 +282,8 @@ if ~isempty(DLC_dir)
         
     end
 end
-fprintf('<strong>%s</strong>: Encode Pos duration = %f\n', mfilename, enc.pos.tvec(end) - enc.pos.tvec(1))
-fprintf('<strong>%s</strong>: Recall Pos duration = %f\n', mfilename, rec.pos.tvec(end) - rec.pos.tvec(1))
+fprintf('<strong>%s</strong>: Encode Pos duration = %.0fs = %.1fmin\n', mfilename, enc.pos.tvec(end) - enc.pos.tvec(1),(enc.pos.tvec(end) - enc.pos.tvec(1))/60)
+fprintf('<strong>%s</strong>: Recall Pos duration = %.0fs = %.1fmin\n', mfilename, rec.pos.tvec(end) - rec.pos.tvec(1), (rec.pos.tvec(end) - rec.pos.tvec(1))/60)
 
 pos = enc.pos; 
 pos.tvec = [enc.pos.tvec, rec.pos.tvec]; 
@@ -340,19 +347,25 @@ clf
 subplot(3,4,1:2)
 hold on
 plot(enc.pos.tvec, enc.pos.data(1:2,:), 'k')
+plot(enc.acc.tvec, enc.acc.data(4,:)*500, 'r')
+
 vline(enc.TRL_iv.tstart, '.-r');
 vline(enc.TRL_iv.tend, '.-k');
 vline(enc.ITI_iv.tstart, '--g'); 
 vline(enc.ITI_iv.tend, '--m');
+vline(enc_t, '--b');
 
 
 subplot(3,4,3:4)
 hold on
 plot(rec.pos.tvec, rec.pos.data(1:2,:), 'k')
+plot(rec.acc.tvec, rec.acc.data(4,:)*500, 'r')
+
 vline(rec.TRL_iv.tstart, '.-r');
 vline(rec.TRL_iv.tend, '.-k');
 vline(rec.ITI_iv.tstart, '--g'); 
 vline(rec.ITI_iv.tend, '--m');
+vline(rec_t, '--b');
 
 for ii = 1:4
     this_e = restrict(enc.pos, enc.TRL_iv.tstart(ii), enc.TRL_iv.tend(ii)); 
