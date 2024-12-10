@@ -133,7 +133,7 @@ if sum(contains(evts.label, meta.TTL_rec)) == 1
     
 
 
-    for ii = 1:length(evts.label)
+    for ii = length(evts.label):-1:1
         dur(ii) = evts.t{ii}(end) - evts.t{ii}(1);
     end
     
@@ -344,7 +344,26 @@ rec.ITI_iv.tend = Rec_iti_iv.tend+ rec.csc.tvec(1);
 %% check the tracking and trial intervals
 figure(99)
 clf
-subplot(3,4,1:2)
+subplot(4,4,1:4)
+hold on
+plot(csc.tvec(1:10:end), csc.data(1,1:10:end), 'b')
+plot(enc.pos.tvec, enc.pos.data(1:2,:), 'k')
+plot(rec.pos.tvec, rec.pos.data(1:2,:), 'k')
+vline(enc.TRL_iv.tstart, '.-r');
+vline(enc.TRL_iv.tend, '.-k');
+vline(enc.ITI_iv.tstart, '--g'); 
+vline(enc.ITI_iv.tend, '--m');
+vline(enc_t, '--b');
+
+vline(rec.TRL_iv.tstart, '.-r');
+vline(rec.TRL_iv.tend, '.-k');
+vline(rec.ITI_iv.tstart, '--g'); 
+vline(rec.ITI_iv.tend, '--m');
+vline(rec_t, '--b');
+
+plot(enc.acc.tvec, enc.acc.data(4,:)*500, 'r')
+
+subplot(4,4,5:6)
 hold on
 plot(enc.pos.tvec, enc.pos.data(1:2,:), 'k')
 plot(enc.acc.tvec, enc.acc.data(4,:)*500, 'r')
@@ -356,7 +375,7 @@ vline(enc.ITI_iv.tend, '--m');
 vline(enc_t, '--b');
 
 
-subplot(3,4,3:4)
+subplot(4,4,7:8)
 hold on
 plot(rec.pos.tvec, rec.pos.data(1:2,:), 'k')
 plot(rec.acc.tvec, rec.acc.data(4,:)*500, 'r')
@@ -374,12 +393,12 @@ for ii = 1:4
     this_r = restrict(rec.pos, rec.TRL_iv.tstart(ii), rec.TRL_iv.tend(ii));
     this_r_iti = restrict(rec.pos, rec.ITI_iv.tstart(ii), rec.ITI_iv.tend(ii)); 
     
-    subplot(3,4,ii+4)
+    subplot(4,4,ii+8)
     hold on
     plot(this_e.data(1,:), this_e.data(2,:), '.r')
     plot(this_e_iti.data(1,:), this_e_iti.data(2,:), '.k')
 
-    subplot(3,4,ii+8)
+    subplot(4,4,ii+12)
     hold on
     plot(this_r.data(1,:), this_r.data(2,:), '.r')
     plot(this_r_iti.data(1,:), this_r_iti.data(2,:), '.k')
