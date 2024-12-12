@@ -270,6 +270,7 @@ end
 min_N_place = 3;
 
 Place_temp = []; Place_proj = []; Place_map = [];
+if ~isempty(Place_temp)
 for iB = length(P_temp):-1:1
     
     [map_out{iB}, place_idx{iB}] = MS_Asmbly_map(P_pos{iB}, place, min_N_place);
@@ -281,10 +282,16 @@ for iB = length(P_temp):-1:1
     Place_proj{iB} = P_proj{iB}(:,place_idx{iB});
     
     fprintf('[%.0f/%.0f = %.0f%%] Assemblies contained at least %0.0f place cells (%.2fs binsize)\n',size(Place_temp{iB},2),size(A_temp{iB},2),  (size(Place_temp{iB},2)/size(A_temp{iB},2))*100, min_N_place, bin_s(iB))
-    
-    
 end
 
+else
+    Place_map{iB} = [];
+    
+    Place_temp{iB} = [];
+    Place_proj{iB} = [];
+
+
+end
 %% get the activation locations on the track;
 win_s = 2;
 thresh = 10;

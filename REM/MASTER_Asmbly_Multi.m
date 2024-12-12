@@ -58,13 +58,15 @@ addpath(genpath(code_dir))
 
 
 cd(c_d)
-
+if ~exist('nNeurons', 'var')
+    nNeurons = 256;
+end
 
 move_thresh  = 9;
 bin_size = [.5];
 
 inter_dir = strrep([main_dir 'Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9'], '\', filesep);
-fig_dir = [inter_dir filesep 'checks'];
+fig_dir = [inter_dir filesep num2str(nNeurons) '_checks'];
 
 %%  Extract assembly data
 
@@ -147,7 +149,12 @@ H5_idx = ~novel_idx & anx_idx & ~HS_idx;
 %     save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
 % end
 % if ~isempty(P_out)
-save([main_dir  strrep(['Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\' nuNeurons '\B_out_'], '\', filesep) method '.mat'], 'B_out')
+if ~exist([main_dir  strrep(['Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\' 'N_' num2str(nNeurons) '\B_out_'],'\', filesep)], 'dir')
+    mkdir([main_dir  strrep(['Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\' 'N_' num2str(nNeurons) '\B_out_'],'\', filesep)])
+end
+warning off
+save([main_dir  strrep(['Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\' 'N_' num2str(nNeurons) '\B_out_'], '\', filesep) method '.mat'], 'B_out')
+warning on
 % end
 
 %% load data that has been processed.

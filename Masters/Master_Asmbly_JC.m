@@ -84,7 +84,7 @@ for ii = 1:length(f_list)
     % A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
     % P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
 
-    B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method);
+    B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method, 256);
 
     B_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, B_out{ii});
 

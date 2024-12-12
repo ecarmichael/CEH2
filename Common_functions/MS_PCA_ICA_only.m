@@ -121,7 +121,7 @@ for iS = nShuff:-1:1
         wake_shuff_mat(iS,:) =  S_prog(1,:);
         keep_idx(iS) = 1;
     else
-        wake_shuff_mat(iS,:) = NaN;
+        wake_shuff_mat(iS,:) = NaN(1,length(shuff_data));
         keep_idx(iS) = 0;
     end
     %     for ii = size(this_ass,2):-1:1
