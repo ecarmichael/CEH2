@@ -128,6 +128,9 @@ for ii = 1: size(A_cells,2)
         
 
         if ~isempty(fig_dir)
+            if ~exist(fig_dir, 'dir')
+                mkdir(fig_dir)
+            end
             saveas(gcf, [fig_dir filesep info.subject '_' info.session '_Wake_A_summery_' num2str(f_n+1) '_' strrep(num2str(info.bin), '.', 'p')  's_bin.png']);
 
             set(gcf,'Units','Inches');
