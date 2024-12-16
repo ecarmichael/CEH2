@@ -1,18 +1,31 @@
-function out = Pipeline_Asmbly_top_cells(fname,bin_s, move_thresh, method, nNeurons)
+function out = Pipeline_Asmbly_top_cells(fname,bin_s, move_thresh, method, opts, nNeurons)
 %% Pipeline_Asmbly: provides a wrapper for running assembly and reactivation analyses using calcium data.
 
 
 if nargin <2
     bin_s = .5;
     move_thresh = 5;
+    opts = [];
     nNeurons = [];
 elseif nargin <3
     move_thresh = 5;
+    opts = [];
     nNeurons = [];
 elseif nargin < 4
+    opts = [];
     nNeurons = [];
+elseif nargin < 5
+    nNeurons = []; 
 end
 
+
+if isempty(opts)
+    opts.threshold.method = 'circularshift';
+    opts.Patterns.method = 'ICA';
+    opts.Patterns.number_of_iterations = 500;
+    opts.threshold.permutations_percentile= 95;
+    opts.threshold.number_of_permutations= 500;
+end
 
 rng(123, 'twister')
 
@@ -224,12 +237,6 @@ place.p_bins = PCs_properties.bins(1:end-1)+(mode(diff(PCs_properties.bins)))/2;
 
 %% get the initial assemblies
 
-    opts.threshold.method = 'circularshift';
-    opts.Patterns.method = 'ICA';
-    opts.Patterns.number_of_iterations = 500;
-    opts.threshold.permutations_percentile= 95;
-    opts.threshold.number_of_permutations= 500;
-
 A_temp = []; A_prog = []; wake_data = []; wake_tvec = [];
 for iB = length(bin_s):-1:1
     
@@ -270,27 +277,29 @@ end
 min_N_place = 3;
 
 Place_temp = []; Place_proj = []; Place_map = [];
-if ~isempty(Place_temp)
 for iB = length(P_temp):-1:1
-    
-    [map_out{iB}, place_idx{iB}] = MS_Asmbly_map(P_pos{iB}, place, min_N_place);
-    
-    Place_map{iB} = map_out{iB};
-    Place_map{iB}(~place_idx{iB}) = [];
-    
-    Place_temp{iB} = P_temp{iB}(:,place_idx{iB});
-    Place_proj{iB} = P_proj{iB}(:,place_idx{iB});
-    
-    fprintf('[%.0f/%.0f = %.0f%%] Assemblies contained at least %0.0f place cells (%.2fs binsize)\n',size(Place_temp{iB},2),size(A_temp{iB},2),  (size(Place_temp{iB},2)/size(A_temp{iB},2))*100, min_N_place, bin_s(iB))
-end
-
-else
-    Place_map{iB} = [];
-    
-    Place_temp{iB} = [];
-    Place_proj{iB} = [];
-
-
+    if ~isempty(Place_temp)
+        
+        [map_out{iB}, place_idx{iB}] = MS_Asmbly_map(P_pos{iB}, place, min_N_place);
+        
+        Place_map{iB} = map_out{iB};
+        Place_map{iB}(~place_idx{iB}) = [];
+        
+        Place_temp{iB} = P_temp{iB}(:,place_idx{iB});
+        Place_proj{iB} = P_proj{iB}(:,place_idx{iB});
+        
+        fprintf('[%.0f/%.0f = %.0f%%] Assemblies contained at least %0.0f place cells (%.2fs binsize)\n',size(Place_temp{iB},2),size(A_temp{iB},2),  (size(Place_temp{iB},2)/size(A_temp{iB},2))*100, min_N_place, bin_s(iB))
+        
+        
+    else
+        map_out{iB} = [];
+        Place_map{iB} = [];
+        
+        Place_temp{iB} = [];
+        Place_proj{iB} = [];
+        
+        
+    end
 end
 %% get the activation locations on the track;
 win_s = 2;
@@ -365,6 +374,7 @@ for iB = length(bin_s):-1:1
     info.S_neurons = S_neurons; 
     info.S_type = S_type; 
     info.ms_fs = mode(diff(ms_trk_cut.time)); 
+    info.opts = opts; 
     
     out{iB}.info = info;
     out{iB}.bins = bin_s(iB);

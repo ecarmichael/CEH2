@@ -20,7 +20,7 @@ for ii = 1:length(A_in)
         continue
     else
         
-        REM_temp_all = assembly_patterns(A_in{ii}.REM_Pre_data);
+        REM_temp_all = assembly_patterns(A_in{ii}.REM_Pre_data, A_in{ii}.info.opts);
         
         pREM_proj = assembly_activity(REM_temp_all, A_in{ii}.REM_Pre_data');
 
