@@ -36,8 +36,10 @@ rng(123, 'twister')
 % load('behav_DLC.mat')
 this_sess = fname;
 
+dbclear error
 load(this_sess);
 
+dbstop error
 %% preprocess beahviour
 behav = MS_align_data(behav,ms);
 
