@@ -84,7 +84,7 @@ fprintf(fid, '\n%%Recording details\n');
 
 %same for CSC
 fprintf(fid, 'Meta.task_order = {''Pre'', ''Track'', ''Post''};\n');
-fprintf(fid, 'Meta.conv_fact = [.95 .95];\n');
+fprintf(fid, 'Meta.conv_fact = [10.65 10.65];\n');
 fprintf(fid, 'Meta.camera = ''Miniscope'';\n');
 fprintf(fid, 'Meta.TTL_rec = ''6'';\n');
 fprintf(fid, 'Meta.TTL_miniscope_frame = ''5'';\n');

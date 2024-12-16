@@ -46,18 +46,33 @@ kernel = gausskernel([cfg.gau_win cfg.gau_win],cfg.gau_sd); % 2d gaussian in bin
 
 %% restrict to movement if speed is given.
 
-if ~isempty(spd)
-
+if ~isempty(spd) || sum(contains(pos.label, 'Speed'))>0
+    
+    
+    
+    spd = pos;
+    this_idx = find(contains(pos.label, 'Speed'));
+    spd.label(~this_idx) = [];
+    spd.data = spd.data(this_idx,:);
+    
+    if ~isstruct(spd) && length(spd) == length(pos.tvec);
+        
+        spd = pos;
+        spd.data = spd;
+        
+        
+    end
+    
     cfg_spd = [];
     cfg_spd.method = 'raw';
     cfg_spd.operation = '>';
     cfg_spd.threshold = cfg.spd_thresh;
     iv_move = TSDtoIV(cfg_spd,spd); % only keep intervals with speed above thresh
-
-
+    
+    
     S = restrict(S, iv_move);
     pos = restrict(pos, iv_move);
-
+    
 end
 
 
@@ -89,19 +104,24 @@ occ_hist(no_occ_idx) = NaN;
 
 %% compute the tunig curves
 for ii = 1:length(S.t)
-
-
+    
+    if isempty(S.t{ii})
+        tc{ii} = NaN(size(occ_hist)); 
+    else
+    
+    
     spk_x{ii} = interp1(pos.tvec,pos.data(1,:),S.t{ii},'linear');
     spk_y{ii} = interp1(pos.tvec,pos.data(2,:),S.t{ii},'linear');
-
-
+    
+    
     % compute the rate map
     spk_hist = histcn([spk_x{ii}, spk_y{ii}],x_edges,y_edges);
     spk_hist = conv2(spk_hist,kernel, 'same');
-
+    
     spk_hist(no_occ_idx) = NaN;
     tc{ii} = spk_hist./occ_hist;
-
+    end
+    
 end
 %% plot some simple maps with spikes
 
@@ -114,31 +134,31 @@ if cfg.plot
     clf
     ip = 0;
     for ii = 1:length(S.t)
-
+        
         if isempty(S.t{ii})
             continue
         end
-
+        
         if ip >= (n*m)/2
             figure(get(gcf, 'Number')+1)
             ip = 1;
         else
             ip = ip+1;
         end
-
+        
         disp(ip)
         subplot(m, n, s1_idx(ip))
         plot(pos.data(1,:), pos.data(2,:), '.k');
         hold on
         plot(spk_x{ii}, spk_y{ii}, '.r');axis off;
-
-
-
+        
+        
+        
         subplot(m, n, s2_idx(ip))
         pcolor(tc{ii}'); shading flat; axis off; %colorbar('Location', 'northoutside')
-
+        
         title([strrep(S.label{ii}(1:end-2), '_', '-' ) ' (peak: ' num2str(max(tc{ii},[], 'all'),2) 'Hz)'])
-
+        
     end
 end
 %%

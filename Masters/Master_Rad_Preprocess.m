@@ -288,6 +288,22 @@ fprintf('<strong>%s</strong>: Recall Pos duration = %.0fs = %.1fmin\n', mfilenam
 pos = enc.pos; 
 pos.tvec = [enc.pos.tvec, rec.pos.tvec]; 
 pos.data = [enc.pos.data, rec.pos.data]; 
+
+% spd = pos; 
+% this_idx = find(contains(pos.label, 'Speed'));
+% spd.label(~this_idx) = [];
+% spd.data = spd.data(this_idx,:); 
+% pos.label(this_idx) = []; 
+% pos.data(this_idx,:) = []; 
+% 
+% hd = pos;
+% this_idx = find(contains(pos.label, 'HD'));
+% hd.label(~this_idx) = [];
+% hd.data = hd.data(this_idx,:); 
+% pos.label(this_idx) = []; 
+% pos.data(this_idx,:) = []; 
+
+
 clear this_pos
 
 % speed = getLinSpd([],pos); % linear speed
@@ -454,5 +470,10 @@ fname = [meta.subject '_' strrep(meta.date, '-', '_') '_' meta.session];
 
 save([save_dir filesep fname], 'out')
 
+%% quick place plots
 
+maps_e = MS_get_place_field([], restrict(out.Encode.S, out.Encode.TRL_iv.tstart, out.Encode.TRL_iv.tend), restrict(out.Encode.pos, out.Encode.TRL_iv.tstart, out.Encode.TRL_iv.tend))
+
+
+maps_r = MS_get_place_field([], restrict(out.Recall.S, out.Recall.TRL_iv.tstart, out.Recall.TRL_iv.tend), restrict(out.Recall.pos, out.Recall.TRL_iv.tstart, out.Recall.TRL_iv.tend))
 
