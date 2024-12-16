@@ -2,7 +2,7 @@ function out = Pipeline_Asmbly_append_SWS(fname, A_in)
 %% Pipeline_Asmbly: provides a wrapper for running assembly and reactivation analyses using calcium data.
 
 
-    bin_s = A_in{1}.bins; 
+    % bin_s = A_in{1}.bins; 
 
 
 
@@ -101,7 +101,7 @@ cfg_ReAct.thresh = 99;
 ms = []; 
 cfg_ReAct.ms_fs = A_in{1}.info.ms_fs; 
 
-for iB = length(bin_s):-1:1
+for iB = length(A_in):-1:1
     % pre REM
     [SWS_pre_proj{iB},SWS_pre_stats{iB}, SWS_pre_data{iB}, SWS_pre_tvec{iB}, SWS_Pre_shuff{iB}] = MS_Asmbly_ReAct(cfg_ReAct, SW_pre_data_in, A_in{iB}.P_temp ,ms,  A_in{iB}.info.bin);
     
@@ -115,7 +115,7 @@ end
 xc_bin = 1; 
 t_max = 2; 
 
-for iB = length(bin_s):-1:1
+for iB = length(A_in):-1:1
     
     [wake_zxcor{iB}, wake_zxcov{iB}, wake_xcor{iB},wake_xcov{iB}] = MS_Asmbly_xcor(A_in{iB}.P_proj,A_in{iB}.wake_tvec, 5, xc_bin, t_max);
     
@@ -134,7 +134,7 @@ end
 
 %% reactivation strength
 
-for iB = length(bin_s):-1:1
+for iB = length(A_in):-1:1
     
     for ii = size(A_in{iB}.P_proj,1):-1:1
         
@@ -143,7 +143,7 @@ for iB = length(bin_s):-1:1
 end
 
 %% collect the outputs
-for iB = length(bin_s):-1:1
+for iB = length(A_in):-1:1
     out{iB} = A_in{iB}; 
 
     

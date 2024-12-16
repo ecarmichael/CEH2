@@ -19,8 +19,8 @@ end
 for iB = size(A_out,2):-1:1
     MS_Asmbly_plot(A_out{iB}.P_temp, A_out{iB}.P_pos, A_out{iB}.map, A_out{iB}.P_loc, fig_dir, A_out{iB}.info);
     close all;
-    if ~isempty(A_out{iB}.REM_temp)
-        MS_Asmbly_plot(A_out{iB}.REM_temp, A_out{iB}.REM_A_pos, A_out{iB}.pREM_Place_map, A_out{iB}.pREM_wake_P_loc, [fig_dir filesep 'preREM'], A_out{iB}.info);
+    if ~isempty(A_out{iB}.pREM_temp)
+        MS_Asmbly_plot(A_out{iB}.pREM_temp, A_out{iB}.pREM_A_pos, A_out{iB}.pREM_Place_map, A_out{iB}.pREM_wake_P_loc, [fig_dir filesep 'preREM'], A_out{iB}.info);
         close all;
     end
 end
