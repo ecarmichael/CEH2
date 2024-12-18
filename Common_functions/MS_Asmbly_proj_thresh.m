@@ -32,7 +32,7 @@ for iS = nShuff:-1:1
     try
         this_idx = randsample(1:size(shuff_proj,1), 1);
     catch 
-        dbstop 
+        display(size(shuff_proj))
     end
 
         shuff_mat(iS,:) = shuff_proj(this_idx,:);

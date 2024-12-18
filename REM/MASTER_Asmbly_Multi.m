@@ -86,7 +86,7 @@ f_list = dir('*data*');
 
 % loop over number of neurons to use. 
 
-nN = [256:-16:32]; 
+nN = [256:-32:32]; 
 
 out = NaN(length(nN), length(length(f_list))); 
 out_pre = out; 
