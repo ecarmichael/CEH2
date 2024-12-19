@@ -119,10 +119,20 @@ for iN = 1:length(nN)
         %         Pipline_Asmbly_plot(C_out{ii}, [fig_dir filesep method filesep 'best']);
         
         %     Pipline_Asmbly_plot_SWS(C_out{ii}, [fig_dir filesep method filesep 'best_SWS']);
-        
-%         out(iN, ii) = size(C_out{ii}{1}.P_proj,1); 
-%         out_sws(iN, ii) = size(C_out{ii}{1}.P_proj,1); 
-%         out_pre(iN, ii) = size(C_out{ii}{1}.P_proj,1); 
+        for iB = 1:length(C_out{ii})
+
+            %% get the number of awake assemblies that are sig active in REM sleep. 
+            out(iN, ii, iB) = size(C_out{ii}{iB}.P_proj,1);
+
+            %get the wake assembly reactivations in pre and post SWS
+
+            out_sws(iN, ii, iB) = size(C_out{ii}{iB}.P_proj,1);
+
+            %% get the pre assembly sig reactivations
+            out_preA(iN, ii, iB) = sum(sum(C_out{ii}{iB}.pREM_proj > C_out{ii}{iB}.pREM_stats.R_thresh, 2) > 0);
+        end
+
+
 
     end
     
