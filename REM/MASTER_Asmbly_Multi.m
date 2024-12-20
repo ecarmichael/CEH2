@@ -129,7 +129,11 @@ for iN = 1:length(nN)
             out_sws(iN, ii, iB) = size(C_out{ii}{iB}.P_proj,1);
 
             %% get the pre assembly sig reactivations
+            if ~isempty(C_out{ii}{iB}.pREM_proj)
             out_preA(iN, ii, iB) = sum(sum(C_out{ii}{iB}.pREM_proj > C_out{ii}{iB}.pREM_stats.R_thresh, 2) > 0);
+            else 
+                out_preA(iN, ii, iB) = 0;
+            end
         end
 
 
@@ -144,6 +148,16 @@ for iN = 1:length(nN)
     warning on
     
 end
+
+%% quick plot
+
+figure(1981)
+% subplot(1,3,1)
+surf(squeeze(mean(out(2:end,:,:),1))); 
+zlabel('n Wake Asmbly in REM');
+ylabel('number of place cells');
+xlabel('bin size');
+set(gca, 'Xticklabel', bin_size, 'yticklabel', nN(1:end-1))
 %%  Extract assembly data
 
 % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')

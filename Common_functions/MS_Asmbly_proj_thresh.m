@@ -11,7 +11,12 @@ elseif nargin < 5
     Proj_in = [];
 end
 
-
+if isempty(Temp_in)
+    ReAct_stats.R_thresh = NaN;
+    shuff_proj = [];
+    shuff_mat = [];
+    return
+end
 
 %%
 rng(123,'twister')
