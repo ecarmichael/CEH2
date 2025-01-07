@@ -67,8 +67,7 @@ for iF = 1:length(f_list)
 end
 
 % convert to table
-table_out = table(subject{:}', date_id', Closed_prct', Open_prct', Trans_prct', N_head_dip', C2T', T2O'); 
-
+table_out = table(subject', date_id', Closed_prct', Open_prct', Trans_prct', N_head_dip', C2T', T2O','VariableNames',  ["Subject", "Date",  "Closed_prct", "Open_prct", "Trans_prct", "N_head_dip", "C2T", "T2O"]);
 %% one shot to update the EPM data
 
 cd(data_dir)
