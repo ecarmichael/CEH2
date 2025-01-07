@@ -86,7 +86,7 @@ f_list = dir('*data*');
 
 % loop over number of neurons to use. 
 
-nN = [256:-32:32]; 
+nN = [256:-16:32]; 
 
 out = NaN(length(nN), length(length(f_list))); 
 out_pre = out; 
@@ -119,10 +119,24 @@ for iN = 1:length(nN)
         %         Pipline_Asmbly_plot(C_out{ii}, [fig_dir filesep method filesep 'best']);
         
         %     Pipline_Asmbly_plot_SWS(C_out{ii}, [fig_dir filesep method filesep 'best_SWS']);
-        
-%         out(iN, ii) = size(C_out{ii}{1}.P_proj,1); 
-%         out_sws(iN, ii) = size(C_out{ii}{1}.P_proj,1); 
-%         out_pre(iN, ii) = size(C_out{ii}{1}.P_proj,1); 
+        for iB = 1:length(C_out{ii})
+
+            %% get the number of awake assemblies that are sig active in REM sleep. 
+            out(iN, ii, iB) = size(C_out{ii}{iB}.P_proj,1);
+
+            %get the wake assembly reactivations in pre and post SWS
+
+            out_sws(iN, ii, iB) = size(C_out{ii}{iB}.P_proj,1);
+
+            %% get the pre assembly sig reactivations
+            if ~isempty(C_out{ii}{iB}.pREM_proj)
+            out_preA(iN, ii, iB) = sum(sum(C_out{ii}{iB}.pREM_proj > C_out{ii}{iB}.pREM_stats.R_thresh, 2) > 0);
+            else 
+                out_preA(iN, ii, iB) = 0;
+            end
+        end
+
+
 
     end
     
@@ -134,6 +148,16 @@ for iN = 1:length(nN)
     warning on
     
 end
+
+%% quick plot
+
+figure(1981)
+% subplot(1,3,1)
+surf(squeeze(mean(out(2:end,:,:),1))); 
+zlabel('n Wake Asmbly in REM');
+ylabel('number of place cells');
+xlabel('bin size');
+set(gca, 'Xticklabel', bin_size, 'yticklabel', nN(1:end-1))
 %%  Extract assembly data
 
 % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
