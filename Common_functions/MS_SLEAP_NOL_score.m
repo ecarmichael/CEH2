@@ -1,4 +1,4 @@
-function [f_out] = MS_SLEAP_EMP_score(data_dir)
+function [f_out] = MS_SLEAP_NOL_score(data_dir)
 %% MS_SLEAP_EMP_score: collects the state indicies from MS_SLEAP_EMP and converts it to a csv with all the relevant metrics. 
 %
 %

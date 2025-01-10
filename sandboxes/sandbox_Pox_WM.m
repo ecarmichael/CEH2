@@ -80,7 +80,7 @@ sess = 1:4;
 
 figure(101)
 clf
-for ii = 1:length(sub);
+for ii = 1:length(sub)
     
     t_day = 1:length(D_ID{sub(ii)});
     for iD = 1:length(t_day)
