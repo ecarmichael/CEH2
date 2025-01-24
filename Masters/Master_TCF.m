@@ -65,6 +65,11 @@ for iF = 1:length(f_list)
     fprintf('%s\n',f_list(iF).name)
 end
 
+
+%% load the LED on table
+
+TFC_tab = readtable('CFT_Frame - Sheet1.csv'); 
+
 %% loop over sessons
 
 for iF = 1:length(f_list)
@@ -74,8 +79,18 @@ for iF = 1:length(f_list)
     info.sess = f_list(iF).name(strfind(f_list(iF).name, 'TFC'):strfind(f_list(iF).name, 'TFC')+3);
     info.date = f_list(iF).name(1:strfind(f_list(iF).name, 'TFC')-2);
     
+    if strcmp(info.sess, 'TFC1')
+        proto = TFC1;
+    elseif strcmp(info.sess, 'TFC2')
+        proto = TFC2;
+    elseif strcmp(info.sess, 'TFC3')
+        proto = TFC3;
+    end
     
-    out.(info.subject).(info.sess) = MS_DLC_score_freezing(f_list(iF).name); 
+    % get the table info for the lED on frame. 
+    this_tab = find(contains(TFC_tab.Subject, info.subject));
+    
+    out.(info.subject).(info.sess) = MS_DLC_score_freezing(f_list(iF).name,proto, TFC_tab.(info.sess)(this_tab)); 
 
     
     

@@ -175,7 +175,7 @@ if length(data_out.tvec) ~= length(data_out.(fields{1}))
             data_out.(fields{iFields}) = data_out.(fields{iFields})(1:length(data_out.tvec),:);
         end
     elseif length(data_out.tvec)> length(data_out.(fields{1}))
-        data_out.tvec = 1:length(data_out.(fields{iFields})); 
+        data_out.tvec = data_out.tvec(1:length(data_out.(fields{iFields}))); 
         
     end
 end
@@ -327,19 +327,20 @@ if plot_flag
         
         imagesc(read(vidObj,iF))
         
-        plot(pos.data(1,iF), pos.data(2,iF), 'or')
-        plot(pos.data(3,iF), pos.data(4,iF), 'sb')
-        plot([pos.data(3,iF), pos.data(1,iF)],[pos.data(4,iF), pos.data(2,iF)], 'k')
+        plot(pos.data(1,iF)*conv_fac(1), pos.data(2,iF)*conv_fac(2), 'or')
+        plot(pos.data(3,iF)*conv_fac(1), pos.data(4,iF)*conv_fac(2), 'sb')
+        plot(ear_mid(iF,1)*conv_fac(1), ear_mid(iF,2)*conv_fac(2), 'dy')
+        plot([pos.data(3,iF), pos.data(1,iF)]*conv_fac(1),[pos.data(4,iF), pos.data(2,iF)]*conv_fac(2), 'k')
         
         %     plot(behav.position(iF,1), behav.position(iF,2), 'or')
         %     plot([data_out.R_ear(iF,1),  data_out.L_ear(iF,1)], [data_out.R_ear(iF,2),  data_out.L_ear(iF,2)], 'sr')
         %     plot(ear_mid(iF, 1), ear_mid(iF,2), '.b')
         %     plot(data_out.LED(iF,1), data_out.LED(iF,2), 'xg')
         %     plot([ear_mid(iF,1), behav.position(iF,1)],[ear_mid(iF,2), behav.position(iF,2)], 'k')
-        xlim([min(pos.data(1,:)) max(pos.data(1,:))]);
-        ylim([min(pos.data(2,:)) max(pos.data(2,:))]);
-        text(min(pos.data(1,:)), min(pos.data(2,:))+((max(pos.data(2,:)) - min(pos.data(2,:)))/18),['HD (deg): ' num2str(pos.data(end,iF),3)]);
-        text(min(pos.data(1,:)), min(pos.data(2,:))+((max(pos.data(2,:)) - min(pos.data(2,:)))/10),['Speed (' pos.units '/s): ' num2str(pos.data(end-1,iF),3)]);
+        xlim([min(pos.data(1,:)*conv_fac(1)) max(pos.data(1,:)*conv_fac(1))]);
+        ylim([min(pos.data(2,:)*conv_fac(2)) max(pos.data(2,:)*conv_fac(2))]);
+        text(min(pos.data(1,:)*conv_fac(1)), min(pos.data(2,:))+((max(pos.data(2,:)*conv_fac(2)) - min(pos.data(2,:)*conv_fac(2)))/18),['HD (deg): ' num2str(pos.data(end,iF),3)]);
+        text(min(pos.data(1,:)*conv_fac(1)), min(pos.data(2,:))+((max(pos.data(2,:)*conv_fac(2)) - min(pos.data(2,:)*conv_fac(2)))/10),['Speed (' pos.units '/s): ' num2str(pos.data(end-1,iF),3)]);
         drawnow
         pause(0.0303/300)
         cla(gca)
