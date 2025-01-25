@@ -71,6 +71,7 @@ end
 TFC_tab = readtable('CFT_Frame - Sheet1.csv'); 
 
 %% loop over sessons
+out = []; 
 
 for iF = 1:length(f_list)
     
@@ -90,8 +91,20 @@ for iF = 1:length(f_list)
     % get the table info for the lED on frame. 
     this_tab = find(contains(TFC_tab.Subject, info.subject));
     
-    out.(info.subject).(info.sess) = MS_DLC_score_freezing(f_list(iF).name,proto, TFC_tab.(info.sess)(this_tab)); 
-
+    if ~isempty(this_tab)
+    
+    out.(info.subject).(info.sess) = MS_DLC_score_freezing(f_list(iF).name,25,proto, TFC_tab.(info.sess)(this_tab));
+    
+    % hold the 60 binned freezing.
+    if strcmp(info.sess, 'TFC1')
+        TFC1_out = [TFC1_out, out.(info.subject).(info.sess).f_bin];
+    elseif strcmp(info.sess, 'TFC2')
+        TFC2_out = [TFC2_out, out.(info.subject).(info.sess).f_bin];
+    elseif strcmp(info.sess, 'TFC3')
+        TFC3_out = [TFC3_out, out.(info.subject).(info.sess).f_bin];
+    end
+    
+    end
     
     
     
@@ -101,4 +114,54 @@ for iF = 1:length(f_list)
     
 end
     
+    %% collect the outputs
     
+    s_list = fieldnames(out); 
+    TFC1_out = []; TFC2_out = []; TFC3_out = [];TFC2_bar = [];
+    TFC2_bar.baseline = []; 
+    TFC2_bar.tone = []; 
+    TFC2_bar.ITI = [];
+
+    
+    for iSub = 1:length(s_list)
+        
+        sess_list = fieldnames(out.(s_list{iSub})); 
+        
+        for iSess = 1:length(sess_list)
+            if isempty(out.(s_list{iSub}).(sess_list{iSess}).TFC)
+                continue
+            else
+            % hold the 60 binned freezing.
+            if strcmp(sess_list{iSess}, 'TFC1')
+                TFC1_out = [TFC1_out; out.(s_list{iSub}).(sess_list{iSess}).f_bin];
+                t_vec = out.(s_list{iSub}).(sess_list{iSess}).t_bin; 
+            elseif strcmp(sess_list{iSess}, 'TFC2')
+                TFC2_out = [TFC2_out; out.(s_list{iSub}).(sess_list{iSess}).f_bin];
+                t_vec2 = out.(s_list{iSub}).(sess_list{iSess}).t_bin;
+                
+                TFC2_bar.baseline(end+1) = mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.baseline); 
+                TFC2_bar.tone(end+1) =  mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.tone); 
+                TFC2_bar.ITI(end+1)=  mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.ITI); 
+
+            elseif strcmp(sess_list{iSess}, 'TFC3')
+                TFC3_out = [TFC3_out; out.(s_list{iSub}).(sess_list{iSess}).f_bin];
+            end
+            
+            end
+        end
+        
+    end
+    
+    % simple plots
+    
+    figure(102)
+    subplot(1,4,1)
+    plot(t_vec/60, mean(TFC1_out,1))  
+    
+    subplot(1,4,2)
+    plot(t_vec2/60, mean(TFC2_out,1))  
+    
+    subplot(1,4,3)
+    hold on
+    bar(1:3, [mean(TFC2_bar.baseline), mean(TFC2_bar.tone), mean(TFC2_bar.ITI)])
+end
