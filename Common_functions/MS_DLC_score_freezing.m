@@ -60,7 +60,7 @@ dlc_name = f_list(keep_idx).name;
 dlc_dir = f_list(keep_idx);
 
 if contains(fname, 'TFC2')
-    conv_fact = [47.5, 44];  %
+    conv_fact = [1125/46, 668/29];  % 46 x 29cm. (1125 x 668pixels)
 else
     conv_fact = [47.5, 44]; % convert from pixels (890 x 800) to cm (box dimensions [48 44])
 end
