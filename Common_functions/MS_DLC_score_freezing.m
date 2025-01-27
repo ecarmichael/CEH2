@@ -1,4 +1,4 @@
-function  out = MS_DLC_score_freezing(fname, thresh, proto, LED_on)
+function  out = MS_DLC_score_freezing(fname, thresh, proto, LED_on, fig_dir)
 %% MS_score_freezing: score freezing based on movement in DLC tracking data. if multiple body parts, average across to get a better measure.
 
 
@@ -14,11 +14,16 @@ if nargin < 2
     thresh = 50;
     proto = [];
     LED_on = 1;
+    fig_dir = [];
 elseif nargin < 3
     proto = [];
     LED_on = 1;
+    fig_dir = [];
 elseif nargin < 4
     LED_on = 1;
+    fig_dir = [];
+elseif nargin < 5
+    fig_dir = [];
     
 end
 
@@ -68,8 +73,14 @@ end
 pos = MS_DLC2TSD_single(dlc_name, fname,conv_fact);
 
 %trim to the LED off signal.
-s_idx = int16(LED_on+(2/mode(diff(pos.tvec))));
-e_idx = int16(LED_on+(2/mode(diff(pos.tvec))) + proto.ITI(end,2)/mode(diff(pos.tvec)));
+if contains(fname, 'TFC3')
+    s_idx = nearest_idx(0, pos.tvec);
+    e_idx = nearest_idx(proto.baseline(end), pos.tvec);
+else
+    s_idx = int16(LED_on+(2/mode(diff(pos.tvec))));
+    e_idx = int16(LED_on+(2/mode(diff(pos.tvec))) + proto.ITI(end,2)/mode(diff(pos.tvec)));
+end
+
 pos_r = pos;
 pos_r.tvec  = pos.tvec(s_idx:e_idx);
 pos_r.tvec = pos_r.tvec - pos_r.tvec(1);
@@ -85,7 +96,13 @@ mov_m = movmedian(pos_r.data(end-1,:), t_win_f);
 
 fvec = zeros(1, length(mov_m));
 
-fvec(mov_m < prctile(mov_m, thresh)) = 1;
+if isempty(thresh)
+    mov_thresh = 2;
+else
+    mov_thresh = prctile(mov_m, thresh);
+end
+
+fvec(mov_m < mov_thresh) = 1;
 
 fvec = logical(fvec);
 
@@ -104,7 +121,7 @@ cfg_f.minlen = 2;
 
 f_iv = TSDtoIV(cfg_f, pos_f);
 
-
+if ~isempty(fig_dir)
 figure(101)
 clf
 ax(1) = subplot(3,2,[1:4]);
@@ -114,14 +131,18 @@ hold on
 plot(pos_r.tvec, pos_r.data(end-1,:), 'k')
 plot(pos_r.tvec, mov_m, 'b')
 
-yline(prctile(mov_m, thresh), 'r', [num2str(thresh) 'th prctile move median'])
-
+if isempty(thresh)
+    yline(mov_thresh, 'r', [num2str(thresh) 'th prctile move median'])
+    
+else
+    yline(prctile(mov_m, thresh), 'r', [num2str(mov_thresh) 'th prctile move median'])
+end
 plot(pos_r.tvec,fvec)
 
 proto_fnames = fieldnames(proto);
 c_ord = MS_linspecer(length(proto_fnames));
 
-
+end
 %%
 for F = 1:length(fieldnames(proto))
     
@@ -133,9 +154,11 @@ for F = 1:length(fieldnames(proto))
         out.TFC.(proto_fnames{F})(ii) = sum(fvec(nearest_idx(proto.(proto_fnames{F})(ii,1), pos_r.tvec):nearest_idx(proto.(proto_fnames{F})(ii,2), pos_r.tvec)))...
             /length(nearest_idx(proto.(proto_fnames{F})(ii,1), pos_r.tvec):nearest_idx(proto.(proto_fnames{F})(ii,2), pos_r.tvec));
         
+        if ~isempty(fig_dir)
+
         rectangle('position', [proto.(proto_fnames{F})(ii,1), -5, proto.(proto_fnames{F})(ii,2) - proto.(proto_fnames{F})(ii,1), 5], 'FaceColor', c_ord(F,:))
         text((proto.(proto_fnames{F})(ii,1) +( proto.(proto_fnames{F})(ii,2) - proto.(proto_fnames{F})(ii,1))/2), -2.5, [proto_fnames{F} ' ' num2str(out.TFC.(proto_fnames{F})(ii)*100,3) '%'], 'HorizontalAlignment', 'center')
-        
+        end
         out.TFC.(proto_fnames{F})(ii) = sum(fvec(nearest_idx(proto.(proto_fnames{F})(ii,1), pos_r.tvec):nearest_idx(proto.(proto_fnames{F})(ii,2), pos_r.tvec)))...
             /length(nearest_idx(proto.(proto_fnames{F})(ii,1), pos_r.tvec):nearest_idx(proto.(proto_fnames{F})(ii,2), pos_r.tvec));
     end
@@ -164,6 +187,8 @@ for ii = 0:t_bin:ceil(pos_r.tvec(end))-2
     
 end
 
+if ~isempty(fig_dir)
+
 figure(101)
 ax(2) = subplot(3,2,[5:6]);
 bar((0:t_bin:ceil(pos_r.tvec(end))-2)+(t_bin/2), f_val,'BarWidth', 1)
@@ -172,10 +197,10 @@ bar((0:t_bin:ceil(pos_r.tvec(end))-2)+(t_bin/2), f_val,'BarWidth', 1)
 
 linkaxes(ax, 'x')
 xlim([pos_r.tvec(1) pos_r.tvec(end)]);
-
+end
 
 %% collect the outputs
-
+out.pos_r = pos_r; 
 out.fvec = fvec;
 out.f_bin = f_val;
 out.t_bin = (0:t_bin:ceil(pos_r.tvec(end))-2);
