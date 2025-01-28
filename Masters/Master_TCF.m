@@ -73,7 +73,7 @@ TFC_tab = readtable('CFT_Frame - Sheet1.csv');
 %% loop over sessons
 % out = [];
 
-for iF = 35:length(f_list)
+for iF = 1:length(f_list)
     
     info = [];
     info.subject = f_list(iF).name(strfind(f_list(iF).name, 'Pox'):strfind(f_list(iF).name, '.mp4')-1);
@@ -91,7 +91,7 @@ for iF = 35:length(f_list)
     % get the table info for the lED on frame.
     this_tab = find(contains(TFC_tab.Subject, info.subject));
     
-    if sum(~isempty(this_tab) + ~isnan(TFC_tab.(info.sess)(this_tab))) == 0
+    if ~isempty(this_tab)%+ ~isnan(TFC_tab.(info.sess)(this_tab))) == 0
         
         out.(info.subject).(info.sess) = MS_DLC_score_freezing(f_list(iF).name,25,proto, TFC_tab.(info.sess)(this_tab), ['Figs' filesep info.subject '_' info.sess]);
         
