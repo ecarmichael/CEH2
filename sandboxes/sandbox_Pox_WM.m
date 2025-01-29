@@ -58,11 +58,11 @@ maze.cent = [958.3148 565.6295];
 maze.rad = 423.4;
 maze.xv = maze.rad*1.1*cos(0:pi/100:2*pi)+maze.cent(1);
 maze.yv = maze.rad*1.1*sin(0:pi/100:2*pi)+maze.cent(2);
-maze.platform_diameter = 12; 
+maze.platform_diameter = 11.5; 
 maze.platform_cent = [1134.3 367.68];
 maze.units = 'cm';
-maze.diameter_cm = 120; 
-maze.diameter_px = 844; 
+maze.diameter_cm = 115; 
+maze.diameter_px = 870; 
 maze.conv_fact = maze.diameter_px/maze.diameter_cm; 
 
 c_ord = MS_linspecer(4);
@@ -99,9 +99,9 @@ for ii = 1:length(sub)
         pos_r = restrict(pos, pos.tvec(tstart{sub(ii)}(t_day(iD))),  pos.tvec(tend{sub(ii)}(t_day(iD))));
         
         % center the data to the middle of the pool;
-        for ii = 1:2:size(pos_r.data,1)-2
-            pos_r.data(ii,:) = pos_r.data(ii,:) - maze.cent(1)/maze.conv_fact; 
-            pos_r.data(ii+1,:) = pos_r.data(ii+1,:) - maze.cent(2)/maze.conv_fact; 
+        for jj = 1:2:size(pos_r.data,1)-2
+            pos_r.data(jj,:) = pos_r.data(jj,:) - maze.cent(1)/maze.conv_fact; 
+            pos_r.data(jj+1,:) = pos_r.data(jj+1,:) - maze.cent(2)/maze.conv_fact; 
         end
         
         %%
@@ -121,8 +121,17 @@ for ii = 1:length(sub)
         hold on
         set(gca, 'ydir', 'reverse')
         if iD ==1
-            imagesc(pos.mean_frame); colormap('gray')
-            plot(maze.xv, maze.yv, '.w')
+            x = 1:size(pos.mean_frame,2); 
+            y = 1:size(pos.mean_frame,1);
+            x  = x./maze.conv_fact; 
+            y  = y./maze.conv_fact;
+
+            x = x - (maze.cent(1)/maze.conv_fact); 
+            y = y - (maze.cent(2)/maze.conv_fact); 
+
+
+            imagesc(x, y,pos.mean_frame); colormap('gray')
+            plot((maze.xv./maze.conv_fact)- (maze.cent(1)/maze.conv_fact), (maze.yv./maze.conv_fact)- (maze.cent(2)/maze.conv_fact), '.w')
         end
         plot(pos_r.data(1,:), pos_r.data(2,:),'.', 'color', c_ord(S_dir{sub(ii)}(t_day(iD)),:))
         plot(pos_r.data(3,:), pos_r.data(4,:),'.', 'color', c_ord(S_dir{sub(ii)}(t_day(iD)),:)*.8,  'MarkerSize', 4)
