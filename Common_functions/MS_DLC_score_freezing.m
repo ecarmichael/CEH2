@@ -166,7 +166,7 @@ end
 
 %% get the minute by minue
 
-t_bin =10;
+t_bin =20;
 
 f_val = zeros(1, length(0:t_bin:ceil(pos_r.tvec(end))-2));
 
