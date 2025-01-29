@@ -97,7 +97,7 @@ mov_m = movmedian(pos_r.data(end-1,:), t_win_f);
 fvec = zeros(1, length(mov_m));
 
 if isempty(thresh)
-    mov_thresh = 2;
+    mov_thresh = 1;
 else
     mov_thresh = prctile(mov_m, thresh);
 end
@@ -166,7 +166,7 @@ end
 
 %% get the minute by minue
 
-t_bin =60;
+t_bin =10;
 
 f_val = zeros(1, length(0:t_bin:ceil(pos_r.tvec(end))-2));
 
@@ -197,6 +197,8 @@ bar((0:t_bin:ceil(pos_r.tvec(end))-2)+(t_bin/2), f_val,'BarWidth', 1)
 
 linkaxes(ax, 'x')
 xlim([pos_r.tvec(1) pos_r.tvec(end)]);
+
+saveas(gcf, fig_dir)
 end
 
 %% collect the outputs

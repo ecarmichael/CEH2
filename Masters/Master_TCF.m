@@ -41,7 +41,8 @@ TFC1.ITI = [282 402; 444 564; 606 706];
 
 TFC2.baseline = [0 240];
 TFC2.tone = [240 300; 480 540; 720 780];
-TFC2.ITI = [300 480; 540 720;780 960];
+TFC2.trace = [300 320; 540 560; 780 800] ; 
+TFC2.ITI = [320 480; 560 720; 800 960];
 
 TFC3.baseline = [0 300];
 
@@ -71,7 +72,7 @@ end
 TFC_tab = readtable('CFT_Frame - Sheet1.csv');
 
 %% loop over sessons
-% out = [];
+out = [];
 
 for iF = 1:length(f_list)
     
@@ -90,10 +91,13 @@ for iF = 1:length(f_list)
     
     % get the table info for the lED on frame.
     this_tab = find(contains(TFC_tab.Subject, info.subject));
+    if isempty(this_tab)
+        continue
+    end
     
     if ~isempty(this_tab)%+ ~isnan(TFC_tab.(info.sess)(this_tab))) == 0
         
-        out.(info.subject).(info.sess) = MS_DLC_score_freezing(f_list(iF).name,25,proto, TFC_tab.(info.sess)(this_tab), ['Figs' filesep info.subject '_' info.sess]);
+        out.(info.subject).(info.sess) = MS_DLC_score_freezing(f_list(iF).name,[],proto, TFC_tab.(info.sess)(this_tab), ['Figs' filesep info.subject '_' info.sess]);
         
     else
         out.(info.subject).(info.sess).out = [];
