@@ -122,8 +122,37 @@ end
 
 
 
+%% Resample f_bin 
+
+t_bin =20;
 
 
+for iSub = 1:length(s_list)
+    
+    sess_list = fieldnames(out.(s_list{iSub}));
+    
+    for iSess = 1:length(sess_list)
+        if isempty(out.(s_list{iSub}).(sess_list{iSess}).TFC)
+            continue
+        else
+            
+            f_val = zeros(1, length(0:t_bin:ceil(pos_r.tvec(end))-2));
+            
+            c= 0;
+            for ii = 0:t_bin:ceil(pos_r.tvec(end))-2
+                c = c+1;
+                
+                s_idx = nearest_idx(ii, pos_r.tvec);
+                
+                e_idx = nearest_idx(ii+t_bin,pos_r.tvec);
+                
+                f_val(c) = sum(fvec(s_idx:e_idx))/length(fvec(s_idx:e_idx));
+                %fprintf('block length %.0f  F: %.2f%%\n', (e_idx - s_idx)*mode(diff(pos_r.tvec)),f_val(c)*100)
+                
+            end
+            
+        end
+    end
 
 
 %% collect the outputs
@@ -132,8 +161,9 @@ s_list = fieldnames(out);
 TFC1_out = []; TFC2_out = []; TFC3_out = [];TFC2_bar = [];
 TFC2_bar.baseline = [];
 TFC2_bar.tone = [];
+TFC2_bar.trace = [];
 TFC2_bar.ITI = [];
-
+TFC3_bar.baseline = []; 
 
 for iSub = 1:length(s_list)
     
@@ -153,10 +183,14 @@ for iSub = 1:length(s_list)
                 
                 TFC2_bar.baseline(end+1) = mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.baseline);
                 TFC2_bar.tone(end+1) =  mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.tone);
+                TFC2_bar.trace(end+1) =  mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.trace);
                 TFC2_bar.ITI(end+1)=  mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.ITI);
                 
             elseif strcmp(sess_list{iSess}, 'TFC3')
                 TFC3_out = [TFC3_out; out.(s_list{iSub}).(sess_list{iSess}).f_bin];
+                t_vec3 = out.(s_list{iSub}).(sess_list{iSess}).t_bin;
+                TFC3_bar.baseline(end+1) = mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.baseline);
+
             end
             
         end
@@ -167,13 +201,37 @@ end
 % simple plots
 
 figure(102)
-subplot(1,4,1)
-plot(t_vec/60, mean(TFC1_out,1))
-
-subplot(1,4,2)
-plot(t_vec2/60, mean(TFC2_out,1))
-
-subplot(1,4,3)
+clf
+subplot(2,3,1)
 hold on
-bar(1:3, [mean(TFC2_bar.baseline), mean(TFC2_bar.tone), mean(TFC2_bar.ITI)])
+plot(t_vec/60, mean(TFC1_out), 'k', 'linewidth', 4)
+errorb(t_vec/60, TFC1_out, MS_SEM_vec(TFC1_out))
+
+title('Aquisition'); 
+ylabel('%freezing')
+xlabel('time (s)')
+
+subplot(2,3,2)
+hold on
+plot(t_vec2/60, TFC2_out, 'linewidth', .5)
+plot(t_vec2/60, mean(TFC2_out), 'k', 'linewidth', 4)
+title('Context B + Tone'); 
+ylabel('%freezing')
+xlabel('time (s)')
+
+subplot(2,3,5)
+hold on
+bar(1:4, [mean(TFC2_bar.baseline), mean(TFC2_bar.tone),mean(TFC2_bar.trace) mean(TFC2_bar.ITI)])
+scatter(1+sort(MS_randn_range(length(TFC2_bar.baseline), 1, -.2, .2)), TFC2_bar.baseline,25,  'b', 'filled')
+scatter(2+sort(MS_randn_range(length(TFC2_bar.tone), 1, -.2, .2)), TFC2_bar.tone,25,  'b', 'filled')
+scatter(3+sort(MS_randn_range(length(TFC2_bar.trace), 1, -.2, .2)), TFC2_bar.trace,25,  'b', 'filled')
+scatter(4+sort(MS_randn_range(length(TFC2_bar.ITI), 1, -.2, .2)), TFC2_bar.ITI,25,  'b', 'filled')
+xlim([.5 4.5])
+set(gca, 'xtick', 1:4, 'XTickLabel', {'Base', 'Tone', 'Trace', 'ITI'})
+
+subplot(2,3,3)
+hold on
+plot(t_vec3/60, TFC3_out, 'linewidth', .5)
+plot(t_vec3/60, mean(TFC3_out), 'k', 'linewidth', 4)
+
 end

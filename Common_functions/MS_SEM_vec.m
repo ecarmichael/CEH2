@@ -1,4 +1,4 @@
-function sem =  MS_SEM(data_in)
+function sem =  MS_SEM_vec(data_in)
 %% MS_SEM:
 %
 %
@@ -22,4 +22,4 @@ function sem =  MS_SEM(data_in)
 
 nan_idx = isnan(data_in);
 
-sem = std(data_in(~nan_idx))./ sqrt(length(data_in(~nan_idx))); 
+sem = nanstd(data_in, [], 1)./ sqrt(length(data_in(~nan_idx))); 
