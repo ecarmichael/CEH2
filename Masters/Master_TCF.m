@@ -97,7 +97,7 @@ for iF = 1:length(f_list)
     
     if ~isempty(this_tab)%+ ~isnan(TFC_tab.(info.sess)(this_tab))) == 0
         
-        out.(info.subject).(info.sess) = MS_DLC_score_freezing(f_list(iF).name,[],proto, TFC_tab.(info.sess)(this_tab), ['Figs' filesep info.subject '_' info.sess]);
+        out.(info.subject).(info.sess) = MS_DLC_score_freezing(f_list(iF).name,[],proto, TFC_tab.(info.sess)(this_tab), ['figs' filesep info.subject '_' info.sess]);
         
     else
         out.(info.subject).(info.sess).out = [];
@@ -120,7 +120,9 @@ end
 %
 
 
+%% remove Pox90_M9 for wild behaviour. 
 
+out = rmfield(out, 'Pox90_m9')
 
 %% Resample f_bin 
 
@@ -157,6 +159,8 @@ for iSub = 1:length(s_list)
 
 %% collect the outputs
 
+c_ord = MS_linspecer(4); 
+
 s_list = fieldnames(out);
 TFC1_out = []; TFC2_out = []; TFC3_out = [];TFC2_bar = [];
 TFC2_bar.baseline = [];
@@ -164,6 +168,9 @@ TFC2_bar.tone = [];
 TFC2_bar.trace = [];
 TFC2_bar.ITI = [];
 TFC3_bar.baseline = []; 
+Geno = []; Subs = []; Sess = []; 
+TFC1_geno = []; TFC2_geno = []; TFC3_geno = []; 
+TFC2_sub = []; 
 
 for iSub = 1:length(s_list)
     
@@ -173,10 +180,14 @@ for iSub = 1:length(s_list)
         if isempty(out.(s_list{iSub}).(sess_list{iSess}).TFC)
             continue
         else
+                        this_tab = find(contains(TFC_tab.Subject, s_list{iSub}));
+
             % hold the 60 binned freezing.
             if strcmp(sess_list{iSess}, 'TFC1')
                 TFC1_out = [TFC1_out; out.(s_list{iSub}).(sess_list{iSess}).f_bin];
                 t_vec = out.(s_list{iSub}).(sess_list{iSess}).t_bin;
+                                TFC1_geno(end+1) = TFC_tab.Pox(this_tab); 
+
             elseif strcmp(sess_list{iSess}, 'TFC2')
                 TFC2_out = [TFC2_out; out.(s_list{iSub}).(sess_list{iSess}).f_bin];
                 t_vec2 = out.(s_list{iSub}).(sess_list{iSess}).t_bin;
@@ -185,14 +196,19 @@ for iSub = 1:length(s_list)
                 TFC2_bar.tone(end+1) =  mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.tone);
                 TFC2_bar.trace(end+1) =  mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.trace);
                 TFC2_bar.ITI(end+1)=  mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.ITI);
-                
+                TFC2_geno(end+1) = TFC_tab.Pox(this_tab);
+                TFC2_sub{end+1} = s_list{iSub}; 
+
             elseif strcmp(sess_list{iSess}, 'TFC3')
                 TFC3_out = [TFC3_out; out.(s_list{iSub}).(sess_list{iSess}).f_bin];
                 t_vec3 = out.(s_list{iSub}).(sess_list{iSess}).t_bin;
                 TFC3_bar.baseline(end+1) = mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.baseline);
-
+                TFC3_geno(end+1) = TFC_tab.Pox(this_tab); 
             end
-            
+            Subs{end+1} = s_list{iSub}; 
+            Sess{end+1} = sess_list{iSess}; 
+
+            Geno(end+1) = TFC_tab.Pox(this_tab); 
         end
     end
     
@@ -204,8 +220,10 @@ figure(102)
 clf
 subplot(2,3,1)
 hold on
+plot(t_vec/60, TFC1_out)
 plot(t_vec/60, mean(TFC1_out), 'k', 'linewidth', 4)
-errorb(t_vec/60, TFC1_out, MS_SEM_vec(TFC1_out))
+errorbar(t_vec/60, mean(TFC1_out),MS_SEM_vec(TFC1_out)); 
+errorbar(t_vec/60, mean(TFC1_out),MS_SEM_vec(TFC1_out)); 
 
 title('Aquisition'); 
 ylabel('%freezing')
@@ -214,7 +232,9 @@ xlabel('time (s)')
 subplot(2,3,2)
 hold on
 plot(t_vec2/60, TFC2_out, 'linewidth', .5)
-plot(t_vec2/60, mean(TFC2_out), 'k', 'linewidth', 4)
+plot(t_vec2/60, mean(TFC2_out), 'k', 'linewidth', 4);
+errorb(t_vec2/60, mean(TFC2_out), MS_SEM_vec(TFC2_out))
+
 title('Context B + Tone'); 
 ylabel('%freezing')
 xlabel('time (s)')
@@ -222,10 +242,10 @@ xlabel('time (s)')
 subplot(2,3,5)
 hold on
 bar(1:4, [mean(TFC2_bar.baseline), mean(TFC2_bar.tone),mean(TFC2_bar.trace) mean(TFC2_bar.ITI)])
-scatter(1+sort(MS_randn_range(length(TFC2_bar.baseline), 1, -.2, .2)), TFC2_bar.baseline,25,  'b', 'filled')
-scatter(2+sort(MS_randn_range(length(TFC2_bar.tone), 1, -.2, .2)), TFC2_bar.tone,25,  'b', 'filled')
-scatter(3+sort(MS_randn_range(length(TFC2_bar.trace), 1, -.2, .2)), TFC2_bar.trace,25,  'b', 'filled')
-scatter(4+sort(MS_randn_range(length(TFC2_bar.ITI), 1, -.2, .2)), TFC2_bar.ITI,25,  'b', 'filled')
+scatter(1+sort(MS_randn_range(length(TFC2_bar.baseline), 1, -.2, .2)), TFC2_bar.baseline,25,  'k', 'filled')
+scatter(2+sort(MS_randn_range(length(TFC2_bar.tone), 1, -.2, .2)), TFC2_bar.tone,25,  'k', 'filled')
+scatter(3+sort(MS_randn_range(length(TFC2_bar.trace), 1, -.2, .2)), TFC2_bar.trace,25,  'k', 'filled')
+scatter(4+sort(MS_randn_range(length(TFC2_bar.ITI), 1, -.2, .2)), TFC2_bar.ITI,25,  'k', 'filled')
 xlim([.5 4.5])
 set(gca, 'xtick', 1:4, 'XTickLabel', {'Base', 'Tone', 'Trace', 'ITI'})
 
@@ -234,4 +254,113 @@ hold on
 plot(t_vec3/60, TFC3_out, 'linewidth', .5)
 plot(t_vec3/60, mean(TFC3_out), 'k', 'linewidth', 4)
 
+
+figure(202)
+clf
+subplot(2,3,1)
+hold on
+plot(t_vec/60, mean(TFC1_out(TFC1_geno == 0,:)), 'color', c_ord(1,:), 'linewidth', 4)
+errorbar(t_vec/60, mean(TFC1_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 0,:)), 'color', c_ord(1,:)); 
+errorbar(t_vec/60, mean(TFC1_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 0,:)), 'color', c_ord(1,:)); 
+
+plot(t_vec/60, mean(TFC1_out(TFC1_geno == 1,:)), 'color', c_ord(2,:), 'linewidth', 4)
+errorbar(t_vec/60, mean(TFC1_out(TFC1_geno == 1,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 1,:)), 'color', c_ord(2,:)); 
+errorbar(t_vec/60, mean(TFC1_out(TFC1_geno == 1,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 1,:)), 'color', c_ord(2,:)); 
+
+title('Aquisition'); 
+ylabel('%freezing')
+xlabel('time (s)')
+
+subplot(2,3,2)
+hold on
+plot(t_vec2/60, mean(TFC2_out(TFC1_geno == 0,:)), 'color', c_ord(1,:), 'linewidth', 4)
+errorbar(t_vec2/60, mean(TFC2_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
+errorbar(t_vec2/60, mean(TFC2_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
+
+plot(t_vec2/60, mean(TFC2_out(TFC2_geno == 1,:)), 'color', c_ord(2,:), 'linewidth', 4)
+errorbar(t_vec2/60, mean(TFC2_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
+errorbar(t_vec2/60, mean(TFC2_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
+
+title('Context B + Tone'); 
+ylabel('%freezing')
+xlabel('time (s)')
+
+subplot(2,3,5)
+hold on
+b = bar(1:4, [mean(TFC2_bar.baseline(TFC2_geno == 0)), mean(TFC2_bar.tone(TFC2_geno == 0)),mean(TFC2_bar.trace(TFC2_geno == 0)) mean(TFC2_bar.ITI(TFC2_geno == 0));...
+mean(TFC2_bar.baseline(TFC2_geno == 1)), mean(TFC2_bar.tone(TFC2_geno == 1)),mean(TFC2_bar.trace(TFC2_geno == 1)) mean(TFC2_bar.ITI(TFC2_geno == 1))]);
+b(1).FaceColor =  c_ord(1,:); 
+b(2).FaceColor =  c_ord(2,:);
+
+scatter(.8+sort(MS_randn_range(length(TFC2_bar.baseline(TFC2_geno == 0)), 1, -.1, .1)), TFC2_bar.baseline(TFC2_geno == 0),25,   c_ord(1,:), 'filled')
+scatter(1.8+sort(MS_randn_range(length(TFC2_bar.tone(TFC2_geno == 0)), 1, -.1, .1)), TFC2_bar.tone(TFC2_geno == 0),25,   c_ord(1,:), 'filled')
+scatter(2.8+sort(MS_randn_range(length(TFC2_bar.trace(TFC2_geno == 0)), 1, -.1, .1)), TFC2_bar.trace(TFC2_geno == 0),25,   c_ord(1,:), 'filled')
+scatter(3.8+sort(MS_randn_range(length(TFC2_bar.ITI(TFC2_geno == 0)), 1, -.1, .1)), TFC2_bar.ITI(TFC2_geno == 0),25,   c_ord(1,:), 'filled')
+
+scatter(1.2+sort(MS_randn_range(length(TFC2_bar.baseline(TFC2_geno == 1)), 1, -.1, .1)), TFC2_bar.baseline(TFC2_geno == 1),25,   c_ord(2,:), 'filled')
+scatter(2.2+sort(MS_randn_range(length(TFC2_bar.tone(TFC2_geno == 1)), 1, -.1, .1)), TFC2_bar.tone(TFC2_geno == 1),25,  c_ord(2,:), 'filled')
+scatter(3.2+sort(MS_randn_range(length(TFC2_bar.trace(TFC2_geno == 1)), 1, -.1, .1)), TFC2_bar.trace(TFC2_geno == 1),25,  c_ord(2,:), 'filled')
+scatter(4.2+sort(MS_randn_range(length(TFC2_bar.ITI(TFC2_geno == 1)), 1, -.1, .1)), TFC2_bar.ITI(TFC2_geno == 1),25,   c_ord(2,:), 'filled')
+xlim([.5 4.5])
+set(gca, 'xtick', 1:4, 'XTickLabel', {'Base', 'Tone', 'Trace', 'ITI'})
+
+
+subplot(2,3,4)
+cla
+hold on
+
+scatter(1+sort(MS_randn_range(length(TFC2_bar.tone(TFC2_geno == 0)), 1, -.1, .1)), TFC2_bar.tone(TFC2_geno == 0),25,  c_ord(1,:), 'filled')
+scatter(2+sort(MS_randn_range(length(TFC2_bar.tone(TFC2_geno == 1)), 1, -.1, .1)), TFC2_bar.tone(TFC2_geno == 1),25,  c_ord(2,:), 'filled')
+
+scatter(5+sort(MS_randn_range(length(TFC2_bar.trace(TFC2_geno == 0)), 1, -.1, .1)), TFC2_bar.trace(TFC2_geno == 0),25,  c_ord(1,:), 'filled')
+scatter(6+sort(MS_randn_range(length(TFC2_bar.trace(TFC2_geno == 1)), 1, -.1, .1)), TFC2_bar.trace(TFC2_geno == 1),25,  c_ord(2,:), 'filled')
+
+[hb, h, p] = MS_bar_w_err(TFC2_bar.tone(TFC2_geno == 0), TFC2_bar.tone(TFC2_geno == 1), [.2 .2 .2],1,  'ttest2', [1 2]);
+
+hb(1).FaceColor = 'none';
+hb(1).EdgeColor = 'k';
+
+[hb, h, p] = MS_bar_w_err(TFC2_bar.trace(TFC2_geno == 0), TFC2_bar.trace(TFC2_geno == 1), [.2 .2 .2],1,  'ttest2', [5 6]);
+hb(1).FaceColor = 'none';
+hb(1).EdgeColor = 'k';
+
+
+
+y_l = ylim; 
+ylim([y_l(1) y_l(2)*1.1])
+
+text(1.5, y_l(2)*1.1, 'Tone', 'HorizontalAlignment','center','VerticalAlignment','top')
+
+text(5.5,y_l(2)*1.1, 'Trace', 'HorizontalAlignment','center','VerticalAlignment','top')
+
+set(gca, 'xtick', [1:2 5:6], 'xticklabels', {'Tau -', 'Tau +', 'Tau -', 'Tau +'}, 'XTickLabelRotation', 45)
+
+
+
+title('Context B')
+ylabel('Trace freezing (%)')
+
+
+
+
+
+subplot(2,3,3)
+hold on
+plot(t_vec3/60, TFC3_out, 'linewidth', .5)
+plot(t_vec3/60, mean(TFC3_out), 'k', 'linewidth', 4)
+
+subplot(2,3,6)
+hold on
+scatter(1+sort(MS_randn_range(length(TFC3_bar.baseline(TFC3_geno == 0)), 1, -.1, .1)), TFC3_bar.baseline(TFC3_geno == 0),25,  c_ord(1,:), 'filled')
+scatter(2+sort(MS_randn_range(length(TFC3_bar.baseline(TFC3_geno == 1)), 1, -.1, .1)), TFC3_bar.baseline(TFC3_geno == 1),25,  c_ord(2,:), 'filled')
+
+[hb, h, p] = MS_bar_w_err(TFC3_bar.baseline(TFC3_geno == 0), TFC3_bar.baseline(TFC3_geno == 1), [.2 .2 .2],1,  'ttest2');
+
+set(gca, 'xtick', 1:2, 'xticklabels', {'Tau -', 'Tau +'}, 'XTickLabelRotation', 45)
+
+hb(1).FaceColor = 'none';
+hb(1).EdgeColor = 'k';
+
+title('Context A Re-exposure')
+ylabel('Contextual freezing (%)')
 end
