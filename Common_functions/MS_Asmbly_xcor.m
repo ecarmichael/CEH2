@@ -14,12 +14,23 @@ end
 cfg.binsize = xc_bin;
 cfg.max_t = t_max;
 
+
+
+
 %% convert the data to timestamps; 
 
 for ii = size(Proj_in, 1):-1:1
     [~, this_ts] = findpeaks(Proj_in(ii,:), 'MinPeakHeight', R_thresh); 
     
     TS{ii} = tvec(this_ts); 
+end
+
+if size(TS,1) <2
+    z_x_c= NaN;
+    z_ac_max= NaN; 
+    mean_x_c= NaN;
+    ac_max = NaN;
+    return
 end
 
 %% create a null distibution
@@ -37,8 +48,11 @@ for iS = 1000:-1:1
     TS_shuff = randsample(tvec, length(TS{idx(1)}));
     TS_shuff2 = randsample(tvec, length(TS{idx(2)}));
 
-    shuff_x_c(iS) = mean(ccf(cfg, TS_shuff, TS_shuff2));
-    
+    if isempty(TS_shuff) || isempty(TS_shuff2)
+        shuff_x_c(iS) = NaN;
+    else
+        shuff_x_c(iS) = mean(ccf(cfg, TS_shuff, TS_shuff2));
+    end
 end
         
 

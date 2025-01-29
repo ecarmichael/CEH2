@@ -1,4 +1,4 @@
-function [pos, behav] = MS_DLC2TSD(dir_in, model_in,conv_fac, plot_flag)
+function [pos, behav] = MS_DLC2TSD_single(fname, vname, conv_fac, plot_flag)
 %% MS_DLC2TSD: loads and collects all DLC files in a directory. Will skip over files without a number since DLC saves the interation number in the .csv
 %
 %
@@ -24,16 +24,9 @@ function [pos, behav] = MS_DLC2TSD(dir_in, model_in,conv_fac, plot_flag)
 % EC 2023-01-28  initial version
 %% initialize
 
-if nargin == 0
-    dir_in = cd; % just use current dir.
-    model_in = [];
-    conv_fac = [1 1];
-    plot_flag = 0;
-elseif nargin == 1
-    model_in = [];
-    conv_fac = [1 1];
-    plot_flag = 0;
-elseif nargin ==2
+if nargin == 1
+    error('needs a video file for time');
+elseif nargin == 2
     conv_fac = [1 1];
     plot_flag = 0;
 elseif nargin ==3
@@ -43,77 +36,48 @@ end
 
 %% find all the files
 
-%%%%% TO Do implement model_in catch %%%%%%%%
+% get the name of the corresponding video. 
 
 
-og_dir = dir_in;
-cd(dir_in);
 
-file_list = {};
-d = dir(['*DLC*.csv']);
-rem_idx = zeros(1,length(d));
-for iF = length(d):-1:1
-    parts = strsplit(d(iF).name, {'_', '.'});
-    
-    if isempty(model_in) && any(parts{end-1} >= '0' & parts{end-1} <= '9')
-        inter_ver(iF) = str2double(parts{end-1});
-        file_list{iF} = d(iF).name;
-    elseif ~isempty(model_in) && contains(d(iF).name, model_in)
-        inter_ver(iF) = str2double(parts{end-1});
-        file_list{iF} = d(iF).name;
-    else
-        inter_ver(iF) = NaN;
-        file_list{iF} = NaN;
-        rem_idx(iF) = iF;
-    end
-    f_num(iF) = str2double( regexp(d(iF).name, '\d+','match', 'once' )); % used to sort the files.
-end
 
-[~, idx] = sort(f_num);              % sort the file names based on
-file_list  = file_list(idx);
-inter_ver  = inter_ver(idx);
-rem_idx = rem_idx(idx);
-
-% remove empty cells
-rem_idx(rem_idx == 0) = [];
-file_list(rem_idx) = [];
-
-newest_inter_ver = max(inter_ver);
-% loop and find only the DLC versions that use the best trained model (ie most
-% iterations).
-rem_idx = zeros(1,length(file_list));
-for iF = length(file_list):-1:1
-    parts = strsplit(file_list{iF}, {'_', '.'});
-    if str2double(parts{end-1}) ~= newest_inter_ver
-        rem_idx(iF) = iF;
-    end
-end
-rem_idx(rem_idx == 0) = [];
-file_list(rem_idx) = [];
 
 %%   cycle through all the files and collect the data
 
 this_field = [];
 
-for iF  = 1:length(file_list)
-    DLC_data = table2array(readtable(file_list{iF}, 'Headerlines', 3));
-    tbl = readtable(file_list{iF},'Headerlines', 1);
+    DLC_data = table2array(readtable(fname, 'Headerlines', 3));
+    tbl = readtable(fname,'Headerlines', 1);
     DLC_labels = tbl.Properties.VariableNames(2:end);
     fields= DLC_labels;
     % hack to have it work for Bryan's data
-    if sum(contains(DLC_labels, 'body_center'))>0
-        bd_idx = find(contains(DLC_labels, 'body_center')); 
-        DLC_labels{bd_idx(1)} = 'body';
-                fields{bd_idx(1)} = 'body';
+%     if sum(contains(DLC_labels, 'body_center'))>0
+%         bd_idx = find(contains(DLC_labels, 'body_center')); 
+%         DLC_labels{bd_idx(1)} = 'body';
+%                 fields{bd_idx(1)} = 'body';
+%     end
+
+% catch extra fields with numbers at the end. 
+rm_idx = []; 
+for f = length(fields):-1:1
+    if ~isnan(str2double(fields{f}(end)))
+        rm_idx(f) = true;
+    else
+        rm_idx(f) = false; 
     end
-    fields(contains(DLC_labels, '_')) = [];
+    
+end
+
+fields(logical(rm_idx)) = []; 
+    
+%     fields(contains(DLC_labels, '_')) = [];
+    
     %     fields = unique(DLC_labels); % get the parts
     
     for iFields = 1:length(fields)
         f_idx = find(contains(DLC_labels, fields{iFields}));
-        this_field{iF, iFields} = [DLC_data(:,f_idx(1)+1), DLC_data(:,f_idx(2)+1), DLC_data(:,f_idx(3)+1)];
+        this_field{iFields} = [DLC_data(:,f_idx(1)+1), DLC_data(:,f_idx(2)+1), DLC_data(:,f_idx(3)+1)];
     end
-end
 
 %make an empty field for each.
 fprintf('Found %i fields: ', length(fields));
@@ -125,12 +89,11 @@ fprintf('\n');
 
 % put them all together
 fnum = [];
-for iF  = 1:length(file_list)
     for iFields = 1:length(fields)
-        data_out.(fields{iFields}) = [ data_out.(fields{iFields});  this_field{iF, iFields}];
+        data_out.(fields{iFields}) = [ data_out.(fields{iFields});  this_field{iFields}];
     end
-    fnum = [fnum , 1:length(this_field{iF, 1})];
-end
+    fnum = [fnum , 1:length(this_field{1})];
+
 
 
 % apply simple smoothing over any points that are larger than a 3sd jump.
@@ -164,6 +127,16 @@ if ~isempty(dir('*.nvt'))
     data_out.tvec = data_out.tvec*10^-6; % convert to seconds
     frameNum = 1:length(data_out.tvec); 
     maxBufferUsed = NaN; 
+    
+    
+elseif contains(vname, '.mp4')
+    
+    v = VideoReader(vname);
+    data_out.tvec = (0:v.NumFrames)./v.FrameRate; 
+    frameNum = v.NumFrames;
+    
+    
+    
     
 else
     
@@ -201,6 +174,9 @@ if length(data_out.tvec) ~= length(data_out.(fields{1}))
         for iFields = 1:length(fields)
             data_out.(fields{iFields}) = data_out.(fields{iFields})(1:length(data_out.tvec),:);
         end
+    elseif length(data_out.tvec)> length(data_out.(fields{1}))
+        data_out.tvec = data_out.tvec(1:length(data_out.(fields{iFields}))); 
+        
     end
 end
 %% get the meta data from the json to pull the recording start time.
@@ -273,7 +249,12 @@ elseif sum(contains(fields, 'nose'))>0 && sum(contains(fields, 'body'))>0
     ear_mid(:,2) = data_out.body(:,2);
     
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.nose(:,2),ear_mid(:,1) - data_out.nose(:,1)));
+elseif sum(contains(fields, 'Ear_R'))>0 && sum(contains(fields, 'Ear_L'))>0
+       ear_mid(:,1) = (data_out.Ear_R(:,1) + data_out.Ear_L(:,1))/2; % get x mid
+        ear_mid(:,2) = (data_out.Ear_R(:,2) + data_out.Ear_L(:,2))/2; % get x mid
+        HD = rad2deg(atan2(ear_mid(:,2) - data_out.Body(:,2),ear_mid(:,1) - data_out.Body(:,1)));
 
+    
 end
 
 % get the speed from the mid-ear position
@@ -306,12 +287,13 @@ if isfield(pos.cfg.json, 'recordingStartTime') && ~isfield(pos.cfg.json, 'msecSi
 end
 
 %% grab a video for a mean frame. 
-avi_dir = dir([dir_in filesep '*.avi']);
+avi_dir = dir([ vname]);
 if ~isempty(avi_dir)
     vidObj = VideoReader([avi_dir(1).folder filesep avi_dir(1).name]);   
     
-    F=read(vidObj);                             
+    F=read(vidObj, [1,200]);                             
     pos.mean_frame=median(F,4);
+    clear vidObj F
 else
     pos.mean_frame = []; 
 end
@@ -320,7 +302,7 @@ end
 behav = [];
 behav.time = data_out.tvec;
 behav.dirName = cd;
-behav.numFiles = length(file_list);
+behav.numFiles = 1;
 behav.numFrames = data_out.tvec;
 behav.vidNum = fnum;
 behav.frameNum = frameNum;
@@ -328,7 +310,7 @@ behav.maxFramesPerFile = 1000;
 behav.height = ceil(max(data_out.(fields{1})(:,1)));
 behav.width =  ceil(max(data_out.(fields{1})(:,2)));
 behav.camNumber = 1;
-behav.maxBufferUsed =  maxBufferUsed;
+behav.maxBufferUsed =  NaN;
 behav.position = data_out.(fields{1})(:,1:2);
 behav.speed = sqrt(vx.^2+vy.^2)';
 behav.HD = HD;
@@ -338,25 +320,30 @@ behav.conv_fac = conv_fac;
 %% test out the HD.
 if plot_flag
     figure(797)
+    vidObj = VideoReader(vname); 
     clf
     hold on
     for iF =1:floor(length(pos.data)/20)
-        plot(pos.data(1,iF), pos.data(2,iF), 'or')
-        plot(pos.data(3,iF), pos.data(4,iF), 'sb')
-        plot([pos.data(3,iF), pos.data(1,iF)],[pos.data(4,iF), pos.data(2,iF)], 'k')
+        
+        imagesc(read(vidObj,iF))
+        
+        plot(pos.data(1,iF)*conv_fac(1), pos.data(2,iF)*conv_fac(2), 'or')
+        plot(pos.data(3,iF)*conv_fac(1), pos.data(4,iF)*conv_fac(2), 'sb')
+        plot(ear_mid(iF,1)*conv_fac(1), ear_mid(iF,2)*conv_fac(2), 'dy')
+        plot([pos.data(3,iF), pos.data(1,iF)]*conv_fac(1),[pos.data(4,iF), pos.data(2,iF)]*conv_fac(2), 'k')
         
         %     plot(behav.position(iF,1), behav.position(iF,2), 'or')
         %     plot([data_out.R_ear(iF,1),  data_out.L_ear(iF,1)], [data_out.R_ear(iF,2),  data_out.L_ear(iF,2)], 'sr')
         %     plot(ear_mid(iF, 1), ear_mid(iF,2), '.b')
         %     plot(data_out.LED(iF,1), data_out.LED(iF,2), 'xg')
         %     plot([ear_mid(iF,1), behav.position(iF,1)],[ear_mid(iF,2), behav.position(iF,2)], 'k')
-        xlim([min(pos.data(1,:)) max(pos.data(1,:))]);
-        ylim([min(pos.data(2,:)) max(pos.data(2,:))]);
-        text(min(pos.data(1,:)), min(pos.data(2,:))+((max(pos.data(2,:)) - min(pos.data(2,:)))/18),['HD (deg): ' num2str(pos.data(end,iF),3)]);
-        text(min(pos.data(1,:)), min(pos.data(2,:))+((max(pos.data(2,:)) - min(pos.data(2,:)))/10),['Speed (' pos.units '/s): ' num2str(pos.data(end-1,iF),3)]);
+        xlim([min(pos.data(1,:)*conv_fac(1)) max(pos.data(1,:)*conv_fac(1))]);
+        ylim([min(pos.data(2,:)*conv_fac(2)) max(pos.data(2,:)*conv_fac(2))]);
+        text(min(pos.data(1,:)*conv_fac(1)), min(pos.data(2,:))+((max(pos.data(2,:)*conv_fac(2)) - min(pos.data(2,:)*conv_fac(2)))/18),['HD (deg): ' num2str(pos.data(end,iF),3)]);
+        text(min(pos.data(1,:)*conv_fac(1)), min(pos.data(2,:))+((max(pos.data(2,:)*conv_fac(2)) - min(pos.data(2,:)*conv_fac(2)))/10),['Speed (' pos.units '/s): ' num2str(pos.data(end-1,iF),3)]);
         drawnow
         pause(0.0303/300)
         cla(gca)
     end
 end
-cd(og_dir);
+% cd(og_dir);

@@ -37,6 +37,8 @@ if nargin < 1
     
     cfg_csc.fc = {Meta.EMG};%, 'CSC3.ncs'};  % pick the channels to load
     emg = LoadCSC(cfg_csc); % load the csc data
+        wake_idx = []; 
+
 elseif nargin < 2
         Meta = MS_Load_meta;
     cfg_csc.fc = {Meta.goodCSC};%, 'CSC3.ncs'};  % pick the channels to load
@@ -44,10 +46,16 @@ elseif nargin < 2
     
     cfg_csc.fc = {Meta.EMG};%, 'CSC3.ncs'};  % pick the channels to load
     emg = LoadCSC(cfg_csc); % load the csc data
+        wake_idx = []; 
+
 elseif nargin < 3
         Meta = MS_Load_meta;
     cfg_csc.fc = {Meta.EMG};%, 'CSC3.ncs'};  % pick the channels to load
     emg = LoadCSC(cfg_csc); % load the csc data
+    
+elseif nargin < 4
+    wake_idx = []; 
+
 end
 
 if sum(diff(unique(diff(csc.tvec)))>csc.cfg.hdr{1}.SamplingFrequency*4) > 1
@@ -69,14 +77,22 @@ end
 
 
 %% get the EMG RMS
-if isstruct(emg)
-emg_rms = sqrt(movmedian(emg.data.^2, csc.cfg.hdr{1}.SamplingFrequency*10));      % RMS Value Over ‘WinLen’ Samples
-emg_og = emg_rms;
-else
-emg_rms_prctile = 50; 
-emg_rms = movmedian(emg, csc.cfg.hdr{1}.SamplingFrequency*10) ; 
-emg_og = emg_rms; 
+
+if sum(contains(emg.label, 'RMS')) >0
+    emg_rms = emg.data(find(contains(emg.label, 'RMS')),:);
+    emg_rms_prctile = 70;
+    
+    if isstruct(emg)
+        emg_rms = sqrt(movmedian(emg.data.^2, csc.cfg.hdr{1}.SamplingFrequency*10));      % RMS Value Over ‘WinLen’ Samples
+        emg_og = emg_rms;
+    else
+        emg_rms_prctile = 50;
+        emg_rms = movmedian(emg, csc.cfg.hdr{1}.SamplingFrequency*10) ;
+        emg_og = emg_rms;
+    end
 end
+
+
 
 emg_rms(sat_idx) = NaN; 
 % emg_rms_z = zscore(emg_rms); 
@@ -139,7 +155,7 @@ REM_tsd = tsd(csc.tvec, (hypno_init == 3)', 'REM');
 
 rem_cfg.threshold = 0; 
 rem_cfg.dcn = '>';
-rem_cfg.minlen = 10;
+rem_cfg.minlen = 20;
 rem_cfg.merge_thr = 5; 
 REM_iv = TSDtoIV(rem_cfg, REM_tsd);
  
@@ -231,6 +247,12 @@ if plot_flag
     % SetFigure([], gcf);
     maximize
 end
+
+fprintf('<strong>%s</strong>:  Wake %.0f%% SWS %.0f%% REM %.0f%%\n', mfilename, (sum(hypno_out == 1)/length(hypno_out))*100,(sum(hypno_out == 2)/length(hypno_out))*100,(sum(hypno_out == 3)/length(hypno_out))*100)
+fprintf('<strong>%s</strong>:  Wake %.2f SWS %.2f REM %.2fhrs\n', mfilename, (sum(hypno_out == 1)/length(hypno_out))*(csc.tvec(end)-csc.tvec(1))/3600,...
+    (sum(hypno_out == 2)/length(hypno_out))*(csc.tvec(end)-csc.tvec(1))/3600,...
+    (sum(hypno_out == 3)/length(hypno_out))*(csc.tvec(end)-csc.tvec(1))/3600)
+
 %% collect the values
 
 cfg_hypno = [];

@@ -1,4 +1,4 @@
-function meta = MS_Write_meta_NOL(data_dir)
+function meta = MS_Write_meta_RAD(data_dir)
 %% MS_Write_meta_Rad: this will create an Meta file by taking the information from the data files
 %   and putting it into an exicutable Meta.m script. Yo can then run Meta.m
 %   to have a structure with all of the values as a struct
@@ -59,7 +59,7 @@ fprintf(fid, ['Meta.version = ' num2str(1) ';\n']);
 fprintf(fid, 'Meta.species = ''mouse'';\n');
 if contains(subject_id, 'PV')
     fprintf(fid, 'Meta.experimenter = ''EC'';\n');
-    fprintf(fid, ['Meta.probe = ''8 wire '';\n']);
+%     fprintf(fid, ['Meta.probe = ''16 TT '';\n']);
 end
 fprintf(fid, 'Meta.behavior = ''HAT'';\n');
 
@@ -83,9 +83,14 @@ fprintf(fid, 'Meta.notes = '''';\n');
 fprintf(fid, '\n%%Recording details\n');
 
 %same for CSC
-fprintf(fid, 'Meta.target = ''bilateral CA1'';\n');
 fprintf(fid, 'Meta.task_order = {''Pre'', ''Track'', ''Post''};\n');
-fprintf(fid, 'Meta.LFP_hemisphere = ''R/L'';\n');
+fprintf(fid, 'Meta.conv_fact = [10.65 10.65];\n');
+fprintf(fid, 'Meta.camera = ''Miniscope'';\n');
+fprintf(fid, 'Meta.TTL_rec = ''6'';\n');
+fprintf(fid, 'Meta.TTL_miniscope_frame = ''5'';\n');
+fprintf(fid, 'Meta.TTL_LED = ''4'';\n');
+
+
 % fprintf(fid, ['Meta.tetrodeDepths = ' num2str(depth) ';\n']);
 
 if strcmpi(subject_id, '1260')
@@ -95,18 +100,23 @@ if strcmpi(subject_id, '1260')
     fprintf(fid, 'Meta.goodCSC2 = ''CSC4.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
 
 elseif strcmpi(subject_id, 'PV1')
-
+    fprintf(fid, 'Meta.LFP_hemisphere = ''R/L'';\n');
+    fprintf(fid, 'Meta.target = ''bilateral CA1'';\n');
     fprintf(fid, 'Meta.EMG = ''NA''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
-
+    
     fprintf(fid, 'Meta.goodCSC = ''CSC1.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
     fprintf(fid, 'Meta.goodCSC2 = ''CSC2.ncs''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
-
+    
 elseif strcmpi(subject_id, 'VGAT2')
-
+    fprintf(fid, 'Meta.LFP_hemisphere = ''R'';\n');
+    fprintf(fid, 'Meta.target = ''Unilateral CA1'';\n');
+    
     fprintf(fid, 'Meta.EMG = ''NA''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
-
-    fprintf(fid, 'Meta.goodCSC = ''CH63.continuous''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
-    fprintf(fid, 'Meta.goodCSC2 = ''CH48.continuous''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+    
+    fprintf(fid, 'Meta.goodCSC = ''CH63''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+    fprintf(fid, 'Meta.goodCSC2 = ''CH48''; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
+    
+    fprintf(fid, 'Meta.OE_acc = {''AUX1'', ''AUX2'', ''AUX3''}; %%this channel was referenced to the skull wire, while all others were locally referenced to optimize spikes\n');
 
 end
 

@@ -1,4 +1,4 @@
-%% MASTER_Asmbly
+function MASTER_Asmbly_Multi(nNeurons)
 
 if strcmp(computer, 'GLNXA64')
 
@@ -35,7 +35,7 @@ else
     ca_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2';
     oasis_dir = 'C:\Users\ecarm\Documents\GitHub\OASIS_matlab';
     
-    code_dir = 'C:\Users\ecarm\Downloads\Dos-Santos Assembly ICA\Dos-Santos Assembly ICA';
+    code_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Dos-Santos Assembly ICA';%'C:\Users\ecarm\Downloads\Dos-Santos Assembly ICA\Dos-Santos Assembly ICA';
     
     RnR_dir = 'C:\Users\ecarm\Documents\GitHub\RnR_methods';
     
@@ -58,17 +58,119 @@ addpath(genpath(code_dir))
 
 
 cd(c_d)
-
+if ~exist('nNeurons', 'var')
+    nNeurons = 256;
+end
 
 move_thresh  = 9;
-bin_size = [.5];
+bin_size = [.5,1,1.5,2];
 
 inter_dir = strrep([main_dir 'Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9'], '\', filesep);
-fig_dir = [inter_dir filesep 'checks'];
+fig_dir = [inter_dir filesep num2str(nNeurons) '_checks'];
 
+%% cycle over parameters and just get the counts
+
+% opts.threshold.method = 'circularshift';
+% opts.Patterns.method = 'ICA';
+% opts.Patterns.number_of_iterations = 500;
+% opts.threshold.permutations_percentile= 95;
+% opts.threshold.number_of_permutations= 500;
+
+    opts.threshold.method = 'MarcenkoPastur';
+    opts.Patterns.method = 'ICA';
+    opts.Patterns.number_of_iterations = 500;
+
+cd(inter_dir);
+
+f_list = dir('*data*');
+
+% loop over number of neurons to use. 
+
+nN = [256:-16:32]; 
+
+out = NaN(length(nN), length(length(f_list))); 
+out_pre = out; 
+out_sws = out;
+out_rate = out; 
+out_rate_pre = out; 
+out_rate_sws = out; 
+
+
+for iN = 1:length(nN)
+    
+    %init params
+    session = [];
+    method = 'binary';
+    
+    C_out = [];
+    
+    for ii = 1:length(f_list)
+        session{ii} = f_list(ii).name;
+        % compute assemblies and related ReActs
+        % A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
+        % P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
+        
+        C_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method,opts, nN(iN));
+        
+        C_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, C_out{ii});
+        
+        C_out{ii} = Pipeline_Asmbly_append_preA(C_out{ii});
+        
+        %         Pipline_Asmbly_plot(C_out{ii}, [fig_dir filesep method filesep 'best']);
+        
+        %     Pipline_Asmbly_plot_SWS(C_out{ii}, [fig_dir filesep method filesep 'best_SWS']);
+        for iB = 1:length(C_out{ii})
+
+            %% get the number of awake assemblies that are sig active in REM sleep. 
+            out(iN, ii, iB) = size(C_out{ii}{iB}.P_proj,1);
+
+            %get the wake assembly reactivations in pre and post SWS
+
+            out_sws(iN, ii, iB) = size(C_out{ii}{iB}.P_proj,1);
+
+            %% get the pre assembly sig reactivations
+            if ~isempty(C_out{ii}{iB}.pREM_proj)
+            out_preA(iN, ii, iB) = sum(sum(C_out{ii}{iB}.pREM_proj > C_out{ii}{iB}.pREM_stats.R_thresh, 2) > 0);
+            else 
+                out_preA(iN, ii, iB) = 0;
+            end
+        end
+
+
+
+    end
+    
+    if ~exist([main_dir  strrep(['Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\' 'N_' num2str(nN(iN)) '\C_out_'],'\', filesep)], 'dir')
+        mkdir([main_dir  strrep(['Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\' 'N_' num2str(nN(iN)) '\C_out_'],'\', filesep)])
+    end
+    warning off
+        save([main_dir  strrep(['Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\' 'N_' num2str(nN(iN)) '\C_out_'], '\', filesep) method '.mat'], 'C_out')
+    warning on
+    
+end
+
+%% quick plot
+
+figure(1981)
+% subplot(1,3,1)
+surf(squeeze(mean(out(2:end,:,:),1))); 
+zlabel('n Wake Asmbly in REM');
+ylabel('number of place cells');
+xlabel('bin size');
+set(gca, 'Xticklabel', bin_size, 'yticklabel', nN(1:end-1))
 %%  Extract assembly data
 
 % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
+
+% opts.threshold.method = 'circularshift';
+% opts.Patterns.method = 'ICA';
+% opts.Patterns.number_of_iterations = 500;
+% opts.threshold.permutations_percentile= 95;
+% opts.threshold.number_of_permutations= 500;
+
+    opts.threshold.method = 'MarcenkoPastur';
+    opts.Patterns.method = 'ICA';
+    opts.Patterns.number_of_iterations = 500;
 
 cd(inter_dir);
 
@@ -84,7 +186,7 @@ for ii = 1:length(f_list)
     % A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
     % P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
 
-    B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method, 256);
+    B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method,opts, nNeurons);
 
     B_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, B_out{ii});
 
@@ -97,7 +199,10 @@ for ii = 1:length(f_list)
     Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
 
     Pipline_Asmbly_plot_SWS(B_out{ii}, [fig_dir filesep method filesep 'best_SWS']);
+end
 
+for ii = 1:length(f_list)
+    session{ii} = f_list(ii).name;
     
     close all
     
@@ -138,13 +243,18 @@ lt5_idx = ~novel_idx & ~anx_idx & ~HS_idx;
 H1_idx = novel_idx & anx_idx & ~HS_idx;
 H5_idx = ~novel_idx & anx_idx & ~HS_idx;
 
-A_all = A_out;
-A_out = A_out(1:11);
+% A_all = A_out;
+% A_out = A_out(1:11);
 % if ~isempty(A_out)
 %     save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
 % end
 % if ~isempty(P_out)
-save([main_dir  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
+if ~exist([main_dir  strrep(['Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\' 'N_' num2str(nNeurons) '\B_out_'],'\', filesep)], 'dir')
+    mkdir([main_dir  strrep(['Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\' 'N_' num2str(nNeurons) '\B_out_'],'\', filesep)])
+end
+warning off
+save([main_dir  strrep(['Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\' 'N_' num2str(nNeurons) '\B_out_'], '\', filesep) method '.mat'], 'B_out')
+warning on
 % end
 
 %% load data that has been processed.

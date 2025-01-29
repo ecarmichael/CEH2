@@ -1,7 +1,7 @@
 function [ReAct_stats, shuff_mat, shuff_proj] = MS_Asmbly_proj_thresh(data_in, Temp_in, nShuff, p_thresh, Proj_in)
 
 if nargin < 3
-    nShuff = 500;
+    nShuff = 1000;
     p_thresh = 99;
     Proj_in = [];
 elseif nargin < 4
@@ -11,7 +11,12 @@ elseif nargin < 5
     Proj_in = [];
 end
 
-
+if isempty(Temp_in)
+    ReAct_stats.R_thresh = NaN;
+    shuff_proj = [];
+    shuff_mat = [];
+    return
+end
 
 %%
 rng(123,'twister')
@@ -29,9 +34,13 @@ for iS = nShuff:-1:1
     
     shuff_proj = assembly_activity(Temp_in,shuff_data');
     
-    this_idx = randsample(1:size(shuff_proj,1), 1);
+    try
+        this_idx = randsample(1:size(shuff_proj,1), 1);
+    catch 
+        display(size(shuff_proj))
+    end
 
-    shuff_mat(iS,:) = shuff_proj(this_idx,:);
+        shuff_mat(iS,:) = shuff_proj(this_idx,:);
 end
 
 ReAct_stats.R_thresh = prctile(shuff_mat(shuff_mat >0), p_thresh, 'all');

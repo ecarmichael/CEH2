@@ -20,28 +20,51 @@ for ii = 1:length(A_in)
         continue
     else
         
-        REM_temp_all = assembly_patterns(A_in{ii}.REM_Pre_data);
+        REM_temp_all = assembly_patterns(A_in{ii}.REM_Pre_data, A_in{ii}.info.opts);
         
-        pREM_proj = assembly_activity(REM_temp_all, A_in{ii}.REM_Pre_data');
+        if isempty(REM_temp_all)
+                        fprintf('%.0f Assemblies found in Pre REM (%.2fs binsize)\n',size(REM_temp_all,2), A_in{ii}.info.bin)
 
-        
-        Wake_proj = assembly_activity(REM_temp_all, A_in{ii}.wake_data');
-        
-        [REM_temp, Wake_proj, REM_pos]=  MS_Asmbly_select(REM_temp_all, Wake_proj, 2);
-        
-        [~, pREM_proj, ~]=  MS_Asmbly_select(REM_temp_all, pREM_proj, 2);
-
-        
-        A_in{ii}.pREM_temp = REM_temp;
-        A_in{ii}.pREM_proj = pREM_proj;
-        A_in{ii}.pREM_Wake_proj = Wake_proj;
-        A_in{ii}.pREM_A_pos = REM_pos;
-        
-        fprintf('[%.0f/%.0f = %.0f%%] Pre REM Assemblies had cells with positive weights (%.2fs binsize)\n',size(REM_temp,2),size(REM_temp_all,2),  (size(REM_temp,2)/size(REM_temp_all,2))*100, A_in{ii}.info.bin)
-   
-        
-        [A_in{ii}.pREM_stats, A_in{ii}.pREM_shuff.data, A_in{ii}.pREM_shuff.proj] = MS_Asmbly_proj_thresh(A_in{ii}.REM_Pre_data, REM_temp, 500, 99); 
-
+            A_in{ii}.pREM_temp = [];
+            A_in{ii}.pREM_proj = [];
+            A_in{ii}.pREM_Wake_proj = [];
+            A_in{ii}.pREM_A_pos = [];
+            
+                 A_in{ii}.pREM_stats= [];
+                A_in{ii}.pREM_shuff.data = [];
+                A_in{ii}.pREM_shuff.proj = [];
+            
+        else
+            
+            pREM_proj = assembly_activity(REM_temp_all, A_in{ii}.REM_Pre_data');
+            
+            % see if the pre REM assemblies are present in the wake phase.
+            Wake_proj = assembly_activity(REM_temp_all, A_in{ii}.wake_data');
+            
+            % only keep the projections that have positive weights.
+            [REM_temp, Wake_proj, REM_pos]=  MS_Asmbly_select(REM_temp_all, Wake_proj, 2);
+            
+            % keep the preREM projects from pre REM assemblies with positive
+            % weights.
+            [~, pREM_proj, ~]=  MS_Asmbly_select(REM_temp_all, pREM_proj, 2);
+            
+            
+            A_in{ii}.pREM_temp = REM_temp;
+            A_in{ii}.pREM_proj = pREM_proj;
+            A_in{ii}.pREM_Wake_proj = Wake_proj;
+            A_in{ii}.pREM_A_pos = REM_pos;
+            
+            fprintf('[%.0f/%.0f = %.0f%%] Pre REM Assemblies had cells with positive weights (%.2fs binsize)\n',size(REM_temp,2),size(REM_temp_all,2),  (size(REM_temp,2)/size(REM_temp_all,2))*100, A_in{ii}.info.bin)
+            
+            if isempty(REM_temp)
+                A_in{ii}.pREM_stats= [];
+                A_in{ii}.pREM_shuff.data = [];
+                A_in{ii}.pREM_shuff.proj = [];
+            else
+                [A_in{ii}.pREM_stats, A_in{ii}.pREM_shuff.data, A_in{ii}.pREM_shuff.proj] = MS_Asmbly_proj_thresh(A_in{ii}.REM_Pre_data, REM_temp, 500, 99);
+                
+            end
+        end
         
         
         % 
@@ -97,7 +120,7 @@ min_N_place = 3;
 
 Place_temp = []; Place_proj = []; Place_map = [];
 for iB = length(A_in):-1:1
-    if isempty(A_in{ii}.pREM_A_pos)
+    if isempty(A_in{iB}.pREM_A_pos)
         A_in{iB}.pREM_Place_map = [];
         continue
     else
@@ -119,9 +142,14 @@ for iB = length(A_in):-1:1
 end
 %%
 win_s = 2;
-thresh = 10;
 for iB = length(A_in):-1:1
+    if isfield(A_in{ii}, 'pREM_stats') && ~isempty(A_in{ii}.pREM_stats) 
+        thresh = A_in{ii}.pREM_stats.R_thresh;
+
+
     
     [A_in{ii}.pREM_wake_P_loc] = MS_Asmbly_act_loc(A_in{ii}.pREM_Wake_proj, A_in{ii}.wake_tvec, A_in{ii}.behav, win_s, thresh, 2/A_in{1}.bins);
-    
+    else
+        A_in{ii}.pREM_stats.R_thresh = []; 
+    end
 end

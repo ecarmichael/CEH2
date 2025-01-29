@@ -21,10 +21,11 @@ function Evt_out = OE_LoadEvents(fname, Fs)
 %
 %
 %% initialize
-if nargin < 1
+
+if nargin <1
     
     files  = dir('*.events');
-                fprintf('<strong>%s</strong>: %d events file detected...', mfilename, length(files))
+    fprintf('<strong>%s</strong>: %d events file detected...', mfilename, length(files))
 
     for ii = 1:length(files)
         if ~contains( files(ii).name, 'messages')
@@ -35,7 +36,7 @@ if nargin < 1
     
     Fs = 30000; 
     disp('No Fs specified. Assuming 30kHz...')
-elseif nargin <2
+elseif nargin ==2
     Fs = 30000; 
         disp('No Fs specified. Assuming 30kHz...')
 end

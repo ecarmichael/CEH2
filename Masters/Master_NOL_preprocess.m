@@ -31,7 +31,7 @@ cfg_def.conv_fac = [340/38  350/38];
 cfg_def.behav_label = 'Body';
 cfg_def.TTL_trig = '6'; 
 cfg_def.TTL_frame = '4'; 
-cfg_def.csc_chan = {'CH44'};
+cfg_def.csc_chan = {'CH63'}; %44
 cfg_def.emg_chan = {'CH18'}; 
 cfg_def.acc_chan = {'CH65', 'CH66', 'CH67'};
 
