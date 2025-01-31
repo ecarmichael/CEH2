@@ -82,6 +82,29 @@ plot(1:length(table_out.Open_prct), table_out.T2O, '.r', 'markersize', 20)
 set(gca, 'XTick', 1:length(table_out.Open_prct), 'XTickLabel', table_out.Subject, 'XTickLabelRotation', 65)
 ylabel('Number of Open arm entries')
 
+
+%% split based on aTau
+table.geno = logical([0     0     0     0     0     1     0     1     1     0     0     0     1     1     0     1     1     0     0     0     0     0     0     0     0     0     0]); 
+
+c_ord = MS_linspecer(4);
+figure(909)
+clf
+hold on
+scatter(1+sort(MS_randn_range(length(table_out.Closed_prct(table_out.Geno == 0)), 1, -.1, .1)), table_out.Closed_prct(table_out.Geno == 0),25,  c_ord(1,:), 'filled')
+scatter(2+sort(MS_randn_range(length(table_out.Closed_prct(table_out.Geno == 1)), 1, -.1, .1)), table_out.Closed_prct(table_out.Geno == 1),25,  c_ord(2,:), 'filled')
+
+scatter(5+sort(MS_randn_range(length(table_out.T2O(table_out.Geno == 0)), 1, -.1, .1)), table_out.T2O(table_out.Geno == 0),25,  c_ord(1,:), 'filled')
+scatter(6+sort(MS_randn_range(length(table_out.T2O(table_out.Geno == 1)), 1, -.1, .1)), table_out.T2O(table_out.Geno == 1),25,  c_ord(2,:), 'filled')
+
+[hb h, p]= MS_bar_w_err(table_out.Closed_prct(table_out.Geno == 0), table_out.Closed_prct(table_out.Geno == 1),c_ord(1,:),  1, 'ttest2', 1:2)
+
+hb(1).FaceColor = 'none';
+hb(1).EdgeColor = 'k';
+
+[hb h, p]= MS_bar_w_err(table_out.T2O(table_out.Geno == 0), table_out.T2O(table_out.Geno == 1),c_ord(2,:),  1, 'ttest2', 5:6)
+hb(1).FaceColor = 'none';
+hb(1).EdgeColor = 'k';
+
 %% one shot to update the EPM data
 
 cd(data_dir)
