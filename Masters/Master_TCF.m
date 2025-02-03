@@ -360,7 +360,7 @@ set(gca, 'xtick', 1:2, 'xticklabels', {'Tau -', 'Tau +'}, 'XTickLabelRotation', 
 
 hb(1).FaceColor = 'none';
 hb(1).EdgeColor = 'k';
-
+xlim([0 6])
 title('Context A Re-exposure')
 ylabel('Contextual freezing (%)')
 end
