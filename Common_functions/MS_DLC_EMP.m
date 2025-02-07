@@ -32,10 +32,11 @@ tsd = MS_DLC2TSD(data_dir, [],conv_f, 0);
 
 if (tsd.tvec(end) - tsd.tvec(1)) > 600
     
-    s_idx = nearest_idx(tsd.tvec(end) - 600, tsd.tvec);
+    s_idx = nearest_idx(5, tsd.tvec);
+    e_idx = nearest_idx(605, tsd.tvec);
     
-    tsd.tvec = tsd.tvec(s_idx:end);
-    tsd.data = tsd.data(:,s_idx:end);
+    tsd.tvec = tsd.tvec(s_idx:e_idx);
+    tsd.data = tsd.data(:,s_idx:e_idx);
     
     
 end
@@ -164,10 +165,52 @@ emp_idx(x_idx) = 3;
 % [o_exits] = find(diff(emp_idx == 2) < 0);
 % [x_exits] = find(diff(emp_idx == 3) < 0);
 
-% get head dips
+%% get transitons
+% %%%%% Closed to Transition %%%%%%%%%
+c_entries = find(diff(c_idx == 1) >0);
+c_exits    = find(diff(c_idx == 1) <0);
+
+if c_entries(1) > c_exits(1)
+    c_entries = [1 c_entries]; 
+end
+% make 'trials' for each entry/exit type.
+if length(c_entries) > length(c_exits)
+    c_exits(end+1) = length(c_idx);
+end
+
+% use IV functions to link transitions or something.
+CtT_IV = iv(c_entries, c_exits);
+
+cfg_m = [];
+cfg_m.gap = .5* round(1/mode(diff(tsd.tvec)));
+CtT_IV_m = MergeIV(cfg_m, CtT_IV);
+
+
+% %%%%%transition 2 open %%%%%%%%%
+o_entries = find(diff(o_idx == 1) >0);
+o_exits    = find(diff(o_idx == 1) <0);
+
+if o_entries(1) > o_exits(1)
+    o_entries = [1 o_entries]; 
+end
+% make 'trials' for each entry/exit type.
+if length(o_entries) > length(o_exits)
+    o_exits(end+1) = length(o_idx);
+end
+
+% use IV functions to link transitions or something.
+OtT_IV = iv(o_entries, o_exits);
+cfg_m = [];
+cfg_m.gap = .5* round(1/mode(diff(tsd.tvec)));
+OtT_IV_m = MergeIV(cfg_m, OtT_IV);
+
+
+% %%%%% get head dips %%%%%%%%%%%%
 d_entries = find(diff(d_idx == 1) >0);
 d_exits    = find(diff(d_idx == 1) <0);
-
+if d_entries(1) > d_exits(1)
+    d_entries = [1 d_entries]; 
+end
 % make 'trials' for each entry/exit type.
 if length(d_entries) > length(d_exits)
     d_exits(end+1) = length(d_idx);
@@ -327,6 +370,8 @@ out.emp_idx = emp_idx;
 out.labels = labels;
 out.boxes = boxes;
 out.dip_IV = dip_IV_m; 
+out.CtT_IV = CtT_IV_m; 
+out.OtT_IV = OtT_IV_m; 
 
 if ~isempty(save_dir)
     save([save_dir filesep info.subject '_' info.date '.mat'], 'out')

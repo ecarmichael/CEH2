@@ -181,8 +181,8 @@ end
 % end
 
 %% PRobe only
-n = ceil(length(M_ID)/2)+1;
-m = 2;
+n = ceil(length(M_ID)/4)+1;
+m = 3;
 
 
 for ii = 1:length(M_ID)

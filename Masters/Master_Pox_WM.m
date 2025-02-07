@@ -61,17 +61,21 @@ for iC = 1:length(coh)
     % for ii = 1:length(data.(coh{iC}).sub)
     %     plot(1:5, this_day_mean(ii,:))
     % 
-    % end
+    % end    
     plot(1:5, mean(data.(coh{iC}).day_mean_ctrl), 'color', c_ord(1,:), 'LineWidth',2)
+    errorb(1:5, mean(data.(coh{iC}).day_mean_ctrl),MS_SEM_vec(data.(coh{iC}).day_mean_ctrl), 'color', c_ord(1,:), 'LineWidth',2)
+    
     plot(1:5, mean(data.(coh{iC}).day_mean_tau), 'color', c_ord(2,:), 'LineWidth',2)
+    errorb(1:5, mean(data.(coh{iC}).day_mean_tau),MS_SEM_vec(data.(coh{iC}).day_mean_tau), 'color', c_ord(2,:), 'LineWidth',2)
 
-    plot(1:5, mean(this_day_mean), 'k', 'LineWidth',2)
+
+%     plot(1:5, mean(this_day_mean), 'k', 'LineWidth',2)
     % leg = data.(coh{iC}).sub; 
     % leg{end+1} = 'mean';
     legend({'Ctrl', 'Tau', 'All'}, 'Box','off')
     ylabel('Mean escape latency')
 
-    set(gca, 'XTickLabel', {'Day 1' 'Day2 ' 'Day 3' 'Day 4' 'Day 5'}, 'XTickLabelRotation', 45)
+    set(gca,'xtick', 1:5, 'XTickLabel', {'Day 1' 'Day2 ' 'Day 3' 'Day 4' 'Day 5'}, 'XTickLabelRotation', 45)
 
     subplot(1,4,4)
         
@@ -82,10 +86,14 @@ for iC = 1:length(coh)
     scatter(1+sort(MS_randn_range(length(data.(coh{iC}).cross(data.(coh{iC}).geno == 0)), 1, -.1, .1)), data.(coh{iC}).cross(data.(coh{iC}).geno == 0),25,  c_ord(1,:), 'filled')
     scatter(2+sort(MS_randn_range(length(data.(coh{iC}).cross(data.(coh{iC}).geno == 1)), 1, -.1, .1)), data.(coh{iC}).cross(data.(coh{iC}).geno == 1),25,  c_ord(2,:), 'filled')
 
+    ylabel('Annulus crossings')
+    set(gca, 'xtick', 1:2, 'xticklabel', {'Tau -', 'Tau +'}, 'XTickLabelRotation', 45)
 
 end
 
-%% simple plots
+SetFigure([], gcf,1)
+%% Collect the probe data
 
-plot(this_tab(2:end,:))
+
+
 
