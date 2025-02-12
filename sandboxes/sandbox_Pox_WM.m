@@ -219,7 +219,7 @@ for ii = 1:length(M_ID)
         scatter(nanmean(pos_r.data([1, 3, 5],:)), nanmean(pos_r.data([2, 4, 6],:)),5, 1:length(pos_r.tvec), '.')
         title({strrep(M_ID{ii}, '_', ' ') ; ['T: ' num2str(QT{ii}(iD),3) ' |O: ' num2str(QO{ii}(iD),3) ' |O: ' num2str(QR{ii}(iD),3) ' |L: ' num2str(QL{ii}(iD),3)]})
         axis square
-        
+        axis off
         P_QT(ii) = QT{ii}(iD);
         P_QO(ii) = QO{ii}(iD);
         P_QR(ii) = QR{ii}(iD);
