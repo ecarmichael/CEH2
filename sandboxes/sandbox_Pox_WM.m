@@ -310,8 +310,8 @@ for iS =  1:length(subs)
     
     tbl_out = cell2table(c_tbl);
     
-    % write a .csv per animal.
-%     writetable(tbl, [subs{iS} '_WM.csv'], 'WriteVariableNames',1)
+    %write a .csv per animal.
+    writetable(tbl, [subs{iS} '_WM.csv'], 'WriteVariableNames',1)
     % tbl_in = readtable([subs{iS} '_WM.csv'])
     
 end
