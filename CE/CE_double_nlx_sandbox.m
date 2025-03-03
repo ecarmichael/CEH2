@@ -28,20 +28,20 @@ nlx2 = sort(unique([evts.t{TTL(2)} evts.t{TTL(2)+1}]));
 warning off
 load([Ca_dir1 filesep 'ms.mat'])
 
-ms_1 = ms; 
+ms_1 = MS_Ca_good_cells(ms); 
 clear ms; 
 
 % CA2
 load([Ca_dir2 filesep 'ms.mat'])
 
-ms_2 = ms; 
+ms_2 = MS_Ca_good_cells(ms); 
 clear ms; 
 
 warning on
 
 
 %% restrict sleep section
-ms_1_start_idx = find(diff(ms_1.time) > 300); 
+ms_1_start_idx = [length(ms_1.tvecs{1}), length(ms_1.tvecs{1}) + length(ms_1.tvecs{2})]; 
 
 ms1.time = ms_1.time(ms_1_start_idx(1)+1:ms_1_start_idx(2)); 
 ms1.detrendRaw = ms_1.detrendRaw(ms_1_start_idx(1)+1:ms_1_start_idx(2),:); 
@@ -50,7 +50,7 @@ ms1.Binary = ms_1.Binary(ms_1_start_idx(1)+1:ms_1_start_idx(2),:);
 
 % trim to the sleep phase
 
-ms_2_start_idx = find(diff(ms_2.time) > 300); 
+ms_2_start_idx = [length(ms_2.tvecs{1}), length(ms_2.tvecs{1}) + length(ms_2.tvecs{2})]; 
 
 ms2.time = ms_2.time(ms_2_start_idx(1)+1:ms_2_start_idx(2)); 
 ms2.detrendRaw = ms_2.detrendRaw(ms_2_start_idx(1)+1:ms_2_start_idx(2),:); 
@@ -105,8 +105,30 @@ MS_SWR_detector(csc, 'CSC1.ncs', 1)
 
 
 
-this_ms = ms1; 
+% this_ms = ms1; 
 
-this_ms.Binary(ms_1.k
 
+%% quick behaviour check
+
+load([Ca_dir2 filesep 'behav_enc.mat'])
+
+
+load([Ca_dir2 filesep 'behav_rec.mat'])
+
+%%
+ms2_enc.time = ms_2.time(1:length(ms_2.tvecs{1})); 
+ms2_enc.Binary = ms_2.Binary(1:length(ms_2.tvecs{1}),:); 
+ms2_enc.detrendRaw = ms_2.detrendRaw(1:length(ms_2.tvecs{1}),:); 
+ms2_enc.deconv = ms_2.deconv(1:length(ms_2.tvecs{1}),:); 
+
+behav_enc_a = MS_align_data(behav_enc, ms2_enc);
+
+move_idx = behav_enc_a.speed > 5; 
+
+
+for ii  =50:100
+    figure(ii)
+[rate_m, occ_mat ] = MS_decon_rate_map(ms2_enc.deconv(move_idx,ii),ms2_enc.time(move_idx),behav_enc_a.position(move_idx,:),2.5, 1, 1); 
+
+end
 
