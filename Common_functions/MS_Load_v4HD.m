@@ -50,16 +50,16 @@ if plot_flag
     
    figure(919)
    subplot(3,1,1)
-   plot(hd_temp.time, eulZYX)
+   plot(hd_temp.tvec, eulZYX)
    ylabel('Euclidean movement')
    legend({'Yaw (Z)', 'Pitch (Y)', 'Roll (X)'}); 
    
    subplot(3,1,2)
-      plot(hd_temp.time, hd_temp.motion)
+      plot(hd_temp.tvec, hd_temp.motion)
 ylabel('Movement (sqrt movmean: 5 samples)')
 
    subplot(3,1,3)
-   plot(hd_temp.time, hd_temp.quat)
+   plot(hd_temp.tvec, hd_temp.quat)
        ylabel('Quaternion movement')
        xlabel('time (s)')
 

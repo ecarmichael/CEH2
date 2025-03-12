@@ -33,8 +33,10 @@ ms = MS_append_sharp_SFPs(ms);
 
 ms = MS_append_timeStamps(ms, cd);
 
-
-hd = MS_Load_v4HD(cd, 1)
+% get the HD information and add it as a field to the ms struct. The second
+% input is a plot flag. If 1; it plots the HD and movement, if 0 it does
+% not. 
+ms.hd = MS_Load_v4HD(cd, 1); 
 %% plot the data
 
 MS_Ca_check(ms)
