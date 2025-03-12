@@ -27,7 +27,7 @@ s_idx = nearest_idx(ms.time,[0 60]);
 if isempty(ms2)
     e_idx = nearest_idx(ms.time,[ms.time(end) - 60 ms.time(end)]);
 else
-    e_idx = nearest_idx(ms2.time [ms2.time(end) - 60 ms2.time(end)]);
+    e_idx = nearest_idx(ms2.time, [ms2.time(end) - 60 ms2.time(end)]);
 end
 
 disp('Keep (space) | reject (delete)')
