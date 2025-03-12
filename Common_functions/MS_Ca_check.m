@@ -1,4 +1,4 @@
-function MS_Ca_check(ms, cell_ids, fact)
+function MS_Ca_check(ms, cell_ids,time, fact)
 %% MS_Ca_check: Quick plot to check traces, deconv, and SFPs in ms file. 
 %
 %
@@ -25,15 +25,34 @@ if nargin < 2
      if ms.numNeurons < 20
         cell_ids  = 1:ms.numNeurons;
      end
+     time = [ms.time(1) ms.time(end)]; 
+     
          fact = 1; 
 elseif nargin < 3
+         time = [ms.time(1) ms.time(end)]; 
+
         fact = 1; 
+elseif nargin < 4
+    fact = 1; 
 end
 
 if ~isfield(ms, 'time') && isfield(ms, 'tvec')
     ms.time = ms.tvec;
 end
 
+%% restrict data 
+if (time(1) ~= ms.time(1)) || (time(end) ~= ms.time(end)) 
+    fprintf('Restricting between %0.2fs and %0.2fs\n', time(1), time(end))
+idx = nearest_idx(time, ms.time ); 
+
+ms.time = ms.time(idx(1):idx(2)); 
+ms.deconv = ms.deconv(idx(1):idx(2),:); 
+ms.denoise = ms.denoise(idx(1):idx(2),:); 
+ms.RawTraces = ms.RawTraces(idx(1):idx(2),:); 
+ms.Binary = ms.Binary(idx(1):idx(2),:); 
+
+
+end
 %%
 figure(1919)
     clf
