@@ -33,6 +33,8 @@ ms = MS_append_sharp_SFPs(ms);
 
 ms = MS_append_timeStamps(ms, cd);
 
+
+hd = MS_Load_v4HD(cd, 1)
 %% plot the data
 
 MS_Ca_check(ms)
@@ -47,7 +49,7 @@ MS_Ca_check(ms)
 [keep_idx, ms] = MS_curate_cells(ms); % appends the keep_idx to the ms struct. also gives it as an output; 
 
 % version with ROI curration for speed. 
-[keep_idx, ms] = MS_curate_cells(ms, [], 1); % appends the keep_idx to the ms struct. also gives it as an output; second input is for merging data. third is for using an ROI to remove cells outside the ROI. 
+% [keep_idx, ms] = MS_curate_cells(ms, [], 1); % appends the keep_idx to the ms struct. also gives it as an output; second input is for merging data. third is for using an ROI to remove cells outside the ROI. 
 
 % remove the rejected cells
 
