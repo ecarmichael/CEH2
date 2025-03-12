@@ -25,9 +25,9 @@ c_ord = MS_linspecer(4);
 
 s_idx = nearest_idx3([0 60], ms.time);
 if isempty(ms2)
-    e_idx = nearest_idx3([ms.time(end) - 60 ms.time(end)], ms.time);
+    e_idx = nearest_idx(ms.time,[ms.time(end) - 60 ms.time(end)]);
 else
-    e_idx = nearest_idx3([ms2.time(end) - 60 ms2.time(end)], ms2.time);
+    e_idx = nearest_idx(ms2.time [ms2.time(end) - 60 ms2.time(end)]);
 end
 
 disp('Keep (space) | reject (delete)')
