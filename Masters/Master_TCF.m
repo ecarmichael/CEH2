@@ -390,7 +390,7 @@ scatter(2+sort(MS_randn_range(length(TFC3_bar.baseline(TFC3_geno == 1)), 1, -.1,
 [hb, h, p] = MS_bar_w_err(TFC3_bar.baseline(TFC3_geno == 0), TFC3_bar.baseline(TFC3_geno == 1), [.2 .2 .2],1,  'ttest2');
 
 set(gca, 'xtick', 1:2, 'xticklabels', {'Tau -', 'Tau +'}, 'XTickLabelRotation', 45)
-
+ylim([y_l(1) y_l(2)*1.1])
 hb(1).FaceColor = 'none';
 hb(1).EdgeColor = 'k';
 xlim([0 6])
