@@ -95,12 +95,47 @@ flash_rec = flash_rec -ms_rec.time(1);
 ms_rec.time = ms_rec.time - ms_rec.time(1); 
 
 behav_rec_a = MS_align_data(behav_rec, ms_rec);
+%% hack to get the trials periods
+cd('C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Radial\JKA_HPC_07')
+Radial_log_JKA_07_2025_02_20_Day5
+cd('C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Radial\JKA_HPC_07\2025_02_20')
+
+trl_s = nearest_idx(Rad.D2025_02_20.JKA_07.recall.tstart, behav_rec_a.time); 
+trl_e = nearest_idx(Rad.D2025_02_20.JKA_07.recall.tend, behav_rec_a.time); 
+
+trl_idx = zeros(size(behav_rec_a.time)); 
+for ii = 1:length(trl_s)
+trl_idx(trl_s(ii):trl_e(ii)) = 1; 
+
+end
+trl_idx = logical(trl_idx); 
+
+figure(101)
+clf
+subplot(2,2, 3:4)
+hold on
+plot(behav_rec_a.time, behav_rec_a.position, 'color', [.7 .7 .7])
+plot(behav_rec_a.time(trl_idx), behav_rec_a.position(trl_idx,:))
+
+subplot(2,2,1)
+hold on
+% plot(behav_rec_a.position(~trl_idx,1), behav_rec_a.position(~trl_idx,2), '.', 'color', [.7 .7 .7]))
+
+plot(behav_rec_a.position(trl_idx,1), behav_rec_a.position(trl_idx,2), '.r')
+
+subplot(2,2,2)
+hold on
+plot(behav_rec_a.position(~trl_idx,1), behav_rec_a.position(~trl_idx,2), '.', 'color', [.7 .7 .7])
+% plot(behav_rec_a.position(trl_idx,1), behav_rec_a.position(trl_idx,2), '.r')
+
+
 
 %%
 % move_idx 
 
-mov_idx = behav_rec_a.speed > 2.5; 
+mov_idx = (behav_rec_a.speed > 2.5) & (behav_rec_a.speed <20);
 
+k_idx = mov_idx & trl_idx; 
 
 figure(910)
 clf
@@ -108,9 +143,37 @@ hold on
 plot(behav_rec.time , behav_rec.position(:,1))
 plot(ms_rec.time , ms_rec.denoise(:,1))
 
-MS_event_rate_map(flash_vec(mov_idx) , ms_rec.time(mov_idx), behav_rec_a.position(mov_idx,:), 1, 1);
+MS_event_rate_map(flash_vec(k_idx) , ms_rec.time(k_idx), behav_rec_a.position(k_idx,:), 2, 3);
+
+title(['Rewarded arms: ' num2str(Rad.D2025_02_20.correct)])
 
 
+
+%% make a movement movie
+
+this_behav = behav_rec_a; 
+
+figure(888)
+clf
+plot(this_behav.position(:,1), this_behav.position(:,2), '.', 'color', [.8 .8 .8])
+
+for ii = 1:length(this_behav.time)
+    
+    
+    hold on
+    if trl_idx(ii) == 1
+             h = plot(this_behav.position(ii,1), this_behav.position(ii,2), 'or', 'markersize', 15);
+    else
+            h = plot(this_behav.position(ii,1), this_behav.position(ii,2), 'ob', 'markersize', 15);
+    end
+    
+    t = text(80, 80, num2str(this_behav.time(ii)));
+    
+    drawnow
+    pause(mode(diff(this_behav.time))/10)
+    delete(h)
+    delete(t)
+end
 
 
 
