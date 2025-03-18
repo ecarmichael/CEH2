@@ -1,4 +1,4 @@
-function [ms, Binary_out] = MS_append_filt_binary(ms, z_threshold)
+function [ms_out, Binary_out] = MS_append_filt_binary(ms, z_threshold)
 %% : MS_append_filt_binary: extracts the binary 'on' phases from the denoised signal instead of the filtered signal as per msExtractBinary_detrendTraces.m
 %
 %

@@ -1,10 +1,11 @@
-function [rate_map, occ_mat] = MS_decon_rate_map(data,tvec,pos,bin_size, plot_flag, smooth_SD,X_bins,Y_bins)
+function [rate_map, occ_mat] = MS_event_rate_map(evts,tvec,pos,bin_size, plot_flag, smooth_SD,X_bins,Y_bins)
 %% MS_decon_rate_map:  estimates the firing rate map form the deconvolved Ca signal. Requires the OASIS toolbox
 %
 %
 %
 %    Inputs:
-%    - data: [1 x nSamples]  deconvolved signal (from OASIS).
+%    - evts: [1 x nEvts]  time points or logical for the events  Can also
+%    be a vector [logical 1 x nSamples]
 %
 %    - tvec: [1 x nSamples]  time vector.
 %
@@ -45,10 +46,10 @@ elseif nargin < 5
     Y_bins = 0:bin_size:ceil(max(pos(:,2)));
     % Y_bin_centers = Y_bins +  bin_size/2;
     plot_flag = 0;
-    smooth_SD = 0;
+    smooth_SD = 1;
     
 elseif nargin < 6
-    smooth_SD = 0;
+    smooth_SD = 1;
     
     X_bins = 0:bin_size:ceil(max(pos(:,1)));
     
@@ -73,8 +74,19 @@ end
 
 %% plot for sanity
 
+if length(evts) ~= length(tvec)
+    spk_idx = nearest_idx(evts, tvec);
+    
+    spk_vec = zeros(size(tvec)); 
+    
+    spk_vec(spk_idx) = 1; 
+    spk_vec = logical(spk_vec); 
+else
+    spk_idx = logical(evts>0);
+    spk_vec = evts; 
+end
+
 if plot_flag
-    spk_idx = data > 0;
   clf
     subplot(2,2,1)
     hold on
@@ -96,11 +108,11 @@ end
 % get occupancy and event rate per bin
 for iY = 1:length(Y_bins)-1
     for iX = 1:length(X_bins)-1
-        this_vec = zeros(size(data));
+%         this_vec = zeros(size(evts));
         p_idx = find(pos(:,1) >= X_bins(iX) & pos(:,1) < X_bins(iX+1) & pos(:,2) >= Y_bins(iY) & pos(:,2) < Y_bins(iY+1));
         
         if ~isempty(p_idx)
-            this_data = data(p_idx); % get all the data points while in this bin
+            this_data = spk_vec(p_idx); % get all the data points while in this bin
             spk_mat(iX, iY) = sum(this_data > 0);
             occ_mat(iX, iY) = length(p_idx)/length(tvec);
         end

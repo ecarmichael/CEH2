@@ -82,6 +82,7 @@ figure(101)
 clf
 for ii = 1:length(sub)
     
+    %%
     t_day = 1:length(D_ID{sub(ii)});
     for iD = 1:length(t_day)
         %
@@ -181,8 +182,8 @@ end
 % end
 
 %% PRobe only
-n = ceil(length(M_ID)/2)+1;
-m = 2;
+n = ceil(length(M_ID)/4)+1;
+m = 3;
 
 
 for ii = 1:length(M_ID)
@@ -219,7 +220,7 @@ for ii = 1:length(M_ID)
         scatter(nanmean(pos_r.data([1, 3, 5],:)), nanmean(pos_r.data([2, 4, 6],:)),5, 1:length(pos_r.tvec), '.')
         title({strrep(M_ID{ii}, '_', ' ') ; ['T: ' num2str(QT{ii}(iD),3) ' |O: ' num2str(QO{ii}(iD),3) ' |O: ' num2str(QR{ii}(iD),3) ' |L: ' num2str(QL{ii}(iD),3)]})
         axis square
-        
+        axis off
         P_QT(ii) = QT{ii}(iD);
         P_QO(ii) = QO{ii}(iD);
         P_QR(ii) = QR{ii}(iD);
@@ -310,8 +311,8 @@ for iS =  1:length(subs)
     
     tbl_out = cell2table(c_tbl);
     
-    % write a .csv per animal.
-%     writetable(tbl, [subs{iS} '_WM.csv'], 'WriteVariableNames',1)
+    %write a .csv per animal.
+    writetable(tbl, [subs{iS} '_WM.csv'], 'WriteVariableNames',1)
     % tbl_in = readtable([subs{iS} '_WM.csv'])
     
 end

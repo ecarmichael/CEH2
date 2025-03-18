@@ -1,4 +1,4 @@
-function h = SetFigure(cfg_in, h)
+function h = SetFigure(cfg_in, h, sqr)
 %  SetFigure will set the properties of figre "h" to the standards for EC
 %  figure.
 %          Inputs:
@@ -14,12 +14,16 @@ function h = SetFigure(cfg_in, h)
 % EC - 2016-10-05
 
 %% defaults
+if nargin < 3
+    sqr = 0;
+end
+
 cfg_def.ft_size = 18;
 cfg_def.font = 'helvetica';
 % cfg_def.fontweight = 'normal';
 cfg_def.grid = 'off';
 cfg_def.resize = 1;
-cfg_def.re_line = 0; 
+cfg_def.re_line = 0;
 
 cfg = ProcessConfig2(cfg_def, cfg_in);
 
@@ -29,10 +33,15 @@ set(gcf,'windowstyle','normal');
 set(h,'PaperPositionMode','auto')
 set(gca,'DefaultTextFontSize',cfg.ft_size)
 set(0, 'DefaulttextInterpreter', 'none')
-if cfg.resize == 1
-%     set(gcf, 'position', [600 50 560*1.4 420*1.4]);
+
+
+if sqr == 1
+    set(gcf,'units','normalized','outerposition',[.3 .1 .6 .8])
+    
+elseif cfg.resize == 1
+    %     set(gcf, 'position', [600 50 560*1.4 420*1.4]);
     set(gcf,'units','normalized','outerposition',[0 0 1 1])
-%      set(gcf,'units','centimeters','outerposition',[0 0 10 10])
+    %      set(gcf,'units','centimeters','outerposition',[0 0 10 10])
 end
 % H = get(gcf, 'children');
 H = findobj(gcf,'type','axes','-not','Tag','legend','-not','Tag','Colorbar');

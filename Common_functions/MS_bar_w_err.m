@@ -1,4 +1,4 @@
-function [hb, eb, p] =  MS_bar_w_err(data_a, data_b, color, data_flag, stats, x_vals)
+function [hb, eb, sc, p] =  MS_bar_w_err(data_a, data_b, color, data_flag, stats, x_vals)
 
 if nargin < 4
     data_flag = 0; 
@@ -16,11 +16,10 @@ hold on
 
 
 if data_flag && length(data_a) == length(data_b)
-    for ii = length(data_a):-1:1
-        plot(x_vals(1), data_a(ii), '.', 'color', [.5 .5 .5], 'markersize', 15)
-        plot(x_vals(1), data_b(ii), '.', 'color', [.5 .5 .5], 'markersize', 15)
-        plot(x_vals, [data_a(ii) data_b(ii)], '-', 'color', [.5 .5 .5], 'linewidth', .5)
-    end
+    sc{1} = scatter(1+sort(MS_randn_range(length(data_a), 1, -.1, .1)), data_a,25,  color(1,:), 'filled');
+    sc{1} = scatter(1+sort(MS_randn_range(length(data_b), 1, -.1, .1)), data_b,25,  color(2,:), 'filled');
+else
+    sc = []; 
 end
 
 eb = errorbar(x_vals, [nanmean(data_a), nanmean(data_b)], [MS_SEM(data_a) ,MS_SEM(data_b)]);

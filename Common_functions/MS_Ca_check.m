@@ -1,4 +1,4 @@
-function MS_Ca_check(ms, cell_ids, fact)
+function MS_Ca_check(ms, cell_ids,time, fact)
 %% MS_Ca_check: Quick plot to check traces, deconv, and SFPs in ms file. 
 %
 %
@@ -23,17 +23,36 @@ function MS_Ca_check(ms, cell_ids, fact)
 if nargin < 2
     cell_ids = 1:20; 
      if ms.numNeurons < 20
-        cell_ids  = 1:ms.numNeurons;
+        cell_ids  = 1:size(ms.RawTraces,2);
      end
+     time = [ms.time(1) ms.time(end)]; 
+     
          fact = 1; 
 elseif nargin < 3
+         time = [ms.time(1) ms.time(end)]; 
+
         fact = 1; 
+elseif nargin < 4
+    fact = 1; 
 end
 
 if ~isfield(ms, 'time') && isfield(ms, 'tvec')
     ms.time = ms.tvec;
 end
 
+%% restrict data 
+if (time(1) ~= ms.time(1)) || (time(end) ~= ms.time(end)) 
+    fprintf('Restricting between %0.2fs and %0.2fs\n', time(1), time(end))
+idx = nearest_idx(time, ms.time ); 
+
+ms.time = ms.time(idx(1):idx(2)); 
+ms.deconv = ms.deconv(idx(1):idx(2),:); 
+ms.denoise = ms.denoise(idx(1):idx(2),:); 
+ms.RawTraces = ms.RawTraces(idx(1):idx(2),:); 
+ms.Binary = ms.Binary(idx(1):idx(2),:); 
+
+
+end
 %%
 figure(1919)
     clf
@@ -57,7 +76,7 @@ figure(1919)
         text(col, row, num2str(cell_ids(ii)), 'FontSize', 10, 'FontWeight', 'bold', 'Color', 'g');
 %         scatter(col, row,50,'o',  'MarkerEdgeColor',c_ord(ii,:) , 'LineWidth', 1);% c_ord(ii,:)
     end
-    title(['nCells: ' num2str(ms.numNeurons)]);
+    title(['nCells: ' num2str(size(ms.RawTraces,2))]);
 %     xlim([min(ms.Centroids(:,1))-min(ms.Centroids(:,1))*.2  max(ms.Centroids(:,1))+max(ms.Centroids(:,1))*.2])
 %     ylim([min(ms.Centroids(:,2))-min(ms.Centroids(:,2))*.2  max(ms.Centroids(:,2))+max(ms.Centroids(:,2))*.2])
     end
@@ -71,7 +90,7 @@ figure(1919)
         gau_z = zscore(gau_sdf, [], 2);
         
         
-    imagesc( ms.time,1:ms.numNeurons,  gau_z);  set(gca, 'YDir', 'normal'); 
+    imagesc( ms.time,1:size(ms.RawTraces,2),  gau_z);  set(gca, 'YDir', 'normal'); 
       c_val = caxis; 
     caxis([0 c_val(2)*.2])
 %     caxis([0 .01])
@@ -96,7 +115,7 @@ figure(1919)
      c_val = caxis; 
     caxis([0 16])
 %     set(gca,'ytick', 0:100:ms.numNeurons*mult_fac, 'YTickLabel', (0:100:length(ms.units)*mult_fac)/mult_fac, 'TickDir', 'out')
-    ylim([0 ms.numNeurons])
+    ylim([0 size(ms.RawTraces,2)])
 %     xlim([ms.time(1) ms.time(end)])
 %         set(gca,'xtick', [round(abs(ms.time(1))) round(ms.time(end),0)], 'xTickLabel', [round(abs(ms.time(1))) round(ms.time(end),0)], 'TickDir', 'out')
 

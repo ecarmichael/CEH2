@@ -126,35 +126,35 @@ out = rmfield(out, 'Pox90_m9')
 
 %% Resample f_bin 
 
-t_bin =20;
-
-
-for iSub = 1:length(s_list)
-    
-    sess_list = fieldnames(out.(s_list{iSub}));
-    
-    for iSess = 1:length(sess_list)
-        if isempty(out.(s_list{iSub}).(sess_list{iSess}).TFC)
-            continue
-        else
-            
-            f_val = zeros(1, length(0:t_bin:ceil(pos_r.tvec(end))-2));
-            
-            c= 0;
-            for ii = 0:t_bin:ceil(pos_r.tvec(end))-2
-                c = c+1;
-                
-                s_idx = nearest_idx(ii, pos_r.tvec);
-                
-                e_idx = nearest_idx(ii+t_bin,pos_r.tvec);
-                
-                f_val(c) = sum(fvec(s_idx:e_idx))/length(fvec(s_idx:e_idx));
-                %fprintf('block length %.0f  F: %.2f%%\n', (e_idx - s_idx)*mode(diff(pos_r.tvec)),f_val(c)*100)
-                
-            end
-            
-        end
-    end
+% t_bin =20;
+% 
+% 
+% for iSub = 1:length(s_list)
+%     
+%     sess_list = fieldnames(out.(s_list{iSub}));
+%     
+%     for iSess = 1:length(sess_list)
+%         if isempty(out.(s_list{iSub}).(sess_list{iSess}).TFC)
+%             continue
+%         else
+%             
+%             f_val = zeros(1, length(0:t_bin:ceil(pos_r.tvec(end))-2));
+%             
+%             c= 0;
+%             for ii = 0:t_bin:ceil(pos_r.tvec(end))-2
+%                 c = c+1;
+%                 
+%                 s_idx = nearest_idx(ii, pos_r.tvec);
+%                 
+%                 e_idx = nearest_idx(ii+t_bin,pos_r.tvec);
+%                 
+%                 f_val(c) = sum(fvec(s_idx:e_idx))/length(fvec(s_idx:e_idx));
+%                 fprintf('block length %.0f  F: %.2f%%\n', (e_idx - s_idx)*mode(diff(pos_r.tvec)),f_val(c)*100)
+%                 
+%             end
+%             
+%         end
+%     end
 
 
 %% collect the outputs
@@ -241,7 +241,8 @@ xlabel('time (s)')
 
 subplot(2,3,5)
 hold on
-bar(1:4, [mean(TFC2_bar.baseline), mean(TFC2_bar.tone),mean(TFC2_bar.trace) mean(TFC2_bar.ITI)])
+b = bar(1:4, [mean(TFC2_bar.baseline), mean(TFC2_bar.tone),mean(TFC2_bar.trace) mean(TFC2_bar.ITI)]);
+% b.face
 scatter(1+sort(MS_randn_range(length(TFC2_bar.baseline), 1, -.2, .2)), TFC2_bar.baseline,25,  'k', 'filled')
 scatter(2+sort(MS_randn_range(length(TFC2_bar.tone), 1, -.2, .2)), TFC2_bar.tone,25,  'k', 'filled')
 scatter(3+sort(MS_randn_range(length(TFC2_bar.trace), 1, -.2, .2)), TFC2_bar.trace,25,  'k', 'filled')
@@ -259,6 +260,12 @@ figure(202)
 clf
 subplot(2,3,1)
 hold on
+for ii = 1:length(TFC1.tone)
+   rectangle('position',  [TFC1.tone(ii,1)/60 0, (TFC1.tone(ii,2) - TFC1.tone(ii,1))/60, 1], 'FaceColor', [.7 .7 .7 .2], 'EdgeColor', 'none')
+   rectangle('position',  [TFC1.trace(ii,1)/60 0, (TFC1.trace(ii,2) - TFC1.trace(ii,1))/60, 1], 'FaceColor', c_ord(3,:), 'EdgeColor', 'none')
+   rectangle('position',  [TFC1.shock(ii,1)/60 0, (TFC1.shock(ii,2) - TFC1.shock(ii,1))/60, 1], 'FaceColor',[([210 240 10]/255) .8], 'EdgeColor', 'none')
+
+end
 plot(t_vec/60, mean(TFC1_out(TFC1_geno == 0,:)), 'color', c_ord(1,:), 'linewidth', 4)
 errorbar(t_vec/60, mean(TFC1_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 0,:)), 'color', c_ord(1,:)); 
 errorbar(t_vec/60, mean(TFC1_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 0,:)), 'color', c_ord(1,:)); 
@@ -267,12 +274,20 @@ plot(t_vec/60, mean(TFC1_out(TFC1_geno == 1,:)), 'color', c_ord(2,:), 'linewidth
 errorbar(t_vec/60, mean(TFC1_out(TFC1_geno == 1,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 1,:)), 'color', c_ord(2,:)); 
 errorbar(t_vec/60, mean(TFC1_out(TFC1_geno == 1,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 1,:)), 'color', c_ord(2,:)); 
 
-title('Aquisition'); 
+title('Context A: Aquisition'); 
 ylabel('%freezing')
 xlabel('time (s)')
+ylim([0 1])
 
 subplot(2,3,2)
+cla
 hold on
+for ii = 1:length(TFC2.tone)
+   rectangle('position',  [TFC2.tone(ii,1)/60 0, (TFC2.tone(ii,2) - TFC2.tone(ii,1))/60, 1], 'FaceColor', [.7 .7 .7 .2], 'EdgeColor', 'none')
+   rectangle('position',  [TFC2.trace(ii,1)/60 0, (TFC2.trace(ii,2) - TFC2.trace(ii,1))/60, 1], 'FaceColor', c_ord(3,:), 'EdgeColor', 'none')
+
+end
+
 plot(t_vec2/60, mean(TFC2_out(TFC1_geno == 0,:)), 'color', c_ord(1,:), 'linewidth', 4)
 errorbar(t_vec2/60, mean(TFC2_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
 errorbar(t_vec2/60, mean(TFC2_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
@@ -281,29 +296,30 @@ plot(t_vec2/60, mean(TFC2_out(TFC2_geno == 1,:)), 'color', c_ord(2,:), 'linewidt
 errorbar(t_vec2/60, mean(TFC2_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
 errorbar(t_vec2/60, mean(TFC2_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
 
-title('Context B + Tone'); 
+
+
+title('Context B: Trace Memory'); 
 ylabel('%freezing')
 xlabel('time (s)')
+ylim([0 1])
 
-subplot(2,3,5)
+subplot(2,3,3)
 hold on
-b = bar(1:4, [mean(TFC2_bar.baseline(TFC2_geno == 0)), mean(TFC2_bar.tone(TFC2_geno == 0)),mean(TFC2_bar.trace(TFC2_geno == 0)) mean(TFC2_bar.ITI(TFC2_geno == 0));...
-mean(TFC2_bar.baseline(TFC2_geno == 1)), mean(TFC2_bar.tone(TFC2_geno == 1)),mean(TFC2_bar.trace(TFC2_geno == 1)) mean(TFC2_bar.ITI(TFC2_geno == 1))]);
-b(1).FaceColor =  c_ord(1,:); 
-b(2).FaceColor =  c_ord(2,:);
+plot(t_vec3/60, mean(TFC3_out(TFC2_geno == 0,:)), 'color', c_ord(1,:), 'linewidth', 4)
+errorbar(t_vec3/60, mean(TFC3_out(TFC2_geno == 0,:)),MS_SEM_vec(TFC3_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
+errorbar(t_vec3/60, mean(TFC3_out(TFC2_geno == 0,:)),MS_SEM_vec(TFC3_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
 
-scatter(.8+sort(MS_randn_range(length(TFC2_bar.baseline(TFC2_geno == 0)), 1, -.1, .1)), TFC2_bar.baseline(TFC2_geno == 0),25,   c_ord(1,:), 'filled')
-scatter(1.8+sort(MS_randn_range(length(TFC2_bar.tone(TFC2_geno == 0)), 1, -.1, .1)), TFC2_bar.tone(TFC2_geno == 0),25,   c_ord(1,:), 'filled')
-scatter(2.8+sort(MS_randn_range(length(TFC2_bar.trace(TFC2_geno == 0)), 1, -.1, .1)), TFC2_bar.trace(TFC2_geno == 0),25,   c_ord(1,:), 'filled')
-scatter(3.8+sort(MS_randn_range(length(TFC2_bar.ITI(TFC2_geno == 0)), 1, -.1, .1)), TFC2_bar.ITI(TFC2_geno == 0),25,   c_ord(1,:), 'filled')
+plot(t_vec3/60, mean(TFC3_out(TFC2_geno == 1,:)), 'color', c_ord(2,:), 'linewidth', 4)
+errorbar(t_vec3/60, mean(TFC3_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC3_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
+errorbar(t_vec3/60, mean(TFC3_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC3_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
 
-scatter(1.2+sort(MS_randn_range(length(TFC2_bar.baseline(TFC2_geno == 1)), 1, -.1, .1)), TFC2_bar.baseline(TFC2_geno == 1),25,   c_ord(2,:), 'filled')
-scatter(2.2+sort(MS_randn_range(length(TFC2_bar.tone(TFC2_geno == 1)), 1, -.1, .1)), TFC2_bar.tone(TFC2_geno == 1),25,  c_ord(2,:), 'filled')
-scatter(3.2+sort(MS_randn_range(length(TFC2_bar.trace(TFC2_geno == 1)), 1, -.1, .1)), TFC2_bar.trace(TFC2_geno == 1),25,  c_ord(2,:), 'filled')
-scatter(4.2+sort(MS_randn_range(length(TFC2_bar.ITI(TFC2_geno == 1)), 1, -.1, .1)), TFC2_bar.ITI(TFC2_geno == 1),25,   c_ord(2,:), 'filled')
-xlim([.5 4.5])
-set(gca, 'xtick', 1:4, 'XTickLabel', {'Base', 'Tone', 'Trace', 'ITI'})
+title('Context A'': Context Memory'); 
+ylabel('%freezing')
+xlabel('time (s)')
+ylim([0 1])
 
+% plot(t_vec3/60, TFC3_out, 'linewidth', .5)
+% plot(t_vec3/60, mean(TFC3_out), 'k', 'linewidth', 4)
 
 subplot(2,3,4)
 cla
@@ -334,20 +350,37 @@ text(1.5, y_l(2)*1.1, 'Tone', 'HorizontalAlignment','center','VerticalAlignment'
 text(5.5,y_l(2)*1.1, 'Trace', 'HorizontalAlignment','center','VerticalAlignment','top')
 
 set(gca, 'xtick', [1:2 5:6], 'xticklabels', {'Tau -', 'Tau +', 'Tau -', 'Tau +'}, 'XTickLabelRotation', 45)
+y_l = ylim; 
 
 
 
-title('Context B')
+% title('Context B')
 ylabel('Trace freezing (%)')
 
 
-
-
-
-subplot(2,3,3)
+subplot(2,3,5)
 hold on
-plot(t_vec3/60, TFC3_out, 'linewidth', .5)
-plot(t_vec3/60, mean(TFC3_out), 'k', 'linewidth', 4)
+b = bar(1:4, [mean(TFC2_bar.baseline(TFC2_geno == 0)), mean(TFC2_bar.tone(TFC2_geno == 0)),mean(TFC2_bar.trace(TFC2_geno == 0)) mean(TFC2_bar.ITI(TFC2_geno == 0));...
+mean(TFC2_bar.baseline(TFC2_geno == 1)), mean(TFC2_bar.tone(TFC2_geno == 1)),mean(TFC2_bar.trace(TFC2_geno == 1)) mean(TFC2_bar.ITI(TFC2_geno == 1))]);
+b(1).FaceColor =  [1 1 1]; 
+b(2).FaceColor =   [1 1 1]; c_ord(2,:);
+
+scatter(.85+sort(MS_randn_range(length(TFC2_bar.baseline(TFC2_geno == 0)), 1, -.05, .05)), TFC2_bar.baseline(TFC2_geno == 0),25,   c_ord(1,:), 'filled')
+scatter(1.85+sort(MS_randn_range(length(TFC2_bar.tone(TFC2_geno == 0)), 1, -.05, .05)), TFC2_bar.tone(TFC2_geno == 0),25,   c_ord(1,:), 'filled')
+scatter(2.85+sort(MS_randn_range(length(TFC2_bar.trace(TFC2_geno == 0)), 1, -.05, .05)), TFC2_bar.trace(TFC2_geno == 0),25,   c_ord(1,:), 'filled')
+scatter(3.85+sort(MS_randn_range(length(TFC2_bar.ITI(TFC2_geno == 0)), 1, -.05, .05)), TFC2_bar.ITI(TFC2_geno == 0),25,   c_ord(1,:), 'filled')
+
+scatter(1.15+sort(MS_randn_range(length(TFC2_bar.baseline(TFC2_geno == 1)), 1, -.05, .05)), TFC2_bar.baseline(TFC2_geno == 1),25,   c_ord(2,:), 'filled')
+scatter(2.15+sort(MS_randn_range(length(TFC2_bar.tone(TFC2_geno == 1)), 1, -.05, .05)), TFC2_bar.tone(TFC2_geno == 1),25,  c_ord(2,:), 'filled')
+scatter(3.15+sort(MS_randn_range(length(TFC2_bar.trace(TFC2_geno == 1)), 1, -.05, .05)), TFC2_bar.trace(TFC2_geno == 1),25,  c_ord(2,:), 'filled')
+scatter(4.15+sort(MS_randn_range(length(TFC2_bar.ITI(TFC2_geno == 1)), 1, -.05, .05)), TFC2_bar.ITI(TFC2_geno == 1),25,   c_ord(2,:), 'filled')
+xlim([.5 4.5])
+set(gca, 'xtick', 1:4, 'XTickLabel', {'Base', 'Tone', 'Trace', 'ITI'})
+ylim(y_l)
+
+
+
+
 
 subplot(2,3,6)
 hold on
@@ -361,6 +394,22 @@ ylim([y_l(1) y_l(2)*1.1])
 hb(1).FaceColor = 'none';
 hb(1).EdgeColor = 'k';
 xlim([0 6])
-title('Context A Re-exposure')
+
+ylim(y_l)
+% title('Context A Re-exposure')
 ylabel('Contextual freezing (%)')
+%% convert data into csv
+
+table_out = table(TFC2_sub', TFC2_geno',TFC2_bar.baseline',TFC2_bar.tone', TFC2_bar.trace', TFC2_bar.ITI', TFC3_bar.baseline',...
+    'VariableNames', {'Subject', 'Genotype', 'TFC2_baseline', 'TFC2_tone', 'TFC2_trace', 'TFC2_ITI','TFC3_baseline'});
+
+writetable(table_out, 'TFC_bar_data.csv')
+
+%% save
+
+set(gcf,'PaperPositionMode','auto');         
+set(gcf,'PaperOrientation','landscape');
+set(gcf,'Position',[50 50 1200 800]);
+print(gcf, '-dpdf',[cd filesep 'figs' filesep 'TFC_summary.pdf'])
+
 end

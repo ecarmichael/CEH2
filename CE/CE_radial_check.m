@@ -1,7 +1,9 @@
 %% CE_radial_preprocess
 
 
-sub_list = {'1799', '1842', '1860', 'dSub_g8_E', 'dSub_g8_F'};
+% sub_list = {'1799', '1842', '1860', 'dSub_g8_E', 'dSub_g8_F'};
+
+sub_list = {'JKA_HPC_07'}
 
 if ispc
     usr_path = ['C:\Users\' getenv('username')];
