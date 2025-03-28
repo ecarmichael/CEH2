@@ -390,7 +390,7 @@ scatter(2+sort(MS_randn_range(length(TFC3_bar.baseline(TFC3_geno == 1)), 1, -.1,
 [hb, h, p] = MS_bar_w_err(TFC3_bar.baseline(TFC3_geno == 0), TFC3_bar.baseline(TFC3_geno == 1), [.2 .2 .2],1,  'ttest2');
 
 set(gca, 'xtick', 1:2, 'xticklabels', {'Tau -', 'Tau +'}, 'XTickLabelRotation', 45)
-
+ylim([y_l(1) y_l(2)*1.1])
 hb(1).FaceColor = 'none';
 hb(1).EdgeColor = 'k';
 xlim([0 6])
@@ -398,6 +398,12 @@ xlim([0 6])
 ylim(y_l)
 % title('Context A Re-exposure')
 ylabel('Contextual freezing (%)')
+%% convert data into csv
+
+table_out = table(TFC2_sub', TFC2_geno',TFC2_bar.baseline',TFC2_bar.tone', TFC2_bar.trace', TFC2_bar.ITI', TFC3_bar.baseline',...
+    'VariableNames', {'Subject', 'Genotype', 'TFC2_baseline', 'TFC2_tone', 'TFC2_trace', 'TFC2_ITI','TFC3_baseline'});
+
+writetable(table_out, 'TFC_bar_data.csv')
 
 %% save
 
