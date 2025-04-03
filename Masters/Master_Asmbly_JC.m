@@ -180,8 +180,8 @@ novel_idx = []; anx_idx = []; HS_idx = [];
 for iA = size(A_out,2):-1:1
     this_f = A_out{iA}{1}.info.session;
     
-    A_out{iA} = Pipeline_Asmbly_append_preA(A_out{iA});
-    A_out{iA} = Pipeline_Asmbly_append_postA(A_out{iA});
+    %A_out{iA} = Pipeline_Asmbly_append_preA(A_out{iA});
+    %A_out{iA} = Pipeline_Asmbly_append_postA(A_out{iA});
     
     if contains(this_f, 'HATDS')
         HS_idx(iA) = 1;
@@ -1782,6 +1782,8 @@ LM_map = fitlme(ReAct_long_tbl, 'Mean_map ~ Session * Open_Closed * Pre_post + (
 figure(8989); clf
 boxchart(ReAct_long_tbl.Session, ReAct_long_tbl.Mean_map, 'GroupbyColor', ReAct_long_tbl.Open_Closed)
 legend
+set(gca, 'xticklabel', {'Familiar', 'Anxiety'})
+
 writetable(ReAct_long_tbl, [inter_dir filesep 'Map_ReAct_tbl.csv'])
 
 % same but with the difference between open and closed
@@ -1821,10 +1823,11 @@ Diff_tbl.Pre_post = categorical(Diff_tbl.Pre_post);
 
 diff_LM_map = fitlme(Diff_tbl, 'Mean_map ~ Session * Pre_post + (1|Subject)')
 anova(diff_LM_map)
-figure(8989); clf
+figure(89892); clf
 boxchart(Diff_tbl.Session, Diff_tbl.Mean_map, 'GroupbyColor', Diff_tbl.Pre_post)
 legend
-
+set(gca, 'xticklabel', {'Familiar', 'Anxiety'})
+ylabel({'reactivation bias'; '<---- Closed    |    Open --->'})
 writetable(Diff_tbl, [inter_dir filesep 'diff_tbl.csv'])
 
 
@@ -1923,28 +1926,128 @@ title('Wake assemblies in Pre and Post REM')
 
 %% quick stats
 
-lme_wake_A = fitlme(tbl,'nWake_A~Cond+(1|Sub)');
-fprintf('nWake_A: coef test p = %2.4f\n', coefTest(lme_wake_A))
 
-lme_pre_sig = fitlme(tbl,'nPre_sig~Cond+(1|Sub)');
-fprintf('nPre_Sig: coef test p = %2.4f\n', coefTest(lme_pre_sig))
+disp('Nov FAM AnxN AnxF AnxS')
+lme_mod = fitlme(tbl,'nWake_A~Cond+(1|Sub)', 'DummyVarCoding', 'reference');
+A = lme_mod.anova; 
+fprintf('%s |  F: %2.4f test p = %2.4f\n',lme_mod.Formula,   A.FStat(2), coefTest(lme_mod))
+% 
+% lme_mod = fitlme(tbl,'nPre_sig~Cond+(1|Sub)');
+% A = lme_mod.anova; 
+% fprintf('%s |  F: %2.4f test p = %2.4f\n',lme_mod.Formula,   A.FStat(2), coefTest(lme_mod))
+% 
+% lme_mod = fitlme(tbl,'nPost_sig~Cond+(1|Sub)');
+% A = lme_mod.anova; 
+% fprintf('%s |  F: %2.4f test p = %2.4f\n',lme_mod.Formula,   A.FStat(2), coefTest(lme_mod))
+% 
+% lme_mod = fitlme(tbl,'nPre_A~Cond+(1|Sub)');
+% A = lme_mod.anova; 
+% fprintf('%s |  F: %2.4f test p = %2.4f\n',lme_mod.Formula,   A.FStat(2), coefTest(lme_mod))
 
-lme_post_sig = fitlme(tbl,'nPost_sig~Cond+(1|Sub)');
-fprintf('nPost_Sig: coef test p = %2.4f\n', coefTest(lme_post_sig))
+lme_mod = fitlme(tbl,'ReAct_str ~Cond+(1|Sub)', 'DummyVarCoding', 'reference');
+A = lme_mod.anova; 
+fprintf('%s |  F: %2.4f test p = %2.4f\n',lme_mod.Formula,   A.FStat(2), coefTest(lme_mod))
 
-lme_pre_A = fitlme(tbl,'nPre_A~Cond+(1|Sub)');
-fprintf('nPre_A: coef test p = %2.4f\n', coefTest(lme_pre_A))
+lme_mod = fitlme(tbl,'nWake_R ~Cond+(1|Sub)', 'DummyVarCoding', 'reference');
+A = lme_mod.anova; 
+fprintf('%s |  F: %2.4f test p = %2.4f\n',lme_mod.Formula,   A.FStat(2), coefTest(lme_mod))
 
-lme_ReAct = fitlme(tbl,'ReAct_str ~Cond+(1|Sub)');
-fprintf('ReAct_Str: coef test p = %2.4f\n', coefTest(lme_ReAct))
+NFA_tbl = tbl; 
 
-lme_wake_R = fitlme(tbl,'nWake_R ~Cond+(1|Sub)');
-fprintf('nWake_R: coef test p = %2.4f\n', coefTest(lme_wake_R))
+NFA_tbl((NFA_tbl.Cond == '4' | NFA_tbl.Cond == '5'), :) = []; 
+NFA_tbl.Cond = nominal(NFA_tbl.Cond);
+
+disp('Novel, Fam, Anxiety only')
+lme_mod = fitlme(NFA_tbl,'nWake_A~Cond+(1|Sub)', 'DummyVarCoding', 'reference');
+A = lme_mod.anova; 
+fprintf('%s |  F: %2.4f test p = %2.4f\n',lme_mod.Formula,   A.FStat(2), coefTest(lme_mod))
+% 
+% lme_mod = fitlme(tbl,'nPre_sig~Cond+(1|Sub)');
+% A = lme_mod.anova; 
+% fprintf('%s |  F: %2.4f test p = %2.4f\n',lme_mod.Formula,   A.FStat(2), coefTest(lme_mod))
+% 
+% lme_mod = fitlme(tbl,'nPost_sig~Cond+(1|Sub)');
+% A = lme_mod.anova; 
+% fprintf('%s |  F: %2.4f test p = %2.4f\n',lme_mod.Formula,   A.FStat(2), coefTest(lme_mod))
+% 
+% lme_mod = fitlme(tbl,'nPre_A~Cond+(1|Sub)');
+% A = lme_mod.anova; 
+% fprintf('%s |  F: %2.4f test p = %2.4f\n',lme_mod.Formula,   A.FStat(2), coefTest(lme_mod))
+
+lme_mod = fitlme(NFA_tbl,'ReAct_str ~Cond+(1|Sub)', 'DummyVarCoding', 'reference');
+A = lme_mod.anova; 
+fprintf('%s |  F: %2.4f test p = %2.4f\n',lme_mod.Formula,   A.FStat(2), coefTest(lme_mod))
+
+lme_mod = fitlme(NFA_tbl,'nWake_R ~Cond+(1|Sub)', 'DummyVarCoding', 'reference');
+A = lme_mod.anova; 
+fprintf('%s |  F: %2.4f test p = %2.4f\n',lme_mod.Formula,   A.FStat(2), coefTest(lme_mod))
 % stats = anova1(lme_wake_A);
-% multcompare(stats)
+%  multcompare(stats)
+
+% anova2(tbl, {nPre_sig, nPost_sig}, 'Cond')
+
+% same but with ANOVAs
 
 
 
+%% GLM comparing Novel and limit to just familiar vs Anx
+
+tbl_glm = tbl; 
+
+
+lt_idx = (tbl.Cond == '2'); 
+ht_idx = tbl.Cond == '3'; 
+
+tbl_lt_ht = tbl; 
+tbl_lt_ht(~(lt_idx | ht_idx),:) = []; 
+
+
+lt_ht_nPre_A = fitlme(tbl,'nPre_A  ~ Cond + (Sub)');
+fprintf('LME - nPre_A: coef test p = %2.4f\n', coefTest(lt_ht_nPre_A))
+
+
+% new var for LT5 vs HAT1
+
+%% check against anovan
+y = [tbl_lt_ht.nPre_sig ; tbl_lt_ht.nPost_sig];
+cond = ones(size(tbl_lt_ht.Cond)); 
+cond(tbl_lt_ht.Cond == '2') = 1; 
+cond(tbl_lt_ht.Cond == '3') = 2; 
+cond = [cond; cond]; 
+
+cond_c = cell(size(cond)); 
+for ii = length(cond_c)
+    if cond(ii) == 1
+        cond_c{ii} = 'Fam'; 
+    elseif cond(ii) == 2;
+        cond_c{ii} = 'Anx';
+    end
+end
+
+pre_post = [ones(size(tbl_lt_ht.Cond));  ones(size(tbl_lt_ht.Cond))+1];
+% g1 = tbl_lt_ht.Cond; 
+
+% % tbl_lt_ht = [];
+% tbl_
+
+% lme_pre_post_sig = fitlme(tbl_lt_ht, 'score'
+
+[p, tbl, stats] = anovan(y, {cond,pre_post}, 2,2, {'cond', 'pre_post'});
+
+c1 = multcompare(stats);
+tbl1 = array2table(c1,"VariableNames", ...
+    ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"])
+
+
+
+figure(1919)
+subplot(2,2,1)
+boxchart(pre_post, y,'GroupByColor',cond)
+subplot(2,2,3:4)
+bar([median(y(cond == 1 & pre_post == 1)), median(y(cond == 1 & pre_post == 2)); median(y(cond == 2 & pre_post == 1)), median(y(cond == 2 & pre_post == 2))]) 
+hold on
+errorbar_groups([median(y(cond == 1 & pre_post == 1)), median(y(cond == 1 & pre_post == 2)); median(y(cond == 2 & pre_post == 1)), median(y(cond == 2 & pre_post == 2))])
+% anova2(tbl.nWake_A, tbl_lt_ht.Cond)
 
 
 %% plot number of significant assemblies
@@ -2518,9 +2621,9 @@ for ii = 1:5
     % add 'walls'
     if ii == 1 || ii == 2
         rectangle('position', [off_set(ii)-1, p_centr(1), 2, p_centr(end)- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
-    elseif ii == 3 || ii ==4
+    elseif ii == 5
         rectangle('position', [off_set(ii)-1, p_centr(ceil(length(p_centr)/2)), 2, p_centr(end)- p_centr(ceil(length(p_centr)/2))], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
-    elseif ii ==5
+    elseif ii == 3 || ii ==4
         rectangle('position', [off_set(ii)-1, p_centr(1), 2, p_centr(ceil(length(p_centr)/2))- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
     end
     
@@ -2563,9 +2666,9 @@ for ii = 1:5
     
     if ii == 1 || ii == 2
         rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(end)- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
-    elseif ii == 3 || ii ==4
+    elseif ii == 5
         rectangle('position', [off_set(ii), p_centr(ceil(length(p_centr)/2)), mode(diff(off_set))*.75, p_centr(end)- p_centr(ceil(length(p_centr)/2))], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
-    elseif ii ==5
+    elseif ii == 3 || ii ==4
         rectangle('position', [off_set(ii), p_centr(1), mode(diff(off_set))*.75, p_centr(ceil(length(p_centr)/2))- p_centr(1)], 'FaceColor', [.9 .9 .9 .9], 'EdgeColor', [1 1 1]);
     end
     
@@ -2598,7 +2701,7 @@ eb = errorbar([nanmean(nWake_A(Cond==1)), nanmean(nWake_A(Cond ==2)), nanmean(nW
 eb.LineStyle = 'none';
 eb.Color = 'k';
 set(gca, 'XTickLabel', {'Novel', 'Familiar', 'HAT_{nov}', 'HAT_{fam}', 'HAT_{sw}'}, 'XTickLabelRotation', 45)
-ylim(y_lim);
+% ylim(y_lim);
 title('Wake Assemblies in Wake')
 axis('square')
 ylabel('Number of assemblies')
@@ -2789,6 +2892,71 @@ ylim([0 25])%max(y, [], 'all')+max(err, [], 'all')*1.5]);
 title('wake assemblies in REM')
 axis('square')
 
+% Fam vs Anx
+
+subplot(2,4,8)
+% try to get the pre and post REM assemblies in one plot
+wake_mean = [nanmean(nWake_A(Cond==2)), nanmean(nWake_A(Cond ==3))]; 
+pre_mean = [nanmean(nPre_sig(Cond==2)), nanmean(nPre_sig(Cond ==3))];
+post_mean = [nanmean(nPost_sig(Cond==2)), nanmean(nPost_sig(Cond ==3))];
+wake_err = [MS_SEM(nWake_A(Cond==2)), MS_SEM(nWake_A(Cond ==3))];
+pre_err = [MS_SEM(nPre_sig(Cond==2)), MS_SEM(nPre_sig(Cond ==3))];
+post_err = [MS_SEM(nPost_sig(Cond==2)), MS_SEM(nPost_sig(Cond ==3))];
+
+y = [pre_mean;  post_mean]';
+err = [pre_err;  post_err]';
+
+cla;
+hb = bar(y, 1); % get the bar handles
+hold on;
+% xpos = ;
+pause(.5)
+
+errorbar(hb(1).XData + hb(1).XOffset, y(:,1), err(:,1), 'LineStyle', 'none', ...
+    'Color', 'k');
+pause(.5)
+errorbar(hb(2).XData + hb(2).XOffset, y(:,2), err(:,2), 'LineStyle', 'none', ...
+    'Color', 'k');
+
+% ylim(y_lim);
+
+
+for ii = 1:2
+    hb(ii).FaceColor ='flat';
+    hb(ii).EdgeColor ='none';
+    
+    for jj = 1:2
+        if jj == 1
+            hb(ii).CData(jj,:) = f_ord(2,:);
+        elseif jj ==2
+            hb(ii).CData(jj,:) = f_ord(3,:);
+        end
+        % set the alpha for the pre and post.
+        if ii == 1
+            hb(ii).FaceAlpha = .7;
+        elseif ii == 2
+            hb(ii).FaceAlpha = .3;
+        end
+    end
+end
+ylim([0 25])%max(y, [], 'all')+max(err, [], 'all')*1.5]);
+set(gca, 'XTickLabel', {'Familiar', 'Anxiety'}, 'XTickLabelRotation', 45)
+axis('square')
+title('Wake assemblies in REM')
+legend({'pre' 'post'}, 'box', 'off')
+% color
+
+cond_val = [ones(1,length(nPre_sig(Cond==1))), ones(1,length(nPre_sig(Cond==3)))+1]; 
+pre_post = [ones(1,length(cond_val)), ones(1,length(cond_val))+1]; 
+cond_val = [cond_val, cond_val]; 
+
+c1 = anovan([nPre_sig(Cond==1)  nPre_sig(Cond ==3), nPost_sig(Cond==1)  nPost_sig(Cond ==3) ], {cond_val, pre_post});
+tbl1 = array2table(c1,"VariableNames", ...
+    ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"])
+
+
+
+%
 
 subplot(2,4,4)
 cla
@@ -2811,7 +2979,216 @@ set(gcf,'Units','Inches');
 pos = get(gcf,'Position');
 set(gcf,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
 
+
+
+
+
+
+
 print(gcf,  [fig_dir filesep   'Stats_summery_SfN_pre_' strrep(num2str(A_out{1}{1}.info.bin), '.', 'p') 's_bin.pdf'], '-dpdf','-r0')
+
+
+%% compare the pre and post across novel, familiar and anxiety
+figure(19199)
+subplot(2,4,1)
+% try to get the pre and post REM assemblies in one plot
+wake_mean = [nanmean(nWake_A(Cond==1)), nanmean(nWake_A(Cond==2)), nanmean(nWake_A(Cond ==3))]; 
+pre_mean = [nanmean(nPre_sig(Cond==1)), nanmean(nPre_sig(Cond==2)), nanmean(nPre_sig(Cond ==3))];
+post_mean = [nanmean(nPost_sig(Cond==1)), nanmean(nPost_sig(Cond==2)), nanmean(nPost_sig(Cond ==3))];
+wake_err = [MS_SEM(nWake_A(Cond==1)), MS_SEM(nWake_A(Cond==2)), MS_SEM(nWake_A(Cond ==3))];
+pre_err = [MS_SEM(nPre_sig(Cond==1)), MS_SEM(nPre_sig(Cond==2)), MS_SEM(nPre_sig(Cond ==3))];
+post_err = [MS_SEM(nPost_sig(Cond==1)),MS_SEM(nPost_sig(Cond==2)), MS_SEM(nPost_sig(Cond ==3))];
+
+y = [pre_mean;  post_mean]';
+err = [pre_err;  post_err]';
+
+cla;
+hb = bar(y, 1); % get the bar handles
+hold on;
+% xpos = ;
+pause(.5)
+
+errorbar(hb(1).XData + hb(1).XOffset, y(:,1), err(:,1), 'LineStyle', 'none', ...
+    'Color', 'k');
+pause(.5)
+errorbar(hb(2).XData + hb(2).XOffset, y(:,2), err(:,2), 'LineStyle', 'none', ...
+    'Color', 'k');
+
+% ylim(y_lim);
+
+
+for ii = 1:2
+    hb(ii).FaceColor ='flat';
+    hb(ii).EdgeColor ='none';
+    
+    for jj = 1:3
+        if jj == 1
+            hb(ii).CData(jj,:) = f_ord(4,:);
+        elseif jj ==2
+            hb(ii).CData(jj,:) = f_ord(2,:);
+        elseif jj ==3
+            hb(ii).CData(jj,:) = f_ord(3,:);
+        end 
+        % set the alpha for the pre and post.
+        if ii == 1
+            hb(ii).FaceAlpha = .7;
+        elseif ii == 2
+            hb(ii).FaceAlpha = .3;
+        end
+    end
+end
+ylim([0 20])%max(y, [], 'all')+max(err, [], 'all')*1.5]);
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'Anxiety'}, 'XTickLabelRotation', 45)
+axis('square')
+ylabel({'Num. wake assemblies'; 'reactivated in REM'})
+legend({'pre' 'post'}, 'box', 'off')
+% color
+
+cond_val = [ones(1,length(nPre_sig(Cond==1))),ones(1,length(nPre_sig(Cond==2)))+1 ones(1,length(nPre_sig(Cond==3)))+2]; 
+pre_post = [ones(1,length(cond_val)), ones(1,length(cond_val))+1]; 
+cond_val = [cond_val, cond_val]; 
+
+[~,a_tbl, stats] = anovan([nPre_sig(Cond==1)  nPre_sig(Cond ==2) nPre_sig(Cond ==3), nPost_sig(Cond==1)  nPost_sig(Cond ==2) nPost_sig(Cond ==3) ], {cond_val, pre_post}, 2,3,  {'cond', 'pre_post'}, 'off');
+a_tbl(:, 4) = []; 
+
+c1 = multcompare(stats,'display','off');
+ca_tbl1 = array2table(c1,"VariableNames", ...
+    ["A","B","Lower Limit","A-B","Upper Limit","P-value"]);
+ca_tbl_cell =["A","B","Lower Limit","A-B","Upper Limit","P-value";  table2cell(ca_tbl1)]; 
+ca_tbl_cell(:, 4) = []; 
+figure(19199)
+subplot(2,4,2)
+cla
+for ii = 1:size(ca_tbl_cell,1)
+    for jj = 1:size(ca_tbl_cell,2)
+            if jj == 1 || jj == 2 || jj ==3; 
+        f = .75;  
+    else
+        f = 1;
+    end 
+        if isnumeric(ca_tbl_cell{ii, jj})
+            text((jj-1)*f, -ii-.5, num2str(ca_tbl_cell{ii, jj},3), 'fontsize', 8)
+        else
+            text((jj-1)*f, -ii, ca_tbl_cell{ii, jj}, 'fontsize',8)
+        end
+    end
+end
+
+for ii = 1:size(a_tbl,1)-2
+       for jj = 1:size(a_tbl,2)
+        if isnumeric(a_tbl{ii, jj})
+            text((jj-1)*f, -ii+size(a_tbl,2)-1.5, num2str(a_tbl{ii, jj},3), 'fontsize', 8)
+        else
+            text((jj-1)*f, -ii+size(a_tbl,2)-1, a_tbl{ii, jj}, 'fontsize',8)
+        end
+    end
+end
+xlim([0 size(ca_tbl_cell, 2)*f])
+
+ylim([-size(ca_tbl_cell,2) size(a_tbl,2)-1])
+axis off
+
+%% same thing but for the rate
+% try to get the pre and post REM assemblies in one plot
+wake_mean = [nanmean(nWake_A(Cond==1)), nanmean(nWake_A(Cond==2)), nanmean(nWake_A(Cond ==3))]; 
+pre_mean = [nanmean(nPre_sig(Cond==1)), nanmean(nPre_sig(Cond==2)), nanmean(nPre_sig(Cond ==3))];
+post_mean = [nanmean(nPost_sig(Cond==1)), nanmean(nPost_sig(Cond==2)), nanmean(nPost_sig(Cond ==3))];
+wake_err = [MS_SEM(nWake_A(Cond==1)), MS_SEM(nWake_A(Cond==2)), MS_SEM(nWake_A(Cond ==3))];
+pre_err = [MS_SEM(nPre_sig(Cond==1)), MS_SEM(nPre_sig(Cond==2)), MS_SEM(nPre_sig(Cond ==3))];
+post_err = [MS_SEM(nPost_sig(Cond==1)),MS_SEM(nPost_sig(Cond==2)), MS_SEM(nPost_sig(Cond ==3))];
+
+
+y = [pre_mean; wake_mean; post_mean]';
+err = [pre_err; wake_err; post_err]';
+
+y = [pre_mean;  post_mean]';
+err = [pre_err;  post_err]';
+
+cla;
+hb = bar(y, 1); % get the bar handles
+hold on;
+% xpos = ;
+pause(.5)
+
+errorbar(hb(1).XData + hb(1).XOffset, y(:,1), err(:,1), 'LineStyle', 'none', ...
+    'Color', 'k');
+pause(.5)
+errorbar(hb(2).XData + hb(2).XOffset, y(:,2), err(:,2), 'LineStyle', 'none', ...
+    'Color', 'k');
+
+% ylim(y_lim);
+
+
+for ii = 1:2
+    hb(ii).FaceColor ='flat';
+    hb(ii).EdgeColor ='none';
+    
+    for jj = 1:3
+        if jj == 1
+            hb(ii).CData(jj,:) = f_ord(4,:);
+        elseif jj ==2
+            hb(ii).CData(jj,:) = f_ord(2,:);
+        elseif jj ==3
+            hb(ii).CData(jj,:) = f_ord(3,:);
+        end 
+        % set the alpha for the pre and post.
+        if ii == 1
+            hb(ii).FaceAlpha = .7;
+        elseif ii == 2
+            hb(ii).FaceAlpha = .3;
+        end
+    end
+end
+ylim([0 20])%max(y, [], 'all')+max(err, [], 'all')*1.5]);
+set(gca, 'XTickLabel', {'Novel', 'Familiar', 'Anxiety'}, 'XTickLabelRotation', 45)
+axis('square')
+ylabel('Wake assemblies in REM')
+legend({'pre' 'post'}, 'box', 'off')
+% color
+
+cond_val = [ones(1,length(nPre_sig(Cond==1))),ones(1,length(nPre_sig(Cond==2)))+1 ones(1,length(nPre_sig(Cond==3)))+2]; 
+pre_post = [ones(1,length(cond_val)), ones(1,length(cond_val))+1]; 
+cond_val = [cond_val, cond_val]; 
+
+[~,a_tbl, stats] = anovan([nPre_sig(Cond==1)  nPre_sig(Cond ==2) nPre_sig(Cond ==3), nPost_sig(Cond==1)  nPost_sig(Cond ==2) nPost_sig(Cond ==3) ], {cond_val, pre_post}, 2,3,  {'cond', 'pre_post'}, 'off');
+a_tbl(:, 4) = []; 
+
+c1 = multcompare(stats,'display','off');
+ca_tbl1 = array2table(c1,"VariableNames", ...
+    ["A","B","Lower Limit","A-B","Upper Limit","P-value"]);
+ca_tbl_cell =["A","B","Lower Limit","A-B","Upper Limit","P-value";  table2cell(ca_tbl1)]; 
+ca_tbl_cell(:, 4) = []; 
+figure(19199)
+subplot(2,4,2)
+cla
+for ii = 1:size(ca_tbl_cell,1)
+    for jj = 1:size(ca_tbl_cell,2)
+            if jj == 1 || jj == 2 || jj ==3; 
+        f = .75;  
+    else
+        f = 1;
+    end 
+        if isnumeric(ca_tbl_cell{ii, jj})
+            text((jj-1)*f, -ii-.5, num2str(ca_tbl_cell{ii, jj},3), 'fontsize', 8)
+        else
+            text((jj-1)*f, -ii, ca_tbl_cell{ii, jj}, 'fontsize',8)
+        end
+    end
+end
+
+for ii = 1:size(a_tbl,1)-2
+       for jj = 1:size(a_tbl,2)
+        if isnumeric(a_tbl{ii, jj})
+            text((jj-1)*f, -ii+size(a_tbl,2)-1.5, num2str(a_tbl{ii, jj},3), 'fontsize', 8)
+        else
+            text((jj-1)*f, -ii+size(a_tbl,2)-1, a_tbl{ii, jj}, 'fontsize',8)
+        end
+    end
+end
+xlim([0 size(ca_tbl_cell, 2)*f])
+
+ylim([-size(ca_tbl_cell,2) size(a_tbl,2)-1])
+axis off
 
 %% plot a specific example
 N_idx = []; F_idx = [];
