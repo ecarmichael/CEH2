@@ -34,6 +34,14 @@ end
 
 c_ord = linspecer(8); 
 
+
+%% swap data from the miniscope format to tsd; 
+
+pos_tsd = []; 
+pos_tsd.data = pos.position' ;
+pos_tsd.tvec = pos.time; 
+
+pos = pos_tsd; 
 %% create a basic grid
 xmin = 20; % make sure these are bigger and consistent across sessions. 
 xmax = 120; 
@@ -79,13 +87,59 @@ c_idx = inpolygon(pos.data(1,:), pos.data(2,:), c_x, c_y);
 pattern.c_idx = c_idx; 
 plot(pos.data(1,c_idx), pos.data(2,c_idx), '.r')
 
+%% draw rectangle and then rotate. 
 
+this_axis = MS_drawrectangle_wait
+
+%%
+this_poly = polyshape([this_axis.Position(1), this_axis.Position(1) this_axis.Position(1)+this_axis.Position(3), this_axis.Position(1)+this_axis.Position(3)],...
+    [this_axis.Position(2)+this_axis.Position(4), this_axis.Position(2),this_axis.Position(2), this_axis.Position(2)+this_axis.Position(4)]);
+% plot(this_poly)
+
+% NE_axis = this_axis; 
+% NE_axis.RotationAngle = 45; 
+
+% NE_poly = polyshape([NE_axis.Position(1), NE_axis.Position(1) NE_axis.Position(1)+NE_axis.Position(3), NE_axis.Position(1)+NE_axis.Position(3)],...
+    % [NE_axis.Position(2)+NE_axis.Position(4), NE_axis.Position(2),NE_axis.Position(2), NE_axis.Position(2)+NE_axis.Position(4)]);
+
+    NE_poly = rotate(this_poly, 45, pattern.c_cent);
+plot(NE_poly)
+
+% EW_axis = this_axis; 
+% EW_axis.RotationAngle = 90; 
+% 
+% EW_poly = polyshape([EW_axis.Position(1), EW_axis.Position(1) EW_axis.Position(1)+EW_axis.Position(3), EW_axis.Position(1)+EW_axis.Position(3)],...
+%     [EW_axis.Position(2)+EW_axis.Position(4), EW_axis.Position(2),EW_axis.Position(2), EW_axis.Position(2)+EW_axis.Position(4)]);
+% 
+
+    EW_poly = rotate(this_poly, 90, pattern.c_cent);
+
+plot(EW_poly)
+
+% SE_axis = this_axis; 
+% SE_axis.RotationAngle = 135; 
+% 
+% SE_poly = polyshape([SE_axis.Position(1), SE_axis.Position(1) SE_axis.Position(1)+SE_axis.Position(3), SE_axis.Position(1)+SE_axis.Position(3)],...
+%     [SE_axis.Position(2)+SE_axis.Position(4), SE_axis.Position(2),SE_axis.Position(2), SE_axis.Position(2)+SE_axis.Position(4)]);
+
+    SE_poly = rotate(this_poly, 135, pattern.c_cent);
+
+plot(SE_poly)
+
+rad_poly = union(this_poly, SE_poly); 
+rad_poly = union(rad_poly, EW_poly); 
+rad_poly = union(rad_poly, NE_poly); 
+
+%% plot again
+hold on
+
+plot(rad_poly, 'FaceColor','r')
 
 %% try it with a line. 
 
     % north arm
 if ~isfield(pattern, 'N')
-
+    disp('Draw north arm')
     this_arm = drawline(gca, 'color', c_ord(1,:));
     pattern.N.pos = this_arm.Position; 
 
@@ -93,24 +147,28 @@ end
     
 
 if ~isfield(pattern, 'NE')
+        disp('Draw north east arm')
     this_arm = drawline(gca, 'color', c_ord(2,:));
     pattern.NE.pos = this_arm.Position; 
 
 end
 
 if ~isfield(pattern, 'E')
+        disp('Draw east arm')
     this_arm = drawline(gca, 'color', c_ord(3,:));
     pattern.E.pos = this_arm.Position; 
 end
 
 % South East arm
 if ~isfield(pattern, 'SE')
+        disp('Draw south east arm')
    this_arm = drawline(gca, 'color', c_ord(4,:));
     pattern.SE.pos = this_arm.Position; 
 end
 
 % South  arm
 if ~isfield(pattern, 'S')
+        disp('Draw south arm')
    this_arm = drawline(gca, 'color', c_ord(5,:));
     pattern.S.pos = this_arm.Position; 
 end
@@ -118,6 +176,7 @@ end
 
 % South West arm
 if ~isfield(pattern, 'SW')
+        disp('Draw south west arm')
    this_arm = drawline(gca, 'color', c_ord(6,:));
    pattern.SW.pos = this_arm.Position; 
 end
@@ -125,15 +184,45 @@ end
 
 %  West arm
 if ~isfield(pattern, 'W')
+        disp('Draw west arm')
    this_arm = drawline(gca, 'color', c_ord(7,:));
     pattern.W.pos = this_arm.Position; 
 end
 
 %  North West arm
 if ~isfield(pattern, 'NW')
+        disp('Draw north west arm')
    this_arm = drawline(gca, 'color', c_ord(8,:));
     pattern.NW.pos = this_arm.Position; 
 end
+
+%% draw lines using the center of the maze and drawing a line out to the end from the center. 
+
+figure(10)
+clf
+hold on
+plot(pos.data(1,:), pos.data(2,:), '.')
+MS_rescale_axis(pos.data(1,:), pos.data(2,:), 0.1)
+
+axis equal
+
+arms = {'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'}; 
+
+t = 0:0.01:2*pi; % use to make a circle. 
+
+c_x = cos(t)*pattern.c_rad+pattern.c_cent(1);
+c_y = sin(t)*pattern.c_rad+pattern.c_cent(2);
+
+hold on
+plot(c_x, c_y, '.r')
+plot(pattern.c_cent(1), pattern.c_cent(2), 'x')
+
+for iA = 1:length(arms)
+    line([pattern.c_cent(1) pattern.(arms{iA}).pos(1,1)]', [pattern.c_cent(2) pattern.(arms{iA}).pos(1,2)]','color',  c_ord(iA,:), 'linewidth', 3)
+    % line_grid(:, )
+end
+
+
 
 
 %%  Snap the arms using a polygon for each arm;
@@ -210,8 +299,20 @@ pos.data(2,:) = fillmissing(pos.data(2,:), 'nearest');
 %% Snap to line in arm. 
 linpos_temp(keep_idx) = griddata(Coord_in.coord(1,:),Coord_in.coord(2,:),coord_vals,x(keep_idx),y(keep_idx),'nearest');
 
-
-
+%% try to make a hex grid
+% 
+% Rad3Over2 = sqrt(3) / 2;
+% [X Y] = meshgrid(0:2:xmax+3);
+% n = size(X,1);
+% X = Rad3Over2 * X;
+% Y = Y + repmat([0 0.5],[n,n/2]);
+% 
+% Plot the hexagonal mesh, including cell borders
+% [XV YV] = voronoi(X(:),Y(:)); plot(XV,YV,'b-')
+% axis equal, axis([10 20 10 20]), zoom on
+% 
+% 
+% histogram2(pos.data(1,:), pos.data(2,:), XV(1,:), YV(2,:))
 end
 
 
