@@ -67,8 +67,8 @@ flash_enc = flash_t(flash_t < ms.time(ms.timestamps(1)));
 flash_rec = flash_t(flash_t > ms.time(sum(ms.timestamps(1:2))+2));
 
 
-plot(flash_enc, h.Values(flash_t < ms.time(ms.timestamps(1))), 'xb')
-plot(flash_rec, h.Values(flash_t > ms.time(sum(ms.timestamps(1:2))+2)), 'xr')
+plot(flash_enc-(h.BinWidth/2), h.Values(flash_t < ms.time(ms.timestamps(1))), 'xb')
+plot(flash_rec-(h.BinWidth/2), h.Values(flash_t > ms.time(sum(ms.timestamps(1:2))+2)), 'xr')
 
 xline(ms.time(sum(ms.timestamps(1:2))+3))
 linkaxes(ax, 'x')
