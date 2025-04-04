@@ -227,78 +227,78 @@ for ii =1:8
     Rad{ii}.nPoints = size(Coord,2);
     Rad{ii}.pointDist = pdist(Coord(:,1:2)','euclidean');
     Rad{ii}.standardized = 0;
-    Rad.label{ii} = labels{ii}; 
+    Rad{ii}.label = labels{ii}; 
 end
 
 
 
-
-
-%%
-if isempty(newX) || isempty(newY)
-	[newY,newX] = ginput;
-	newX = abs(newX)';
-	newY = abs(newY)';
-end
-
-% wrap around the path
-if wraparound
-    newX(end + 1) = newX(1);
-    newY(end + 1) = newY(1);
-end
-
-% add 1 pixel of jitter to any consequtive points which have the same x or y values
-while any(diff(newX) == 0) || any(diff(newY) == 0)
-    newX(find(diff(newX) == 0)) = newX(find(diff(newX) == 0)) + 1;
-    newY(find(diff(newY) == 0)) = newY(find(diff(newY) == 0)) + 1;
-end
-
-Coord = [newX; newY];
-
-% find the distance between each Coord point
-dCoord = diff(Coord');
-lCoord = sum((dCoord.*dCoord)').^0.5;
-
-% Set up an array for the interpolated points
-newPoints = [];
-for iF = 1:length(lCoord)
-    newPoints = [newPoints, Coord(:,iF)];
-    if lCoord(iF) > MaxDist
-        m = dCoord(iF,2)/dCoord(iF,1);
-        b = (Coord(2,iF) - m*(Coord(1,iF)));
-        nPoints = floor(lCoord(iF)/MaxDist);  % number of points to add
-        StepSize = -(Coord(1,iF) - Coord(1,iF + 1))/nPoints;
-        for iN = 1:nPoints - 1
-            newY = m*(Coord(1,iF) + StepSize*(iN)) + b;
-            Coord(1,iF);
-            newPoints = [newPoints, [(Coord(1,iF) + StepSize*(iN)) newY]'];
-        end
-    end
-end
-newPoints = [newPoints, Coord(:,end)];
-Coord = newPoints;
-
-% Show the idealized path
-plot(Coord(2,:),Coord(1,:),'og');
-plot(Coord(2,1),Coord(1,1),'*b'); %start
-plot(Coord(2,end),Coord(1,end),'*r'); %end
-
-% trying to get the function to plot how user wants to see it, but also
-% output the coord correctly. So this hack seems to work (ACarey)
-temp = Coord(2,:); 
-Coord(2,:) = Coord(1,:); 
-Coord(1,:) = temp; 
-% end of hack
-
-pause(2);
-close 
-
-%% housekeeping
-Coord_out = [];
-Coord_out.coord = Coord;
-Coord_out.units = tsd_in.units;
-Coord_out.run_dist = run_dist;
-Coord_out.nPoints = size(Coord,2);
-Coord_out.pointDist = pdist(Coord(:,1:2)','euclidean');
-Coord_out.standardized = 0;
+% 
+% 
+% %%
+% if isempty(newX) || isempty(newY)
+% 	[newY,newX] = ginput;
+% 	newX = abs(newX)';
+% 	newY = abs(newY)';
+% end
+% 
+% % wrap around the path
+% if wraparound
+%     newX(end + 1) = newX(1);
+%     newY(end + 1) = newY(1);
+% end
+% 
+% % add 1 pixel of jitter to any consequtive points which have the same x or y values
+% while any(diff(newX) == 0) || any(diff(newY) == 0)
+%     newX(find(diff(newX) == 0)) = newX(find(diff(newX) == 0)) + 1;
+%     newY(find(diff(newY) == 0)) = newY(find(diff(newY) == 0)) + 1;
+% end
+% 
+% Coord = [newX; newY];
+% 
+% % find the distance between each Coord point
+% dCoord = diff(Coord');
+% lCoord = sum((dCoord.*dCoord)').^0.5;
+% 
+% % Set up an array for the interpolated points
+% newPoints = [];
+% for iF = 1:length(lCoord)
+%     newPoints = [newPoints, Coord(:,iF)];
+%     if lCoord(iF) > MaxDist
+%         m = dCoord(iF,2)/dCoord(iF,1);
+%         b = (Coord(2,iF) - m*(Coord(1,iF)));
+%         nPoints = floor(lCoord(iF)/MaxDist);  % number of points to add
+%         StepSize = -(Coord(1,iF) - Coord(1,iF + 1))/nPoints;
+%         for iN = 1:nPoints - 1
+%             newY = m*(Coord(1,iF) + StepSize*(iN)) + b;
+%             Coord(1,iF);
+%             newPoints = [newPoints, [(Coord(1,iF) + StepSize*(iN)) newY]'];
+%         end
+%     end
+% end
+% newPoints = [newPoints, Coord(:,end)];
+% Coord = newPoints;
+% 
+% % Show the idealized path
+% plot(Coord(2,:),Coord(1,:),'og');
+% plot(Coord(2,1),Coord(1,1),'*b'); %start
+% plot(Coord(2,end),Coord(1,end),'*r'); %end
+% 
+% % trying to get the function to plot how user wants to see it, but also
+% % output the coord correctly. So this hack seems to work (ACarey)
+% temp = Coord(2,:); 
+% Coord(2,:) = Coord(1,:); 
+% Coord(1,:) = temp; 
+% % end of hack
+% 
+% pause(2);
+% close 
+% 
+% %% housekeeping
+% Coord_out = [];
+% Coord_out.coord = Coord;
+% Coord_out.units = tsd_in.units;
+% Coord_out.run_dist = run_dist;
+% Coord_out.nPoints = size(Coord,2);
+% Coord_out.pointDist = pdist(Coord(:,1:2)','euclidean');
+% Coord_out.standardized = 0;
 end
