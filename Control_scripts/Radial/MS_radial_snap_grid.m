@@ -89,15 +89,52 @@ plot(pos.data(1,c_idx), pos.data(2,c_idx), '.r')
 
 %% draw rectangle and then rotate. 
 
-% this_axis = MS_drawrectangle_wait
+this_axis = MS_drawrectangle_wait
+
+%%
 this_poly = polyshape([this_axis.Position(1), this_axis.Position(1) this_axis.Position(1)+this_axis.Position(3), this_axis.Position(1)+this_axis.Position(3)],...
-    [this_axis.Position(2)+this_axis.Position(4), this_axis.Position(2),this_axis.Position(2), this_axis.Position(2)+this_axis.Position(4)])
-plot(this_poly)
+    [this_axis.Position(2)+this_axis.Position(4), this_axis.Position(2),this_axis.Position(2), this_axis.Position(2)+this_axis.Position(4)]);
+% plot(this_poly)
 
-next_poly = this_axis; 
-next_poly.RotationAngle = 45; 
+% NE_axis = this_axis; 
+% NE_axis.RotationAngle = 45; 
 
-plot(next_poly)
+% NE_poly = polyshape([NE_axis.Position(1), NE_axis.Position(1) NE_axis.Position(1)+NE_axis.Position(3), NE_axis.Position(1)+NE_axis.Position(3)],...
+    % [NE_axis.Position(2)+NE_axis.Position(4), NE_axis.Position(2),NE_axis.Position(2), NE_axis.Position(2)+NE_axis.Position(4)]);
+
+    NE_poly = rotate(this_poly, 45, pattern.c_cent);
+plot(NE_poly)
+
+% EW_axis = this_axis; 
+% EW_axis.RotationAngle = 90; 
+% 
+% EW_poly = polyshape([EW_axis.Position(1), EW_axis.Position(1) EW_axis.Position(1)+EW_axis.Position(3), EW_axis.Position(1)+EW_axis.Position(3)],...
+%     [EW_axis.Position(2)+EW_axis.Position(4), EW_axis.Position(2),EW_axis.Position(2), EW_axis.Position(2)+EW_axis.Position(4)]);
+% 
+
+    EW_poly = rotate(this_poly, 90, pattern.c_cent);
+
+plot(EW_poly)
+
+% SE_axis = this_axis; 
+% SE_axis.RotationAngle = 135; 
+% 
+% SE_poly = polyshape([SE_axis.Position(1), SE_axis.Position(1) SE_axis.Position(1)+SE_axis.Position(3), SE_axis.Position(1)+SE_axis.Position(3)],...
+%     [SE_axis.Position(2)+SE_axis.Position(4), SE_axis.Position(2),SE_axis.Position(2), SE_axis.Position(2)+SE_axis.Position(4)]);
+
+    SE_poly = rotate(this_poly, 135, pattern.c_cent);
+
+plot(SE_poly)
+
+rad_poly = union(this_poly, SE_poly); 
+rad_poly = union(rad_poly, EW_poly); 
+rad_poly = union(rad_poly, NE_poly); 
+
+%% plot again
+hold on
+
+plot(rad_poly, 'FaceColor','r')
+
 %% try it with a line. 
 
     % north arm
@@ -262,8 +299,20 @@ pos.data(2,:) = fillmissing(pos.data(2,:), 'nearest');
 %% Snap to line in arm. 
 linpos_temp(keep_idx) = griddata(Coord_in.coord(1,:),Coord_in.coord(2,:),coord_vals,x(keep_idx),y(keep_idx),'nearest');
 
-
-
+%% try to make a hex grid
+% 
+% Rad3Over2 = sqrt(3) / 2;
+% [X Y] = meshgrid(0:2:xmax+3);
+% n = size(X,1);
+% X = Rad3Over2 * X;
+% Y = Y + repmat([0 0.5],[n,n/2]);
+% 
+% Plot the hexagonal mesh, including cell borders
+% [XV YV] = voronoi(X(:),Y(:)); plot(XV,YV,'b-')
+% axis equal, axis([10 20 10 20]), zoom on
+% 
+% 
+% histogram2(pos.data(1,:), pos.data(2,:), XV(1,:), YV(2,:))
 end
 
 
