@@ -1,4 +1,4 @@
-function [ax, p] =  MS_rain_plot(data_in, group_idx, color, stats, x_vals)
+function [ax, p, stats] =  MS_rain_plot(data_in, group_idx, color, stats, x_vals)
 
 % based off this cool function by Tom Marshall: https://git.fmrib.ox.ac.uk/marshall/public/-/blob/d0b82399a75ea907b332779421c00ff34e2f669a/raincloud_plots/raincloud_plot.m
 
@@ -66,14 +66,14 @@ if ~isempty(stats)
         switch stats
             case 'ttest'
                 disp('using ttest')
-                [h, p] = ttest(data_in(group_idx == grps(1)), data_in(group_idx == grps(2)));
+                [h, p,~, stats] = ttest(data_in(group_idx == grps(1)), data_in(group_idx == grps(2)));
             case 'ttest2'
                 disp('using ttest2')
-                [h, p] = ttest2(data_in(group_idx == grps(1)), data_in(group_idx == grps(2)));
+                [h, p,~, stats] = ttest2(data_in(group_idx == grps(1)), data_in(group_idx == grps(2)));
                 
             case 'ranksum'
                 disp('using ranksum')
-                [h, p] = ranksum(data_in(group_idx == grps(1)), data_in(group_idx == grps(2)));
+                [h, p,~, stats] = ranksum(data_in(group_idx == grps(1)), data_in(group_idx == grps(2)));
         end
     end
     

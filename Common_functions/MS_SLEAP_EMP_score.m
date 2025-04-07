@@ -74,7 +74,8 @@ table_out = table(subject', date_id', Closed_prct', Open_prct', Trans_prct', N_h
 
 
 %% split based on aTau
-table_out.geno = logical([0     0     0     0     0     1     0     1     1     0     0     0     1     1     0     1     1     0     0     0     0     0     0     0     0     0     0])'; 
+table_out.geno = logical([0     0     0     0     0     1     0     1     1     0     0     0     1     1     0, ...
+    1     1     0     0     0     0     0     0     0     0     0     ])'; 
 
 c_ord = MS_linspecer(4);
 figure(909)
@@ -83,8 +84,8 @@ title('EPM')
 subplot(2,2,1)
 hold on
 
-[h_c, p] = MS_rain_plot(table_out.Closed_prct, table_out.geno, c_ord(1:2,:), 'ttest2');
-
+[h_c, p, stats] = MS_rain_plot(table_out.Closed_prct, table_out.geno, c_ord(1:2,:), 'ttest2');
+fprintf('Closed ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
 % scatter(1+sort(MS_randn_range(length(table_out.Closed_prct(table_out.geno == 0)), 1, -.1, .1)), table_out.Closed_prct(table_out.geno == 0),25,  c_ord(1,:), 'filled')
 % scatter(2+sort(MS_randn_range(length(table_out.Closed_prct(table_out.geno == 1)), 1, -.1, .1)), table_out.Closed_prct(table_out.geno == 1),25,  c_ord(2,:), 'filled')
 
@@ -107,7 +108,8 @@ ylim([0 3])
 
 subplot(2,2,3)
 hold on
-[h_c, p] = MS_rain_plot(table_out.C2T, table_out.geno, c_ord(1:2,:), 'ttest2');
+[h_c, p, stats] = MS_rain_plot(table_out.C2T, table_out.geno, c_ord(1:2,:), 'ttest2');
+fprintf('Closed-to-open transitions ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
 
 xlabel('Number of transition entries')
 set(gca, 'ytick', 1:2, 'yticklabel', {'Tau -', 'Tau +'}, 'YTickLabelRotation' , 45)
@@ -116,7 +118,8 @@ ylim([0 3])
 
 
 subplot(2,2,2)
-[h_c, p] = MS_rain_plot(table_out.Open_prct, table_out.geno, c_ord(1:2,:), 'ttest2');
+[h_c, p, stats] = MS_rain_plot(table_out.Open_prct, table_out.geno, c_ord(1:2,:), 'ttest2');
+fprintf('Open %% ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
 
 xlabel('% of time in open arm')
 set(gca, 'ytick', 1:2, 'yticklabel', {'Tau -', 'Tau +'}, 'YTickLabelRotation' , 45)
@@ -127,7 +130,8 @@ set(gca, 'ytick', 1:2, 'yticklabel', {'Tau -', 'Tau +'}, 'YTickLabelRotation' , 
 ylim([0 3])
 
 subplot(2,2,4)
-[h_c, p] = MS_rain_plot(table_out.T2O, table_out.geno, c_ord(1:2,:), 'ttest2');
+[h_c, p, stats] = MS_rain_plot(table_out.T2O, table_out.geno, c_ord(1:2,:), 'ttest2');
+fprintf('transition-to-open transitions ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
 
 xlabel('Number of open arm entries')
 set(gca, 'ytick', 1:2, 'yticklabel', {'Tau -', 'Tau +'}, 'YTickLabelRotation' , 45)
