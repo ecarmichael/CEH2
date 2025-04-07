@@ -3325,3 +3325,31 @@ hdf5write(fname, '/F_REM_post_tvec', A_out{F_idx}{1}.REM_Post_tvec,'WriteMode', 
 
 hdf5write(fname, '/N_REM_post_xlim', int16([90 150]),'WriteMode', 'append');
 hdf5write(fname, '/F_REM_post_xlim', int16([0 60]),'WriteMode', 'append');
+
+
+%% convert all assemblies into a giant table
+
+A_tbl = []; 
+sub_list = []; 
+sess_list = [];
+win_list = []; 
+ReAct_list = []; 
+
+for iA  = 1:length(A_out):-1:1
+    for iB = 1:length(A_out{iA})
+        
+        for ii = 1:size(A_out{iA}{iB}.P_pos,2)
+            
+            sub_list{end+1} =  A_out{iA}{iB}.info.subject; 
+            sess_list{end+1} = A_out{iA}{iB}.info.session;
+            win_list(end+1) = A_out{iA}{iB}.info.bin; 
+            ReAct_list(end+1) = A_out{iA}{iB}.ReAct(ii); 
+        end
+        
+        
+    end
+end
+
+
+
+
