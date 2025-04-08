@@ -3334,8 +3334,10 @@ sub_list = [];
 sess_list = [];
 win_list = []; 
 ReAct_list = []; 
-
-for iA  = 1:length(A_out):-1:1
+trk_peak = []; 
+trk_bias = []; 
+maps = []; 
+for iA  = 1:length(A_out)
     for iB = 1:length(A_out{iA})
         
         for ii = 1:size(A_out{iA}{iB}.P_pos,2)
@@ -3344,6 +3346,38 @@ for iA  = 1:length(A_out):-1:1
             sess_list{end+1} = A_out{iA}{iB}.info.session;
             win_list(end+1) = A_out{iA}{iB}.info.bin; 
             ReAct_list(end+1) = A_out{iA}{iB}.ReAct(ii); 
+            
+            % get the peak of the assembly mean map. 
+            [~, pk_loc] = findpeaks(A_out{iA}{iB}.Place_map{ii}.map_mean, A_out{iA}{iB}.Place_map{ii}.bins,'SortStr', 'descend');
+            pk_loc = pk_loc(1); 
+            maps(end+1,:) = A_out{iA}{iB}.Place_map{ii}.map_mean; 
+            
+            trk_peak(end+1)  = pk_loc; 
+            
+            % classify the peak into open, closed, or transition on HAT
+            % days
+            if contains(A_out{iA}{iB}.info.session, {'HATD1', 'HATD3', 'HATD5'})
+                
+                if pk_loc > 60
+                    trk_bias{end+1} = 'O';
+                elseif (40 < pk_loc) && (pk_loc< 60)
+                    trk_bias{end+1} = 'T';
+                elseif pk_loc < 40
+                    trk_bias{end+1} = 'C';
+                end
+          
+            elseif contains(A_out{iA}{iB}.info.session, {'HATDSwitch'})
+                if pk_loc > 60
+                    trk_bias{end+1} = 'C';
+                elseif (40 < pk_loc) && (pk_loc< 60)
+                    trk_bias{end+1} = 'T';
+                elseif pk_loc < 40
+                    trk_bias{end+1} = 'O';
+                end
+            else
+                trk_bias{end+1} = 'NaN'; 
+            end
+
         end
         
         
@@ -3351,5 +3385,24 @@ for iA  = 1:length(A_out):-1:1
 end
 
 
+A_tbl = table(sub_list,sess_list,win_list,ReAct_list,trk_peak,trk_bias, 'VariableNames', {'subject','session','Windo_size','ReAct_str','trk_peak','trk_bias'}); 
 
+A_tbl.session = categorical(A_tbl.session); 
+A_tbl.subject = categorical(A_tbl.subject); 
+
+%%
+
+figure(99999)
+
+subplot(2,2,1)
+hold on
+open_idx = find(ismember(A_tbl.trk_bias, 'O')); 
+scatter(A_tbl.session(open_idx), A_tbl.ReAct_str(open_idx), 55, A_tbl.subject(open_idx), 'o')
+
+open_idx = find(ismember(A_tbl.trk_bias, 'C')); 
+scatter(A_tbl.session(open_idx), A_tbl.ReAct_str(open_idx), 55, A_tbl.subject(open_idx), 'x')
+
+yline(0)
+ylabel({'Reactivation strength'; 'weaker <-    |    -> stronger'})
+legend
 
