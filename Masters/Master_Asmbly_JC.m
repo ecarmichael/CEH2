@@ -3385,10 +3385,11 @@ for iA  = 1:length(A_out)
 end
 
 
-A_tbl = table(sub_list,sess_list,win_list,ReAct_list,trk_peak,trk_bias, 'VariableNames', {'subject','session','Windo_size','ReAct_str','trk_peak','trk_bias'}); 
+A_tbl = table(sub_list',sess_list',win_list',ReAct_list',trk_peak',trk_bias', 'VariableNames', {'subject','session','Windo_size','ReAct_str','trk_peak','trk_bias'}); 
 
 A_tbl.session = categorical(A_tbl.session); 
 A_tbl.subject = categorical(A_tbl.subject); 
+A_tbl.trk_bias = categorical(A_tbl.trk_bias); 
 
 %%
 
@@ -3396,13 +3397,32 @@ figure(99999)
 
 subplot(2,2,1)
 hold on
-open_idx = find(ismember(A_tbl.trk_bias, 'O')); 
+open_idx = (ismember(A_tbl.trk_bias, 'O')); 
 scatter(A_tbl.session(open_idx), A_tbl.ReAct_str(open_idx), 55, A_tbl.subject(open_idx), 'o')
 
-open_idx = find(ismember(A_tbl.trk_bias, 'C')); 
-scatter(A_tbl.session(open_idx), A_tbl.ReAct_str(open_idx), 55, A_tbl.subject(open_idx), 'x')
+close_idx = (ismember(A_tbl.trk_bias, 'C')); 
+scatter(A_tbl.session(close_idx), A_tbl.ReAct_str(close_idx), 55, A_tbl.subject(close_idx), 'x')
+
+trans_idx = (ismember(A_tbl.trk_bias, 'T')); 
+scatter(A_tbl.session(trans_idx), A_tbl.ReAct_str(trans_idx), 55, A_tbl.subject(trans_idx), 's')
+
+non_idx = ~open_idx | ~close_idx | ~trans_idx; 
+
+scatter(A_tbl.session(non_idx), A_tbl.ReAct_str(non_idx), 55, A_tbl.subject(non_idx), '.')
+
+
 
 yline(0)
 ylabel({'Reactivation strength'; 'weaker <-    |    -> stronger'})
 legend
+
+% same plot but easier to read
+subplot(2,2,3)
+cla
+
+hold on
+HAT1_ReAct = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1')); 
+
+
+scatter(ones(length()))
 
