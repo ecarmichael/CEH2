@@ -130,10 +130,6 @@ data.cross_tau = [data.cross_tau; data.(coh{iC}).cross(data.(coh{iC}).geno == 1)
 end
 
 
-% convert to table data
-
-subject = [reshape(zeros(size(data.day_mean_ctrl)), 1, numel(data.day_mean_ctrl))
-
 %% Combined data
 
    figure(101)
@@ -155,7 +151,9 @@ subject = [reshape(zeros(size(data.day_mean_ctrl)), 1, numel(data.day_mean_ctrl)
     % leg = data.(coh{iC}).sub; 
     % leg{end+1} = 'mean';
     legend({'Ctrl', 'Tau', 'All'}, 'Box','off')
-    ylabel('Mean escape latency')
+   ylabel({'Escape latency (s)'})
+    title('All trials')
+    ylim([0 40])
 
     set(gca,'xtick', 1:5, 'XTickLabel', {'Day 1' 'Day2 ' 'Day 3' 'Day 4' 'Day 5'}, 'XTickLabelRotation', 45)
     
@@ -178,8 +176,10 @@ subject = [reshape(zeros(size(data.day_mean_ctrl)), 1, numel(data.day_mean_ctrl)
 %     plot(1:5, mean(this_day_mean), 'k', 'LineWidth',2)
     % leg = data.(coh{iC}).sub; 
     % leg{end+1} = 'mean';
-    legend({'Ctrl', 'Tau', 'All'}, 'Box','off')
-    ylabel({'Mean escape latency'; 'first two trials'})
+    legend({'Tau -', 'Tau +', 'All'}, 'Box','off')
+    ylabel({'Escape latency (s)'})
+    title('First two trials')
+    ylim([0 40])
 
     set(gca,'xtick', 1:5, 'XTickLabel', {'Day 1' 'Day2 ' 'Day 3' 'Day 4' 'Day 5'}, 'XTickLabelRotation', 45)
 
@@ -198,8 +198,42 @@ subject = [reshape(zeros(size(data.day_mean_ctrl)), 1, numel(data.day_mean_ctrl)
     set(gca, 'xtick', 1:2, 'xticklabel', {'Tau -', 'Tau +'}, 'XTickLabelRotation', 45)
     
     
+    cfg_fig.Font_size = 8; 
 
-% SetFigure([], gcf,1)
+SetFigure(cfg_fig, gcf,1)
+
+%% convert to table data for anovas
+
+ % group = [reshape(zeros(size(data.day_mean_ctrl)), 1, numel(data.day_mean_ctrl)), reshape(ones(size(data.day_mean_tau)), 1, numel(data.day_mean_tau))]; 
+A_tbl = table(repmat([data.Jan25.sub' data.Jul24.sub'],1,5)',...
+    repmat([data.Jan25.geno' data.Jul24.geno'],1,5)',...
+    [zeros(1,length([data.Jan25.geno' data.Jul24.geno']))+1,zeros(1,length([data.Jan25.geno' data.Jul24.geno']))+2, zeros(1,length([data.Jan25.geno' data.Jul24.geno']))+3, zeros(1,length([data.Jan25.geno' data.Jul24.geno']))+4, zeros(1,length([data.Jan25.geno' data.Jul24.geno']))+5]',...
+    [data.Jan25.day_mean(:,1)' data.Jul24.day_mean(:,1)' , data.Jan25.day_mean(:,2)' data.Jul24.day_mean(:,2)', data.Jan25.day_mean(:,3)' data.Jul24.day_mean(:,3)', data.Jan25.day_mean(:,4)' data.Jul24.day_mean(:,4)', data.Jan25.day_mean(:,5)' data.Jul24.day_mean(:,5)']',...
+    [data.Jan25.day_first(:,1)' data.Jul24.day_first(:,1)' , data.Jan25.day_first(:,2)' data.Jul24.day_first(:,2)', data.Jan25.day_first(:,3)' data.Jul24.day_first(:,3)', data.Jan25.day_first(:,4)' data.Jul24.day_first(:,4)', data.Jan25.day_first(:,5)' data.Jul24.day_first(:,5)']',...
+    'VariableNames',{'Subject', 'Geno','Day', 'Day_mean', 'Day_first'}); 
+
+A_tbl.Day = categorical(A_tbl.Day); 
+A_tbl.Geno = categorical(A_tbl.Geno); 
+
+% stats
+
+% r anova
+
+% model
+day_mdl = fitrm(A_tbl, 'Day_mean~Geno*Day', 'WithinDesign',table([1 2 3 4 5],'VariableNames', "Days"));
+% repeated measures ANOVA
+ranova_tbl = ranova(day_mdl, 'WithinModel', 'Days');
+% results
+disp(ranova_tbl);
+    multcompare(ranova_tbl)
+
+% model
+day_f_mdl = fitrm(A_tbl, 'Day_first~Geno*Day', 'WithinDesign',table([1 2 3 4 5],'VariableNames', "Days"));
+% repeated measures ANOVA
+ranova_df_tbl = ranova(day_f_mdl, 'WithinModel', 'Days');
+% results
+disp(ranova_df_tbl);
+
 %% Collect the probe data
 
   figure(101)
