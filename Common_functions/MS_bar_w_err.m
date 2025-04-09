@@ -1,4 +1,4 @@
-function [hb, eb, sc, p] =  MS_bar_w_err(data_a, data_b, color, data_flag, stats, x_vals)
+function [hb, eb, sc, p, stats] =  MS_bar_w_err(data_a, data_b, color, data_flag, stats, x_vals)
 
 if nargin < 4
     data_flag = 0; 
@@ -31,14 +31,14 @@ if ~isempty(stats)
     switch stats
         case 'ttest'
             disp('using ttest')
-            [h, p] = ttest(data_a, data_b);
+            [h, p, ~, stats] = ttest(data_a, data_b);
         case 'ttest2'
             disp('using ttest2')
-            [h, p] = ttest2(data_a, data_b);
+            [h, p, ~,stats] = ttest2(data_a, data_b);
             
         case 'ranksum'
             disp('using ranksum')
-            [h, p] = ranksum(data_a, data_b);
+            [h, p, ~,stats] = ranksum(data_a, data_b);
     end
     
     if h
