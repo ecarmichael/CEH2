@@ -3337,6 +3337,13 @@ ReAct_list = [];
 trk_peak = []; 
 trk_bias = []; 
 maps = []; 
+
+Pre_rate_list = []; 
+Post_rate_list = []; 
+Pre_str_list = []; 
+Post_str_list = []; 
+
+
 for iA  = 1:length(A_out)
     for iB = 1:length(A_out{iA})
         
@@ -3346,6 +3353,14 @@ for iA  = 1:length(A_out)
             sess_list{end+1} = A_out{iA}{iB}.info.session;
             win_list(end+1) = A_out{iA}{iB}.info.bin; 
             ReAct_list(end+1) = A_out{iA}{iB}.ReAct(ii); 
+            Pre_rate_list(end+1) = A_out{iA}{iB}.REM_Pre_stats.rate(ii);
+            Post_rate_list(end+1) = A_out{iA}{iB}.REM_Post_stats.rate(ii);
+
+            
+            % compute average expression strength of each assembly. 
+            Pre_str_list(end+1) = mean(A_out{iA}{iB}.REM_Pre_proj(ii,:));  
+            Post_str_list(end+1) = mean(A_out{iA}{iB}.REM_Post_proj(ii,:));  
+
             
             % get the peak of the assembly mean map. 
             [~, pk_loc] = findpeaks(A_out{iA}{iB}.Place_map{ii}.map_mean, A_out{iA}{iB}.Place_map{ii}.bins,'SortStr', 'descend');
@@ -3385,7 +3400,8 @@ for iA  = 1:length(A_out)
 end
 
 
-A_tbl = table(sub_list',sess_list',win_list',ReAct_list',trk_peak',trk_bias', 'VariableNames', {'subject','session','Windo_size','ReAct_str','trk_peak','trk_bias'}); 
+A_tbl = table(sub_list',sess_list',win_list',ReAct_list', Pre_rate_list', Post_rate_list',Pre_str_list', Post_str_list', trk_peak',trk_bias',...
+    'VariableNames', {'subject','session','Windo_size','ReAct_str','Pre_rate', 'Post_rate','Pre_str', 'Post_str','trk_peak','trk_bias'}); 
 
 A_tbl.session = categorical(A_tbl.session); 
 A_tbl.subject = categorical(A_tbl.subject); 
@@ -3393,36 +3409,407 @@ A_tbl.trk_bias = categorical(A_tbl.trk_bias);
 
 %%
 
+
+% to do:  scatter of pre vs post str to match van de ven paper. 
+
+
 figure(99999)
-
-subplot(2,2,1)
+clf
+subplot(2,3,1)
 hold on
-open_idx = (ismember(A_tbl.trk_bias, 'O')); 
-scatter(A_tbl.session(open_idx), A_tbl.ReAct_str(open_idx), 55, A_tbl.subject(open_idx), 'o')
+% open_idx = (ismember(A_tbl.trk_bias, 'O')); 
+% scatter(A_tbl.session(open_idx), A_tbl.ReAct_str(open_idx), 55, A_tbl.subject(open_idx), 'o')
+% 
+% close_idx = (ismember(A_tbl.trk_bias, 'C')); 
+% scatter(A_tbl.session(close_idx), A_tbl.ReAct_str(close_idx), 55, A_tbl.subject(close_idx), 'x')
+% 
+% trans_idx = (ismember(A_tbl.trk_bias, 'T')); 
+% scatter(A_tbl.session(trans_idx), A_tbl.ReAct_str(trans_idx), 55, A_tbl.subject(trans_idx), 's')
+% 
+% non_idx = ~open_idx | ~close_idx | ~trans_idx; 
+% 
+% scatter(A_tbl.session(non_idx), A_tbl.ReAct_str(non_idx), 55, A_tbl.subject(non_idx), '.')
 
-close_idx = (ismember(A_tbl.trk_bias, 'C')); 
-scatter(A_tbl.session(close_idx), A_tbl.ReAct_str(close_idx), 55, A_tbl.subject(close_idx), 'x')
+    %%%%%%% pre rate
 
-trans_idx = (ismember(A_tbl.trk_bias, 'T')); 
-scatter(A_tbl.session(trans_idx), A_tbl.ReAct_str(trans_idx), 55, A_tbl.subject(trans_idx), 's')
-
-non_idx = ~open_idx | ~close_idx | ~trans_idx; 
-
-scatter(A_tbl.session(non_idx), A_tbl.ReAct_str(non_idx), 55, A_tbl.subject(non_idx), '.')
-
-
+     sc{1} = scatter(1+sort(MS_randn_range(length(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD1'))), 1, -.2, .2)), A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD1')),10, c_ord(1,:), 'filled');
+               line([.9 1.1], [mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD1'))) mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD1')))], 'color',  'k', 'linewidth', 2)
+     eb = errorbar(1, mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD1'))), std(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD1'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+     sc{1} = scatter(2+sort(MS_randn_range(length(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD5'))), 1, -.1, .1)), A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD5')),25, [.8 .8 .8], 'filled');
+            line([1.9 2.1], [mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD5'))) mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD5')))], 'color',  'k', 'linewidth', 2)
+     eb = errorbar(2, mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD5'))), std(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD5'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+    sc{1} = scatter(3+sort(MS_randn_range(length(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1'))), 1, -.1, .1)), A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1')),25, c_ord(4,:), 'filled');
+            line([2.9 3.1], [mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1'))) mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1')))], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(3, mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1'))), std(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+    sc{1} = scatter(4+sort(MS_randn_range(length(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD5'))), 1, -.1, .1)), A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD5')),25, c_ord(3,:), 'filled');
+        line([3.9 4.1], [mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD5'))) mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD5')))], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(4, mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD5'))), std(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD5'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+    sc{1} = scatter(5+sort(MS_randn_range(length(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATDSwitch'))), 1, -.1, .1)), A_tbl.ReAct_str(ismember(A_tbl.session, 'HATDSwitch')),25, c_ord(2,:), 'filled');
+    line([4.9 5.1], [mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATDSwitch'))) mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATDSwitch')))], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(5, mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATDSwitch'))), std(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATDSwitch'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+%         ylabel({'Pre REM assembly rate' ; 'activations/mins'})
 
 yline(0)
 ylabel({'Reactivation strength'; 'weaker <-    |    -> stronger'})
-legend
+    set(gca, 'xtick', 1:5, 'xticklabels', {'LTD1', 'LTD5', 'HATD1', 'HATD5', 'HATDS'})
+    ylim([-1 1])
 
 % same plot but easier to read
-subplot(2,2,3)
+subplot(2,3,4)
 cla
 
 hold on
-HAT1_ReAct = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1')); 
+
+% bar(1:2, [mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD1'))); mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD2')))])
+% HAT1_ReAct = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1')); 
+
+% x_data = 
+ydata = A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD1'));
+    sc{1} = scatter(1+sort(MS_randn_range(length(ydata), 1, -.1, .1)), ydata,25, c_ord(1,:), 'filled');
+    line([.9 1.1], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(1, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    
+ydata = A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD5'));
+    sc{1} = scatter(2+sort(MS_randn_range(length(ydata), 1, -.1, .1)), ydata,25, [.8 .8 .8], 'filled');
+    line([1.9 2.1], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(2, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+   
+    % hat varients
+ydata = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1') & ismember(A_tbl.trk_bias, 'O'));
+    sc{1} = scatter(3+sort(MS_randn_range(length(ydata), 1, -.2, -.1)), ydata,25, c_ord(4,:));
+    line([2.8 2.9], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(2.85, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    ydata = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1') & ismember(A_tbl.trk_bias, 'T'));
+    sc{1} = scatter(3+sort(MS_randn_range(length(ydata), 1, -0.05, .05)), ydata,25, c_ord(4,:)*.5,'x');
+    line([2.95 3.05], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(3, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1') & ismember(A_tbl.trk_bias, 'C'));
+    sc{1} = scatter(3+sort(MS_randn_range(length(ydata), 1, .1, .2)), ydata,25, c_ord(4,:)*.8,'o', 'filled');
+    line([3.1 3.2], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(3.15, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    %hat 5
+ydata = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD5') & ismember(A_tbl.trk_bias, 'O'));
+    sc{1} = scatter(4+sort(MS_randn_range(length(ydata), 1, -.2, -.1)), ydata,25, c_ord(3,:));
+    line([3.8 3.9], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(3.85, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD5') & ismember(A_tbl.trk_bias, 'T'));
+    sc{1} = scatter(4+sort(MS_randn_range(length(ydata), 1, -0.05, .05)), ydata,25, c_ord(3,:)*.5,'x');
+    line([3.95 4.05], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(4, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD5') & ismember(A_tbl.trk_bias, 'C'));
+    sc{1} = scatter(4+sort(MS_randn_range(length(ydata), 1, .1, .2)), ydata,25, c_ord(3,:)*.8,'o', 'filled');
+    line([4.1 4.2], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(4.15, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    
+        %hat switch
+
+ydata = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATDSwitch') & ismember(A_tbl.trk_bias, 'O'));
+    sc{1} = scatter(5+sort(MS_randn_range(length(ydata), 1, -.2, -.1)), ydata,25, c_ord(2,:));
+    line([4.8 4.9], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(4.85, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATDSwitch') & ismember(A_tbl.trk_bias, 'T'));
+    sc{1} = scatter(5+sort(MS_randn_range(length(ydata), 1, -0.05, .05)), ydata,25, c_ord(2,:)*.5,'x');
+    line([4.95 5.05], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(5, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATDSwitch') & ismember(A_tbl.trk_bias, 'C'));
+    sc{1} = scatter(5+sort(MS_randn_range(length(ydata), 1, .1, .2)), ydata,25, c_ord(2,:)*.8,'o', 'filled');
+    line([5.1 5.2], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(5.15, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    
+    yline(0)
+ylabel({'Reactivation strength'; 'weaker <-    |    -> stronger'})
+
+       set(gca, 'xtick', 1:5, 'xticklabels', {'LTD1', 'LTD5', 'HATD1', 'HATD5', 'HATDS'})
+        ylim([-1 1])
+
+%%%%%%% pre rate
+    %%%%%%% pre rate
+    subplot(2,3,2)
+    cla
+    hold on
+     sc{1} = scatter(1+sort(MS_randn_range(length(A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD1'))), 1, -.2, .2)), A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD1')),10, c_ord(1,:), 'filled');
+               line([.9 1.1], [mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD1'))) mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD1')))], 'color',  'k', 'linewidth', 2)
+     eb = errorbar(1, mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD1'))), std(A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD1'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+     sc{1} = scatter(2+sort(MS_randn_range(length(A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD5'))), 1, -.1, .1)), A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD5')),25, [.8 .8 .8], 'filled');
+            line([1.9 2.1], [mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD5'))) mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD5')))], 'color',  'k', 'linewidth', 2)
+     eb = errorbar(2, mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD5'))), std(A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD5'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+    sc{1} = scatter(3+sort(MS_randn_range(length(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD1'))), 1, -.1, .1)), A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD1')),25, c_ord(4,:), 'filled');
+            line([2.9 3.1], [mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD1'))) mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD1')))], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(3, mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD1'))), std(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD1'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+    sc{1} = scatter(4+sort(MS_randn_range(length(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD5'))), 1, -.1, .1)), A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD5')),25, c_ord(3,:), 'filled');
+        line([3.9 4.1], [mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD5'))) mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD5')))], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(4, mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD5'))), std(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD5'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+    sc{1} = scatter(5+sort(MS_randn_range(length(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATDSwitch'))), 1, -.1, .1)), A_tbl.Pre_rate(ismember(A_tbl.session, 'HATDSwitch')),25, c_ord(2,:), 'filled');
+    line([4.9 5.1], [mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATDSwitch'))) mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATDSwitch')))], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(5, mean(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATDSwitch'))), std(A_tbl.Pre_rate(ismember(A_tbl.session, 'HATDSwitch'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+        ylabel({'Pre REM assembly rate' ; 'activations/mins'})
+    set(gca, 'xtick', 1:5, 'xticklabels', {'LTD1', 'LTD5', 'HATD1', 'HATD5', 'HATDS'})
+
+subplot(2,3,5)
+cla
+
+hold on
+
+% bar(1:2, [mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD1'))); mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD2')))])
+% HAT1_ReAct = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1')); 
+
+% x_data = 
+ydata = A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD1'));
+    sc{1} = scatter(1+sort(MS_randn_range(length(ydata), 1, -.1, .1)), ydata,25, c_ord(1,:), 'filled');
+    line([.9 1.1], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(1, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    
+ydata = A_tbl.Pre_rate(ismember(A_tbl.session, 'LTD5'));
+    sc{1} = scatter(2+sort(MS_randn_range(length(ydata), 1, -.1, .1)), ydata,25, [.8 .8 .8], 'filled');
+    line([1.9 2.1], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(2, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+   
+    % hat varients
+ydata = A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD1') & ismember(A_tbl.trk_bias, 'O'));
+    sc{1} = scatter(3+sort(MS_randn_range(length(ydata), 1, -.2, -.1)), ydata,25, c_ord(4,:));
+    line([2.8 2.9], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(2.85, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    ydata = A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD1') & ismember(A_tbl.trk_bias, 'T'));
+    sc{1} = scatter(3+sort(MS_randn_range(length(ydata), 1, -0.05, .05)), ydata,25, c_ord(4,:)*.5,'x');
+    line([2.95 3.05], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(3, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD1') & ismember(A_tbl.trk_bias, 'C'));
+    sc{1} = scatter(3+sort(MS_randn_range(length(ydata), 1, .1, .2)), ydata,25, c_ord(4,:)*.8,'o', 'filled');
+    line([3.1 3.2], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(3.15, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    %hat 5
+ydata = A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD5') & ismember(A_tbl.trk_bias, 'O'));
+    sc{1} = scatter(4+sort(MS_randn_range(length(ydata), 1, -.2, -.1)), ydata,25, c_ord(3,:));
+    line([3.8 3.9], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(3.85, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD5') & ismember(A_tbl.trk_bias, 'T'));
+    sc{1} = scatter(4+sort(MS_randn_range(length(ydata), 1, -0.05, .05)), ydata,25, c_ord(3,:)*.5,'x');
+    line([3.95 4.05], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(4, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.Pre_rate(ismember(A_tbl.session, 'HATD5') & ismember(A_tbl.trk_bias, 'C'));
+    sc{1} = scatter(4+sort(MS_randn_range(length(ydata), 1, .1, .2)), ydata,25, c_ord(3,:)*.8,'o', 'filled');
+    line([4.1 4.2], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(4.15, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    
+        %hat switch
+ydata = A_tbl.Pre_rate(ismember(A_tbl.session, 'HATDSwitch') & ismember(A_tbl.trk_bias, 'O'));
+    sc{1} = scatter(5+sort(MS_randn_range(length(ydata), 1, -.2, -.1)), ydata,25, c_ord(2,:));
+    line([4.8 4.9], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(4.85, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.Pre_rate(ismember(A_tbl.session, 'HATDSwitch') & ismember(A_tbl.trk_bias, 'T'));
+    sc{1} = scatter(5+sort(MS_randn_range(length(ydata), 1, -0.05, .05)), ydata,25, c_ord(2,:)*.5,'x');
+    line([4.95 5.05], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(5, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.Pre_rate(ismember(A_tbl.session, 'HATDSwitch') & ismember(A_tbl.trk_bias, 'C'));
+    sc{1} = scatter(5+sort(MS_randn_range(length(ydata), 1, .1, .2)), ydata,25, c_ord(2,:)*.8,'o', 'filled');
+    line([5.1 5.2], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(5.15, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    
+    ylabel({'Pre REM assembly rate' ; 'activations/mins'})
+    set(gca, 'xtick', 1:5, 'xticklabels', {'LTD1', 'LTD5', 'HATD1', 'HATD5', 'HATDS'})
+    
+    
+    
+    %%%%%%% post rate
+    subplot(2,3,3)
+    cla
+    hold on
+     sc{1} = scatter(1+sort(MS_randn_range(length(A_tbl.Post_rate(ismember(A_tbl.session, 'LTD1'))), 1, -.2, .2)), A_tbl.Post_rate(ismember(A_tbl.session, 'LTD1')),10, c_ord(1,:), 'filled');
+               line([.9 1.1], [mean(A_tbl.Post_rate(ismember(A_tbl.session, 'LTD1'))) mean(A_tbl.Post_rate(ismember(A_tbl.session, 'LTD1')))], 'color',  'k', 'linewidth', 2)
+     eb = errorbar(1, mean(A_tbl.Post_rate(ismember(A_tbl.session, 'LTD1'))), std(A_tbl.Post_rate(ismember(A_tbl.session, 'LTD1'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+     sc{1} = scatter(2+sort(MS_randn_range(length(A_tbl.Post_rate(ismember(A_tbl.session, 'LTD5'))), 1, -.1, .1)), A_tbl.Post_rate(ismember(A_tbl.session, 'LTD5')),25, [.8 .8 .8], 'filled');
+            line([1.9 2.1], [mean(A_tbl.Post_rate(ismember(A_tbl.session, 'LTD5'))) mean(A_tbl.Post_rate(ismember(A_tbl.session, 'LTD5')))], 'color',  'k', 'linewidth', 2)
+     eb = errorbar(2, mean(A_tbl.Post_rate(ismember(A_tbl.session, 'LTD5'))), std(A_tbl.Post_rate(ismember(A_tbl.session, 'LTD5'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+    sc{1} = scatter(3+sort(MS_randn_range(length(A_tbl.Post_rate(ismember(A_tbl.session, 'HATD1'))), 1, -.1, .1)), A_tbl.Post_rate(ismember(A_tbl.session, 'HATD1')),25, c_ord(4,:), 'filled');
+            line([2.9 3.1], [mean(A_tbl.Post_rate(ismember(A_tbl.session, 'HATD1'))) mean(A_tbl.Post_rate(ismember(A_tbl.session, 'HATD1')))], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(3, mean(A_tbl.Post_rate(ismember(A_tbl.session, 'HATD1'))), std(A_tbl.Post_rate(ismember(A_tbl.session, 'HATD1'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+    sc{1} = scatter(4+sort(MS_randn_range(length(A_tbl.Post_rate(ismember(A_tbl.session, 'HATD5'))), 1, -.1, .1)), A_tbl.Post_rate(ismember(A_tbl.session, 'HATD5')),25, c_ord(3,:), 'filled');
+        line([3.9 4.1], [mean(A_tbl.Post_rate(ismember(A_tbl.session, 'HATD5'))) mean(A_tbl.Post_rate(ismember(A_tbl.session, 'HATD5')))], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(4, mean(A_tbl.Post_rate(ismember(A_tbl.session, 'HATD5'))), std(A_tbl.Post_rate(ismember(A_tbl.session, 'HATD5'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+    
+    sc{1} = scatter(5+sort(MS_randn_range(length(A_tbl.Post_rate(ismember(A_tbl.session, 'HATDSwitch'))), 1, -.1, .1)), A_tbl.Post_rate(ismember(A_tbl.session, 'HATDSwitch')),25, c_ord(2,:), 'filled');
+    line([4.9 5.1], [mean(A_tbl.Post_rate(ismember(A_tbl.session, 'HATDSwitch'))) mean(A_tbl.Post_rate(ismember(A_tbl.session, 'HATDSwitch')))], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(5, mean(A_tbl.Post_rate(ismember(A_tbl.session, 'HATDSwitch'))), std(A_tbl.Post_rate(ismember(A_tbl.session, 'HATDSwitch'))), 'color', 'k'); 
+    eb.LineWidth = 2;
+
+        ylabel({'Post REM assembly rate' ; 'activations/mins'})
+    set(gca, 'xtick', 1:5, 'xticklabels', {'LTD1', 'LTD5', 'HATD1', 'HATD5', 'HATDS'})
+    
+subplot(2,3,6)
+cla
+
+hold on
+
+% bar(1:2, [mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD1'))); mean(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD2')))])
+% HAT1_ReAct = A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1')); 
+
+% x_data = 
+ydata = A_tbl.Post_rate(ismember(A_tbl.session, 'LTD1'));
+    sc{1} = scatter(1+sort(MS_randn_range(length(ydata), 1, -.1, .1)), ydata,25, c_ord(1,:), 'filled');
+    line([.9 1.1], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(1, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    
+ydata = A_tbl.Post_rate(ismember(A_tbl.session, 'LTD5'));
+    sc{1} = scatter(2+sort(MS_randn_range(length(ydata), 1, -.1, .1)), ydata,25, [.8 .8 .8], 'filled');
+    line([1.9 2.1], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(2, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+   
+    % hat varients
+ydata = A_tbl.Post_rate(ismember(A_tbl.session, 'HATD1') & ismember(A_tbl.trk_bias, 'O'));
+    sc{1} = scatter(3+sort(MS_randn_range(length(ydata), 1, -.2, -.1)), ydata,25, c_ord(4,:));
+    line([2.8 2.9], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(2.85, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    ydata = A_tbl.Post_rate(ismember(A_tbl.session, 'HATD1') & ismember(A_tbl.trk_bias, 'T'));
+    sc{1} = scatter(3+sort(MS_randn_range(length(ydata), 1, -0.05, .05)), ydata,25, c_ord(4,:)*.5,'x');
+    line([2.95 3.05], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(3, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.Post_rate(ismember(A_tbl.session, 'HATD1') & ismember(A_tbl.trk_bias, 'C'));
+    sc{1} = scatter(3+sort(MS_randn_range(length(ydata), 1, .1, .2)), ydata,25, c_ord(4,:)*.8,'o', 'filled');
+    line([3.1 3.2], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(3.15, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    %hat 5
+ydata = A_tbl.Post_rate(ismember(A_tbl.session, 'HATD5') & ismember(A_tbl.trk_bias, 'O'));
+    sc{1} = scatter(4+sort(MS_randn_range(length(ydata), 1, -.2, -.1)), ydata,25, c_ord(3,:));
+    line([3.8 3.9], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(3.85, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.Post_rate(ismember(A_tbl.session, 'HATD5') & ismember(A_tbl.trk_bias, 'T'));
+    sc{1} = scatter(4+sort(MS_randn_range(length(ydata), 1, -0.05, .05)), ydata,25, c_ord(3,:)*.5,'x');
+    line([3.95 4.05], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(4, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.Post_rate(ismember(A_tbl.session, 'HATD5') & ismember(A_tbl.trk_bias, 'C'));
+    sc{1} = scatter(4+sort(MS_randn_range(length(ydata), 1, .1, .2)), ydata,25, c_ord(3,:)*.8,'o', 'filled');
+    line([4.1 4.2], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(4.15, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    
+        %hat switch
+ydata = A_tbl.Post_rate(ismember(A_tbl.session, 'HATDSwitch') & ismember(A_tbl.trk_bias, 'O'));
+    sc{1} = scatter(5+sort(MS_randn_range(length(ydata), 1, -.2, -.1)), ydata,25, c_ord(2,:));
+    line([4.8 4.9], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(4.85, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.Post_rate(ismember(A_tbl.session, 'HATDSwitch') & ismember(A_tbl.trk_bias, 'T'));
+    sc{1} = scatter(5+sort(MS_randn_range(length(ydata), 1, -0.05, .05)), ydata,25, c_ord(2,:)*.5,'x');
+    line([4.95 5.05], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(5, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+ydata = A_tbl.Post_rate(ismember(A_tbl.session, 'HATDSwitch') & ismember(A_tbl.trk_bias, 'C'));
+    sc{1} = scatter(5+sort(MS_randn_range(length(ydata), 1, .1, .2)), ydata,25, c_ord(2,:)*.8,'o', 'filled');
+    line([5.1 5.2], [mean(ydata) mean(ydata)], 'color',  'k', 'linewidth', 2)
+    eb = errorbar(5.15, mean(ydata), std(ydata), 'color', 'k'); 
+    eb.LineWidth = 2; 
+    
+    
+    ylabel({'Post REM assembly rate' ; 'activations/mins'})
+    set(gca, 'xtick', 1:5, 'xticklabels', {'LTD1', 'LTD5', 'HATD1', 'HATD5', 'HATDS'})
+%     sc{1} = scatter(2+sort(MS_randn_range(length(A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD5'))), 1, -.1, .1)), A_tbl.ReAct_str(ismember(A_tbl.session, 'LTD5')),25, c_ord(1,:), 'filled');
+%     sc{1} = scatter(3+sort(MS_randn_range(length(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1'))), 1, -.1, .1)), A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD1')),25, c_ord(1,:), 'filled');
+%     sc{1} = scatter(4+sort(MS_randn_range(length(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD5'))), 1, -.1, .1)), A_tbl.ReAct_str(ismember(A_tbl.session, 'HATD5')),25, c_ord(1,:), 'filled');
+%     sc{1} = scatter(5+sort(MS_randn_range(length(A_tbl.ReAct_str(ismember(A_tbl.session, 'HATDSwitch'))), 1, -.1, .1)), A_tbl.ReAct_str(ismember(A_tbl.session, 'HATDSwitch')),25, c_ord(1,:), 'filled');
 
 
-scatter(ones(length()))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
