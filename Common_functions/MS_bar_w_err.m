@@ -11,13 +11,15 @@ elseif nargin < 6
     x_vals = [1 2];
 end
 
-hb = bar(x_vals, [nanmean(data_a), nanmean(data_b)], 'FaceColor', color(1,:), 'EdgeColor', color(1,:));
+if data_flag == 1
+    hb = bar(x_vals, [nanmean(data_a), nanmean(data_b)], 'FaceColor', color(1,:), 'EdgeColor', color(1,:));
+end
 hold on
 
 
-if data_flag && length(data_a) == length(data_b)
+if data_flag > 0 %&& length(data_a) == length(data_b)
     sc{1} = scatter(1+sort(MS_randn_range(length(data_a), 1, -.1, .1)), data_a,25,  color(1,:), 'filled');
-    sc{1} = scatter(1+sort(MS_randn_range(length(data_b), 1, -.1, .1)), data_b,25,  color(2,:), 'filled');
+    sc{2} = scatter(2+sort(MS_randn_range(length(data_b), 1, -.1, .1)), data_b,25,  color(2,:), 'filled');
 else
     sc = []; 
 end
@@ -45,5 +47,9 @@ if ~isempty(stats)
         plot(median(x_vals), max([data_a, data_b], [], 'all')*1.15, '*', 'color', 'k')
         plot(x_vals, [max([data_a, data_b], [], 'all')*1.1 max([data_a, data_b], [], 'all')*1.1], '-k', 'linewidth', 1.5)
     end
+end
+
+if ~exist('hb','var')
+    hb = sc;
 end
 
