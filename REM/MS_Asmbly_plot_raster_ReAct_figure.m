@@ -1,4 +1,4 @@
-function MS_Asmbly_plot_raster_ReAct(A_in, fig_dir,sleep_phase,plot_idx, type)
+function MS_Asmbly_plot_raster_ReAct(A_in, fig_dir,sleep_phase,plot_idx, c_ord , type)
 
 
     
@@ -20,10 +20,17 @@ if nargin < 3
     fig_dir = [];
     plot_idx = 1:length(A_in.P_pos);
     type = 'act_mat';
+            c_ord = []; 
+
 elseif nargin < 4
     plot_idx = 1:length(A_in.P_pos);
     type = 'act_mat';
-elseif nargin < 5
+            c_ord = []; 
+
+    elseif nargin < 5
+    type = 'act_mat';
+        c_ord = []; 
+elseif nargin < 6
     type = 'act_mat';
 end
 
@@ -32,10 +39,12 @@ end
 %%
 
 ft_size = 14; 
-if length(plot_idx) <= 4
-c_ord = [ 253 22 26; 225 168 43;132 147 35; 87 117 144]/255;    %[67, 127, 151; 132 147 35; 255 179 13; 253 22 26]/255;
-else
-    c_ord = MS_linspecer(length(plot_idx)+ceil(length(plot_idx)/5));
+if isempty(c_ord);
+    if length(plot_idx) <= 4
+        c_ord = [67, 127, 151; 132 147 35; 255 179 13; 253 22 26]/255;
+    else
+        c_ord = MS_linspecer(length(plot_idx)+ceil(length(plot_idx)/5));
+    end
 end
     
    
@@ -66,6 +75,7 @@ end
     f = figure(110); 
 % f.WindowState = 'maximized';
 clf
+set(gcf, 'units','inches', 'position',[0 0 1.5 1]*6, 'innerposition',[0 0 1.5 1]*6,'outerposition',[0 0 1.5 1]*6)
 % set(gcf, 'units','inches', 'position',[0 0 1.5 1]*6, 'innerposition',[0 0 1.5 1]*6,'outerposition',[0 0 1.5 1]*6)
 % set(gcf,  'PaperPosition', [0 0 6 3])
 % axes('Units', 'normalized', 'Position', [0 0 1 1])
@@ -74,7 +84,7 @@ clf
 
 
 if isstr(type) == 1
-  ax(1) = subplot(7,1,1:5);
+ax(1) = subplot(3, 1, 2);
     cla
     hold on
     off_set = 0; these_idx = [];
@@ -224,6 +234,10 @@ end
     
     xlim([A_in.(REM_tvec)(1) A_in.(REM_tvec)(end)])
     
+    cfg.ft_size= ft_size;
+cfg.resize = 0;
+SetFigure(cfg, gcf)
+    
     %% save the figure
     if ~isempty(fig_dir)
         pause(.5)
@@ -235,7 +249,7 @@ end
             set(gcf,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(4), pos(4)])
             ft_size = 14;
 
-            subplot(7,1,1:5)
+    ax(3) = subplot(3,1,2);
             set(gca, 'YTick', c_step(2:end) - diff(c_step)/2, 'YTickLabel',[])
             for ii = 2:length(c_step)
                 text(0, c_step(ii) - diff(c_step(ii-1:ii))/2, c_label{ii-1},'HorizontalAlignment', 'right', 'Color', c_map(ii,:), 'FontSize', ft_size )

@@ -1,4 +1,4 @@
-function [keep_idx, ms] = MS_curate_cells(ms, ms2)
+function [ms, keep_idx] = MS_curate_cells(ms, ms2)
 %% MS_curate_cells: displays the raw traces, binary, deconv (if present) and the spf of each cell across a recording to determine if it is worth keeping.
 
 

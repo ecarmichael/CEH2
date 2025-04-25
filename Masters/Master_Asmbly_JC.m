@@ -4190,3 +4190,136 @@ set(gcf, 'Units', 'centimeters', 'Position', [0 0  30 20])
 
 cfg_set.ft_size = 12;
 SetFigure(cfg_set, gcf)
+
+
+%% Fig 5 example
+
+%% plot a specific example
+S_idx = []; 
+for ii = length(A_out):-1:1
+    if strcmpi(A_out{ii}{1}.info.subject, 'pv1060') &&  strcmpi(A_out{ii}{1}.info.session, 'HATD5')
+        S_idx(ii) = true;
+    else
+        S_idx(ii) = false;
+    end
+    fprintf('%s   - %s\n', A_out{ii}{1}.info.subject, A_out{ii}{1}.info.session)
+end
+
+S_idx = find(S_idx);
+
+
+% figure(9910)
+% clf
+
+    this_data = A_out{S_idx}{1};
+    
+    p_cent = []; p_rate = [];
+    
+    for ii = length(this_data.P_pos):-1:1
+        p_cent(ii) = this_data.map{ii}.cent_z;
+        p_rate(ii) = length(this_data.P_loc{ii}.loc_time);
+    end
+%     
+    p_rate(p_cent > -1.95) = 0;
+    [~, s_idx] = sort(p_rate, 'descend');
+    p_rank = s_idx;
+    
+    if length(this_data.P_pos) >3
+        p_idx = p_rank(1:4);
+    else
+        p_idx = p_rank(1:length(this_data.P_pos));
+    end
+%     
+%     c_ord = [67, 127, 151; 132 147 35; 255 179 13; 253 22 26]/255;
+%     
+%     
+%     
+%         ax1(1) = subplot(5,1,1);
+%         cla; hold on
+%                 rectangle('position', [0 0, this_data.behav.time(end)/1000, 50], 'Facecolor',  [c_ord(4,:) .6], 'Edgecolor',  [c_ord(4,:) 0])
+%                 rectangle('position', [0 50, this_data.behav.time(end)/1000, 50], 'Facecolor',  [c_ord(1,:) .6], 'Edgecolor',  [c_ord(1,:) 0])
+% 
+%         plot(this_data.behav.time/1000, this_data.behav.position(:,1), 'k', 'linewidth', 3)
+        
+        
+%                 ax1(2) = subplot(4,1,2:3);
+r_idx = [1,3,4]; 
+                c_ord_p =MS_linspecer(40);
+                c_ord_p = [c_ord_p(5,:); c_ord_p(30,:); c_ord_p(40,:)];
+                MS_Asmbly_plot_raster_figure(this_data, [], p_rank(r_idx), c_ord_p)
+                
+                MS_Asmbly_plot_raster_ReAct_figure(this_data, [], 'REM_Post_data', p_rank(r_idx), c_ord_p)
+
+                figure(8988); clf; for ii = 1:length(r_idx);subplot(2,3,ii); imagesc(this_data.map{p_rank(r_idx(ii))}.map); ylabel(num2str(p_rank(r_idx(ii)))); end
+%         yline(this_data.REM_Post_stats.R_thresh, '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
+%     yline(log10(this_data.REM_Post_stats.R_thresh), '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
+    
+%     hold on
+%     for ii = length(p_idx):-1:1
+%         this_proj = this_data.P_proj(p_idx(ii),:);
+%         plot(this_data.wake_tvec, log10(this_proj), 'color', c_ord(ii,:), 'linewidth', .5)
+%     end
+%     
+%     ylim([0 inf])
+%     y_val = get(gca, 'YTick');
+%     %         y_val = [0 1 2 2.3979];
+%     % yTick', [0 1 2 2.3979]
+%     set(gca, 'YTickLabel', 10.^y_val, 'linewidth', 1);
+%     
+%         ylabel({'assembly strength'})
+%     set(gca, 'xtick', []);
+%     
+        
+        
+%     
+%         ax2(iD) = subplot(2,1,2);
+% 
+%     %         yline(this_data.REM_Post_stats.R_thresh, '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
+%     yline(log10(this_data.REM_Post_stats.R_thresh), '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
+%     
+%     hold on
+%     for ii = length(p_idx):-1:1
+%         this_proj = this_data.REM_Post_proj(p_idx(ii),:);
+%         plot(this_data.REM_Post_tvec, log10(this_proj), 'color', c_ord(ii,:), 'linewidth', .5)
+%     end
+%     
+%     ylim([0 inf])
+%     y_val = get(gca, 'YTick');
+%     %         y_val = [0 1 2 2.3979];
+%     % yTick', [0 1 2 2.3979]
+%     set(gca, 'YTickLabel', 10.^y_val, 'linewidth', 1);
+%     
+%         ylabel({'assembly strength'})
+%     set(gca, 'xtick', []);
+%     
+%         xlim([0 60]);
+        
+        
+  
+%     for ii = length(p_idx):-1:1
+%         this_proj_idx = find(this_data.REM_Post_proj(p_idx(ii),:) > this_data.REM_Post_stats.R_thresh);
+%         line([this_data.REM_Post_tvec(this_proj_idx); this_data.REM_Post_tvec(this_proj_idx)] , [ii-.5; ii+.5], 'color', c_ord(ii,:), 'linewidth', .5)
+%     end
+%     
+%     set(gca, 'ytick', [])
+%     
+%     if iD == 1
+%         xlim([0 60]);
+%         xlabel('time (s)')
+%         set(gca, 'xtick', [0 60])
+   
+    
+% linkaxes(ax, 'y')
+% set(gcf,'PaperUnits','inches', 'Units', 'inches');
+% set(gcf, 'position', [5 5 7 2])
+% set(gcf,'PaperSize', [7, 2]);
+% set(gca,'xlimmode','manual','ylimmode','manual')
+% print(gcf, '-dpdf', [fig_dir filesep 'Fig3_example.pdf'])
+
+% save an h5 with the data for plotting.
+% fname = ['Fig3_assembly_.h5'];
+
+% if exist(fname, 'file')
+%     delete(fname)
+% end
+

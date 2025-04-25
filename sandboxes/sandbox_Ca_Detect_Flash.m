@@ -1,17 +1,17 @@
 %% shifts test
 
-
-d_mat = [];
-
-for ii = 1:length(ms.shifts)
-    
-    this_d = cell2mat({ms.shifts{ii}(:).diff});
-    
-    d_mat = [d_mat this_d]; 
-end
-
-
-% not helpful
+% 
+% d_mat = [];
+% 
+% for ii = 1:length(ms.shifts)
+%     
+%     this_d = cell2mat({ms.shifts{ii}(:).diff});
+%     
+%     d_mat = [d_mat this_d]; 
+% end
+% 
+% 
+% % not helpful
 
 %% try getting the median of only the negative values by removing all positives before getting the median. 
 ms = MS_Ca_good_cells(ms); 

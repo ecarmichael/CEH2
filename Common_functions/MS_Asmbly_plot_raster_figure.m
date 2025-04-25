@@ -1,24 +1,30 @@
-function MS_Asmbly_plot_raster_figure(A_in, fig_dir,plot_idx, type)
+function MS_Asmbly_plot_raster_figure(A_in, fig_dir,plot_idx, c_ord, type)
 
 if nargin < 2
     fig_dir = [];
     plot_idx = 1:length(A_in.P_pos);
+    c_ord = []; 
     type = 'act_mat';
 elseif nargin < 3
     plot_idx = 1:length(A_in.P_pos);
     type = 'act_mat';
+        c_ord = []; 
 elseif nargin < 4
+    type = 'act_mat';
+        c_ord = []; 
+elseif nargin < 5
     type = 'act_mat';
 end
 
 %%
-ft_size = 14; 
-if length(plot_idx) <= 4
-c_ord = [67, 127, 151; 132 147 35; 255 179 13; 253 22 26]/255;
-else
-    c_ord = MS_linspecer(length(plot_idx)+ceil(length(plot_idx)/5));
+ft_size = 14;
+if isempty(c_ord);
+    if length(plot_idx) <= 4
+        c_ord = [67, 127, 151; 132 147 35; 255 179 13; 253 22 26]/255;
+    else
+        c_ord = MS_linspecer(length(plot_idx)+ceil(length(plot_idx)/5));
+    end
 end
-    
    
 % make a colour coded activity array
 act_array = zeros(size(A_in.wake_data));
@@ -58,8 +64,8 @@ pause(.5)
 ax(1) = subplot(3, 1, 1);
 cla
 hold on
-plot(A_in.behav.time/1000, A_in.behav.position(:,1), '-', 'color', [.5 .5 .5], 'linewidth', 0.3)
-s = scatter(A_in.behav.time(A_in.move_idx)/1000, A_in.behav.position((A_in.move_idx),1),ones(size(A_in.behav.time(A_in.move_idx)))*4, A_in.behav.speed(A_in.move_idx), 'Marker', '.'); 
+plot(A_in.behav.time/1000, A_in.behav.position(:,1), '-', 'color', [.5 .5 .5], 'linewidth', 1)
+s = scatter(A_in.behav.time(A_in.move_idx)/1000, A_in.behav.position((A_in.move_idx),1),ones(size(A_in.behav.time(A_in.move_idx)))*200, A_in.behav.speed(A_in.move_idx), 'Marker', '.'); 
 s.MarkerFaceColor = s.MarkerEdgeColor; 
 %     plot(A_in.behav.time(A_in.move_idx)/1000, A_in.behav.position((A_in.move_idx),1));
 xlim([min(A_in.behav.time(A_in.move_idx)) max(A_in.behav.time(A_in.move_idx))]/1000)
@@ -93,7 +99,7 @@ if isstr(type) == 1
                 off_set = off_set+1;
                 
                 if strcmpi(type, 'raw')
-                    plot(A_in.wake_tvec, ((A_in.wake_data(:,iC)./max(A_in.wake_data(:,iC)))*.8)+off_set,  'color', c_ord(iA,:), 'linewidth', 1)
+                    plot(A_in.wake_tvec, ((A_in.wake_data(:,iC)./max(A_in.wake_data(:,iC)))*.8)+off_set,  'color', c_ord(iA,:), 'linewidth', 3)
                 elseif strcmpi(type, 'raster')
                     this_idx = find(A_in.wake_data(:,iC) > 0);
                     this_t = A_in.wake_tvec(this_idx);
@@ -172,8 +178,8 @@ set(gca, 'YTickLabel', 10.^y_val, 'linewidth', 1);
 % text('R thresh'
 
 
-
-linkprop(ax,{'XLim'});
+linkaxes(ax, 'x');
+linkprop(ax,{'x', 'XLim'});
 colormap(ax(1), 'parula');
 colormap(ax(2),[1 1 1; c_map(2:end,:)]);
 if length(ax) == 4

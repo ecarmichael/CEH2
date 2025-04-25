@@ -151,8 +151,8 @@ else
     legend([leg_val 'R thresh'], 'Orientation', 'horizontal', 'box', 'off')
     
     
-    
-    linkprop(ax,{'XLim'})
+   
+    linkprop(ax,{'x', 'XLim'})
     colormap(ax(1), 'parula')
     colormap(ax(2),c_map)
     if length(ax) == 4
