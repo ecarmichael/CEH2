@@ -4243,14 +4243,31 @@ S_idx = find(S_idx);
         
         
 %                 ax1(2) = subplot(4,1,2:3);
-r_idx = [1,3,4]; 
+r_idx = [1 10];% [4 6 10]; %[1,3,4]; 
+% r_idx = [1:length(p_rank)];
+%                 c_ord_p =MS_linspecer(length(p_rank(r_idx)));
+
                 c_ord_p =MS_linspecer(40);
-                c_ord_p = [c_ord_p(5,:); c_ord_p(30,:); c_ord_p(40,:)];
+%                 c_ord_p = c_ord_p(5:floor(40/length(r_idx)):40,:); 
+%                 c_ord_p = [c_ord_p(5,:);  c_ord_p(35,:); c_ord_p(40,:)];
+c_ord_p = linspecer(2);
                 MS_Asmbly_plot_raster_figure(this_data, [], p_rank(r_idx), c_ord_p)
                 
                 MS_Asmbly_plot_raster_ReAct_figure(this_data, [], 'REM_Post_data', p_rank(r_idx), c_ord_p)
 
-                figure(8988); clf; for ii = 1:length(r_idx);subplot(2,3,ii); imagesc(this_data.map{p_rank(r_idx(ii))}.map); ylabel(num2str(p_rank(r_idx(ii)))); end
+                figure(8988); clf; 
+                if length(r_idx) <5
+                    mm = 2;
+                    nn = 2;
+                else
+                mm = ceil(length(r_idx)/4); 
+                                nn = ceil(length(r_idx)/4); 
+                end
+                for ii = 1:length(r_idx)
+                    subplot(mm,nn,ii); 
+                    imagesc(this_data.map{p_rank(r_idx(ii))}.map); 
+                    ylabel({num2str(p_rank(r_idx(ii))) ; [num2str(this_data.REM_Post_stats.rate(p_rank(r_idx(ii)))) '  |  ' num2str(this_data.REM_Post_stats.rate_p(p_rank(r_idx(ii))))  ]}); 
+                end
 %         yline(this_data.REM_Post_stats.R_thresh, '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
 %     yline(log10(this_data.REM_Post_stats.R_thresh), '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
     
