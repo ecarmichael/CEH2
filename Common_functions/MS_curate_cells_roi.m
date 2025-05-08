@@ -18,7 +18,7 @@ if roi == 1
     figure(101)
     clf
     MS_plot_all_SFPs(ms.SFPs_sharp);
-    
+    clim([0 100])
     poly_roi = MS_drawpoly_wait('', MS_linspecer(1));
     
     roi = [];
@@ -54,7 +54,7 @@ temp_sfps = ms.SFPs_sharp;
 
 temp_sfps(:,:,~roi_keep_idx) = [];
 MS_plot_all_SFPs(temp_sfps);
-
+clim([0 100])
 
 c_ord = MS_linspecer(4);
 
@@ -70,14 +70,19 @@ redo = 0;
 
 keep_idx = zeros(ms.numNeurons, 1);
 cell_idx = find(roi_keep_idx);
-for kk = 1:length(cell_idx)
+
+%%
+kk = 1; 
+while kk <length(cell_idx)
     
     if redo == 0
-        ii = cell_idx(kk);
+        kk = kk+1;
     else
         redo =0;
+        kk = kk-1; 
     end
-    
+            ii = cell_idx(kk);
+
     if isempty(ms2)
         subplot(2,3,[1 2 ])
         cla
@@ -227,7 +232,7 @@ for kk = 1:length(cell_idx)
         
     elseif strcmp(key_hit, 'leftarrow')
         fprintf('Redo Cell <strong>%0.0f</strong>/%0.0f : %s\n', ii)
-        ii = cell_idx(kk-1);
+        %ii = cell_idx(kk-1);
         redo = 1;
         continue
     end
