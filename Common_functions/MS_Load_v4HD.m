@@ -22,6 +22,9 @@ function hd= MS_Load_v4HD(data_dir, plot_flag)
 
 if nargin < 1
     data_dir = cd;
+    plot_flag = false; 
+elseif nargin < 2
+    plot_flag = 0; 
 end
 
 cd(data_dir);
