@@ -18,7 +18,7 @@ if roi == 1
     figure(101)
     clf
     MS_plot_all_SFPs(ms.SFPs_sharp);
-    clim([0 100])
+    caxis([0 100])
     poly_roi = MS_drawpoly_wait('', MS_linspecer(1));
     
     roi = [];
@@ -54,7 +54,7 @@ temp_sfps = ms.SFPs_sharp;
 
 temp_sfps(:,:,~roi_keep_idx) = [];
 MS_plot_all_SFPs(temp_sfps);
-clim([0 100])
+caxis([0 100])
 
 c_ord = MS_linspecer(4);
 
@@ -79,7 +79,10 @@ while kk <length(cell_idx)
         kk = kk+1;
     else
         redo =0;
-        kk = kk-1; 
+        kk = kk-1;
+        if kk <1
+            kk = 1;
+        end
     end
             ii = cell_idx(kk);
 
