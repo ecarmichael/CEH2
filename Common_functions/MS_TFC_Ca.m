@@ -1,20 +1,24 @@
-function TFC_out = MS_TFC_Ca(data_dir, signal, plot_flag)
+function TFC_out = MS_TFC_Ca(data_in, signal,hd,  plot_flag)
 
 
 %% init
 if nargin < 1
-    data_dir = cd;
+    data_in = cd;
     signal = 'RawTraces';
+    hd = []; 
     plot_flag = 0;
 elseif nargin < 2
+    hd = []; 
     signal = 'RawTraces';
     plot_flag = 0;
 elseif nargin < 3
+    hd = []; 
+    plot_flag = 0;
+    elseif nargin < 4
     plot_flag = 0;
 end
 
 
-cd(data_dir)
 
 TFC1.baseline = [0 240];
 TFC1.tone = [240 260; 402 422; 564 584];
@@ -36,9 +40,20 @@ c_ord = MS_linspecer(4);
 
 
 %% Load the data
-load('ms.mat')
+if ~isstruct(data_in)
+    cd(data_in)
+    load('ms.mat')
 
-hd = MS_Load_v4HD(cd, 0);
+    hd = MS_Load_v4HD(cd, 0);
+elseif isfield(data_in, 'numNeurons')
+    ms = data_in; 
+elseif isfield(data_in, 'ms')
+    ms = data_in.ms; 
+    if isfield(data_in, 'hd')
+        hd = data_in.hd;
+    end
+end
+clear data_in; 
 
 % get the session info
 
@@ -48,8 +63,10 @@ info.session = parts{end-2};
 
 
 if isfield(ms, 'keep_idx')
+    if length(ms.keep_idx) == size(ms.denoise,2)
     ms = MS_Ca_good_cells(ms);
     fprintf('ms data has been curated using %.0f/%.0f good cells\n', sum(ms.keep_idx), length(ms.keep_idx))
+    end
 end
 
 
@@ -181,14 +198,15 @@ if plot_flag
             'FaceColor',[c_ord(2,:) .6])
     end
     plot(ms_tfc.time, ms_tfc.(signal)(:,1:50), 'k')
-    
+        ylabel('dF/f')
+
     
     %$%% plot the head motion
     ax(2) = subplot(5,3,4:6);
     cla
     hold on
     plot(hd.tvec, hd.data(4,:), 'k')
-    
+    ylabel('Head motion')
     hd_m = max(hd.data(4,:))*1.1;  
     
     for ii = 1:size(TFC1.tone,1)
@@ -214,7 +232,9 @@ if plot_flag
     cla
     hold on
     imagesc(ms_tfc.time,1:size(ms_tfc.(signal),2), all_mat_s' )
-    
+    ylabel('cell id')
+            ylim([0 size(ms_tfc.(signal),2)]); 
+
     for ii = 1:size(TFC1.tone,1)
         rectangle('Position',[TFC1.tone(ii,1),0,...
             TFC1.tone(ii,2) - TFC1.tone(ii,1), size(ms_tfc.(signal),2)],...
@@ -243,21 +263,26 @@ if plot_flag
     xline(ms_tfc.time(tone_s_idx(1)))
     xline(ms_tfc.time(tone_e_idx(1)))
     xlim([ms_tfc.time(tone_s_idx(1)) ms_tfc.time(tone_e_idx(1))])
-    
+        ylabel('cell id')
+        ylim([0 size(ms_tfc.(signal),2)]); 
+
     subplot(5,3,11)
     cla; hold on;
     imagesc(ms_tfc.time(trace_s_idx:trace_e_idx), 1:size(ms_tfc.(signal),2), trace_mat_s);
     xline(ms_tfc.time(trace_s_idx(1)))
     xline(ms_tfc.time(trace_e_idx(1)))
     xlim([ms_tfc.time(trace_s_idx(1)) ms_tfc.time(trace_e_idx(1))])
-    
+            ylim([0 size(ms_tfc.(signal),2)]); 
+        ylim([0 size(ms_tfc.(signal),2)]); 
+
     subplot(5,3,12)
     cla; hold on;
     imagesc(ms_tfc.time(shock_s_idx:shock_e_idx), 1:size(ms_tfc.(signal),2), shock_mat_s);
     xline(ms_tfc.time(shock_s_idx(1))+10)
     xline(ms_tfc.time(shock_e_idx(1))-10)
     xlim([ms_tfc.time(shock_s_idx(1)) ms_tfc.time(shock_e_idx(1))])
-    
+            ylim([0 size(ms_tfc.(signal),2)]); 
+
     subplot(5,3,13)
     cla; hold on;
     plot(ms_tfc.time(tone_s_idx:tone_e_idx), mean(tone_mat_s,1),'k', 'LineWidth',2);
@@ -267,12 +292,13 @@ if plot_flag
     xline(ms_tfc.time(tone_s_idx(1))+10)
     xline(ms_tfc.time(tone_e_idx(1))-10)
     xlim([ms_tfc.time(tone_s_idx(1)) ms_tfc.time(tone_e_idx(1))])
-    legend({'mean', '1^{st}', '2^nd', '3^rd'})
     ylabel('Mean activity')
     
     yyaxis right; cla
     plot(ms_tfc.time(tone_s_idx:tone_e_idx), tone_motion, 'LineWidth',2);
-    
+        legend({'mean', '1^{st}', '2^{nd}', '3^{rd}', 'motion'}, 'box', 'off', 'orientation', 'horizontal', 'location', 'north')
+
+        
     subplot(5,3,14)
     cla; hold on;
     plot(ms_tfc.time(trace_s_idx:trace_e_idx),mean(trace_mat_s,1),'k', 'LineWidth',2);
@@ -306,3 +332,18 @@ if plot_flag
         xlim([ms_tfc.time(1) ms_tfc.time(end)])
 
 end
+
+%% look for assemblies
+ms_tfc.time = ms_tfc.time.*1000; 
+
+%%
+A = []; 
+
+[A.A_temp, A.A_proj, A.data_h, A.tvec, A.opts, A.w_thresh, A.shuff_stats] = MS_PCA_ICA_only(ms_tfc, true(length(ms_tfc.time),1), 0.5);
+
+[A.P_temp, A.P_proj, A.P_cells] = MS_Asmbly_select(A.A_temp, A.A_proj, 2)
+
+%% plot 
+
+MS_Asmbly_plot(A.P_temp, A.P_cells, [], [])
+

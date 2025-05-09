@@ -73,3 +73,9 @@ for ii = 1:length(mlist)
     clear ms hd sess_json scope_json
 
 end
+
+%% play with some data
+
+
+
+
