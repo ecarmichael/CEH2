@@ -1,6 +1,21 @@
 function TFC_out = MS_TFC_Ca(data_in, signal,hd,  plot_flag)
 
 
+% starting TS for shock onset in each subject
+meta.JKA_01.start_idx = 158; 
+meta.JKA_01.start_ts = 10466/1000; 
+meta.JKA_01.shock_idx = 4389; 
+meta.JKA_01.shock_ts = 287887/1000; 
+
+
+meta.JKA_04.shock_idx = 4308; 
+
+meta.JKA_05.shock_idx = 4286; 
+meta.JKA_05.shock_ts = 285631/1000; 
+
+meta.JKA_07.shock_idx = 4276; 
+
+
 %% init
 if nargin < 1
     data_in = cd;
@@ -70,17 +85,27 @@ if isfield(ms, 'keep_idx')
 end
 
 
+s_t = meta.([info.subject(1:3) '_' info.subject(end-1:end)]).shock_ts - 280; 
+
 %% split out the task and sleep
 
-if isfield(ms, 'tvecs') && size(ms.tvecs,1) > 1
+if isfield(ms, 'tvecs') && size(ms.tvecs,2) > 1
     
     ms_pre =  MS_restrict(ms, ms.tvecs{1}(1),ms.tvecs{1}(end));
     
     ms_tfc =  MS_restrict(ms, ms.tvecs{2}(1),ms.tvecs{2}(end));
     
+    
     ms_post =  MS_restrict(ms, ms.tvecs{3}(1),ms.tvecs{3}(end));
     
-    
+    if iscell(hd) 
+        hd_pre =  hd{1}; 
+        hd_post =  hd{3}; 
+
+        hd =  hd{2}; 
+        
+        
+    end
 else
     
     ms_tfc = ms;
@@ -146,11 +171,18 @@ shock_mat = mean(cat(3,ms_tfc.(signal)(shock_s_idx(1):shock_e_idx(1),:),...
 
 % average motion for each period
 
+if isfield(hd, 'motion')
+    
+    tone_motion = mean([hd.motion(tone_s_idx(1):tone_e_idx(1));hd.motion(tone_s_idx(2):tone_e_idx(2)); hd.motion(tone_s_idx(3):tone_e_idx(3))] ,1);
+    trace_motion = mean([hd.motion(trace_s_idx(1):trace_e_idx(1));hd.motion(trace_s_idx(2):trace_e_idx(2)); hd.motion(trace_s_idx(3):trace_e_idx(3))] ,1);
+    shock_motion = mean([hd.motion(shock_s_idx(1):shock_e_idx(1));hd.motion(shock_s_idx(2):shock_e_idx(2)); hd.motion(shock_s_idx(3):shock_e_idx(3))] ,1);
+    
+else
 
 tone_motion = mean([hd.data(4,tone_s_idx(1):tone_e_idx(1));hd.data(4,tone_s_idx(2):tone_e_idx(2)); hd.data(4,tone_s_idx(3):tone_e_idx(3))] ,1); 
 trace_motion = mean([hd.data(4,trace_s_idx(1):trace_e_idx(1));hd.data(4,trace_s_idx(2):trace_e_idx(2)); hd.data(4,trace_s_idx(3):trace_e_idx(3))] ,1); 
 shock_motion = mean([hd.data(4,shock_s_idx(1):shock_e_idx(1));hd.data(4,shock_s_idx(2):shock_e_idx(2)); hd.data(4,shock_s_idx(3):shock_e_idx(3))] ,1); 
-
+end
 % sort the maps
 
 
