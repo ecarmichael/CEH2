@@ -13,7 +13,7 @@ meta.JKA_04.shock_idx = 4308;
 meta.JKA_05.shock_idx = 4286; 
 meta.JKA_05.shock_ts = 285631/1000; 
 
-meta.JKA_07.shock_idx = 4276; 
+meta.JKA_07.shock_idx = 4276; edit 
 
 
 %% init

@@ -77,5 +77,12 @@ end
 %% play with some data
 
 
+%% single MS file movement
+
+
+cd(sess_dir)
+
+load('ms.mat')
+
 
 
