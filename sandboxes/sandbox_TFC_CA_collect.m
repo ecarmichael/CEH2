@@ -1,4 +1,4 @@
-function sandbox_TFC_CA_collect(sess_dir, save_dir)
+function data = sandbox_TFC_CA_collect(sess_dir)
 
 
 cd(sess_dir)
@@ -73,3 +73,4 @@ for ii = 1:length(mlist)
     clear ms hd sess_json scope_json
 
 end
+
