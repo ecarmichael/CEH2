@@ -20,7 +20,7 @@ for ii = 1:length(A_in)
         continue
     else
         
-        REM_temp_all = assembly_patterns(A_in{ii}.REM_Pre_data, A_in{ii}.info.opts);
+        REM_temp_all = assembly_patterns(A_in{ii}.REM_Pre_data', A_in{ii}.info.opts);
         
         if isempty(REM_temp_all)
                         fprintf('%.0f Assemblies found in Pre REM (%.2fs binsize)\n',size(REM_temp_all,2), A_in{ii}.info.bin)

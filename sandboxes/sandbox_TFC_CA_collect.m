@@ -85,5 +85,26 @@ cd(sess_dir)
 
 load('ms.mat')
 
+% split data into pre, task, post, 
+
+data = []; 
+data.pre.ms = MS_restrict(ms_out,  ms_out.tvecs{1}(1), ms_out.tvecs{1}(end)); 
+data.pre.ms.HD = data.pre.ms.HD{1}; 
+data.pre.ms.Exp_json = data.pre.ms.Exp_json{1}; 
+data.pre.ms = rmfield(data.pre.ms, {'vidObj', 'vidNum', 'frameNum', 'tvecs'}); 
+
+data.task.ms = MS_restrict(ms_out, ms_out.tvecs{2}(1), ms_out.tvecs{2}(end));
+data.task.ms.HD = data.task.ms.HD{1}; 
+data.task.ms.Exp_json = data.task.ms.Exp_json{1}; 
+data.task.ms = rmfield(data.task.ms, {'vidObj', 'vidNum', 'frameNum', 'tvecs'}); 
+
+data.post.ms = MS_restrict(ms_out, ms_out.tvecs{3}(1), ms_out.tvecs{3}(end)); 
+data.post.ms.HD = data.post.ms.HD{1}; 
+data.post.ms.Exp_json = data.post.ms.Exp_json{1}; 
+data.post.ms = rmfield(data.post.ms, {'vidObj', 'vidNum', 'frameNum', 'tvecs'}); 
+
+
+
+
 
 

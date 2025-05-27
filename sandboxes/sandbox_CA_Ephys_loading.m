@@ -112,7 +112,7 @@ evt.label{length(evt.label)+1} = 'all_evt';
 
 % load the NLX 'continuous sampled channels' "CSC"
 cfg = [];
-cfg.fc = {'CSC8.ncs'}%,'CSC6.ncs', 'CSC8.ncs'};
+cfg.fc = {'CSC1.ncs'}%; ,'CSC6.ncs', 'CSC8.ncs'};
 cfg.decimateByFactor = 8;
 csc = LoadCSC(cfg);
 

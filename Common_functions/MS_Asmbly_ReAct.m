@@ -45,6 +45,9 @@ tvec = tbin_centers;
 
 %% get the reactivation projection
 rng(123, 'twister')
+% if size(data_h,1) < size(data_h,2)
+%  data_h = data_h'; 
+% end
 
 proj_out = assembly_activity(Temp_in ,data_h');
 

@@ -1,10 +1,28 @@
-%% CE_sandbox_load_NLX 
+function [csc_out, ms_out]  = CE_sandbox_load_NLX(nlx_dir, CA, evt_idx)
 
 
-nlx_dir = 'K:\NLX_CA test\2023-09-29_TTL_Test'; 
+%% init
+if nargin < 3
+    evt_idx = []; 
+    fprintf('<strong>%s</strong>: no ''evt_idx'' specified using closest match', mfilename)
+end
 
-CA_dir = {'K:\NLX_CA test\12_35_04_1827\My_V4_Miniscope',...
-    'K:\NLX_CA test\12_35_36_1828\My_V4_Miniscope'}; 
+
+if isstring(CA)
+    CA_dir = CA; 
+        fprintf('<strong>%s</strong>: ''CA'' is a string, using it as a directory', mfilename)
+
+elseif isstruct(CA)
+    CA_type = 'ms';
+        fprintf('<strong>%s</strong>: ''CA'' input is a struct aligning to pre and post', mfilename)
+
+end
+
+
+% nlx_dir = 'K:\NLX_CA test\2023-09-29_TTL_Test'; 
+% 
+% CA_dir = {'K:\NLX_CA test\12_35_04_1827\My_V4_Miniscope',...
+%     'K:\NLX_CA test\12_35_36_1828\My_V4_Miniscope'}; 
 %% grab some meta_data
 cd(nlx_dir); 
 

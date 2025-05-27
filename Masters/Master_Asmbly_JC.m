@@ -61,7 +61,7 @@ cd(c_d)
 
 
 move_thresh  = 9;
-bin_size = [.5];
+bin_size = .5;
 
 inter_dir = strrep([main_dir 'Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9'], '\', filesep);
 fig_dir = [inter_dir filesep 'checks'];
@@ -84,12 +84,12 @@ for ii = 1:length(f_list)
     % A_out{ii} = Pipeline_Asmbly(f_list(ii).name,bin_size, move_thresh, method);
     % P_out{ii} = Pipeline_Asmbly_place(f_list(ii).name,bin_size, move_thresh, method);
 
-    B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method, 256);
+    B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method, [], 256);
 
-    B_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, B_out{ii});
+    % B_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, B_out{ii});
 
     B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii});
-
+% end
     % Summary plots
     %                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
     %     Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
@@ -162,10 +162,10 @@ clear B_out
 
 exclude_mouse = {'pv1254'};
 
-for ii = length(A_out):-1:1
+for ii = length(B_out):-1:1
     
-    if contains(A_out{ii}{1}.info.subject, exclude_mouse)
-        fprintf('Removing sesson: <strong>%s</strong>\n', A_out{ii}{1}.info.subject);
+    if contains(B_out{ii}{1}.info.subject, exclude_mouse)
+        fprintf('Removing sesson: <strong>%s</strong>\n', B_out{ii}{1}.info.subject);
         rm_idx(ii) = true;
     else
         rm_idx(ii) = false;
@@ -173,7 +173,7 @@ for ii = length(A_out):-1:1
     
 end
 
-A_out(rm_idx) = [];
+B_out(rm_idx) = [];
 
 
 novel_idx = []; anx_idx = []; HS_idx = [];
@@ -4197,7 +4197,7 @@ SetFigure(cfg_set, gcf)
 %% plot a specific example
 S_idx = []; 
 for ii = length(A_out):-1:1
-    if strcmpi(A_out{ii}{1}.info.subject, 'pv1060') &&  strcmpi(A_out{ii}{1}.info.session, 'HATD5')
+    if strcmpi(A_out{ii}{1}.info.subject, 'pv1069') &&  strcmpi(A_out{ii}{1}.info.session, 'LTD5')
         S_idx(ii) = true;
     else
         S_idx(ii) = false;
@@ -4217,10 +4217,10 @@ S_idx = find(S_idx);
     
     for ii = length(this_data.P_pos):-1:1
         p_cent(ii) = this_data.map{ii}.cent_z;
-        p_rate(ii) = length(this_data.P_loc{ii}.loc_time);
+        p_rate(ii) = length(this_data.map{ii}.MI);%length(this_data.P_loc{ii}.loc_time);
     end
 %     
-    p_rate(p_cent > -1.95) = 0;
+    %p_rate(p_cent > -1.95) = 0;
     [~, s_idx] = sort(p_rate, 'descend');
     p_rank = s_idx;
     
@@ -4243,31 +4243,80 @@ S_idx = find(S_idx);
         
         
 %                 ax1(2) = subplot(4,1,2:3);
-r_idx = [1 10];% [4 6 10]; %[1,3,4]; 
+r_idx = [1:4];%  [1 10];% [4 6 10]; %[1,3,4]; 
 % r_idx = [1:length(p_rank)];
-%                 c_ord_p =MS_linspecer(length(p_rank(r_idx)));
+                c_ord_p =MS_linspecer(length(p_rank(r_idx)));
 
-                c_ord_p =MS_linspecer(40);
+                % c_ord_p =MS_linspecer(40);
 %                 c_ord_p = c_ord_p(5:floor(40/length(r_idx)):40,:); 
 %                 c_ord_p = [c_ord_p(5,:);  c_ord_p(35,:); c_ord_p(40,:)];
-c_ord_p = linspecer(2);
-                MS_Asmbly_plot_raster_figure(this_data, [], p_rank(r_idx), c_ord_p)
-                
+% c_ord_p = linspecer(2);
+               ax =  MS_Asmbly_plot_raster_figure(this_data, [], p_rank(r_idx), c_ord_p);
+                linkprop(ax, 'XLim');
+                xlim([0 100])
                 MS_Asmbly_plot_raster_ReAct_figure(this_data, [], 'REM_Post_data', p_rank(r_idx), c_ord_p)
+                xlim([0 100])
 
                 figure(8988); clf; 
                 if length(r_idx) <5
                     mm = 2;
                     nn = 2;
                 else
-                mm = ceil(length(r_idx)/4); 
-                                nn = ceil(length(r_idx)/4); 
+                mm = ceil(length(r_idx)/2); 
+                                nn = ceil(length(r_idx)/2); 
                 end
                 for ii = 1:length(r_idx)
                     subplot(mm,nn,ii); 
                     imagesc(this_data.map{p_rank(r_idx(ii))}.map); 
                     ylabel({num2str(p_rank(r_idx(ii))) ; [num2str(this_data.REM_Post_stats.rate(p_rank(r_idx(ii)))) '  |  ' num2str(this_data.REM_Post_stats.rate_p(p_rank(r_idx(ii))))  ]}); 
                 end
+
+
+% make the stem plots
+
+figure(30311)
+subplot(2,2,1)
+    cla
+    hold on
+    ii = p_rank(r_idx(1)); 
+    stem(this_data.P_temp(:,ii), 'color', [.8 .8 .8 .2])
+    stem(this_data.P_pos{ii}, this_data.P_temp(this_data.P_pos{ii},ii), 'color', c_ord(1,:), 'MarkerFaceColor', c_ord(1,:), 'LineWidth', 1.5)
+    view(90,90)
+    ylim([-.2 .5])
+
+    subplot(2,2,2)
+    cla
+    hold on
+    ii = p_rank(r_idx(2)); 
+    stem(this_data.P_temp(:,ii), 'color', [.8 .8 .8 .2])
+    stem(this_data.P_pos{ii}, this_data.P_temp(this_data.P_pos{ii},ii), 'color', c_ord(2,:), 'MarkerFaceColor', c_ord(2,:), 'LineWidth', 1.5)
+    view(90,90)
+    ylim([-.2 .5])
+
+    subplot(2,2,3)
+    cla
+    hold on
+    ii = p_rank(r_idx(3)); 
+    stem(this_data.P_temp(:,ii), 'color', [.8 .8 .8 .2])
+    stem(this_data.P_pos{ii}, this_data.P_temp(this_data.P_pos{ii},ii), 'color', c_ord(3,:), 'MarkerFaceColor', c_ord(3,:), 'LineWidth', 1.5)
+    view(90,90)
+        ylim([-.2 .5])
+
+
+    subplot(2,2,4)
+    cla
+    hold on
+    ii = p_rank(r_idx(4)); 
+    stem(this_data.P_temp(:,ii), 'color', [.8 .8 .8 .2])
+    stem(this_data.P_pos{ii}, this_data.P_temp(this_data.P_pos{ii},ii), 'color', c_ord(4,:), 'MarkerFaceColor', c_ord(4,:), 'LineWidth', 1.5)
+    view(90,90)
+    ylim([-.2 .5])
+
+
+
+
+
+
 %         yline(this_data.REM_Post_stats.R_thresh, '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
 %     yline(log10(this_data.REM_Post_stats.R_thresh), '--', 'color', [.7 .7 .7], 'linewidth', 0.3)
     
@@ -4340,3 +4389,132 @@ c_ord_p = linspecer(2);
 %     delete(fname)
 % end
 
+%% create a matrix of number of events and rate
+
+% f_list(ii).name,bin_size, move_thresh, method, 256)
+
+Num_sig_A_mat = NaN(3,3); 
+
+for ii = 1:length(A_out)
+
+A_temp = []; A_prog = []; wake_data = []; wake_tvec = [];
+for iB = length(A_out{ii}{1}.bins):-1:1
+    
+    [A_temp{iB}, A_proj{iB}, wake_data{iB}, wake_tvec{iB}, A_opts{iB}] = MS_PCA_ICA_only(ms_trk_cut, move_idx, bin_s(iB),method, opts);
+end
+
+
+for iB = length(A_temp):-1:1
+    
+    [P_temp{iB}, P_proj{iB}, P_pos{iB}] = MS_Asmbly_select(A_temp{iB}, A_proj{iB}, 2);
+    
+    fprintf('[%.0f/%.0f = %.0f%%] Assemblies had cells with positive weights (%.2fs binsize)\n',size(P_temp{iB},2),size(A_temp{iB},2),  (size(P_temp{iB},2)/size(A_temp{iB},2))*100, bin_s(iB))
+end
+
+
+
+
+end
+
+Num_sig_A_mat(1,1,ii) = size(A_out{ii}{1}.REM_Pre_proj,1); 
+Num_sig_A_mat(1,1,ii) = size(A_out{ii}{1}.REM_Pre_proj,1); 
+Num_sig_A_mat(1,1,ii) = size(A_out{ii}{1}.REM_Pre_proj,1); 
+Num_sig_A_mat(1,1,ii) = size(A_out{ii}{1}.REM_Pre_proj,1); 
+
+
+
+
+%% count number of PRE assemblies and percent sig reactivatied
+n_p_a = []; n_p_r =[]; k_i = []; 
+l_pre_r =[]; l_post_r = []; 
+for ii = size(B_out,2):-1:1
+    if strcmp(B_out{ii}{1}.info.session, 'LTD1')
+        k_i(ii) =true; 
+    else 
+        k_i(ii) = false; 
+    end
+
+    l_pre_r(ii) = B_out{ii}{1}.REM_Pre_tvec(end) - B_out{ii}{1}.REM_Pre_tvec(1); 
+    l_post_r(ii) = B_out{ii}{1}.REM_Post_tvec(end) - B_out{ii}{1}.REM_Post_tvec(1); 
+
+    if isempty(B_out{ii}{1}.pREM_Wake_proj)
+        n_p_a(ii) =0;
+        n_p_r(ii) =0;
+
+    else
+        n_p_a(ii) = size(B_out{ii}{1}.pREM_proj,1);
+        n_p_r(ii) = sum(sum(B_out{ii}{1}.pREM_Wake_proj > B_out{ii}{1}.pREM_stats.R_thresh)>0);
+
+    end
+        
+    s_t{ii} = B_out{ii}{1}.info.session; 
+
+end
+
+fprintf('Pre REM dur: %.2f +/- %.2f\n', mean(l_pre_r), std(l_pre_r))
+fprintf('Post REM dur: %.2f +/- %.2f\n', mean(l_post_r), std(l_post_r))
+fprintf('Pre REM prct: %.2f +/- %.2f\n', mean(l_pre_r/120), std(l_pre_r/120))
+fprintf('Post REM prct: %.2f +/- %.2f\n', mean(l_post_r/120), std(l_post_r/120))
+
+%% plot a specific example
+S_idx = []; 
+for ii = length(B_out):-1:1
+    if strcmpi(B_out{ii}{1}.info.subject, 'pv1060') &&  strcmpi(B_out{ii}{1}.info.session, 'LTD1')
+        S_idx(ii) = true;
+    else
+        S_idx(ii) = false;
+    end
+    fprintf('%s   - %s\n', B_out{ii}{1}.info.subject, B_out{ii}{1}.info.session)
+end
+
+S_idx = find(S_idx);
+
+
+% figure(9910)
+% clf
+
+    this_data = B_out{S_idx}{1};
+    
+    p_cent = []; p_rate = [];
+    
+    for ii = size(this_data.pREM_temp,2):-1:1
+        p_cent(ii) = this_data.map{ii}.cent_z;
+        p_rate(ii) = length(this_data.P_loc{ii}.loc_time);
+    end
+%     
+    p_rate(p_cent > -1.95) = 0;
+    [~, s_idx] = sort(p_rate, 'descend');
+    p_rank = s_idx;
+    
+    if length(this_data.P_pos) >3
+        p_idx = p_rank(1:4);
+    else
+        p_idx = p_rank(1:length(this_data.P_pos));
+    end
+
+        
+r_idx = 1:4;%  [1 10];% [4 6 10]; %[1,3,4]; 
+% r_idx = [1:length(p_rank)];
+                c_ord_p =MS_linspecer(length(p_rank(r_idx)));
+
+                % c_ord_p =MS_linspecer(40);
+%                 c_ord_p = c_ord_p(5:floor(40/length(r_idx)):40,:); 
+%                 c_ord_p = [c_ord_p(5,:);  c_ord_p(35,:); c_ord_p(40,:)];
+% c_ord_p = linspecer(2);
+                MS_Asmbly_plot_raster_figure(this_data, [], p_rank(r_idx), c_ord_p)
+                
+                MS_Asmbly_plot_raster_ReAct_figure(this_data, [], 'REM_Post_data', p_rank(r_idx), c_ord_p)
+
+                figure(8988); clf; 
+                if length(r_idx) <5
+                    mm = 2;
+                    nn = 2;
+                else
+                mm = ceil(length(r_idx)/4); 
+                                nn = ceil(length(r_idx)/4); 
+                end
+                for ii = 1:length(r_idx)
+                    subplot(mm,nn,ii); 
+                    imagesc(this_data.map{p_rank(r_idx(ii))}.map); 
+                    ylabel({num2str(p_rank(r_idx(ii))) ; [num2str(this_data.REM_Post_stats.rate(p_rank(r_idx(ii)))) '  |  ' num2str(this_data.REM_Post_stats.rate_p(p_rank(r_idx(ii))))  ]}); 
+                end

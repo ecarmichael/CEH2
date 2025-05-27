@@ -20,7 +20,8 @@ end
 
 
 if isempty(opts)
-    opts.threshold.method = 'circularshift';
+    %opts.threshold.method = 'circularshift';
+    opts.threshold.method = 'MarcenkoPastur';
     opts.Patterns.method = 'ICA';
     opts.Patterns.number_of_iterations = 500;
     opts.threshold.permutations_percentile= 95;

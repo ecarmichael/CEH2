@@ -1,4 +1,4 @@
-function MS_Asmbly_plot_raster_figure(A_in, fig_dir,plot_idx, c_ord, type)
+function ax = MS_Asmbly_plot_raster_figure(A_in, fig_dir,plot_idx, c_ord, type)
 
 if nargin < 2
     fig_dir = [];
@@ -89,7 +89,8 @@ if isstr(type) == 1
         for ii = 2:length(c_step)
            text(0, c_step(ii) - diff(c_step(ii-1:ii))/2, c_label{ii-1},'HorizontalAlignment', 'right', 'Color', c_map(ii,:), 'FontSize', ft_size )
         end
-        
+                % ylim([0.5 off_set+0.5])
+
     else
         
         for iA = plot_idx
@@ -177,9 +178,8 @@ set(gca, 'YTickLabel', 10.^y_val, 'linewidth', 1);
 
 % text('R thresh'
 
-
-linkaxes(ax, 'x');
-linkprop(ax,{'x', 'XLim'});
+    % linkaxes(ax,'x'); 
+linkprop(ax,{ 'XLim'});
 colormap(ax(1), 'parula');
 colormap(ax(2),[1 1 1; c_map(2:end,:)]);
 if length(ax) == 4

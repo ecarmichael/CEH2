@@ -16,8 +16,8 @@ if isempty(method)
 end
 
 if isempty(opts)
-    % opts.threshold.method = 'MarcenkoPastur';
-    opts.threshold.method = 'circularshift';
+     opts.threshold.method = 'MarcenkoPastur';
+    %opts.threshold.method = 'circularshift';
     opts.Patterns.method = 'ICA';
     opts.Patterns.number_of_iterations = 500;
     opts.threshold.number_of_permutations = 500; 
