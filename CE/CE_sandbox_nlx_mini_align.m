@@ -80,7 +80,7 @@ if ~isempty(evt_idx)
     csc_out.pre = []; 
     csc_out.pre.evts = pre_evts;
     csc_out.pre.evts.t =[];
-    csc_out.pre.evts.t{1} =sort(unique([pre_evts.t{3}; pre_evts.t{4}]));
+    csc_out.pre.evts.t{1} =sort(unique([pre_evts.t{1}, pre_evts.t{2}]));
     csc_out.pre.evts.label = [];
     csc_out.pre.evts.label = 'ms_ttl';
     % restrict the csc to the first and last TTl
@@ -93,7 +93,7 @@ if ~isempty(evt_idx)
     csc_out.post = []; 
     csc_out.post.evts = post_evts;
     csc_out.post.evts.t =[];
-    csc_out.post.evts.t{1} =sort(unique([post_evts.t{3}; post_evts.t{4}]));
+    csc_out.post.evts.t{1} =sort(unique([post_evts.t{1}, post_evts.t{2}]));
     csc_out.post.evts.label = [];
     csc_out.post.evts.label = 'ms_ttl';
     % restrict the csc to the first and last TTl
