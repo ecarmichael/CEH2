@@ -252,3 +252,10 @@ for iF = 1:length(F)
           imwrite(F(iF).cdata,'temp_cell_df.gif','gif','DelayTime',1/Fs,'WriteMode','append');
       end
 end
+
+
+%% just the avis
+
+v_id = '0.avi'; 
+
+v = VideoReader(v_id)
