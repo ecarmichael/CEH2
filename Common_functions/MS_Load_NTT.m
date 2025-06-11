@@ -38,16 +38,16 @@ if nargin < 2
             k_idx(ii) = true;
         end
     end
-    fname(k_idx) = []; 
+    fname(~k_idx) = []; 
 end
 
 %% loop over files and 
-S = []; 
-S.type = 'ts';
-S.t = {}; 
-S.label = {};  
+S = ts(); 
+% S.type = 'ts';
+% S.t = {}; 
+% S.label = {};  
 S.wave = {}; 
-S.cfg.history = {}; 
+% S.cfg.history = {}; 
 
 for iF = 1:length(fname)
 
@@ -61,7 +61,7 @@ for iF = 1:length(fname)
 
     % loop over cells; 
     for iC = 1:length(c_id)
-        S.t{end+1} = Timestamps(CellNumbers == c_id(iC))';
+        S.t{end+1} = Timestamps(CellNumbers == c_id(iC))'*10^-6;
         S.label{end+1} = [tt_id '_' num2str(c_id(iC)+1)];
         S.wave{end+1} = mean(Samples(:,:, (CellNumbers == c_id(iC))),3); 
     end
