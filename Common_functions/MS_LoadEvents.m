@@ -39,13 +39,15 @@ end
 
 eventList = unique(EventStrings);
 
+
+eventList(contains(eventList, 'CSC')) = []; % remove extra CSC Reference change events.  Odd case. 
 %% for each event type get the times
 
-evts= [];
-evts.type = 'ts';
-evts.t = [];
-evts.label = [];
-evts.cfg.hdr = [];
+evts= ts();
+% evts.type = 'ts';
+% evts.t = [];
+% evts.label = [];
+% evts.cfg.hdr = [];
 
 for iE = 1:length(eventList)
    
