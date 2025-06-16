@@ -252,3 +252,158 @@ for iF = 1:length(F)
           imwrite(F(iF).cdata,'temp_cell_df.gif','gif','DelayTime',1/Fs,'WriteMode','append');
       end
 end
+
+%% manual video with df
+
+v_id = 'msvideo.avi';
+
+v_obj = VideoReader(v_id);
+
+% v = read(v_obj)
+%%
+figure(19)
+colormap('bone')
+
+figure(20)
+colormap('bone')
+f_n = []; 
+
+idx = floor(30*400):floor(30*420); 
+
+
+mean_f = mean(squeeze(read(v_obj,[idx(1) idx(end)])),3);
+max_f = mean(squeeze(read(v_obj,[idx(1) idx(end)])),'all');
+
+d_f = NaN([size(mean_f), size(idx,1)]);  
+d_f_s = d_f;  
+F = cell(size(idx)); 
+F2 = cell(size(idx)); 
+F3 = cell(size(idx)); 
+
+% mean_f = []; 
+% for ii = floor(30*20):-1:floor(30*5)
+%     
+%     mean_f(:,:,ii) = mean(squeeze(read(v_obj,[ii-120 ii-1])),3);
+% end
+
+for ii = 1:length(idx)
+    
+%     mean_f = mean(squeeze(read(v_obj,[ii-120 ii-1])),3);
+
+    this_f=  double(read(v_obj, idx(ii))) - mean_f; 
+    
+
+this_f = this_f ./ max_f; 
+% this_f(this_f < .1) = 0; 
+d_f(:,:,ii) = this_f;
+
+% d_f(:,:,ii) = imgaussfilt(this_f, .2);
+
+end
+
+d_f_s = imgaussfilt3(d_f, .5); 
+
+for ii = 1:length(idx)
+
+% figure(19)
+subplot(1,2,1)
+r_f = double(read(v_obj, idx(ii))); 
+    imagesc(r_f(crop(1):crop(2),crop(3):crop(4))); 
+%     caxis([0 .5])
+    
+    axis off
+%     F{ii} = getframe(gca) ;    
+
+    subplot(1,2,2)
+% figure(20)
+    imagesc(d_f_s(crop(1):crop(2),crop(3):crop(4),ii)); 
+    
+%     montage({r_f(crop(1):crop(2),crop(3):crop(4)), d_f_s(crop(1):crop(2),crop(3):crop(4),ii)}); 
+        caxis([0 .2])
+
+   Square_subplots
+axis off
+    drawnow;
+% 
+% pause(.03)
+    F3{ii} = getframe(gca) ;  
+    
+    
+end
+
+%%
+Fs  =30; 
+for iF = 1:length(F)
+      if iF == 1
+          imwrite(rgb2gray(F3{iF}.cdata),'temp_cell.gif','gif','DelayTime',1/Fs, 'Loopcount',inf);
+      else
+          imwrite(rgb2gray(F3{iF}.cdata),'temp_cell.gif','gif','DelayTime',1/Fs,'WriteMode','append');
+      end
+      
+%       if iF == 1
+%           imwrite(rgb2gray(F{iF}.cdata),'temp_cell_raw.gif','gif','DelayTime',1/Fs, 'Loopcount',inf);
+%       else
+%           imwrite(rgb2gray(F{iF}.cdata),'temp_cell_raw.gif','gif','DelayTime',1/Fs,'WriteMode','append');
+%       end
+end
+
+%%
+
+for ii = floor(30*20):-1:floor(30*5)
+    
+    f_n(:,:,ii) = double(read(v_obj, ii)); 
+    
+    f_df  = f_n(crop(1):crop(2),crop(3):crop(4),ii) - mean_f(crop(1):crop(2),crop(3):crop(4)); 
+%     this_f(this_f < -2) = 0; 
+
+% this_f = this_f ./ max_f; 
+    
+end
+% mean_f = mean(f_n, 3); 
+
+% f_df = f_n - mean_f; 
+
+f_smooth = imgaussfilt3(f_n, .2); 
+
+% f_df_smooth= imgaussfilt3(f_df, .2); 
+
+for   ii = floor(30*20):-1:floor(30*5)
+    
+subplot(2,2,1)
+% % v_img = double(read(v_obj, ii)); 
+    imagesc(f_n(crop(1):crop(2),crop(3):crop(4),ii)); 
+%     caxis([0 .5])
+    
+    subplot(2,2,2)
+    imagesc(f_smooth(crop(1):crop(2),crop(3):crop(4),ii)); 
+%     caxis([0 .5])
+    
+    subplot(2,2,3)
+    imagesc(f_smooth(crop(1):crop(2),crop(3):crop(4),ii)); 
+    
+    subplot(2,2,4)
+    imagesc(f_df_smooth(crop(1):crop(2),crop(3):crop(4),ii)); 
+    drawnow;
+%     pause(.03)
+    F{end+1} = getframe(gcf) ;    
+    
+end
+
+%%
+writerObj = VideoWriter(['JKA_05_TFC.avi']);
+writerObj.FrameRate = 30;
+writerObj.Quality = 100;
+% set the seconds per image
+% open the video writer
+open(writerObj);
+% write the frames to the video
+for iF = 1:length(f_n)
+    % for ii =3962:2:5282
+    
+    % convert the image to a frame
+    frame = f_n(:,:,iF) ;
+    writeVideo(writerObj, frame);
+end
+% close the writer object
+close(writerObj);
+
