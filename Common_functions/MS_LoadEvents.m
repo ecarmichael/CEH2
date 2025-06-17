@@ -40,7 +40,7 @@ end
 eventList = unique(EventStrings);
 
 
-eventList(contains(eventList, 'CSC')) = []; % remove extra CSC Reference change events.  Odd case. 
+eventList(contains(eventList, 'Ref Changed')) = []; % remove extra CSC Reference change events.  Odd case. 
 %% for each event type get the times
 
 evts= ts();
