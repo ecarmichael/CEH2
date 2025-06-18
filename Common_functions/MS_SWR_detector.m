@@ -55,7 +55,7 @@ end
 cfg_swr = [];
 cfg_swr.check = 0; % plot checks.
 cfg_swr.filt.type = 'butter'; %Cheby1 is sharper than butter
-cfg_swr.filt.f  = [125 200]; % broad, could use 150-200?
+cfg_swr.filt.f  = [125 250]; % broad, could use 150-200?
 cfg_swr.filt.order = 4; %type filter order (fine for this f range)
 cfg_swr.filt.display_filter = 0; % use this to see the fvtool
 
