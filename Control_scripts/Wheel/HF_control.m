@@ -75,6 +75,18 @@ hold on
 rho = ones(24,1); 
 step = 24; 
 theta = 0:360/step:(360 - 360/step);
+x = [0 rho(1)]; 
+y = [0 0];
+
+for ii = 1:step
+    y2=0+(step*sind(theta(ii)));
+    x2=0+(step*cosd(theta(ii)));
+    plot([0 x2],[0 y2], 'k')
+    text(
+    
+end
+
+
 v = version('-release'); 
 
 
