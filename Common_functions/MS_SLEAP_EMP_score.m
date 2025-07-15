@@ -105,6 +105,8 @@ xlabel('% of time in closed arm')
 
 set(gca, 'ytick', 1:2, 'yticklabel', {'Tau -', 'Tau +'}, 'YTickLabelRotation' , 45)
 ylim([0 3])
+xlim([0 100])
+
 
 subplot(2,2,3)
 hold on
@@ -115,6 +117,9 @@ xlabel('Number of transition entries')
 set(gca, 'ytick', 1:2, 'yticklabel', {'Tau -', 'Tau +'}, 'YTickLabelRotation' , 45)
 % boxplot(table_out.Closed_prct,table_out.geno)
 ylim([0 3])
+x_lim = xlim; 
+
+xlim([0 x_lim(2)])
 
 
 subplot(2,2,2)
@@ -128,6 +133,7 @@ set(gca, 'ytick', 1:2, 'yticklabel', {'Tau -', 'Tau +'}, 'YTickLabelRotation' , 
 % set(gca, 'XTick', 1:length(table_out.Open_prct), 'XTickLabel', table_out.Subject, 'XTickLabelRotation', 65)
 % ylabel('prct time in Open arm')
 ylim([0 3])
+xlim([0 100])
 
 subplot(2,2,4)
 [h_c, p, stats] = MS_rain_plot(table_out.T2O, table_out.geno, c_ord(1:2,:), 'ttest2');
@@ -139,7 +145,106 @@ set(gca, 'ytick', 1:2, 'yticklabel', {'Tau -', 'Tau +'}, 'YTickLabelRotation' , 
 % set(gca, 'XTick', 1:length(table_out.Open_prct), 'XTickLabel', table_out.Subject, 'XTickLabelRotation', 65)
 % ylabel('Number of Open arm entries')
 ylim([0 3])
+x_lim = xlim; 
+xlim([0 x_lim(2)])
 
+SetFigure([], gcf, 1)
+saveas(gcf, 'Summary_rain.png')
+print(gcf, '-dpdf','Summary_rain.pdf')
+
+
+%% sample plot but bars
+table_out.geno = logical([0     0     0     0     0     1     0     1     1     0     0     0     1     1     0, ...
+    1     1     0     0     0     0     0     0     0     0     0     ])'; 
+
+c_ord = MS_linspecer(4);
+figure(909)
+clf
+title('EPM')
+subplot(2,2,1)
+hold on
+
+% [h_c, p, stats] = MS_rain_plot(table_out.Closed_prct, table_out.geno, c_ord(1:2,:), 'ttest2');
+[h_c, eb, sc, p, stats] = MS_bar_w_err(table_out.Closed_prct(table_out.geno ==0),table_out.Closed_prct(table_out.geno ==1) , c_ord(1:2,:),1, 'ttest2', [1 2]);
+fprintf('Closed ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
+
+h_c.FaceColor = 'none'; 
+h_c.EdgeColor = 'k'; h_c.FaceColor = 'none'; 
+h_c.EdgeColor = 'k'; 
+% scatter(1+sort(MS_randn_range(length(table_out.Closed_prct(table_out.geno == 0)), 1, -.1, .1)), table_out.Closed_prct(table_out.geno == 0),25,  c_ord(1,:), 'filled')
+% scatter(2+sort(MS_randn_range(length(table_out.Closed_prct(table_out.geno == 1)), 1, -.1, .1)), table_out.Closed_prct(table_out.geno == 1),25,  c_ord(2,:), 'filled')
+
+% scatter(4+sort(MS_randn_range(length(table_out.T2O(table_out.geno == 0)), 1, -.1, .1)), table_out.T2O(table_out.geno == 0),25,  c_ord(1,:), 'filled')
+% scatter(5+sort(MS_randn_range(length(table_out.T2O(table_out.geno == 1)), 1, -.1, .1)), table_out.T2O(table_out.geno == 1),25,  c_ord(2,:), 'filled')
+
+% [hb h, p]= MS_bar_w_err(table_out.Closed_prct(table_out.geno == 0), table_out.Closed_prct(table_out.geno == 1),c_ord(1,:),  1, 'ttest2', 1:2)
+
+% [hb, h, p]
+% 
+% hb(1).FaceColor = 'none';
+% hb(1).EdgeColor = 'k';
+
+% [hb h, p]= MS_bar_w_err(table_out.T2O(table_out.geno == 0), table_out.T2O(table_out.geno == 1),c_ord(2,:),  1, 'ttest2', 4:5)
+
+ylabel('% of time in closed arm')
+
+set(gca, 'xtick', 1:2, 'xticklabel', {'Tau -', 'Tau +'}, 'xTickLabelRotation' , 45)
+xlim([-1 4])
+y_lim = ylim; 
+
+ylim([0 y_lim(2)])
+
+subplot(2,2,3)
+cla
+hold on
+[h_c, eb, sc, p, stats] = MS_bar_w_err(table_out.C2T(table_out.geno ==0),table_out.C2T(table_out.geno ==1) , c_ord(1:2,:),1, 'ttest2', [1 2]);
+fprintf('Closed-to-open transitions ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
+
+h_c.FaceColor = 'none'; 
+h_c.EdgeColor = 'k'; 
+
+ylabel('Number of transition entries')
+set(gca, 'xtick', 1:2, 'xticklabel', {'Tau -', 'Tau +'}, 'xTickLabelRotation' , 45)
+% boxplot(table_out.Closed_prct,table_out.geno)
+xlim([-1 4])
+y_lim = ylim; 
+
+ylim([0 y_lim(2)])
+
+
+subplot(2,2,2)
+cla
+% [h_c, p, stats] = MS_rain_plot(table_out.Open_prct, table_out.geno, c_ord(1:2,:), 'ttest2');
+[h_c, eb, sc, p, stats] = MS_bar_w_err(table_out.Open_prct(table_out.geno ==0),table_out.Open_prct(table_out.geno ==1) , c_ord(1:2,:),1, 'ttest2', [1 2]);
+fprintf('Open %% ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
+h_c.FaceColor = 'none'; 
+h_c.EdgeColor = 'k'; 
+
+ylabel('% of time in open arm')
+set(gca, 'xtick', 1:2, 'xticklabel', {'Tau -', 'Tau +'}, 'XTickLabelRotation' , 45)
+% x = 1:length(table_out.Open_prct);
+% plot(x(table_out.geno == 0), table_out.Open_prct(table_out.geno == 0), '.b', 'markersize', 40, 'filled')
+% set(gca, 'XTick', 1:length(table_out.Open_prct), 'XTickLabel', table_out.Subject, 'XTickLabelRotation', 65)
+% ylabel('prct time in Open arm')
+xlim([-1 4])
+y_lim = ylim; 
+
+ylim([0 y_lim(2)])
+subplot(2,2,4)
+% [h_c, p, stats] = MS_rain_plot(table_out.T2O, table_out.geno, c_ord(1:2,:), 'ttest2');
+[h_c, eb, sc, p, stats] = MS_bar_w_err(table_out.T2O(table_out.geno ==0),table_out.T2O(table_out.geno ==1) , c_ord(1:2,:),1, 'ttest2', [1 2]);
+fprintf('transition-to-open transitions ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
+h_c.FaceColor = 'none'; 
+h_c.EdgeColor = 'k'; 
+
+ylabel('Number of open arm entries')
+set(gca, 'xtick', 1:2, 'xticklabel', {'Tau -', 'Tau +'}, 'xTickLabelRotation' , 45)
+% plot(1:length(table_out.Open_prct), table_out.T2O, '.r', 'markersize', 20)
+% set(gca, 'XTick', 1:length(table_out.Open_prct), 'XTickLabel', table_out.Subject, 'XTickLabelRotation', 65)
+% ylabel('Number of Open arm entries')
+xlim([-1 4])
+y_lim = ylim; 
+ylim([0 y_lim(2)])
 
 SetFigure([], gcf, 1)
 saveas(gcf, 'Summary.png')
