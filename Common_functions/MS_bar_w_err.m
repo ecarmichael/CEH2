@@ -44,8 +44,8 @@ if ~isempty(stats)
     end
     
     if h
-        plot(median(x_vals), max([data_a, data_b], [], 'all')*1.15, '*', 'color', 'k')
-        plot(x_vals, [max([data_a, data_b], [], 'all')*1.1 max([data_a, data_b], [], 'all')*1.1], '-k', 'linewidth', 1.5)
+        plot(median(x_vals), max([data_a, data_b], [], 'all')*1.1, '*', 'color', 'k')
+        plot(x_vals, [max([data_a, data_b], [], 'all')*1.05 max([data_a, data_b], [], 'all')*1.05], '-k', 'linewidth', 1.5)
     end
 end
 
