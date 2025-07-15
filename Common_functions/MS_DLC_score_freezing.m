@@ -86,18 +86,27 @@ pos_r.tvec  = pos.tvec(s_idx:e_idx);
 pos_r.tvec = pos_r.tvec - pos_r.tvec(1);
 pos_r.data  = pos.data(:,s_idx:e_idx);
 
+% vx = dxdt(pos_r.tvec,pos_r.data(end-3,:));
+% vy = dxdt(pos_r.tvec,pos_r.data(end-2,:));
+% 
+% pos_r.data(end+1,:) = sqrt(vx.^2+vy.^2)';
+% pos_r.label{end+1} = 'speed body'; 
+% 
+% spd_idx = find(contains(pos_r.label, 'Speed'));
+
+spd_idx = size(pos_r.data,1) -1;
 %% extract the movement from the head speed vector.
 
 % get the moving mean of the speed
-t_win = 2;
+t_win = 2.5;
 t_win_f = round(t_win /mode(diff(pos_r.tvec))); % convert to frames/samples
 
-mov_m = movmedian(pos_r.data(end-1,:), t_win_f);
+mov_m = movmedian(pos_r.data(spd_idx,:), t_win_f);
 
 fvec = zeros(1, length(mov_m));
 
 if isempty(thresh)
-    mov_thresh = 1;
+    mov_thresh = .5;
 else
     mov_thresh = prctile(mov_m, thresh);
 end
@@ -128,7 +137,7 @@ ax(1) = subplot(3,2,[1:4]);
 
 hold on
 
-plot(pos_r.tvec, pos_r.data(end-1,:), 'k')
+plot(pos_r.tvec, pos_r.data(spd_idx,:), 'k')
 plot(pos_r.tvec, mov_m, 'b')
 
 if isempty(thresh)
