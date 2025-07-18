@@ -189,7 +189,7 @@ h_c.EdgeColor = 'k';
 ylabel('% of time in closed arm')
 
 set(gca, 'xtick', 1:2, 'xticklabel', {'Tau -', 'Tau +'}, 'xTickLabelRotation' , 45)
-xlim([-1 4])
+xlim([0 3])
 y_lim = ylim; 
 
 ylim([0 y_lim(2)])
@@ -206,7 +206,7 @@ h_c.EdgeColor = 'k';
 ylabel('Number of transition entries')
 set(gca, 'xtick', 1:2, 'xticklabel', {'Tau -', 'Tau +'}, 'xTickLabelRotation' , 45)
 % boxplot(table_out.Closed_prct,table_out.geno)
-xlim([-1 4])
+xlim([0 3])
 y_lim = ylim; 
 
 ylim([0 y_lim(2)])
@@ -226,7 +226,7 @@ set(gca, 'xtick', 1:2, 'xticklabel', {'Tau -', 'Tau +'}, 'XTickLabelRotation' , 
 % plot(x(table_out.geno == 0), table_out.Open_prct(table_out.geno == 0), '.b', 'markersize', 40, 'filled')
 % set(gca, 'XTick', 1:length(table_out.Open_prct), 'XTickLabel', table_out.Subject, 'XTickLabelRotation', 65)
 % ylabel('prct time in Open arm')
-xlim([-1 4])
+xlim([0 3])
 y_lim = ylim; 
 
 ylim([0 y_lim(2)])
@@ -242,14 +242,109 @@ set(gca, 'xtick', 1:2, 'xticklabel', {'Tau -', 'Tau +'}, 'xTickLabelRotation' , 
 % plot(1:length(table_out.Open_prct), table_out.T2O, '.r', 'markersize', 20)
 % set(gca, 'XTick', 1:length(table_out.Open_prct), 'XTickLabel', table_out.Subject, 'XTickLabelRotation', 65)
 % ylabel('Number of Open arm entries')
-xlim([-1 4])
+xlim([0 3])
 y_lim = ylim; 
 ylim([0 y_lim(2)])
 
-SetFigure([], gcf, 1)
+
+cfg_fig = []; 
+cfg_fig.ft_size = 16; 
+SetFigure(cfg_fig, gcf, 1)
+% p = get(gcf, 'Position'); 
+% set(gcf, 'Position', [p(1), p(2) p(4)*.4 p(4)*.8])
+
+set(gcf,'PaperPositionMode','auto');         
+set(gcf,'PaperOrientation','landscape');
+set(gcf,'Position',[.2 .2 .4 .6]);
+
 saveas(gcf, 'Summary.png')
 print(gcf, '-dpdf','Summary.pdf')
 
+
+
+%% same but compact
+c_ord = MS_linspecer(4);
+figure(909)
+clf
+title('EPM')
+
+
+
+subplot(1,3,1)
+hold on
+[h_c, eb, sc, p, stats] = MS_bar_w_err(table_out.Closed_prct(table_out.geno ==0),table_out.Closed_prct(table_out.geno ==1) , c_ord(1:2,:),1, 'ttest2', [1 2]);
+fprintf('Closed ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
+
+h_c.FaceColor = 'none'; 
+h_c.EdgeColor = 'k'; 
+h_c.LineWidth = 1; 
+eb.LineWidth = 1.5;
+ylabel('% of time in closed arm')
+
+set(gca, 'xtick', 1:2, 'xticklabel', {'Tau -', 'Tau +'}, 'xTickLabelRotation' , 45)
+xlim([0 3])
+y_lim = ylim; 
+ylim([0 y_lim(2)])
+ax = gca; ax.LineWidth = 1.5;
+
+
+subplot(1,3,2)
+cla
+[h_c, eb, sc, p, stats] = MS_bar_w_err(table_out.Open_prct(table_out.geno ==0),table_out.Open_prct(table_out.geno ==1) , c_ord(1:2,:),1, 'ttest2', [1 2]);
+fprintf('Open %% ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
+h_c.FaceColor = 'none'; 
+h_c.EdgeColor = 'k';
+h_c.LineWidth = 1; 
+eb.LineWidth = 1.5;
+
+box off
+ylabel('% of time in open arm')
+xlim([0 3])
+y_lim = ylim; 
+ylim([0 y_lim(2)])
+ax = gca; ax.LineWidth = 1.5;
+
+
+subplot(1,3,3)
+cla
+hold on
+[h_c, eb, sc, p, stats] = MS_bar_w_err(table_out.C2T(table_out.geno ==0),table_out.C2T(table_out.geno ==1) , c_ord(1:2,:),1, 'ttest2', [1 2]);
+fprintf('Closed-to-open transitions ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
+
+h_c.FaceColor = 'none'; 
+h_c.EdgeColor = 'k'; 
+h_c.LineWidth =1; 
+eb.LineWidth = 1.5;
+ylabel('Number of entries')
+y_lim = ylim; 
+
+[h_c, eb, sc, p, stats] = MS_bar_w_err(table_out.T2O(table_out.geno ==0),table_out.T2O(table_out.geno ==1) , c_ord(1:2,:),1, 'ttest2', [4 5]);
+fprintf('transition-to-open transitions ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
+h_c.FaceColor = 'none'; 
+h_c.EdgeColor = 'k'; 
+h_c.LineWidth = 1; 
+eb.LineWidth = 1.5;
+
+% ylabel('Number of open arm entries')
+set(gca, 'xtick', [1.5 4.5], 'xticklabel', {'trans\newlinezone', 'open\newlinearm'})
+xlim([0 6])
+y_lim2 = ylim; 
+ylim([0 max([y_lim(2) y_lim2(2)])])
+ax = gca; ax.LineWidth = 1.5;
+
+
+cfg_fig = []; 
+cfg_fig.ft_size = 16; 
+SetFigure(cfg_fig, gcf, 1)
+% p = get(gcf, 'Position'); 
+% set(gcf, 'Position', [p(1), p(2) p(4)*.4 p(4)*.8])
+
+set(gcf,'PaperPositionMode','auto');         
+set(gcf,'PaperOrientation','landscape');
+set(gcf,'Position',[.2 .2 .6 .3]);
+
+saveas(gcf, 'Summary_3.png')
+print(gcf, '-dpdf','Summary_3.pdf')
 %% one shot to update the EPM data
 
 cd(data_dir)
