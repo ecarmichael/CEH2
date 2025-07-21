@@ -34,11 +34,15 @@ if nargin < 2
     k_idx = false(1,length(fname)); 
 
     for ii = 1:length(fname)
-        if contains(fname(ii).name, '0001.ntt')
+        if contains(fname(ii).name, '000')
             k_idx(ii) = true;
         end
     end
     fname(~k_idx) = []; 
+elseif nargin == 2  && (sum(contains(fname, '*')) > 0) % deal with wildcard calls.
+    
+    fname = dir(fname); 
+
 end
 
 %% loop over files and 
