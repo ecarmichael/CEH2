@@ -290,10 +290,10 @@ plot(open_wR_p, 'FaceColor', c_ord(5,:), 'FaceAlpha', .1, 'EdgeColor', c_ord(5,:
 plot(open_wL_p, 'FaceColor', c_ord(5,:), 'FaceAlpha', .1, 'EdgeColor', c_ord(5,:), 'LineWidth', 3);
 
 p1 = plot(tsd.data(body_idx(1),c_idx),tsd.data(body_idx(2),c_idx),'.','color', c_ord(1,:), 'markersize', 12); % points inside
-p2 = plot(tsd.data(body_idx(1),o_idx),tsd.data(body_idx(2),o_idx),'o','color',  c_ord(2,:), 'markersize', 12); % points outside
-p3 = plot(tsd.data(body_idx(1),x_idx),tsd.data(body_idx(2),x_idx),'x','color',  c_ord(3,:), 'markersize', 12); % points outside
+p2 = plot(tsd.data(body_idx(1),o_idx),tsd.data(body_idx(2),o_idx),'.','color',  c_ord(2,:), 'markersize', 12); % points outside
+p3 = plot(tsd.data(body_idx(1),x_idx),tsd.data(body_idx(2),x_idx),'.','color',  c_ord(3,:), 'markersize', 12); % points outside
 p4 = plot(tsd.data(body_idx(1),n_idx),tsd.data(body_idx(2),n_idx),'.','color',  c_ord(4,:), 'markersize', 12); % points outside
-p5 = plot(tsd.data(head_idx(1),d_idx),tsd.data(head_idx(2),d_idx),'s','color',  c_ord(5,:), 'markersize', 12); % points outside
+p5 = plot(tsd.data(head_idx(1),d_idx),tsd.data(head_idx(2),d_idx),'.','color',  c_ord(5,:), 'markersize', 12); % points outside
 
 lg = legend([p1 p2 p3 p4 p5], {'closed idx', 'open idx', 'x idx', 'none idx', 'dip idx'});
 

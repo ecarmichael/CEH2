@@ -18,8 +18,8 @@ hold on
 
 
 if data_flag > 0 %&& length(data_a) == length(data_b)
-    sc{1} = scatter(1+sort(MS_randn_range(length(data_a), 1, -.1, .1)), data_a,25,  color(1,:), 'filled');
-    sc{2} = scatter(2+sort(MS_randn_range(length(data_b), 1, -.1, .1)), data_b,25,  color(2,:), 'filled');
+    sc{1} = scatter(x_vals(1)+sort(MS_randn_range(length(data_a), 1, -.1, .1)), data_a,25,  color(1,:), 'filled');
+    sc{2} = scatter(x_vals(2)+sort(MS_randn_range(length(data_b), 1, -.1, .1)), data_b,25,  color(2,:), 'filled');
 else
     sc = []; 
 end
@@ -44,8 +44,8 @@ if ~isempty(stats)
     end
     
     if h
-        plot(median(x_vals), max([data_a, data_b], [], 'all')*1.15, '*', 'color', 'k')
-        plot(x_vals, [max([data_a, data_b], [], 'all')*1.1 max([data_a, data_b], [], 'all')*1.1], '-k', 'linewidth', 1.5)
+        plot(median(x_vals), max([data_a, data_b], [], 'all')*1.1, '*', 'color', 'k')
+        plot(x_vals, [max([data_a, data_b], [], 'all')*1.05 max([data_a, data_b], [], 'all')*1.05], '-k', 'linewidth', 1.5)
     end
 end
 

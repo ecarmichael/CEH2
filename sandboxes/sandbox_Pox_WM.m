@@ -9,12 +9,15 @@ else
 end
 
 
+% POX_tbl = readtable("POX_WM - Sheet1.csv");
 
-
-POX_tbl = readtable("POX_WM - Sheet1.csv");
+clear all
+POX_tbl = readtable("POX_WM - Jan25_Cohort.csv");
+POX_tbl = removevars(POX_tbl, ["LeftImmuno", "RightImmuno"]);
 
 M_idx = find(contains(POX_tbl.ID, 'Pox'));
-Days = POX_tbl.Properties.VariableNames(2:end-2);
+probe_idx = find(contains(lower(POX_tbl.Properties.VariableNames),lower('Probe')));
+Days = POX_tbl.Properties.VariableNames(2:probe_idx);
 
 S_loc = {'N', 'E', 'S', 'W'};
 P_loc = {'NE', 'SE', 'SW', 'NW'};
@@ -236,7 +239,7 @@ subs = fieldnames(all_data);
 target = {'Nose','Head'};
 
 
-for iS =  1:length(subs)
+for iS =  2:length(subs)
     %%
     
 %     figure(iS)
@@ -250,7 +253,8 @@ for iS =  1:length(subs)
         max_d(iD) = length(all_data.(subs{iS}).(days{iD}).pos_r.tvec);
     end
     d_ord = MS_linspecer(length(days));
-    
+    all_max_x = [];
+    all_max_y = [];
     for iD = 1:length(days)
         
         d_idx = strfind(all_data.(subs{iS}).(days{iD}).pos_r.cfg.fname{1}, '2024');
@@ -295,8 +299,13 @@ for iS =  1:length(subs)
         
         hold on
         plot(this_x, this_y, '.', 'color', d_ord(iD,:));
+        all_max_x(1, iD) = min(this_x);
+        all_max_x(2, iD) = max(this_x);
+        all_max_y(1, iD) = min(this_y);
+        all_max_y(2, iD) = max(this_y);   
     end
     
+    fprintf("min x %.1f max x %.1f  | min y %.1f max y %.1f\n", min(all_max_x(1,:)), max(all_max_x(2,:)), min(all_max_y(1,:)), max(all_max_y(2,:)))
     % try replacing NaNs by converting to a cell arraty
     c_tbl = table2cell(tbl);
     
@@ -312,7 +321,7 @@ for iS =  1:length(subs)
     tbl_out = cell2table(c_tbl);
     
     %write a .csv per animal.
-    writetable(tbl, [subs{iS} '_WM.csv'], 'WriteVariableNames',1)
+    writetable(tbl, [subs{iS} '_WM.csv'], 'WriteVariableNames',0)
     % tbl_in = readtable([subs{iS} '_WM.csv'])
     
 end
