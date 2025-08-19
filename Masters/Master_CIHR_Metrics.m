@@ -17,6 +17,7 @@
 %% NOL %%%%%%%%
 
 data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\CIHR_NOL_2025'; 
+%%
 cd(data_dir)
 % get all of the "*markers.csv' files for the scored interactions
 
@@ -37,10 +38,19 @@ for ii  = 1:length(mkr_list)
     obj_1_idx = find((tbl.object_id == 1 ) & contains(tbl.marker_type, 'start')); 
     obj_2_idx = find((tbl.object_id == 2 ) & contains(tbl.marker_type, 'start')); 
 
+    % remove any blocks starting after 600seconds
+    rm_idx = tbl.marker_time(obj_1_idx) > 600; 
+    
+
     % loop over events and get the duration
     obj_1 = []; 
     for jj = length(obj_1_idx):-1:1
-        obj_1(jj) = tbl.marker_time(obj_1_idx(jj)+1) - tbl.marker_time(obj_1_idx(jj)); 
+
+        if  tbl.marker_time(obj_1_idx(jj)+1) > 600
+            obj_1(jj) = 600 - tbl.marker_time(obj_1_idx(jj));
+        else
+            obj_1(jj) = tbl.marker_time(obj_1_idx(jj)+1) - tbl.marker_time(obj_1_idx(jj)); 
+        end
     end
 
     obj_2 = []; 
@@ -71,8 +81,18 @@ dlc_list = dir('*shuffle*.csv');
 Sub = cell(length(dlc_list),1); Sess = Sub; 
 data_out = cell(length(dlc_list), 6); 
 
-for ii  = 1:length(dlc_list)
+dist = []; c_dist = {}; occ_mat = []; 
 
-    pos = MS_DLC2TSD_single(dlc_list(ii).name, )
+for ii  = length(dlc_list):-1:1
 
+    vname = [dlc_list(ii).name(1:strfind(dlc_list(ii).name, 'DLC')-1) '.mp4'];
+
+    pos = MS_DLC2TSD_single(dlc_list(ii).name, vname, [805/38 805/38]); 
+
+    % get an occupancy map
+    [~, occ_mat(:,:,ii)] = MS_event_rate_map(zeros(1,size(pos.tvec,2)), pos.tvec, pos.data(1:2,:)', 2.5,0, 2, 24:1:68,4:1:46 ); 
+
+    % get the total distance traveled. 
+    dist(ii) = trapz(pos.tvec, pos.data(end-1,:)); 
+    cdist{ii} = cumtrapz(pos.tvec, pos.data(end-1,:)); 
 end

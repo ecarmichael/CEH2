@@ -218,6 +218,12 @@ elseif sum(contains(fields, 'body'))>0 && sum(contains(fields, 'head'))>0
     ear_mid(:,2) = data_out.body(:,2);
     
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.head(:,2),ear_mid(:,1) - data_out.head(:,1)));
+
+
+elseif sum(contains(fields, 'L_ear'))>0 && sum(contains(fields, 'R_ear'))>0
+    ear_mid(:,1) = (data_out.R_ear(:,1) + data_out.L_ear(:,1))/2; % get x mid
+    ear_mid(:,2) = (data_out.R_ear(:,2) + data_out.L_ear(:,2))/2; % get x mid
+    HD = rad2deg(atan2(ear_mid(:,2) - data_out.nose(:,2),ear_mid(:,1) - data_out.nose(:,1)));
     
 elseif sum(contains(fields, 'Body'))>0 && sum(contains(fields, 'Neck'))>0
     ear_mid(:,1) = data_out.Body(:,1);
