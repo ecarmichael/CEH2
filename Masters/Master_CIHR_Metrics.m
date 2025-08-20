@@ -45,7 +45,7 @@ for ii  = 1:length(mkr_list)
     this_idx = find(contains(opto_tbl.Subject, Sub{ii})); 
     Geno{ii} = opto_tbl.Strain{this_idx}; 
     Virus{ii} = opto_tbl.Injection{this_idx}; 
-
+    Sex{ii} = opto_tbl.Sex{this_idx}; 
 
     tbl = readtable(mkr_list(ii).name); 
 
@@ -81,21 +81,22 @@ for ii  = 1:length(mkr_list)
     data_out{ii, 2} = Sess{ii}; 
     data_out{ii, 3} = Geno{ii}; 
     data_out{ii, 4} = Virus{ii}; 
-    data_out{ii, 5} = length(obj_1); 
-    data_out{ii, 6} = sum(obj_1); 
-    data_out{ii, 7} = length(obj_2); 
-    data_out{ii, 8} = sum(obj_2); 
-    data_out{ii, 9} = (sum(obj_2) - sum(obj_1))/(sum(obj_2)+sum(obj_1)); 
-    data_out{ii, 10} = (length(obj_2) - length(obj_1))/(length(obj_2)+length(obj_1)); 
+    data_out{ii, 5} = Sex{ii};
+    data_out{ii, 6} = length(obj_1); 
+    data_out{ii, 7} = sum(obj_1); 
+    data_out{ii, 8} = length(obj_2); 
+    data_out{ii, 9} = sum(obj_2); 
+    data_out{ii, 10} = (sum(obj_2) - sum(obj_1))/(sum(obj_2)+sum(obj_1)); 
+    data_out{ii, 11} = (length(obj_2) - length(obj_1))/(length(obj_2)+length(obj_1)); 
 
-    fprintf("%s - %s Obj 1 n: %.0f  t:%.2f    |  Obj 2 n: %.0f  t:%.2f   | <strong>%.1f</strong> <strong>(%.1f)</strong>\n", Sub{ii}, Sess{ii}, length(obj_1), sum(obj_1), length(obj_2), sum(obj_2), data_out{ii,7}, data_out{ii,8})
+    fprintf("%s - %s Obj 1 n: %.0f  t:%.2f    |  Obj 2 n: %.0f  t:%.2f   | <strong>%.1f</strong> <strong>(%.1f)</strong>\n", Sub{ii}, Sess{ii}, length(obj_1), sum(obj_1), length(obj_2), sum(obj_2), data_out{ii,10}, data_out{ii,11})
 
 
 end
 
 % convert to table
 
-tbl_out = cell2table(data_out, "VariableNames",{'Subject', 'Session','Geno', 'Virus', 'Obj1_n', 'Obj1_t', 'Obj2_n', 'Obj2_t', 'DI_n', 'DI_t'});
+tbl_out = cell2table(data_out, "VariableNames",{'Subject', 'Session','Geno', 'Virus','Sex', 'Obj1_n', 'Obj1_t', 'Obj2_n', 'Obj2_t', 'DI_n', 'DI_t'});
 
 
 %% plot
@@ -116,30 +117,123 @@ art_idx =  contains(tbl_out.Virus, 'ArchT');
 sst_idx =  contains(tbl_out.Geno, 'Sst');
 
 figure(191)
+this_data = tbl_out.DI_t; 
+
 clf
 % overall
 subplot(2,2,1:2)
-[hb, eb, sc, p, stats] = MS_bar_w_err(tbl_out.DI_t(e_idx)', tbl_out.DI_t(r_idx)', [c_ord(1,:);c_ord(end,:)],1,  'ttest2', [1 2]);
+[hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx)', this_data(r_idx)', [c_ord(1,:);c_ord(end,:)],1,  'ttest2', [1 2]);
 
 % 
-[hb, eb, sc, p, stats] = MS_bar_w_err(tbl_out.DI_t(e_idx & ctrl_idx)', tbl_out.DI_t(r_idx & ctrl_idx)', [c_ord(3,:);c_ord(3,:)],1,  'ttest2', [4 5]);
+[hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx & ctrl_idx)', this_data(r_idx & ctrl_idx)', [c_ord(3,:);c_ord(3,:)],1,  'ttest2', [4 5]);
 
-[hb, eb, sc, p, stats] = MS_bar_w_err(tbl_out.DI_t(e_idx &  bi_idx)', tbl_out.DI_t(r_idx &  bi_idx)', [c_ord(4,:);c_ord(4,:)],1,  'ttest2', [7 8]);
 
-[hb, eb, sc, p, stats] = MS_bar_w_err(tbl_out.DI_t(e_idx & (art_idx))', tbl_out.DI_t(r_idx & (art_idx))', [c_ord(7,:);c_ord(8,:)],1,  'ttest2', [10 11]);
+[hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx &  bi_idx)', this_data(r_idx &  bi_idx)', [c_ord(4,:);c_ord(4,:)],1,  'ttest2', [7 8]);
 
-[hb, eb, sc, p, stats] = MS_bar_w_err(tbl_out.DI_t(e_idx & cheta_idx)', tbl_out.DI_t(r_idx & cheta_idx)', [c_ord(5,:);c_ord(5,:)],1,  'ttest2', [13 14]);
+
+[hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx & (art_idx))', this_data(r_idx & (art_idx))', [c_ord(7,:);c_ord(8,:)],1,  'ttest2', [10 11]);
+
+[hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx & cheta_idx)', this_data(r_idx & cheta_idx)', [c_ord(5,:);c_ord(5,:)],1,  'ttest2', [13 14]);
 
 set(gca, 'XTick', [1 2 4 5 7 8 10 11 13 14], 'XTickLabel', {'All - Enc', 'All - Rec', 'Ctrl - Enc', 'Ctrl - Rec', 'Bipole - Enc', 'Bipole - Rec'...
     'ArchT - Enc', 'ArchT - Rec', 'Cheta - Enc', 'Cheta - Rec'}, 'XTickLabelRotation', 45)
-subplot(2,2,3)
-[hb, eb, sc, p, stats] = MS_bar_w_err(tbl_out.DI_t(r_idx & ctrl_idx)', tbl_out.DI_t(r_idx & (art_idx | bi_idx))', [[ .6 .6 .6];c_ord(1,:)],1,  'ttest2', [1 2]);
 
-hb.FaceColor = "none"; 
-sc{1}.MarkerFaceColor = [ .6 .6 .6]; 
-sc{2}.MarkerFaceColor = c_ord{1}; 
+% subplot(2,2,3)
+% [hb, eb, sc, p, stats] = MS_bar_w_err(this_data(r_idx & ctrl_idx)', this_data(r_idx & (art_idx | bi_idx))', [[ .6 .6 .6];c_ord(1,:)],1,  'ttest2', [1 2]);
 
 
+subplot(2,2,3:4)
+cla
+hold on
+yline(0)
+
+% ctrl
+idx = find(r_idx & ctrl_idx);
+x_vec = sort(MS_randn_range(1,sum(r_idx & ctrl_idx), .8, 1.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', [.6 .6 .6],"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+for ii = 1:length(idx) 
+    if contains(tbl_out.Sex(idx(ii)), 'M')
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)))
+    end
+end
+
+
+% bipole
+idx = find(r_idx & bi_idx & ~sst_idx);
+x_vec = sort(MS_randn_range(1,sum(r_idx & bi_idx & ~sst_idx), 1.8, 2.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', c_ord(2,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+for ii = 1:length(idx) 
+    if contains(tbl_out.Sex(idx(ii)), 'M')
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)))
+    end
+end
+
+idx = find(r_idx & bi_idx & sst_idx);
+x_vec = sort(MS_randn_range(1,sum(r_idx & bi_idx & sst_idx), 1.8, 2.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', c_ord(2,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"diamond")
+for ii = 1:length(idx) 
+    if contains(tbl_out.Sex(idx(ii)), 'M')
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)))
+    end
+end
+
+% archt
+idx = find(r_idx & art_idx & ~sst_idx);
+x_vec = sort(MS_randn_range(1,sum(r_idx & art_idx& ~sst_idx), 2.8, 3.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', c_ord(3,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+for ii = 1:length(idx) 
+    if contains(tbl_out.Sex(idx(ii)), 'M')
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)))
+    end
+end
+
+idx = find(r_idx & art_idx & sst_idx);
+x_vec = sort(MS_randn_range(1,sum(r_idx & art_idx& sst_idx), 2.8, 3.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', c_ord(3,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"diamond")
+for ii = 1:length(idx) 
+    if contains(tbl_out.Sex(idx(ii)), 'M')
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)))
+    end
+end
+
+idx = find(r_idx & cheta_idx & ~sst_idx);
+x_vec = sort(MS_randn_range(1,sum(r_idx & cheta_idx & ~sst_idx),3.8, 4.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', c_ord(5,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+for ii = 1:length(idx)
+    if contains(tbl_out.Sex(idx(ii)), 'M')
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)))
+    end
+end
+
+idx = find(r_idx & cheta_idx & sst_idx);
+x_vec = sort(MS_randn_range(1,sum(r_idx & cheta_idx & sst_idx),3.8, 4.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', c_ord(5,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"diamond")
+for ii = 1:length(idx)
+    if contains(tbl_out.Sex(idx(ii)), 'Male')
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)))
+    end
+end
+
+set(gca, 'XTick', 1:4, 'XTickLabel', { 'Ctrl - Rec' 'Bipole - Rec'...
+    'ArchT - Rec' 'Cheta - Rec'}, 'XTickLabelRotation', 45)
+
+ylim([-1 1]); 
+xlim ([0.5 4.5])
+ylabel({'Discrimination index'; '(Obj2 - Obj1)/(Obj1+obj2)'})
 %%%%%% to do %%%
 %convert into vectors for paired tests. 
 
