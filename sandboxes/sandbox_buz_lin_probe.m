@@ -9,15 +9,15 @@ cd(data_dir)
 
 %% load all the spikes from the recording
 
-S = MS_Load_NTT([], 'TT*_0001.ntt'); 
-
+% S = MS_Load_NTT([], 'TT*_0001.ntt'); 
+S = MS_Load_NTT([])
 % grab the LFP for the linear shank
 
 cfg_lin = []; 
 cfg_lin.desired_sampling_frequency = 2000; 
 cfg_lin.fc = []; 
-for ii = 1
-    cfg_lin.fc{end+1} = ['CSC' num2str(ii) '_0001.ncs']; 
+for ii = 26:41
+    cfg_lin.fc{end+1} = ['CSC' num2str(ii) '.ncs']; %_0001.ncs']; 
 end
 
 csc = MS_LoadCSC(cfg_lin); 
@@ -77,18 +77,18 @@ csc_g = FilterLFP(cfg_filter, csc);
 figure(1)
 clf
 hold on
-imagesc(csc_f.tvec - csc_f.tvec(1),1:size(csd,1),csd)
+% imagesc(csc_f.tvec - csc_f.tvec(1),1:size(csd,1),csd)
 
 for ii = 1:length(csd_inds)
-    plot(csc_f.tvec - csc_f.tvec(1), (csc.data(csd_inds(ii),:)*2500)+ii, 'k');
+    plot(csc_f.tvec - csc_f.tvec(1), (csc.data(csd_inds(ii),:)*3500)+ii, 'k');
     plot(csc_f.tvec - csc_f.tvec(1), (csc_f.data(csd_inds(ii),:)*1500)+ii, 'b');
-    plot(csc_g.tvec - csc_g.tvec(1), abs(hilbert((csc_g.data(csd_inds(ii),:)))*2000)+ii, 'r');
-        plot(csc_g.tvec - csc_g.tvec(1), (csc_g.data(csd_inds(ii),:)*2000)+ii, 'r');
+    % plot(csc_g.tvec - csc_g.tvec(1), abs(hilbert((csc_g.data(csd_inds(ii),:)))*2000)+ii, 'r');
+    plot(csc_g.tvec - csc_g.tvec(1), (csc_g.data(csd_inds(ii),:)*2000)+ii, 'r');
 
 
 end
 
-set(gca, 'ytick', 1:length(csd_inds), 'YTickLabel', csc.label(csd_inds))
+set(gca, 'ytick', 1:length(csd_inds), 'YTickLabel', csc.label(csd_inds), 'YDir', 'normal')
 
 
 %% average over theta cycles
@@ -160,11 +160,18 @@ csc_q = csc;
 csc_q.data(~c_idx,:) = [];  
 csc_q.label(~c_idx) = []; 
 
+csc_q.tvec = csc_q.tvec-csc_q.tvec(1); 
+
+
+S_q = S;
+for ii = 1:length(S.t)
+    S_q.t{ii} = S.t{ii} -csc.tvec(1); 
+end
 
 cfg_plt = []; 
 cfg_plt.lfp = csc_q; 
 
-MultiRaster(cfg_plt, S)
+MultiRaster(cfg_plt, S_q)
 ylim([-20, length(S.label)])
 
 %% 
