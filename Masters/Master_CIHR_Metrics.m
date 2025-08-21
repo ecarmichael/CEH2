@@ -11,10 +11,7 @@
 %       |  1     2  |
 %       |___________|
 
-
-%% genotype and virus arrays
-
-
+%%%%%%%%%%% chronate M7-m9 recall
 
 %% NOL %%%%%%%%
 
@@ -30,6 +27,16 @@ opto_tbl = readtable("Opto_grant.xlsx", 'VariableNamingRule','preserve');
 % get all of the "*markers.csv' files for the scored interactions
 
 mkr_list = dir('*markers.csv'); 
+
+for ii = 1:length(mkr_list)
+    if (sum(contains(mkr_list(ii).name, 'p1')) > 0) || ( sum(contains(mkr_list(ii).name, 'p2')) > 0)
+        rm_idx(ii) = true;
+    else
+        rm_idx(ii) = false;
+    end
+end
+
+mkr_list(rm_idx) = []; 
 
 % loop over and collect the interactions 
 Sub = cell(length(mkr_list),1); Sess = Sub; Geno = Sub; Virus = Sub; 
@@ -98,7 +105,9 @@ end
 
 tbl_out = cell2table(data_out, "VariableNames",{'Subject', 'Session','Geno', 'Virus','Sex', 'Obj1_n', 'Obj1_t', 'Obj2_n', 'Obj2_t', 'DI_n', 'DI_t'});
 
+% make a paired table as well. 
 
+tbl_pairs = []; 
 %% plot
 c_ord = MS_linspecer(8); 
 
@@ -116,33 +125,48 @@ art_idx =  contains(tbl_out.Virus, 'ArchT');
 
 sst_idx =  contains(tbl_out.Geno, 'Sst');
 
-figure(191)
+figure(192)
 this_data = tbl_out.DI_t; 
 
 clf
 % overall
-subplot(2,2,1:2)
+subplot(2,2,1)
 [hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx)', this_data(r_idx)', [c_ord(1,:);c_ord(end,:)],1,  'ttest2', [1 2]);
 
 % 
-[hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx & ctrl_idx)', this_data(r_idx & ctrl_idx)', [c_ord(3,:);c_ord(3,:)],1,  'ttest2', [4 5]);
+[hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx & ctrl_idx)', this_data(r_idx & ctrl_idx)', [.6 .6 .6 ;.6 .6 .6],1,  'ttest2', [4 5]);
 
 
-[hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx &  bi_idx)', this_data(r_idx &  bi_idx)', [c_ord(4,:);c_ord(4,:)],1,  'ttest2', [7 8]);
+[hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx &  bi_idx)', this_data(r_idx &  bi_idx)', [c_ord(2,:);c_ord(2,:)],1,  'ttest2', [7 8]);
 
 
-[hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx & (art_idx))', this_data(r_idx & (art_idx))', [c_ord(7,:);c_ord(8,:)],1,  'ttest2', [10 11]);
+[hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx & (art_idx))', this_data(r_idx & (art_idx))', [c_ord(3,:);c_ord(3,:)],1,  'ttest2', [10 11]);
 
 [hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx & cheta_idx)', this_data(r_idx & cheta_idx)', [c_ord(5,:);c_ord(5,:)],1,  'ttest2', [13 14]);
 
 set(gca, 'XTick', [1 2 4 5 7 8 10 11 13 14], 'XTickLabel', {'All - Enc', 'All - Rec', 'Ctrl - Enc', 'Ctrl - Rec', 'Bipole - Enc', 'Bipole - Rec'...
     'ArchT - Enc', 'ArchT - Rec', 'Cheta - Enc', 'Cheta - Rec'}, 'XTickLabelRotation', 45)
 
+ylabel({'Discrimination index'; '(Obj2 - Obj1)/(Obj1+obj2)'})
+
 % subplot(2,2,3)
 % [hb, eb, sc, p, stats] = MS_bar_w_err(this_data(r_idx & ctrl_idx)', this_data(r_idx & (art_idx | bi_idx))', [[ .6 .6 .6];c_ord(1,:)],1,  'ttest2', [1 2]);
 
 
-subplot(2,2,3:4)
+% plot the interaction number and events per type as a scatter
+subplot(2,2,2)
+hold on
+scatter(tbl_out.DI_t(r_idx & ctrl_idx), tbl_out.DI_n(r_idx & ctrl_idx), 100, 'MarkerFaceColor', [.6 .6 .6],"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+scatter(tbl_out.DI_t(r_idx & bi_idx), tbl_out.DI_n(r_idx & bi_idx), 100, 'MarkerFaceColor', c_ord(2,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+scatter(tbl_out.DI_t(r_idx & art_idx), tbl_out.DI_n(r_idx & art_idx), 100, 'MarkerFaceColor', c_ord(3,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+scatter(tbl_out.DI_t(r_idx & cheta_idx), tbl_out.DI_n(r_idx & cheta_idx), 100, 'MarkerFaceColor', c_ord(5,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+xline(0); yline(0);
+ylabel('DI: n interactions')
+xlabel('DI: time')
+legend({'Control', 'Bipole', 'ArchT', 'Cheta'}, 'Box','off', 'Location','northwest')
+xlim([-1 1]); ylim([-1 1])
+
+subplot(2,2,3)
 cla
 hold on
 yline(0)
@@ -157,6 +181,7 @@ for ii = 1:length(idx)
     else
         text(x_vec(ii), this_data(idx(ii)), tbl_out.Subject(idx(ii)))
     end
+    disp(tbl_out.Subject(idx(ii)))
 end
 
 
@@ -232,7 +257,7 @@ set(gca, 'XTick', 1:4, 'XTickLabel', { 'Ctrl - Rec' 'Bipole - Rec'...
     'ArchT - Rec' 'Cheta - Rec'}, 'XTickLabelRotation', 45)
 
 ylim([-1 1]); 
-xlim ([0.5 4.5])
+xlim ([-.5 4.5])
 ylabel({'Discrimination index'; '(Obj2 - Obj1)/(Obj1+obj2)'})
 %%%%%% to do %%%
 %convert into vectors for paired tests. 
