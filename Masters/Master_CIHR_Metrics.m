@@ -16,7 +16,7 @@
 %% NOL %%%%%%%%
 
 data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\CIHR_NOL_2025'; 
-%%
+%
 cd(data_dir)
 
 % load the opto_grant.xlsx file containing the IDs, genotypes, and viruses. 
@@ -61,18 +61,18 @@ for ii  = 1:length(mkr_list)
     obj_2_idx = find((tbl.object_id == 2 ) & contains(tbl.marker_type, 'start')); 
 
     % remove any blocks starting after 600seconds
-    rm_idx = tbl.marker_time(obj_1_idx) > 600; 
+    rm_idx = tbl.marker_time(obj_1_idx) > 300; 
     obj_1_idx(rm_idx) = []; 
     
-    rm_idx = tbl.marker_time(obj_2_idx) > 600; 
+    rm_idx = tbl.marker_time(obj_2_idx) > 300; 
     obj_2_idx(rm_idx) = []; 
 
     % loop over events and get the duration
     obj_1 = []; 
     for jj = length(obj_1_idx):-1:1
 
-        if  tbl.marker_time(obj_1_idx(jj)+1) > 600
-            obj_1(jj) = 600 - tbl.marker_time(obj_1_idx(jj));
+        if  tbl.marker_time(obj_1_idx(jj)+1) > 300
+            obj_1(jj) = 300 - tbl.marker_time(obj_1_idx(jj));
         else
             obj_1(jj) = tbl.marker_time(obj_1_idx(jj)+1) - tbl.marker_time(obj_1_idx(jj)); 
         end
@@ -101,14 +101,236 @@ for ii  = 1:length(mkr_list)
 
 end
 
+
+
 % convert to table
 
 tbl_out = cell2table(data_out, "VariableNames",{'Subject', 'Session','Geno', 'Virus','Sex', 'Obj1_n', 'Obj1_t', 'Obj2_n', 'Obj2_t', 'DI_n', 'DI_t'});
 
 % make a paired table as well. 
 
-tbl_pairs = []; 
+enc_idx = (contains(data_out(:,2), 'ENC')); 
+
+data_pair_e = data_out(:,[1 2 3 4 5 6 7 8 9 10 11]); 
+data_pair_r = data_out(:,[1 2 3 4 5 6 7 8 9 10 11]); 
+data_pair_e(~enc_idx,:) = []; 
+data_pair_r(enc_idx,:) = []; 
+
+data_pair = [data_pair_e, data_pair_r(:, [1 2 6 7 8 9])];
+%%%%%% double check this is getting the right variables %%%%%%%%%%%%
+tbl_pairs = cell2table(data_pair, "VariableNames",{'Subject', 'Session','Geno', 'Virus','Sex','E_Obj1_t', 'E_Obj1_n', 'E_Obj2_t', 'E_Obj2_n' 'E_DI_n', 'E_DI_t','SubRr', 'SessR','R_Obj1_t', 'R_Obj1_n', 'R_Obj2_t', 'R_Obj2_n', 'R_DI_n', 'R_DI_t'});
+
+% check the subjects line up. 
+for ii = 1:size(tbl_pairs.Subject,1)
+    if ~strcmp(tbl_pairs.Subject, tbl_pairs.SubRr)
+        disp([tbl_pairs.Subject(ii) ' - ' tbl_pairs.SubRr(ii)]);
+    end
+
+    if strcmp(tbl_pairs.Session, tbl_pairs.SessR)
+        disp([tbl_pairs.Session(ii) ' - ' tbl_pairs.SessR(ii)]);
+    end
+
+    if (sum([tbl_pairs.E_Obj1_t(ii),tbl_pairs.E_Obj2_t(ii)]) < 5) || (sum([tbl_pairs.R_Obj1_t(ii),tbl_pairs.R_Obj2_t(ii)]) < 5)
+        fprintf('%s  E = %.2fs  | R = %.2fs \n', tbl_pairs.Subject{ii}, sum([tbl_pairs.E_Obj1_t(ii),tbl_pairs.E_Obj2_t(ii)]),sum([tbl_pairs.R_Obj1_t(ii),tbl_pairs.R_Obj2_t(ii)])); 
+    end
+end
+
+
+
+
+%% reshash mice with lost optics
+f_idx  = find(contains(tbl_out.Subject, 'M9'));
+
+for ii = 1:length(f_idx)
+    tbl_out.Virus{f_idx(ii)} = 'Sham';
+end
+
+f_idx  = contains(tbl_out.Subject, {'M23' 'M4'});
+tbl_out(f_idx,:) = []; 
+
+
+f_idx  = find(contains(tbl_pairs.Subject, 'M9'));
+
+for ii = 1:length(f_idx)
+    tbl_pairs.Virus{f_idx(ii)} = 'Sham';
+end
+
+f_idx  = contains(tbl_pairs.Subject, {'M23' 'M4'});
+tbl_pairs(f_idx,:) = []; 
+
 %% plot
+c_ord = MS_linspecer(8); 
+
+ctrl_idx =  contains(tbl_pairs.Virus, 'Sham'); 
+
+cheta_idx =  contains(tbl_pairs.Virus, 'Cheta'); 
+
+bi_idx =  contains(tbl_pairs.Virus, 'Bipole');
+
+art_idx =  contains(tbl_pairs.Virus, 'ArchT');
+
+sst_idx =  contains(tbl_pairs.Geno, 'Sst');
+
+figure(192)
+this_data_e = tbl_pairs.E_DI_t; 
+this_data_r = tbl_pairs.R_DI_t; 
+
+clf
+% overall
+subplot(2,2,1)
+[hb, eb, sc, p, stats] = MS_bar_w_err(this_data_e', this_data_r', [c_ord(1,:);c_ord(end,:)],1,  'ttest', [1 2]);
+
+% 
+[hb, eb, sc, p, stats] = MS_bar_w_err(this_data_e(ctrl_idx)', this_data_r(ctrl_idx)', [.6 .6 .6 ;.6 .6 .6],1,  'ttest', [4 5]);
+
+
+[hb, eb, sc, p, stats] = MS_bar_w_err(this_data_e(bi_idx)', this_data_r(bi_idx)', [c_ord(2,:);c_ord(2,:)],1,  'ttest', [7 8]);
+
+
+[hb, eb, sc, p, stats] = MS_bar_w_err(this_data_e(art_idx)', this_data_r(art_idx)', [c_ord(3,:);c_ord(3,:)],1,  'ttest', [10 11]);
+
+[hb, eb, sc, p, stats] = MS_bar_w_err(this_data_e(cheta_idx)', this_data_r(cheta_idx)', [c_ord(5,:);c_ord(5,:)],1,  'ttest', [13 14]);
+
+set(gca, 'XTick', [1 2 4 5 7 8 10 11 13 14], 'XTickLabel', {'All - Enc', 'All - Rec', 'Ctrl - Enc', 'Ctrl - Rec', 'Bipole - Enc', 'Bipole - Rec'...
+    'ArchT - Enc', 'ArchT - Rec', 'Cheta - Enc', 'Cheta - Rec'}, 'XTickLabelRotation', 45)
+
+ylabel({'Discrimination index'; '(Obj2 - Obj1)/(Obj1+obj2)'})
+
+% subplot(2,2,3)
+% [hb, eb, sc, p, stats] = MS_bar_w_err(this_data(r_idx & ctrl_idx)', this_data(r_idx & (art_idx | bi_idx))', [[ .6 .6 .6];c_ord(1,:)],1,  'ttest2', [1 2]);
+
+
+% plot the interaction number and events per type as a scatter
+subplot(2,2,2)
+hold on
+scatter(tbl_pairs.R_DI_t(ctrl_idx), tbl_pairs.R_DI_n(ctrl_idx), 100, 'MarkerFaceColor', [.6 .6 .6],"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+scatter(tbl_pairs.R_DI_t(bi_idx), tbl_pairs.R_DI_n(bi_idx), 100, 'MarkerFaceColor', c_ord(2,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+scatter(tbl_pairs.R_DI_t(art_idx), tbl_pairs.R_DI_n(art_idx), 100, 'MarkerFaceColor', c_ord(3,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+scatter(tbl_pairs.R_DI_t(cheta_idx), tbl_pairs.R_DI_n(cheta_idx), 100, 'MarkerFaceColor', c_ord(5,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+xline(0); yline(0);
+ylabel('DI: n interactions')
+xlabel('DI: time')
+legend({'Control', 'Bipole', 'ArchT', 'Cheta'}, 'Box','off', 'Location','northwest')
+xlim([-1 1]); ylim([-1 1])
+
+subplot(2,2,4)
+hold on
+scatter(tbl_pairs.R_Obj1_n(ctrl_idx), tbl_pairs.R_Obj2_n(ctrl_idx), 100, 'MarkerFaceColor', [.6 .6 .6],"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+scatter(tbl_pairs.R_Obj1_n(bi_idx), tbl_pairs.R_Obj2_n(bi_idx), 100, 'MarkerFaceColor', c_ord(2,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+scatter(tbl_pairs.R_Obj1_n(art_idx), tbl_pairs.R_Obj2_n(art_idx), 100, 'MarkerFaceColor', c_ord(3,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+scatter(tbl_pairs.R_Obj1_n(cheta_idx), tbl_pairs.R_Obj2_n(cheta_idx), 100, 'MarkerFaceColor', c_ord(5,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+xline(0); yline(0);
+ylabel('DI: n interactions')
+xlabel('DI: time')
+legend({'Control', 'Bipole', 'ArchT', 'Cheta'}, 'Box','off', 'Location','northwest')
+xlim([-1 1]); ylim([-1 1])
+
+subplot(2,2,3)
+cla
+hold on
+yline(0)
+this_data = tbl_pairs.R_DI_t;
+
+% ctrl
+idx = find(ctrl_idx);
+x_vec = sort(MS_randn_range(1,sum(ctrl_idx), .8, 1.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', [.6 .6 .6],"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+for ii = 1:length(idx) 
+    if contains(tbl_pairs.Sex(idx(ii)), 'M')
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)))
+    end
+    disp(tbl_pairs.Subject(idx(ii)))
+end
+
+
+% bipole
+idx = find(bi_idx & ~sst_idx);
+x_vec = sort(MS_randn_range(1,sum( bi_idx & ~sst_idx), 1.8, 2.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', c_ord(2,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+for ii = 1:length(idx) 
+    if contains(tbl_pairs.Sex(idx(ii)), 'M')
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)))
+    end
+end
+
+idx = find(bi_idx & sst_idx);
+x_vec = sort(MS_randn_range(1,sum( bi_idx & sst_idx), 1.8, 2.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', c_ord(2,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"diamond")
+for ii = 1:length(idx) 
+    if contains(tbl_pairs.Sex(idx(ii)), 'M')
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)))
+    end
+end
+
+% archt
+idx = find(art_idx & ~sst_idx);
+x_vec = sort(MS_randn_range(1,sum(art_idx& ~sst_idx), 2.8, 3.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', c_ord(3,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+for ii = 1:length(idx) 
+    if contains(tbl_pairs.Sex(idx(ii)), 'M')
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)))
+    end
+end
+
+idx = find(art_idx & sst_idx);
+x_vec = sort(MS_randn_range(1,sum( art_idx& sst_idx), 2.8, 3.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', c_ord(3,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"diamond")
+for ii = 1:length(idx) 
+    if contains(tbl_pairs.Sex(idx(ii)), 'M')
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)))
+    end
+end
+
+idx = find(cheta_idx & ~sst_idx);
+x_vec = sort(MS_randn_range(1,sum( cheta_idx & ~sst_idx),3.8, 4.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', c_ord(5,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"o")
+for ii = 1:length(idx)
+    if contains(tbl_pairs.Sex(idx(ii)), 'M')
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)))
+    end
+end
+
+idx = find( cheta_idx & sst_idx);
+x_vec = sort(MS_randn_range(1,sum(cheta_idx & sst_idx),3.8, 4.2));
+scatter(x_vec, this_data(idx), 100, 'MarkerFaceColor', c_ord(5,:),"MarkerEdgeColor",[.6 .6 .6], 'Marker',"diamond")
+for ii = 1:length(idx)
+    if contains(tbl_pairs.Sex(idx(ii)), 'Male')
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)), 'color', 'r')
+    else
+        text(x_vec(ii), this_data(idx(ii)), tbl_pairs.Subject(idx(ii)))
+    end
+end
+
+set(gca, 'XTick', 1:4, 'XTickLabel', { 'Ctrl - Rec' 'Bipole - Rec'...
+    'ArchT - Rec' 'Cheta - Rec'}, 'XTickLabelRotation', 45)
+
+ylim([-1 1]); 
+xlim ([-.5 4.5])
+ylabel({'Discrimination index'; '(Obj2 - Obj1)/(Obj1+obj2)'})
+%%%%%% to do %%%
+%convert into vectors for paired tests. 
+
+% plot as all four conditions for encoding  and then for recall
+
+% plot as all four conditions and comparisons
+
+% make a gittered scatter with the mouse labels to see if any odd sessions
+% are outliers. 
+
+
+%% plot draft without paired values.
 c_ord = MS_linspecer(8); 
 
 e_idx = contains(tbl_out.Session, 'ENC');

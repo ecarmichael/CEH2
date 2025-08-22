@@ -16,10 +16,12 @@ if data_flag == 1
 end
 hold on
 
+offsets_a = x_vals(1)+ sort(MS_randn_range(length(data_a), 1, -.1, .1));
+offsets_b = x_vals(2)+ sort(MS_randn_range(length(data_b), 1, -.1, .1));
 
 if data_flag > 0 %&& length(data_a) == length(data_b)
-    sc{1} = scatter(x_vals(1)+sort(MS_randn_range(length(data_a), 1, -.1, .1)), data_a,25, 'markerfacecolor', color(1,:), 'MarkerEdgeColor', [.2 .2 .2]);
-    sc{2} = scatter(x_vals(2)+sort(MS_randn_range(length(data_b), 1, -.1, .1)), data_b,25,  'markerfacecolor', color(2,:), 'MarkerEdgeColor', [.2 .2 .2]);
+    sc{1} = scatter( offsets_a, data_a,25, 'markerfacecolor', color(1,:), 'MarkerEdgeColor', [.2 .2 .2]);
+    sc{2} = scatter(offsets_b, data_b,25,  'markerfacecolor', color(2,:), 'MarkerEdgeColor', [.2 .2 .2]);
 else
     sc = []; 
 end
@@ -34,6 +36,10 @@ if ~isempty(stats)
         case 'ttest'
             disp('using ttest')
             [h, p, ~, stats] = ttest(data_a, data_b);
+
+            % add connections between points. 
+
+            plot([offsets_a, offsets_b]', [data_a ;data_b], '-', 'Color', [.6 .6 .6])
         case 'ttest2'
             disp('using ttest2')
             [h, p, ~,stats] = ttest2(data_a, data_b);
