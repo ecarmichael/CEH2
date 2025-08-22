@@ -132,7 +132,7 @@ clf
 % overall
 subplot(2,2,1)
 [hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx)', this_data(r_idx)', [c_ord(1,:);c_ord(end,:)],1,  'ttest2', [1 2]);
-
+fprintf("")
 % 
 [hb, eb, sc, p, stats] = MS_bar_w_err(this_data(e_idx & ctrl_idx)', this_data(r_idx & ctrl_idx)', [.6 .6 .6 ;.6 .6 .6],1,  'ttest2', [4 5]);
 
