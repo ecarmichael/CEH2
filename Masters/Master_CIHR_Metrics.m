@@ -518,3 +518,126 @@ for ii  = length(dlc_list):-1:1
     dist(ii) = trapz(pos.tvec, pos.data(end-1,:)); 
     cdist{ii} = cumtrapz(pos.tvec, pos.data(end-1,:)); 
 end
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% TFC 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% load the LED on table
+
+TFC_tab = readtable('CIHR_TFC_Frame - Sheet1.csv');
+
+
+% protocol
+
+TFC1.baseline = [0 240];
+TFC1.tone = [240 260; 402 422; 564 584; 726 746; 888 908];
+TFC1.trace = [260 280; 422 442; 584 604; 746 766; 908 928];
+TFC1.shock = [280 282; 442 444; 604 606; 766 768; 928 930];
+TFC1.ITI = [282 402; 444 564; 606 726; 768 888; 930 1050 ];
+
+TFC2.baseline = [0 240];
+TFC2.tone = [240 260; 400 420; 560 580; 720 740; 880 900 ];
+TFC2.trace = [260 280; 420 440; 580 600; 740 760; 900 920] ; 
+TFC2.ITI = [280 400; 440 560; 600 720; 760 880; 920 1040];
+
+TFC3.baseline = [0 300];
+
+% figure(1010)
+% clf
+% subplot(2,1,1)
+% hold on
+% 
+% blocks = fieldnames(TFC1); 
+% c_ord = parula(length(blocks)); 
+% 
+% for ii = 1:length(blocks)
+%     for jj = 1:size(TFC1.(blocks{ii}),1)
+%         rectangle('Position',[TFC1.(blocks{ii})(jj,1), ii-1, TFC1.(blocks{ii})(jj,2) - TFC1.(blocks{ii})(jj,1), 1], 'FaceColor',c_ord(ii,:));
+%     end
+% end
+% set(gca, 'yTick', .5:length(blocks), 'yTickLabel', blocks)
+% 
+% 
+% subplot(2,1,2)
+% hold on
+% 
+% blocks = fieldnames(TFC2); 
+% c_ord = parula(length(blocks)); 
+% 
+% for ii = 1:length(blocks)
+%     for jj = 1:size(TFC2.(blocks{ii}),1)
+%         rectangle('Position',[TFC2.(blocks{ii})(jj,1), ii-1, TFC2.(blocks{ii})(jj,2) - TFC2.(blocks{ii})(jj,1), 1], 'FaceColor',c_ord(ii,:));
+%     end
+% end
+% set(gca, 'yTick', .5:length(blocks), 'yTickLabel', blocks)
+%% initialize
+
+f_list = dir([cd filesep '*.mp4']);
+
+rm_idx = zeros(1,length(f_list));
+for iF = 1:length(f_list)
+    if contains(f_list(iF).name, 'labeled.mp4')
+        rm_idx(iF) = 1;
+    else
+        rm_idx(iF) = 0;
+    end
+end
+
+f_list(logical(rm_idx)) = [];
+
+for iF = 1:length(f_list)
+    fprintf('%s\n',f_list(iF).name)
+end
+
+
+
+%% loop over sessons
+out = [];
+
+for iF = 1:length(f_list)
+    
+    info = [];
+    info.subject = f_list(iF).name(strfind(f_list(iF).name, 'Pox'):strfind(f_list(iF).name, '.mp4')-1);
+    info.sess = f_list(iF).name(strfind(f_list(iF).name, 'TFC'):strfind(f_list(iF).name, 'TFC')+3);
+    info.date = f_list(iF).name(1:strfind(f_list(iF).name, 'TFC')-2);
+    
+    if strcmp(info.sess, 'TFC1')
+        proto = TFC1;
+    elseif strcmp(info.sess, 'TFC2')
+        proto = TFC2;
+    elseif strcmp(info.sess, 'TFC3')
+        proto = TFC3;
+    end
+    
+    % get the table info for the lED on frame.
+    this_tab = find(contains(TFC_tab.Subject, info.subject));
+    if isempty(this_tab)
+        continue
+    end
+    
+    if ~isempty(this_tab)%+ ~isnan(TFC_tab.(info.sess)(this_tab))) == 0
+        
+        out.(info.subject).(info.sess) = MS_DLC_score_freezing(f_list(iF).name,[],proto, TFC_tab.(info.sess)(this_tab), ['figs' filesep info.subject '_' info.sess]);
+        
+    else
+        out.(info.subject).(info.sess).out = [];
+        out.(info.subject).(info.sess).out.fvec = [];
+        out.(info.subject).(info.sess).out.f_bin = [];
+        out.(info.subject).(info.sess).out.t_bin = [];
+        out.(info.subject).(info.sess).out.TFC = [];
+    end
+    
+    % hold the 60 binned freezing.
+    %     if strcmp(info.sess, 'TFC1')
+    %         TFC1_out = [TFC1_out, out.(info.subject).(info.sess).f_bin];
+    %     elseif strcmp(info.sess, 'TFC2')
+    %         TFC2_out = [TFC2_out, out.(info.subject).(info.sess).f_bin];
+    %     elseif strcmp(info.sess, 'TFC3')
+    %         TFC3_out = [TFC3_out, out.(info.subject).(info.sess).f_bin];
+    %     end
+    %
+end
+%
