@@ -534,47 +534,47 @@ end
 
 % protocol
 
-TFC1.baseline = [0 240];
-TFC1.tone = [240 260; 402 422; 564 584; 726 746; 888 908];
-TFC1.trace = [260 280; 422 442; 584 604; 746 766; 908 928];
-TFC1.shock = [280 282; 442 444; 604 606; 766 768; 928 930];
-TFC1.ITI = [282 402; 444 564; 606 726; 768 888; 930 1050 ];
+TFC1.baseline = [0 300]+2;
+TFC1.tone = [300 320; 492 512; 684 704 ; 876 896; 1068 1088]+2; 
+TFC1.trace = [320 340; 512 532; 704 724; 896 916; 1088 1108]+2; 
+TFC1.shock = [340 342; 532 534; 724 726; 916 918; 1108 1110]+2; 
+TFC1.ITI = [342 492; 534 684; 726 876; 918 1068; 1110 1260]+2;
 
-TFC2.baseline = [0 240];
-TFC2.tone = [240 260; 400 420; 560 580; 720 740; 880 900 ];
-TFC2.trace = [260 280; 420 440; 580 600; 740 760; 900 920] ; 
-TFC2.ITI = [280 400; 440 560; 600 720; 760 880; 920 1040];
+TFC2.baseline = [2 302];
+TFC2.tone = [302 322; 514 534; 706 726; 898 918; 1090 1110];
+TFC2.trace = [322 342; 534 554; 726 746; 918 938; 1110 1130]; 
+TFC2.ITI = [342 494; 554 706; 746 898; 938 1090; 1130 1282]; 
 
 TFC3.baseline = [0 300];
 
-% figure(1010)
-% clf
-% subplot(2,1,1)
-% hold on
-% 
-% blocks = fieldnames(TFC1); 
-% c_ord = parula(length(blocks)); 
-% 
-% for ii = 1:length(blocks)
-%     for jj = 1:size(TFC1.(blocks{ii}),1)
-%         rectangle('Position',[TFC1.(blocks{ii})(jj,1), ii-1, TFC1.(blocks{ii})(jj,2) - TFC1.(blocks{ii})(jj,1), 1], 'FaceColor',c_ord(ii,:));
-%     end
-% end
-% set(gca, 'yTick', .5:length(blocks), 'yTickLabel', blocks)
-% 
-% 
-% subplot(2,1,2)
-% hold on
-% 
-% blocks = fieldnames(TFC2); 
-% c_ord = parula(length(blocks)); 
-% 
-% for ii = 1:length(blocks)
-%     for jj = 1:size(TFC2.(blocks{ii}),1)
-%         rectangle('Position',[TFC2.(blocks{ii})(jj,1), ii-1, TFC2.(blocks{ii})(jj,2) - TFC2.(blocks{ii})(jj,1), 1], 'FaceColor',c_ord(ii,:));
-%     end
-% end
-% set(gca, 'yTick', .5:length(blocks), 'yTickLabel', blocks)
+figure(1010)
+clf
+subplot(2,1,1)
+hold on
+
+blocks = fieldnames(TFC1); 
+c_ord = parula(length(blocks)); 
+
+for ii = 1:length(blocks)
+    for jj = 1:size(TFC1.(blocks{ii}),1)
+        rectangle('Position',[TFC1.(blocks{ii})(jj,1), ii-1, TFC1.(blocks{ii})(jj,2) - TFC1.(blocks{ii})(jj,1), 1], 'FaceColor',c_ord(ii,:));
+    end
+end
+set(gca, 'yTick', .5:length(blocks), 'yTickLabel', blocks)
+
+
+subplot(2,1,2)
+hold on
+
+blocks = fieldnames(TFC2); 
+c_ord = parula(length(blocks)); 
+
+for ii = 1:length(blocks)
+    for jj = 1:size(TFC2.(blocks{ii}),1)
+        rectangle('Position',[TFC2.(blocks{ii})(jj,1), ii-1, TFC2.(blocks{ii})(jj,2) - TFC2.(blocks{ii})(jj,1), 1], 'FaceColor',c_ord(ii,:));
+    end
+end
+set(gca, 'yTick', .5:length(blocks), 'yTickLabel', blocks)
 %% initialize
 
 d_list = dir(cd); 
@@ -631,9 +631,9 @@ for iF = 1:length(f_list)
         continue
     end
     
-    if ~isempty(this_tab)%+ ~isnan(TFC_tab.(info.sess)(this_tab))) == 0
+    if ~strcmpi(info.subject, 'M5') || ~isempty(this_tab)%+ ~isnan(TFC_tab.(info.sess)(this_tab))) == 0
         
-        out.(info.subject).(info.sess) = MS_DLC_score_freezing_dir(f_list(iF).folder,[],proto, TFC_tab.(info.sess)(this_tab), ['figs' filesep info.subject '_' info.sess]);
+        out.(info.subject).(info.sess) = MS_DLC_score_freezing_dir(f_list(iF).folder,[],proto, TFC_tab.(info.sess)(this_tab), [d_list(1).folder filesep 'figs' filesep info.subject '_' info.sess]);
         
     else
         out.(info.subject).(info.sess).out = [];

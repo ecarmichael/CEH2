@@ -40,7 +40,7 @@ end
 pos = MS_DLC2TSD(fname,[], conv_fact);
 
 %trim to the LED off signal.
-if contains(fname, 'TFC3')
+if contains(fname, 'TFC3') || contains(fname, 'TFC_B')
     s_idx = nearest_idx(0, pos.tvec);
     e_idx = nearest_idx(proto.baseline(end), pos.tvec);
 else
