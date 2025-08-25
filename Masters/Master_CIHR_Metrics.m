@@ -528,7 +528,9 @@ end
 % load the LED on table
 
 TFC_tab = readtable('CIHR_TFC_Frame - Sheet1.csv');
-
+for ii = 1:length(TFC_tab.Subject)
+    TFC_tab.S_num(ii) = str2double(TFC_tab.Subject{ii}(2:end)); 
+end
 
 % protocol
 
@@ -575,21 +577,24 @@ TFC3.baseline = [0 300];
 % set(gca, 'yTick', .5:length(blocks), 'yTickLabel', blocks)
 %% initialize
 
-f_list = dir([cd filesep '*.mp4']);
+d_list = dir(cd); 
+rm_idx = true(1, length(d_list)); 
+for ii  = 1:length(d_list); if strcmp(d_list(ii).name(1), 'M'); rm_idx(ii) = false; s_idx(ii) = str2double(d_list(ii).name(2:end)); end; end
+d_list(rm_idx) = []; s_idx(rm_idx) = []; 
 
-rm_idx = zeros(1,length(f_list));
+[~, s] = sort(s_idx); 
+d_list = d_list(s); 
+
+f_list = []; 
+
+for ii  = length(d_list):-1:1
+    
+     p_dir = dir(fullfile([d_list(ii).folder filesep d_list(ii).name], ['**' filesep '*Processed*'])); % Lists all files and folders recursively
+    f_list(ii).folder = p_dir.folder; 
+end 
+
 for iF = 1:length(f_list)
-    if contains(f_list(iF).name, 'labeled.mp4')
-        rm_idx(iF) = 1;
-    else
-        rm_idx(iF) = 0;
-    end
-end
-
-f_list(logical(rm_idx)) = [];
-
-for iF = 1:length(f_list)
-    fprintf('%s\n',f_list(iF).name)
+    fprintf('%s\n',f_list(iF).folder)
 end
 
 
@@ -598,11 +603,19 @@ end
 out = [];
 
 for iF = 1:length(f_list)
+
+    parts = strsplit(f_list(iF).folder, filesep); 
+
+    s_idx = find(contains(parts, 'TFC_')); 
     
     info = [];
-    info.subject = f_list(iF).name(strfind(f_list(iF).name, 'Pox'):strfind(f_list(iF).name, '.mp4')-1);
-    info.sess = f_list(iF).name(strfind(f_list(iF).name, 'TFC'):strfind(f_list(iF).name, 'TFC')+3);
-    info.date = f_list(iF).name(1:strfind(f_list(iF).name, 'TFC')-2);
+    info.subject = parts{s_idx+2}; 
+    info.sess = parts{s_idx+1}; 
+
+    if strcmp(info.sess, 'TFC_A'); info.sess = 'TFC1'; 
+    elseif strcmp(info.sess, 'TFC_B'); info.sess = 'TFC2';
+    elseif strcmp(info.sess, 'TFC_C'); info.sess = 'TFC3';
+    end
     
     if strcmp(info.sess, 'TFC1')
         proto = TFC1;
@@ -613,14 +626,14 @@ for iF = 1:length(f_list)
     end
     
     % get the table info for the lED on frame.
-    this_tab = find(contains(TFC_tab.Subject, info.subject));
+    this_tab = find(TFC_tab.S_num == str2double(info.subject(2:end)));
     if isempty(this_tab)
         continue
     end
     
     if ~isempty(this_tab)%+ ~isnan(TFC_tab.(info.sess)(this_tab))) == 0
         
-        out.(info.subject).(info.sess) = MS_DLC_score_freezing(f_list(iF).name,[],proto, TFC_tab.(info.sess)(this_tab), ['figs' filesep info.subject '_' info.sess]);
+        out.(info.subject).(info.sess) = MS_DLC_score_freezing_dir(f_list(iF).folder,[],proto, TFC_tab.(info.sess)(this_tab), ['figs' filesep info.subject '_' info.sess]);
         
     else
         out.(info.subject).(info.sess).out = [];
