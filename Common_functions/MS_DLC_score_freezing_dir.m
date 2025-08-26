@@ -40,18 +40,18 @@ end
 pos = MS_DLC2TSD(fname,[], conv_fact);
 
 %trim to the LED off signal.
-if contains(fname, 'TFC3') || contains(fname, 'TFC_B')
+if contains(fname, 'TFC3') || contains(fname, 'TFC_C')
     s_idx = nearest_idx(0, pos.tvec);
     e_idx = nearest_idx(proto.baseline(end), pos.tvec);
 else
-    s_idx = int16(LED_on+(2/mode(diff(pos.tvec))));
-    e_idx = int16(LED_on+(2/mode(diff(pos.tvec))) + proto.ITI(end,2)/mode(diff(pos.tvec)));
+    s_idx = int16(LED_on);
+    e_idx = s_idx +nearest_idx(proto.ITI(end,2), pos.tvec);
 end
 
-pos_r = pos;
-pos_r.tvec  = pos.tvec(s_idx:e_idx);
+pos_r = restrict(pos, pos.tvec(s_idx), pos.tvec(end));
+pos_r.tvec  = pos.tvec(s_idx:end);
 pos_r.tvec = pos_r.tvec - pos_r.tvec(1);
-pos_r.data  = pos.data(:,s_idx:e_idx);
+pos_r.data  = pos.data(:,s_idx:end);
 
 % vx = dxdt(pos_r.tvec,pos_r.data(end-3,:));
 % vy = dxdt(pos_r.tvec,pos_r.data(end-2,:));
@@ -75,7 +75,8 @@ fvec = zeros(1, length(mov_m));
 if isempty(thresh)
     mov_thresh = .5;
 else
-    mov_thresh = prctile(mov_m, thresh);
+    mov_thresh = thresh; 
+%     mov_thresh = prctile(mov_m, thresh);
 end
 
 fvec(mov_m < mov_thresh) = 1;
@@ -142,12 +143,18 @@ end
 
 %% get the minute by minue
 
-t_bin =20;
+t_bin =10;
 
-f_val = zeros(1, length(0:t_bin:ceil(pos_r.tvec(end))-2));
+if contains(fname, 'TFC3') || contains(fname, 'TFC_C')
+    cut = 300; 
+else
+    cut = proto.ITI(end,2); 
+
+end
+    f_val = zeros(1, length(0:t_bin:cut-t_bin));
 
 c= 0;
-for ii = 0:t_bin:ceil(pos_r.tvec(end))-2
+for ii = 0:t_bin:cut-t_bin
     c = c+1;
     
     s_idx = nearest_idx(ii, pos_r.tvec);
@@ -167,7 +174,7 @@ if ~isempty(fig_dir)
 
 figure(101)
 ax(2) = subplot(3,2,[5:6]);
-bar((0:t_bin:ceil(pos_r.tvec(end))-2)+(t_bin/2), f_val,'BarWidth', 1)
+bar((0:t_bin:cut-t_bin)+(t_bin/2), f_val,'BarWidth', 1)
 % set(gca, 'XTicklabel', (0:t_bin:ceil(pos_r.tvec(end))-2))
 
 
@@ -181,5 +188,5 @@ end
 out.pos_r = pos_r; 
 out.fvec = fvec;
 out.f_bin = f_val;
-out.t_bin = (0:t_bin:ceil(pos_r.tvec(end))-2);
+out.t_bin = (0:t_bin:cut-t_bin);
 
