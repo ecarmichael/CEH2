@@ -646,7 +646,7 @@ for iF = 1:length(f_list)
              (~(strcmp(info.subject(1:end), 'M1') && contains(info.sess, {'TFC1'})) && ~isempty(this_tab)) && ...
              (~(contains(info.subject, {'M7'}) && contains(info.sess, {'TFC1'})) && ~isempty(this_tab)) %+ ~isnan(TFC_tab.(info.sess)(this_tab))) == 0
         
-        out.(info.subject).(info.sess) = MS_DLC_score_freezing_dir(f_list(iF).folder,.15,proto, TFC_tab.(info.sess)(this_tab), [MS_parent_dir(d_list(1).folder) filesep 'figs' filesep info.subject '_' info.sess]);
+        out.(info.subject).(info.sess) = MS_DLC_score_freezing_dir(f_list(iF).folder,.1,proto, TFC_tab.(info.sess)(this_tab), [MS_parent_dir(d_list(1).folder) filesep 'figs' filesep info.subject '_' info.sess]);
         
     else
         out.(info.subject).(info.sess) = [];
