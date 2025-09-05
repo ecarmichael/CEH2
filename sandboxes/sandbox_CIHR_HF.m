@@ -7,7 +7,7 @@ if ispc
     eye_dir = [];
 elseif ismac
     kilo_dir = [];
-    '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/conditioning 1/';
+    ctrl_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/conditioning 1/';
     eye_dir = [];
 end
 
@@ -63,6 +63,30 @@ wheel_tsd = tsd(wheel.tvec, [wheel.data; diff([wheel.data wheel.data(end)])], {'
 licks = []; licks.type = 'ts'; 
 licks.t{1} = log_tab.time(contains(log_tab.event, 'Lick'));
 licks.label{1} = 'licks';
+licks.cfg.history.mfun = {'ts'}; 
+licks.cfg.history.cfg = {[]};
+
+% movement binary 
+
+mov_bin = wheel.data(1,:) > 0.1; 
+wheel.data(3,:) = mov_bin; 
+wheel.label{3} = 'move binary';
+
+% count the licks per trial
+trials = []; 
+for ii = 1:length(log_iv.Tone.tstart)
+
+    bl = restrict(licks, log_iv.Tone.tstart(ii)-20, log_iv.Tone.tstart(ii));
+    trials.base.licks(ii) = length(bl.t{1})./20;  
+
+     tl = restrict(licks, log_iv.Tone.tstart(ii), log_iv.Tone.tend(ii));
+    trials.tone.licks(ii) = length(tl.t{1})./20; 
+
+    trl = restrict(licks, log_iv.Trace.tstart(ii), log_iv.Trace.tend(ii));
+    trials.trace.licks(ii) = length(trl.t{1})./15; 
+
+    % same thing but movement
+end
 
 %% ephys
 cd(kilo_dir)
@@ -140,18 +164,6 @@ linkaxes(ax, 'x')
 xlim([0 log.end])
 
 
-%% trial-ified the data
-
-% wheel and movement
-
-mov_bin = wheel.data(1,:) > 0.1; 
-wheel.data(3,:) = mov_bin; 
-wheel.label{3} = 'move binary';
-
-% for ii = 1:r
-
-
-
 %%
 % plot??
 c_ord = MS_linspecer(9); 
@@ -169,19 +181,38 @@ for ii = 1:length(log_iv.Tone.tstart)
 
     plot(this_r.tvec - this_r.tvec(1)-20, this_r.data(2,:), 'color', c_ord(ii,:));
     
+    % add the licks as a raster
+
+    this_l = restrict(licks, log_iv.Tone.tstart(ii)-20, log_iv.Puff.tend(ii)+20);
+    plot([this_l.t{1}- this_r.tvec(1)-20 this_l.t{1}- this_r.tvec(1)-20]', [ones(size(this_l.t{1}))*-(ii*.25)-.25 ones(size(this_l.t{1}))*-(ii*.25)]', 'Color',c_ord(ii,:), 'LineWidth',2)
 end
+
+
 xline([0 20 35 36])
-rectangle(gca, 'Position',[-20 -.55 20 .5], 'FaceColor',[.7 .7 .7], 'EdgeColor','none' )
-rectangle(gca, 'Position',[0 -.55 20 .5], 'FaceColor',r_ord(2,:), 'EdgeColor','none' )
-rectangle(gca, 'Position',[20 -.55 15 .5], 'FaceColor',r_ord(4,:), 'EdgeColor','none' )
-rectangle(gca, 'Position',[35 -.55 1 .5], 'FaceColor',r_ord(6,:), 'EdgeColor','none' )
-rectangle(gca, 'Position',[36 -.55 20 .5], 'FaceColor',[.7 .7 .7], 'EdgeColor','none' )
+rectangle(gca, 'Position',[-20 -.25 20 .25], 'FaceColor',[.7 .7 .7], 'EdgeColor','none' )
+rectangle(gca, 'Position',[0 -.25 20 .25], 'FaceColor',r_ord(2,:), 'EdgeColor','none' )
+rectangle(gca, 'Position',[20 -.25 15 .25], 'FaceColor',r_ord(4,:), 'EdgeColor','none' )
+rectangle(gca, 'Position',[35 -.25 1 .25], 'FaceColor',r_ord(6,:), 'EdgeColor','none' )
+rectangle(gca, 'Position',[36 -.25 20 .25], 'FaceColor',[.7 .7 .7], 'EdgeColor','none' )
 
 ylabel('Movement (a.u.)')
 
 xlim([-20 56])
 y_l = ylim;
-ylim([-.55 y_l(2)]);
+% ylim([-.55 y_l(2)]);
 
-ax(2) = subplot(3,2,3);
-cla
+
+% bar plots summarizing movement and licks. 
+ax(2) = subplot(3,2, 2);
+hold on
+
+hb = MS_bar_w_err(trials.tone.licks, trials.base.licks, c_ord(2:3,:), 1, 'ttest',[1 0]); 
+hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
+
+hb = MS_bar_w_err(trials.tone.licks, trials.trace.licks, c_ord(1:2,:), 1, 'ttest',[1 2]); 
+
+hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
+
+ylabel('mean licks rate')
+
+set(gca, 'XTick', 1:3, 'XTickLabel', {'Baseline [-20:0]', 'Tone', 'Trace'})
