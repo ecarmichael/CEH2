@@ -57,7 +57,7 @@ wheel.data(isnan(wheel.data)) = 0;
 wheel.tvec = tvec_i; 
 
 
-wheel_tsd = tsd(wheel.tvec, [wheel.data; diff([wheel.data wheel.data(end)])], {'encoder' 'movement'})
+wheel_tsd = tsd(wheel.tvec, [wheel.data; diff([wheel.data wheel.data(end)])], {'encoder' 'movement'}); 
 
 % licks
 licks = []; licks.type = 'ts'; 
@@ -65,7 +65,7 @@ licks.t{1} = log_tab.time(contains(log_tab.event, 'Lick'));
 licks.label{1} = 'licks';
 
 %% ephys
-
+cd(kilo_dir)
 OE_rec = readNPY('timestamps.npy');
 OE_rec = [OE_rec(1) OE_rec(end)]; 
 
@@ -148,55 +148,40 @@ mov_bin = wheel.data(1,:) > 0.1;
 wheel.data(3,:) = mov_bin; 
 wheel.label{3} = 'move binary';
 
-for ii = 1:
+% for ii = 1:r
 
 
 
 %%
 % plot??
-c_ord = MS_linspecer(8); 
+c_ord = MS_linspecer(9); 
 
+r_ord = winter(6); 
 figure(102)
 
 clf
 
-ax(1) = subplot(3,2,1);
+ax(1) = subplot(3,2,[1 3]);
 cla
+hold on
+for ii = 1:length(log_iv.Tone.tstart)
+    this_r = restrict(wheel_tsd, log_iv.Tone.tstart(ii)-20, log_iv.Puff.tend(ii)+20);
 
-plot(wheel.tvec, wheel.data, 'k');
-
-for ii = 1:length(phases)
-xline(log.(phases{ii}), 'Color',c_ord(ii,:), 'LineWidth',3)
+    plot(this_r.tvec - this_r.tvec(1)-20, this_r.data(2,:), 'color', c_ord(ii,:));
+    
 end
-ylabel('Encoder pos')
+xline([0 20 35 36])
+rectangle(gca, 'Position',[-20 -.55 20 .5], 'FaceColor',[.7 .7 .7], 'EdgeColor','none' )
+rectangle(gca, 'Position',[0 -.55 20 .5], 'FaceColor',r_ord(2,:), 'EdgeColor','none' )
+rectangle(gca, 'Position',[20 -.55 15 .5], 'FaceColor',r_ord(4,:), 'EdgeColor','none' )
+rectangle(gca, 'Position',[35 -.55 1 .5], 'FaceColor',r_ord(6,:), 'EdgeColor','none' )
+rectangle(gca, 'Position',[36 -.55 20 .5], 'FaceColor',[.7 .7 .7], 'EdgeColor','none' )
 
-ax(2) = subplot(5,1,2);
-cla
-plot(wheel.tvec(1:end-1)  - wheel.tvec(1), abs(diff(wheel.data)), 'r');
 ylabel('Movement (a.u.)')
 
-for ii = 1:length(phases)
-xline(log.(phases{ii}), 'Color',c_ord(ii,:), 'LineWidth',3)
-end
+xlim([-20 56])
+y_l = ylim;
+ylim([-.55 y_l(2)]);
 
-
-ax(3) = subplot(5,1,3);
+ax(2) = subplot(3,2,3);
 cla
-plot([licks.t{1} licks.t{1}]', [zeros(size(licks.t{1})) ones(size(licks.t{1}))]', 'k');
-ylabel('Licks'); ylim([0 2]);
-
-for ii = 1:length(phases)
-xline(log.(phases{ii}), 'Color',c_ord(ii,:), 'LineWidth',3)
-end
-
-ax(4) = subplot(5,1,4:5);
-cla
-plot(S_r);
-% ylabel('Licks'); ylim([0 2]);
-
-for ii = 1:length(phases)
-    xline(log.(phases{ii}), 'Color',c_ord(ii,:), 'LineWidth',3)
-end
-
-linkaxes(ax, 'x')
-xlim([0 log.end])
