@@ -69,8 +69,8 @@ licks.cfg.history.cfg = {[]};
 % movement binary 
 
 mov_bin = wheel.data(1,:) > 0.1; 
-wheel.data(3,:) = mov_bin; 
-wheel.label{3} = 'move binary';
+wheel_tsd.data(3,:) = mov_bin; 
+wheel_tsd.label{3} = 'move binary';
 
 % count the licks per trial
 trials = []; 
@@ -86,6 +86,15 @@ for ii = 1:length(log_iv.Tone.tstart)
     trials.trace.licks(ii) = length(trl.t{1})./15; 
 
     % same thing but movement
+    bl = restrict(wheel_tsd, log_iv.Tone.tstart(ii)-20, log_iv.Tone.tstart(ii));
+    trials.base.mov(ii) = sum(bl.data(3,:)) / length(bl.tvec);  
+
+     tl = restrict(wheel_tsd, log_iv.Tone.tstart(ii), log_iv.Tone.tend(ii));
+    trials.tone.mov(ii) = sum(tl.data(3,:)) / length(tl.tvec);  
+
+    trl = restrict(wheel_tsd, log_iv.Trace.tstart(ii), log_iv.Trace.tend(ii));
+    trials.trace.mov(ii) = sum(trl.data(3,:)) / length(trl.tvec);  
+
 end
 
 %% ephys
@@ -206,6 +215,21 @@ y_l = ylim;
 ax(2) = subplot(3,2, 2);
 hold on
 
+hb = MS_bar_w_err(trials.tone.mov, trials.base.mov, c_ord(2:3,:), 1, 'ttest',[1 0]); 
+hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
+
+hb = MS_bar_w_err(trials.tone.mov, trials.trace.mov, c_ord(1:2,:), 1, 'ttest',[1 2]); 
+
+hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
+
+ylabel('mov % ')
+
+set(gca, 'XTick', 1:3, 'XTickLabel', {'Baseline [-20:0]', 'Tone', 'Trace'})
+
+% licks mean. 
+ax(2) = subplot(3,2, 4);
+hold on
+
 hb = MS_bar_w_err(trials.tone.licks, trials.base.licks, c_ord(2:3,:), 1, 'ttest',[1 0]); 
 hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
 
@@ -215,4 +239,4 @@ hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
 
 ylabel('mean licks rate')
 
-set(gca, 'XTick', 1:3, 'XTickLabel', {'Baseline [-20:0]', 'Tone', 'Trace'})
+set(gca, 'XTick', 0:2, 'XTickLabel', {'Baseline [-20:0]', 'Tone', 'Trace'})
