@@ -150,7 +150,7 @@ end
 %     plot(1:5, mean(this_day_mean), 'k', 'LineWidth',2)
     % leg = data.(coh{iC}).sub; 
     % leg{end+1} = 'mean';
-    legend({'Ctrl', 'Tau', 'All'}, 'Box','off')
+    legend({'Tau -', 'Tau +', 'All'}, 'Box','off')
    ylabel({'Escape latency (s)'})
     title('All trials')
     ylim([0 40])
@@ -225,7 +225,7 @@ day_mdl = fitrm(A_tbl, 'Day_mean~Geno*Day', 'WithinDesign',table([1 2 3 4 5],'Va
 ranova_tbl = ranova(day_mdl, 'WithinModel', 'Days');
 % results
 disp(ranova_tbl);
-    multcompare(ranova_tbl)
+%     multcompare(ranova_tbl)
 
 % model
 day_f_mdl = fitrm(A_tbl, 'Day_first~Geno*Day', 'WithinDesign',table([1 2 3 4 5],'VariableNames', "Days"));

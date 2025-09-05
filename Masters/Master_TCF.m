@@ -185,7 +185,17 @@ end
 c_ord = MS_linspecer(4); 
 
 s_list = fieldnames(out);
-TFC1_out = []; TFC2_out = []; TFC3_out = [];TFC2_bar = [];
+TFC1_out = []; TFC2_out = []; TFC3_out = [];
+TFC1_bar = []; TFC2_bar = [];
+TFC1_bar.baseline = [];
+TFC1_bar.tone = [];
+TFC1_bar.trace = [];
+TFC1_bar.ITI = [];
+TFC1_t.tone = []; 
+TFC1_t.trace = []; 
+TFC1_t.ITI = []; 
+
+
 TFC2_bar.baseline = [];
 TFC2_bar.tone = [];
 TFC2_bar.trace = [];
@@ -193,8 +203,10 @@ TFC2_bar.ITI = [];
 TFC3_bar.baseline = []; 
 Geno = []; Subs = []; Sess = []; 
 TFC1_geno = []; TFC2_geno = []; TFC3_geno = []; 
-TFC2_sub = []; 
+TFC1_sub = []; TFC2_sub = []; 
 
+
+l_idx = 0;
 for iSub = 1:length(s_list)
     
     sess_list = fieldnames(out.(s_list{iSub}));
@@ -209,7 +221,21 @@ for iSub = 1:length(s_list)
             if strcmp(sess_list{iSess}, 'TFC1')
                 TFC1_out = [TFC1_out; out.(s_list{iSub}).(sess_list{iSess}).f_bin];
                 t_vec = out.(s_list{iSub}).(sess_list{iSess}).t_bin;
-                                TFC1_geno(end+1) = TFC_tab.Pox(this_tab); 
+                                
+                TFC1_bar.baseline(end+1) = mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.baseline);
+                TFC1_bar.tone(end+1) =  mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.tone);
+                TFC1_bar.trace(end+1) =  mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.trace);
+                TFC1_bar.ITI(end+1)=  mean(out.(s_list{iSub}).(sess_list{iSess}).TFC.ITI);
+                
+                l_idx = l_idx +1; 
+                for jj = 1:3
+                    TFC1_t.tone(jj,l_idx) = out.(s_list{iSub}).(sess_list{iSess}).TFC.tone(jj);
+                    TFC1_t.trace(jj,l_idx) = out.(s_list{iSub}).(sess_list{iSess}).TFC.trace(jj);
+                    TFC1_t.ITI(jj,l_idx) = out.(s_list{iSub}).(sess_list{iSess}).TFC.ITI(jj);
+                end
+                
+                TFC1_geno(end+1) = TFC_tab.Pox(this_tab);
+                TFC1_sub{end+1} = s_list{iSub};
 
             elseif strcmp(sess_list{iSess}, 'TFC2')
                 TFC2_out = [TFC2_out; out.(s_list{iSub}).(sess_list{iSess}).f_bin];
@@ -289,13 +315,16 @@ for ii = 1:length(TFC1.tone)
    rectangle('position',  [TFC1.shock(ii,1)/60 0, (TFC1.shock(ii,2) - TFC1.shock(ii,1))/60, 1], 'FaceColor',[([210 240 10]/255) .8], 'EdgeColor', 'none')
 
 end
-plot(t_vec/60, mean(TFC1_out(TFC1_geno == 0,:)), 'color', c_ord(1,:), 'linewidth', 4)
-errorbar(t_vec/60, mean(TFC1_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 0,:)), 'color', c_ord(1,:)); 
-errorbar(t_vec/60, mean(TFC1_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 0,:)), 'color', c_ord(1,:)); 
+t_vec_mid = (t_vec+(mode(diff(t_vec))/2))/60;
 
-plot(t_vec/60, mean(TFC1_out(TFC1_geno == 1,:)), 'color', c_ord(2,:), 'linewidth', 4)
-errorbar(t_vec/60, mean(TFC1_out(TFC1_geno == 1,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 1,:)), 'color', c_ord(2,:)); 
-errorbar(t_vec/60, mean(TFC1_out(TFC1_geno == 1,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 1,:)), 'color', c_ord(2,:)); 
+
+plot(t_vec_mid, mean(TFC1_out(TFC1_geno == 0,:)), 'color', c_ord(1,:), 'linewidth', 4)
+errorbar(t_vec_mid, mean(TFC1_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 0,:)), 'color', c_ord(1,:)); 
+errorbar(t_vec_mid, mean(TFC1_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 0,:)), 'color', c_ord(1,:)); 
+
+plot(t_vec_mid, mean(TFC1_out(TFC1_geno == 1,:)), 'color', c_ord(2,:), 'linewidth', 4)
+errorbar(t_vec_mid, mean(TFC1_out(TFC1_geno == 1,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 1,:)), 'color', c_ord(2,:)); 
+errorbar(t_vec_mid, mean(TFC1_out(TFC1_geno == 1,:)),MS_SEM_vec(TFC1_out(TFC1_geno == 1,:)), 'color', c_ord(2,:)); 
 
 title('Context A: Aquisition'); 
 ylabel('%freezing')
@@ -310,14 +339,15 @@ for ii = 1:length(TFC2.tone)
    rectangle('position',  [TFC2.trace(ii,1)/60 0, (TFC2.trace(ii,2) - TFC2.trace(ii,1))/60, 1], 'FaceColor', c_ord(3,:), 'EdgeColor', 'none')
 
 end
+t_vec2_mid = (t_vec2+(mode(diff(t_vec2))/2))/60;
 
-plot(t_vec2/60, mean(TFC2_out(TFC1_geno == 0,:)), 'color', c_ord(1,:), 'linewidth', 4)
-errorbar(t_vec2/60, mean(TFC2_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
-errorbar(t_vec2/60, mean(TFC2_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
+plot(t_vec2_mid, mean(TFC2_out(TFC1_geno == 0,:)), 'color', c_ord(1,:), 'linewidth', 4)
+errorbar(t_vec2_mid, mean(TFC2_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
+errorbar(t_vec2_mid, mean(TFC2_out(TFC1_geno == 0,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
 
-plot(t_vec2/60, mean(TFC2_out(TFC2_geno == 1,:)), 'color', c_ord(2,:), 'linewidth', 4)
-errorbar(t_vec2/60, mean(TFC2_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
-errorbar(t_vec2/60, mean(TFC2_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
+plot(t_vec2_mid, mean(TFC2_out(TFC2_geno == 1,:)), 'color', c_ord(2,:), 'linewidth', 4)
+errorbar(t_vec2_mid, mean(TFC2_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
+errorbar(t_vec2_mid, mean(TFC2_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC2_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
 
 
 
@@ -328,13 +358,15 @@ ylim([0 1])
 
 subplot(2,3,3)
 hold on
-plot(t_vec3/60, mean(TFC3_out(TFC2_geno == 0,:)), 'color', c_ord(1,:), 'linewidth', 4)
-errorbar(t_vec3/60, mean(TFC3_out(TFC2_geno == 0,:)),MS_SEM_vec(TFC3_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
-errorbar(t_vec3/60, mean(TFC3_out(TFC2_geno == 0,:)),MS_SEM_vec(TFC3_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
+t_vec3_mid = (t_vec3+(mode(diff(t_vec3))/2))/60;
 
-plot(t_vec3/60, mean(TFC3_out(TFC2_geno == 1,:)), 'color', c_ord(2,:), 'linewidth', 4)
-errorbar(t_vec3/60, mean(TFC3_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC3_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
-errorbar(t_vec3/60, mean(TFC3_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC3_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
+plot(t_vec3_mid, mean(TFC3_out(TFC2_geno == 0,:)), 'color', c_ord(1,:), 'linewidth', 4)
+errorbar(t_vec3_mid, mean(TFC3_out(TFC2_geno == 0,:)),MS_SEM_vec(TFC3_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
+errorbar(t_vec3_mid, mean(TFC3_out(TFC2_geno == 0,:)),MS_SEM_vec(TFC3_out(TFC2_geno == 0,:)), 'color', c_ord(1,:)); 
+
+plot(t_vec3_mid, mean(TFC3_out(TFC2_geno == 1,:)), 'color', c_ord(2,:), 'linewidth', 4)
+errorbar(t_vec3_mid, mean(TFC3_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC3_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
+errorbar(t_vec3_mid, mean(TFC3_out(TFC2_geno == 1,:)),MS_SEM_vec(TFC3_out(TFC2_geno == 1,:)), 'color', c_ord(2,:)); 
 
 title('Context A'': Context Memory'); 
 ylabel('%freezing')
@@ -354,27 +386,35 @@ hold on
 % scatter(5+sort(MS_randn_range(length(TFC2_bar.trace(TFC2_geno == 0)), 1, -.1, .1)), TFC2_bar.trace(TFC2_geno == 0),25,  c_ord(1,:), 'filled')
 % scatter(6+sort(MS_randn_range(length(TFC2_bar.trace(TFC2_geno == 1)), 1, -.1, .1)), TFC2_bar.trace(TFC2_geno == 1),25,  c_ord(2,:), 'filled')
 
-[hb, eb, sc, p, stats] = MS_bar_w_err(TFC2_bar.baseline(TFC2_geno == 0), TFC2_bar.baseline(TFC2_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [1 2]);
+%phase plots for each trial
+[hb, eb, sc, p, stats] = MS_bar_w_err(TFC1_bar.baseline(TFC1_geno == 0), TFC1_bar.baseline(TFC1_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [1 2]);
+hb(1).FaceColor = 'none';
+hb(1).EdgeColor = 'k';
+% 
+% 
+% [hb, eb, sc, p, stats] = MS_bar_w_err(TFC1_t.trace(1,TFC1_geno == 0), TFC1_t.trace(1,TFC1_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [3.25 3.]);
+% hb(1).FaceColor = 'none';
+% hb(1).EdgeColor = 'k';
 
+
+
+% phase bar plots - mean
+[hb, eb, sc, p, stats] = MS_bar_w_err(TFC1_bar.baseline(TFC1_geno == 0), TFC1_bar.baseline(TFC1_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [1 2]);
 hb(1).FaceColor = 'none';
 hb(1).EdgeColor = 'k';
 
-[hb, eb, sc, p, stats] = MS_bar_w_err(TFC2_bar.tone(TFC2_geno == 0), TFC2_bar.tone(TFC2_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [4 5]);
+[hb, eb, sc, p, stats] = MS_bar_w_err(TFC1_bar.tone(TFC2_geno == 0), TFC1_bar.tone(TFC1_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [4 5]);
 hb(1).FaceColor = 'none';
 hb(1).EdgeColor = 'k';
 
-[hb, eb, sc, p, stats] = MS_bar_w_err(TFC2_bar.trace(TFC2_geno == 0), TFC2_bar.trace(TFC2_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [7 8]);
+[hb, eb, sc, p, stats] = MS_bar_w_err(TFC1_bar.trace(TFC2_geno == 0), TFC1_bar.trace(TFC1_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [7 8]);
 hb(1).FaceColor = 'none';
 hb(1).EdgeColor = 'k';
 
-[hb, eb, sc, p, stats] = MS_bar_w_err(TFC2_bar.ITI(TFC2_geno == 0), TFC2_bar.ITI(TFC2_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [10 11]);
+[hb, eb, sc, p, stats] = MS_bar_w_err(TFC1_bar.ITI(TFC1_geno == 0), TFC1_bar.ITI(TFC1_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [10 11]);
 hb(1).FaceColor = 'none';
 hb(1).EdgeColor = 'k';
 
-
-[hb, eb, sc, p, stats] = MS_bar_w_err(TFC3_bar.baseline(TFC3_geno == 0), TFC3_bar.baseline(TFC3_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [14 15]);
-hb(1).FaceColor = 'none';
-hb(1).EdgeColor = 'k';
 
 y_l = ylim; 
 ylim([y_l(1) 1.1])
@@ -418,7 +458,7 @@ ylabel('Trace freezing (%)')
 
 
 
-subplot(2,3,5:6)
+subplot(2,3,5)
 hold on
 [hb, eb, sc, p, stats] = MS_bar_w_err(TFC2_bar.baseline(TFC2_geno == 0), TFC2_bar.baseline(TFC2_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [1 2]);
 
@@ -437,20 +477,25 @@ hb(1).EdgeColor = 'k';
 hb(1).FaceColor = 'none';
 hb(1).EdgeColor = 'k';
 
+ylim([0 1.1])
 
-[hb, eb, sc, p, stats] = MS_bar_w_err(TFC3_bar.baseline(TFC3_geno == 0), TFC3_bar.baseline(TFC3_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [14 15]);
+set(gca, 'xtick', [1.5 4.5 7.5 10.5 ], 'XTickLabel', {'Base', 'Tone', 'Trace', 'ITI', })
+
+
+
+subplot(2,3,6)
+cla
+[hb, eb, sc, p, stats] = MS_bar_w_err(TFC3_bar.baseline(TFC3_geno == 0), TFC3_bar.baseline(TFC3_geno == 1), [c_ord(1,:);c_ord(2,:)],1,  'ttest2', [1 2]);
 hb(1).FaceColor = 'none';
 hb(1).EdgeColor = 'k';
-
-y_l = ylim; 
-ylim([y_l(1) 1.1])
-
+ylim([0 1.1])
+xlim([-1 4])
 % text(1.5, y_l(2)*1.1, 'Tone', 'HorizontalAlignment','center','VerticalAlignment','top')
 
 % text(5.5,y_l(2)*1.1, 'Trace', 'HorizontalAlignment','center','VerticalAlignment','top')
 
 % set(gca, 'xtick', [1:2 5:6], 'xticklabels', {'Tau -', 'Tau +', 'Tau -', 'Tau +'}, 'XTickLabelRotation', 45)
-set(gca, 'xtick', [1.5 4.5 7.5 10.5 14.5], 'XTickLabel', {'Base', 'Tone', 'Trace', 'ITI', 'Context'})
+set(gca, 'xtick', [1.5 ], 'XTickLabel', { 'Context'})
 
 
 % % scatter(1+sort(MS_randn_range(length(TFC3_bar.baseline(TFC3_geno == 0)), 1, -.1, .1)), TFC3_bar.baseline(TFC3_geno == 0),25,  c_ord(1,:), 'filled')
@@ -472,6 +517,7 @@ ylabel('Freezing (%)')
 %% repeated measures
 TFC1_vec = []; 
 TFC2_vec = []; 
+TFC3_vec = []; 
 
 for iSub = length(s_list):-1:1
     
@@ -480,6 +526,8 @@ for iSub = length(s_list):-1:1
     
     TFC2_vec(iSub,:) = out.(s_list{iSub}).TFC2.f_bin; 
     
+        TFC3_vec(iSub,:) = out.(s_list{iSub}).TFC3.f_bin; 
+
 end
 
 
@@ -512,6 +560,20 @@ tfc2_tab.Geno = categorical(tfc2_tab.Geno);
 
 rm = fitrm(tfc2_tab, ['t1-t' num2str(size(TFC2_vec,2)) ' ~ Geno'], 'WithinDesign',  out.(s_list{1}).TFC2.t_bin);
 display('TFC2')
+ranova_tbl = ranova(rm)
+
+
+
+v_names=[];
+v_names{1} = 'Geno'; 
+for ii = size(TFC3_vec,2):-1:1
+    v_names{ii+1} = ['t' num2str(ii)];
+end
+tfc3_tab = cell2table(num2cell([TFC3_geno', TFC3_vec]), 'VariableNames', v_names);
+tfc3_tab.Geno = categorical(tfc3_tab.Geno); 
+
+rm = fitrm(tfc3_tab, ['t1-t' num2str(size(TFC3_vec,2)) ' ~ Geno'], 'WithinDesign',  out.(s_list{1}).TFC3.t_bin);
+display('TFC3')
 ranova_tbl = ranova(rm)
 
 %% convert data into csv
