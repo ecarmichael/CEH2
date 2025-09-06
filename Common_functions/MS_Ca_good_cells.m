@@ -43,7 +43,7 @@ for iF = 1:length(f_names)
     end
 end
 
-
+ms.numNeurons = sum(keep_idx); 
 
 
 

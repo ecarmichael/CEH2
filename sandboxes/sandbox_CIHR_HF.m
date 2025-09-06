@@ -3,11 +3,15 @@
 if ispc
     kilo_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-03_16-34-57_TFC_ENC\Record Node 113\experiment1\recording1\continuous\Intan_RHD_USB-100.Rhythm Data';
     OE_evts_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-03_16-34-57_TFC_ENC\Record Node 113\experiment1\recording1\events\Intan_RHD_USB-100.Rhythm Data\TTL';
-    ctrl_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\conditioning 1/';
+    ctrl_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\conditioning_logs\';
     eye_dir = [];
 elseif ismac
     kilo_dir = [];
+<<<<<<< HEAD
+    '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/conditioning_logs/';
+=======
     ctrl_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/conditioning 1/';
+>>>>>>> 3c8098c4e5a72e16fb5598fa6c13c7e2b4d95f9e
     eye_dir = [];
 end
 
@@ -58,6 +62,10 @@ wheel.tvec = tvec_i;
 
 
 wheel_tsd = tsd(wheel.tvec, [wheel.data; diff([wheel.data wheel.data(end)])], {'encoder' 'movement'}); 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 3c8098c4e5a72e16fb5598fa6c13c7e2b4d95f9e
 
 % licks
 licks = []; licks.type = 'ts'; 
@@ -173,6 +181,20 @@ linkaxes(ax, 'x')
 xlim([0 log.end])
 
 
+<<<<<<< HEAD
+%% trial-ified the data
+
+% wheel and movement
+
+mov_bin = wheel.data(1,:) > 0.1; 
+wheel.data(3,:) = mov_bin; 
+wheel.label{3} = 'move binary';
+
+
+
+
+=======
+>>>>>>> 3c8098c4e5a72e16fb5598fa6c13c7e2b4d95f9e
 %%
 % plot??
 c_ord = MS_linspecer(9); 
@@ -237,6 +259,85 @@ hb = MS_bar_w_err(trials.tone.licks, trials.trace.licks, c_ord(1:2,:), 1, 'ttest
 
 hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
 
+<<<<<<< HEAD
+linkaxes(ax, 'x')
+xlim([0 log.end])
+
+
+%% over sessions
+
+s_list = dir([ctrl_dir filesep 'arduino_log*.csv']); 
+
+
+% loop
+data_out = []; 
+for iS  = length(s_list):-1:1
+    log_tab = readtable([ctrl_dir s_list(iS).name]);
+
+
+    log_tab.time = log_tab.time - log_tab.time(1);  % zero to the first time point.
+    log_tab.time = log_tab.time/ 1000; % convert from ms to seconds;
+
+    % convert to evts
+
+    labels = unique(log_tab.phase);
+    phases = {'baseline', 'Tone', 'Trace', 'Puff'};
+
+    for ii = 1:length(phases)
+        log.(phases{ii}) = log_tab.time(contains(log_tab.event, '-') & contains(log_tab.phase, phases{ii}));
+    end
+    log.end = log_tab.time(contains(log_tab.event, 'Finish'));
+
+    all_phases.t = log_tab.time(contains(log_tab.event, '-'));
+    all_phases.data = log_tab.phase(contains(log_tab.event, '-'));
+
+    % make intervals for each phase state
+    log_iv =[];
+    for ii = 1:length(phases)
+        idx = find(ismember(all_phases.t, log.(phases{ii})));
+        if max(idx) == length(all_phases.t)
+            log_iv.(phases{ii}) = iv(all_phases.t(idx), [all_phases.t(idx(1:end-1))+1; log.end]);
+        else
+            log_iv.(phases{ii}) = iv(all_phases.t(idx), all_phases.t(idx+1));
+        end
+    end
+
+    % get the encoder changes as a vector.
+
+    wheel.tvec = log_tab.time(contains(log_tab.event, 'pos'));
+    wheel.data = log_tab.encoderCount(contains(log_tab.event, 'pos'));
+
+    % interp
+    tvec_i = 0:.01:wheel.tvec(end);
+
+    wheel.data = interp1(wheel.tvec, wheel.data, tvec_i);
+    wheel.data(isnan(wheel.data)) = 0;
+    wheel.tvec = tvec_i;
+
+
+    wheel_tsd = tsd(wheel.tvec, [wheel.data; diff([wheel.data wheel.data(end)])], {'encoder' 'movement'});
+
+    % licks
+    licks = []; licks.type = 'ts';
+    licks.t{1} = log_tab.time(contains(log_tab.event, 'Lick'));
+    licks.label{1} = 'licks';
+
+    % hold over
+    data_out{iS}.licks = licks; 
+    data_out{iS}.wheel_tsd = wheel_tsd; 
+    data_out{iS}.log_iv = log_iv; 
+
+
+end
+
+%% get the overall stats
+
+=======
 ylabel('mean licks rate')
 
+<<<<<<< HEAD
 set(gca, 'XTick', 0:2, 'XTickLabel', {'Baseline [-20:0]', 'Tone', 'Trace'})
+=======
+set(gca, 'XTick', 1:3, 'XTickLabel', {'Baseline [-20:0]', 'Tone', 'Trace'})
+>>>>>>> 3c8098c4e5a72e16fb5598fa6c13c7e2b4d95f9e
+>>>>>>> 17966eae93058dee22e230a92e9642ade2ead673
