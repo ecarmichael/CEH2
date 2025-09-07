@@ -49,7 +49,7 @@ if ~isempty(stats)
             [h, p, ~,stats] = ranksum(data_a, data_b);
     end
     
-    if h
+    if ~isnan(h) && h == 1
         plot(median(x_vals), max([data_a, data_b], [], 'all')*1.1, '*', 'color', 'k')
         plot(x_vals, [max([data_a, data_b], [], 'all')*1.05 max([data_a, data_b], [], 'all')*1.05], '-k', 'linewidth', 1.5)
     end
