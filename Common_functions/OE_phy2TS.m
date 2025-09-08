@@ -25,6 +25,10 @@ spike_times = readNPY([data_dir filesep 'spike_times.npy']);
 spike_times = double(spike_times)/spike_struct.sample_rate; % from  https://github.com/cortex-lab/spikes/blob/master/preprocessing/phyHelpers/loadKSdir.m
 spike_clusters = readNPY([data_dir filesep 'spike_clusters.npy']);
 
+%chan_shanks = readNPY([data_dir filesep 'channel_shanks.npy']);
+%chan_pos= readNPY([data_dir filesep 'spike_positions.npy']);
+
+
 fid = fopen('cluster_group.tsv');
 C = textscan(fid, '%s%s');
 fclose(fid);
