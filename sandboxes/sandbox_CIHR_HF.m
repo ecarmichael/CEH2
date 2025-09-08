@@ -270,7 +270,7 @@ for iS  = length(s_list):-1:1
     for ii = 1:length(phases)
         log.(phases{ii}) = log_tab.time(contains(log_tab.event, '-') & contains(log_tab.phase, phases{ii}));
     end
-    
+
     log.end = log_tab.time(contains(log_tab.event, 'Finish'));
 
     all_phases.t = log_tab.time(contains(log_tab.event, '-'));
@@ -439,7 +439,7 @@ end
 
 
 
-%% 
+%%
 %% over Conditioning sessions
 
 s_list = dir([ctrl_dir filesep 'arduino_log*Rec*.csv']);
@@ -462,7 +462,7 @@ for iS  = length(s_list):-1:1
     for ii = 1:length(phases)
         log.(phases{ii}) = log_tab.time(contains(log_tab.event, '-') & contains(log_tab.phase, phases{ii}));
     end
-    
+
     log.end = log_tab.time(contains(log_tab.event, 'Finish'));
 
     all_phases.t = log_tab.time(contains(log_tab.event, '-'));
@@ -491,7 +491,7 @@ for iS  = length(s_list):-1:1
     wheel.tvec = tvec_i;
 
     % remove extreme values
-    spd = diff([wheel.data wheel.data(end)]); 
+    spd = diff([wheel.data wheel.data(end)]);
 
     spd(abs(spd) > 10 ) = NaN;
 
@@ -521,7 +521,7 @@ for iS  = length(s_list):-1:1
         tl = restrict(licks, log_iv.tone1.tstart(ii), log_iv.tone1.tend(ii));
         trials.tone.licks(ii) = length(tl.t{1})./20;
 
-        trl = restrict(licks, log_iv.tone1.tend(ii), log_iv.tone1.tend(ii)+20);
+        trl = restrict(licks, log_iv.tone1.tend(ii), log_iv.tone1.tend(ii)+15);
         trials.trace.licks(ii) = length(trl.t{1})./15;
 
         % same thing but movement
@@ -576,26 +576,102 @@ for iS  = length(s_list):-1:1
     % data_wheel.(sess) = [data_wheel.(sess); data_out{iS}.wheel_tsd.data(3,:)]
 end
 
+%% load some blink tracking.
+
+if ismac
+    eye_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/Front_videos';
+elseif ispc
+    eye_dir = [];
+end
+cd(eye_dir)
+
+s_idx = 71; %for HF1 Rec
+
+pos = MS_DLC2TSD_single('HF_1_Rec_d1DLC_Resnet50_HF_TFC_wide_cameraSep5shuffle1_snapshot_090_filtered.csv', 'HF_1_Rec_d1DLC_Resnet50_HF_TFC_wide_cameraSep5shuffle1_snapshot_090_filtered_p60_labeled.mp4', [1 1], 0);
+
+pos = restrict(pos, pos.tvec(s_idx), pos.tvec(s_idx)+2550);
+
+pos.tvec = pos.tvec - pos.tvec(1);
+
+eye_d =[]; eye_v = [];
+
+eye_d(1,:) = smoothdata(pos.data(1,:)', 'movmedian', 20);
+eye_d(2,:) = smoothdata(pos.data(2,:)', 'movmedian', 20);
+
+eye_v(1,:) = smoothdata(pos.data(5,:)', 'movmedian', 20);
+eye_v(2,:) = smoothdata(pos.data(6,:)', 'movmedian', 20);
+
+% d = pdist(pos.data(1:2,:)', pos.data(5:6,:)','euclidean');
+d = [];
+for ii = length(pos.data(1,:)):-1:1
+
+    d(ii) = norm(eye_d(:,ii) - eye_v(:,ii));
+
+end
+
+d_z = zscore(d);
+
+rm_idx =  abs(d_z) > 2.5 ;
+
+d_z(rm_idx) = NaN;
+
+d = fillmissing(d, 'nearest');
+
+eye_tsd = tsd(pos.tvec, zscore(d), 'z eye dist');
+
+
+for ii = 1:length(data_rec_out{1}.log_iv.tone1.tstart)
+
+    bl = restrict(eye_tsd, data_rec_out{1}.log_iv.tone1.tstart(ii)-20, data_rec_out{1}.log_iv.tone1.tstart(ii));
+    data_rec_out{1}.trials.base.eye(ii) = mean(bl.data);
+
+    tl = restrict(eye_tsd, data_rec_out{1}.log_iv.tone1.tstart(ii), data_rec_out{1}.log_iv.tone1.tend(ii));
+    data_rec_out{1}.trials.tone.eye(ii) = mean(tl.data);
+
+    trl = restrict(eye_tsd, data_rec_out{1}.log_iv.tone1.tend(ii), data_rec_out{1}.log_iv.tone1.tend(ii)+20);
+    data_rec_out{1}.trials.trace.eye(ii) = mean(trl.data);
+
+end
+
+for ii = 1:length(data_rec_out{1}.log_iv.tone2.tstart)
+
+    bl = restrict(eye_tsd, data_rec_out{1}.log_iv.tone2.tstart(ii)-20, data_rec_out{1}.log_iv.tone2.tstart(ii));
+    data_rec_out{1}.trials.base2.eye(ii) = mean(bl.data);
+
+    tl = restrict(eye_tsd, data_rec_out{1}.log_iv.tone2.tstart(ii), data_rec_out{1}.log_iv.tone2.tend(ii));
+    data_rec_out{1}.trials.tone2.eye(ii) = mean(tl.data);
+
+    trl = restrict(eye_tsd, data_rec_out{1}.log_iv.tone2.tend(ii), data_rec_out{1}.log_iv.tone2.tend(ii)+20);
+    data_rec_out{1}.trials.trace2.eye(ii) = mean(trl.data);
+
+end
 
 %% summar plots for Rec sessions
 
 c_ord = winter(9);
 r_ord = MS_linspecer(4);
+s_ord = spring(9);
 
-for iS =1:length(data_rec_out)
+for iS =1%:length(data_rec_out)
     figure(iS)
     clf
     title(data_rec_out{iS}.name)
 
-    ax(1) = subplot(2,5,1:2);
+    ax(1) = subplot(3,6,1:3);
     cla
     hold on
     for ii = 1:length(data_rec_out{iS}.log_iv.tone1.tstart)
 
-            this_r = restrict(data_rec_out{iS}.wheel_tsd, data_rec_out{iS}.log_iv.tone1.tstart(ii)-20, data_rec_out{iS}.log_iv.tone1.tend(ii)+20);
-            this_l = restrict(data_rec_out{iS}.licks, data_rec_out{iS}.log_iv.tone1.tstart(ii)-20, data_rec_out{iS}.log_iv.tone1.tend(ii)+20);
-       
-       hdl(ii) = plot(this_r.tvec - this_r.tvec(1)-20, abs(this_r.data(2,:)), 'color', c_ord(ii,:), 'LineWidth',1); 
+        this_r = restrict(data_rec_out{iS}.wheel_tsd, data_rec_out{iS}.log_iv.tone1.tstart(ii)-20, data_rec_out{iS}.log_iv.tone1.tend(ii)+35);
+        this_l = restrict(data_rec_out{iS}.licks, data_rec_out{iS}.log_iv.tone1.tstart(ii)-20, data_rec_out{iS}.log_iv.tone1.tend(ii)+35);
+        % if strcmp(data_rec_out{iS}.name, 'HF1')
+        %     this_eye = restrict(eye_tsd, data_rec_out{iS}.log_iv.tone1.tstart(ii)-20, data_rec_out{iS}.log_iv.tone1.tend(ii)+35);
+        %     plot(this_eye.tvec - this_eye.tvec(1)-20, (this_eye.data(1,:)*.5)-4, 'color', c_ord(ii,:), 'LineWidth',1);
+        % else
+        %     this_eye = [];
+        % end
+
+        hdl(ii) = plot(this_r.tvec - this_r.tvec(1)-20, abs(this_r.data(2,:)), 'color', c_ord(ii,:), 'LineWidth',1);
 
         plot([this_l.t{1}- this_r.tvec(1)-20 this_l.t{1}- this_r.tvec(1)-20]', [ones(size(this_l.t{1}))*-(ii*.25)-.25 ones(size(this_l.t{1}))*-(ii*.25)]', 'Color',c_ord(ii,:), 'LineWidth',2)
     end
@@ -611,10 +687,10 @@ for iS =1:length(data_rec_out)
     ylabel('speed (a.u)')
     xlim([-20 55])
     y_l = ylim;
-    title("CS+ | context B")
+    title("CS+ | context 2")
 
     % bar plots summarizing movement and licks.
-    subplot(2,5, 3);
+    subplot(3,6, 4);
     hold on
     hb = MS_bar_w_err(data_rec_out{iS}.trials.base.mov, data_rec_out{iS}.trials.tone.mov, [.7 .7 .7; r_ord(1,:)], 1, 'ttest' ,[0 1]);
     hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
@@ -626,7 +702,7 @@ for iS =1:length(data_rec_out)
     set(gca, 'XTick', 0:2, 'XTickLabel', {'Baseline [-20:0]', 'CS+', 'CS+ trace'})
     ylim([0 70])
 
-    subplot(2,5, 4);
+    subplot(3,6, 5);
     hold on
     hb = MS_bar_w_err(data_rec_out{iS}.trials.base2.mov, data_rec_out{iS}.trials.tone2.mov, [.7 .7 .7; r_ord(1,:)], 1, 'ttest' ,[0 1]);
     hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
@@ -639,7 +715,7 @@ for iS =1:length(data_rec_out)
     ylim([0 70])
 
 
-    subplot(2,5, 5);
+    subplot(3,6, 6);
     hb = MS_bar_w_err(data_rec_out{iS}.trials.tone.mov, data_rec_out{iS}.trials.tone2.mov, [r_ord(1,:) ;r_ord(3,:)], 1,'ttest2' ,[0 1]);
     hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
 
@@ -653,7 +729,7 @@ for iS =1:length(data_rec_out)
 
 
     % licks mean.
-    subplot(2,5, 8);
+    subplot(3,6, 10);
     hold on
     hb = MS_bar_w_err(data_rec_out{iS}.trials.base.licks, data_rec_out{iS}.trials.tone.licks, [.7 .7 .7; r_ord(1,:)], 1, 'ttest' ,[0 1]);
     hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
@@ -666,7 +742,7 @@ for iS =1:length(data_rec_out)
     ylim([0 6])
 
 
-    subplot(2,5, 9);
+    subplot(3,6, 11);
     hold on
     hb = MS_bar_w_err(data_rec_out{iS}.trials.base2.licks, data_rec_out{iS}.trials.tone2.licks, [.7 .7 .7; r_ord(1,:)], 1, 'ttest' ,[0 1]);
     hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
@@ -679,7 +755,7 @@ for iS =1:length(data_rec_out)
     ylim([0 6])
 
 
-    subplot(2,5, 10);
+    subplot(3,6, 12);
     hb = MS_bar_w_err(data_rec_out{iS}.trials.tone.licks, data_rec_out{iS}.trials.tone2.licks, [r_ord(1,:) ;r_ord(3,:)], 1,'ttest2' ,[0 1]);
     hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
 
@@ -690,23 +766,69 @@ for iS =1:length(data_rec_out)
     set(gca, 'XTick', 0:4, 'XTickLabel', {'CS+', 'CS-',  'C+ trace', 'CS- trace'})
     ylim([0 6])
 
+    % eyes
+    if strcmp(data_rec_out{iS}.name, 'HF1')
+        subplot(3,6, 16);
+        hold on
+        hb = MS_bar_w_err(data_rec_out{iS}.trials.base.eye, data_rec_out{iS}.trials.tone.eye, [.7 .7 .7; r_ord(1,:)], 1, 'ttest' ,[0 1]);
+        hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
+
+        hb = MS_bar_w_err(data_rec_out{iS}.trials.tone.eye, data_rec_out{iS}.trials.trace.eye, r_ord(1:2,:), 1,'ttest' ,[1 2]);
+        hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
+
+        ylabel('z eyelid distance ')
+        set(gca, 'XTick', 0:2, 'XTickLabel', {'Baseline [-20:0]', 'CS+', 'CS+ trace'})
+        ylim([-1 2])
+
+        subplot(3,6, 17);
+        hold on
+        hb = MS_bar_w_err(data_rec_out{iS}.trials.base2.eye, data_rec_out{iS}.trials.tone2.eye, [.7 .7 .7; r_ord(1,:)], 1, 'ttest' ,[0 1]);
+        hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
+
+        hb = MS_bar_w_err(data_rec_out{iS}.trials.tone2.eye, data_rec_out{iS}.trials.trace2.eye, r_ord(1:2,:), 1,'ttest' ,[1 2]);
+        hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
+
+        ylabel('z eyelid distance ')
+        set(gca, 'XTick', 0:2, 'XTickLabel', {'Baseline [-20:0]', 'CS-', 'CS- trace'})
+        ylim([-1 2])
+
+
+        subplot(3,6, 18);
+        hb = MS_bar_w_err(data_rec_out{iS}.trials.tone.eye, data_rec_out{iS}.trials.tone2.eye, [r_ord(1,:) ;r_ord(3,:)], 1,'ttest2' ,[0 1]);
+        hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
+
+        hb = MS_bar_w_err(data_rec_out{iS}.trials.trace.eye, data_rec_out{iS}.trials.trace2.eye, [r_ord(2,:) ;r_ord(4,:)], 1,'ttest2' ,[2 3]);
+        hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
+
+        ylabel('z eyelid distance ')
+        set(gca, 'XTick', 0:4, 'XTickLabel', {'CS+', 'CS-',  'C+ trace', 'CS- trace'})
+        ylim([-1 2])
+    end
+
+
     % tone 2
 
-
-    ax(2) = subplot(2,5,6:7);
+    ax(2) = subplot(3,6,7:9);
     cla
     hold on
     for ii = 1:length(data_rec_out{iS}.log_iv.tone2.tstart)
 
-            this_r = restrict(data_rec_out{iS}.wheel_tsd, data_rec_out{iS}.log_iv.tone2.tstart(ii)-20, data_rec_out{iS}.log_iv.tone2.tend(ii)+20);
-            this_l = restrict(data_rec_out{iS}.licks, data_rec_out{iS}.log_iv.tone2.tstart(ii)-20, data_rec_out{iS}.log_iv.tone2.tend(ii)+20);
-       
-       hdl(ii) =  plot(this_r.tvec - this_r.tvec(1)-20, abs(this_r.data(2,:)), 'color', c_ord(ii,:), 'LineWidth',1);
+        this_r = restrict(data_rec_out{iS}.wheel_tsd, data_rec_out{iS}.log_iv.tone2.tstart(ii)-20, data_rec_out{iS}.log_iv.tone2.tend(ii)+35);
+        this_l = restrict(data_rec_out{iS}.licks, data_rec_out{iS}.log_iv.tone2.tstart(ii)-20, data_rec_out{iS}.log_iv.tone2.tend(ii)+35);
+
+        % if strcmp(data_rec_out{iS}.name, 'HF1')
+        %     this_eye = restrict(eye_tsd, data_rec_out{iS}.log_iv.tone2.tstart(ii)-20, data_rec_out{iS}.log_iv.tone2.tend(ii)+35);
+        %     plot(this_eye.tvec - this_eye.tvec(1)-20, (this_eye.data(1,:)*.5)-4, 'color', c_ord(ii,:), 'LineWidth',1);
+        % else
+        %     this_eye = [];
+        % end
+
+        hdl(ii) =  plot(this_r.tvec - this_r.tvec(1)-20, abs(this_r.data(2,:)), 'color', c_ord(ii,:), 'LineWidth',1);
 
         plot([this_l.t{1}- this_r.tvec(1)-20 this_l.t{1}- this_r.tvec(1)-20]', [ones(size(this_l.t{1}))*-(ii*.25)-.25 ones(size(this_l.t{1}))*-(ii*.25)]', 'Color',c_ord(ii,:), 'LineWidth',2)
     end
 
-        legend(hdl([1 length(hdl)]), {'first trial' 'last trial'}, 'box', 'off')
+    legend(hdl([1 length(hdl)]), {'first trial' 'last trial'}, 'box', 'off')
 
     xline([0 20 35 36])
     rectangle(gca, 'Position',[-20 -.25 20 .25], 'FaceColor',[.7 .7 .7], 'EdgeColor','none' )
@@ -717,6 +839,54 @@ for iS =1:length(data_rec_out)
     ylabel('speed (a.u)')
     xlim([-20 55])
     y_l = ylim;
-    title("CS- | context B")
+    title("CS- | context 2")
 
+
+
+    ax(2) = subplot(3,6,13:15);
+    cla
+    hold on
+    for ii = 1:length(data_rec_out{iS}.log_iv.tone2.tstart)
+
+        if strcmp(data_rec_out{iS}.name, 'HF1')
+            yyaxis left
+            this_eye = restrict(eye_tsd, data_rec_out{iS}.log_iv.tone1.tstart(ii)-20, data_rec_out{iS}.log_iv.tone1.tend(ii)+35);
+            plot(this_eye.tvec - this_eye.tvec(1)-20, (this_eye.data(1,:)), '-','color', c_ord(ii,:), 'LineWidth',1);
+
+            yyaxis right
+            this_eye = restrict(eye_tsd, data_rec_out{iS}.log_iv.tone2.tstart(ii)-20, data_rec_out{iS}.log_iv.tone2.tend(ii)+35);
+            plot(this_eye.tvec - this_eye.tvec(1)-20, (this_eye.data(1,:)-6),'-',  'color', s_ord(ii,:), 'LineWidth',1);
+        else
+            this_eye = [];
+        end
+
+    end
+    yyaxis left
+    legend(hdl([1 length(hdl)]), {'first trial' 'last trial'}, 'box', 'off')
+
+    xline([0 20 35 36])
+    rectangle(gca, 'Position',[-20 -3 20 1], 'FaceColor',[.7 .7 .7], 'EdgeColor','none' )
+    rectangle(gca, 'Position',[0 -3 20 1], 'FaceColor',r_ord(1,:), 'EdgeColor','none' )
+    rectangle(gca, 'Position',[20 -3 15 1], 'FaceColor',r_ord(2,:), 'EdgeColor','none' )
+    rectangle(gca, 'Position',[35 -3 20 1], 'FaceColor',[.7 .7 .7], 'EdgeColor','none' )
+
+
+    ylabel('eye dist (zscore)')
+    xlim([-20 55])
+    yyaxis right
+
+    ylim([-10 6]);
+    set(gca,'ytick', -8:2:8)
+    set(gca, "YTickLabel", get(gca, 'ytick') +6)
+
+    yyaxis left
+    ylim([-10 6]);
+
+    text(-15, 5, 'CS+', 'HorizontalAlignment','left', 'FontSize',14)
+
+    text(-15, -9, 'CS-', 'HorizontalAlignment','left', 'FontSize',14)
+
+    % title("CS- | context 2")
 end
+
+
