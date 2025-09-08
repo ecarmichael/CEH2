@@ -7,11 +7,7 @@ if ispc
     eye_dir = [];
 elseif ismac
     kilo_dir = [];
-<<<<<<< HEAD
-    '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/conditioning_logs/';
-=======
-    ctrl_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/conditioning 1/';
->>>>>>> 3c8098c4e5a72e16fb5598fa6c13c7e2b4d95f9e
+    ctrl_dir ='/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/conditioning_logs/';
     eye_dir = [];
 end
 
@@ -62,10 +58,7 @@ wheel.tvec = tvec_i;
 
 
 wheel_tsd = tsd(wheel.tvec, [wheel.data; diff([wheel.data wheel.data(end)])], {'encoder' 'movement'}); 
-<<<<<<< HEAD
 
-=======
->>>>>>> 3c8098c4e5a72e16fb5598fa6c13c7e2b4d95f9e
 
 % licks
 licks = []; licks.type = 'ts'; 
@@ -172,7 +165,6 @@ linkaxes(ax, 'x')
 xlim([0 log.end])
 
 
-<<<<<<< HEAD
 %% trial-ified the data
 
 % wheel and movement
@@ -184,8 +176,6 @@ wheel.label{3} = 'move binary';
 
 
 
-=======
->>>>>>> 3c8098c4e5a72e16fb5598fa6c13c7e2b4d95f9e
 %%
 % plot??
 c_ord = MS_linspecer(9); 
@@ -235,7 +225,6 @@ hb = MS_bar_w_err(trials.tone.licks, trials.trace.licks, c_ord(1:2,:), 1, 'ttest
 
 hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
 
-<<<<<<< HEAD
 linkaxes(ax, 'x')
 xlim([0 log.end])
 
@@ -299,17 +288,17 @@ for iS  = length(s_list):-1:1
     licks.label{1} = 'licks';
 
     % hold over
+        data_out.{iS}.name = 
+
+
     data_out{iS}.licks = licks; 
     data_out{iS}.wheel_tsd = wheel_tsd; 
     data_out{iS}.log_iv = log_iv; 
-
 
 end
 
 %% get the overall stats
 
-=======
 ylabel('mean licks rate')
 
 set(gca, 'XTick', 1:3, 'XTickLabel', {'Baseline [-20:0]', 'Tone', 'Trace'})
->>>>>>> 3c8098c4e5a72e16fb5598fa6c13c7e2b4d95f9e
