@@ -129,12 +129,16 @@ for iA = length(A_out):-1:1
     % wake_post_nA(iA) = sum(A_out{iA}{1}.REM_Post_stats.p_val < 0.05);
 
 
+          % current assembly wieghts;
+        A_temp = A_out{iA}{1}.P_temp;
+
     % apply the weights to other subjects
+
+
 
     for jj = length(A_out):-1:1
 
-        % current assembly wieghts;
-        A_temp = A_out{iA}{1}.P_temp;
+      
 
         if jj == iA
             J_data = A_out{iA}{1}.REM_post_in;
@@ -152,26 +156,26 @@ for iA = length(A_out):-1:1
         else
             % try a circ shift for sanity
             J_data = []; 
-            for iS = size(A_out{jj}{1}.REM_pre_in, 2):-1:1
-                J_data(:,iS) = circshift(A_out{jj}{1}.REM_post_in(:,iS), floor(MS_randn_range(1,1,1,length(J_data)))); 
-            end
-            
+            % for iS = size(A_out{jj}{1}.REM_pre_in, 2):-1:1
+            %     J_data(:,iS) = circshift(A_out{jj}{1}.REM_post_in(:,iS), floor(MS_randn_range(1,1,1,length(J_data)))); 
+            % end
+            % 
 
-            for iShuff = 500:-1:1
-                % temporary data from session jj;
-                s_idx = randperm(size(A_out{jj}{1}.REM_post_in, 2));
-                J_data = A_out{jj}{1}.REM_pre_in(:, s_idx);
-
-                % test if A_temps can be found in J-data
-                T_proj = assembly_activity(A_temp,J_data');
-
-                J_proj = [];
-                for tt = size(T_proj, 1):-1:1
-                    J_proj(tt) = sum(T_proj(tt,:)>9);
-                end
-                t_sigs(iShuff) = sum(J_proj > 0)/length(J_proj);
-
-            end
+            % for iShuff = 500:-1:1
+            %     % temporary data from session jj;
+            %     s_idx = randperm(size(A_out{jj}{1}.REM_post_in, 2));
+            %     J_data = A_out{jj}{1}.REM_pre_in(:, s_idx);
+            % 
+            %     % test if A_temps can be found in J-data
+            %     T_proj = assembly_activity(A_temp,J_data');
+            % 
+            %     J_proj = [];
+            %     for tt = size(T_proj, 1):-1:1
+            %         J_proj(tt) = sum(T_proj(tt,:)>9);
+            %     end
+            %     t_sigs(iShuff) = sum(J_proj > 0)/length(J_proj);
+            % 
+            % end
             J_sig(iA, jj) = mean(t_sigs);
         end
     end
@@ -190,6 +194,22 @@ for iA = length(A_out):-1:1
 
 end
 
+%% same thing but using the same reactivation method as the REM data
+
+
+for iA = length(A_out):-1:1
+
+
+
+
+    for jj = length(A_out):-1:1
+
+
+
+
+    end
+
+end
 
 
 
@@ -241,5 +261,47 @@ for iA = 1
 
 
     w_thresh(iA) = prctile(wake_shuff_mat(wake_shuff_mat >0), 99, 'all');
+
+end
+
+%%  
+
+for ii = 1:5
+
+    y_max = max([A_out{iA}{1}.REM_Post_proj(ii,:), A_out{jj}{1}.REM_Post_proj(ii,:)]); 
+
+    figure(ii)
+    clf
+             J_data = A_out{iA}{1}.REM_post_in;
+
+            % test if A_temps can be found in J-data
+            T_proj = assembly_activity(A_temp,J_data');
+
+    MS_asmbly_quick_plot(A_out{iA}{1}.P_temp, T_proj,J_data,ii )
+    % MS_asmbly_quick_plot(A_out{iA}{1}.P_temp, A_out{iA}{1}.REM_Post_proj,A_out{iA}{1}.REM_Post_data,ii )
+    subplot(2,4,2:4);
+    ylim([0 y_max])
+
+    figure(ii+10)
+    clf
+    J_data = A_out{jj}{1}.REM_post_in;
+
+    % test if A_temps can be found in J-data
+    T_proj = assembly_activity(A_temp,J_data');
+
+
+
+    MS_asmbly_quick_plot(A_out{iA}{1}.P_temp, T_proj,J_data,ii )
+    ax(1) = subplot(2,4,2:4);
+    ylim([0 y_max])
+
+
+    % figure(ii+20)
+    % clf
+    % for kk = size()
+    % MS_asmbly_quick_plot(A_out{iA}{1}.P_temp, A_out{jj}{1}.REM_Post_proj,A_out{jj}{1}.REM_Post_data,ii )
+    % ax(1) = subplot(2,4,2:4);
+    % ylim([0 y_max])
+
 
 end
