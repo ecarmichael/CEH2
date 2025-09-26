@@ -1,9 +1,9 @@
 %% load some OE data
 
 if ispc
-    data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-08_12-23-48_TFC_REC3_swd\Record Node 119';
-    evts_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-08_12-23-48_TFC_REC3_swd\Record Node 118';
-    spk_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-08_12-23-48_TFC_REC3_swd\Record Node 113\experiment1\recording1\continuous\Intan_RHD_USB-100.Rhythm Data';
+    data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-08_12-23-48_TFC_REC3_swr\Record Node 119';
+    evts_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-08_12-23-48_TFC_REC3_swr\Record Node 118';
+    spk_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-08_12-23-48_TFC_REC3_swr\Record Node 113\experiment1\recording1\continuous\Intan_RHD_USB-100.Rhythm Data';
 
 elseif ismac
     data_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/HF_1_2025-09-05_15-53-34_TFC_REC/Record Node 118';
@@ -15,7 +15,6 @@ end
 cd(evts_dir)
 evts = OE_LoadEvents();
 
-rec_iv = iv(evts.t{1}(1), evts.t{1}(2)); 
 
 csc_list = dir([data_dir filesep '*.continuous']);
 csc= []; labels = [];
@@ -40,9 +39,33 @@ csc.label = labels;
 cfg_in.decimateFactor = 15; 
 csc_r = decimate_tsd(cfg_in, csc);
 
+% correct for start of csc. Why is this offset? 
+csc_r.tvec = csc_r.tvec- csc_r.tvec(1); 
 
+% loop over events and remove the offset. 
+for ii = 1:length(evts.t)
+    evts.t{ii} = evts.t{ii} - csc.tvec(1); 
+end
 
+%% compare events in binary and OE format. 
+cd(evts_dir)
+OE_evts = OE_LoadEvents();
+
+cd('C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-08_12-23-48_TFC_REC3_swr\Record Node 113\experiment1\recording1\events\Intan_RHD_USB-100.Rhythm Data\TTL')
+BIN_evts = OE_load_binary_evts(cd);
+
+for ii = 1:size(BIN_evts.t{1},2)
+disp(['Binary: ' num2str(BIN_evts.t{1}(1, ii)) ' : ' num2str(BIN_evts.t{1}(2, ii))  '  diff: ' num2str(BIN_evts.t{1}(2, ii)- BIN_evts.t{1}(1, ii)) 's ...' ...
+    '(' num2str((BIN_evts.t{1}(2, ii)- BIN_evts.t{1}(1, ii))/60)  'min)'  ])
+
+disp(['OE    : ' num2str(OE_evts.t{1}(1, ii)) ' : ' num2str(OE_evts.t{1}(2, ii))  '  diff: ' num2str(OE_evts.t{1}(2, ii)- OE_evts.t{1}(1, ii)) 's ...' ...
+    '(' num2str((OE_evts.t{1}(2, ii)- OE_evts.t{1}(1, ii))/60)  'min)'  ])
+end
 %% 
+
+rec_iv = iv(evts.t{1}(1), evts.t{1}(2)); 
+
+
 swr_iv = iv(evts.t{end-1}-.05,evts.t{end-1}+.1); 
 
 swr_iv = MergeIV([], swr_iv); 
@@ -75,37 +98,45 @@ end
 
 
 
-csc_p = csc;
+csc_p = csc_r;
 csc_p.data = csc_p.data(2,:); 
 csc_p.cfg.hdr = []; 
-csc_p.cfg.hdr{1} = csc.cfg.hdr{2}; 
+csc_p.cfg.hdr{1} = csc_r.cfg.hdr{2}; 
 
-S_r_9 = restrict(S_r, 1970, 2000); 
-csc_p = restrict(csc_p, 1970, 2000); 
+
 
 
 % cfg.lfp = csc_p; 
 
 figure(1)
 clf
-ax(1) = subplot(4,1,1);
-cfg_plt.display = 'tsd';
-PlotTSDfromIV(cfg_plt, swr_r_iv, csc_p)
+% ax(1) = subplot(4,1,1);
+% cfg_plt.display = 'tsd';
+% PlotTSDfromIV(cfg_plt, swr_r_iv, csc_p)
+% 
+% vline(evts.t{2}, 'r')
+% vline(evts.t{3}, 'r')
 
-vline(evts.t{2}, 'r')
-vline(evts.t{3}, 'r')
-
-ax(2) = subplot(4,1,2:4);
+ax(1) = subplot(5,1,1:4);
 cfg_mr.lfp = csc_p; 
 cfg_mr.evt = swr_r_iv; 
 cfg_mr.spkColor = [repmat([0 0 0], 41,1); repmat([0.3467 0.5360  0.6907], 18,1)]; 
-h = MultiRaster(cfg_mr, S);
+cfg_mr.openNewFig = 0; 
+h = MultiRaster(cfg_mr, S_r);
 
 % 42-end are shank 4. 
 
+ax(2) = subplot(5,1,5);
+cfg_mua = []; 
+cfg_mua.tvec = csc_r.tvec;
+MUA = getMUA(cfg_mua, S_r);
+plot(MUA.tvec, zscore(MUA.data))
+xlim([MUA.tvec(1) MUA.tvec(end)])
 
+vline(evts.t{1}, 'g')
 vline(evts.t{2}, 'r')
-vline(evts.t{3}, 'r')
+vline(evts.t{3}, 'b')
+
 
 linkaxes(ax, 'x')
 
