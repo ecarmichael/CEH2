@@ -108,7 +108,7 @@ csc_p.cfg.hdr{1} = csc_r.cfg.hdr{2};
 
 % cfg.lfp = csc_p; 
 
-figure(1)
+figure(2)
 clf
 % ax(1) = subplot(4,1,1);
 % cfg_plt.display = 'tsd';
@@ -127,11 +127,14 @@ h = MultiRaster(cfg_mr, S_r);
 % 42-end are shank 4. 
 
 ax(2) = subplot(5,1,5);
-cfg_mua = []; 
-cfg_mua.tvec = csc_r.tvec;
-MUA = getMUA(cfg_mua, S_r);
-plot(MUA.tvec, zscore(MUA.data))
-xlim([MUA.tvec(1) MUA.tvec(end)])
+cla; 
+% cfg_mua = []; 
+% cfg_mua.tvec = csc_r.tvec;
+% MUA = getMUA(cfg_mua, S_r);
+% plot(MUA.tvec, zscore(MUA.data))
+% xlim([MUA.tvec(1) MUA.tvec(end)])
+plot(rate_tsd.tvec, R(:,keep_idx(1:5)))
+
 
 vline(evts.t{1}, 'g')
 vline(evts.t{2}, 'r')
