@@ -29,17 +29,20 @@ c_ord = MS_linspecer(length(idx));
     %% compute the xcorr between pairs of member and non member cells
     corr_mat = []; 
     cfg.binsize = .01; 
-    cfg.max_t = .5; 
+    cfg.max_t = .2; 
 
     % Snip the data for speed;
 
     S_snip = restrict(S, tvec(1), tvec(1)+300); %just use 5mins
     for jj = length(S_snip.t):-1:1
         for kk = length(S_snip.t):-1:1
+                    fprintf([num2str(jj) '-' num2str(kk)])
             if jj == kk
                 corr_mat{jj, kk} = nan;
             else
+                tic
                 [corr_mat{jj, kk}, t_vec] = ccf(cfg, S_snip.t{jj}, S_snip.t{kk});
+                toc
             end
         end
     end
@@ -55,7 +58,7 @@ for ii = 1:length(idx)
     hold on
     stem(A_temp(:,ii), 'color', [.8 .8 .8 .2])
 
-    a_idx = sum(zscore(A_temp(:,ii)) > 1.96, 2) > 0;
+    a_idx = sum(zscore(A_temp(:,ii)) > 1, 2) > 0;
 
     stem(find(a_idx), A_temp(find(a_idx),ii), 'color',c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
     ylim([-.2 .8])
@@ -65,9 +68,59 @@ for ii = 1:length(idx)
     A_cells_id = [A_cells_id repmat(ii,1,  length(find(a_idx)))];
 
     subplot(n,m, s_idx(ii,2))
+    cla
+        hold on
 
 
+        a = find(a_idx); 
+        pairs{1} = 'start'; 
+        a_corr = []; 
+        for jj = 1:length(a)
+            this_corr = [];
+            for kk = 1:length(a)
+                if jj == kk || sum(contains(pairs,[num2str(kk) '_' num2str(jj)] )) >0
+                    continue
+                else
+                    % disp([num2str(jj) ' ' num2str(kk)])
+                    this_corr(end+1,:) =  corr_mat{jj, kk};
+                    pairs{kk} = [num2str(jj) '_' num2str(kk)];
+                end
+            end
+            a_corr{jj} = this_corr;
+        end
 
+        a_corr_mat = []; 
+        for jj = 1:length(a_corr)
+            a_corr_mat = [a_corr_mat; a_corr{jj}];
+            plot(t_vec, mean(a_corr{jj},1), 'Color',[c_ord(ii,:) .2], 'LineWidth',.1);
+        end
+
+        plot(t_vec, mean(a_corr_mat), 'Color',c_ord(ii,:), 'LineWidth',3);
+
+        % for the non members
+         nm = find(~a_idx); 
+         pairs = []; 
+        pairs{1} = 'start'; 
+
+        for jj = 1:length(nm)
+            this_corr = [];
+            for kk = 1:length(nm)
+                if jj == kk || sum(contains(pairs,[num2str(kk) '_' num2str(jj)] )) >0
+                    continue
+                else
+                    disp([num2str(jj) ' ' num2str(kk)])
+                    this_corr(end+1,:) =  corr_mat{jj, kk};
+                    pairs{kk} = [num2str(jj) '_' num2str(kk)];
+                end
+            end
+            n_corr{jj} = this_corr;
+        end
+
+        n_corr_mat = [];
+        for jj = 1:length(n_corr)
+            n_corr_mat = [n_corr_mat; n_corr{jj}];
+            plot(t_vec, mean(n_corr{jj},1), 'Color',[.8 .8 .8 .1], 'LineWidth',.1);
+        end
 
 end
 
