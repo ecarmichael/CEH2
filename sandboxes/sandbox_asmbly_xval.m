@@ -264,6 +264,86 @@ for iA = 1
 
 end
 
+%% try the jaccard metric
+
+
+c_ord = MS_linspecer(5); 
+
+for iS = 1:3
+
+    this_A = A_out{iS}{1}.P_temp;
+    this_data = A_out{iS}{1}.REM_Post_data;
+
+    this_proj_alt = nan(length(this_data), 1);
+    this_R_proj = A_out{iS}{1}.REM_Post_proj; 
+
+    % convert A_temp to only sig values
+    for iA = 1:size(this_A,2)
+
+        %%
+        idx = zscore(this_A(:,iA)) <1 ;
+        this_A_pos =  this_A(:,iA);
+        this_A_pos(idx)  = 0;
+        
+        this_A_pos(~idx)  = 1;
+
+        % use the classic but with the negative weights set to zero
+
+        % this_A_pos
+        this_proj_aa = assembly_activity(this_A(:,iA) ,this_data');
+        this_proj_alt = assembly_activity(this_A(~idx,iA) ,this_data(:,~idx)');
+
+
+        % TRY AN alternative distance metric
+        for ii = 1:length(this_data)
+           this_proj_alt2(ii) = pdist2(this_A_pos', this_data(ii,:), "cosine");
+           this_proj_alt2(ii) = 1 - this_proj_alt2(ii); 
+            
+            % jaccard requires removing the zeros first? 
+            % a_idx = sum(zscore(this_A_pos(:,1)) > 0, 2) > 0;
+            % 
+            % jac_A = this_A_pos(a_idx); 
+            % jac_data = this_data(ii,a_idx); 
+            % this_proj_alt(ii) = pdist2(this_A_pos', this_data(ii,:), "jaccard");
+
+        end
+
+        % plot the alternative projection and the original. 
+        figure(iS*100+iA)
+        clf
+        subplot(6,4,[1 5 9 13 17 21])
+        hold on
+        stem(this_A(:,1), 'color', [.8 .8 .8 .2])
+        a_idx = sum(zscore(this_A(:,1)) > 0, 2) > 0;
+        stem(find(a_idx), this_A(find(a_idx),1), 'color',winter(1), 'MarkerFaceColor', winter(1))
+        view(90,90)
+
+        ax(1) = subplot(6,4,2:4);
+        plot(this_proj_aa(1,:), 'color', c_ord(1,:));
+        title('standard all wieghts')
+
+        ax(2) = subplot(6,4,6:8);
+        plot(this_proj_alt', 'color',c_ord(2,:));
+        title('standard pos only wieghts')
+
+        ax(3) = subplot(6,4,10:12);
+        plot(this_proj_alt2', 'color',c_ord(2,:));
+        title('cosine distance')
+
+        ax(4) = subplot(6,4,[14:16 22:24]);
+        imagesc(this_data(:, a_idx)')
+
+        linkaxes(ax, 'x')
+        xlim([1 length(this_proj_alt)])
+
+
+    end
+end
+
+
+    MS_asmbly_quick_plot(this_A_pos, 1-this_proj_alt',this_data,1, 1)
+
+
 %%  
 
 for ii = 1:5

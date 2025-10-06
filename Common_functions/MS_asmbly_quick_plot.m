@@ -1,6 +1,9 @@
-function MS_asmbly_quick_plot(temp, proj,data_in,  idx)
+function MS_asmbly_quick_plot(temp, proj,data_in,  idx, idx_thresh)
 %% MS_asmbly_quick_plot: plots the templates and projection for a specific assembly given the template and projection arrays
 
+if nargin < 4
+    idx_thresh = 1.96; 
+end
 
 
 
@@ -9,7 +12,7 @@ subplot(2,4,[1 5])
 hold on
 stem(temp(:,idx), 'color', [.8 .8 .8 .2])
 
-a_idx = sum(zscore(temp(:,idx)) > 2, 2) > 0;
+a_idx = sum(zscore(temp(:,idx)) > idx_thresh, 2) > 0;
 
 stem(find(a_idx), temp(find(a_idx),idx), 'color',winter(1), 'MarkerFaceColor', winter(1))
 
