@@ -67,60 +67,60 @@ for ii = 1:length(idx)
     A_cells = [A_cells, find(a_idx)']; 
     A_cells_id = [A_cells_id repmat(ii,1,  length(find(a_idx)))];
 
-    subplot(n,m, s_idx(ii,2))
-    cla
-        hold on
-
-
-        a = find(a_idx); 
-        pairs{1} = 'start'; 
-        a_corr = []; 
-        for jj = 1:length(a)
-            this_corr = [];
-            for kk = 1:length(a)
-                if jj == kk || sum(contains(pairs,[num2str(kk) '_' num2str(jj)] )) >0
-                    continue
-                else
-                    % disp([num2str(jj) ' ' num2str(kk)])
-                    this_corr(end+1,:) =  corr_mat{jj, kk};
-                    pairs{kk} = [num2str(jj) '_' num2str(kk)];
-                end
-            end
-            a_corr{jj} = this_corr;
-        end
-
-        a_corr_mat = []; 
-        for jj = 1:length(a_corr)
-            a_corr_mat = [a_corr_mat; a_corr{jj}];
-            plot(t_vec, mean(a_corr{jj},1), 'Color',[c_ord(ii,:) .2], 'LineWidth',.1);
-        end
-
-        plot(t_vec, mean(a_corr_mat), 'Color',c_ord(ii,:), 'LineWidth',3);
-
-        % for the non members
-         nm = find(~a_idx); 
-         pairs = []; 
-        pairs{1} = 'start'; 
-
-        for jj = 1:length(nm)
-            this_corr = [];
-            for kk = 1:length(nm)
-                if jj == kk || sum(contains(pairs,[num2str(kk) '_' num2str(jj)] )) >0
-                    continue
-                else
-                    disp([num2str(jj) ' ' num2str(kk)])
-                    this_corr(end+1,:) =  corr_mat{jj, kk};
-                    pairs{kk} = [num2str(jj) '_' num2str(kk)];
-                end
-            end
-            n_corr{jj} = this_corr;
-        end
-
-        n_corr_mat = [];
-        for jj = 1:length(n_corr)
-            n_corr_mat = [n_corr_mat; n_corr{jj}];
-            plot(t_vec, mean(n_corr{jj},1), 'Color',[.8 .8 .8 .1], 'LineWidth',.1);
-        end
+    % subplot(n,m, s_idx(ii,2))
+    % cla
+    %     hold on
+    % 
+    % 
+    %     a = find(a_idx); 
+    %     pairs{1} = 'start'; 
+    %     a_corr = []; 
+    %     for jj = 1:length(a)
+    %         this_corr = [];
+    %         for kk = 1:length(a)
+    %             if jj == kk || sum(contains(pairs,[num2str(kk) '_' num2str(jj)] )) >0
+    %                 continue
+    %             else
+    %                 % disp([num2str(jj) ' ' num2str(kk)])
+    %                 this_corr(end+1,:) =  corr_mat{jj, kk};
+    %                 pairs{kk} = [num2str(jj) '_' num2str(kk)];
+    %             end
+    %         end
+    %         a_corr{jj} = this_corr;
+    %     end
+    % 
+    %     a_corr_mat = []; 
+    %     for jj = 1:length(a_corr)
+    %         a_corr_mat = [a_corr_mat; a_corr{jj}];
+    %         plot(t_vec, mean(a_corr{jj},1), 'Color',[c_ord(ii,:) .2], 'LineWidth',.1);
+    %     end
+    % 
+    %     plot(t_vec, mean(a_corr_mat), 'Color',c_ord(ii,:), 'LineWidth',3);
+    % 
+    %     % for the non members
+    %      nm = find(~a_idx); 
+    %      pairs = []; 
+    %     pairs{1} = 'start'; 
+    % 
+    %     for jj = 1:length(nm)
+    %         this_corr = [];
+    %         for kk = 1:length(nm)
+    %             if jj == kk || sum(contains(pairs,[num2str(kk) '_' num2str(jj)] )) >0
+    %                 continue
+    %             else
+    %                 disp([num2str(jj) ' ' num2str(kk)])
+    %                 this_corr(end+1,:) =  corr_mat{jj, kk};
+    %                 pairs{kk} = [num2str(jj) '_' num2str(kk)];
+    %             end
+    %         end
+    %         n_corr{jj} = this_corr;
+    %     end
+    % 
+    %     n_corr_mat = [];
+    %     for jj = 1:length(n_corr)
+    %         n_corr_mat = [n_corr_mat; n_corr{jj}];
+    %         plot(t_vec, mean(n_corr{jj},1), 'Color',[.8 .8 .8 .1], 'LineWidth',.1);
+    %     end
 
 end
 
@@ -147,6 +147,7 @@ end
 S_sort  = S; 
 
 S_sort.t = S_sort.t(c_ids);
+S_sort.label = S_sort.label(c_ids);
 
 %% plot the raster 
 

@@ -117,16 +117,23 @@ clf
 % vline(evts.t{2}, 'r')
 % vline(evts.t{3}, 'r')
 
-ax(1) = subplot(5,1,1:4);
+ax(1) = subplot(7,1,1:3);
 cfg_mr.lfp = csc_p; 
 cfg_mr.evt = swr_r_iv; 
 cfg_mr.spkColor = [repmat([0 0 0], 41,1); repmat([0.3467 0.5360  0.6907], 18,1)]; 
 cfg_mr.openNewFig = 0; 
 h = MultiRaster(cfg_mr, S_r);
 
+ax(2) = subplot(7,1,4:6);
+hold on
+for ii = 1:size(rate_tsd.data,1)
+    plot(rate_tsd.tvec, normalize(rate_tsd.data(ii,:), 'range', [0 1])+ii, 'color', cfg_mr.spkColor(ii,:));
+
+end
+
 % 42-end are shank 4. 
 
-ax(2) = subplot(5,1,5);
+ax(4) = subplot(7,1,7);
 cla; 
 % cfg_mua = []; 
 % cfg_mua.tvec = csc_r.tvec;
