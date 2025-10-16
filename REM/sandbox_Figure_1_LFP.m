@@ -1,9 +1,14 @@
 %% JC_REM_Fig1_LFP_EMG
+if ismac
 
+usr_dir = '/Users/ecar'; 
+else
+usr_dir= 'C:\Users\ecarm'; 
 
-data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\7_8_2019_PV1069_LTD1';
-nlx_dir  = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Jisoo\Raw_LFP\2019-07-08_09-03-55_PV1069_LTD1'; 
-save_dir = 'C:\Users\ecarm\Desktop\REM_figs';
+end
+data_dir = strrep([usr_dir filesep 'Williams Lab Dropbox\Eric Carmichael\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\7_12_2019_PV1069_LTD5'], '\', filesep);
+nlx_dir  = strrep([usr_dir filesep  'Williams Lab Dropbox\Williams Lab Team Folder\Jisoo\Raw_LFP\2019-07-12_09-24-26_PV1069_LTD5'], '\', filesep); 
+save_dir = strrep([usr_dir filesep  'Desktop\REM_figs'], '\', filesep);
 cd(data_dir)
 
 
@@ -20,7 +25,7 @@ csc = MS_LoadCSC(cfg);
 %% cut out some REM epochs
 rem_idx = find(contains(ms_seg_resize.hypno_label, 'REM')); 
 win = 60; 
-this_idx = 7;
+this_idx = 1;
 csc_rem = restrict(csc, ms_seg_resize.NLX_csc{rem_idx(this_idx)}.tvec(1)-win, ms_seg_resize.NLX_csc{rem_idx(this_idx)}.tvec(end)+win);
 
 Fs = round(1/mode(diff(csc_rem.tvec)));
@@ -31,7 +36,7 @@ tvec = csc_rem.tvec-csc_rem.tvec(1);
 %% spectrogram
 
 win_size = 2^11; % works out to 512 samples. Out of some superstition I always use base 2 (b/c of bytes or something) when computing spectra. 
-n_overlap = win_size/4; % just needs to be smaller than the window. 1/4 gives nice temporal resolution. 
+n_overlap = win_size/2; % just needs to be smaller than the window. 1/4 gives nice temporal resolution. 
 fs = csc.cfg.hdr{1}.SamplingFrequency;
 freq_range = 1:0.1:30; % range of frequencies. 
 
@@ -66,8 +71,8 @@ view([0 90])
 ylim([F(1) F(end)])
 set(gca, 'YDir', 'normal')
 hold on
-    rectangle('position', [win+10, F(1), z_win, F(end)-F(1)], 'FaceColor', 'none', 'EdgeColor', 'k', 'LineWidth',2)
-    rectangle('position', [win-40, F(1), z_win, F(end)-F(1)], 'FaceColor', 'none', 'EdgeColor', 'k','LineWidth',2)
+    rectangle('position', [win+25, F(1), z_win, F(end)-F(1)], 'FaceColor', 'none', 'EdgeColor', 'k', 'LineWidth',2)
+    rectangle('position', [win-30, F(1), z_win, F(end)-F(1)], 'FaceColor', 'none', 'EdgeColor', 'k','LineWidth',2)
     rectangle('position', [floor(tvec(end)-win+5), F(1), z_win, F(end)-F(1)], 'FaceColor', 'none', 'EdgeColor', 'k','LineWidth',2)
 
 linkaxes(ax, 'x')
@@ -97,7 +102,7 @@ set(gca, 'YDir', 'normal')
 ylim([F(1) F(end)]); box off
 
 linkaxes(ar, 'x')
-xlim([win-40 win-40+z_win])
+xlim([win-30 win-30+z_win])
 
 %REM zoom
 ay(1) = subplot(6,3,2);
@@ -117,7 +122,7 @@ set(gca, 'YDir', 'normal')
 ylim([F(1) F(end)])
 
 linkaxes(ay, 'x')
-xlim([win+10 win+10+z_win])
+xlim([win+25 win+25+z_win])
 
 %wake zoom
 ay(1) = subplot(6,3,3);
@@ -143,10 +148,10 @@ SetFigure([], gcf, 1)
 
 %% save the figures
 figure(101)
-print("-bestfit",[save_dir filesep strrep(ms_seg_resize.dirName(4:end), '\', '_') '_fig1_LFP'], '-dpdf')
+print("-bestfit",[save_dir filesep strrep(ms_seg_resize.dirName(4:end), '\', '_') '_fig1_LFP'], '-dpdf', "-vector")
 
 figure(102)
-print("-bestfit",[save_dir filesep strrep(ms_seg_resize.dirName(4:end), '\', '_') '_fig1_LFP_inset'], '-dpdf')
+print("-bestfit",[save_dir filesep strrep(ms_seg_resize.dirName(4:end), '\', '_') '_fig1_LFP_inset'], '-dpdf', "-vector")
 
 %%
 
@@ -248,4 +253,4 @@ maxfreq = 30;
 % Color gradient
 numColors = 256;
 colormap('parula');
-xlim([])
+% xlim([])
