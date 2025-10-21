@@ -140,44 +140,45 @@ for iA = length(A_out):-1:1
 
       
 
-        if jj == iA
-            J_data = A_out{iA}{1}.REM_post_in;
+        % if jj == iA
+            A_data = A_out{jj}{1}.REM_post_in;
 
             % test if A_temps can be found in J-data
-            T_proj = assembly_activity(A_temp,J_data');
+            % _proj = assembly_activity(A_temp,J_data');
 
-            J_proj = [];
-            for tt = size(T_proj, 1):-1:1
-                J_proj(tt) = sum(T_proj(tt,:)>9);
+            A_proj = [];
+            for tt = size(A_proj, 1):-1:1
+                A_proj(tt) = sum(A_proj(tt,:)>9);
             end
 
-            J_sig(jj) = sum(J_proj > 0)/length(J_proj); % get the percentage of assemblies exceeding the activation cut off.
-
-        else
-            % try a circ shift for sanity
-            J_data = []; 
-            % for iS = size(A_out{jj}{1}.REM_pre_in, 2):-1:1
-            %     J_data(:,iS) = circshift(A_out{jj}{1}.REM_post_in(:,iS), floor(MS_randn_range(1,1,1,length(J_data)))); 
-            % end
-            % 
-
-            % for iShuff = 500:-1:1
-            %     % temporary data from session jj;
-            %     s_idx = randperm(size(A_out{jj}{1}.REM_post_in, 2));
-            %     J_data = A_out{jj}{1}.REM_pre_in(:, s_idx);
-            % 
-            %     % test if A_temps can be found in J-data
-            %     T_proj = assembly_activity(A_temp,J_data');
-            % 
-            %     J_proj = [];
-            %     for tt = size(T_proj, 1):-1:1
-            %         J_proj(tt) = sum(T_proj(tt,:)>9);
-            %     end
-            %     t_sigs(iShuff) = sum(J_proj > 0)/length(J_proj);
-            % 
-            % end
-            J_sig(iA, jj) = mean(t_sigs);
-        end
+            J_sig(iA, jj) = sum(A_proj > 0)/length(A_proj); % get the percentage of assemblies exceeding the activation cut off.
+            J_sig(iA, jj) = sum(A_proj > 0)/length(A_proj); % get the percentage of assemblies exceeding the activation cut off.
+        % 
+        % else
+        %     % try a circ shift for sanity
+        %     J_data = []; 
+        %     % for iS = size(A_out{jj}{1}.REM_pre_in, 2):-1:1
+        %     %     J_data(:,iS) = circshift(A_out{jj}{1}.REM_post_in(:,iS), floor(MS_randn_range(1,1,1,length(J_data)))); 
+        %     % end
+        %     % 
+        % 
+        %     % for iShuff = 500:-1:1
+        %     %     % temporary data from session jj;
+        %     %     s_idx = randperm(size(A_out{jj}{1}.REM_post_in, 2));
+        %     %     J_data = A_out{jj}{1}.REM_pre_in(:, s_idx);
+        %     % 
+        %     %     % test if A_temps can be found in J-data
+        %     %     T_proj = assembly_activity(A_temp,J_data');
+        %     % 
+        %     %     J_proj = [];
+        %     %     for tt = size(T_proj, 1):-1:1
+        %     %         J_proj(tt) = sum(T_proj(tt,:)>9);
+        %     %     end
+        %     %     t_sigs(iShuff) = sum(J_proj > 0)/length(J_proj);
+        %     % 
+        %     % end
+        %     J_sig(iA, jj) = mean(t_sigs);
+        % end
     end
 
     % t_data.Binary = A_out{iA}{1}.wake_data;
@@ -195,24 +196,141 @@ for iA = length(A_out):-1:1
 end
 
 %% same thing but using the same reactivation method as the REM data
+rng(123, 'twister'); % for reproducibility.
+
+opts = [];
+opts.threshold.method = 'MarcenkoPastur';
+opts.Patterns.method = 'ICA';
+opts.Patterns.number_of_iterations = 500;
+opts.threshold.permutations_percentile= 95;
+opts.threshold.number_of_permutations= 500;
 
 
+% init vars for number of assemblies per session and the shuff stats
+a_num = NaN(size(A_out));
+shuff_num = a_num;
+wake_nA = []; wake_pre_nA = []; wake_post_nA = [];
+J_sig = [];
 for iA = length(A_out):-1:1
 
+    % current assembly wieghts;
+    A_temp = A_out{iA}{1}.P_temp;
+    A_REM_post_proj = A_out{iA}{1}.REM_Post_proj; 
 
-
-
+    % loop over sessions
     for jj = length(A_out):-1:1
 
+        % J_data = ; % grab the data for the jjth session
+
+        % test if A_temps can be found in J-data
+        rng(123, 'twister'); % for reproducibility.
+        A_proj = assembly_activity(A_temp,A_out{jj}{1}.REM_Post_data');
+        rng(123, 'twister'); % for reproducibility.
+        A_REM_post_proj = assembly_activity(A_temp,A_out{iA}{1}.REM_Post_data');
 
 
+        % trim the J_proj to be the same length as the A_proj
+        if length(A_proj) > length(A_REM_post_proj)
+               A_proj = A_proj(:,1:length(A_REM_post_proj)); 
+        end
 
+        %get the same detection stats for both assemblies 
+        % within session
+        rng(123, 'twister'); % for reproducibility.
+        [ReAct_stats, shuff.data, shuff.proj] = MS_Asmbly_proj_thresh(A_out{iA}{1}.REM_Post_data, A_temp, 500, 99);
+        ReAct_stats.p_val = [];
+        ReAct_stats.rate = [];
+        ReAct_stats.rate_p = [];
+
+        for ii = size(A_REM_post_proj,1):-1:1
+            ReAct_stats.p_val(ii) = sum(sum(shuff.data > ReAct_stats.R_thresh,2) > sum(A_REM_post_proj(ii,:) > ReAct_stats.R_thresh))/ size(shuff.data,1);
+            ReAct_stats.rate(ii) = sum(A_REM_post_proj(ii,:) > ReAct_stats.R_thresh) / ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
+            ReAct_stats.shuff_rate = sum(shuff.data > ReAct_stats.R_thresh,2)./ ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
+            ReAct_stats.rate_p(ii) = sum(ReAct_stats.shuff_rate > ReAct_stats.rate(ii)) / length(ReAct_stats.shuff_rate);
+        end
+
+        % alternative session
+        rng(123, 'twister'); % for reproducibility.
+        [Alt_stats, shuff.data, shuff.proj] = MS_Asmbly_proj_thresh(A_out{jj}{1}.REM_Post_data, A_temp, 500, 99);
+        Alt_stats.p_val = [];
+        Alt_stats.rate = [];
+        Alt_stats.rate_p = [];
+
+        for ii = size(A_proj,1):-1:1
+            Alt_stats.p_val(ii) = sum(sum(shuff.data > ReAct_stats.R_thresh,2) > sum(A_proj(ii,:) > ReAct_stats.R_thresh))/ size(shuff.data,1);
+            Alt_stats.rate(ii) = sum(A_proj(ii,:) > ReAct_stats.R_thresh) / ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
+            Alt_stats.shuff_rate = sum(shuff.data > ReAct_stats.R_thresh,2)./ ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
+            Alt_stats.rate_p(ii) = sum(Alt_stats.shuff_rate > Alt_stats.rate(ii)) / length(ReAct_stats.shuff_rate);
+        end
+
+        % count the significant events per assembly on the jjth data
+        J_proj_cnt = []; A_proj_cnt = [];
+        for tt = size(A_proj, 1):-1:1
+            J_proj_cnt(tt) = nnz(A_proj(tt,:)>9); % count the number of sig reactivations
+            A_proj_cnt(tt) = nnz(A_REM_post_proj(tt,:)>9); % count the number of sig reactivations
+        end
+
+        J_sig(iA, jj) = sum(J_proj_cnt > 0)/length(J_proj_cnt); % get the percentage of assemblies exceeding the activation cut off.
+        J_n(iA, jj) = median(J_proj_cnt./A_proj_cnt); % get the percentage of assemblies exceeding the activation cut off.
+        J_n_pval(iA, jj) = sum(Alt_stats.p_val < 0.05)/sum(ReAct_stats.p_val < 0.05); % percent of jj assemblies passing the pval rest ./ number of real assemblies passing. 
+
+        %
     end
-
+    sess_id{iA}  = [A_out{iA}{1}.info.subject '-' A_out{iA}{1}.info.session]; 
 end
 
+%%
+figure(103); clf
+subplot(2,4,1)
+imagesc(J_sig*100)
+title('% of assemblies exceeding reactivation threshold of 9')
+colorbar
+axis square
+set(gca, 'YTick', 1:18, 'YTickLabel', sess_id)
+
+subplot(2,4,2)
+imagesc(J_n*100)
+title('median n alt assemblies ./ n session assemblies')
+colorbar
+axis square
+
+subplot(2,4,3)
+imagesc(J_n_pval*100)
+title('median n alt assemblies ./ n session assemblies')
+colorbar
+axis square
+% set(gca, 'YDir', 'normal')
+
+% quick stats of within vs alt values for each metric
+d_idx = find(logical(eye(size(J_sig)))); 
+off_idx = find(~logical(eye(size(J_sig))));
 
 
+subplot(2,4,5)
+[~,~,~,J_sig_stats] = MS_bar_w_err(J_sig(d_idx)*100, J_sig(off_idx)*100,[c_ord(1,:); .7 .7 .7], 1, 'ttest2');
+set(gca, 'XTickLabel', {'Within' 'Across'})
+ylabel('percentage of reactive assemblies')
+
+
+subplot(2,4,6)
+[~,~,~,J_n_stats] = MS_bar_w_err(J_n(d_idx)*100, J_n(off_idx)*100,[c_ord(1,:); .7 .7 .7], 1, 'ttest2');
+set(gca, 'XTickLabel', {'Within' 'Across'})
+ylabel('median alt:true reactivations')
+
+
+subplot(2,4,7)
+[~,~,~,J_n_pval_stats] = MS_bar_w_err(J_n_pval(d_idx)*100, J_n_pval(off_idx)*100,[c_ord(1,:); .7 .7 .7], 1, 'ttest2');
+set(gca, 'XTickLabel', {'Within' 'Across'})
+ylabel('percentage of sig reactive assemblies')
+y_lim = ylim; 
+
+subplot(2,4,8)
+[d, b] = hist(J_n_pval(off_idx)*100, 50); 
+bar(b, d, 'FaceColor',  [.7 .7 .7]); 
+% xlim([0 ])
+view(90,90)
+set(gca, 'XDir', 'reverse')
+xlim([y_lim])
 %% quick R threshold generation
 
 rng(123,'twister')
@@ -348,30 +466,34 @@ end
 
 for ii = 1:5
 
-    y_max = max([A_out{iA}{1}.REM_Post_proj(ii,:), A_out{jj}{1}.REM_Post_proj(ii,:)]); 
+    % y_max = max([A_out{iA}{1}.REM_Post_proj(ii,:), A_out{jj}{1}.REM_Post_proj(ii,:)]); 
 
     figure(ii)
     clf
-             J_data = A_out{iA}{1}.REM_post_in;
+    A_data = A_out{iA}{1}.REM_Post_data;
 
-            % test if A_temps can be found in J-data
-            T_proj = assembly_activity(A_temp,J_data');
+    % test if A_temps can be found in J-data
+    rng(123, 'twister'); % for reproducibility.
+    A_proj = assembly_activity(A_temp,A_data');
 
-    MS_asmbly_quick_plot(A_out{iA}{1}.P_temp, T_proj,J_data,ii )
-    % MS_asmbly_quick_plot(A_out{iA}{1}.P_temp, A_out{iA}{1}.REM_Post_proj,A_out{iA}{1}.REM_Post_data,ii )
+        % test if A_temps can be found in J-data
+    rng(123, 'twister'); % for reproducibility.
+    J_proj = assembly_activity(A_temp,A_out{jj}{1}.REM_Post_data');
+
+    y_max = max([A_proj(ii,:), J_proj(ii,:)]); 
+
+    MS_asmbly_quick_plot(A_out{iA}{1}.P_temp, A_proj,A_data,ii )
+
     subplot(2,4,2:4);
     ylim([0 y_max])
 
+
     figure(ii+10)
     clf
-    J_data = A_out{jj}{1}.REM_post_in;
-
-    % test if A_temps can be found in J-data
-    T_proj = assembly_activity(A_temp,J_data');
 
 
 
-    MS_asmbly_quick_plot(A_out{iA}{1}.P_temp, T_proj,J_data,ii )
+    MS_asmbly_quick_plot(A_out{iA}{1}.P_temp, J_proj,A_out{jj}{1}.REM_Post_data,ii )
     ax(1) = subplot(2,4,2:4);
     ylim([0 y_max])
 

@@ -1,7 +1,7 @@
 function MS_asmbly_quick_plot(temp, proj,data_in,  idx, idx_thresh)
 %% MS_asmbly_quick_plot: plots the templates and projection for a specific assembly given the template and projection arrays
 
-if nargin < 4
+if nargin < 5
     idx_thresh = 1.96; 
 end
 
@@ -28,5 +28,6 @@ ax(2) = subplot(2,4,6:8);
 imagesc(data_in(:, a_idx)')
 
 linkaxes(ax, 'x')
+xlim([1 length(data_in)])
 
 end
