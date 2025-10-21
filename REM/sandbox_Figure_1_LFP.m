@@ -212,7 +212,7 @@ cwt_test_power = abs(cwt_test).^2;
 % freq = cwt_test.frequencies;
 % freq = f;
 figure;
-args = {tvec,f,10*log10(cwt_test_power)};
+args = {tvec,f,abs(cwt_test)};
 surf(args{:},'edgecolor','none');
 view(0,90);
 % imagesc(tvec, f, cwt_test_power);

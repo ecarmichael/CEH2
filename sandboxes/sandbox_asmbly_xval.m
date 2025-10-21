@@ -140,8 +140,8 @@ for iA = length(A_out):-1:1
 
       
 
-        if jj == iA
-            J_data = A_out{iA}{1}.REM_post_in;
+        % if jj == iA
+            J_data = A_out{jj}{1}.REM_post_in;
 
             % test if A_temps can be found in J-data
             T_proj = assembly_activity(A_temp,J_data');
@@ -151,10 +151,42 @@ for iA = length(A_out):-1:1
                 J_proj(tt) = sum(T_proj(tt,:)>9);
             end
 
-            J_sig(jj) = sum(J_proj > 0)/length(J_proj); % get the percentage of assemblies exceeding the activation cut off.
+            J_sig(iA, jj) = sum(J_proj > 0)/length(J_proj); % get the percentage of assemblies exceeding the activation cut off.
+        % 
+        % else
+        % 
+        %     J_data = A_out{iA}{1}.REM_post_in;
+        % 
+        %     % test if A_temps can be found in J-data
+        %     T_proj = assembly_activity(A_temp,J_data');
+        % 
+        %     J_proj = [];
+        %     for tt = size(T_proj, 1):-1:1
+        %         J_proj(tt) = sum(T_proj(tt,:)>9);
+        %     end
+        % 
+        %     J_sig(jj) = sum(J_proj > 0)/length(J_proj); % get the percentage of assemblies exceeding the activation cut off.
+        % 
+        % 
+        % end
+    end
 
-        else
-            % try a circ shift for sanity
+    % t_data.Binary = A_out{iA}{1}.wake_data;
+    % t_data.time = A_out{iA}{1}.wake_tvec;
+    %
+    %
+    % [T_temp, T_proj, wake_data, wake_tvec, r_thresh] = MS_PCA_ICA_only(A_out{iA}{1}.wake_data, ones(1,length(A_out{iA}{1}.wake_data)), A_out{iA}{1}.bins,method, opts);
+    %
+
+
+
+
+
+
+end
+
+%%
+  % try a circ shift for sanity
             J_data = []; 
             % for iS = size(A_out{jj}{1}.REM_pre_in, 2):-1:1
             %     J_data(:,iS) = circshift(A_out{jj}{1}.REM_post_in(:,iS), floor(MS_randn_range(1,1,1,length(J_data)))); 
@@ -177,22 +209,6 @@ for iA = length(A_out):-1:1
             % 
             % end
             J_sig(iA, jj) = mean(t_sigs);
-        end
-    end
-
-    % t_data.Binary = A_out{iA}{1}.wake_data;
-    % t_data.time = A_out{iA}{1}.wake_tvec;
-    %
-    %
-    % [T_temp, T_proj, wake_data, wake_tvec, r_thresh] = MS_PCA_ICA_only(A_out{iA}{1}.wake_data, ones(1,length(A_out{iA}{1}.wake_data)), A_out{iA}{1}.bins,method, opts);
-    %
-
-
-
-
-
-
-end
 
 %% same thing but using the same reactivation method as the REM data
 
@@ -313,9 +329,9 @@ for iS = 1:3
         clf
         subplot(6,4,[1 5 9 13 17 21])
         hold on
-        stem(this_A(:,1), 'color', [.8 .8 .8 .2])
-        a_idx = sum(zscore(this_A(:,1)) > 0, 2) > 0;
-        stem(find(a_idx), this_A(find(a_idx),1), 'color',winter(1), 'MarkerFaceColor', winter(1))
+        stem(this_A(:,iA), 'color', [.8 .8 .8 .2])
+        a_idx = sum(zscore(this_A(:,iA)) > 0, 2) > 0;
+        stem(find(a_idx), this_A(find(a_idx),iA), 'color',winter(1), 'MarkerFaceColor', winter(1))
         view(90,90)
 
         ax(1) = subplot(6,4,2:4);
