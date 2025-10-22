@@ -243,7 +243,7 @@ place.p_bins = PCs_properties.bins(1:end-1)+(mode(diff(PCs_properties.bins)))/2;
 A_temp = []; A_prog = []; wake_data = []; wake_tvec = [];
 for iB = length(bin_s):-1:1
     
-    [A_temp{iB}, A_proj{iB}, wake_data{iB}, wake_tvec{iB}, A_opts{iB}] = MS_PCA_ICA_only(ms_trk_cut, move_idx, bin_s(iB),method, opts);
+    [A_temp{iB}, A_proj{iB}, wake_data{iB}, wake_tvec{iB}, A_opts{iB}, ] = MS_PCA_ICA_only(ms_trk_cut, move_idx, bin_s(iB),method, opts);
 end
 
 

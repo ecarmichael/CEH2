@@ -12,7 +12,9 @@ elseif nargin < 6
 end
 
 if data_flag == 1
-    hb = bar(x_vals, [nanmean(data_a), nanmean(data_b)], 'FaceColor', color(1,:), 'EdgeColor', color(1,:));
+    hb = bar(x_vals, [nanmean(data_a), nanmean(data_b)]', 'FaceColor', 'flat');
+    hb.CData(1,:) = color(1,:); 
+    hb.CData(2,:) = color(2,:); 
 end
 hold on
 
@@ -50,8 +52,22 @@ if ~isempty(stats)
     end
     
     if ~isnan(h) && h == 1
-        plot(median(x_vals), max([data_a, data_b], [], 'all')*1.1, '*', 'color', 'k')
-        plot(x_vals, [max([data_a, data_b], [], 'all')*1.05 max([data_a, data_b], [], 'all')*1.05], '-k', 'linewidth', 1.5)
+        if size(data_a,2) == 1
+            data_pool = [data_a; data_b]; 
+        else
+            data_pool = [data_a, data_b];
+        end
+        if (0.5 > p) && (p > 0.01)
+            text(median(x_vals), max(data_pool, [], 'all')*1.1, '*', 'color', 'k', 'FontSize',22)
+        elseif (0.1 >= p) && (p >= 0.001)
+            text(median(x_vals)*.975, max(data_pool, [], 'all')*1.1, '**', 'color', 'k', 'FontSize',22)
+        elseif p < 0.001
+            text(median(x_vals)*.95, max(data_pool, [], 'all')*1.1, '***', 'color', 'k', 'FontSize',22)
+        end
+                   
+        text(median(x_vals)*1.1, max(data_pool, [], 'all')*1.15, ['   p = ' num2str(p, 3)], 'color', 'k', 'FontSize',16)
+
+        plot(x_vals, [max(data_pool, [], 'all')*1.05 max(data_pool, [], 'all')*1.05], '-k', 'linewidth', 1.5)
     end
 end
 
