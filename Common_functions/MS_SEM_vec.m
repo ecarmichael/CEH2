@@ -21,5 +21,8 @@ function sem =  MS_SEM_vec(data_in)
 %% initialize
 
 nan_idx = isnan(data_in);
+for ii = length(data_in):-1:1
 
-sem = nanstd(data_in, [], 1)./ sqrt(length(data_in(~nan_idx))); 
+sem(ii) = nanstd(data_in(:,ii), [], 1)./ sqrt(sum(~isnan(data_in(:,ii))));
+
+end

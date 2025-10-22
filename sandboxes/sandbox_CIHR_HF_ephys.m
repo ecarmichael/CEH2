@@ -41,19 +41,36 @@ cfg_in.decimateFactor = 15;
 csc_r = decimate_tsd(cfg_in, csc);
 
 
+% csc_r = restrict(csc_r, rec_iv);
+
+csc_r.tvec = csc_r.tvec - rec_iv.tstart; 
+
+
 
 %% 
+
 swr_iv = iv(evts.t{end-1}-.05,evts.t{end-1}+.1); 
 
 swr_iv = MergeIV([], swr_iv); 
 
-csc_r = restrict(csc_r, rec_iv);
-swr_r_iv = restrict(swr_iv, rec_iv);
+swr_r_iv = swr_iv; 
+% swr_r_iv = restrict(swr_iv, rec_iv);
+
+for ii = 1:length(swr_r_iv.tstart)
+    swr_r_iv.tstart(ii) = swr_r_iv.tstart(ii) - rec_iv.tstart; 
+    swr_r_iv.tend(ii) = swr_r_iv.tend(ii) - rec_iv.tstart; 
+end
 
 cd(spk_dir)
 S = OE_phy2TS(spk_dir);
 
-S_r = restrict(S, rec_iv);
+S_r = S;
+
+
+for ii = 1:length(S_r.t)
+    S_r.t{ii} = S_r.t{ii}-rec_iv.tstart; 
+end
+
 
 ca_idx = []; 
 for ii = 1:length(S_r.t)
@@ -73,15 +90,13 @@ end
 
 %% load and make a raster of the spikes
 
-
-
-csc_p = csc;
+csc_p = csc_r;
 csc_p.data = csc_p.data(2,:); 
 csc_p.cfg.hdr = []; 
 csc_p.cfg.hdr{1} = csc.cfg.hdr{2}; 
-
-S_r_9 = restrict(S_r, 1970, 2000); 
-csc_p = restrict(csc_p, 1970, 2000); 
+% 
+% S_r_9 = restrict(S_r, 1970, 2000); 
+% csc_p = restrict(csc_p, 1970, 2000); 
 
 
 % cfg.lfp = csc_p; 
@@ -92,20 +107,20 @@ ax(1) = subplot(4,1,1);
 cfg_plt.display = 'tsd';
 PlotTSDfromIV(cfg_plt, swr_r_iv, csc_p)
 
-vline(evts.t{2}, 'r')
-vline(evts.t{3}, 'r')
+vline(evts.t{2}-rec_iv.tstart, 'r')
+vline(evts.t{3}-rec_iv.tstart, 'r')
 
-ax(2) = subplot(4,1,2:4);
+% ax(2) = subplot(4,1,2:4);
 cfg_mr.lfp = csc_p; 
 cfg_mr.evt = swr_r_iv; 
 cfg_mr.spkColor = [repmat([0 0 0], 41,1); repmat([0.3467 0.5360  0.6907], 18,1)]; 
-h = MultiRaster(cfg_mr, S);
+h = MultiRaster(cfg_mr, S_r);
 
 % 42-end are shank 4. 
 
 
-vline(evts.t{2}, 'r')
-vline(evts.t{3}, 'r')
+vline(evts.t{2}-rec_iv.tstart, 'r')
+vline(evts.t{3}-rec_iv.tstart, 'r')
 
 linkaxes(ax, 'x')
 
