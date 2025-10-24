@@ -86,7 +86,7 @@ for ii = 1:length(f_list)
 
     B_out{ii} = Pipeline_Asmbly_top_cells(f_list(ii).name,bin_size, move_thresh, method, [], 256);
 
-    % B_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, B_out{ii});
+    B_out{ii} = Pipeline_Asmbly_append_SWS(f_list(ii).name, B_out{ii});
 
     B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii});
 % end
@@ -94,9 +94,9 @@ for ii = 1:length(f_list)
     %                 Pipline_Asmbly_plot(A_out{ii}, [fig_dir filesep method]);
     %     Pipline_Asmbly_plot(P_out{ii}, [fig_dir filesep method filesep 'place']);
 
-    Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep method filesep 'best']);
+    Pipline_Asmbly_plot(B_out{ii}, [fig_dir filesep 'bin_' num2str(bin_size) filesep method filesep 'best']);
 
-    Pipline_Asmbly_plot_SWS(B_out{ii}, [fig_dir filesep method filesep 'best_SWS']);
+    Pipline_Asmbly_plot_SWS(B_out{ii}, [fig_dir filesep 'bin_' num2str(bin_size) filesep method filesep 'best_SWS']);
 
     
     close all
@@ -140,12 +140,12 @@ H5_idx = ~novel_idx & anx_idx & ~HS_idx;
 
 A_all = A_out;
 A_out = A_out(1:11);
-% if ~isempty(A_out)
-%     save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
-% end
-% if ~isempty(P_out)
-save([main_dir  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
-% end
+% % if ~isempty(A_out)
+% %     save(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\A_out_' method '.mat'], 'A_out')
+% % end
+% % if ~isempty(P_out)
+% save([main_dir  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
+% % end
 
 %% load data that has been processed.
 
@@ -162,10 +162,10 @@ clear B_out
 
 exclude_mouse = {'pv1254'};
 
-for ii = length(B_out):-1:1
+for ii = length(A_out):-1:1
     
-    if contains(B_out{ii}{1}.info.subject, exclude_mouse)
-        fprintf('Removing sesson: <strong>%s</strong>\n', B_out{ii}{1}.info.subject);
+    if contains(A_out{ii}{1}.info.subject, exclude_mouse)
+        fprintf('Removing sesson: <strong>%s</strong>\n', A_out{ii}{1}.info.subject);
         rm_idx(ii) = true;
     else
         rm_idx(ii) = false;
@@ -173,7 +173,7 @@ for ii = length(B_out):-1:1
     
 end
 
-B_out(rm_idx) = [];
+A_out(rm_idx) = [];
 
 
 novel_idx = []; anx_idx = []; HS_idx = [];
