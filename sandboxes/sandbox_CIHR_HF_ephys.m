@@ -54,6 +54,11 @@ OE_evts = OE_LoadEvents();
 cd('C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-08_12-23-48_TFC_REC3_swr\Record Node 113\experiment1\recording1\events\Intan_RHD_USB-100.Rhythm Data\TTL')
 BIN_evts = OE_load_binary_evts(cd);
 
+% csc_r = restrict(csc_r, rec_iv);
+
+csc_r.tvec = csc_r.tvec - rec_iv.tstart; 
+
+
 for ii = 1:size(BIN_evts.t{1},2)
 disp(['Binary: ' num2str(BIN_evts.t{1}(1, ii)) ' : ' num2str(BIN_evts.t{1}(2, ii))  '  diff: ' num2str(BIN_evts.t{1}(2, ii)- BIN_evts.t{1}(1, ii)) 's ...' ...
     '(' num2str((BIN_evts.t{1}(2, ii)- BIN_evts.t{1}(1, ii))/60)  'min)'  ])
@@ -63,6 +68,7 @@ disp(['OE    : ' num2str(OE_evts.t{1}(1, ii)) ' : ' num2str(OE_evts.t{1}(2, ii))
 end
 %% 
 
+
 rec_iv = iv(evts.t{1}(1), evts.t{1}(2)); 
 
 
@@ -70,13 +76,24 @@ swr_iv = iv(evts.t{end-1}-.05,evts.t{end-1}+.1);
 
 swr_iv = MergeIV([], swr_iv); 
 
-csc_r = restrict(csc_r, rec_iv);
-swr_r_iv = restrict(swr_iv, rec_iv);
+swr_r_iv = swr_iv; 
+% swr_r_iv = restrict(swr_iv, rec_iv);
+
+for ii = 1:length(swr_r_iv.tstart)
+    swr_r_iv.tstart(ii) = swr_r_iv.tstart(ii) - rec_iv.tstart; 
+    swr_r_iv.tend(ii) = swr_r_iv.tend(ii) - rec_iv.tstart; 
+end
 
 cd(spk_dir)
 S = OE_phy2TS(spk_dir);
 
-S_r = restrict(S, rec_iv);
+S_r = S;
+
+
+for ii = 1:length(S_r.t)
+    S_r.t{ii} = S_r.t{ii}-rec_iv.tstart; 
+end
+
 
 ca_idx = []; 
 for ii = 1:length(S_r.t)
@@ -96,20 +113,20 @@ end
 
 %% load and make a raster of the spikes
 
-
-
 csc_p = csc_r;
 csc_p.data = csc_p.data(2,:); 
 csc_p.cfg.hdr = []; 
-csc_p.cfg.hdr{1} = csc_r.cfg.hdr{2}; 
-
-
+csc_p.cfg.hdr{1} = csc.cfg.hdr{2}; 
+% 
+% S_r_9 = restrict(S_r, 1970, 2000); 
+% csc_p = restrict(csc_p, 1970, 2000); 
 
 
 % cfg.lfp = csc_p; 
 
 figure(2)
 clf
+
 % ax(1) = subplot(4,1,1);
 % cfg_plt.display = 'tsd';
 % PlotTSDfromIV(cfg_plt, swr_r_iv, csc_p)
@@ -141,6 +158,7 @@ cla;
 % plot(MUA.tvec, zscore(MUA.data))
 % xlim([MUA.tvec(1) MUA.tvec(end)])
 plot(rate_tsd.tvec, R(:,keep_idx(1:5)))
+
 
 
 vline(evts.t{1}, 'g')
