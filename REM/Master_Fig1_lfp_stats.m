@@ -23,11 +23,12 @@ for ii = length(l_list):-1:1
 
     lfp = MS_h5_to_stuct(l_list(ii).name);
 
-    % get the theta delta ratio using an overall bandpower across the
-    % pre_rem_td(ii) = bandpower(lfp.pre_rem_lfp(2,:), 2000, [6 10])./ bandpower(lfp.pre_rem_lfp(2,:), 2000, [1 4]);
-    % pre_sws_td(ii) = bandpower(lfp.pre_sws_lfp(2,:), 2000, [6 10])./ bandpower(lfp.pre_sws_lfp(2,:), 2000, [1 4]);
-    % post_rem_td(ii) = bandpower(lfp.post_rem_lfp(2,:), 2000, [6 10])./ bandpower(lfp.post_rem_lfp(2,:), 2000, [1 4]);
-    % post_sws_td(ii) = bandpower(lfp.post_sws_lfp(2,:), 2000, [6 10])./ bandpower(lfp.post_sws_lfp(2,:), 2000, [1 4]);
+    % get the theta delta ratio using an overall bandpower across the whole
+    % sleep recording. 
+    pre_rem_td_s(ii) = bandpower(lfp.pre_rem_lfp(2,:), 2000, [6 10])./ bandpower(lfp.pre_rem_lfp(2,:), 2000, [1 4]);
+    pre_sws_td_s(ii) = bandpower(lfp.pre_sws_lfp(2,:), 2000, [6 10])./ bandpower(lfp.pre_sws_lfp(2,:), 2000, [1 4]);
+    post_rem_td_s(ii) = bandpower(lfp.post_rem_lfp(2,:), 2000, [6 10])./ bandpower(lfp.post_rem_lfp(2,:), 2000, [1 4]);
+    post_sws_td_s(ii) = bandpower(lfp.post_sws_lfp(2,:), 2000, [6 10])./ bandpower(lfp.post_sws_lfp(2,:), 2000, [1 4]);
 
     % continuous ratio version
     % loop for clarity
@@ -126,7 +127,7 @@ ylabel({'theta/delta'; 'continuous'})
 set(gca, 'XTickLabel', {'REM' 'NREM'})
 xlim([0 3])
 axis square
-fprintf('REM (%0.2f +/- %0.2f ) - NREM (%0.2f +/- %0.2f ) theta delta ration: t(%d) = %0.2f; p %0.3f\n',...
+fprintf('REM (%0.2f +/- %0.2f ) - NREM (%0.2f +/- %0.2f ) theta delta ratio: t(%d) = %0.2f; p %0.3f\n',...
     mean([pre_rem_td_f post_rem_td_f]), MS_SEM([pre_rem_td_f post_rem_td_f]),...
     mean([pre_sws_td_f, post_sws_td_f]), MS_SEM([pre_sws_td_f, post_sws_td_f]),...
     stats.df, stats.tstat, p )
@@ -139,9 +140,22 @@ ylabel({'theta/delta'; 'bandpower'})
 set(gca, 'XTickLabel', {'REM' 'NREM'})
 axis square
 xlim([0 3])
-fprintf('REM (%0.2f +/- %0.2f ) - NREM (%0.2f +/- %0.2f ) theta delta ration: t(%d) = %0.2f; p %0.3f\n',...
+fprintf('REM (%0.2f +/- %0.2f ) - NREM (%0.2f +/- %0.2f ) theta delta ratio: t(%d) = %0.2f; p %0.3f\n',...
     mean([pre_rem_td post_rem_td]), MS_SEM([pre_rem_td post_rem_td]),...
     mean([pre_sws_td, post_sws_td]), MS_SEM([pre_sws_td, post_sws_td]),...
+    stats.df, stats.tstat, p )
+
+
+% using bandpower per session
+subplot(2,2,4)
+[~, ~, ~, p, stats] = MS_bar_w_err([pre_rem_td_s post_rem_td_s], [pre_sws_td_s, post_sws_td_s], [rem_c; sws_c], 1, 'ttest2', 1:2);
+ylabel({'theta/delta'; 'bandpower'})
+set(gca, 'XTickLabel', {'REM' 'NREM'})
+axis square
+xlim([0 3])
+fprintf('REM (%0.2f +/- %0.2f ) - NREM (%0.2f +/- %0.2f ) theta delta ratio (session): t(%d) = %0.2f; p %0.3f\n',...
+    mean([pre_rem_td_s post_rem_td_s]), MS_SEM([pre_rem_td_s post_rem_td_s]),...
+    mean([pre_sws_td_s, post_sws_td_s]), MS_SEM([pre_sws_td_s, post_sws_td_s]),...
     stats.df, stats.tstat, p )
 
 % set figure properties
