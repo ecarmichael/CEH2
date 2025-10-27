@@ -1,4 +1,4 @@
-function [hypno, csc, emg] = MS_get_hypno(csc, emg, wake_idx, emg_rms_prctile)
+function [hypno, csc, emg] = MS_get_hypno(csc, emg, wake_idx, emg_rms_prctile, d_t_ratio)
 %% dSub_Sleep_screener: run an intial screening of sleep ephys data to classify data as movement or rough sleep stages.
 %
 %
@@ -35,19 +35,25 @@ if nargin < 1
     cfg_csc.fc = {Meta.EMG};%, 'CSC3.ncs'};  % pick the channels to load
     emg = LoadCSC(cfg_csc); % load the csc data
     emg_rms_prctile = 90;
+    d_t_ratio = 1;
 
 elseif nargin < 2
     Meta = MS_Load_meta;
     cfg_csc.fc = {Meta.EMG};%, 'CSC3.ncs'};  % pick the channels to load
     emg = LoadCSC(cfg_csc); % load the csc data
     emg_rms_prctile = 90;
+    d_t_ratio = 1;
 
 elseif nargin < 3
     wake_idx = [];
     emg_rms_prctile = 90; 
-    
+        d_t_ratio = 1;
+
 elseif nargin < 4
     emg_rms_prctile = 90; 
+        d_t_ratio = 1;
+elseif nargin < 5
+        d_t_ratio = 1;
 end
 
 if sum(diff(unique(diff(csc.tvec)))>csc.cfg.hdr{1}.SamplingFrequency*4) > 1
@@ -56,7 +62,7 @@ end
 
 cord = linspecer(5);
 
-d_t_ratio = 1;
+% d_t_ratio = 1.5;
 % emg_rms_prctile = 90;
 
 
@@ -195,7 +201,7 @@ deci_fact = 10;
         ratio_plot.data = decimate(ratio.data,deci_fact);
         hypno_out_plot = hypno_out(1:deci_fact:end); 
         
-figure(221)
+figure
 clf
 ax(1) = subplot(7,1,1:4);
 cla
