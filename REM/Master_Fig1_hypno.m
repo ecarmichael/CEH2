@@ -7,7 +7,7 @@
 hypno_dir = '/Users/ecar/Williams Lab Dropbox/Eric Carmichael/JisooProject2020/2020_Results_aftercutting/Across_episodes/Inter';
 
 inter_dir = '/Users/ecar/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter/Hypno'; 
-if ~exist("inter_dir", "dir"); mkdir(inter_dir); end
+if ~exist(inter_dir, "dir"); mkdir(inter_dir); end
 %% copy all of the hypnograms (only need to run once)
 
 filelist = dir(fullfile(hypno_dir, ['**' filesep '*Hypno.mat*']));  %get list of files and folders in any subfolder

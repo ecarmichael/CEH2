@@ -1,13 +1,14 @@
-%% JC_REM_Fig1_LFP_EMG
-if ismac
+%% Figure 1 LFP and Ca raw trace example for a sleep expisode. 
 
-usr_dir = '/Users/ecar'; 
+
+if ismac
+usr_dir = '/Users/ecar/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter'; 
 else
-usr_dir= 'C:\Users\ecarm'; 
+usr_dir= 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter'; 
 
 end
-data_dir = strrep([usr_dir filesep 'Williams Lab Dropbox\Eric Carmichael\JisooProject2020\2020_Results_aftercutting\Across_episodes\Inter\PV1069\7_12_2019_PV1069_LTD5'], '\', filesep);
-nlx_dir  = strrep([usr_dir filesep  'Williams Lab Dropbox\Williams Lab Team Folder\Jisoo\Raw_LFP\2019-07-12_09-24-26_PV1069_LTD5'], '\', filesep); 
+data_dir = strrep([usr_dir filesep 'Sample_data_code\Figure 1'], '\', filesep);
+nlx_dir  = strrep([usr_dir filesep  'Sample_data_code\Figure 1\nlx_data'], '\', filesep); 
 save_dir = strrep([usr_dir filesep  'Desktop\REM_figs'], '\', filesep);
 cd(data_dir)
 
@@ -42,10 +43,9 @@ freq_range = 1:0.1:30; % range of frequencies.
 
 [~,F,T, P] = spectrogram(csc_rem.data(2,:),win_size,n_overlap,freq_range,fs); 
 
-% T = T+csc_rem.tvec(1); % just so that our time vectors are the same
-% for ii = size(P,2):-1:1
-    P_s = smoothdata(P,2, 'gaussian',5); 
-% end
+% smooth for visualization
+
+P_s = smoothdata(P,2, 'gaussian',5); 
 %% basic plot
 z_win = 1; % zoom window
 figure(101)
@@ -171,15 +171,15 @@ for iC = 1:64
     if strcmp(cfg.rescale, 'zscore')
         plot(time*0.001, zscore(data(:,iC))+iC*cfg.offset, 'color', c_ord(iC,:), 'linewidth', cfg.width)
         % plot3(time*0.001, repmat(iC,size(data,1),1), zscore(data(:,iC))+iC*cfg.offset, 'color', c_ord(iC,:), 'linewidth', cfg.width)
-        tick_val(end+1) = median(zscore(data(:,iC))+iC*cfg.offset);
+        % tick_val(end+1) = median(zscore(data(:,iC))+iC*cfg.offset);
     elseif strcmp(cfg.rescale, 'max')
         plot(time*0.001, data(:,iC)./max(data(:,iC))+iC*cfg.offset, 'color', c_ord(iC,:), 'linewidth', cfg.width)
-        tick_val(iC) = median(data(:,iC)./max(data(:,iC))+iC*cfg.offset);
+        % tick_val(iC) = median(data(:,iC)./max(data(:,iC))+iC*cfg.offset);
     else
         plot(time*0.001, data(:,iC)+iC*cfg.offset, 'color', c_ord(iC,:), 'linewidth', cfg.width)
-        tick_val(iC) = median(data(:,iC)+iC*cfg.offset);
+        % tick_val(iC) = median(data(:,iC)+iC*cfg.offset);
     end
-    tick_label{iC} = iC;
+    % tick_label{iC} = iC;
 end
     
 axis off
@@ -198,110 +198,3 @@ figure(103)
 print("-bestfit",[save_dir filesep strrep(ms_seg_resize.dirName(4:end), '\', '_') '_fig1_REM_ca_inset'], '-dpdf', "-vector")
 
     
-
-
-
-
-
-
-%%
-
-
-
-fb = cwtfilterbank(SignalLength=numel(csc_rem.data(2,:)),SamplingFrequency=Fs,...
-    FrequencyLimits=[1 120], VoicesPerOctave=32);
-cwt(csc_rem.data(2,:), FilterBank=fb);
-[cfs,frq] = cwt(csc_rem.data(2,:), FilterBank=fb);
-% [cfs,frq] = cwt(csc_rem.data(2,:), Fs, 'bump', 'VoicesPerOctave',32);
-% helperCWTTimeFreqPlot(cfs,tvec,frq, 'surf','CWT of Bat Echolocation','seconds','Hz')
-
-cfs_pow = abs(cfs).^2;
-[minf,maxf] = cwtfreqbounds(numel(csc_rem.data(2,:)),Fs);
-freq = 2.^(round(log2(minf)):round(log2(maxf)));
-
-
-figure(103)
-bx(3) = subplot(5,1,3:5);
-% imagesc(tvec, frq, 10*log10(cfs_pow))
-args = {tvec,frq,10*log10(cfs_pow)};
-surf(args{:},'edgecolor','none');
-view(0,90);
-% xlabels = get(gca, 'xtick');
-% set(gca, 'xticklabels', xlabels - win_s)
-h = gcf;
-x_lim = xlim;
-hold on
-% xline(win_s, '--w', 'start', 'linewidth', 2);
-%         xline(x_lim(2) - win_s, '--k', 'end', 'linewidth', 2);
-yline(10, '--w', '10hz', 'linewidth', 2, 'LabelHorizontalAlignment','left');
-
-AX = gca;
-
-AX.YTickLabelMode = 'auto';
-AX.YTick = freq;
-% ylim([1 140])
-
-
-%%
-% dt is the sampling period in unit of time and T is the length of your recording
-T = 100;
-dt = 0.001;
-t = 0:dt:T;
-NumVoices = 64;
-a0 = 2^(1/NumVoices);
-wavCenterFreq = centfrq('morl');
-
-minfreq = 0.5;
-maxfreq = 120;
-
-minscale = wavCenterFreq/(maxfreq*dt);
-maxscale = wavCenterFreq/(minfreq*dt);
-minscale = floor(NumVoices*log2(minscale));
-maxscale = ceil(NumVoices*log2(maxscale));
-scales = a0.^(minscale:maxscale).*dt;
-
-% testing the wavelet spectrogram on a sinasoid with frequency of 150 Hz
-% cwt_test = cwtft({sin(2*pi*150.*t),dt},'scales',scales,'wavelet','morl');
-[cwt_test, f] = cwt(csc_rem.data(2,:),'amor', Fs, VoicesPerOctave=32, FrequencyLimits=[minfreq maxfreq]);
-cwt_test_power = abs(cwt_test).^2;
-% cwt_test_power = abs(cwt_test.cfs).^2;
-% freq = cwt_test.frequencies;
-% freq = f;
-figure;
-args = {tvec,f,abs(cwt_test)};
-surf(args{:},'edgecolor','none');
-view(0,90);
-% imagesc(tvec, f, cwt_test_power);
-set(gca, 'YDir', 'normal')
-axis tight;
-colormap('jet');
-
-title('wavelet spectrogram');
-xlabel('time (s)');
-ylabel('frequency (Hz)');
-h = colorbar;
-set(h, 'YTick', get(gca, 'CLim'));
-ylabel(h, 'power (db)', 'FontName', 'Arial', 'FontSize', 12, 'FontWeight', 'Bold', ...
-    'Position', [1.6304 -23.5000 0]);
-
-%% 
-
-minfreq = 0.5;
-maxfreq = 30;
-
- cwt(csc_rem.data(2,:),'amor', Fs, VoicesPerOctave=32, FrequencyLimits=[minfreq maxfreq]);
-% [cfs, frq] = cwt(csc_rem.data(2,:), fs); 
-%  xlabels = get(gca, 'xtick'); 
-%  set(gca, 'xticks', xlabels/60)
-        % 
-         AX = gca;
-        % [minf,maxf] = cwtfreqbounds(numel(csc_rem.data(2,:)),fs);
-        % 
-        % freq = 2.^(round(log2(minf)):round(log2(maxf)));
-        % AX.YTickLabelMode = 'auto';
-        % AX.YTick = freq;
-% ylim([1 140])
-% Color gradient
-numColors = 256;
-colormap('parula');
-% xlim([])

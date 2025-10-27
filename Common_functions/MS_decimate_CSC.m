@@ -30,7 +30,7 @@ csc_out.tvec = [];
 
 fprintf('Decimating by factor %d old Fs:%d \n',factor, round(1/mode(diff(csc_in.tvec))))
 
-for ii = length(csc_in.label):-1:1
+for ii = size(csc_in.data,1):-1:1
     disp(csc_in.label{ii})
     csc_out.data(ii,:) = decimate(csc_in.data(ii,:),factor);
     csc_out.cfg.hdr{ii}.SamplingFrequency = csc_in.cfg.hdr{ii}.SamplingFrequency./factor;
