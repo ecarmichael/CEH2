@@ -36,18 +36,18 @@ eb.LineWidth =1.5;
 if ~isempty(stats)
     switch stats
         case 'ttest'
-            disp('using ttest')
+            % disp('using ttest')
             [h, p, ~, stats] = ttest(data_a, data_b);
 
             % add connections between points. 
 
             plot([offsets_a, offsets_b]', [data_a ;data_b], '-', 'Color', [.6 .6 .6])
         case 'ttest2'
-            disp('using ttest2')
+            % disp('using ttest2')
             [h, p, ~,stats] = ttest2(data_a, data_b);
             
         case 'ranksum'
-            disp('using ranksum')
+            % disp('using ranksum')
             [h, p, ~,stats] = ranksum(data_a, data_b);
     end
     

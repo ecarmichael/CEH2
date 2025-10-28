@@ -242,7 +242,7 @@ opts.threshold.number_of_permutations= 500;
 a_num = NaN(size(A_out));
 shuff_num = a_num;
 wake_nA = []; wake_pre_nA = []; wake_post_nA = [];
-J_sig = []; J_n = []; J_n_pval = [];
+J_sig = []; J_n = []; J_n_pval = []; J_n_ass = [];  J_r_ass = []; 
 for iA = length(A_out):-1:1
 
     % current assembly wieghts;
@@ -267,19 +267,25 @@ for iA = length(A_out):-1:1
         end
 
         %get the same detection stats for both assemblies
-        % within session
-        rng(123, 'twister'); % for reproducibility.
-        [ReAct_stats, shuff.data, shuff.proj] = MS_Asmbly_proj_thresh(A_out{iA}{1}.REM_Post_data, A_temp, 500, 99);
-        ReAct_stats.p_val = [];
-        ReAct_stats.rate = [];
-        ReAct_stats.rate_p = [];
-
-        for ii = size(A_REM_post_proj,1):-1:1
-            ReAct_stats.p_val(ii) = sum(sum(shuff.data > ReAct_stats.R_thresh,2) > sum(A_REM_post_proj(ii,:) > ReAct_stats.R_thresh))/ size(shuff.data,1);
-            ReAct_stats.rate(ii) = sum(A_REM_post_proj(ii,:) > ReAct_stats.R_thresh) / ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
-            ReAct_stats.shuff_rate = sum(shuff.data > ReAct_stats.R_thresh,2)./ ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
-            ReAct_stats.rate_p(ii) = sum(ReAct_stats.shuff_rate > ReAct_stats.rate(ii)) / length(ReAct_stats.shuff_rate);
-        end
+        % % within session
+        % rng(123, 'twister'); % for reproducibility.
+        % [ReAct_stats, shuff.data, shuff.proj] = MS_Asmbly_proj_thresh(A_out{iA}{1}.REM_Post_data, A_temp, 500, 99);
+        % ReAct_stats.p_val = [];
+        % ReAct_stats.rate = [];
+        % ReAct_stats.rate_p = [];
+        % ReAct_stats.shuff_n = [];
+        % ReAct_stats.shuff_r = [];
+        % 
+        % for ii = size(A_REM_post_proj,1):-1:1
+        %     ReAct_stats.p_val(ii) = sum(sum(shuff.data > ReAct_stats.R_thresh,2) > sum(A_REM_post_proj(ii,:) > ReAct_stats.R_thresh))/ size(shuff.data,1);
+        %     ReAct_stats.rate(ii) = sum(A_REM_post_proj(ii,:) > ReAct_stats.R_thresh) / ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
+        %     ReAct_stats.shuff_rate = sum(shuff.data > ReAct_stats.R_thresh,2)./ ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
+        %     ReAct_stats.rate_p(ii) = sum(ReAct_stats.shuff_rate > ReAct_stats.rate(ii)) / length(ReAct_stats.shuff_rate);
+        % 
+        %     ReAct_stats.shuff_n(ii) = median(sum(shuff.data > ReAct_stats.R_thresh,2));
+        %     ReAct_stats.shuff_r(ii) = median(sum(shuff.data > ReAct_stats.R_thresh,2) / ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60));
+        % 
+        % end
 
         % alternative session
         rng(123, 'twister'); % for reproducibility.
@@ -287,25 +293,36 @@ for iA = length(A_out):-1:1
         Alt_stats.p_val = [];
         Alt_stats.rate = [];
         Alt_stats.rate_p = [];
+        Alt_stats.shuff_n = [];
+        Alt_stats.shuff_r = [];
 
         for ii = size(A_alt_proj,1):-1:1
-            Alt_stats.p_val(ii) = sum(sum(shuff.data > ReAct_stats.R_thresh,2) > sum(A_alt_proj(ii,:) > ReAct_stats.R_thresh))/ size(shuff.data,1);
-            Alt_stats.rate(ii) = sum(A_alt_proj(ii,:) > ReAct_stats.R_thresh) / ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
-            Alt_stats.shuff_rate = sum(shuff.data > ReAct_stats.R_thresh,2)./ ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
-            Alt_stats.rate_p(ii) = sum(Alt_stats.shuff_rate > Alt_stats.rate(ii)) / length(ReAct_stats.shuff_rate);
+            Alt_stats.p_val(ii) = sum(sum(shuff.data > Alt_stats.R_thresh,2) > sum(A_alt_proj(ii,:) > Alt_stats.R_thresh))/ size(shuff.data,1);
+            Alt_stats.rate(ii) = sum(A_alt_proj(ii,:) > Alt_stats.R_thresh) / ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
+            Alt_stats.shuff_rate = sum(shuff.data > Alt_stats.R_thresh,2)./ ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
+            Alt_stats.rate_p(ii) = sum(Alt_stats.shuff_rate > Alt_stats.rate(ii)) / length(Alt_stats.shuff_rate);
+
+            Alt_stats.shuff_n(ii) = median(sum(shuff.data > Alt_stats.R_thresh,2));
+            Alt_stats.shuff_r(ii) = median(sum(shuff.data > Alt_stats.R_thresh,2) / ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60));
+
         end
 
         % count the significant events per assembly on the jjth data
-        J_proj_cnt = []; A_proj_cnt = [];
-        for tt = size(A_alt_proj, 1):-1:1
-            J_proj_cnt(tt) = nnz(A_alt_proj(tt,:)>9); % count the number of sig reactivations
-            A_proj_cnt(tt) = nnz(A_REM_post_proj(tt,:)>9); % count the number of sig reactivations
-        end
+        % J_proj_cnt = []; A_proj_cnt = [];
+        % for tt = size(A_alt_proj, 1):-1:1
+        %     J_proj_cnt(tt) = nnz(A_alt_proj(tt,:)>ReAct_stats.R_thresh); % count the number of sig reactivations
+        %     A_proj_cnt(tt) = nnz(A_REM_post_proj(tt,:)>ReAct_stats.R_thresh); % count the number of sig reactivations
+        % end
 
-        J_sig(iA, jj) = sum(J_proj_cnt > 0)/length(J_proj_cnt); % get the percentage of assemblies exceeding the activation cut off.
-        J_n(iA, jj) = median(J_proj_cnt./A_proj_cnt); % get the percentage of assemblies exceeding the activation cut off.
-        J_n_pval(iA, jj) = sum(Alt_stats.p_val < 0.05)/sum(ReAct_stats.p_val < 0.05); % percent of jj assemblies passing the pval rest ./ number of real assemblies passing.
+        % J_sig(iA, jj) = sum(J_proj_cnt > 0)/length(J_proj_cnt); % get the percentage of assemblies exceeding the activation cut off.
+        % J_n(iA, jj) = median(J_proj_cnt./A_proj_cnt); % get the percentage of assemblies exceeding the activation cut off.
+        % J_n_pval(iA, jj) = sum(Alt_stats.p_val < 0.05)/sum(ReAct_stats.p_val < 0.05); % percent of jj assemblies passing the pval rest ./ number of real assemblies passing.
+        J_n_ass(iA, jj) = sum(Alt_stats.p_val < 0.05); % number of jj assemblies passing the pval test
+        J_r_ass(iA, jj) = median(Alt_stats.rate(Alt_stats.rate_p < 0.05)); % number of jj assemblies passing the pval test
+        S_n_ass(iA, jj) = median(Alt_stats.shuff_n); % number of jj assemblies passing the pval test
+        S_r_ass(iA, jj) = median(Alt_stats.shuff_r); % number of jj assemblies passing the pval test
 
+        % J_n_ass(iA, jj,1) =sum(ReAct_stats.p_val < 0.05); % number of within assemblies passing the pval test
         %
             fprintf('iA: %d  | jj: %d\n', iA, jj)
 
@@ -313,23 +330,131 @@ for iA = length(A_out):-1:1
     sess_id{iA}  = [A_out{iA}{1}.info.subject '-' A_out{iA}{1}.info.session];
     
 end
+%% collect the number across conditions
+idx = 1:size(J_n_ass,1); 
+this_a_n = []; this_alt_n = []; 
+this_a_r= []; this_alt_r = []; 
+this_s_a_n= []; this_s_alt_n = []; 
+this_s_a_r= []; this_alt_r = []; 
+
+for ii = 1:size(J_n_ass,1)
+    k_idx = idx ~=ii; 
+    this_a_n(ii) = J_n_ass(ii,ii); 
+    this_alt_n(ii) = median(J_n_ass(ii,k_idx), "omitnan"); 
+
+    % get the rate metrics
+    this_a_r(ii) = J_r_ass(ii,ii); 
+    this_alt_r(ii) = median(J_r_ass(ii,k_idx),"omitnan"); 
+
+    this_s_a_n(ii) = S_n_ass(ii,ii); 
+    this_s_alt_n(ii) = median(S_n_ass(ii,k_idx), "omitnan"); 
+
+    % get the rate metrics
+    this_s_a_r(ii) = S_r_ass(ii,ii); 
+    this_s_alt_r(ii) = median(S_r_ass(ii,k_idx), "omitnan"); 
+
+end
+
+%%
+% quick stats of within vs alt values for each metric
+d_idx = find(logical(eye(size(J_sig))));
+off_idx = find(~logical(eye(size(J_sig))));
+
+figure(103); clf
+subplot(2,4,1)
+imagesc(J_n_ass)
+title('number of sig reactive assemblies')
+cd = colorbar; 
+cd.Position = cd.Position +[0.03 0 0 0];
+c_a = clim; 
+axis square
+
+subplot(2,4,5)
+[~,~,~,p, J_n_ass_stats] = MS_bar_w_err(this_a_n, this_alt_n,[c_ord(1,:); .7 .7 .7], 1, 'ttest');
+set(gca, 'XTickLabel', {'Within' 'Across'})
+ylabel('Num sig reactive assemblies')
+y_n = ylim;
+
+fprintf('Number of assemblies passing criteria within session (%0.2f +/- %0.2f) and across surrogate sessions (%0.2f +/- %0.2f); t(%d) = %0.2f, p = %0.3f\n', ...
+    mean(this_a_n), mean(this_alt_n), MS_SEM(this_a_n), MS_SEM(this_alt_n), ...
+    J_n_ass_stats.df, J_n_ass_stats.tstat, p)
+
+subplot(2,4,2)
+imagesc(J_r_ass)
+title('number of sig reactive assemblies')
+cd = colorbar; 
+cd.Position = cd.Position +[0.03 0 0 0];
+c_r = clim; 
+axis square
+
+
+% same but for Rate
+subplot(2,4,6)
+[~,~,~,p, J_n_ass_stats] = MS_bar_w_err(this_a_r, this_alt_r,[c_ord(1,:); .7 .7 .7], 1, 'ttest');
+set(gca, 'XTickLabel', {'Within' 'Across'})
+ylabel('Num sig reactive assemblies')
+y_r = ylim;
+
+fprintf('Number of assemblies passing criteria within session (%0.2f +/- %0.2f) and across surrogate sessions (%0.2f +/- %0.2f); t(%d) = %0.2f, p = %0.3f\n', ...
+    mean(this_a_r), mean(this_alt_r), MS_SEM(this_a_r), MS_SEM(this_alt_r), ...
+    J_n_ass_stats.df, J_n_ass_stats.tstat, p)
+
+% SHUFFLE number
+subplot(2,4,3)
+imagesc(S_n_ass)
+title({'Num sig reactive assemblies'; 'shuffle'})
+cd = colorbar; 
+cd.Position = cd.Position +[0.03 0 0 0];
+clim(c_a)
+axis square
+
+subplot(2,4,7)
+[~,~,~,p, S_n_ass_stats] = MS_bar_w_err(this_s_a_n, this_s_alt_n,[.3 .3 .3; .7 .7 .7], 1, 'ttest');
+set(gca, 'XTickLabel', {'Within' 'Across'})
+ylabel({'Num sig reactive assemblies'; 'shuffle'})
+ylim(y_n);
+
+fprintf('SHUFFLE Number of assemblies passing criteria within session (%0.2f +/- %0.2f) and across surrogate sessions (%0.2f +/- %0.2f); t(%d) = %0.2f, p = %0.3f\n', ...
+    mean(this_s_a_n), mean(this_s_alt_n), MS_SEM(this_s_a_n), MS_SEM(this_s_alt_n), ...
+    S_n_ass_stats.df, S_n_ass_stats.tstat, p)
+
+% SHUFFLE rate
+subplot(2,4,4)
+imagesc(S_r_ass)
+title({'rate of reactive assemblies'; 'shuffle'})
+cd = colorbar; 
+clim(c_r)
+cd.Position = cd.Position +[0.03 0 0 0];
+axis square
+
+subplot(2,4,8)
+[~,~,~,p, S_r_ass_stats] = MS_bar_w_err(this_s_a_r, this_s_alt_r,[.3 .3 .3; .7 .7 .7], 1, 'ttest');
+set(gca, 'XTickLabel', {'Within' 'Across'})
+ylabel({'Reactivations / min'; 'shuffle'})
+ylim(y_r);
+
+fprintf('SHUFFLE Rate reactivations within session (%0.2f +/- %0.2f) and across surrogate sessions (%0.2f +/- %0.2f); t(%d) = %0.2f, p = %0.3f\n', ...
+    mean(this_s_a_r), mean(this_s_alt_r), MS_SEM(this_s_a_r), MS_SEM(this_s_alt_r), ...
+    S_r_ass_stats.df, S_r_ass_stats.tstat, p)
+
+
 
 %%
 figure(103); clf
 subplot(2,4,1)
-imagesc(J_sig*100)
-title('% of assemblies exceeding reactivation threshold of 9')
-colorbar
-axis square
-set(gca, 'YTick', 1:18, 'YTickLabel', sess_id)
+% imagesc(J_sig*100)
+% title('% of assemblies exceeding reactivation threshold of 9')
+% colorbar
+% axis square
+% set(gca, 'YTick', 1:18, 'YTickLabel', sess_id)
+% 
+% subplot(2,4,2)
+% imagesc(J_n*100)
+% title('median n alt assemblies ./ n session assemblies')
+% colorbar
+% axis square
 
-subplot(2,4,2)
-imagesc(J_n*100)
-title('median n alt assemblies ./ n session assemblies')
-colorbar
-axis square
-
-subplot(2,4,3)
+% subplot(2,4,3)
 imagesc(J_n_pval*100)
 title('percentage of sig reactive assemblies')
 colorbar
@@ -342,26 +467,49 @@ off_idx = find(~logical(eye(size(J_sig))));
 
 
 subplot(2,4,5)
-[~,~,~,J_sig_stats] = MS_bar_w_err(J_sig(d_idx)*100, J_sig(off_idx)*100,[c_ord(1,:); .7 .7 .7], 1, 'ttest2');
-set(gca, 'XTickLabel', {'Within' 'Across'})
-ylabel('percentage of reactive assemblies')
+% [~,~,~,J_sig_stats] = MS_bar_w_err(J_sig(d_idx)*100, J_sig(off_idx)*100,[c_ord(1,:); .7 .7 .7], 1, 'ttest2');
+% set(gca, 'XTickLabel', {'Within' 'Across'})
+% ylabel('percentage of reactive assemblies')
+% 
+% 
+% subplot(2,4,6)
+% [~,~,~,J_n_stats] = MS_bar_w_err(J_n(d_idx)*100, J_n(off_idx)*100,[c_ord(1,:); .7 .7 .7], 1, 'ttest2');
+% set(gca, 'XTickLabel', {'Within' 'Across'})
+% ylabel('median alt:true reactivations')
 
 
-subplot(2,4,6)
-[~,~,~,J_n_stats] = MS_bar_w_err(J_n(d_idx)*100, J_n(off_idx)*100,[c_ord(1,:); .7 .7 .7], 1, 'ttest2');
-set(gca, 'XTickLabel', {'Within' 'Across'})
-ylabel('median alt:true reactivations')
-
-
-subplot(2,4,7)
+% subplot(2,4,7)
 [~,~,~,J_n_pval_stats] = MS_bar_w_err(J_n_pval(d_idx)*100, J_n_pval(off_idx)*100,[c_ord(1,:); .7 .7 .7], 1, 'ttest2');
 set(gca, 'XTickLabel', {'Within' 'Across'})
 ylabel('percentage of sig reactive assemblies')
 y_lim = ylim;
 
-subplot(2,4,8)
+subplot(2,4,6)
 [d, b] = hist(J_n_pval(off_idx)*100, 50);
 bar(b, d, 'FaceColor',  [.7 .7 .7]);
+% xlim([0 ])
+view(90,90)
+set(gca, 'XDir', 'reverse')
+xlim(y_lim)
+
+subplot(2,4,7)
+[~,~,~,p, J_n_ass_stats] = MS_bar_w_err(this_r_n, this_alt_n,[c_ord(1,:); .7 .7 .7], 1, 'ttest');
+set(gca, 'XTickLabel', {'Within' 'Across'})
+ylabel('Num sig reactive assemblies')
+y_lim = ylim;
+
+fprintf('Number of assemblies passing criteria within session (%0.2f +/- %0.2f) and across surrogate sessions (%0.2f +/- %0.2f); t(%d) = %0.2f, p = %0.3f\n', ...
+    mean(this_r_n), mean(this_alt_n), MS_SEM(this_r_n), MS_SEM(this_alt_n), ...
+    J_n_ass_stats.df, J_n_ass_stats.tstat, p)
+
+subplot(2,4,8)
+cla
+hold on
+[d, b] = hist(this_alt_n, 0:2.5:20);
+area(b, d, 'FaceColor',  [.7 .7 .7]);
+
+[d, b] = hist(this_r_n, 0:2.5:20);
+area(b, d, 'FaceColor',  c_ord(1,:));
 % xlim([0 ])
 view(90,90)
 set(gca, 'XDir', 'reverse')
