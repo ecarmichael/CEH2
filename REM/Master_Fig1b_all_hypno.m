@@ -62,7 +62,7 @@ for iA = 1:length(A_list)
         cfg.desired_sampling_frequency = 2000;
         if contains(lower('PV1060'), lower(A_list{iA}(1:6)))
             cfg.fc = {'CSC1.ncs', 'CSC8.ncs'}; % CSC1 is the emg and the other is the best LFP channel
-            emg_f = 0;
+            emg_f = 1;
         elseif contains(lower('PV1252'), lower(A_list{iA}(1:6)))
             cfg.fc = {'CSC1.ncs', 'CSC6.ncs'}; % CSC1 is the emg and the other is the best LFP channel
             emg_f = 1;
@@ -97,7 +97,7 @@ for iA = 1:length(A_list)
         if emg_f
             cfg_emg = [];
             cfg_emg.threshold = 0;
-            cfg_emg.f = [15 30];
+            cfg_emg.f = [10 20];
             emg = FilterLFP(cfg_emg,emg);
         end
             out.hypno = MS_get_hypno(lfp, emg, [], emg_thresh, TD_ratio);
