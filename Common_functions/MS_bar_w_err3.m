@@ -110,14 +110,14 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
             data_pool = [data_a, data_b];
         end
         if (0.5 > this_p) && (this_p> 0.01)
-            text(median(x_vals(1:2)), max(data_pool, [], 'all')*1.2, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median(x_vals(1:2)), max(data_pool, [], 'all')*1.15, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
         elseif (0.1 >= this_p) && (this_p >= 0.001)
-            text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.2, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
         elseif this_p < 0.001
-            text(median(x_vals(1:2))*.95, max(data_pool, [], 'all')*1.2, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median(x_vals(1:2))*.95, max(data_pool, [], 'all')*1.15, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
         end
 
-        plot(x_vals(1:2), [max(data_pool, [], 'all')*1.15 max(data_pool, [], 'all')*1.15], '-k', 'linewidth', 1)
+        plot(x_vals(1:2), [max(data_pool, [], 'all')*1.1 max(data_pool, [], 'all')*1.1], '-k', 'linewidth', 1)
     end
 
     % 1 vs 3
@@ -125,19 +125,19 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
 
     if ~isnan(this_p) && this_p < 0.05
         if size(data_a,2) == 1
-            data_pool = [data_a; data_b];
+            data_pool = [data_a; data_c];
         else
-            data_pool = [data_a, data_b];
+            data_pool = [data_a, data_c];
         end
         if (0.5 > this_p) && (this_p> 0.01)
-            text(median([x_vals(1) x_vals(3)]), max(data_pool, [], 'all')*1.1, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median([x_vals(1) x_vals(3)]), max(data_pool, [], 'all')*1.05, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
         elseif (0.1 >= this_p) && (this_p >= 0.001)
-            text(median([x_vals(1) x_vals(3)])*.975, max(data_pool, [], 'all')*1.1, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median([x_vals(1) x_vals(3)])*.975, max(data_pool, [], 'all')*1.05, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
         elseif this_p < 0.001
-            text(median([x_vals(1) x_vals(3)])*.95, max(data_pool, [], 'all')*1.1, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median([x_vals(1) x_vals(3)])*.95, max(data_pool, [], 'all')*1.05, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
         end
 
-        plot([x_vals(1) x_vals(3)], [max(data_pool, [], 'all')*1.05 max(data_pool, [], 'all')*1.05], '-k', 'linewidth', 1)
+        plot([x_vals(1) x_vals(3)], [max(data_pool, [], 'all')*1.025 max(data_pool, [], 'all')*1.025], '-k', 'linewidth', 1)
     end
 
 
@@ -146,9 +146,9 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
 
     if ~isnan(this_p) && this_p < 0.05
         if size(data_a,2) == 1
-            data_pool = [data_a; data_b];
+            data_pool = [data_b; data_c];
         else
-            data_pool = [data_a, data_b];
+            data_pool = [data_b, data_c];
         end
         if (0.5 > this_p) && (this_p> 0.01)
             text(median(x_vals(2:3)), max(data_pool, [], 'all')*1.1, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)

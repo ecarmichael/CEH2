@@ -379,16 +379,16 @@ colormap(viridis)
 figure(1041)
 clf
 [~,~,~,p, S_r_ass_stats] = MS_bar_w_err3(this_a_n, this_alt_n, this_s_a_n, [c_ord(1,:); .4 .4 .4; .7 .7 .7], 1, 'anova2');
-set(gca, 'XTickLabel', {'Within' 'Across' 'Shuffle'})
+set(gca, 'XTickLabel', {'Within' 'Across' 'Shuffle'}, 'XTickLabelRotation', 90, 'LineWidth', 1, 'FontWeight', 'bold', 'TickDir', 'out')
 ylabel('number of sig reactive assemblies')
-MS_set_aspect_ratio(gca, [1 .67 1]);
+MS_set_aspect_ratio(gca, [.75 1 1], [1 1 1]);
+xlim([.5 3.5])
 fprintf('\nAnova2\n')
 fprintf('Number of reactivated assemblies within session (%0.2f +/- %0.2f), across surrogate session (%0.2f +/- %0.2f) and shuffles (%0.2f +/- %0.2f); F(%d,%d) = %0.2f, p = %0.4f\n', ...
     mean(this_a_n),MS_SEM(this_a_n), mean(this_alt_n), MS_SEM(this_alt_n), mean(this_s_a_n), MS_SEM(this_s_a_n), ...
    S_r_ass_stats.a_tbl{2,3}, S_r_ass_stats.a_tbl{end,3}, S_r_ass_stats.stats.F, S_r_ass_stats.a_tbl{2, end})
 
 for ii =1:3
-
 fprintf(' %d  - %d   Tukey-kramer corrected p = %f\n', ...
    S_r_ass_stats.m_tbl.("Group A")(ii), S_r_ass_stats.m_tbl.("Group B")(ii), S_r_ass_stats.m_tbl.("P-value")(ii))
 end
@@ -396,14 +396,15 @@ end
 cfg_fig = []; 
 cfg_fig.ft_size = 7; 
 SetFigure(cfg_fig, gcf);
-set(gcf,'units','normalized','outerposition',[.3 .1 .15 .2])
+set(gcf,'units','points','outerposition',[ 100 100 60*4 65*4])%[.3 .1 .1 .133])
 
 %%
 figure(104);
 print("-bestfit",['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9\256_checks' filesep 'figS2_asmbly_checks_post'], '-dpdf', "-vector")
 
 figure(1041)
-print("-bestfit",['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9\256_checks' filesep 'figS2_asmbly_mult_post'], '-dpdf', "-vector")
+% print("-bestfit",['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9\256_checks' filesep 'figS2_asmbly_mult_post'], '-dpdf', "-vector")
+exportgraphics(gcf, ['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9\256_checks' filesep 'figS2_asmbly_mult_post.pdf'])
 
 
 %%  PRE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -645,16 +646,16 @@ colormap(viridis)
 figure(1051)
 clf
 [~,~,~,p, S_r_ass_stats] = MS_bar_w_err3(this_a_n, this_alt_n, this_s_a_n, [c_ord(1,:); .4 .4 .4; .7 .7 .7], 1, 'anova2');
-set(gca, 'XTickLabel', {'Within' 'Across' 'Shuffle'})
+set(gca, 'XTickLabel', {'Within' 'Across' 'Shuffle'}, 'XTickLabelRotation', 90, 'LineWidth', 1, 'FontWeight', 'bold', 'TickDir', 'out')
 ylabel('number of sig reactive assemblies')
-MS_set_aspect_ratio(gca, [1 .67 1]);
+MS_set_aspect_ratio(gca, [.75 1 1], [1 1 1]);
+xlim([.5 3.5])
 fprintf('\nAnova2\n')
 fprintf('Number of reactivated assemblies within session (%0.2f +/- %0.2f), across surrogate session (%0.2f +/- %0.2f) and shuffles (%0.2f +/- %0.2f); F(%d,%d) = %0.2f, p = %0.4f\n', ...
     mean(this_a_n),MS_SEM(this_a_n), mean(this_alt_n), MS_SEM(this_alt_n), mean(this_s_a_n), MS_SEM(this_s_a_n), ...
    S_r_ass_stats.a_tbl{2,3}, S_r_ass_stats.a_tbl{end,3}, S_r_ass_stats.stats.F, S_r_ass_stats.a_tbl{2, end})
 
 for ii =1:3
-
 fprintf(' %d  - %d   Tukey-kramer corrected p = %f\n', ...
    S_r_ass_stats.m_tbl.("Group A")(ii), S_r_ass_stats.m_tbl.("Group B")(ii), S_r_ass_stats.m_tbl.("P-value")(ii))
 end
@@ -662,16 +663,16 @@ end
 cfg_fig = []; 
 cfg_fig.ft_size = 7; 
 SetFigure(cfg_fig, gcf);
-set(gcf,'units','normalized','outerposition',[.3 .1 .15 .2])
+set(gcf,'units','points','outerposition',[ 100 100 60*4 65*4])%[.3 .1 .1 .133])
 
 %%
 figure(105)
 print("-bestfit",['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9\256_checks' filesep 'figS2_asmbly_checks_pre'], '-dpdf', "-vector")
 
 figure(1051)
-print("-bestfit",['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9\256_checks' filesep 'figS2_asmbly_mult_pre'], '-dpdf', "-vector")
+print(['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9\256_checks' filesep 'figS2_asmbly_mult_pre'], '-dpdf', "-vector")
 
-
+exportgraphics(gcf, ['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9\256_checks' filesep 'figS2_asmbly_mult_pre.pdf'])
 
 
 
