@@ -1,6 +1,9 @@
-function [evts, timestamps, states, samples, words] = OE_load_binary_evts(evt_dir)
+function [evts, timestamps, states, samples, words] = OE_load_binary_evts(evt_dir, offset)
 %% OE_load_binary_evts: loads the .npy binary TTL files [requires the npy-matlab toolbox]
 
+if nargin < 2
+    offset = 0;
+end
 
 p_dir = cd; 
 
@@ -26,5 +29,12 @@ for ii = 1:length(state_id)
     evts.t{ii} = [st_t'; end_t']; 
     evts.label{ii} = num2str(state_id(ii)); 
 end
+
+
+% correct for any specified offset
+for ii = 1:length(evts.t)
+    evts.t{ii} = evts.t{ii} - offset; 
+end
+
 
 cd(p_dir)

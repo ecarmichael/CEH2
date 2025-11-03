@@ -103,11 +103,11 @@ ylabel('Event #');
 ylim([1 nT])
 xlim(cfg.window);
 hold on
-if size(t,2) > 1
-rectangle('position', [0 1 abs(mode(t(:,2)-t(:,1)))  nT], 'facecolor', [cfg.evt_color 0.5], 'edgecolor', [cfg.evt_color 0.5])
-else
-rectangle('position', [0 1 0.001  nT], 'facecolor', [cfg.evt_color 0.5], 'edgecolor', [cfg.evt_color 0.5])
-end
+% if size(t,2) > 1
+% rectangle('position', [0 1 abs(mode(t(:,2)-t(:,1)))  nT], 'facecolor', [cfg.evt_color 0.5], 'edgecolor', [cfg.evt_color 0.5])
+% else
+% rectangle('position', [0 1 0.001  nT], 'facecolor', [cfg.evt_color 0.5], 'edgecolor', [cfg.evt_color 0.5])
+% end
 %% add in the wave forms
 if ~isempty(cfg.waves)
     for ii = 1:4
@@ -144,12 +144,12 @@ pre_stim_mean = mean(outputGau(1:idx));
 post_stim_mean = mean(outputGau(idx:end)); 
 
 
-if ~(max(mean_S_gau)) ==0
-    ylim([0 max(mean_S_gau)])
-    if size(t,2) > 1
-        rectangle('position', [0 1 abs(mode(t(:,2)-t(:,1)))  max(mean_S_gau)], 'facecolor', [cfg.evt_color 0.5], 'edgecolor', [cfg.evt_color 0.5])
-    else
-        rectangle('position', [0 1 0.001  max(mean_S_gau)], 'facecolor', [cfg.evt_color 0.5], 'edgecolor', [cfg.evt_color 0.5])
-    end
-end
+% if ~(max(mean_S_gau)) ==0
+%     ylim([0 max(mean_S_gau)])
+%     if size(t,2) > 1
+%         rectangle('position', [0 1 abs(mode(t(:,2)-t(:,1)))  max(mean_S_gau)], 'facecolor', [cfg.evt_color 0.5], 'edgecolor', [cfg.evt_color 0.5])
+%     else
+%         rectangle('position', [0 1 0.001  max(mean_S_gau)], 'facecolor', [cfg.evt_color 0.5], 'edgecolor', [cfg.evt_color 0.5])
+%     end
+% end
 

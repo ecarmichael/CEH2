@@ -36,10 +36,8 @@ if nargin <1
     
     Fs = 30000; 
     disp('No Fs specified. Assuming 30kHz...')
-elseif nargin ==2
-    Fs = 30000; 
-        disp('No Fs specified. Assuming 30kHz...')
 end
+
 
 %% load the events file
 
