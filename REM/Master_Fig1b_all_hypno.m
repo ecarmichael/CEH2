@@ -1,15 +1,17 @@
 %% Master_REM_Sleep_stats
 
-lfp_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Jisoo\Raw_LFP';
-inter_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Hypno\LFP_data'; 
-ca_data = [];
+
+    lfp_dir = ['C:\Users\' getenv('username') '\Williams Lab Dropbox\Williams Lab Team Folder\Jisoo\Raw_LFP'];
+    inter_dir = ['C:\Users\' getenv('username') '\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Hypno\LFP_data']; 
+
+    ca_data = [];
 
 %% load the A_out to get the session information for all of the manuscript
 % data
 
 method = 'binary';
 
-load(['C:\Users\ecarm\'  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
+load(['C:\Users\'  getenv('username') '\'  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
 
 % rename due to progressive structure naming convention above.
 A_out = B_out;
