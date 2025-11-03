@@ -143,7 +143,7 @@ wake_tsd = tsd(csc.tvec, (hypno_init == 1)', 'wake');
 
 wake_cfg.threshold = 0;
 wake_cfg.dcn = '>';
-wake_cfg.minlen = 10;
+wake_cfg.minlen = 20;
 wake_cfg.merge_thr = 5;
 wake_iv = TSDtoIV(wake_cfg, wake_tsd);
 
@@ -154,7 +154,7 @@ qwake_tsd = tsd(csc.tvec, (hypno_init == 1)', 'q_wake');
 qwake_cfg.threshold = 0;
 qwake_cfg.dcn = '>';
 qwake_cfg.operation = '>';
-qwake_cfg.minlen = 5;
+qwake_cfg.minlen = 10;
 qwake_cfg.merge_thr = 5;
 qwake_iv = TSDtoIV(qwake_cfg, qwake_tsd);
 
