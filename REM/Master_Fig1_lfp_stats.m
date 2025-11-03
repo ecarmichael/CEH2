@@ -149,7 +149,7 @@ fprintf('REM (%0.2f +/- %0.2f ) - NREM (%0.2f +/- %0.2f ) theta delta ratio: t(%
 % using bandpower per session
 subplot(2,2,4)
 [~, ~, ~, p, stats] = MS_bar_w_err([pre_rem_td_s post_rem_td_s], [pre_sws_td_s, post_sws_td_s], [rem_c; sws_c], 1, 'ttest2', 1:2);
-ylabel({'theta/delta'; 'bandpower'})
+ylabel({'theta/delta'; 'bandpower (sess)'})
 set(gca, 'XTickLabel', {'REM' 'NREM'})
 axis square
 xlim([0 3])
