@@ -1,15 +1,17 @@
 %% Master_REM_Sleep_stats
 
-lfp_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Jisoo\Raw_LFP';
-inter_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Hypno\LFP_data'; 
-ca_data = [];
+
+    lfp_dir = ['C:\Users\' getenv('username') '\Williams Lab Dropbox\Williams Lab Team Folder\Jisoo\Raw_LFP'];
+    inter_dir = ['C:\Users\' getenv('username') '\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Hypno\LFP_data']; 
+
+    ca_data = [];
 
 %% load the A_out to get the session information for all of the manuscript
 % data
 
 method = 'binary';
 
-load(['C:\Users\ecarm\'  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
+load(['C:\Users\'  getenv('username') '\'  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
 
 % rename due to progressive structure naming convention above.
 A_out = B_out;
@@ -156,6 +158,17 @@ for iS = length(s_list):-1:1
     all_post.data{iS} = post_hypno.data; 
 end
 
+
+%% convert short wake to quiet wake classification
+
+for ii = 1:length(all_pre.data)
+    
+    
+
+
+
+
+end
 %% plot the data 
 
 [max_pre, pre_idx]= max(cellfun(@length, all_pre.tvec)); 
@@ -189,9 +202,11 @@ colormap([1, 1, 1; viridis(3)]);
 cb = colorbar(gca, 'northoutside'); 
 cb.Ticks = 0:3; cb.TickLabels = {'NA', 'wake', 'SWS', 'REM'};
 ylabel('session')
+xlim([-2 0])
 
 subplot(2,4,2)
 imagesc(post_tvec, 1:length(all_pre.tvec),post_mat)
 set(gca, 'YTick',length(all_pre.tvec), 'YTickLabel',[])
 cb = colorbar(gca, 'northoutside'); 
 cb.Ticks = 0:3; cb.TickLabels = {'NA', 'wake', 'SWS', 'REM'}; 
+xlim([0 2])

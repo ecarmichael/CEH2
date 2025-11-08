@@ -134,19 +134,32 @@ hypno_init = ones(size(csc.tvec))*2; % set everything to SWS;
 hypno_init(~move_idx & (z_ratio > d_t_ratio)) = 3; % putative REM
 hypno_init(move_idx | sat_idx) = 1; %awake based on movement;
 
-labels = {'Wake', 'SWS', 'REM'};
+labels = {'Wake','Quite', 'SWS', 'REM'};
 
 %% smooth things out to avoid jumps.
 
-% sws
+% wake
 wake_tsd = tsd(csc.tvec, (hypno_init == 1)', 'wake');
 
 wake_cfg.threshold = 0;
 wake_cfg.dcn = '>';
-wake_cfg.minlen = 5;
+wake_cfg.minlen = 20;
 wake_cfg.merge_thr = 5;
 wake_iv = TSDtoIV(wake_cfg, wake_tsd);
 
+
+% q_wake
+qwake_tsd = tsd(csc.tvec, (hypno_init == 1)', 'q_wake');
+
+qwake_cfg.threshold = 0;
+qwake_cfg.dcn = '>';
+qwake_cfg.operation = '>';
+qwake_cfg.minlen = 10;
+qwake_cfg.merge_thr = 5;
+qwake_iv = TSDtoIV(qwake_cfg, qwake_tsd);
+
+
+qwake_iv = DifferenceIV([], qwake_iv, wake_iv); 
 
 REM_tsd = tsd(csc.tvec, (hypno_init == 3)', 'REM');
 
@@ -161,7 +174,7 @@ SWS_tsd = tsd(csc.tvec, (hypno_init == 2)', 'SWS');
 sws_cfg.threshold = 0;
 sws_cfg.dcn = '>';
 sws_cfg.minlen = 30;
-sws_cfg.merge_thr = 5;
+sws_cfg.merge_thr = 10;
 SWS_iv = TSDtoIV(sws_cfg, SWS_tsd);
 
 % cfg = [];
@@ -176,6 +189,9 @@ for ii = 1:length(wake_iv.tstart)
     hypno_out(nearest_idx3(wake_iv.tstart(ii), csc.tvec):  nearest_idx3(wake_iv.tend(ii), csc.tvec)) = 1;
 end
 
+for ii = 1:length(qwake_iv.tstart)
+    hypno_out(nearest_idx3(qwake_iv.tstart(ii), csc.tvec):  nearest_idx3(qwake_iv.tend(ii), csc.tvec)) = 1.5;
+end
 
 for ii = 1:length(REM_iv.tstart)
     hypno_out(nearest_idx3(REM_iv.tstart(ii), csc.tvec):  nearest_idx3(REM_iv.tend(ii), csc.tvec)) = 3;
@@ -248,9 +264,10 @@ vec = zeros(size(hypno_out_plot));
 plot((csc_plot.tvec(hypno_out_plot == 2) - csc_plot.tvec(1)), vec(hypno_out_plot == 2)+2,'s','MarkerEdgeColor', cord(2,:),'MarkerFaceColor',cord(2,:), 'linewidth', 1)
 plot((csc_plot.tvec(hypno_out_plot == 3) - csc_plot.tvec(1)), vec(hypno_out_plot == 3)+3,'s','MarkerEdgeColor', cord(3,:),'MarkerFaceColor',cord(3,:), 'linewidth', 1)
 plot((csc_plot.tvec(hypno_out_plot == 1) - csc_plot.tvec(1)), vec(hypno_out_plot == 1)+1,'s','MarkerEdgeColor', cord(1,:),'MarkerFaceColor',cord(1,:), 'linewidth', 1)
+plot((csc_plot.tvec(hypno_out_plot == 1.5) - csc_plot.tvec(1)), vec(hypno_out_plot == 1.5)+1.5,'s','MarkerEdgeColor', cord(4,:),'MarkerFaceColor',cord(4,:), 'linewidth', 1)
 
 % imagesc((csc.tvec - csc.tvec(1)), 1, hypno_init')
-ytickValues = [1, 2, 3];  % Specify the values where you want tick marks
+ytickValues = [1, 1.5 2, 3];  % Specify the values where you want tick marks
 yticks(ytickValues);
 set(gca, 'YTickLabel', labels)
 % colormap(linspecer(3));
