@@ -1,4 +1,4 @@
-function [VR_out] = HF_load_VR(fname)
+function [vr] = HF_load_VR(fname)
 %% HF_load_VR:  loads the .csv output from the Unity/arduino VR setup. 
 
 
