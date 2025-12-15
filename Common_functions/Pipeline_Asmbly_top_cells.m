@@ -1,7 +1,5 @@
 function out = Pipeline_Asmbly_top_cells(fname,bin_s, move_thresh, method, opts, nNeurons)
 %% Pipeline_Asmbly: provides a wrapper for running assembly and reactivation analyses using calcium data.
-
-
 if nargin <2
     bin_s = .5;
     move_thresh = 5;
@@ -18,7 +16,6 @@ elseif nargin < 5
     nNeurons = []; 
 end
 
-
 if isempty(opts)
     %opts.threshold.method = 'circularshift';
     opts.threshold.method = 'MarcenkoPastur';
@@ -29,7 +26,6 @@ if isempty(opts)
 end
 
 rng(123, 'twister')
-
 
 %% load the data
 
@@ -43,20 +39,17 @@ load(this_sess);
 dbstop error
 %% preprocess beahviour
 behav = MS_align_data(behav,ms);
-
 move_idx = behav.speed > move_thresh;
 
 %% load the selected neurons h5
 h5_dir = dir('selected*.h5'); 
 for ii = length(h5_dir):-1:1
-    
     if contains(this_sess, {'535', '537', '540'})
         if  contains(h5_dir(ii).name, this_sess(1:3)) && contains(h5_dir(ii).name,this_sess(5:8))
             keep_idx(ii) = true;
         else
             keep_idx(ii) = false;
         end
-        
     else
         if  contains(h5_dir(ii).name, this_sess(1:6)) && contains(h5_dir(ii).name,this_sess(8:12))
             keep_idx(ii) = true;
@@ -64,7 +57,6 @@ for ii = length(h5_dir):-1:1
             keep_idx(ii) = false;
         end
     end
-
 end
 h5_idx = find(keep_idx); 
 fprintf('session: <strong>%s</strong> found h5 <strong>%s</strong>\n', this_sess, h5_dir(h5_idx).name); 
@@ -80,10 +72,8 @@ end
 %% remove questionable cells
 
 ms_trk = ms;
-
 rm_idx = 1:ms_trk.numNeurons; 
 remove_cell_id = find(~ismember(rm_idx,double(S_neurons)));
-
 
 cfg_rem = [];
 cfg_rem.remove_idx = remove_cell_id;
@@ -100,7 +90,6 @@ for ii = length(S_neurons):-1:1
 end
 
 
-
 if  strcmpi(method, 'grosmark')
     if ~isfield(ms_trk, 'deconv') % get the deconvolved trace if not already present.
         ms_trk_cut = MS_append_deconv(ms_trk_cut, 1);
@@ -110,7 +99,6 @@ end
 % trim the REM data as well
 all_binary_post_REM(:, remove_cell_id) = [];
 all_binary_post_REM = all_binary_post_REM(:, s_idx); 
-
 
 all_binary_pre_REM(:, remove_cell_id) = [];
 all_binary_pre_REM = all_binary_pre_REM(:, s_idx); 
@@ -125,7 +113,6 @@ if strcmpi(method, 'grosmark')
     all_denoise_pre_REM = all_denoise_pre_REM(:, s_idx);
     
     % all_deconv_post_REM
-    
     all_deconv_post_REM(:, remove_cell_id) = [];
     all_deconv_post_REM = all_deconv_post_REM(:, s_idx);
     
@@ -164,7 +151,6 @@ if strcmpi(method, 'grosmark')
 %     Csp =all_deconv_post_REM./all_denoise_post_REM;
 %     Csp = Csp > 0.01;
 %     REM_post_data_in = Csp;
-
     
 else
     REM_pre_data_in = all_binary_pre_REM;
@@ -172,7 +158,6 @@ else
 end
 
 % sort the ms_trk_cut
-
 f_list = fieldnames(ms_trk_cut); 
 
 for ii = length(f_list):-1:1
@@ -186,14 +171,10 @@ for ii = length(f_list):-1:1
     
 end
 
-
-
 %% load the place information
 t_h5_dir = dir('tuning_*.h5');
 
-
 PCs_properties = MS_h5_to_stuct(t_h5_dir(h5_idx).name); 
-
 
 % load([info.subject '_' info.session '_PCs.mat'])
 place.bin_s = mode(diff(PCs_properties.bins)); 
@@ -202,21 +183,15 @@ place.centroids = double(PCs_properties.peak_loc)';
 
 % is it a place cell?
 place.is = PCs_properties.p_value < 0.05;
-
 place.map = PCs_properties.tuning_curves';
-
 place.MI = PCs_properties.info;
-
 place.peak_rate = PCs_properties.peak_val;
-
-
 
 place.centroids(remove_cell_id)= [];
 place.centroids =place.centroids(s_idx); 
 
 place.is(remove_cell_id)= [];
 place.is = place.is(s_idx); 
-
 
 place.map(remove_cell_id,:)= [];
 place.map =place.map(s_idx,:);
@@ -235,12 +210,10 @@ place.bins = PCs_properties.bins;
 place.p_bins = PCs_properties.bins(1:end-1)+(mode(diff(PCs_properties.bins)))/2;
 
 % see if there are any anxiety cells
-
 % [~,p_sort] = sort(place.centroids);
 
 %% get the initial assemblies
-
-A_temp = []; A_prog = []; wake_data = []; wake_tvec = [];
+A_temp = []; A_proj = []; wake_data = []; wake_tvec = [];
 for iB = length(bin_s):-1:1
     
     [A_temp{iB}, A_proj{iB}, wake_data{iB}, wake_tvec{iB}, A_opts{iB}, ] = MS_PCA_ICA_only(ms_trk_cut, move_idx, bin_s(iB),method, opts);
@@ -253,18 +226,11 @@ end
 
 %% if using the 'grosmark 2021' method, smooth the REM data as per the wake data
 % if isfield(A_opts{1}, 'gauss_window')
-%     
-% 
 %         gk = gausskernel(A_opts{1}.gauss_window,A_opts{1}.gauss_SD); 
 %         gk = gk./A_opts{1}.binsize; % normalize by binsize
-%         
 %         REM_pre_data_in = conv2(REM_pre_data_in,gk,'same'); % convolve with gaussian window
-%         
 %         REM_post_data_in = conv2(REM_post_data_in,gk,'same'); % convolve with gaussian window
-%         
 % %         test = conv2(all_deconv_pre_REM(:,1)./all_denoise_pre_REM(:,1),gk,'same'); 
-%         
-%     
 % end
 
 %% remove assemblies without positive weights
@@ -275,10 +241,8 @@ for iB = length(A_temp):-1:1
     fprintf('[%.0f/%.0f = %.0f%%] Assemblies had cells with positive weights (%.2fs binsize)\n',size(P_temp{iB},2),size(A_temp{iB},2),  (size(P_temp{iB},2)/size(A_temp{iB},2))*100, bin_s(iB))
 end
 
-
 %% get the spacial tuning of the assemblies
 min_N_place = 3;
-
 Place_temp = []; Place_proj = []; Place_map = [];
 for iB = length(P_temp):-1:1
     if ~isempty(P_pos{iB})
@@ -287,21 +251,16 @@ for iB = length(P_temp):-1:1
         
         Place_map{iB} = map_out{iB};
         Place_map{iB}(~place_idx{iB}) = [];
-        
         Place_temp{iB} = P_temp{iB}(:,place_idx{iB});
         Place_proj{iB} = P_proj{iB}(:,place_idx{iB});
         
         fprintf('[%.0f/%.0f = %.0f%%] Assemblies contained at least %0.0f place cells (%.2fs binsize)\n',size(Place_temp{iB},2),size(A_temp{iB},2),  (size(Place_temp{iB},2)/size(A_temp{iB},2))*100, min_N_place, bin_s(iB))
         
-        
     else
         map_out{iB} = [];
         Place_map{iB} = [];
-        
         Place_temp{iB} = [];
         Place_proj{iB} = [];
-        
-        
     end
 end
 %% get the activation locations on the track;
@@ -313,20 +272,18 @@ for iB = length(bin_s):-1:1
     
 end
 
-
 %% Load the REM data and compare it to the wake
 cfg_ReAct.nShuff = 500;
 cfg_ReAct.thresh = 99;
 
 for iB = length(bin_s):-1:1
-    % pre REM
+    % pre REM using wake
     [REM_pre_proj{iB},REM_pre_stats{iB}, REM_pre_data{iB}, REM_pre_tvec{iB}, REM_Pre_shuff{iB}] = MS_Asmbly_ReAct(cfg_ReAct, REM_pre_data_in, P_temp{iB} ,ms_trk_cut,  bin_s(iB));
     
-    % post REM
+    % post REM using wake
     [REM_post_proj{iB}, REM_post_stats{iB}, REM_post_data{iB}, REM_post_tvec{iB},REM_Post_shuff{iB}] = MS_Asmbly_ReAct(cfg_ReAct,REM_post_data_in, P_temp{iB} ,ms_trk_cut,  bin_s(iB));
-    
-end
 
+end
 
 %% get the cross correlation between assemblies
 % xc_bin = 1; 
@@ -348,17 +305,12 @@ end
 % 
 % end
 
-
 %% reactivation strength
-
 for iB = length(bin_s):-1:1
-    
     for ii = size(P_proj{iB},1):-1:1
-        
         ReAct{iB}(ii) = mean(REM_post_proj{iB}(ii,:)) - mean(REM_pre_proj{iB}(ii,:));
     end
 end
-
 
 %% count the instances of each cell per reactivation
 % for iB = length(bin_s):-1:1
@@ -366,7 +318,6 @@ end
 %     
 %     REM_pre_part = MS_Asmbly_participation(REM_pre_proj{iB},P_temp{iB}, REM_pre_data{iB},REM_pre_stats{iB}.R_thresh);
 % end
-
 
 
 %% collect the outputs
@@ -417,7 +368,6 @@ for iB = length(bin_s):-1:1
 %     out{iB}.REM_Pre_cffz = REM_pre_zxcor{iB};
 %     out{iB}.REM_Pre_nsig_cff = REM_Pre_sig_CoOc{iB}; 
 %     out{iB}.REM_Pre_psig_cff = (REM_Pre_sig_CoOc{iB}/wake_sig_CoOc{iB})*100;  
-
     
     out{iB}.REM_Post_proj = REM_post_proj{iB};
     out{iB}.REM_Post_stats = REM_post_stats{iB};
@@ -430,12 +380,7 @@ for iB = length(bin_s):-1:1
 %     out{iB}.REM_Post_psig_cff = (REM_Post_sig_CoOc{iB}/wake_sig_CoOc{iB})*100;  
 end
 
-
-
 %% check the correlation and pool
-
-
-
 % A_corr = [];
 % int_tvec = ms.time(1)/1000:min(bin_s):ms.time(end)/1000;
 % int_tvec = int_tvec(1:end-1);
@@ -448,25 +393,19 @@ end
 %
 %         A_1_int = interp1(wake_tvec{ii}, A_prog{ii}(iA,:), int_tvec);
 %
-%
-%
 %         for jj = length(A_prog):-1:1
 %
 %             for iA2 = size(A_prog{jj},1):-1:1
 %
 %                 A_2_int = interp1(wake_tvec{jj}, A_prog{jj}(iA2,:),int_tvec);
 %
-%
 %                 [this_corr this_p] = corrcoef(A_1_int(~isnan(A_1_int)), A_2_int(~isnan(A_2_int)));
 %                 A_corr(iA,iA2) = this_corr(1,2);
 %                 P_corr(iA, iA2) = this_p(1,2);
 %
 %             end
-%
 %         end
-%
 %     end
-%
 % end
 %
 % sum(P_corr(logical(triu(ones(size(P_corr)),1))) < 0.05)/length(P_corr(logical(triu(ones(size(P_corr)),1))))

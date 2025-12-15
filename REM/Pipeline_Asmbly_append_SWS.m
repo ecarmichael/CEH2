@@ -112,32 +112,30 @@ end
 
 
 %% get the cross correlation between assemblies
-xc_bin = 1; 
-t_max = 2; 
-
-for iB = length(A_in):-1:1
-    
-    [wake_zxcor{iB}, wake_zxcov{iB}, wake_xcor{iB},wake_xcov{iB}] = MS_Asmbly_xcor(A_in{iB}.P_proj,A_in{iB}.wake_tvec, 5, xc_bin, t_max);
-    
-    [SWS_pre_zxcor{iB}, SWS_pre_zxcov{iB},SWS_pre_xcor{iB},SWS_pre_xcov{iB}] = MS_Asmbly_xcor(SWS_pre_proj{iB},SWS_pre_tvec{iB},SWS_pre_stats{iB}.R_thresh , xc_bin, t_max);
-    
-    [SWS_post_zxcor{iB}, SWS_post_zxcov{iB},SWS_post_xcor{iB}, SWS_post_xcov{iB}] = MS_Asmbly_xcor(SWS_post_proj{iB},SWS_post_tvec{iB}, SWS_post_stats{iB}.R_thresh, xc_bin, t_max);
-
-    [SWS_Pre_sig_CoOc{iB}, wake_sig_CoOc{iB}] = MS_Asmbly_CoAct_count(wake_zxcor{iB},SWS_pre_zxcor{iB}, 1.96); 
-    fprintf('Pre had %.0f (%.0f%%) significant assembly pairs using xcor of the %0.0f sig pairs found in wake \n', SWS_Pre_sig_CoOc{iB}, (SWS_Pre_sig_CoOc{iB} / wake_sig_CoOc{iB})*100, wake_sig_CoOc{iB})
-    
-    [SWS_Post_sig_CoOc{iB}] = MS_Asmbly_CoAct_count(wake_zxcor{iB},SWS_post_zxcor{iB}, 1.96); 
-    fprintf('Post had %.0f (%.0f%%) significant assembliy pairs using xcor of the %0.0f sig pairs found in wake \n', SWS_Post_sig_CoOc{iB}, (SWS_Post_sig_CoOc{iB} / wake_sig_CoOc{iB})*100, wake_sig_CoOc{iB})
-
-end
+% xc_bin = 1; 
+% t_max = 2; 
+% 
+% for iB = length(A_in):-1:1
+% 
+%     [wake_zxcor{iB}, wake_zxcov{iB}, wake_xcor{iB},wake_xcov{iB}] = MS_Asmbly_xcor(A_in{iB}.P_proj,A_in{iB}.wake_tvec, 5, xc_bin, t_max);
+% 
+%     [SWS_pre_zxcor{iB}, SWS_pre_zxcov{iB},SWS_pre_xcor{iB},SWS_pre_xcov{iB}] = MS_Asmbly_xcor(SWS_pre_proj{iB},SWS_pre_tvec{iB},SWS_pre_stats{iB}.R_thresh , xc_bin, t_max);
+% 
+%     [SWS_post_zxcor{iB}, SWS_post_zxcov{iB},SWS_post_xcor{iB}, SWS_post_xcov{iB}] = MS_Asmbly_xcor(SWS_post_proj{iB},SWS_post_tvec{iB}, SWS_post_stats{iB}.R_thresh, xc_bin, t_max);
+% 
+%     [SWS_Pre_sig_CoOc{iB}, wake_sig_CoOc{iB}] = MS_Asmbly_CoAct_count(wake_zxcor{iB},SWS_pre_zxcor{iB}, 1.96); 
+%     fprintf('Pre had %.0f (%.0f%%) significant assembly pairs using xcor of the %0.0f sig pairs found in wake \n', SWS_Pre_sig_CoOc{iB}, (SWS_Pre_sig_CoOc{iB} / wake_sig_CoOc{iB})*100, wake_sig_CoOc{iB})
+% 
+%     [SWS_Post_sig_CoOc{iB}] = MS_Asmbly_CoAct_count(wake_zxcor{iB},SWS_post_zxcor{iB}, 1.96); 
+%     fprintf('Post had %.0f (%.0f%%) significant assembliy pairs using xcor of the %0.0f sig pairs found in wake \n', SWS_Post_sig_CoOc{iB}, (SWS_Post_sig_CoOc{iB} / wake_sig_CoOc{iB})*100, wake_sig_CoOc{iB})
+% 
+% end
 
 
 %% reactivation strength
 
 for iB = length(A_in):-1:1
-    
     for ii = size(A_in{iB}.P_proj,1):-1:1
-        
         SWS_ReAct{iB}(ii) = mean(SWS_post_proj{iB}(ii,:)) - mean(SWS_pre_proj{iB}(ii,:));
     end
 end
@@ -158,10 +156,10 @@ for iB = length(A_in):-1:1
     out{iB}.SWS_Pre_data = SWS_pre_data{iB};
     out{iB}.SWS_Pre_tvec = SWS_pre_tvec{iB};
     out{iB}.SWS_Pre_shuff = SWS_Pre_shuff{iB};
-    out{iB}.SWS_Pre_cff = SWS_pre_xcor{iB};
-    out{iB}.SWS_Pre_cffz = SWS_pre_zxcor{iB};
-    out{iB}.SWS_Pre_nsig_cff = SWS_Pre_sig_CoOc{iB}; 
-    out{iB}.SWS_Pre_psig_cff = (SWS_Pre_sig_CoOc{iB}/wake_sig_CoOc{iB})*100;  
+    % out{iB}.SWS_Pre_cff = SWS_pre_xcor{iB};
+    % out{iB}.SWS_Pre_cffz = SWS_pre_zxcor{iB};
+    % out{iB}.SWS_Pre_nsig_cff = SWS_Pre_sig_CoOc{iB}; 
+    % out{iB}.SWS_Pre_psig_cff = (SWS_Pre_sig_CoOc{iB}/wake_sig_CoOc{iB})*100;  
 
     
     out{iB}.SWS_Post_proj = SWS_post_proj{iB};
@@ -169,9 +167,9 @@ for iB = length(A_in):-1:1
     out{iB}.SWS_Post_data = SWS_post_data{iB};
     out{iB}.SWS_Post_tvec = SWS_post_tvec{iB};
     out{iB}.SWS_Post_shuff = SWS_Post_shuff{iB};
-    out{iB}.SWS_Post_cff = SWS_post_xcor{iB};
-    out{iB}.SWS_Post_cffz = SWS_post_zxcor{iB};
-    out{iB}.SWS_Post_nsig_cff = SWS_Post_sig_CoOc{iB}; 
-    out{iB}.SWS_Post_psig_cff = (SWS_Post_sig_CoOc{iB}/wake_sig_CoOc{iB})*100;  
+    % out{iB}.SWS_Post_cff = SWS_post_xcor{iB};
+    % out{iB}.SWS_Post_cffz = SWS_post_zxcor{iB};
+    % out{iB}.SWS_Post_nsig_cff = SWS_Post_sig_CoOc{iB}; 
+    % out{iB}.SWS_Post_psig_cff = (SWS_Post_sig_CoOc{iB}/wake_sig_CoOc{iB})*100;  
 end
 
