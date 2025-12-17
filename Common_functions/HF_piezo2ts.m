@@ -1,4 +1,4 @@
-function [adc_ts, adc_f_tsd, rate_tsd] =  HF_piezo2ts(fname)
+function [adc_ts, adc_f_tsd, rate_tsd] =  HF_piezo2ts(fname, plt_flg)
 %% HF_piezo2iv: loads the Analog signal from the piezo, applies some filters and extracts the deflections as timestamps.
 %
 %  to convert to a rate use MS_spike2rate.m

@@ -10,7 +10,8 @@ S = OE_phy2TS(phy2_dir);
 
 evts = OE_load_binary_evts(evts_dir);
 %% load the lfp
-csc_list = dir([csc_dir filesep '*.continuous']);
+csc_list = dir([csc_dir filesep '*CH*.continuous']);
+
 csc= []; labels = [];
 for ii = 1:length(csc_list)
 
@@ -39,12 +40,18 @@ cfg_in.decimateFactor = 15;
 csc = decimate_tsd(cfg_in, csc);
 
 
-
+%% get the AD channel piezo
+adc = dir([csc_dir filesep '*ADC*.continuous']); 
+if ~isempty(adc)
+    [adc_ts, adc_f_tsd, rate_tsd] =  HF_piezo2ts(adc(1).name, 0); 
+    adc_f_tsd.tvec = adc_f_tsd.tvec - adc_f_tsd.tvec(1); 
+    adc_ts.t{1} = adc_ts.t{1} - adc_f_tsd.tvec(1); 
+    rate_tsd.tvec = rate_tsd.tvec - rate_tsd.tvec(1); 
+end
 %% correct the events times and the LFP so that it aligns with the spikes
 
 % correct for start of csc. Why is this offset? 
 csc.tvec = csc.tvec- csc.tvec(1); 
-
 % loop over events and remove the offset. 
 for ii = 1:length(evts.t)
     evts.t{ii} = evts.t{ii} - offset; 

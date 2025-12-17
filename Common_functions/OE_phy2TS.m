@@ -29,11 +29,11 @@ spike_clusters = readNPY([data_dir filesep 'spike_clusters.npy']);
 %chan_pos= readNPY([data_dir filesep 'spike_positions.npy']);
 
 
-fid = fopen('cluster_group.tsv');
+fid = fopen([data_dir filesep 'cluster_group.tsv']);
 C = textscan(fid, '%s%s');
 fclose(fid);
 
-fid = fopen('cluster_info.tsv');
+fid = fopen([data_dir filesep 'cluster_info.tsv']);
 I= textscan(fid, '%s%s%s%s%s%s');
 fclose(fid);
 
