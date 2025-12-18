@@ -40,5 +40,7 @@ P_temp(:,~keep_idx) = [];
 
 P_cells(~keep_idx) = []; 
 
-P_proj = A_proj;
-P_proj(~keep_idx,:) = [];
+if nargout > 1
+    P_proj = A_proj;
+    P_proj(~keep_idx,:) = [];
+end
