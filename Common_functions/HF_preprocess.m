@@ -1,4 +1,4 @@
-function [data_out] = HF_preprocess(phy2_dir, csc_dir, evts_dir)
+function [data_out] = HF_preprocess(phy2_dir, csc_dir, evts_dir, vr_fname)
 % HF_preprocess loads and preprocesses all the principle data types for a
 % recording session. 
 
@@ -45,9 +45,17 @@ adc = dir([csc_dir filesep '*ADC*.continuous']);
 if ~isempty(adc)
     [adc_ts, adc_f_tsd, rate_tsd] =  HF_piezo2ts(adc(1).name, 0); 
     adc_f_tsd.tvec = adc_f_tsd.tvec - adc_f_tsd.tvec(1); 
-    adc_ts.t{1} = adc_ts.t{1} - adc_f_tsd.tvec(1); 
     rate_tsd.tvec = rate_tsd.tvec - rate_tsd.tvec(1); 
+
+    evts.t{end+1} = adc_ts.t{1}; 
+    evts.label{end+1} = 'Licks'; 
+else
+    rate_tsd = tsd(); 
 end
+
+%% load the log file
+
+HF_load_VR(vr_fname)
 %% correct the events times and the LFP so that it aligns with the spikes
 
 % correct for start of csc. Why is this offset? 
@@ -63,5 +71,6 @@ data_out.params = params;
 data_out.S = S;
 data_out.csc = csc; 
 data_out.evts = evts; 
+data_out.licks = rate_tsd; 
 
 

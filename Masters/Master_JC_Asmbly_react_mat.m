@@ -1,73 +1,40 @@
 %% MS_Asmbly_Shuff_tests
 
+restoredefaultpath
+usr = char(java.lang.System.getProperty('user.name')); 
 
 if strcmp(computer, 'GLNXA64')
-
-    usr = char(java.lang.System.getProperty('user.name'));
-
     codebase_dir = ['/home/' usr '/Documents/Github/vandermeerlab/code-matlab/shared'];
     ca_dir = ['/home/' usr '/Documents/Github/CEH2'];
-    oasis_dir = ['/home/' usr '/Documents/Github/OASIS_matlab'];
-
-    code_dir = ['/home/' usr '/Documents/Github/Dos-Santos Assembly ICA/Dos-Santos Assembly ICA'];
-
-    RnR_dir = ['/home/' usr '/Documents/Github/RnR_methods'];
-
-    % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
+    code_dir = ['/home/' usr '/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter/Git_repos/Dos-Santos Assembly ICA'];
     main_dir = ['/home/' usr '/'];
-
-
+    
 elseif strcmp(computer, 'MACA64')
-
-    codebase_dir = '/Users/ecar/Documents/Github/vandermeerlab/code-matlab/shared';
-    ca_dir = '/Users/ecar/Documents/Github/CEH2';
-    oasis_dir = '/Users/ecar/Documents/Github/OASIS_matlab';
-
-    code_dir = '/Users/ecar/Documents/Github/Dos-Santos Assembly ICA/Dos-Santos Assembly ICA';
-
-    RnR_dir = '//Users/ecar/Documents/Github/RnR_methods';
-
-    % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
-    main_dir = '/Users/ecar/';
-
+    codebase_dir = ['/Users/' usr '/Documents/Github/vandermeerlab/code-matlab/shared'];
+    ca_dir = ['/Users/' usr '/Documents/Github/CEH2'];
+    code_dir = ['/Users/' usr '/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter/Git_repos/Dos-Santos Assembly ICA'];
+    main_dir = ['/Users/' usr filesep];
 else
-
-    codebase_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared';
-    ca_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2';
-    oasis_dir = 'C:\Users\ecarm\Documents\GitHub\OASIS_matlab';
-
-    code_dir = 'C:\Users\ecarm\Downloads\Dos-Santos Assembly ICA\Dos-Santos Assembly ICA';
-
-    RnR_dir = 'C:\Users\ecarm\Documents\GitHub\RnR_methods';
-
-    % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
-    main_dir = 'C:\Users\ecarm\';
-
+    codebase_dir = ['C:\Users\' usr '\Documents\Github\vandermeerlab\code-matlab\shared'];
+    ca_dir = ['C:\Users\' usr '\Documents\Github\CEH2'];
+    code_dir = ['C:\Users\' usr '\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Git_repos\Dos-Santos Assembly ICA'];
+    main_dir = ['C:\Users\' usr '\'];
 end
 
 restoredefaultpath
 c_d = cd;
-% cd(oasis_dir)
-% addpath(genpath(oasis_dir));
-% oasis_setup
 
 addpath(genpath(ca_dir));
 addpath(genpath(codebase_dir))
-addpath(genpath(RnR_dir));
-
 addpath(genpath(code_dir))
 
-% clear the paths vars after adding.
-clearvars *_dir -except main_dir
-
 cd(c_d)
-
 
 move_thresh  = 9;
 bin_size = .5;
 
 inter_dir = strrep([main_dir 'Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9'], '\', filesep);
-fig_dir = [inter_dir filesep 'checks'];
+fig_dir = [inter_dir filesep 'xstate_mats'];
 
 %%
 
@@ -117,14 +84,16 @@ for iA = length(A_out):-1:1
 
     % isolate the data for clarity
     wake_data= A_out{iA}{1}.wake_data;
+    wake_tvec = A_out{iA}{1}.wake_tvec;
 
     pre_REM_data = A_out{iA}{1}.REM_pre_in;
+    pre_REM_tvec = A_out{iA}{1}.REM_Pre_tvec;
 
     post_REM_data  = A_out{iA}{1}.REM_post_in;
+    post_REM_tvec = A_out{iA}{1}.REM_Post_tvec;
 
 
     % get the assembly templates
-
     for iT = 3:-1:1
         % get the template data
         if iT == 1
@@ -147,30 +116,33 @@ for iA = length(A_out):-1:1
 
         % get the projections within the same data type;
         rng(123, 'twister')
-        proj{iA}{iT}{iR} = assembly_activity(temp{iA}{iT},temp_data');
+        T_proj{iA}{iT} = assembly_activity(temp{iA}{iT},temp_data');
 
         % fprintf('%s : PCA-ICA detected %.0f assemblies using a %.2fs binsize\n', t_type, size(temp{iA}{iT},2), A_out{iA}{1}.bins)
 
         % remove assemblies without positive weights
-        p_temp{iA}{iT} = MS_Asmbly_select(temp{iA}{iT}, proj{iA}{iT}{iR}, 2);
+        p_temp{iA}{iT} = MS_Asmbly_select(temp{iA}{iT}, T_proj{iA}{iT}, 2);
 
-        fprintf('[%s:  %.0f/%.0f = %.0f%%] Assemblies had cells with positive weights (%.2fs binsize)\n',...
+        fprintf('%s:  [%.0f/%.0f = %.0f%%] Assemblies had cells with positive weights (%.2fs binsize)\n',...
             t_type, size(p_temp{iA}{iT},2),size(temp{iA}{iT},2),  (size(p_temp{iA}{iT},2)/size(temp{iA}{iT},2))*100, A_out{iA}{1}.bins)
 
-
-        for iR = 3:-1:1
+        % loop over reference data
+        for iR = 3%:-1:1
             % set the reference data
             if iR == 1
-                ref_data = pre_REM_data;
+                Ref_data = pre_REM_data;
+                Ref_tvec = pre_REM_tvec;
             elseif iR == 2
-                ref_data = wake_data;
+                Ref_data = wake_data;
+                Ref_tvec = wake_tvec;
             elseif iR ==3
-                ref_data = post_REM_data;
+                Ref_data = post_REM_data;
+                Ref_tvec = post_REM_tvec;
             end
 
             % get the projections within the same data type;
             rng(123, 'twister')
-            R_proj{iA}{iT}{iR} = assembly_activity(temp{iA}{iT},ref_data');
+            R_proj{iA}{iT}{iR} = assembly_activity(p_temp{iA}{iT},ref_data');
 
 
             % check for significant reactivations against shuffles
@@ -185,13 +157,17 @@ for iA = length(A_out):-1:1
 
             for ii = size(R_proj{iA}{iT}{iR},1):-1:1
                 Ref_stats{iA}{iT}{iR}.p_val(ii) = sum(sum(shuff.data > Ref_stats{iA}{iT}{iR}.R_thresh,2) > sum(R_proj{iA}{iT}{iR}(ii,:) > Ref_stats{iA}{iT}{iR}.R_thresh))/ size(shuff.data,1);
-                Ref_stats{iA}{iT}{iR}.rate(ii) = sum(R_proj{iA}{iT}{iR}(ii,:) > Ref_stats{iA}{iT}{iR}.R_thresh) / ((A_REM_tvec(end) - A_REM_tvec(1))/60);
-                Ref_stats{iA}{iT}{iR}.shuff_rate = sum(shuff.data > Ref_stats{iA}{iT}{iR}.R_thresh,2)./ ((A_REM_tvec(end) - A_REM_tvec(1))/60);
+                Ref_stats{iA}{iT}{iR}.rate(ii) = sum(R_proj{iA}{iT}{iR}(ii,:) > Ref_stats{iA}{iT}{iR}.R_thresh) / ((Ref_tvec(end) - Ref_tvec(1))/60);
+                Ref_stats{iA}{iT}{iR}.shuff_rate = sum(shuff.data > Ref_stats{iA}{iT}{iR}.R_thresh,2)./ ((Ref_tvec(end) - Ref_tvec(1))/60);
                 Ref_stats{iA}{iT}{iR}.rate_p(ii) = sum(Ref_stats{iA}{iT}{iR}.shuff_rate > Ref_stats{iA}{iT}{iR}.rate(ii)) / length(Ref_stats{iA}{iT}{iR}.shuff_rate);
 
                 Ref_stats{iA}{iT}{iR}.shuff_n(ii) = mean(sum(shuff.data > Ref_stats{iA}{iT}{iR}.R_thresh,2));
-                Ref_stats{iA}{iT}{iR}.shuff_r(ii) = mean(sum(shuff.data > Ref_stats{iA}{iT}{iR}.R_thresh,2) / ((A_REM_tvec(end) - A_REM_tvec(1))/60));
+                Ref_stats{iA}{iT}{iR}.shuff_r(ii) = mean(sum(shuff.data > Ref_stats{iA}{iT}{iR}.R_thresh,2) / ((Ref_tvec(end) - Ref_tvec(1))/60));
             end
+
+            % collect the number of reactivations.
+            Sig_map(iT, iR, iA) = sum(Ref_stats{iA}{iT}{iR}.p_val<0.05);
+            Rate_map(iT, iR, iA) = mean(Ref_stats{iA}{iT}{iR}.rate(Ref_stats{iA}{iT}{iR}.p_val<0.05));
 
         end % end reference data loop
 
@@ -199,6 +175,27 @@ for iA = length(A_out):-1:1
 
 end % end of cross session loop
 
+%%
+
+figure(2000)
+subplot(2,2,1)
+imagesc(mean(Sig_map,3, 'omitmissing'))
+xlabel('Train data')
+ylabel('Test data')
+clim([0 inf]); 
+cb = colorbar; 
+cb.Label.String = 'nSig Assemblies React';
+set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 'YTickLabel', {'Pre REM', 'Wake', 'Post'})
+
+
+subplot(2,2,2)
+imagesc(mean(Rate_map,3, 'omitmissing'))
+xlabel('Train data')
+ylabel('Test data')
+clim([0 inf]); 
+cb = colorbar; 
+cb.Label.String = 'Sig React / min';
+set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 'YTickLabel', {'Pre REM', 'Wake', 'Post'})
 
 
     %% collect the number across conditions
