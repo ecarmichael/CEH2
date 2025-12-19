@@ -178,7 +178,7 @@ mean_S_gau = nanmean(outputGau,2); % get the mean gaussian smoothed firing rate
 mean_S_gau_z = nanmean(outputGau,2); % get the mean gaussian smoothed firing rate
 mean_S_gau_z = (mean_S_gau_z - nanmean(outputGau_shuf,2))./nanstd(outputGau_shuf, [], 2);
 
-idx = nearest_idx3(0, outputIT); % get the event time index
+idx = nearest_idx(0, outputIT); % get the event time index
 
 pre_stim_means = nanmean(outputGau(1:idx-1,:),1);  % get the mean of the gau smoothed firing rate before the event.
 post_stim_means = nanmean(outputGau(idx:end,:),1); % % get the mean of the gau smoothed FR after the event.
