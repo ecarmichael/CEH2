@@ -180,6 +180,7 @@ end % end of cross session loop
 figure(2000)
 subplot(2,2,1)
 imagesc(mean(Sig_map,3, 'omitmissing'))
+title('Number of Sig Reactivations')
 xlabel('Train data')
 ylabel('Test data')
 clim([0 inf]); 
@@ -189,12 +190,45 @@ set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 
 
 
 subplot(2,2,2)
-imagesc(mean(Rate_map,3, 'omitmissing'))
+imagesc(mean(Rate_map,3, 'omitmissing')./60)
+title('Rate Sig Reactivations')
 xlabel('Train data')
 ylabel('Test data')
 clim([0 inf]); 
 cb = colorbar; 
-cb.Label.String = 'Sig React / min';
+cb.Label.String = 'Sig React (Hz)';
+set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 'YTickLabel', {'Pre REM', 'Wake', 'Post'})
+
+%normalized to wake
+subplot(2,2,3)
+Norm_sig_map = NaN(size(Sig_map)); 
+for iA = 1:size(Sig_map, 3)
+    Norm_sig_map(:,:,iA) = Sig_map(:,:,iA)./Sig_map(2,2,iA);
+end
+imagesc(mean(Norm_sig_map,3, 'omitmissing'))
+title('Normalized to wake-wake')
+
+xlabel('Train data')
+ylabel('Test data')
+clim([0 inf]); 
+cb = colorbar; 
+cb.Label.String = {'nSig Assemblies React'; 'Normalized to wake-wake'};
+set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 'YTickLabel', {'Pre REM', 'Wake', 'Post'})
+
+
+subplot(2,2,4)
+Norm_rate_map = NaN(size(Rate_map)); 
+for iA = 1:size(Rate_map, 3)
+    Norm_rate_map(:,:,iA) = Rate_map(:,:,iA)./Rate_map(2,2,iA);
+end
+imagesc(mean(Norm_rate_map,3, 'omitmissing'))
+title('Normalized to wake-wake')
+
+xlabel('Train data')
+ylabel('Test data')
+clim([0 inf]); 
+cb = colorbar; 
+cb.Label.String = {'Normalized React rate'};
 set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 'YTickLabel', {'Pre REM', 'Wake', 'Post'})
 
 
