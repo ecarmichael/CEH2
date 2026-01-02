@@ -48,43 +48,99 @@ xline(data.vr.evt.t{contains(data.vr.evt.label, 'Collision with Rwd1')}, 'c', 'L
 
 xlim([data.vr.pos.tvec(1) data.vr.evt.t{contains(data.vr.evt.label, 'Collision with Rwd1')}(1)+5])
 %% peth per cell
-window = [-1 5]; 
+c_red = [0.9153    0.2816    0.2878]; 
+
+
+window = [-.250 .250]; 
 bin_s = .025;
 evt_t = data.evts.t{2} ;
 
 % isolate events of a certain length
 e_d = evt_t(2,:) - evt_t(1,:); 
 
-% k_idx = .08> e_d;   
+ITIs = unique(round(e_d, 3)); 
 
-% evt_t(:,~k_idx) = []; 
+for iTi = 1:length(ITIs)
 
-    cfg = []; 
-    cfg.dt = 0.025; 
+    evt_t = data.evts.t{2} ;
+
+k_idx = round(e_d,3) == ITIs(iTi) ;  
+
+evt_t(:,~k_idx) = []; 
+    % 
+    % cfg = []; 
+    % cfg.dt = 0.025; 
     % cfg.gauss_window = .01; 
     % cfg.gauss_sd = 0.0025;
 
-for iS = 1:length(data.S.t)
+    for iS = 1:length(data.S.t)
 
-    figure(iS+300)
-    clf
+        % figure(iS+300)
+        % clf
 
-    S = data.S;
-    S.t = [];
-    S.t{1} = data.S.t{iS};
-    S.label = [];
-    S.label{1} =  data.S.label{iS};
+        S = data.S;
+        S.t = [];
+        S.t{1} = data.S.t{iS};
+        S.label = [];
+        S.label{1} =  data.S.label{iS};
 
-    evt_t = sort(evt_t(1,:)); 
+        evt_t = sort(evt_t(1,:));
 
- 
         cfg_peth = [];
-        cfg_peth.window = [-.5 .5];
+        cfg_peth.window = [-.25 .25];
         cfg_peth. plot_type = 'raw';
-        cfg_peth.dt = 0.01;
-        cfg_peth.gauss_sd = .025;
-        cfg_peth.shuff = 500; 
-        [~,~,this_peth] = SpikePETH_Shuff(cfg_peth, S, evt_t );
+        cfg_peth.dt = 0.001;
+        cfg_peth.gauss_window = .025;
+        cfg_peth.gauss_sd = .0025;
+        cfg_peth.shuff = 500;
+        cfg_peth.t_on = mode(e_d(k_idx));
+        cfg_peth.rec_color = c_red;
+        % cfg_peth.plot = 'off'; 
+        [peth_S{iS,iTi}, peth_IT{iS,iTi},peth_gau{iS,iTi}, ~, ~, ~, ~, ~, ~,peth_T{iS, iTi}] = SpikePETH_Shuff(cfg_peth, S, evt_t);
+    end
+end
+
+%% plot the PETHS together
+reds = hot(10); 
+
+for iS = 1:size(peth_gau,1)
+
+    figure(iS);
+    clf
+    subplot(2,1,1)
+    cla
+    hold on;
+    % Plot the PETH for each ITI
+    offset = 0; 
+    for iT = 1:size(peth_gau,2)
+        u_val = unique(peth_T{iS, iT});
+        for iV = 1:length(u_val)
+            this_idx = peth_T{iS, iT} == u_val(iV);
+            if isempty(this_idx)
+                continue
+            end
+            plot(peth_S{iS, iT}(this_idx), peth_T{iS, iT}(this_idx)+0.5 + offset,'.', 'color', reds(iT,:), 'MarkerSize', 10)
+            % disp(mode(peth_T{iS, iT}(this_idx)+ offset))
+        end
+        y_lim = ylim; 
+        offset = y_lim(2); 
+
+    end
+
+    subplot(2,1,2)
+        hold on;
+    % Plot the mean activity for each ITI
+    for iT = 1:size(peth_gau,2)
+        plot(peth_IT{iS,iT}, mean(peth_gau{iS,iT},2, 'omitnan')', 'Color', reds(iT,:), 'LineWidth', 1.5);
+
+    end
+    xlabel('Time (s)');
+    ylabel('PETH');
+    title(['PETH for Cell ' num2str(iS) ' - ITI: ' num2str(ITIs(iT))]);
+    legend({num2str(ITIs')}, 'Box', 'off')
+
+
+
 end
 
 

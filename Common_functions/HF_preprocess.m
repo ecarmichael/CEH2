@@ -53,7 +53,7 @@ csc = decimate_tsd(cfg_in, csc);
 %% get the AD channel piezo
 adc = dir([csc_dir filesep '*ADC*.continuous']); 
 if ~isempty(adc)
-    [adc_ts, adc_f_tsd, rate_tsd] =  HF_piezo2ts(adc(1).name, 0); 
+    [adc_ts, adc_f_tsd, rate_tsd] =  HF_piezo2ts([adc(1).folder filesep adc(1).name], 0); 
     adc_f_tsd.tvec = adc_f_tsd.tvec - adc_f_tsd.tvec(1); 
     rate_tsd.tvec = rate_tsd.tvec - rate_tsd.tvec(1); 
 

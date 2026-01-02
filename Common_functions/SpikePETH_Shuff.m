@@ -1,4 +1,4 @@
-function [outputS, outputIT, outputGau,outputGau_shuf, pre_stim_means, post_stim_means, pre_stim_std, post_stim_std, z_vals] = SpikePETH_Shuff(cfg_in, S,t,varargin)
+function [outputS, outputIT, outputGau,outputGau_shuf, pre_stim_means, post_stim_means, pre_stim_std, post_stim_std, z_vals, outputT] = SpikePETH_Shuff(cfg_in, S,t,varargin)
 %% SpikePETH_Shuff: computes the perievent histogram for spike data "S" at events
 %             "t".  Outputs
 %
@@ -19,6 +19,7 @@ function [outputS, outputIT, outputGau,outputGau_shuf, pre_stim_means, post_stim
 cfg_def.shuff = 5000; % give a value for shuffle. will skip if empty
 cfg_def.window = [-2 5];
 cfg_def.dt = 0.001;
+cfg_def.t_on = []; 
 cfg_def.excessBounds = 1;
 cfg_def.outputGrid = 0;
 cfg_def.evt_color_mat = repmat([0 0 0], length(t),1);
@@ -102,11 +103,14 @@ end
 outputIT = outputIT(1:end-1);
 
 
-%% check if there are any spikes
+%% check if there are any spike\
 if isempty(outputT)
     z_vals = nan(size(outputIT))';
     outputS = nan(size(outputIT))';
     outputGau = nan(size(outputIT))';
+    outputS_shuf = [];
+    outputT_shuf = [];
+    outputGau_shuf = []; 
     mean_S_gau = nan(size(outputIT))';
     pre_stim_means = nan(size(t));
     post_stim_means = nan(size(t));
@@ -220,11 +224,16 @@ if  strcmp(cfg.plot, 'on')
     end
     xlim(cfg.window);
     hold on
-    if (size(t,2) > 1) || (size(t,1) == 1)
+    if ~isempty(cfg.t_on)
+        rectangle('position', [0 1 cfg.t_on  nT], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
+    elseif (size(t,2) > 1) || (size(t,1) == 1)
         rectangle('position', [0 1 0.001  nT], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
     else
         rectangle('position', [0 1 abs(mode(t(:,2)-t(:,1)))  nT], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
     end
+
+    %Reverse the stacking order so that the patch overlays the line
+    set(gca, 'Children',flipud(get(gca, 'Children')))
     %% add in the wave forms
     if ~isempty(cfg.waves)
         axes('Position', [.8 .85 0.1 .075])
@@ -266,7 +275,9 @@ if  strcmp(cfg.plot, 'on')
             plot(outputIT,nanmean(zscore(outputGau_shuf,[], 'all'),2), '--', 'color', [0.3 .3 .3])
         end
         if ~(max(mean_S_gau)) ==0
-            if (size(t,2) > 1) || (size(t,1) == 1)
+            if ~isempty(cfg.t_on)
+                rectangle('position', [0 min(z_vals) cfg.t_on  (max(z_vals) - min(z_vals))*10], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
+            elseif (size(t,2) > 1) || (size(t,1) == 1)
                 rectangle('position', [0 min(z_vals) 0.001  (max(z_vals) - min(z_vals))*10], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
             else
                 rectangle('position', [0 min(z_vals) abs(mode(t(:,2)-t(:,1)))  (max(z_vals) - min(z_vals))*10], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
@@ -290,7 +301,9 @@ if  strcmp(cfg.plot, 'on')
         %             plot(outputIT,nanmean(zscore(outputGau_shuf,[], 'all'),2), '--', 'color', [0.3 .3 .3])
         %         end
         if ~(max(mean_S_gau_z)) ==0
-            if (size(t,2) > 1) || (size(t,1) == 1)
+            if ~isempty(cfg.t_on)
+                rectangle('position', [0 min(mean_S_gau_z) cfg.t_on  (max(mean_S_gau_z) - min(mean_S_gau_z))*10], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
+            elseif (size(t,2) > 1) || (size(t,1) == 1)
                 rectangle('position', [0 min(mean_S_gau_z) 0.001  (max(mean_S_gau_z) - min(mean_S_gau_z))*10], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
             else
                 rectangle('position', [0 min(mean_S_gau_z) abs(mode(t(:,2)-t(:,1)))  (max(mean_S_gau_z) - min(mean_S_gau_z))*10], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
@@ -315,12 +328,16 @@ if  strcmp(cfg.plot, 'on')
         
         if ~(max(mean_S_gau)) ==0
             ylim([min(mean_S_gau) max(mean_S_gau)])
-            if (size(t,2) > 1) || (size(t,1) == 1)
+            if ~isempty(cfg.t_on)
+                rectangle('position', [0 min(mean_S_gau) cfg.t_on  (max(mean_S_gau) - min(mean_S_gau))*10], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
+            elseif (size(t,2) > 1) || (size(t,1) == 1)
                 rectangle('position', [0 min(mean_S_gau) 0.001  abs(max(mean_S_gau))*10], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
             else
                 rectangle('position', [0 min(mean_S_gau) abs(mode(t(:,2)-t(:,1)))  abs(max(mean_S_gau))*10], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
             end
         end
+            set(gca, 'Children',flipud(get(gca, 'Children')))
+
         
         % add in pre and post event means
         x_lims = xlim;
@@ -331,15 +348,37 @@ if  strcmp(cfg.plot, 'on')
         text(x_lims(1), y_lims(2)*.9, ['Pre mean: ' num2str(mean(mean_gau(1:idx-1)), 2) '+/-' num2str(std(mean_gau(1:idx-1)),2) 'Hz'], 'fontweight', 'bold', 'fontsize', 12, 'color',c_ord(1,:) )
         text(x_lims(1), y_lims(2)*.7, ['Post mean: ' num2str(mean(mean_gau(idx:end)), 2)  '+/-' num2str(std(mean_gau(idx:end)),2) 'Hz' ], 'fontweight', 'bold', 'fontsize', 12, 'color',c_ord(2,:))
         
-    end
+    end % end plot type 
     
-    
-    
-    
-    
-    
-    
-end
+end % end plotting
 
 
+if ~exist('z_vals')
+    z_vals = nan(size(outputIT))';
 end
+
+if ~exist('outputGau')
+outputGau = nan(size(outputIT))';
+end
+
+if ~exist('outputGau_shuf')
+    outputGau_shuf = nan(size(outputIT))';
+end
+
+if ~exist('pre_stim_means')
+pre_stim_means = nan(size(t));
+end
+
+if ~exist('post_stim_means')
+post_stim_means = nan(size(t));
+end
+
+if ~exist('pre_stim_std')
+pre_stim_std = nan(size(t));
+end
+
+if ~exist('post_stim_std')
+post_stim_std = nan(size(t));
+end
+
+end % end function
