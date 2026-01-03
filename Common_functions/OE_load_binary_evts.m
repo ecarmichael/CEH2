@@ -25,6 +25,9 @@ for ii = 1:length(state_id)
     st_t = timestamps(states == state_id(ii)); 
     end_t = timestamps(states == -state_id(ii)); 
 
+    if size(st_t,1) > size(end_t,1)
+        end_t(end+1,1) = NaN; 
+    end
 
     evts.t{ii} = [st_t'; end_t']; 
     evts.label{ii} = num2str(state_id(ii)); 
