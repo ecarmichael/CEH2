@@ -125,7 +125,7 @@ evt_t(:,~k_idx) = [];
         cfg_peth.shuff = 500;
         cfg_peth.t_on = mode(e_d(k_idx));
         cfg_peth.rec_color = c_red;
-        % cfg_peth.plot = 'off'; 
+        cfg_peth.plot = 'off'; 
         [peth_S{iS,iTi}, peth_IT{iS,iTi},peth_gau{iS,iTi}, ~, ~, ~, ~, ~, ~,peth_T{iS, iTi}] = SpikePETH_Shuff(cfg_peth, S, evt_t);
     end
 end

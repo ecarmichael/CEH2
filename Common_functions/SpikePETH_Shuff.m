@@ -19,7 +19,7 @@ function [outputS, outputIT, outputGau,outputGau_shuf, pre_stim_means, post_stim
 cfg_def.shuff = 5000; % give a value for shuffle. will skip if empty
 cfg_def.window = [-2 5];
 cfg_def.dt = 0.001;
-cfg_def.t_on = []; 
+cfg_def.t_on = [];
 cfg_def.excessBounds = 1;
 cfg_def.outputGrid = 0;
 cfg_def.evt_color_mat = repmat([0 0 0], length(t),1);
@@ -71,33 +71,33 @@ for iT = nT:-1:1
     S0 = restrict(S, t(iT)+cfg.window(1)-cfg.excessBounds, t(iT)+cfg.window(2)+cfg.excessBounds);
     if length(S0.t{1}) > 0
         S0 = restrict(S0, t(iT)+cfg.window(1), t(iT)+cfg.window(2));
-        
+
         outputT = [outputT; repmat(iT, length(S0.t{1}),1)];
         outputS = [outputS; S0.t{1}-t(iT)];
-        
+
         %convolve with gaussian for firing rate.
         tbin_edges = t(iT)+cfg.window(1):cfg.binsize:t(iT)+cfg.window(2);
         tbin_centers = tbin_edges(1:end-1)+cfg.binsize/2;
         spk_count = histc(S0.t{1},tbin_edges);
         spk_count = spk_count(1:end-1);
-        
-        
+
+
         S_gau_sdf = conv2(spk_count,gk,'same'); % convolve with gaussian window
         if size(S_gau_sdf,1) >1
             S_gau_sdf = S_gau_sdf';
         end
         outputGau(:,iT) = S_gau_sdf;
-        
-        
+
+
         if cfg.outputGrid
-            
+
             temp = histc(S0.t{1}-t(iT),xbin); temp = temp(1:end-1);
             if ~isempty(temp)
                 outputG(iT,:) = temp;
             end
-            
+
         end
-        
+
     end
 end
 outputIT = outputIT(1:end-1);
@@ -110,7 +110,7 @@ if isempty(outputT)
     outputGau = nan(size(outputIT))';
     outputS_shuf = [];
     outputT_shuf = [];
-    outputGau_shuf = []; 
+    outputGau_shuf = [];
     mean_S_gau = nan(size(outputIT))';
     pre_stim_means = nan(size(t));
     post_stim_means = nan(size(t));
@@ -137,21 +137,21 @@ end
 
 
 for iShuf = cfg.shuff:-1:1
-    
+
     S0 = restrict(S, shuff_t(iShuf)+cfg.window(1)-cfg.excessBounds, shuff_t(iShuf)+cfg.window(2)+cfg.excessBounds);
     if length(S0.t{1}) > 0
         S0 = restrict(S0, shuff_t(iShuf)+cfg.window(1), shuff_t(iShuf)+cfg.window(2));
-        
-        
+
+
         outputT_shuf = [ repmat(iShuf, length(S0.t{1}),1);  outputT_shuf];
         outputS_shuf = [ S0.t{1}-shuff_t(iShuf); outputS_shuf];
-        
+
         %convolve with gaussian for firing rate.
         tbin_edges = shuff_t(iShuf)+cfg.window(1):cfg.binsize:shuff_t(iShuf)+cfg.window(2);
         tbin_centers = tbin_edges(1:end-1)+cfg.binsize/2;
         spk_count = histc(S0.t{1},tbin_edges);
         spk_count = spk_count(1:end-1);
-        
+
         gauss_window = cfg.gauss_window./cfg.binsize; % 1 second window
         gauss_SD = cfg.gauss_sd./cfg.binsize; % 0.02 seconds (20ms) SD
         gk = gausskernel(gauss_window,gauss_SD); gk = gk./cfg.binsize; % normalize by binsize
@@ -160,17 +160,17 @@ for iShuf = cfg.shuff:-1:1
             S_gau_sdf = S_gau_sdf';
         end
         outputGau_shuf(:,iShuf) =  S_gau_sdf;
-        
-        
+
+
         if cfg.outputGrid
-            
+
             temp = histc(S0.t{1}-t(iT),xbin); temp = temp(1:end-1);
             if ~isempty(temp)
                 outputG(iT,:) = temp;
             end
-            
+
         end
-        
+
     end % end check for any spikes
 end % end shuffles.
 
@@ -190,7 +190,7 @@ post_stim_means = nanmean(outputGau(idx:end,:),1); % % get the mean of the gau s
 pre_stim_std = nanstd(outputGau(1:idx-1,:),[],1);  % get the mean of the gau smoothed firing rate before the event.
 post_stim_std = nanstd(outputGau(idx:end,:),[],1); % % get the mean of the gau smoothed FR after the event.
 
-% z_vals = (mean_S_gau - mean(mean_S_gau(1:idx)))./mean(mean_S_gau(1:idx));
+z_vals = (mean_S_gau - mean(mean_S_gau(1:idx)))./mean(mean_S_gau(1:idx));
 
 
 
@@ -198,8 +198,8 @@ post_stim_std = nanstd(outputGau(idx:end,:),[],1); % % get the mean of the gau s
 %% display
 clf
 if  strcmp(cfg.plot, 'on')
-    
-    
+
+
     % spike raster
     subplot(2,1,1);
     % 	imagesc(window,[1 nT], outputID);
@@ -213,7 +213,7 @@ if  strcmp(cfg.plot, 'on')
         end
         plot(outputS(this_idx), outputT(this_idx)+0.5,'.', 'color', cfg.evt_color_mat(u_val(iV),:), 'MarkerSize', cfg.markersize)
     end
-    
+
     %     plot(outputS, outputT+0.5, '.k', 'MarkerSize', 5);
     xlabel('peri-event (sec)');
     ylabel('Event #');
@@ -243,7 +243,7 @@ if  strcmp(cfg.plot, 'on')
             set(gca, 'visible', 'off')
         end
     end
-    
+
     %%
     % bar graph
     % subplot(3,2,3);
@@ -256,17 +256,17 @@ if  strcmp(cfg.plot, 'on')
     % set(gca, 'XLim', cfg.window);
     % ylabel('FR (Hz)')
     % xlabel('peri-event (sec)');
-    
+
     % mean frequency line
     subplot(2,1,2);
     yyaxis left
     hold on
     %     outputITG= linspace(cfg.window(1), cfg.window(2), diff(cfg.window)/gauss_window+1);
-    
+
     % se_S_gau = nanstd(outputGau,2)/sqrt(nT+1);
     % plot(outputIT(1:end-1),mean_S_gau, 'b',outputIT(1:end-1),mean_S_gau+se_S_gau, 'b:',outputIT(1:end-1),mean_S_gau-se_S_gau, 'b:' )
-    
-    
+
+
     if strcmp(cfg.plot_type, 'zscore')
         plot(outputIT, z_vals,'color', 'k', 'linewidth', cfg.linewidth)
         ylabel('Pre-event zscore')
@@ -283,16 +283,18 @@ if  strcmp(cfg.plot, 'on')
                 rectangle('position', [0 min(z_vals) abs(mode(t(:,2)-t(:,1)))  (max(z_vals) - min(z_vals))*10], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
             end
         end
+        set(gca, 'Children',flipud(get(gca, 'Children')))
+
         x_lims = xlim;
         y_lims = ylim;
-        
+
         mean_gau =nanmean(z_vals,2);
-        
+
         text(x_lims(1), y_lims(2)*.9, ['Pre mean: ' num2str(mean(mean_gau(1:idx-1)), 2) '+/-' num2str(std(mean_gau(1:idx-1)),2) 'Hz'], 'fontweight', 'bold', 'fontsize', 12, 'color',c_ord(1,:) )
         text(x_lims(1), y_lims(2)*.7, ['Post mean: ' num2str(mean(mean_gau(idx:end)), 2)  '+/-' num2str(std(mean_gau(idx:end)),2) 'Hz' ], 'fontweight', 'bold', 'fontsize', 12, 'color',c_ord(2,:))
-        
-        
-        
+
+
+
     elseif strcmp(cfg.plot_type, 'shuff_zscore')
         plot(outputIT, mean_S_gau_z,'color', 'k', 'linewidth', cfg.linewidth)
         ylabel('Pre-event shuff zscore')
@@ -311,13 +313,14 @@ if  strcmp(cfg.plot, 'on')
         end
         x_lims = xlim;
         y_lims = ylim;
-        
+        set(gca, 'Children',flipud(get(gca, 'Children')))
+
         mean_gau =nanmean(mean_S_gau_z,2);
-        
+
         text(x_lims(1), y_lims(2)*.9, ['Pre mean: ' num2str(mean(mean_gau(1:idx-1)), 2) '+/-' num2str(std(mean_gau(1:idx-1)),2) 'Hz'], 'fontweight', 'bold', 'fontsize', 12, 'color',c_ord(1,:) )
         text(x_lims(1), y_lims(2)*.7, ['Post mean: ' num2str(mean(mean_gau(idx:end)), 2)  '+/-' num2str(std(mean_gau(idx:end)),2) 'Hz' ], 'fontweight', 'bold', 'fontsize', 12, 'color',c_ord(2,:))
-        
-        
+
+
     else
         plot(outputIT, mean_S_gau,'color', 'k', 'linewidth', cfg.linewidth)
         xlim(cfg.window);
@@ -325,7 +328,7 @@ if  strcmp(cfg.plot, 'on')
         if ~isempty(cfg.shuff)
             plot(outputIT,nanmean(outputGau_shuf,2), '--', 'color', [0.3 .3 .3])
         end
-        
+
         if ~(max(mean_S_gau)) ==0
             ylim([min(mean_S_gau) max(mean_S_gau)])
             if ~isempty(cfg.t_on)
@@ -336,20 +339,20 @@ if  strcmp(cfg.plot, 'on')
                 rectangle('position', [0 min(mean_S_gau) abs(mode(t(:,2)-t(:,1)))  abs(max(mean_S_gau))*10], 'facecolor', [cfg.rec_color 0.5], 'edgecolor', [cfg.rec_color 0.5])
             end
         end
-            set(gca, 'Children',flipud(get(gca, 'Children')))
+        set(gca, 'Children',flipud(get(gca, 'Children')))
 
-        
+
         % add in pre and post event means
         x_lims = xlim;
         y_lims = ylim;
-        
+
         mean_gau =nanmean(outputGau,2);
-        
+
         text(x_lims(1), y_lims(2)*.9, ['Pre mean: ' num2str(mean(mean_gau(1:idx-1)), 2) '+/-' num2str(std(mean_gau(1:idx-1)),2) 'Hz'], 'fontweight', 'bold', 'fontsize', 12, 'color',c_ord(1,:) )
         text(x_lims(1), y_lims(2)*.7, ['Post mean: ' num2str(mean(mean_gau(idx:end)), 2)  '+/-' num2str(std(mean_gau(idx:end)),2) 'Hz' ], 'fontweight', 'bold', 'fontsize', 12, 'color',c_ord(2,:))
-        
-    end % end plot type 
-    
+
+    end % end plot type
+
 end % end plotting
 
 
@@ -358,7 +361,7 @@ if ~exist('z_vals')
 end
 
 if ~exist('outputGau')
-outputGau = nan(size(outputIT))';
+    outputGau = nan(size(outputIT))';
 end
 
 if ~exist('outputGau_shuf')
@@ -366,19 +369,19 @@ if ~exist('outputGau_shuf')
 end
 
 if ~exist('pre_stim_means')
-pre_stim_means = nan(size(t));
+    pre_stim_means = nan(size(t));
 end
 
 if ~exist('post_stim_means')
-post_stim_means = nan(size(t));
+    post_stim_means = nan(size(t));
 end
 
 if ~exist('pre_stim_std')
-pre_stim_std = nan(size(t));
+    pre_stim_std = nan(size(t));
 end
 
 if ~exist('post_stim_std')
-post_stim_std = nan(size(t));
+    post_stim_std = nan(size(t));
 end
 
 end % end function

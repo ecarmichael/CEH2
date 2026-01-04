@@ -11,7 +11,7 @@ end
 %% load the phy along with the params file
 params = OE_load_params(phy2_dir);
 
-S = OE_phy2TS(phy2_dir);
+S = OE_phy2TS(phy2_dir, params);
 
 
 evts = OE_load_binary_evts(evts_dir);
