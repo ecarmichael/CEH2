@@ -82,7 +82,7 @@ for ii = length(good_clusters_ids):-1:1
     S.label{ii} = [num2str(good_clusters_ids(ii)) '-' num2str(I(ii))]; 
     S.usr{ii}.shank = chan_shanks(ii); 
     S.usr{ii}.pos = chan_pos(ii,:); 
-    S.usr{ii}.temp = chan_temp(:,:, ii); 
+    % S.usr{ii}.temp = chan_temp(:,:, ii); 
 end
 
 S.cfg.history.mfun{1} = mfilename;

@@ -41,7 +41,7 @@ end
 
 rate_tsd.tvec = t_centers'; 
 rate_tsd.units = 'Hz'; 
-rate_tsd.cfg.history.mfun{end+1} = 'MS_spike2rate'; 
-rate_tsd.cfg.history.cfg{end+1}.dt = dt; 
-rate_tsd.cfg.history.cfg{end}.sig = sig; 
-rate_tsd.cfg.history.cfg{end}.bin_s = bin_s; 
+rate_tsd.cfg.history.mfun{end+1,1} = 'MS_spike2rate'; 
+rate_tsd.cfg.history.cfg{end+1,1}.dt = dt; 
+rate_tsd.cfg.history.cfg{end,1}.sig = sig; 
+rate_tsd.cfg.history.cfg{end,1}.bin_s = bin_s; 

@@ -39,7 +39,8 @@ for iS = length(data_in.S.t):-1:1
 
 
     %% opto response
-    c_red = [0.9153    0.2816    0.2878];
+    c_red = [0.9153    0.2816    0.2878; 
+        0 0 1];
     TTL = {'6', '7'};
     TTL_name = {'red', 'blue'};
 
@@ -52,8 +53,8 @@ for iS = length(data_in.S.t):-1:1
             % isolate events of a certain length
             e_d = evt_t(2,:) - evt_t(1,:);
             ITIs = unique(round(e_d, 3));
-
             for iTi = length(ITIs):-1:1
+            figure((iS*1000) + iO*10 + iTi)
 
                 evt_t = data_in.evts.t{this_TTL_idx} ;
                 k_idx = round(e_d,3) == ITIs(iTi) ;
@@ -70,16 +71,16 @@ for iS = length(data_in.S.t):-1:1
 
                 cfg_peth = [];
                 cfg_peth.window = [-.25 .25];
-                cfg_peth. plot_type = 'zscore';
+                cfg_peth. plot_type = 'raw';
                 cfg_peth.dt = 0.001;
                 cfg_peth.gauss_window = .025;
                 cfg_peth.gauss_sd = .0025;
                 cfg_peth.shuff = 500;
                 cfg_peth.t_on = mode(e_d(k_idx));
-                cfg_peth.rec_color = c_red;
+                cfg_peth.rec_color = c_red(iO,:);
                 cfg_peth.plot = 'on';
                 [peth_S, ~,~, ~, ~, ~, ~, ~, ~,peth_T] = SpikePETH_Shuff(cfg_peth, S, evt_t);
-
+                disp(S.label{1})
                 % pre_fr = mean(zval(peth_IT<0));
                 % laser_fr = mean(zval(find(peth_IT==0):nearest_idx(mode(e_d(k_idx)), peth_IT)));
 
@@ -94,15 +95,54 @@ for iS = length(data_in.S.t):-1:1
                     post(iV) = sum((peth_S(this_idx) > 0) & peth_S(this_idx) < mode(e_d(k_idx)));
                 end
 
+                %rate based FR Stim changes
+                this_fr = MS_spike2rate(S, data_in.csc.tvec, 0.001, 0.005); % needs small gau sd for precision. 
+
+                for ii = length(evt_t):-1:1
+                    l_iv = iv(evt_t(ii), evt_t(ii)+ cfg_peth.t_on );
+                    fr_r = restrict(this_fr, l_iv);
+                    l_fr(ii) = mean(fr_r.data);
+
+                    p_iv = iv(evt_t(ii)- cfg_peth.t_on, evt_t(ii) );
+                    fr_r = restrict(this_fr, p_iv);
+                    p_fr(ii) = mean(fr_r.data);
+
+                end
+
+                figure(iS*1000+iO*10+iTi+100000)
+                MS_bar_w_err(p_fr, l_fr, [0 0 1; 0 1 0], 1, 'ttest')
+                real_iv = iv(evt_t- cfg_peth.t_on , evt_t+ cfg_peth.t_on); 
+                shuff_t = datasample(this_fr.tvec, 10000, 1, "Replace",true); 
+                shuff_iv = iv(shuff_t, shuff_t+ cfg_peth.t_on); 
+
+                cfg_diff.verbose = 0; 
+                shuff_iv = DifferenceIV(cfg_diff, shuff_iv, real_iv); 
+
+                shuff_id = datasample(1:length(shuff_iv.tstart), 1000); 
+                shuff_l_fr = []; shuff_p_fr = [];
+
+                for ishuff = 1000:-1:1
+                    this_s_fr = restrict(this_fr, shuff_iv.tstart(shuff_id(ishuff)), shuff_iv.tend(shuff_id(ishuff)));
+                    shuff_l_fr(ishuff) = mean(this_s_fr.data);
+
+                    this_s_fr = restrict(this_fr, shuff_iv.tstart(shuff_id(ishuff)) - cfg_peth.t_on , shuff_iv.tstart(shuff_id(ishuff)));
+                    shuff_p_fr(ishuff) = mean(this_s_fr.data);
+                end
+
+
                 S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.dur = mode(e_d(k_idx));
                 S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.ITI = mode(diff(evt_t));
-                S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.pre = pre;
-                S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.post = post;
+                S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.pre = p_fr;
+                S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.post = l_fr;
+
+                S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.shuff_pre = shuff_l_fr;
+                S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.shuff_post = shuff_p_fr;
+
                 % if ~isempty(pre) || ~isempty(post)
-                [~,S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.pval] = ttest(pre, post);
+                [~,S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.pval] = ttest(l_fr, p_fr);
 
                 if iTi == 1
-                    opto_resp.(TTL_name{iO})(iS) = ttest(pre, post);
+                    opto_resp.(TTL_name{iO})(iS) = ttest(l_fr, p_fr);
                 end
                 % else
                 % S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.pval = NaN;
@@ -112,7 +152,6 @@ for iS = length(data_in.S.t):-1:1
     end
 end% opto colours
 
-end
 
 %%
 for ii = 1:length(S_metrics)
