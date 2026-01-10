@@ -14,8 +14,11 @@
 %%%%%%%%%%% chronate M7-m9 recall
 
 %% NOL %%%%%%%%
-
+if ispc
 data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\CIHR_NOL_2025'; 
+else
+data_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/CIHR_NOL_2025'; 
+end
 %
 cd(data_dir)
 
@@ -116,7 +119,7 @@ data_pair_r = data_out(:,[1 2 3 4 5 6 7 8 9 10 11]);
 data_pair_e(~enc_idx,:) = []; 
 data_pair_r(enc_idx,:) = []; 
 
-data_pair = [data_pair_e, data_pair_r(:, [1 2 6 7 8 9])];
+data_pair = [data_pair_e, data_pair_r(:, [1 2 6 7 8 9 10 11])];
 %%%%%% double check this is getting the right variables %%%%%%%%%%%%
 tbl_pairs = cell2table(data_pair, "VariableNames",{'Subject', 'Session','Geno', 'Virus','Sex','E_Obj1_t', 'E_Obj1_n', 'E_Obj2_t', 'E_Obj2_n' 'E_DI_n', 'E_DI_t','SubRr', 'SessR','R_Obj1_t', 'R_Obj1_n', 'R_Obj2_t', 'R_Obj2_n', 'R_DI_n', 'R_DI_t'});
 
@@ -147,17 +150,33 @@ end
 
 f_idx  = contains(tbl_out.Subject, {'M23' 'M4'});
 tbl_out(f_idx,:) = []; 
-
-
+% 
+% 
 f_idx  = find(contains(tbl_pairs.Subject, 'M9'));
 
 for ii = 1:length(f_idx)
     tbl_pairs.Virus{f_idx(ii)} = 'Sham';
 end
 
-f_idx  = contains(tbl_pairs.Subject, {'M23' 'M4'});
+f_idx  = contains(tbl_pairs.Subject, {'M23', 'M4'});
 tbl_pairs(f_idx,:) = []; 
 
+% f_idx  = find(contains(tbl_pairs.Virus, {'/Sham'}));
+% for ii = 1:length(f_idx)
+%     tbl_pairs.Virus{f_idx(ii)} = 'fibre';
+% end
+% 
+% f_idx  = find(contains(tbl_out.Virus, {'/Sham'}));
+% for ii = 1:length(f_idx)
+%     tbl_out.Virus{f_idx(ii)} = 'fibre';
+% end
+
+
+% f_idx  = contains(tbl_pairs.Virus, {'removed'});
+% tbl_pairs(f_idx,:) = []; 
+% 
+% f_idx  = contains(tbl_out.Virus, {'removed'});
+% tbl_out(f_idx,:) = []; 
 %% plot
 c_ord = MS_linspecer(8); 
 
@@ -166,6 +185,8 @@ ctrl_idx =  contains(tbl_pairs.Virus, 'Sham');
 cheta_idx =  contains(tbl_pairs.Virus, 'Cheta'); 
 
 bi_idx =  contains(tbl_pairs.Virus, 'Bipole');
+
+% ctrl_idx = ctrl_idx & ~bi_idx;
 
 art_idx =  contains(tbl_pairs.Virus, 'ArchT');
 
@@ -347,7 +368,7 @@ art_idx =  contains(tbl_out.Virus, 'ArchT');
 
 sst_idx =  contains(tbl_out.Geno, 'Sst');
 
-figure(192)
+figure(1920)
 this_data = tbl_out.DI_t; 
 
 clf

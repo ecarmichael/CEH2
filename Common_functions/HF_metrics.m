@@ -1,20 +1,24 @@
-function [data_out] = HF_metrics(data_in, dat_path)
+function [data_out] = HF_metrics(data_in, plot_flag)
 %% HF_Metrics:  computes simple spiking measures
 
 if nargin < 2
-    dat_path = [];
+    plot_flag = 0;
 end
+
+% ToDo:
+% - extract waveforms from phy2 wrapper.
+% - classify cells using waveforms.
 
 
 %% loop over cells
 fr = []; isi =[]; b_idx = []; opto_resp = [];
 for iS = length(data_in.S.t):-1:1
-
     S_metrics{iS} = [];
     S_metrics{iS}.fr = length(data_in.S.t{iS})./(data_in.csc.tvec(end)-data_in.csc.tvec(1));
     S_metrics{iS}.ISI = mean(diff(data_in.S.t{iS}));
     S_metrics{iS}.burst_idx = sum(diff(data_in.S.t{iS}) < .010) / sum(diff(data_in.S.t{iS}) > .010);
 
+        
     % autocorrelation
     xbin_centers = -.025-0.001:0.001:0.025+0.001; % first and last bins are to be deleted later
     ac = zeros(size(xbin_centers));
@@ -37,9 +41,8 @@ for iS = length(data_in.S.t):-1:1
     isi(iS) = S_metrics{iS}.ISI;
     b_idx(iS) = S_metrics{iS}.burst_idx;
 
-
     %% opto response
-    c_red = [0.9153    0.2816    0.2878; 
+    c_red = [0.9153    0.2816    0.2878;
         0 0 1];
     TTL = {'6', '7'};
     TTL_name = {'red', 'blue'};
@@ -54,11 +57,31 @@ for iS = length(data_in.S.t):-1:1
             e_d = evt_t(2,:) - evt_t(1,:);
             ITIs = unique(round(e_d, 3));
             for iTi = length(ITIs):-1:1
-            figure((iS*1000) + iO*10 + iTi)
 
+                if plot_flag
+                    figure((iS*1000) + iO*10 + iTi)
+                end
                 evt_t = data_in.evts.t{this_TTL_idx} ;
                 k_idx = round(e_d,3) == ITIs(iTi) ;
                 evt_t(:,~k_idx) = [];
+
+
+                if S_metrics{iS}.fr < 0.5
+                    S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.dur = mode(e_d(k_idx));
+                    S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.ITI = mode(diff(evt_t));
+                    S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.pre = NaN;
+                    S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.post = NaN;
+
+                    S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.shuff_pre = NaN;
+                    S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.shuff_post = NaN;
+
+                    % if ~isempty(pre) || ~isempty(post)
+                    [~,S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.pval] = NaN;
+
+                    if iTi == 1
+                        opto_resp.(TTL_name{iO})(iS) = NaN;
+                    end
+                end
 
                 % isolate the cell
                 S = data_in.S;
@@ -78,7 +101,11 @@ for iS = length(data_in.S.t):-1:1
                 cfg_peth.shuff = 500;
                 cfg_peth.t_on = mode(e_d(k_idx));
                 cfg_peth.rec_color = c_red(iO,:);
-                cfg_peth.plot = 'on';
+                if plot_flag
+                    cfg_peth.plot = 'on';
+                else
+                    cfg_peth.plot = 'off';
+                end
                 [peth_S, ~,~, ~, ~, ~, ~, ~, ~,peth_T] = SpikePETH_Shuff(cfg_peth, S, evt_t);
                 disp(S.label{1})
                 % pre_fr = mean(zval(peth_IT<0));
@@ -96,7 +123,7 @@ for iS = length(data_in.S.t):-1:1
                 end
 
                 %rate based FR Stim changes
-                this_fr = MS_spike2rate(S, data_in.csc.tvec, 0.001, 0.005); % needs small gau sd for precision. 
+                this_fr = MS_spike2rate(S, data_in.csc.tvec, 0.001, 0.005); % needs small gau sd for precision.
 
                 for ii = length(evt_t):-1:1
                     l_iv = iv(evt_t(ii), evt_t(ii)+ cfg_peth.t_on );
@@ -109,16 +136,20 @@ for iS = length(data_in.S.t):-1:1
 
                 end
 
-                figure(iS*1000+iO*10+iTi+100000)
-                MS_bar_w_err(p_fr, l_fr, [0 0 1; 0 1 0], 1, 'ttest')
-                real_iv = iv(evt_t- cfg_peth.t_on , evt_t+ cfg_peth.t_on); 
-                shuff_t = datasample(this_fr.tvec, 10000, 1, "Replace",true); 
-                shuff_iv = iv(shuff_t, shuff_t+ cfg_peth.t_on); 
+                if plot_flag
+                    figure(iS*1000+iO*10+iTi+100000)
+                    MS_bar_w_err(p_fr, l_fr, [.6 .6 .6; cfg_peth.rec_color], 1, 'ttest');
+                    set(gca, 'XTickLabel', {'baseline', 'light'})
+                end
+                % shuffles
+                real_iv = iv(evt_t- cfg_peth.t_on , evt_t+ cfg_peth.t_on);
+                shuff_t = datasample(this_fr.tvec, 10000, 1, "Replace",true);
+                shuff_iv = iv(shuff_t, shuff_t+ cfg_peth.t_on);
 
-                cfg_diff.verbose = 0; 
-                shuff_iv = DifferenceIV(cfg_diff, shuff_iv, real_iv); 
+                cfg_diff.verbose = 0;
+                shuff_iv = DifferenceIV(cfg_diff, shuff_iv, real_iv);
 
-                shuff_id = datasample(1:length(shuff_iv.tstart), 1000); 
+                shuff_id = datasample(1:length(shuff_iv.tstart), 1000);
                 shuff_l_fr = []; shuff_p_fr = [];
 
                 for ishuff = 1000:-1:1
@@ -153,22 +184,30 @@ for iS = length(data_in.S.t):-1:1
 end% opto colours
 
 
-%%
-for ii = 1:length(S_metrics)
-    
-    fprintf('Red Response Cell #%.d, %.4f\n',ii,  S_metrics{ii}.opto_red{1}.pval)
+%% collect the output stats
 
+data_out = data_in; 
+data_out.S_metrics  = S_metrics; 
+
+%% quick check
+r_resp = NaN(length(S_metrics), 1); 
+for ii = 1:length(S_metrics)
+
+    fprintf('Red Response Cell #%.d, %.4f\n',ii,  S_metrics{ii}.opto_red{1}.pval)
+    r_resp(ii) = (S_metrics{ii}.opto_red{1}.pval < 0.05);
 end
 
-fprintf('Red optoresponsive cells %.2f%% (%.d/%.d)\n', (nansum(opto_resp.red)./length(opto_resp.red))*100, nansum(opto_resp.red),length(opto_resp.red))
-fprintf('Red optoresponsive cells %.2f%% (%.d/%.d)\n', (nansum(opto_resp.red)./length(opto_resp.red))*100, nansum(opto_resp.red),length(opto_resp.red))
-
+for iO = 1:length(TTL_name)
+    fprintf('%s optoresponsive cells %.2f%% (%.d/%.d)\n',TTL_name{iO}, (sum(opto_resp.(TTL_name{iO}), 'omitmissing')./length(opto_resp.(TTL_name{iO})))*100, sum(opto_resp.(TTL_name{iO}), 'omitmissing'),length(opto_resp.(TTL_name{iO})))
+end
 %% plotting Fr and ISI
+if plot_flag
+    figure
 
-figure(9990)
+    [~, ~] = MS_kmean_scatter([fr', isi', b_idx'], 2, [1,2,3], 50);
+    xlabel('firing rate')
+    ylabel('ISI')
+    zlabel('bursting index')
+    axis square
+end
 
-[g_idx, n_val] = MS_kmean_scatter([fr', isi', b_idx'], 2, [1,2,3], 50);
-xlabel('firing rate')
-ylabel('ISI')
-zlabel('bursting index')
-axis square

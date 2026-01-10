@@ -13,6 +13,8 @@ evts_dir = ('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Whee
 csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D5/HF2b2_2026-01-02_13-50-31_D5/Record Node 117'; 
 phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/HF2b2_D5';
 vr_fname = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D5/h2b2_VR_D5_2026-01-02_14-09-33.csv'; 
+csc_idx = [1]; 
+
 
 save_name = 'HF2b2_D5'; 
 %% HF2b2_D5_opto_1
@@ -20,6 +22,8 @@ evts_dir = ('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Whee
 csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/HF2b2_2026-01-02_13-15-51_SS_test/Record Node 117'; 
 phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/HF2b2_D5_Opto1';
 vr_fname = []; %'/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D3/HF2b2_D3_2025-12-18_14-08-34.csv'; 
+csc_idx = [1]; 
+
 
 save_name = 'HF2b2_D5_opto1'; 
 %% HF2b2_D5_opto_2
@@ -27,15 +31,45 @@ evts_dir = ('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Whee
 csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/HF2b2_2026-01-02_13-21-35_SS_test2/Record Node 117'; 
 phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/HF2b2_SS_D5_Opto_cells';
 vr_fname = []; %'/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D3/HF2b2_D3_2025-12-18_14-08-34.csv'; 
-
+csc_idx = [1, 4, 6]; 
+swr_ch = 2; 
 save_name = 'HF2b2_D5_opto2'; 
+
+%% plot the csc channels to check for good ones:
+
+figure(1)
+clf
+hold on
+offset =250; 
+for ii  = 1:size(data.csc.data, 1)
+    plot(data.csc.tvec, data.csc.data(ii,:)+(offset*ii)); 
+
+end
 %% load the evts
 
-data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, [1]); 
+data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, csc_idx); 
+
+%% get the basic metrics
+
+data = HF_metrics(data); 
+
+% remove cells with low firing rates
+s_fr = []; 
+for ii = length(data.S_metrics):-1:1
+    s_fr(ii) = data.S_metrics{ii}.fr; 
+end
+
+data_m.S.t(s_fr<0.5) = []; 
+data_m.S.label(s_fr<0.5) = []; 
+data_m.S_metrics(s_fr<0.5) = []; 
 
 
+%% detect SWR
+
+[data.swr.iv, data.swr.cfg] = MS_SWR_detector(data.csc, data.csc.label{swr_ch},1); 
+data.swr.chan = data.csc.label{swr_ch}; 
 %% save the intermediate data
-save(['/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/' save_name '.mat'])
+save(['/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/' save_name '.mat'], "data")
 %% figure showing all the events
 c_ord = MS_linspecer(8); 
 

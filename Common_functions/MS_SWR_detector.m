@@ -1,4 +1,4 @@
-function SWR_evts = MS_SWR_detector_basic(csc, chan_to_use, plot_flag)
+function [SWR_evts, cfg_swr] = MS_SWR_detector(csc, chan_to_use, plot_flag)
 %% MS_SWR_detector: default SWR detector. Meant for speed, not accuracy.
 %
 %
@@ -35,7 +35,7 @@ if length(csc.label) >1 && isempty(chan_to_use);
 end
 
 if ~isempty(chan_to_use)
-    chan_idx = find(contains(csc.label, chan_to_use));
+    chan_idx = find(strcmp(csc.label, chan_to_use));
     
     temp_data = csc.data(chan_idx,:);
     csc.data = [];

@@ -19,7 +19,7 @@ evts = OE_load_binary_evts(evts_dir);
 csc_list = dir([csc_dir filesep '*CH*.continuous']);
 
 if ~isempty(csc_idx)
-    csc_list(~(1:length(csc_list) == csc_idx))= [];
+    csc_list(~ismember(1:length(csc_list), csc_idx))= [];
 end
 
 csc= []; labels = [];
