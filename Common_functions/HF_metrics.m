@@ -76,7 +76,7 @@ for iS = length(data_in.S.t):-1:1
                     S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.shuff_post = NaN;
 
                     % if ~isempty(pre) || ~isempty(post)
-                    [~,S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.pval] = NaN;
+                    S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.pval = NaN;
 
                     if iTi == 1
                         opto_resp.(TTL_name{iO})(iS) = NaN;
