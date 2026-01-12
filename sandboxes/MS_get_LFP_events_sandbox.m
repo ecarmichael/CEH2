@@ -103,7 +103,7 @@ if isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
             cfg.artif_det.threshold = max(amp_artif.data(iChan,:))*.95; 
         end
     
-    
+    cfg.artif_det.method = 'raw'; 
     artif_evts = TSDtoIV(cfg.artif_det,csc_artif);
     
     cfg_temp = [];

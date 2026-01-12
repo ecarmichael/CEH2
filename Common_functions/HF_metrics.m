@@ -112,15 +112,15 @@ for iS = length(data_in.S.t):-1:1
                 % laser_fr = mean(zval(find(peth_IT==0):nearest_idx(mode(e_d(k_idx)), peth_IT)));
 
                 % t-test for pre and post rate for each stim?
-                u_val = unique(peth_T); pre = NaN(1,length(u_val)); post = pre;
-                for iV = length(u_val):-1:1
-                    this_idx = peth_T == u_val(iV);
-                    if isempty(this_idx)
-                        continue
-                    end
-                    pre(iV) = sum((peth_S(this_idx) > -mode(e_d(k_idx))) & (peth_S(this_idx) < 0));
-                    post(iV) = sum((peth_S(this_idx) > 0) & peth_S(this_idx) < mode(e_d(k_idx)));
-                end
+                % u_val = unique(peth_T); pre = NaN(1,length(u_val)); post = pre;
+                % for iV = length(u_val):-1:1
+                %     this_idx = peth_T == u_val(iV);
+                %     if isempty(this_idx)
+                %         continue
+                %     end
+                %     pre(iV) = sum((peth_S(this_idx) > -mode(e_d(k_idx))) & (peth_S(this_idx) < 0));
+                %     post(iV) = sum((peth_S(this_idx) > 0) & peth_S(this_idx) < mode(e_d(k_idx)));
+                % end
 
                 %rate based FR Stim changes
                 this_fr = MS_spike2rate(S, data_in.csc.tvec, 0.001, 0.005); % needs small gau sd for precision.
