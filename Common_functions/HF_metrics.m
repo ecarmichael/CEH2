@@ -1,8 +1,11 @@
-function [data_out] = HF_metrics(data_in, plot_flag)
+function [data_out] = HF_metrics(data_in, plot_flag, TTL)
 %% HF_Metrics:  computes simple spiking measures
 
 if nargin < 2
     plot_flag = 0;
+    TTL = {'6', '7'};
+elseif nargin < 3
+    TTL = {'6', '7'};
 end
 
 % ToDo:
@@ -44,7 +47,7 @@ for iS = length(data_in.S.t):-1:1
     %% opto response
     c_red = [0.9153    0.2816    0.2878;
         0 0 1];
-    TTL = {'6', '7'};
+    
     TTL_name = {'red', 'blue'};
 
     for iO = 1:2
