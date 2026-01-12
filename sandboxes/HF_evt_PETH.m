@@ -1,13 +1,6 @@
 %% sandbox_HF_OE_Peth
 
-if ispc
-    usr =getenv('USERNAME'); 
-    pc_name = ['C:\Users\' usr]; 
-else
-    usr =getenv('USER'); 
-    pc_name = ['/Users/' usr]; 
-end
-    
+
     %% HF2b2_D3
 evts_dir = ('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D5/HF2b2_2025-12-18_13-47-24_D3_2_opto_only/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL') ;
 csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D3/HF2b2_2025-12-18_13-47-24_D3_2_opto_only/Record Node 117';
@@ -61,17 +54,27 @@ vr_fname = []; %'/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/
 csc_idx = [3 11]; 
 swr_ch = 1; 
 save_name = 'SOM2_test_wide_probe2'; 
+TTL = {'3', '7'};
 
 %% HF2b2_H2_opto
-evts_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\GoNoGo\HF2b2_H2\HF2b2_2026-01-12_09-38-52_H2_opto\Record Node 112\experiment1\recording1\events\Intan_RHD_USB-100.Rhythm Data\TTL' ;
+evts_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\GoNoGo\HF2b2_H2\HF2b2_2026-01-12_09-38-52_H2_opto\Record Node 112\experiment1\recording1\events\Intan_RHD_USB-108.Rhythm Data\TTL' ;
 csc_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\GoNoGo\HF2b2_H2\HF2b2_2026-01-12_09-38-52_H2_opto\Record Node 117'; 
 phy_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Kilo_inter\HF2b2_H2_opto';
 vr_fname = []; %'/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D3/HF2b2_D3_2025-12-18_14-08-34.csv'; 
 csc_idx = [3 11]; 
 swr_ch = 1; 
 save_name = 'HF2b2_H2_opto'; 
-
+TTL = {'6' '7'};
 %% convert for PC
+if ispc
+    usr =getenv('USERNAME'); 
+    pc_name = ['C:\Users\' usr]; 
+else
+    usr =getenv('USER'); 
+    pc_name = ['/Users/' usr]; 
+end
+    
+
 evts_dir = regexprep([pc_name evts_dir], {'\', '/'}, {filesep, filesep});
 csc_dir = regexprep([pc_name csc_dir], {'\', '/'}, {filesep, filesep});
 phy_dir = regexprep([pc_name phy_dir], {'\', '/'}, {filesep, filesep});
@@ -97,7 +100,7 @@ data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, csc_idx);
 
 %% get the basic metrics
 
-data = HF_metrics(data, 0, {'3', '7'}); 
+data = HF_metrics(data, 0, TTL); 
 
 % remove cells with low firing rates
 s_fr = [];
@@ -180,8 +183,9 @@ end
 %% peth per cell
 c_red = [0.9153    0.2816    0.2878];
 
-red_idx = find(contains(data.evts.label, '6'));
-blue_idx = find(contains(data.evts.label, '7'));
+
+red_idx = find(contains(data.evts.label, TTL{1})); 
+blue_idx = find(contains(data.evts.label, TTL{2})); 
 
 window = [-.250 .250];
 bin_s = .025;
