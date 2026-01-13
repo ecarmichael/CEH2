@@ -1,6 +1,24 @@
 %% sandbox_HF_OE_Peth
 
+%% HF2b2_D1_red_resp [only 2 cells?]
+evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D1/HF2b2_2025-12-16_11-18-44_Red_respose_Ca1/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL' ;
+csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D1/HF2b2_2025-12-16_11-18-44_Red_respose_Ca1/Record Node 117'; 
+phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/HF2b2_red_response';
+vr_fname = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D1/HF2b2_D1_2025-12-16_12-47-39.csv'; 
+csc_idx = [3 11]; 
+swr_ch = 1; 
+save_name = 'HF2b2_D1_red_resp'; 
+TTL = {'6', '7'};
 
+%% HF2b2_D1
+evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D1/HF2b2_2025-12-16_12-39-09_D1/Record Node 112/experiment2/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL' ;
+csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D1/HF2b2_2025-12-16_12-39-09_D1/Record Node 117'; 
+phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/HF2b2_D1';
+vr_fname = []; 
+csc_idx = [3 11]; 
+swr_ch = 1; 
+save_name = 'HF2b2_D1'; 
+TTL = {'6', '7'};
     %% HF2b2_D3
 evts_dir = ('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D5/HF2b2_2025-12-18_13-47-24_D3_2_opto_only/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL') ;
 csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D3/HF2b2_2025-12-18_13-47-24_D3_2_opto_only/Record Node 117';
@@ -9,13 +27,13 @@ vr_fname = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel
 
 
 %% HF2b2_D5
-evts_dir = ('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D5/HF2b2_2026-01-02_13-50-31_D5/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL') ;
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D5/HF2b2_2026-01-02_13-50-31_D5/Record Node 117';
-phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/HF2b2_D5';
-vr_fname = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D5/h2b2_VR_D5_2026-01-02_14-09-33.csv';
+evts_dir = ('/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D5/HF2b2_2026-01-02_13-50-31_D5/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL') ;
+csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D5/HF2b2_2026-01-02_13-50-31_D5/Record Node 117';
+phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/HF2b2_D5';
+vr_fname = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D5/h2b2_VR_D5_2026-01-02_14-09-33.csv';
 csc_idx = [1 6 11];
 swr_ch = 2;
-
+TTL = {'6', '7'};
 save_name = 'HF2b2_D5';
 %% HF2b2_D5_opto_1
 % evts_dir = ('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/HF2b2_2026-01-02_13-15-51_SS_test/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL') ;
@@ -56,7 +74,7 @@ swr_ch = 1;
 save_name = 'SOM2_test_wide_probe2'; 
 TTL = {'3', '7'};
 
-%% HF2b2_H2_opto
+%% HF2b2_H2_opto  [timing is off]
 evts_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\GoNoGo\HF2b2_H2\HF2b2_2026-01-12_09-38-52_H2_opto\Record Node 112\experiment1\recording1\events\Intan_RHD_USB-108.Rhythm Data\TTL' ;
 csc_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\GoNoGo\HF2b2_H2\HF2b2_2026-01-12_09-38-52_H2_opto\Record Node 117'; 
 phy_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Kilo_inter\HF2b2_H2_opto';
@@ -513,6 +531,8 @@ for ii = length(s_names):-1:1
         cell.b_idx(iC) = this_data.S_metrics{iC}.burst_idx;
         cell.ISI(iC) = this_data.S_metrics{iC}.ISI;
         cell.shank(iC) = this_data.S.usr{iC}.shank;
+        cell.pos(iC,:) = this_data.S.usr{iC}.pos;
+
 
         for iT = length(this_data.S_metrics{iC}.opto_red):-1:1
 
@@ -540,6 +560,8 @@ for ii = length(s_names):-1:1
         all_data.b_idx = [all_data.b_idx, cell.b_idx];
         all_data.ISI = [all_data.ISI, cell.ISI];
         all_data.shank = [all_data.shank, cell.shank];
+        all_data.pos = [all_data.pos; cell.pos];
+
         all_data.red_resp = [all_data.red_resp; cell.red_resp];
         all_data.red_resp_dir = [all_data.red_resp_dir; cell.red_resp_dir];
         all_data.blue_resp = [all_data.blue_resp; cell.blue_resp];
@@ -556,36 +578,59 @@ clf
 
 % K means 
 subplot(1,2,1)
-  [~, ~] = MS_kmean_scatter([all_data.fr', all_data.ISI', all_data.b_idx'], 3, [1,2,3], 50);
+  [~, ~] = MS_kmean_scatter([all_data.fr', all_data.ISI', all_data.b_idx'], 3, [1,2,3], 150);
     xlabel('firing rate')
     ylabel('ISI')
     zlabel('bursting index')
-    axis square
+    % axis square
 
+    view([45 45 45])
+% legend({'group 1', 'group 2', 'group 3'},'Location','northeast')
+set(gca, 'XDir', 'reverse', 'yDir', 'reverse')
 
 subplot(1,2,2)
+cla
 hold on
 k_idx = logical(all_data.red_resp(:,2) < 0.05); 
-shanks = unique(all_data.shank);
-[vz, vl] = view;
+% shanks = unique(all_data.shank);
 
-for ii = 1:length(shanks)
+
+% for ii = 1:length(shanks)
   
-    this_idx = ~k_idx' & (all_data.shank == shanks(ii)); 
-    scatter3(all_data.fr(~this_idx), log(all_data.ISI(~this_idx)), all_data.b_idx(~this_idx), 50,c_ord(ii,:), 'filled', 'Marker','d', 'MarkerFaceAlpha',.25, 'DisplayName',['Shank ' num2str(ii)])
+    this_idx = k_idx'; %& (all_data.shank == shanks(ii)); 
+    scatter3(all_data.fr(this_idx), (all_data.ISI(this_idx)), all_data.b_idx(this_idx), 150,c_ord(ii,:), 'filled', 'Marker','o', 'DisplayName',' responsive')
 
-    this_idx = k_idx' & (all_data.shank == shanks(ii)); 
-    scatter3(all_data.fr(this_idx), log(all_data.ISI(this_idx)), all_data.b_idx(this_idx), 50,c_ord(ii,:), 'filled', 'Marker','o', 'DisplayName',['Shank ' num2str(ii) ' Resp'])
 
-end
+    this_idx = ~k_idx'; %& (all_data.shank == shanks(ii)); 
+    scatter3(all_data.fr(this_idx), (all_data.ISI(this_idx)), all_data.b_idx(this_idx), 150,c_ord(ii,:), 'filled', 'Marker','d', 'MarkerFaceAlpha',.25, 'DisplayName',['not responsive'])
+
+
+% end
 grid on
 xlabel('Firing rate (Hz)')
 ylabel('log ISI')
 zlabel('Burst index')
-legend
-view(0, 90)
-    axis square
+legend('Location','northeast')
+view([45 45 45])
+set(gca, 'XDir', 'reverse', 'yDir', 'reverse')
+% axis square
 
+SetFigure([], gcf)
+%%
+figure(102)
+cla
+hold on
 
+    scatter(all_data.pos(k_idx,1), all_data.pos(k_idx,2), 200,all_data.fr(k_idx), 'filled', 'Marker','o', 'DisplayName',['Shank ' num2str(ii) ' responsive'])
+    scatter(all_data.pos(~k_idx,1), all_data.pos(~k_idx,2), 200,all_data.fr(~k_idx), 'filled','Marker','d', 'MarkerFaceAlpha',.25, 'DisplayName',['not responsive'])
+cb = colorbar;
+ylabel(cb,'Firing rate (Hz)','FontSize',16,'Rotation',90);
+    ylim([-100 0])
 
+    ylabel('Probe depth (microns)')
+    xlabel('Probe width (microns)')
+    text(250, 0, 'CA1', 'HorizontalAlignment','center', 'FontSize',22, 'VerticalAlignment','top')
+text(0, 0, '<-   distal', 'HorizontalAlignment','left', 'FontSize',22, 'VerticalAlignment','top')
+text(500, 0, 'intermediate   -> ', 'HorizontalAlignment','right', 'FontSize',22, 'VerticalAlignment','top')
 
+SetFigure([], gcf)

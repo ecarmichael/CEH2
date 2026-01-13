@@ -15,6 +15,9 @@ S = OE_phy2TS(phy2_dir, params);
 
 
 evts = OE_load_binary_evts(evts_dir);
+
+
+
 %% load the lfp
 csc_list = dir([csc_dir filesep '*CH*.continuous']);
 
@@ -40,6 +43,7 @@ for ii = 1:length(csc_list)
         csc.cfg.hdr{ii}.SamplingFrequency = info.header.sampleRate;
     end
 end
+fs = csc.cfg.hdr{1}.SamplingFrequency; 
 
 csc.data = csc.data';
 csc.label = labels;
@@ -49,7 +53,10 @@ offset = csc.tvec(1);
 cfg_in.decimateFactor = 15;
 csc = decimate_tsd(cfg_in, csc);
 
+% load the OE version of the events.
+evts_list = dir([csc_dir filesep '*Data*.events']);
 
+OE_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs);
 %% get the AD channel piezo
 adc = dir([csc_dir filesep '*ADC*.continuous']);
 if ~isempty(adc)
@@ -71,6 +78,11 @@ csc.tvec = csc.tvec- csc.tvec(1);
 % loop over events and remove the offset.
 for ii = 1:length(evts.t)
     evts.t{ii} = evts.t{ii} - offset;
+end
+
+% loop over events and remove the offset.
+for ii = 1:length(OE_evts.t)
+    OE_evts.t{ii} = OE_evts.t{ii} - offset;
 end
 
 
@@ -103,6 +115,7 @@ data_out.params = params;
 data_out.S = S;
 data_out.csc = csc;
 data_out.evts = evts;
+data_out.OE_evts = OE_evts;
 data_out.licks = rate_tsd;
 if ~isempty(vr_fname)
     data_out.vr = vr;

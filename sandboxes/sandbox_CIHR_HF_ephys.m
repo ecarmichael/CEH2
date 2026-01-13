@@ -6,14 +6,18 @@ if ispc
     spk_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-08_12-23-48_TFC_REC3_swr\Record Node 113\experiment1\recording1\continuous\Intan_RHD_USB-100.Rhythm Data';
 
 elseif ismac
-    data_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/HF_1_2025-09-05_15-53-34_TFC_REC/Record Node 118';
+    data_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/HF_1_2025-09-08_12-23-48_TFC_REC3_swr/Record Node 118';     
+    evts_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/HF_1_2025-09-08_12-23-48_TFC_REC3_swr/Record Node 119';
+    spk_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/HF_1_2025-09-08_12-23-48_TFC_REC3_swr/Record Node 113/experiment1/recording1/continuous/Intan_RHD_USB-100.Rhythm Data'; 
     oe_dir = '/Users/ecar/Documents/Github/open_ephys_matlab_tools';
+    raw_evts_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/HF/HF_1_2025-09-08_12-23-48_TFC_REC3_swr/Record Node 113/experiment1/recording1/events/Intan_RHD_USB-100.Rhythm Data/TTL'; 
 addpath(genpath(oe_dir))
 
 end
 %
 cd(evts_dir)
 evts = OE_LoadEvents();
+% evts = OE_load_binary_evts(raw_evts_dir)
 
 
 csc_list = dir([data_dir filesep '*.continuous']);
@@ -68,9 +72,12 @@ disp(['OE    : ' num2str(OE_evts.t{1}(1, ii)) ' : ' num2str(OE_evts.t{1}(2, ii))
 end
 %% 
 
+if length(evts.t{1}) == 1
+rec_iv = iv(evts.t{1}(1), csc.tvec(end)); 
 
+else
 rec_iv = iv(evts.t{1}(1), evts.t{1}(2)); 
-
+end
 
 swr_iv = iv(evts.t{end-1}-.05,evts.t{end-1}+.1); 
 

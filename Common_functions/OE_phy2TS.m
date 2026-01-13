@@ -28,9 +28,9 @@ spike_ind = readNPY([data_dir filesep 'spike_times.npy']);
 spike_times = double(spike_ind)/spike_struct.sample_rate; % from  https://github.com/cortex-lab/spikes/blob/master/preprocessing/phyHelpers/loadKSdir.m
 spike_clusters = readNPY([data_dir filesep 'spike_clusters.npy']);
 
-chan_shanks = readNPY([data_dir filesep 'channel_shanks.npy']);
+% chan_shanks = readNPY([data_dir filesep 'channel_shanks.npy']); % not what I thought it was.
 chan_pos= readNPY([data_dir filesep 'spike_positions.npy']);
-% chan_amp= readNPY([data_dir filesep 'amplitudes.npy']);
+% chan_map= readNPY([data_dir filesep 'channel_map.npy']);
 % chan_temp= readNPY([data_dir filesep 'templates.npy']);
 
  % cgsFile = fullfile(data_dir, 'cluster_group.tsv')
@@ -80,7 +80,7 @@ S.type = 'ts';
 for ii = length(good_clusters_ids):-1:1
     S.t{ii} = (spike_times(spike_clusters == good_clusters_ids(ii)));
     S.label{ii} = [num2str(good_clusters_ids(ii)) '-' num2str(I(ii))]; 
-    S.usr{ii}.shank = chan_shanks(ii); 
+    % S.usr{ii}.shank = chan_shanks(ii); 
     S.usr{ii}.pos = chan_pos(ii,:); 
     % S.usr{ii}.temp = chan_temp(:,:, ii); 
 end
