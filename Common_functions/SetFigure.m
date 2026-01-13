@@ -59,12 +59,13 @@ if cfg.re_line ~= 0
     
 end
 
-box off
 g = get(gca, 'XLabel');
 set(g, 'fontsize', cfg.ft_size);
 g = get(gca, 'YLabel');
 set(g, 'fontsize', cfg.ft_size);
 g = get(gca, 'title');
 set(g, 'fontsize', cfg.ft_size);
+box off
+
 
 

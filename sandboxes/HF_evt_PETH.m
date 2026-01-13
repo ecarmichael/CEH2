@@ -500,7 +500,7 @@ legend(blue_labels, 'Box', 'off')
 % grab the good intermediate sessions
 int_fname= dir('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/*.mat');
 
-keep_sess = {'HF2b2_D5_opto2.mat', 'HF2b2_D5.mat'};
+keep_sess = {'HF2b2_D5_opto2.mat', 'HF2b2_D5.mat', 'HF2b2_D4'};
 all_sess = [];
 for ii = 1:length(int_fname)
     if contains(int_fname(ii).name, keep_sess)
@@ -530,7 +530,7 @@ for ii = length(s_names):-1:1
         cell.fr(iC) = this_data.S_metrics{iC}.fr;
         cell.b_idx(iC) = this_data.S_metrics{iC}.burst_idx;
         cell.ISI(iC) = this_data.S_metrics{iC}.ISI;
-        cell.shank(iC) = this_data.S.usr{iC}.shank;
+        % cell.shank(iC) = this_data.S.usr{iC}.shank;
         cell.pos(iC,:) = this_data.S.usr{iC}.pos;
 
 
@@ -559,7 +559,7 @@ for ii = length(s_names):-1:1
         all_data.fr = [all_data.fr,  cell.fr];
         all_data.b_idx = [all_data.b_idx, cell.b_idx];
         all_data.ISI = [all_data.ISI, cell.ISI];
-        all_data.shank = [all_data.shank, cell.shank];
+        % all_data.shank = [all_data.shank, cell.shank];
         all_data.pos = [all_data.pos; cell.pos];
 
         all_data.red_resp = [all_data.red_resp; cell.red_resp];
@@ -634,3 +634,45 @@ text(0, 0, '<-   distal', 'HorizontalAlignment','left', 'FontSize',22, 'Vertical
 text(500, 0, 'intermediate   -> ', 'HorizontalAlignment','right', 'FontSize',22, 'VerticalAlignment','top')
 
 SetFigure([], gcf)
+
+%%
+figure(103)
+subplot(1,2,1)
+r_10= (all_data.red_resp(:,1) < 0.05); 
+r_50= (all_data.red_resp(:,2) < 0.05); 
+r_100= (all_data.red_resp(:,3) < 0.05); 
+r_250= (all_data.red_resp(:,4) < 0.05); 
+n_cells = length(all_data.red_resp(:,4)); 
+
+ax = piechart([sum(r_10 | r_50 | r_100 | r_250)/n_cells, ...        
+    sum(r_10 & ~r_50 &~r_100 &~r_250)/n_cells,...
+    sum(~r_10 & r_50 &~r_100 &~r_250)/n_cells,...
+    sum(~r_10 & ~r_50 & r_100 &~r_250)/n_cells,...
+    sum(~r_10 & ~r_50 &~r_100 & r_250)/n_cells,...
+    sum(~r_10 & ~r_50 &~r_100 &~r_250)/n_cells,...
+    ]*100, {'any', '10ms', '50ms', '100ms', '250ms', 'non-repsonive'}, 'fontsize', 12);
+
+red_map = hot(12); 
+colororder([red_map(1:2:10,:); .7 .7 .7])
+
+title('Red light responses')
+
+% 
+% subplot(1,2,2)
+% r_10= (all_data.blue_resp(:,1) < 0.05); 
+% r_50= (all_data.blue_resp(:,2) < 0.05); 
+% r_100= (all_data.blue_resp(:,3) < 0.05); 
+% r_250= (all_data.blue_resp(:,4) < 0.05); 
+% n_cells = length(all_data.blue_resp(:,4)); 
+% 
+% ax = piechart([sum(r_10 | r_50 | r_100 | r_250)/n_cells, ...
+%     sum(r_10 & ~r_50 &~r_100 &~r_250)/n_cells,...
+%     sum(~r_10 & r_50 &~r_100 &~r_250)/n_cells,...
+%     sum(~r_10 & ~r_50 & r_100 &~r_250)/n_cells,...
+%     sum(~r_10 & ~r_50 &~r_100 & r_250)/n_cells,...
+%     sum(~r_10 & ~r_50 &~r_100 &~r_250)/n_cells,...
+%     ]*100, {'any', '10ms', '50ms', '100ms', '250ms', 'non-repsonive'}, 'fontsize', 12);
+% 
+% title('Blue light responses')
+% ax.Colormap = ([MS_linspecer(5); .7 .7 .7]);
+% colororder([MS_linspecer(5); .7 .7 .7])
