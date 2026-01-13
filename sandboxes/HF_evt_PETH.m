@@ -55,7 +55,7 @@ swr_ch = 1;
 save_name = 'SOM2_test_wide_probe2'; 
 TTL = {'3', '7'};
 
-%% HF2b2_H2_opto
+%% HF2b2_H2_opto  [timing is off]
 evts_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\GoNoGo\HF2b2_H2\HF2b2_2026-01-12_09-38-52_H2_opto\Record Node 112\experiment1\recording1\events\Intan_RHD_USB-108.Rhythm Data\TTL' ;
 csc_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\GoNoGo\HF2b2_H2\HF2b2_2026-01-12_09-38-52_H2_opto\Record Node 117'; 
 phy_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Kilo_inter\HF2b2_H2_opto';
