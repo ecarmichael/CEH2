@@ -1,40 +1,70 @@
 %% MASTER_Asmbly
 
-restoredefaultpath
-usr = char(java.lang.System.getProperty('user.name')); 
-
 if strcmp(computer, 'GLNXA64')
+
+    usr = char(java.lang.System.getProperty('user.name')); 
+    
     codebase_dir = ['/home/' usr '/Documents/Github/vandermeerlab/code-matlab/shared'];
     ca_dir = ['/home/' usr '/Documents/Github/CEH2'];
-    code_dir = ['/home/' usr '/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter/Git_repos/Dos-Santos Assembly ICA'];
+    oasis_dir = ['/home/' usr '/Documents/Github/OASIS_matlab'];
+    
+    code_dir = ['/home/' usr '/Documents/Github/Dos-Santos Assembly ICA/Dos-Santos Assembly ICA'];
+    
+    RnR_dir = ['/home/' usr '/Documents/Github/RnR_methods'];
+    
+    % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
     main_dir = ['/home/' usr '/'];
     
+    
 elseif strcmp(computer, 'MACA64')
-    codebase_dir = ['/Users/' usr '/Documents/Github/vandermeerlab/code-matlab/shared'];
-    ca_dir = ['/Users/' usr '/Documents/Github/CEH2'];
-    code_dir = ['/Users/' usr '/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter/Git_repos/Dos-Santos Assembly ICA'];
-    main_dir = ['/Users/' usr filesep];
+    
+    codebase_dir = '/Users/ecar/Documents/Github/vandermeerlab/code-matlab/shared';
+    ca_dir = '/Users/ecar/Documents/Github/CEH2';
+    oasis_dir = '/Users/ecar/Documents/Github/OASIS_matlab';
+    
+    code_dir = '/Users/ecar/Documents/Github/Dos-Santos Assembly ICA/Dos-Santos Assembly ICA';
+    
+    RnR_dir = '//Users/ecar/Documents/Github/RnR_methods';
+    
+    % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
+    main_dir = '/Users/ecar/';
+    
 else
-    codebase_dir = ['C:\Users\' usr '\Documents\Github\vandermeerlab\code-matlab\shared'];
-    ca_dir = ['C:\Users\' usr '\Documents\Github\CEH2'];
-    code_dir = ['C:\Users\' usr '\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Git_repos\Dos-Santos Assembly ICA'];
-    main_dir = ['C:\Users\' usr '\'];
+    
+    codebase_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared';
+    ca_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2';
+    oasis_dir = 'C:\Users\ecarm\Documents\GitHub\OASIS_matlab';
+    
+    code_dir = 'C:\Users\ecarm\Downloads\Dos-Santos Assembly ICA\Dos-Santos Assembly ICA';
+    
+    RnR_dir = 'C:\Users\ecarm\Documents\GitHub\RnR_methods';
+    
+    % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
+    main_dir = 'C:\Users\ecarm\';
+    
 end
 
 restoredefaultpath
 c_d = cd;
+% cd(oasis_dir)
+% addpath(genpath(oasis_dir));
+% oasis_setup
 
 addpath(genpath(ca_dir));
 addpath(genpath(codebase_dir))
+addpath(genpath(RnR_dir));
+
 addpath(genpath(code_dir))
 
+
 cd(c_d)
+
 
 move_thresh  = 9;
 bin_size = .5;
 
 inter_dir = strrep([main_dir 'Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9'], '\', filesep);
-fig_dir = [inter_dir filesep 'xstate_mats'];
+fig_dir = [inter_dir filesep 'checks'];
 
 %%  Extract assembly data
 

@@ -10,7 +10,7 @@ swr_ch = 1;
 save_name = 'HF2b2_D1_red_resp'; 
 TTL = {'6', '7'};
 
-%% HF2b2_D1
+%% HF2b2_D2
 evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D1/HF2b2_2025-12-16_12-39-09_D1/Record Node 112/experiment2/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL' ;
 csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D1/HF2b2_2025-12-16_12-39-09_D1/Record Node 117'; 
 phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/HF2b2_D1';
@@ -25,7 +25,15 @@ csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/
 phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/HF2b2_D3';
 vr_fname = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D3/HF2b2_D3_2025-12-18_14-08-34.csv';
 
-
+%% HF2b2_D4
+evts_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\GoNoGo\HF2b2_D4\HF2b2_2025-12-21_10-16-03_D4_2\Record Node 112\experiment1\recording1\events\Intan_RHD_USB-108.Rhythm Data\TTL';
+csc_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\GoNoGo\HF2b2_D4\HF2b2_2025-12-21_10-16-03_D4_2\Record Node 117'; 
+phy_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Kilo_inter\HF2b2_D4';
+vr_fname = []; 
+csc_idx = [1 6 26]; 
+swr_ch = 3; 
+save_name = 'HF2b2_D4'; 
+TTL = {'6', '7'};
 %% HF2b2_D5
 evts_dir = ('/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D5/HF2b2_2026-01-02_13-50-31_D5/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL') ;
 csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D5/HF2b2_2026-01-02_13-50-31_D5/Record Node 117';
@@ -102,16 +110,20 @@ end
 
 
 %% plot the csc channels to check for good ones:
-data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, [1, 6, 11, 33:36, 48:52, 64:68]);
+data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, [1:2:64]);
 
 figure(1)
 clf
 hold on
 offset =250;
-for ii  = 1:size(data.csc.data, 1)
+y_val = []; 
+for ii  = size(data.csc.data, 1):-1:1
     plot(data.csc.tvec, data.csc.data(ii,:)+(offset*ii));
-
+    y_name{ii} = num2str(ii); 
+    y_val(ii) = offset*ii;
 end
+
+set(gca, 'YTick', y_val, 'YTickLabel', y_name)
 %% load the evts
 
 data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, csc_idx);
@@ -296,13 +308,13 @@ for iS = 1:size(peth_gau,1)
     ylabel('Firing rate (Hz)');
     % if data.
 
-    title(['PETH for Cell ' num2str(iS) ' | Shank: ' num2str(data.S.usr{iS}.shank)...
-        ' | x: ' num2str(round(data.S.usr{iS}.pos(1))), ' | y: ' num2str(round(data.S.usr{iS}.pos(2)))]);
+    title(['PETH for Cell ' num2str(iS)])% ' | Shank: ' num2str(data.S.usr{iS}.shank)...
+        %' | x: ' num2str(round(data.S.usr{iS}.pos(1))), ' | y: ' num2str(round(data.S.usr{iS}.pos(2)))]);
 
     labels = [];
-    for ii = 1:length(ITIs)
-        labels{ii} = [num2str(ITIs(ii)*1000) ' ms | p = ' num2str(round(data.S_metrics{iS}.opto_red{ii}.pval, 3))];
-    end
+    % for ii = 1:length(ITIs)
+    %     labels{ii} = [num2str(ITIs(ii)*1000) ' ms | p = ' num2str(round(data.S_metrics{iS}.opto_red{ii}.pval, 3))];
+    % end
 
     legend(labels, 'Box', 'off')
 

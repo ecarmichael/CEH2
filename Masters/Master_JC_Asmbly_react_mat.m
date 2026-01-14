@@ -36,8 +36,7 @@ bin_size = .5;
 inter_dir = strrep([main_dir 'Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9'], '\', filesep);
 fig_dir = [inter_dir filesep 'xstate_mats'];
 
-%%
-
+%% load the extracted assemblies
 method = 'binary';
 
 warning off
@@ -49,7 +48,6 @@ A_out = B_out;
 clear B_out
 
 % remove pv1254 due to inconsistent running.
-
 
 exclude_mouse = {'pv1254'};
 
@@ -121,13 +119,13 @@ for iA = length(A_out):-1:1
         % fprintf('%s : PCA-ICA detected %.0f assemblies using a %.2fs binsize\n', t_type, size(temp{iA}{iT},2), A_out{iA}{1}.bins)
 
         % remove assemblies without positive weights
-        p_temp{iA}{iT} = MS_Asmbly_select(temp{iA}{iT}, T_proj{iA}{iT}, 2);
+        [p_temp{iA}{iT}, p_proj{iA}{iT}, p_cells{iA}{iT}] = MS_Asmbly_select(temp{iA}{iT}, T_proj{iA}{iT}, 2);
 
         fprintf('%s:  [%.0f/%.0f = %.0f%%] Assemblies had cells with positive weights (%.2fs binsize)\n',...
             t_type, size(p_temp{iA}{iT},2),size(temp{iA}{iT},2),  (size(p_temp{iA}{iT},2)/size(temp{iA}{iT},2))*100, A_out{iA}{1}.bins)
 
         % loop over reference data
-        for iR = 3%:-1:1
+        for iR = 3:-1:1
             % set the reference data
             if iR == 1
                 Ref_data = pre_REM_data;
@@ -142,7 +140,7 @@ for iA = length(A_out):-1:1
 
             % get the projections within the same data type;
             rng(123, 'twister')
-            R_proj{iA}{iT}{iR} = assembly_activity(p_temp{iA}{iT},ref_data');
+            R_proj{iA}{iT}{iR} = assembly_activity(p_temp{iA}{iT},Ref_data');
 
 
             % check for significant reactivations against shuffles

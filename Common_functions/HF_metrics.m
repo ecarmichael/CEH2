@@ -153,9 +153,9 @@ for iS = length(data_in.S.t):-1:1
                 shuff_iv = DifferenceIV(cfg_diff, shuff_iv, real_iv);
 
                 shuff_id = datasample(1:length(shuff_iv.tstart), 1000);
-                shuff_l_fr = []; shuff_p_fr = [];
+                shuff_l_fr = NaN(1000,1); shuff_p_fr = shuff_l_fr;
 
-                for ishuff = 1000:-1:1
+                for ishuff = 1:100
                     this_s_fr = restrict(this_fr, shuff_iv.tstart(shuff_id(ishuff)), shuff_iv.tend(shuff_id(ishuff)));
                     shuff_l_fr(ishuff) = mean(this_s_fr.data);
 
