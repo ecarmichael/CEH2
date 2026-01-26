@@ -12,10 +12,17 @@ elseif ismac
     eye_dir = [];
 end
 
+%% select the directories/files manually, 
+
+kilo_dir = uigetdir(cd, 'Select the kilosort output dir');
+
+OE_evts_dir = uigetdir(cd, 'Select the OE events [binary format] output dir');
+
+[log_file, log_dir] = uigetfile('.csv', 'Select the arduino log file');
 
 %% load the control log
 
-log_tab = readtable([ctrl_dir 'arduino_log_1756923023.csv']);
+log_tab = readtable([log_dir filesep log_file]);
 
 log_tab.time = log_tab.time - log_tab.time(1);  % zero to the first time point.
 
