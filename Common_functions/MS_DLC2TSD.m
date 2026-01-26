@@ -50,21 +50,22 @@ og_dir = dir_in;
 cd(dir_in);
 
 file_list = {};
-d = dir(['*DLC*.csv']);
-rem_idx = zeros(1,length(d));
+d = dir('*DLC*.csv');
+rem_idx = NaN(1,length(d));
 for iF = length(d):-1:1
     parts = strsplit(d(iF).name, {'_', '.'});
-    
+
     if isempty(model_in) && any(parts{end-1} >= '0' & parts{end-1} <= '9')
         inter_ver(iF) = str2double(parts{end-1});
         file_list{iF} = d(iF).name;
     elseif ~isempty(model_in) && contains(d(iF).name, model_in)
         inter_ver(iF) = str2double(parts{end-1});
         file_list{iF} = d(iF).name;
+        rem_idx(iF) = false;
     else
         inter_ver(iF) = NaN;
         file_list{iF} = NaN;
-        rem_idx(iF) = iF;
+        rem_idx(iF) = true;
     end
     f_num(iF) = str2double( regexp(d(iF).name, '\d+','match', 'once' )); % used to sort the files.
 end
@@ -75,8 +76,8 @@ inter_ver  = inter_ver(idx);
 rem_idx = rem_idx(idx);
 
 % remove empty cells
-rem_idx(rem_idx == 0) = [];
-file_list(rem_idx) = [];
+file_list(rem_idx == 1) = [];
+inter_ver(rem_idx == 1) = [];
 
 newest_inter_ver = max(inter_ver);
 % loop and find only the DLC versions that use the best trained model (ie most
@@ -88,8 +89,8 @@ for iF = length(file_list):-1:1
         rem_idx(iF) = iF;
     end
 end
-rem_idx(rem_idx == 0) = [];
-file_list(rem_idx) = [];
+rem_idx(rem_idx == 1) = [];
+file_list(rem_idx == 1) = [];
 
 %%   cycle through all the files and collect the data
 
@@ -102,13 +103,13 @@ for iF  = 1:length(file_list)
     fields= DLC_labels;
     % hack to have it work for Bryan's data
     if sum(contains(DLC_labels, 'body_center'))>0
-        bd_idx = find(contains(DLC_labels, 'body_center')); 
+        bd_idx = find(contains(DLC_labels, 'body_center'));
         DLC_labels{bd_idx(1)} = 'body';
-                fields{bd_idx(1)} = 'body';
+        fields{bd_idx(1)} = 'body';
     end
     fields(contains(DLC_labels, '_')) = [];
     %     fields = unique(DLC_labels); % get the parts
-    
+
     for iFields = 1:length(fields)
         f_idx = find(contains(DLC_labels, fields{iFields}));
         this_field{iF, iFields} = [DLC_data(:,f_idx(1)+1), DLC_data(:,f_idx(2)+1), DLC_data(:,f_idx(3)+1)];
@@ -136,7 +137,7 @@ end
 % apply simple smoothing over any points that are larger than a 3sd jump.
 for iFields = 1:length(fields)
     nan_idx =abs(zscore(diff(data_out.(fields{iFields})(:,1)))) > 2;
-    
+
     data_out.(fields{iFields})(nan_idx,1) = NaN;
     data_out.(fields{iFields})(:,1) = fillmissing(data_out.(fields{iFields})(:,1), 'spline');
     nan_idx = abs(zscore(diff(data_out.(fields{iFields})(:,2)))) > 2;
@@ -157,28 +158,28 @@ nan_idx = isnan(data_out.(fields{1})(:,1));
 %% grab the timestamps.
 if ~isempty(dir('*.nvt'))
     fprintf('<strong>%s</strong>: NVT file found, using it for timestamps\n', mfilename)
-    
+
     nvt_f =  dir('*.nvt');
-    
+
     [data_out.tvec, ~, ~, ~, ~, ~, ~] = Nlx2MatVT(nvt_f.name, [1 1 1 1 1 1 ], 1, 1, [] );
     data_out.tvec = data_out.tvec*10^-6; % convert to seconds
-    frameNum = 1:length(data_out.tvec); 
-    maxBufferUsed = NaN; 
-    
+    frameNum = 1:length(data_out.tvec);
+    maxBufferUsed = NaN;
+
 else
-    
+
     t_file = dir('time*');
-    
+
     if contains(t_file.name, '.csv')
         TS = readtable(t_file.name);
         data_out.tvec = table2array(TS(:,2));
         frameNum = table2array(TS(:,1));
         maxBufferUsed =  max(table2array(TS(:,3)));
-        
+
     elseif contains(t_file.name, '.dat')
         cfg_ts = [];
         cfg_ts.correct_time = 0;
-        
+
         TS = MS_Load_TS(cfg_ts);
         for ii = length(TS{1}.system_clock):-1:1
             TS_len(ii) = length(TS{1}.system_clock{ii});
@@ -188,15 +189,15 @@ else
         data_out.tvec(1) = 0;
         frameNum = TS{1}.framenumber{this_cam_idx};
         maxBufferUsed = TS{1}.buffer{this_cam_idx};
-        
+
     end
     data_out.tvec = data_out.tvec./1000; % convert to seconds
-    
-    
+
+
 end
 if length(data_out.tvec) ~= length(data_out.(fields{1}))
     fprintf('DLC samples (%.0f) differ from timestamps.dat (%.0f). Trimming...\n',length(data_out.(fields{1})), length(data_out.tvec));
-    
+
     if length(data_out.tvec)< length(data_out.(fields{1}))
         for iFields = 1:length(fields)
             data_out.(fields{iFields}) = data_out.(fields{iFields})(1:length(data_out.tvec),:);
@@ -204,82 +205,86 @@ if length(data_out.tvec) ~= length(data_out.(fields{1}))
     end
 end
 %% get the meta data from the json to pull the recording start time.
-if ~isempty(dir('*.json'))
-    
-    j_files = dir('*.json');
-    
-    fid = fopen([fileparts(j_files.folder) filesep j_files.name]);
-    raw = fread(fid,inf);
-    str = char(raw');
-    Exp_json = jsondecode(str);
-    fclose(fid);
-    
-else
+try
+
+    if ~isempty(dir('*.json'))
+
+        j_files = dir('*.json');
+
+        fid = fopen([fileparts(j_files.folder) filesep j_files.name]);
+        raw = fread(fid,inf);
+        str = char(raw');
+        Exp_json = jsondecode(str);
+        fclose(fid);
+
+    else
+        Exp_json = [];
+    end
+catch
     Exp_json = [];
+
 end
 
 %% compute some other measures.
-
-
-
 % get the HD
 
 if length(fields) ==1 && sum(contains(fields, 'LED'))>0
-    ear_mid(:, 1) = data_out.LED(:,1); 
-    ear_mid(:,2) = data_out.LED(:,2); 
-    
-    HD = nan(length(ear_mid), 1); 
+    ear_mid(:, 1) = data_out.LED(:,1);
+    ear_mid(:,2) = data_out.LED(:,2);
+
+    HD = nan(length(ear_mid), 1);
 
 elseif sum(contains(fields, 'R')) > 0 && sum(contains(fields, 'L')) > 0 && sum(contains(fields, 'LED')) > 0
-    
+
     ear_mid(:,1) = (data_out.(fields{contains(fields, 'R')})(:,1) + data_out.(fields{contains(fields, 'L') & ~contains(fields, 'LED')})(:,1))/2; % get x mid
     ear_mid(:,2) = (data_out.(fields{contains(fields, 'R')})(:,2) + data_out.(fields{contains(fields, 'L') & ~contains(fields, 'LED')})(:,2))/2; % get x mid
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.LED(:,2),ear_mid(:,1) - data_out.LED(:,1)));
-    
-    
+
+
 elseif sum(contains(fields, 'body'))>0 && sum(contains(fields, 'head'))>0
     ear_mid(:,1) = data_out.body(:,1);
     ear_mid(:,2) = data_out.body(:,2);
-    
+
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.head(:,2),ear_mid(:,1) - data_out.head(:,1)));
-    
+
 elseif sum(contains(fields, 'Body'))>0 && sum(contains(fields, 'Neck'))>0
     ear_mid(:,1) = data_out.Body(:,1);
     ear_mid(:,2) = data_out.Body(:,2);
-    
+
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.Neck(:,2),ear_mid(:,1) - data_out.Neck(:,1)));
-    
+
 elseif sum(contains(fields, 'LED'))>0 && sum(contains(fields, 'Tail'))>0
     ear_mid(:,1) = data_out.Tail(:,1);
     ear_mid(:,2) = data_out.Tail(:,2);
-    
+
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.LED(:,2),ear_mid(:,1) - data_out.LED(:,1)));
-    
+
 elseif sum(contains(fields, 'Body'))>0 && sum(contains(fields, 'LED'))>0
     ear_mid(:,1) = data_out.Body(:,1);
     ear_mid(:,2) = data_out.Body(:,2);
-    
+
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.LED(:,2),ear_mid(:,1) - data_out.LED(:,1)));
-    
-    
+
+
 elseif sum(contains(fields, 'Green'))>0 && sum(contains(fields, 'Red'))>0
     ear_mid(:,1) = (data_out.Red(:,1) + data_out.Green(:,1))/2; % get x mid
     ear_mid(:,2) = (data_out.Red(:,2) + data_out.Green(:,2))/2; % get x mid
-    
+
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.Body(:,2),ear_mid(:,1) - data_out.Body(:,1)));
-    
+
 elseif sum(contains(fields, 'nose'))>0 && sum(contains(fields, 'body'))>0
     ear_mid(:,1) = data_out.body(:,1);
     ear_mid(:,2) = data_out.body(:,2);
-    
+
     HD = rad2deg(atan2(ear_mid(:,2) - data_out.nose(:,2),ear_mid(:,1) - data_out.nose(:,1)));
 
 end
 
-% get the speed from the mid-ear position
-vx = dxdt(data_out.tvec,ear_mid(:,1));
-vy = dxdt(data_out.tvec,ear_mid(:,2));
-
+if exist("ear_mid")
+    % get the speed from the mid-ear position
+    vx = dxdt(data_out.tvec,ear_mid(:,1));
+    vy = dxdt(data_out.tvec,ear_mid(:,2));
+end
 
 
 
@@ -290,7 +295,11 @@ for iD = 1:length(fields)
     labels{iD} = fields{iD};
 end
 
-pos = tsd(data_out.tvec,[data, sqrt(vx.^2+vy.^2)', HD]', [labels 'Speed', 'HD']);
+if exist("ear_mid")
+    pos = tsd(data_out.tvec,[data, sqrt(vx.^2+vy.^2)', HD]', [labels 'Speed', 'HD']);
+else
+    pos = tsd(data_out.tvec,[data]', [labels]);
+end
 
 if conv_fac(1) == 1 && conv_fac(2) == 1
     pos.units = 'px';
@@ -299,23 +308,27 @@ else
 end
 
 pos.cfg.json = Exp_json;
-pos.cfg.conv_fac = conv_fac; 
+pos.cfg.conv_fac = conv_fac;
 
 if isfield(pos.cfg.json, 'recordingStartTime') && ~isfield(pos.cfg.json, 'msecSinceEpoch')
     pos.cfg.json.msecSinceEpoch = pos.cfg.json.recordingStartTime.msecSinceEpoch;
 end
 
-%% grab a video for a mean frame. 
+%% grab a video for a mean frame.
 avi_dir = dir([dir_in filesep '*.avi']);
-if ~isempty(avi_dir)
-    vidObj = VideoReader([avi_dir(1).folder filesep avi_dir(1).name]);   
-    
-    F=read(vidObj);                             
-    pos.mean_frame=median(F,4);
-else
-    pos.mean_frame = []; 
-end
 
+try
+    if ~isempty(avi_dir)
+        vidObj = VideoReader([avi_dir(1).folder filesep avi_dir(1).name]);
+
+        F=read(vidObj);
+        pos.mean_frame=median(F,4);
+    else
+        pos.mean_frame = [];
+    end
+catch
+    pos.mean_frame = [];
+end
 %% convert to behav format
 behav = [];
 behav.time = data_out.tvec;
@@ -330,10 +343,12 @@ behav.width =  ceil(max(data_out.(fields{1})(:,2)));
 behav.camNumber = 1;
 behav.maxBufferUsed =  maxBufferUsed;
 behav.position = data_out.(fields{1})(:,1:2);
-behav.speed = sqrt(vx.^2+vy.^2)';
-behav.HD = HD;
+if exist('ear_mid', 'var')
+    behav.speed = sqrt(vx.^2+vy.^2)';
+    behav.HD = HD;
+end
 behav.json = Exp_json;
-behav.conv_fac = conv_fac; 
+behav.conv_fac = conv_fac;
 
 %% test out the HD.
 if plot_flag
@@ -344,7 +359,7 @@ if plot_flag
         plot(pos.data(1,iF), pos.data(2,iF), 'or')
         plot(pos.data(3,iF), pos.data(4,iF), 'sb')
         plot([pos.data(3,iF), pos.data(1,iF)],[pos.data(4,iF), pos.data(2,iF)], 'k')
-        
+
         %     plot(behav.position(iF,1), behav.position(iF,2), 'or')
         %     plot([data_out.R_ear(iF,1),  data_out.L_ear(iF,1)], [data_out.R_ear(iF,2),  data_out.L_ear(iF,2)], 'sr')
         %     plot(ear_mid(iF, 1), ear_mid(iF,2), '.b')
