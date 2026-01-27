@@ -56,9 +56,13 @@ if plot_flag == 1
     imagesc(eye.mean_frame)
     c_ord = MS_linspecer(ceil(size(eye.data,1)/2)); 
 for ii = 1:10:1000
-sc = scatter(eye.data(1:2:end,1:10), eye.data(2:2:end,1:10), 50, 'red', 'filled'); 
+    cla
+        imagesc(eye.mean_frame)
+
+sc = scatter(eye.data(1:2:end,ii), eye.data(2:2:end,ii), 50, 'red', 'filled'); 
 pause(.1)
-delete sc
+clear sc
+drawnow
 end
 
 

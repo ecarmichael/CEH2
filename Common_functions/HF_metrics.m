@@ -200,7 +200,7 @@ for ii = 1:length(S_metrics)
     r_resp(ii) = (S_metrics{ii}.opto_red{1}.pval < 0.05);
 end
 
-for iO = 1:length(TTL_name)
+for iO = 1:length(fieldnames(opto_resp))
     fprintf('%s optoresponsive cells %.2f%% (%.d/%.d)\n',TTL_name{iO}, (sum(opto_resp.(TTL_name{iO}), 'omitmissing')./length(opto_resp.(TTL_name{iO})))*100, sum(opto_resp.(TTL_name{iO}), 'omitmissing'),length(opto_resp.(TTL_name{iO})))
 end
 %% plotting Fr and ISI

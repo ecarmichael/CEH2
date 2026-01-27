@@ -21,6 +21,18 @@ evts = OE_load_binary_evts(evts_dir);
 %% load the lfp
 csc_list = dir([csc_dir filesep '*CH*.continuous']);
 
+% sort the csc based on channel number. 
+for ii = length(csc_list):-1:1
+    ch_idx =  strfind(csc_list(ii).name,'_CH'); 
+    con_idx =  strfind(csc_list(ii).name,'.continuous'); 
+    csc_num(ii) = str2double(csc_list(ii).name(ch_idx+3:con_idx)); 
+end
+
+% sort
+[~, sort_idx] = sort(csc_num); 
+csc_list = csc_list(sort_idx); 
+
+
 if ~isempty(csc_idx)
     csc_list(~ismember(1:length(csc_list), csc_idx))= [];
 end

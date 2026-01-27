@@ -1,5 +1,15 @@
 %% sandbox_HF_OE_Peth
 
+%% HF3b2_TFC3
+evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H3b2/TFC_D4/HF3b2_2026-01-22_18-55-13_TFC_D4_/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL';
+csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H3b2/TFC_D4/HF3b2_2026-01-22_18-55-13_TFC_D4_/Record Node 117'; 
+phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H3b2/TFC_D4/HF3b2_2026-01-22_18-55-13_TFC_D4_/kilosort4';
+vr_fname = ''; 
+csc_idx = [13]; 
+swr_ch = 1; 
+save_name = 'HF3b2_TFC_D4'; 
+TTL = {'6', '7'};
+
 %% HF2b2_D1_red_resp [only 2 cells?]
 evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D1/HF2b2_2025-12-16_11-18-44_Red_respose_Ca1/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL' ;
 csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D1/HF2b2_2025-12-16_11-18-44_Red_respose_Ca1/Record Node 117'; 
