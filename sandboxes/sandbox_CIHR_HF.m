@@ -46,7 +46,7 @@ log_iv =[];
 for ii = 1:length(phases)
     idx = find(ismember(all_phases.t, log.(phases{ii})));
     if max(idx) == length(all_phases.t)
-        log_iv.(phases{ii}) = iv(all_phases.t(idx), [all_phases.t(idx(1:end-1))+1; log.end]);
+        log_iv.(phases{ii}) = iv(all_phases.t(idx), [all_phases.t(idx(1:end-1)+1); log.end]);
     else
         log_iv.(phases{ii}) = iv(all_phases.t(idx), all_phases.t(idx+1));
     end

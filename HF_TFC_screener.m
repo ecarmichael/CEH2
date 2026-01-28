@@ -1,6 +1,18 @@
 %% sandbox_HF_OE_Peth
 
 
+
+%% HF2b2_TFC3_opto
+evts_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\test_data\HF2b1_2026-01-21_12-02-45_TFC3_opto\Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL';
+csc_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\test_data\HF2b1_2026-01-21_12-02-45_TFC3_opto/Record Node 117'; 
+phy_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\test_data\HF2b1_2026-01-21_12-02-45_TFC3_opto/kilosort4';
+vr_fname = ''; 
+csc_idx = [13]; 
+swr_ch = 1; 
+save_name = 'HF1b2_TFC_D3_opto'; 
+TTL = {'6', '7'};
+
+
 %% HF2b2_TFC3
 evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H1b2/TFC_D4/HF1b2_2026-01-22_10-57-05_TFC_D4/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL';
 csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H1b2/TFC_D4/HF1b2_2026-01-22_10-57-05_TFC_D4/Record Node 117'; 
@@ -66,7 +78,7 @@ end
 
 
 %% plot the csc channels to check for good ones:
-data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, [1:2:64]);
+data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, [1:2:64]); 
 
 %%
 % quick filter
@@ -74,7 +86,7 @@ cfg_swr = [];
 cfg_swr.type = 'cheby1'; %Cheby1 is sharper than butter
 cfg_swr.f  = [150 250]; % broad, could use 150-200?
 cfg_swr.order = 4; %type filter order (fine for this f range)
-cfg_swr.display_filter = 0; % use this to see the fvtool
+cfg_swr.display_filter = 1; % use this to see the fvtool
 
 csc_f = FilterLFP(cfg_swr, data.csc); 
 
