@@ -129,6 +129,8 @@ data_out.csc = csc;
 data_out.evts = evts;
 data_out.OE_evts = OE_evts;
 data_out.licks = rate_tsd;
+data_out.licks.data(end+1,:) = adc_f_tsd.data(1:end-1); 
+data_out.licks.label{end+1} = 'Filt ADC'; 
 if ~isempty(vr_fname)
     data_out.vr = vr;
 end
