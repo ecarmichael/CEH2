@@ -11,13 +11,25 @@ end
 %% load the phy along with the params file
 params = OE_load_params(phy2_dir);
 
+if ~isempty(phy2_dir)
 S = OE_phy2TS(phy2_dir, params);
+else
+    S = []; 
+end
 
 
 evts = OE_load_binary_evts(evts_dir);
 
+OE_rec = readNPY([phy2_dir filesep 'timestamps.npy']);
+OE_rec = [OE_rec(1) OE_rec(end)];
 
+% align to the recording start time. (unclear why this is not the same as
+% the spike times. 
+S_r = restrict(S, rec_iv);
 
+for ii = 1:length(S_r.t)
+    S_r.t{ii} = S_r.t{ii} - rec_iv.tstart;
+end
 %% load the lfp
 csc_list = dir([csc_dir filesep '*CH*.continuous']);
 
@@ -91,6 +103,12 @@ csc.tvec = csc.tvec- csc.tvec(1);
 for ii = 1:length(evts.t)
     evts.t{ii} = evts.t{ii} - offset;
 end
+
+% loop over spikes and remove the offset.
+for ii = 1:length(evts.t)
+    evts.t{ii} = evts.t{ii} - offset;
+end
+
 
 % loop over events and remove the offset.
 for ii = 1:length(OE_evts.t)

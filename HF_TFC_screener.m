@@ -83,7 +83,7 @@ data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, [1:2:64]);
 %%
 % quick filter
 cfg_swr = [];
-cfg_swr.type = 'cheby1'; %Cheby1 is sharper than butter
+cfg_swr.type = 'butter'; %Cheby1 is sharper than butter
 cfg_swr.f  = [150 250]; % broad, could use 150-200?
 cfg_swr.order = 4; %type filter order (fine for this f range)
 cfg_swr.display_filter = 1; % use this to see the fvtool
