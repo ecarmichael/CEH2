@@ -21,7 +21,7 @@ end
 %% Parameters
     fprintf('<strong>%s: </strong> Infered sampling rate = %d Hz\n', mfilename, floor(1/(0.001*(mode(diff((ms.time)))))));
 
-    [bFilt,aFilt] = butter(2,  2/(floor(1/(0.001*(mode(diff((ms.time))))))/2), 'low');
+    [bFilt,aFilt] = butter(2,  2/(floor(1/(mode(diff(ms.time))))/2), 'low');
 
     for trace_i = 1:size(ms.FiltTraces,2)
         detrend_raw_trace=detrend(ms.FiltTraces(:,trace_i),2);   

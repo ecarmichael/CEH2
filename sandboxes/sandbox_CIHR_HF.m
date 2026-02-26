@@ -1,8 +1,8 @@
 %% sandbox_CIHR_HR_TFC
 
 if ispc
-    kilo_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-05_15-53-34_TFC_REC\Record Node 112\experiment1\recording1\continuous\Intan_RHD_USB-100.Rhythm Data';
-    OE_evts_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-05_15-53-34_TFC_REC\Record Node 112\experiment1\recording1\events\Intan_RHD_USB-100.Rhythm Data\TTL';
+    kilo_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-08_12-23-48_TFC_REC3_swr\Record Node 112\experiment1\recording1\continuous\Intan_RHD_USB-100.Rhythm Data';
+    OE_evts_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\HF_1_2025-09-08_12-23-48_TFC_REC3_swr\Record Node 112\experiment1\recording1\events\Intan_RHD_USB-100.Rhythm Data\TTL';
     log_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\HF\conditioning_logs';
     log_file = 'arduino_log_HF_1_Rec_d1.csv';
     eye_dir = [];

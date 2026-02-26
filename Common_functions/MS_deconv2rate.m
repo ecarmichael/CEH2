@@ -26,9 +26,9 @@ function ms_out = MS_deconv2rate(cfg_in, ms_in)
 cfg_def = [];
 
 cfg_def.min_decon = 0.01; % minimum to be considered a spike.
-cfg_def.bins = 0.5; % bin size for 'spikes'l
+cfg_def.bins = 0.05; % bin size for 'spikes'l
 cfg_def.gau_win = 1; % window size for gaussian conv
-cfg_def.gau_sd = .5; % standard devision for gaussian conv.
+cfg_def.gau_sd = .05; % standard devision for gaussian conv.
 
 cfg = ProcessConfig(cfg_def, cfg_in);
 %%

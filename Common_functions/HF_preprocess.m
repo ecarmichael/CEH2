@@ -21,7 +21,7 @@ end
 evts = OE_load_binary_evts(evts_dir);
 
 OE_rec = readNPY([phy2_dir filesep 'timestamps.npy']);
-OE_rec = [OE_rec(1) OE_rec(end)];
+rec_iv = iv([OE_rec(1) OE_rec(end)]);
 
 % align to the recording start time. (unclear why this is not the same as
 % the spike times. 
@@ -112,7 +112,7 @@ end
 
 % loop over events and remove the offset.
 for ii = 1:length(OE_evts.t)
-    OE_evts.t{ii} = OE_evts.t{ii} - offset;
+    OE_evts.t{ii} = OE_evts.t{ii} - rec_iv.tstart(1);
 end
 
 
