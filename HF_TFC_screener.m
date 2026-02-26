@@ -16,7 +16,7 @@ TTL = {'6', '7'};
 %% HF2b2_TFC3
 evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H1b2/TFC_D4/HF1b2_2026-01-22_10-57-05_TFC_D4/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL';
 csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H1b2/TFC_D4/HF1b2_2026-01-22_10-57-05_TFC_D4/Record Node 117'; 
-phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/H1b2/TFC_D4/HF1b2_2026-01-22_10-57-05_TFC_D4/kilosort4';
+phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H1b2/TFC_D4/HF1b2_2026-01-22_10-57-05_TFC_D4/kilosort4';
 vr_fname = ''; 
 csc_idx = [13]; 
 swr_ch = 1; 

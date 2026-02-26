@@ -23,14 +23,20 @@ evts = OE_load_binary_evts(evts_dir);
 OE_rec = readNPY([phy2_dir filesep 'timestamps.npy']);
 rec_iv = iv([OE_rec(1) OE_rec(end)]);
 
+
 % align to the recording start time. (unclear why this is not the same as
 % the spike times. 
-S_r = restrict(S, rec_iv);
-
-for ii = 1:length(S_r.t)
-    S_r.t{ii} = S_r.t{ii} - rec_iv.tstart;
-end
+% S_r = restrict(S, rec_iv);
+% 
+% for ii = 1:length(S_r.t)
+%     S_r.t{ii} = S_r.t{ii} - rec_iv.tstart;
+% end
 %% load the lfp
+
+if isempty(csc_dir)
+    csc = []; 
+    OE_evts =[]; 
+else
 csc_list = dir([csc_dir filesep '*CH*.continuous']);
 
 % sort the csc based on channel number. 
@@ -81,6 +87,8 @@ csc = decimate_tsd(cfg_in, csc);
 evts_list = dir([csc_dir filesep '*Data*.events']);
 
 OE_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs);
+
+end
 %% get the AD channel piezo
 adc = dir([csc_dir filesep '*ADC*.continuous']);
 if ~isempty(adc)
