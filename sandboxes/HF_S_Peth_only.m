@@ -46,10 +46,10 @@ for ii = length(data.S.usr):-1:1; s_pos(ii,:) = data.S.usr{ii}.pos; end
 
 [snk_u,~,  s_idx] = unique(round(s_pos(:,1)/100)); % group by 100s of micros
 
-s_ord = MS_linspecer(8);
+c_ord = MS_linspecer(8);
 spkColor = ones(length(data.S.t),3); 
 for ii = 1:length(s_idx)
-    spkColor(ii,:) = s_ord(s_idx(ii),:); 
+    spkColor(ii,:) = c_ord(s_idx(ii),:); 
 end
 
 [~, sort_idx] = sort(s_idx); 
@@ -60,7 +60,23 @@ data.S.usr = data.S.usr(sort_idx);
 
 spkColor = spkColor(sort_idx,:); 
 
+%% quick metrics
+S_metrics = []; 
+for iS = length(data.S.t):-1:1
+    S_metrics.fr(iS) = length(data.S.t{iS})./(ts_prime(end)-ts_prime(1));
+    S_metrics.ISI(iS) = mean(diff(data.S.t{iS}));
+    S_metrics.burst_idx(iS) = sum(diff(data.S.t{iS}) < .010) / sum(diff(data.S.t{iS}) > .010);
+end
 
+figure(1)
+clf
+MS_kmean_scatter([S_metrics.fr; S_metrics.ISI; S_metrics.burst_idx]', 3)
+
+% scatter3(S_metrics.fr, S_metrics.ISI, S_metrics.burst_idx, 150, spkColor, 'filled')
+xlabel('firing rate (Hz)')
+ylabel('ISI (log)')
+zlabel('burst index')
+set(gca, 'YScale', 'log')
 
 %% figure showing all the events
 
