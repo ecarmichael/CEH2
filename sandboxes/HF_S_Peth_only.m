@@ -1,8 +1,18 @@
 %% PETH only sandbox
 
+%% JAWS_D1_1
+evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 101/experiment1/recording1/events/Acquisition_Board-100.acquisition_board/TTL';
+csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 117'; 
+phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/Jaws2_D1_1/kilosort4';
+vr_fname = ''; 
+csc_idx = [13]; 
+swr_ch = 1; 
+save_name = 'HF3b2_TFC_D4'; 
+TTL = {'6'};
+
 %% JAWS_D1_2
-evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-21-05_D1_2/Record Node 101/experiment1/recording1/events/Acquisition_Board-100.acquisition_board/TTL';
-csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-21-05_D1_2/Record Node 117'; 
+evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-21-05_D1_1/Record Node 101/experiment1/recording1/events/Acquisition_Board-100.acquisition_board/TTL';
+csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-21-05_D1_1/Record Node 117'; 
 phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/Jaws2_D1_2/kilosort4';
 vr_fname = ''; 
 csc_idx = [13]; 
@@ -68,9 +78,11 @@ for iS = length(data.S.t):-1:1
     S_metrics.burst_idx(iS) = sum(diff(data.S.t{iS}) < .010) / sum(diff(data.S.t{iS}) > .010);
 end
 
+
+data_in = [S_metrics.fr; S_metrics.ISI; S_metrics.burst_idx]'; 
 figure(1)
 clf
-MS_kmean_scatter([S_metrics.fr; S_metrics.ISI; S_metrics.burst_idx]', 3)
+[g_idx] = MS_kmean_scatter(data_in, 3, 1:length(data_in), 100); 
 
 % scatter3(S_metrics.fr, S_metrics.ISI, S_metrics.burst_idx, 150, spkColor, 'filled')
 xlabel('firing rate (Hz)')
@@ -138,14 +150,13 @@ if isfield(data, 'swr')
 end
 
 
-%% make some Peths
 %% peth per cell
 c_red = [0.9153    0.2816    0.2878];
 
 
 red_idx = find(contains(data.evts.label, TTL{1})); 
 
-window = [-.250 .250];
+window = [-1 1];
 bin_s = .025;
 evt_t = data.evts.t{red_idx} ;
 
@@ -181,7 +192,7 @@ for iTi = 1:length(ITIs)
         evt_t = sort(evt_t(1,:));
 
         cfg_peth = [];
-        cfg_peth.window = [-.25 .25];
+        cfg_peth.window = window;
         cfg_peth. plot_type = 'raw';
         cfg_peth.dt = 0.001;
         cfg_peth.gauss_window = .025;
@@ -197,13 +208,14 @@ for iTi = 1:length(ITIs)
 end
 
 %% plot the PETHS together
-reds = hot(10);
+reds = hot(8);
+reds = reds(2:end,:); 
 
 for iS = 1:size(peth_gau,1)
 
     figure(iS);
     clf
-    subplot(2,1,1)
+    subplot(3,1,1:2)
     cla
     hold on;
     % Plot the PETH for each ITI
@@ -215,18 +227,46 @@ for iS = 1:size(peth_gau,1)
             if isempty(this_idx)
                 continue
             end
-            plot(peth_S{iS, iT}(this_idx)*1000, peth_T{iS, iT}(this_idx)+0.5 + offset,'.', 'color', reds(iT,:), 'MarkerSize', 10)
+
+            % % line plot
+            % nSpikes = length(peth_T{iS, iT}(this_idx));
+            % xvals = peth_T{iS, iT}(this_idx)';
+            % yvals = iC.*(1,nSpikes);
+            % 
+            % xvals = xvals(:);
+            % yvals = yvals(:);
+            % 
+            % if isempty(xvals) && isempty(yvals)
+            %     %             h(iC) = nan;
+            %     h{iC} = nan;
+            % else
+            %     %             h(iC) = plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth);
+            %     plot(xvals,yvals,'.','Color',cfg.spkColor(iC,:));
+            %     h{iC} = get(gca);
+            % end
+            % plot([peth_S{iS, iT}(this_idx)*1000, peth_S{iS, iT}(this_idx)*1000]', [peth_T{iS, iT}(this_idx)-0.5 + iT,peth_T{iS, iT}(this_idx)+0.5 + iT]', 'color', reds(iT,:), 'LineWidth',4)
+
+            plot(peth_S{iS, iT}(this_idx)*1000, peth_T{iS, iT}(this_idx)+0.5 + offset,'.', 'Color', reds(iT,:), 'MarkerSize', 10)
             % disp(mode(peth_T{iS, iT}(this_idx)+ offset))
         end
         y_lim = ylim;
         offset = y_lim(2);
 
     end
+    set(gca, 'XTicklabel', [])
+    ylim([0 length(u_val)+1])
     ylabel('pulse #');
+    xlim([-100 250])
 
 
-    subplot(2,1,2)
+    subplot(3,1,3)
     hold on;
+       labels = {};
+    for ii = 1:length(ITIs)
+        rectangle('Position',[0, 0,ITIs(ii)*1000,  max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1], 'FaceColor',reds(iT,:), 'FaceAlpha',.2, 'EdgeColor','none')
+        labels{ii} = [num2str(ITIs(ii)*1000) ' ms']; % | p = ' num2str(round(data.S_metrics{iS}.opto_red{ii}.pval, 3))];
+    end
+
     % Plot the mean activity for each ITI
     for iT = 1:size(peth_gau,2)
         plot(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'Color', reds(iT,:), 'LineWidth', 1.5);
@@ -234,17 +274,105 @@ for iS = 1:size(peth_gau,1)
     end
     xlabel('Time ms)');
     ylabel('Firing rate (Hz)');
+
     % if data.
 
     title(['PETH for Cell ' num2str(iS)])% ' | Shank: ' num2str(data.S.usr{iS}.shank)...
         %' | x: ' num2str(round(data.S.usr{iS}.pos(1))), ' | y: ' num2str(round(data.S.usr{iS}.pos(2)))]);
 
-    labels = {};
-    for ii = 1:length(ITIs)
-        labels{ii} = [num2str(ITIs(ii)*1000) ' ms']; % | p = ' num2str(round(data.S_metrics{iS}.opto_red{ii}.pval, 3))];
-    end
-
+ 
     legend(labels, 'Box', 'off')
+    xlim([-100 250])
+    ylim([0 max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1])
+
+
+    % % same thing but zoomned in
+    %     subplot(4,1,3)
+    % cla
+    % hold on;
+    % % Plot the PETH for each ITI
+    % offset = 0;
+    % for iT = 1:size(peth_gau,2)
+    %     u_val = unique(peth_T{iS, iT});
+    %     for iV = 1:length(u_val)
+    %         this_idx = peth_T{iS, iT} == u_val(iV);
+    %         if isempty(this_idx)
+    %             continue
+    %         end
+    %         plot(peth_S{iS, iT}(this_idx)*1000, peth_T{iS, iT}(this_idx)+0.5 + offset,'.', 'color', reds(iT,:), 'MarkerSize', 10)
+    %         % disp(mode(peth_T{iS, iT}(this_idx)+ offset))
+    %     end
+    %     y_lim = ylim;
+    %     offset = y_lim(2);
+    % 
+    % end
+    % ylabel('pulse #');
+    % xlim([-150 150])
+    % 
+    % subplot(4,1,4)
+    % hold on;
+    % % Plot the mean activity for each ITI
+    % for iT = 1:size(peth_gau,2)
+    %     plot(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'Color', reds(iT,:), 'LineWidth', 1.5);
+    % 
+    % end
+    % xlabel('Time ms)');
+    % ylabel('Firing rate (Hz)');
+    % % if data.
+    % 
+    % title(['PETH for Cell ' num2str(iS)])% ' | Shank: ' num2str(data.S.usr{iS}.shank)...
+    %     %' | x: ' num2str(round(data.S.usr{iS}.pos(1))), ' | y: ' num2str(round(data.S.usr{iS}.pos(2)))]);
+    % 
+    % labels = {};
+    % for ii = 1:length(ITIs)
+    %     labels{ii} = [num2str(ITIs(ii)*1000) ' ms']; % | p = ' num2str(round(data.S_metrics{iS}.opto_red{ii}.pval, 3))];
+    % end
+    % xlim([-150 150])
+    % 
+    % legend(labels, 'Box', 'off')
 
 end
 red_labels = labels;
+
+
+%% get teh xcorr
+
+xbin_centers = -10-0.01:0.01:10+0.01; % first and last bins are to be deleted later
+%ac = zeros(size(xbin_centers));
+ac = cell(1,length(data.S.t)); 
+
+parfor iC = 1:length(data.S.t)
+    fprintf('%f.0,', iC)
+    ac{iC} = zeros(size(xbin_centers));
+
+    for iSpk = 1:length(data.S.t{iC})
+
+        relative_spk_t = data.S.t{iC} - data.S.t{iC}(iSpk);
+
+        ac{iC} = ac{iC} + hist(relative_spk_t,xbin_centers); % note that hist() puts all spikes outside the bin centers in the first and last bins! delete later.
+
+    end
+ac{iC} = ac{iC}(2:end-1);
+ac{iC}(zero_idx) = 0;
+end
+fprintf('\n')
+
+xbin = xbin_centers(2:end-1); % remove unwanted bins
+zero_idx = find(xbin == 0);
+
+
+%% plot the autocorr
+
+ac_ord = MS_linspecer(length(ac)); 
+figure(201)
+clf
+hold on
+for ii = 1:length(ac)
+
+
+    this_data = ac{ii};
+    z_idx = nearest_idx(0, xbin); 
+    this_data(z_idx - 2:z_idx+2) = NaN; 
+    plot(xbin, (this_data./max(this_data))+ii, 'color', ac_ord(ii,:), 'LineWidth',2)
+
+end
