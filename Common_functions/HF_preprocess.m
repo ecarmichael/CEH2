@@ -12,7 +12,7 @@ end
 params = OE_load_params(phy2_dir);
 
 if ~isempty(phy2_dir)
-S = OE_phy2TS(phy2_dir, params);
+    S = OE_phy2TS(phy2_dir)%, params);
 else
     S = []; 
 end

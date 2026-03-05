@@ -27,6 +27,8 @@ for ii = 1:length(state_id)
 
     if size(st_t,1) > size(end_t,1)
         end_t(end+1,1) = NaN; 
+    elseif size(st_t,1) < size(end_t,1)
+        st_t(end+1, 1) = NaN; 
     end
 
     evts.t{ii} = [st_t'; end_t']; 

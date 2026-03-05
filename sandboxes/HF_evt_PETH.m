@@ -1,5 +1,26 @@
 %% sandbox_HF_OE_Peth
 
+%% H2b3_d3_enc
+evts_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H2b3\HF2b3_2026-03-04_12-42-00_D3_Enc\Record Node 112\experiment1\recording1\events\Intan_RHD_USB-108.Rhythm Data\TTL'; 
+csc_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H2b3\HF2b3_2026-03-04_12-42-00_D3_Enc\Record Node 117'; 
+phy_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Kilo_inter\HF2b3_D3_Enc';
+vr_fname = ''; 
+csc_idx = [7]; 
+swr_ch = 1; 
+save_name = 'HF2b3_TFC_D3'; 
+TTL = {'6', '7'};
+
+%% H3b3_d3_enc
+evts_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H3b3\HF3b3_2026-03-04_14-24-23_D3_Enc\Record Node 112\experiment1\recording1\events\Intan_RHD_USB-108.Rhythm Data\TTL';
+csc_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H3b3\HF3b3_2026-03-04_14-24-23_D3_Enc\Record Node 117'; 
+phy_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Kilo_inter\HF3b3_D3_enc';
+vr_fname = ''; 
+csc_idx = [13]; 
+swr_ch = 1; 
+save_name = 'HF3b3_TFC_D3'; 
+TTL = {'6', '7'};
+
+
 %% HF1b2_TFC_D4
 evts_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H1b2\TFC_D4\HF1b2_2026-01-22_10-57-05_TFC_D4/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL';
 csc_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H1b2\TFC_D4\HF1b2_2026-01-22_10-57-05_TFC_D4\Record Node 117'; 
@@ -27,7 +48,7 @@ evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H3b2/T
 csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H3b2/TFC_D4/HF3b2_2026-01-22_18-55-13_TFC_D4_/Record Node 117'; 
 phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H3b2/TFC_D4/HF3b2_2026-01-22_18-55-13_TFC_D4_/kilosort4';
 vr_fname = ''; 
-csc_idx = [13]; 
+csc_idx = [4]; 
 swr_ch = 1; 
 save_name = 'HF3b2_TFC_D4'; 
 TTL = {'6', '7'};
@@ -161,7 +182,7 @@ offset =250;
 y_val = []; 
 for ii  = size(data.csc.data, 1):-1:1
     plot(data.csc.tvec, data.csc.data(ii,:)+(offset*ii));
-    y_name{ii} = num2str(ii); 
+    y_name{ii} = data.csc.data.label{ii}; 
     y_val(ii) = offset*ii;
 end
 

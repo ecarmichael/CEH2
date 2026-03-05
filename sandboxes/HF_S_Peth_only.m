@@ -195,13 +195,22 @@ for iTi = 1:length(ITIs)
         cfg_peth.window = window;
         cfg_peth. plot_type = 'raw';
         cfg_peth.dt = 0.001;
-        cfg_peth.gauss_window = .025;
-        cfg_peth.gauss_sd = .0025;
+        cfg_peth.gauss_window = .02;
+        cfg_peth.gauss_sd = .002;
         cfg_peth.shuff = 500;
         cfg_peth.t_on = mode(e_d(k_idx));
         cfg_peth.rec_color = c_red;
         cfg_peth.plot = 'off';
         [peth_S{iS,iTi}, peth_IT{iS,iTi},peth_gau{iS,iTi}, ~, ~, ~, ~, ~, ~,peth_T{iS, iTi}] = SpikePETH_Shuff(cfg_peth, S, evt_t);
+        % same thing but with the pre and post stim means (time matched)
+        t_on = ITIs(iTi); 
+        z_idx = nearest_idx(0, peth_IT{iS, iTi}); 
+        t_end_idx = nearest_idx(t_on, peth_IT{iS, iTi});
+
+        peth_pre_fr(iS, iTi, :) = mean(peth_gau{iS,iTi}(z_idx - (t_end_idx- z_idx):z_idx,:),2); 
+        peth_stim_fr(iS, iTi, :) = mean(peth_gau{iS,iTi}(z_idx:t_end_idx,:),2); 
+
+
     end
 
 
@@ -277,7 +286,7 @@ for iS = 1:size(peth_gau,1)
 
     % if data.
 
-    title(['PETH for Cell ' num2str(iS)])% ' | Shank: ' num2str(data.S.usr{iS}.shank)...
+    title(['PETH for Cell ' num2str(data.S.label{iS})])% ' | Shank: ' num2str(data.S.usr{iS}.shank)...
         %' | x: ' num2str(round(data.S.usr{iS}.pos(1))), ' | y: ' num2str(round(data.S.usr{iS}.pos(2)))]);
 
  
@@ -376,3 +385,105 @@ for ii = 1:length(ac)
     plot(xbin, (this_data./max(this_data))+ii, 'color', ac_ord(ii,:), 'LineWidth',2)
 
 end
+
+
+%% plot one cell
+
+%% plot the PETHS together
+
+
+iS = 3
+
+    figure(iS+100);
+    clf
+    subplot(5,3,[1 2  4 5 7 8 10 11])
+    cla
+    hold on;
+    % Plot the PETH for each ITI
+    offset = 0;
+    for iT = 1:size(peth_gau,2)
+        u_val = unique(peth_T{iS, iT});
+        for iV = 1:length(u_val)
+            this_idx = peth_T{iS, iT} == u_val(iV);
+            if isempty(this_idx)
+                continue
+            end
+
+            % % line plot
+            % nSpikes = length(peth_T{iS, iT}(this_idx));
+            % xvals = peth_T{iS, iT}(this_idx)';
+            % yvals = iC.*(1,nSpikes);
+            % 
+            % xvals = xvals(:);
+            % yvals = yvals(:);
+            % 
+            % if isempty(xvals) && isempty(yvals)
+            %     %             h(iC) = nan;
+            %     h{iC} = nan;
+            % else
+            %     %             h(iC) = plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth);
+            %     plot(xvals,yvals,'.','Color',cfg.spkColor(iC,:));
+            %     h{iC} = get(gca);
+            % end
+            plot([peth_S{iS, iT}(this_idx)*1000, peth_S{iS, iT}(this_idx)*1000]', [peth_T{iS, iT}(this_idx)-.5 + iT,peth_T{iS, iT}(this_idx)+.5 + iT]', 'color', 'k', 'LineWidth',1)
+
+            % plot(peth_S{iS, iT}(this_idx)*1000, peth_T{iS, iT}(this_idx)+0.5 + offset,'.', 'Color','k', 'MarkerSize', 10)
+            % disp(mode(peth_T{iS, iT}(this_idx)+ offset))
+        end
+
+        y_lim = ylim;
+        offset = y_lim(2);
+        title(['PETH for Cell ' num2str(data.S.label{iS})])% ' | Shank: ' num2str(data.S.usr{iS}.shank)...
+
+        for ii = 1:length(ITIs)
+            r = rectangle('Position',[0, 0,ITIs(ii)*1000,  offset*1.1], 'FaceColor',reds(iT,:), 'FaceAlpha',.2, 'EdgeColor','none');
+            uistack(r, 'bottom'); 
+        end
+
+
+    end
+    set(gca, 'XTicklabel', [])
+    ylim([0 length(u_val)+1])
+    ylabel('pulse #');
+    xlim([-100 250])
+
+
+    subplot(5,3,[13 14])
+    hold on;
+       labels = {};
+    for ii = 1:length(ITIs)
+        rectangle('Position',[0, 0,ITIs(ii)*1000,  max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1], 'FaceColor',reds(iT,:), 'FaceAlpha',.2, 'EdgeColor','none')
+        labels{ii} = [num2str(ITIs(ii)*1000) ' ms']; % | p = ' num2str(round(data.S_metrics{iS}.opto_red{ii}.pval, 3))];
+    end
+
+    % Plot the mean activity for each ITI
+    for iT = 1:size(peth_gau,2)
+        % plot(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'Color', 'k', 'LineWidth', 1.5);
+        bar(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'faceColor', 'k', 'LineWidth', 1.5);
+    end
+    xlabel('Time (ms)');
+    ylabel('Firing rate (Hz)');
+
+        %' | x: ' num2str(round(data.S.usr{iS}.pos(1))), ' | y: ' num2str(round(data.S.usr{iS}.pos(2)))]);
+
+ 
+    % legend(labels, 'Box', 'off')
+    xlim([-100 250])
+    ylim([0 max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1])
+
+% add the pre post stats
+
+  subplot(5,3,[3  6])
+  MS_bar_w_err(squeeze(peth_pre_fr(iS, iTi,:))', squeeze(peth_stim_fr(iS, iTi,:))', [.7 .7 .7; reds(1,:)], 1, 'ttest', 1:2)
+   ylabel('mean FR')
+
+  set(gca, 'XTickLabel', {'pre', 'Jaws'}, 'XTickLabelRotation', 45)
+
+    cfg_fig =[]; 
+    cfg_fig.ft_size = 8; 
+    SetFigure(cfg_fig, gcf, 1)
+
+    set(gcf,'units','normalized','outerposition',[0 0 .3 .5])
+
+   % exportgraphics(gcf, [phy_dir filesep 'Jaws_opto_cell_' num2str(iS) '.pdf'], 'ContentType', 'vector');
+   print(gcf, '-dpdf', [phy_dir filesep 'Jaws_opto_cell_' num2str(iS) '.pdf'])
