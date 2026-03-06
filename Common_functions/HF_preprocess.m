@@ -12,16 +12,19 @@ end
 params = OE_load_params(phy2_dir);
 
 if ~isempty(phy2_dir)
-    S = OE_phy2TS(phy2_dir)%, params);
+    S = OE_phy2TS(phy2_dir);%, params);
 else
     S = []; 
 end
 
 
-evts = OE_load_binary_evts(evts_dir);
+% evts = OE_load_binary_evts(evts_dir, );
+ts_prime = readNPY([phy2_dir filesep 'timestamps.npy']); 
 
-OE_rec = readNPY([phy2_dir filesep 'timestamps.npy']);
-rec_iv = iv([OE_rec(1) OE_rec(end)]);
+evts = OE_load_binary_evts(evts_dir, ts_prime(1));
+
+% OE_rec = readNPY([phy2_dir filesep 'timestamps.npy']);
+rec_iv = iv([ts_prime(1) ts_prime(end)]);
 
 
 % align to the recording start time. (unclear why this is not the same as
@@ -44,16 +47,35 @@ for ii = length(csc_list):-1:1
     ch_idx =  strfind(csc_list(ii).name,'_CH'); 
     con_idx =  strfind(csc_list(ii).name,'.continuous'); 
     csc_num(ii) = str2double(csc_list(ii).name(ch_idx+3:con_idx)); 
+    csc_name{ii} = csc_list(ii).name; 
 end
 
 % sort
 [~, sort_idx] = sort(csc_num); 
 csc_list = csc_list(sort_idx); 
 
-
-if ~isempty(csc_idx)
+if ~isempty(csc_idx)  && isnumeric(csc_idx(1))
     csc_list(~ismember(1:length(csc_list), csc_idx))= [];
+
+elseif  ~isempty(csc_idx)  && iscell(csc_idx) % if csc_idx is a string look for those patterns
+    
+    temp_list = [];
+
+    for ii = 1:length(csc_idx)
+        temp_idx = find(contains(csc_name, [csc_idx{ii} '.continuous']));
+        if length(temp_idx) > 1
+            error('Too many csc files containing this name')
+        end
+        if ~isempty(temp_idx)
+            temp_list(ii).name= csc_name{temp_idx};
+            temp_list(ii).folder= csc_list(1).folder;
+        end
+    end
+
+    csc_list = temp_list;
+
 end
+
 
 csc= []; labels = [];
 for ii = 1:length(csc_list)
@@ -78,7 +100,9 @@ fs = csc.cfg.hdr{1}.SamplingFrequency;
 csc.data = csc.data';
 csc.label = labels;
 
-offset = csc.tvec(1);
+
+% csc.tvec = ;
+csc.tvec = csc.tvec - csc.tvec(1) + (csc.tvec(1) - ts_prime(1)); % zero out the csc. 
 
 cfg_in.decimateFactor = 15;
 csc = decimate_tsd(cfg_in, csc);
@@ -106,44 +130,46 @@ end
 %% correct the events times and the LFP so that it aligns with the spikes
 
 % correct for start of csc. Why is this offset?
-csc.tvec = csc.tvec- csc.tvec(1);
-% loop over events and remove the offset.
-for ii = 1:length(evts.t)
-    evts.t{ii} = evts.t{ii} - offset;
-end
-
-% loop over spikes and remove the offset.
-for ii = 1:length(evts.t)
-    evts.t{ii} = evts.t{ii} - offset;
-end
-
 
 % loop over events and remove the offset.
-for ii = 1:length(OE_evts.t)
-    OE_evts.t{ii} = OE_evts.t{ii} - rec_iv.tstart(1);
-end
+% for ii = 1:length(evts.t)
+%     evts.t{ii} = evts.t{ii} - ts_prime(1);
+% end
+% 
+% % loop over spikes and remove the offset.
+% for ii = 1:length(evts.t)
+%     evts.t{ii} = evts.t{ii} - OE_rec(1);
+% end
+
+
+% loop over events and remove the offset.
+% for ii = 1:length(OE_evts.t)
+%     OE_evts.t{ii} = OE_evts.t{ii} - ts_prime(1);
+% end
 
 
 %% load the log file
 if ~isempty(vr_fname)
     vr = HF_load_VR(vr_fname);
 
-    % align to the first reward event
-    first_reward_oe = evts.t{ismember(evts.label, '4')}(1,1);
+    % SAVE THIS FOR A PROTOCOL BY PROTOCOL BASIS
 
-    % first vr reward
-    first_reward_vr = vr.evt.t{contains(vr.evt.label, 'Collision with Rwd1')}(1);
-    vr_start = first_reward_vr - vr.pos.tvec(1);
-
-    % Align the OE data to the first reward event
-    vr.pos.tvec = vr.pos.tvec - vr_start + first_reward_oe;
-
-    for ii = 1:length(vr.evt.t)
-
-        vr.evt.t{ii} = vr.evt.t{ii} - vr_start + first_reward_oe;
-
-
-    end
+    % % align to the first reward event
+    % first_reward_oe = evts.t{ismember(evts.label, '4')}(1,1);
+    % 
+    % % first vr reward
+    % first_reward_vr = vr.evt.t{contains(vr.evt.label, 'Collision with Rwd1')}(1);
+    % vr_start = first_reward_vr - vr.pos.tvec(1);
+    % 
+    % % Align the OE data to the first reward event
+    % vr.pos.tvec = vr.pos.tvec - vr_start + first_reward_oe;
+    % 
+    % for ii = 1:length(vr.evt.t)
+    % 
+    %     vr.evt.t{ii} = vr.evt.t{ii} - vr_start + first_reward_oe;
+    % 
+    % 
+    % end
 
 end
 

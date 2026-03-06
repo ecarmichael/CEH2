@@ -5,24 +5,22 @@ function [vr] = HF_load_VR(fname)
 
 %% newer version
 
-%% Set up the Import Options and import the data
-opts = delimitedTextImportOptions("NumVariables", 3);
+opts = delimitedTextImportOptions("NumVariables", 4);
 
 % Specify range and delimiter
 opts.DataLines = [2, Inf];
-opts.Delimiter = ";";
+opts.Delimiter = ",";
 
 % Specify column names and types
-opts.VariableNames = ["Time_s_", "ZPosition", "Event"];
-opts.VariableTypes = ["double", "double", "string"];
+opts.VariableNames = ["time", "encoderCount", "phase", "event"];
+opts.VariableTypes = ["double", "double", "string", "string"];
 
 % Specify file level properties
 opts.ExtraColumnsRule = "ignore";
 opts.EmptyLineRule = "read";
 
 % Specify variable properties
-opts = setvaropts(opts, "Event", "WhitespaceRule", "preserve");
-opts = setvaropts(opts, "Event", "EmptyFieldRule", "auto");
+opts = setvaropts(opts, ["phase", "event"], "EmptyFieldRule", "auto");
 
 vr_tbl = readtable(fname, opts); 
 vr.info = []; 
@@ -31,25 +29,84 @@ vr.info.name = [fname(1:5) '_' fname(7:8)];
 vr.info.date = strrep(fname(10:19), '-', '_');
 vr.info.time = strrep(fname(21:28), '-', '_');
 
+% set the time relative to the start of the protocol
+vr_tbl.time = vr_tbl.time - vr_tbl.time(1);
 
 % position (continuous)
-pos_idx = ismember(vr_tbl.Event, ""); 
-vr.pos = tsd(vr_tbl.Time_s_(pos_idx), vr_tbl.ZPosition(pos_idx)'); 
+vr.pos = tsd(vr_tbl.time, abs(vr_tbl.encoderCount)); 
 
 % interpolate to get constant sampling rate
 dt = 0.02; 
 int_t = vr.pos.tvec(1):dt:vr.pos.tvec(end); 
-vr.pos.data= interp1(vr.pos.tvec, vr.pos.data, int_t, 'linear', 'extrap');
+[~, u_idx] = unique(vr.pos.tvec); 
+vr.pos.data= interp1(vr.pos.tvec(u_idx), vr.pos.data(u_idx), int_t, 'linear', 'extrap');
 vr.pos.tvec = int_t; 
 
 % interval data
-evts = unique(vr_tbl.Event(~ismember(vr_tbl.Event, ""))); 
 vr.evt = ts; 
 
+% phases
+phases = unique(vr_tbl.phase(ismember(vr_tbl.event, "-"))); 
+for iP = 1:length(phases)
+    vr.evt.label{end+1} = phases{iP};
+    p_idx = ismember(vr_tbl.phase, phases{iP}) & ismember(vr_tbl.event, "-"); 
+    vr.evt.t{end+1} = vr_tbl.time(p_idx);
+end
+
+% other events
+evts = unique(vr_tbl.event(~ismember(vr_tbl.event, ""))); 
 for iE  = length(evts):-1:1
     vr.evt.label{end+1} = evts{iE};
-    vr.evt.t{end+1} = vr_tbl.Time_s_(ismember(vr_tbl.Event, evts{iE}));
+    vr.evt.t{end+1} = vr_tbl.time(ismember(vr_tbl.event, evts{iE}));
 end
+
+
+
+%%  OLDER Set up the Import Options and import the data
+% opts = delimitedTextImportOptions("NumVariables", 3);
+% 
+% % Specify range and delimiter
+% opts.DataLines = [2, Inf];
+% opts.Delimiter = ";";
+% 
+% % Specify column names and types
+% opts.VariableNames = ["Time_s_", "ZPosition", "Event"];
+% opts.VariableTypes = ["double", "double", "string"];
+% 
+% % Specify file level properties
+% opts.ExtraColumnsRule = "ignore";
+% opts.EmptyLineRule = "read";
+% 
+% % Specify variable properties
+% opts = setvaropts(opts, "Event", "WhitespaceRule", "preserve");
+% opts = setvaropts(opts, "Event", "EmptyFieldRule", "auto");
+
+% vr_tbl = readtable(fname, opts); 
+% vr.info = []; 
+% 
+% vr.info.name = [fname(1:5) '_' fname(7:8)];
+% vr.info.date = strrep(fname(10:19), '-', '_');
+% vr.info.time = strrep(fname(21:28), '-', '_');
+% 
+% 
+% % position (continuous)
+% pos_idx = ismember(vr_tbl.Event, ""); 
+% vr.pos = tsd(vr_tbl.Time_s_(pos_idx), vr_tbl.ZPosition(pos_idx)'); 
+% 
+% % interpolate to get constant sampling rate
+% dt = 0.02; 
+% int_t = vr.pos.tvec(1):dt:vr.pos.tvec(end); 
+% vr.pos.data= interp1(vr.pos.tvec, vr.pos.data, int_t, 'linear', 'extrap');
+% vr.pos.tvec = int_t; 
+% 
+% % interval data
+% evts = unique(vr_tbl.Event(~ismember(vr_tbl.Event, ""))); 
+% vr.evt = ts; 
+% 
+% for iE  = length(evts):-1:1
+%     vr.evt.label{end+1} = evts{iE};
+%     vr.evt.t{end+1} = vr_tbl.Time_s_(ismember(vr_tbl.Event, evts{iE}));
+% end
 
 % from the older version. 
 % %% get the initialization information

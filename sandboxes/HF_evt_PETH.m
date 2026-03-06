@@ -4,8 +4,8 @@
 evts_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H2b3\HF2b3_2026-03-04_12-42-00_D3_Enc\Record Node 112\experiment1\recording1\events\Intan_RHD_USB-108.Rhythm Data\TTL'; 
 csc_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H2b3\HF2b3_2026-03-04_12-42-00_D3_Enc\Record Node 117'; 
 phy_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Kilo_inter\HF2b3_D3_Enc';
-vr_fname = ''; 
-csc_idx = [7]; 
+vr_fname = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H2b3\HF2b3_2026-03-04_12-42-00_D3_Enc\arduino_log_1772646494.csv'; 
+csc_idx = {'CH124', 'CH76', 'CH117', 'CH65', 'CH13', 'CH7', 'CH8', 'CH16','CH129', 'CH151'}; 
 swr_ch = 1; 
 save_name = 'HF2b3_TFC_D3'; 
 TTL = {'6', '7'};
@@ -173,23 +173,25 @@ end
 
 
 %% plot the csc channels to check for good ones:
-data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, [1:2:64]);
+data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname);
 
 figure(1)
 clf
 hold on
-offset =250;
+offset =500;
 y_val = []; 
 for ii  = size(data.csc.data, 1):-1:1
     plot(data.csc.tvec, data.csc.data(ii,:)+(offset*ii));
-    y_name{ii} = data.csc.data.label{ii}; 
+    y_name{ii} = data.csc.label{ii}; 
     y_val(ii) = offset*ii;
 end
 
 set(gca, 'YTick', y_val, 'YTickLabel', y_name)
 %% load the evts
+% csc_idx
+data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, csc_idx(1));
 
-data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, csc_idx);
+data.mua = MS_MUA(data.S, data.csc.tvec, 10);
 
 %% get the basic metrics
 
@@ -206,10 +208,29 @@ data.S.label(s_fr<0.5) = [];
 data.S.usr(s_fr<0.5) = [];
 data.S_metrics(s_fr<0.5) = [];
 
+%% make a colour map for the shanks
+s_pos = []; 
+for ii = length(data.S.usr):-1:1; s_pos(ii,:) = data.S.usr{ii}.pos; end
+
+[snk_u,~,  s_idx] = unique(round(s_pos(:,1)/100)); % group by 100s of micros
+
+c_ord = MS_linspecer(8);
+spkColor = ones(length(data.S.t),3); 
+for ii = 1:length(s_idx)
+    spkColor(ii,:) = c_ord(s_idx(ii),:); 
+end
+
+[~, sort_idx] = sort(s_idx); 
+
+data.S.t = data.S.t(sort_idx); 
+data.S.label = data.S.label(sort_idx); 
+data.S.usr = data.S.usr(sort_idx); 
+
+spkColor = spkColor(sort_idx,:); 
 
 %% detect SWR
 
-[data.swr.iv, data.swr.cfg] = MS_SWR_detector(data.csc, data.csc.label{swr_ch},1);
+[data.swr.iv, data.swr.cfg] = MS_SWR_detector(data.csc, data.csc.label{swr_ch},0);
 data.swr.chan = data.csc.label{swr_ch};
 %% save the intermediate data
 save(['/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/' save_name '.mat'], "data")
@@ -222,11 +243,17 @@ c_ord = MS_linspecer(8);
 figure(1010)
 clf
 hold on
-plot(data.S);
-plot(data.csc.tvec, (data.csc.data(swr_ch,:)/100)-2, 'b')
-plot(data.licks.tvec, (data.licks.data./5)-10, 'Color', [0.6 .6 .6])
+% plot(data.S);
+cfg = []; cfg.openNewFig = 0;
+cfg.spkColor = spkColor; 
+h = MultiRaster(cfg,data.S);
+plot(data.mua.tvec, (zscore(data.mua.data)/10)-2, 'k')
 
+plot(data.csc.tvec, (data.csc.data(swr_ch,:)/100)-4, 'b')
+plot(data.licks.tvec, (data.licks.data./5)-10, 'Color', [0.6 .6 .6])
 ylim([-10 length(data.S.t)+1])
+
+
 for ii = 1:length(data.evts.label)
     if ~isempty(data.evts.t{ii})
         xline(data.evts.t{ii}(:),'Color', c_ord(ii,:), 'Label', data.evts.label{ii}, 'LabelColor',c_ord(ii,:))
