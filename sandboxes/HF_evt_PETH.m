@@ -191,7 +191,7 @@ set(gca, 'YTick', y_val, 'YTickLabel', y_name)
 % csc_idx
 data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, csc_idx(1));
 
-data.mua = MS_MUA(data.S, data.csc.tvec, 10);
+data.mua = MS_MUA(data.S, data.csc.tvec,5);
 
 %% get the basic metrics
 
