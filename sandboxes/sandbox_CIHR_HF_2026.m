@@ -63,15 +63,26 @@ for ii = 1:length(log_iv.Tone.tstart)
     trl = restrict(vr_licks, log_iv.Trace.tstart(ii), log_iv.Trace.tend(ii));
     trials.trace.licks(ii) = length(trl.t{1})./15;
 
-    % same thing but movement
+    % same thing but movement times
     bl = restrict(vr_pos, log_iv.Tone.tstart(ii)-20, log_iv.Tone.tstart(ii));
-    trials.base.mov(ii) = sum(bl.data(3,:)) / length(bl.tvec);
+    trials.base.mov(ii) = length(bl.t{1})./20;
 
     tl = restrict(vr_pos, log_iv.Tone.tstart(ii), log_iv.Tone.tend(ii));
-    trials.tone.mov(ii) = sum(tl.data(3,:)) / length(tl.tvec);
+    trials.tone.mov(ii) = length(tl.t{1})./20;
 
     trl = restrict(vr_pos, log_iv.Trace.tstart(ii), log_iv.Trace.tend(ii));
-    trials.trace.mov(ii) = sum(trl.data(3,:)) / length(trl.tvec);
+    trials.trace.mov(ii) = length(trl.t{1})./15;
+
+
+    % same thing but movement vector
+    % bl = restrict(vr_pos, log_iv.Tone.tstart(ii)-20, log_iv.Tone.tstart(ii));
+    % trials.base.mov(ii) = sum(bl.data(3,:)) / length(bl.tvec);
+    % 
+    % tl = restrict(vr_pos, log_iv.Tone.tstart(ii), log_iv.Tone.tend(ii));
+    % trials.tone.mov(ii) = sum(tl.data(3,:)) / length(tl.tvec);
+    % 
+    % trl = restrict(vr_pos, log_iv.Trace.tstart(ii), log_iv.Trace.tend(ii));
+    % trials.trace.mov(ii) = sum(trl.data(3,:)) / length(trl.tvec);
 
 end
 
@@ -103,64 +114,52 @@ end
 % xline()
 
 %% plot??
-c_ord = MS_linspecer(8);
-
-figure(101)
-
-clf
-
-ax(1) = subplot(5,1,1);
-cla
-
-plot(data.vr.pos.tvec, data.vr.pos.data(1,:), 'k');
-
-for ii = 1:length(phases)
-    xline(log.(phases{ii}), 'Color',c_ord(ii,:), 'LineWidth',3)
-end
-ylabel('Encoder pos')
-
-ax(2) = subplot(5,1,2);
-cla
-plot(data.vr.pos.tvec, abs(data.vr.pos.data(2,:)), 'r');
-ylabel('Movement (a.u.)')
-
-for ii = 1:length(phases)
-    xline(log.(phases{ii}), 'Color',c_ord(ii,:), 'LineWidth',3)
-end
-
-
-ax(3) = subplot(5,1,3);
-cla
-plot([licks.t{1} licks.t{1}]', [zeros(size(licks.t{1})) ones(size(licks.t{1}))]', 'k');
-ylabel('Licks'); ylim([0 2]);
-
-for ii = 1:length(phases)
-    xline(log.(phases{ii}), 'Color',c_ord(ii,:), 'LineWidth',3)
-end
-
-ax(4) = subplot(5,1,4:5);
-cla
-plot(S_r);
+% c_ord = MS_linspecer(8);
+% 
+% figure(101)
+% 
+% clf
+% 
+% ax(1) = subplot(5,1,1);
+% cla
+% 
+% plot(data.vr.pos.tvec, data.vr.pos.data(1,:), 'k');
+% 
+% for ii = 1:length(phases)
+%     xline(log.(phases{ii}), 'Color',c_ord(ii,:), 'LineWidth',3)
+% end
+% ylabel('Encoder pos')
+% 
+% ax(2) = subplot(5,1,2);
+% cla
+% plot(data.vr.pos.tvec, abs(data.vr.pos.data(2,:)), 'r');
+% ylabel('Movement (a.u.)')
+% 
+% for ii = 1:length(phases)
+%     xline(log.(phases{ii}), 'Color',c_ord(ii,:), 'LineWidth',3)
+% end
+% 
+% 
+% ax(3) = subplot(5,1,3);
+% cla
+% plot([licks.t{1} licks.t{1}]', [zeros(size(licks.t{1})) ones(size(licks.t{1}))]', 'k');
 % ylabel('Licks'); ylim([0 2]);
-
-for ii = 1:length(phases)
-    xline(log.(phases{ii}), 'Color',c_ord(ii,:), 'LineWidth',3)
-end
-
-linkaxes(ax, 'x')
-xlim([0 log.end])
-
-
-%% trial-ified the data
-
-% wheel and movement
-
-mov_bin = wheel.data(1,:) > 0.1; 
-wheel.data(3,:) = mov_bin; 
-wheel.label{3} = 'move binary';
-
-
-
+% 
+% for ii = 1:length(phases)
+%     xline(log.(phases{ii}), 'Color',c_ord(ii,:), 'LineWidth',3)
+% end
+% 
+% ax(4) = subplot(5,1,4:5);
+% cla
+% plot(S_r);
+% % ylabel('Licks'); ylim([0 2]);
+% 
+% for ii = 1:length(phases)
+%     xline(log.(phases{ii}), 'Color',c_ord(ii,:), 'LineWidth',3)
+% end
+% 
+% linkaxes(ax, 'x')
+% xlim([0 log.end])
 
 %%
 % plot??
@@ -174,14 +173,16 @@ clf
 ax(1) = subplot(3,2,[1 3]);
 cla
 hold on
+max_pos = max(data.vr.pos.data(2,:)); 
+
 for ii = 1:length(log_iv.Tone.tstart)
     this_r = restrict(data.vr.pos, log_iv.Tone.tstart(ii)-20, log_iv.Puff.tend(ii)+20);
 
-    plot(this_r.tvec - this_r.tvec(1)-20, this_r.data(2,:), 'color', c_ord(ii,:));
+    plot(this_r.tvec - this_r.tvec(1)-20, this_r.data(2,:)./max_pos, 'color', c_ord(ii,:));
 
     % add the licks as a raster
 
-    this_l = restrict(licks, log_iv.Tone.tstart(ii)-20, log_iv.Puff.tend(ii)+20);
+    this_l = restrict(vr_licks, log_iv.Tone.tstart(ii)-20, log_iv.Puff.tend(ii)+20);
     plot([this_l.t{1}- this_r.tvec(1)-20 this_l.t{1}- this_r.tvec(1)-20]', [ones(size(this_l.t{1}))*-(ii*.25)-.25 ones(size(this_l.t{1}))*-(ii*.25)]', 'Color',c_ord(ii,:), 'LineWidth',2)
 end
 
@@ -202,12 +203,13 @@ y_l = ylim;
 
 % bar plots summarizing movement and licks.
 ax(2) = subplot(3,2, 2);
+cla
 hold on
 
-hb = MS_bar_w_err(trials.tone.mov, trials.base.mov, c_ord(2:3,:), 1, 'ttest',[1 0]);
+hb = MS_bar_w_err(trials.tone.mov, trials.base.mov, c_ord(2:3,:), 1, 'ttest',[2 1]);
 hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
 
-hb = MS_bar_w_err(trials.tone.mov, trials.trace.mov, c_ord(1:2,:), 1, 'ttest',[1 2]);
+hb = MS_bar_w_err(trials.tone.mov, trials.trace.mov, c_ord(1:2,:), 1, 'ttest',[2 3]);
 
 hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
 
@@ -217,20 +219,21 @@ set(gca, 'XTick', 1:3, 'XTickLabel', {'Baseline [-20:0]', 'Tone', 'Trace'})
 
 % licks mean.
 ax(2) = subplot(3,2, 4);
+cla
 hold on
 
-hb = MS_bar_w_err(trials.tone.licks, trials.base.licks, c_ord(2:3,:), 1, 'ttest',[1 0]);
+hb = MS_bar_w_err(trials.tone.licks, trials.base.licks, c_ord(2:3,:), 1, 'ttest',[2 1]);
 hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
 
-hb = MS_bar_w_err(trials.tone.licks, trials.trace.licks, c_ord(1:2,:), 1, 'ttest',[1 2]);
+hb = MS_bar_w_err(trials.tone.licks, trials.trace.licks, c_ord(1:2,:), 1, 'ttest',[2 3]);
 
 hb(1).FaceColor = 'none'; hb(1).EdgeColor = 'k';
 
 linkaxes(ax, 'x')
-xlim([0 log.end])
+xlim([0 3.5])
 ylabel('mean licks rate')
 
-set(gca, 'XTick', 0:2, 'XTickLabel', {'Baseline [-20:0]', 'Tone', 'Trace'})
+set(gca, 'XTick', 1:3, 'XTickLabel', {'Baseline [-20:0]', 'Tone', 'Trace'})
 
 
 %% over Conditioning sessions
