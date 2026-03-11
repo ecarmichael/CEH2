@@ -30,14 +30,18 @@ elseif nargin == 2
 end
 
 
-if length(csc.label) >1 && isempty(chan_to_use);
+if length(csc.label) >1 && isempty(chan_to_use)
     error('Too many data channels. Filtering and detection is only designed for one channel ATM')
 end
 
 if ~isempty(chan_to_use)
+
     chan_idx = find(strcmp(csc.label, chan_to_use));
-    
-    temp_data = csc.data(chan_idx,:);
+    if isscalar(chan_to_use)
+        temp_data = csc.data(chan_idx,:);
+    else
+        temp_data = mean(csc.data(chan_idx,:),1);
+    end
     csc.data = [];
     csc.data(1,:) = temp_data;
     temp_label = csc.label{chan_idx};
@@ -55,7 +59,7 @@ end
 cfg_swr = [];
 cfg_swr.check = 0; % plot checks.
 cfg_swr.filt.type = 'butter'; %Cheby1 is sharper than butter
-cfg_swr.filt.f  = [125 250]; % broad, could use 150-200?
+cfg_swr.filt.f  = [125 200]; % broad, could use 150-200?
 cfg_swr.filt.order = 4; %type filter order (fine for this f range)
 cfg_swr.filt.display_filter = 0; % use this to see the fvtool
 
@@ -63,12 +67,20 @@ cfg_swr.filt.display_filter = 0; % use this to see the fvtool
 cfg_swr.kernel.samples = csc.cfg.hdr{1}.SamplingFrequency/100;
 cfg_swr.kernel.sd = csc.cfg.hdr{1}.SamplingFrequency/100;
 
-% detection
+% artifact detection
 cfg_swr.artif_det.method = 'zscore';
-cfg_swr.artif_det.threshold = 5;
+cfg_swr.artif_det.threshold = 3;
 cfg_swr.artif_det.dcn = '>';
 cfg_swr.artif_det.rm_len = .2;
-cfg_swr.threshold = 1.5;% in sd
+cfg_swr.artif_det.minlen =.01; 
+
+% contrast band (theta)
+cfg_swr.cont_filt.f = [4 12]; 
+cfg_swr.cont_filt.type = 'cheby1';
+cfg_swr.cont_filt.zthresh = 1;
+
+% additional SWR detection
+cfg_swr.threshold =3;% in sd
 cfg_swr.method = 'zscore';
 cfg_swr.min_len = 0.04; % mouse SWR: 40ms from Vandecasteele et al. 2014
 cfg_swr.merge_thr = 0.02; %merge events that are within 20ms of each other.
@@ -88,9 +100,9 @@ cfg_swr.nCycles = 5; % number of cycles
 cfg_swr.nCycles_operation = '>='; % number of cycles
 
 % variaence
-% cfg_swr.var = [];
-% cfg_swr.var.operation = '<';
-% cfg_swr.var.threshold = 1;
+cfg_swr.var_raw = [];
+cfg_swr.var_raw.operation = '<';
+cfg_swr.var_raw.threshold = 30;
 
 [SWR_evts, csc_filt] = MS_get_LFP_events_sandbox(cfg_swr, csc);
 
@@ -102,7 +114,7 @@ cfg_swr.nCycles_operation = '>='; % number of cycles
 % check quality.
 if plot_flag
     cfg_plot.display = 'iv'; %'iv';
-    cfg_plot.title = 'var';
+    cfg_plot.title = 'contrast';
     PlotTSDfromIV(cfg_plot, SWR_evts, csc)
     
 end

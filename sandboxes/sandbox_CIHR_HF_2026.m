@@ -2,7 +2,7 @@
 
 % load some intermediate data
 
-load("HF2b3_TFC_D3.mat")
+load("HF1b3_TFC_D5.mat")
 
 
 %% align the vr to the recording. 
@@ -10,18 +10,26 @@ load("HF2b3_TFC_D3.mat")
 
 tfc_on = iv(data.evts.t{ismember(data.evts.label, '5')}(1,:), data.evts.t{ismember(data.evts.label, '5')}(2,:)); 
 
-for ii = 1:length(data.vr.evt.t)
-
-    data.vr.evt.t{ii} = (data.vr.evt.t{ii}/1000)+tfc_on.tstart; 
+% if the onset TTL from the arduino has more than one time, get the longest
+if length(tfc_on.tstart) > 1
+    ttl_on_len = tfc_on.tend - tfc_on.tstart; 
+    % [~, keep_idx] = max(ttl_on_len); % get the longest block
+    keep_idx = (max(ttl_on_len) == ttl_on_len);
+    tfc_on.tstart(~keep_idx) = []; 
+    tfc_on.tend(~keep_idx) = [];
 end
 
-data.vr.pos.tvec = (data.vr.pos.tvec./1000)+tfc_on.tstart; 
+
+for ii = 1:length(data.vr.evt.t)
+
+    data.vr.evt.t{ii} = (data.vr.evt.t{ii}/1000)+tfc_on.tstart(1); 
+end
+
+data.vr.pos.tvec = (data.vr.pos.tvec./1000)+tfc_on.tstart(1); 
 
 %% convert to evts
-
 labels = unique(data.vr.evt.label);
 phases = {'baseline', 'Tone', 'Trace', 'Puff'};
-
 
 log_iv.baseline = iv(data.vr.evt.t{ismember(data.vr.evt.label, 'baseline')},...
     data.vr.evt.t{ismember(data.vr.evt.label, 'Tone')}); 
@@ -36,19 +44,17 @@ log_iv.Puff = iv(data.vr.evt.t{ismember(data.vr.evt.label, 'Puff')},...
     [data.vr.evt.t{ismember(data.vr.evt.label, 'baseline')}(2:end); data.vr.evt.t{ismember(data.vr.evt.label, 'Finish')}]); 
 
 
-
 data.vr.pos.data(2,:) = diff([data.vr.pos.data data.vr.pos.data(end)]); %, {'encoder' 'movement'}); 
 data.vr.pos.label = {'encoder' 'movement'}; 
 
 % movement binary
-
 mov_bin = data.vr.pos.data(2,:) > 0+realmin;
 data.vr.pos.data(3,:) = mov_bin;
 data.vr.pos.label{3} = 'move binary';
 
-
-
-% count the licks per trial
+% get the SWR times and convert to ts
+swr_times = ts({IVcenters(data.swr.iv)}, {'swr center'});  % Extract SWR center times
+%% count the events per trial
 trials = [];
 vr_pos = ts({data.vr.evt.t{ismember(data.vr.evt.label, 'pos')}}, {'move'}); 
 vr_licks = ts({data.vr.evt.t{ismember(data.vr.evt.label, 'Lick')}}, {'licks'}); 
@@ -73,6 +79,15 @@ for ii = 1:length(log_iv.Tone.tstart)
     trl = restrict(vr_pos, log_iv.Trace.tstart(ii), log_iv.Trace.tend(ii));
     trials.trace.mov(ii) = length(trl.t{1})./15;
 
+    % SWR events
+    bl = restrict(swr_times, log_iv.Tone.tstart(ii)-20, log_iv.Tone.tstart(ii));
+    trials.base.swr(ii) = length(bl.t{1})./20;
+
+    tl = restrict(swr_times, log_iv.Tone.tstart(ii), log_iv.Tone.tend(ii));
+    trials.tone.swr(ii) = length(tl.t{1})./20;
+
+    trl = restrict(swr_times, log_iv.Trace.tstart(ii), log_iv.Trace.tend(ii));
+    trials.trace.swr(ii) = length(trl.t{1})./15;
 
     % same thing but movement vector
     % bl = restrict(vr_pos, log_iv.Tone.tstart(ii)-20, log_iv.Tone.tstart(ii));
@@ -86,28 +101,54 @@ for ii = 1:length(log_iv.Tone.tstart)
 
 end
 
-%% ephys
-cd(kilo_dir)
-OE_rec = readNPY('timestamps.npy');
-OE_rec = [OE_rec(1) OE_rec(end)];
+%% figure for the session to chekc everything
+r_ord = winter(6);
+c_ord = MS_linspecer(9);
 
-evts = OE_load_binary_evts(OE_evts_dir);
+figure(999)
+clf
+hold on
 
-rec_iv = iv(evts.t{1}(1,:)-OE_rec(1), evts.t{1}(2,:)-OE_rec(1));
-tone_iv = iv(evts.t{2}(1,:)-OE_rec(1), evts.t{2}(2,:)-OE_rec(1));
-trace_iv = iv(evts.t{3}(1,:)-OE_rec(1), evts.t{3}(2,:)-OE_rec(1));
+plot(data.vr.pos.tvec, data.vr.pos.data(2,:)./max(data.vr.pos.data(2,:)), 'k')
+plot(data.vr.pos.tvec, data.vr.pos.data(2,:)./max(data.vr.pos.data(2,:)), 'k')
+
+plot([vr_licks.t{1} vr_licks.t{1}]', [zeros(size(vr_licks.t{1}))-.5 zeros(size(vr_licks.t{1}))]', 'Color','r', 'LineWidth',2)
+plot(data.licks.tvec, (data.licks.data(1,:)./max(data.licks.data(1,:))./4)-.5, 'k')
+
+plot(data.csc.tvec, (data.csc.data(1,:)./max(data.csc.data(1,:))./2)-.75, 'Color', c_ord(2,:))
+plot([swr_times.t{1} swr_times.t{1}]', [zeros(size(swr_times.t{1}))-.75 zeros(size(swr_times.t{1}))-.5]', 'Color','c', 'LineWidth',2)
 
 
-% get the good cells
-
-S = OE_phy2TS(kilo_dir);
-
-% restrict to only when the behaviour started.
-S_r = restrict(S, rec_iv);
-
-for ii = 1:length(S_r.t)
-    S_r.t{ii} = S_r.t{ii} - rec_iv.tstart;
+for ii = 1:length(log_iv.baseline.tstart)
+    rectangle(gca, 'Position',[log_iv.baseline.tstart(ii) -.25 log_iv.Tone.tstart(ii) - log_iv.baseline.tstart(ii) .25], 'FaceColor',[.7 .7 .7], 'EdgeColor','none' )
+    rectangle(gca, 'Position',[log_iv.Tone.tstart(ii) -.25 20 .25], 'FaceColor',r_ord(2,:), 'EdgeColor','none' )
+    rectangle(gca, 'Position',[log_iv.Trace.tstart(ii) -.25 15 .25], 'FaceColor',r_ord(4,:), 'EdgeColor','none' )
+    rectangle(gca, 'Position',[log_iv.Puff.tstart(ii) -.25 1 .25], 'FaceColor',r_ord(6,:), 'EdgeColor','none' )
 end
+
+xlim([tfc_on.tstart(1), tfc_on.tend(1)])
+% %% ephys
+% cd(kilo_dir)
+% OE_rec = readNPY('timestamps.npy');
+% OE_rec = [OE_rec(1) OE_rec(end)];
+% 
+% evts = OE_load_binary_evts(OE_evts_dir);
+% 
+% rec_iv = iv(evts.t{1}(1,:)-OE_rec(1), evts.t{1}(2,:)-OE_rec(1));
+% tone_iv = iv(evts.t{2}(1,:)-OE_rec(1), evts.t{2}(2,:)-OE_rec(1));
+% trace_iv = iv(evts.t{3}(1,:)-OE_rec(1), evts.t{3}(2,:)-OE_rec(1));
+% 
+% 
+% % get the good cells
+% 
+% S = OE_phy2TS(kilo_dir);
+% 
+% % restrict to only when the behaviour started.
+% S_r = restrict(S, rec_iv);
+% 
+% for ii = 1:length(S_r.t)
+%     S_r.t{ii} = S_r.t{ii} - rec_iv.tstart;
+% end
 
 % figure
 % plot(S_r)
@@ -170,7 +211,7 @@ figure(102)
 
 clf
 
-ax(1) = subplot(3,2,[1 3]);
+ax(1) = subplot(3,4,[1 2 3 5 6 7]);
 cla
 hold on
 max_pos = max(data.vr.pos.data(2,:)); 
@@ -202,7 +243,7 @@ y_l = ylim;
 
 
 % bar plots summarizing movement and licks.
-ax(2) = subplot(3,2, 2);
+subplot(3,4, 4);
 cla
 hold on
 
@@ -218,7 +259,7 @@ ylabel('mov % ')
 set(gca, 'XTick', 1:3, 'XTickLabel', {'Baseline [-20:0]', 'Tone', 'Trace'})
 
 % licks mean.
-ax(2) = subplot(3,2, 4);
+subplot(3,4, 8);
 cla
 hold on
 
@@ -234,6 +275,10 @@ xlim([0 3.5])
 ylabel('mean licks rate')
 
 set(gca, 'XTick', 1:3, 'XTickLabel', {'Baseline [-20:0]', 'Tone', 'Trace'})
+
+
+% add in the SWR
+
 
 
 %% over Conditioning sessions

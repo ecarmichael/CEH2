@@ -1,13 +1,24 @@
 %% sandbox_HF_OE_Peth
 
-%% H1b3_d3_enc
-evts_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H2b3\HF2b3_2026-03-04_12-42-00_D3_Enc\Record Node 112\experiment1\recording1\events\Intan_RHD_USB-108.Rhythm Data\TTL'; 
-csc_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H2b3\HF2b3_2026-03-04_12-42-00_D3_Enc\Record Node 117'; 
-phy_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Kilo_inter\HF2b3_D3_Enc';
-vr_fname = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H2b3\HF2b3_2026-03-04_12-42-00_D3_Enc\arduino_log_1772646494.csv'; 
-csc_idx = {'CH124', 'CH76', 'CH117', 'CH65', 'CH13', 'CH7', 'CH8', 'CH16','CH129', 'CH151'}; 
-swr_ch = 1; 
-save_name = 'HF2b3_TFC_D3'; 
+
+%% H1b3_d5_test
+evts_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H1b3\test\HF1b3_2026-03-05_18-34-55_D5_Test\Record Node 112\experiment1\recording1\events\Intan_RHD_USB-108.Rhythm Data\TTL'; 
+csc_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H1b3\test\HF1b3_2026-03-05_18-34-55_D5_Test\Record Node 117'; 
+phy_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Kilo_inter\HF1b3_D5_test';
+vr_fname = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H1b3\test\HF1b3_2026-03-05_18-34-55_D5_Test\arduino_log_1772754078.csv'; 
+csc_idx = {'CH124', 'CH76', 'CH117', 'CH65', 'CH13', 'CH7', 'CH8', 'CH16','CH129', 'CH151', 'CH57'}; 
+swr_ch =length(csc_idx); 
+save_name = 'HF1b3_TFC_D5'; 
+TTL = {'6', '7'};
+
+%% H2b3_d5_test
+evts_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H2b3\HF2b3_2026-03-06_15-03-02_D5_Test\Record Node 112\experiment1\recording1\events\Intan_RHD_USB-108.Rhythm Data\TTL'; 
+csc_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H2b3\HF2b3_2026-03-06_15-03-02_D5_Test\Record Node 117'; 
+phy_dir = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Kilo_inter\HF2b3_D5_test';
+vr_fname = '\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\TFC\H2b3\HF2b3_2026-03-06_15-03-02_D5_Test\arduino_log_1772827650.csv'; 
+csc_idx = {'CH124', 'CH76', 'CH117', 'CH65', 'CH13', 'CH7', 'CH8', 'CH16','CH129', 'CH151', 'CH57'}; 
+swr_ch =length(csc_idx); 
+save_name = 'HF2b3_TFC_D5'; 
 TTL = {'6', '7'};
 
 
@@ -206,6 +217,7 @@ data = HF_preprocess(phy_dir, csc_dir, evts_dir, vr_fname, csc_idx);
 % vdm standard MUA
 cfg = []; 
 cfg.tvec = data.csc.tvec;
+cfg.sigma = 0.02;
 data.mua = getMUA(cfg, data.S);
 
 %% get the basic metrics
@@ -243,12 +255,16 @@ data.S.usr = data.S.usr(sort_idx);
 
 spkColor = spkColor(sort_idx,:); 
 
+
+for ii = 1:length(data.S.t)
+    data.S.usr{ii}.color = spkColor(ii,:); 
+end
 %% detect SWR
 
 [data.swr.iv, data.swr.cfg] = MS_SWR_detector(data.csc, data.csc.label{swr_ch},1);
 data.swr.chan = data.csc.label{swr_ch};
 %% save the intermediate data
-save(['/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/' save_name '.mat'], "data")
+save(['/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/' save_name '.mat'], "data", "-v7.3")
 %% figure showing all the events
 c_ord = MS_linspecer(8);
 
@@ -264,7 +280,7 @@ cfg.spkColor = spkColor;
 h = MultiRaster(cfg,data.S);
 plot(data.mua.tvec, (zscore(data.mua.data))-2, 'k')
 
-plot(data.csc.tvec, (data.csc.data(2,:)/100)-4, 'b')
+plot(data.csc.tvec, (data.csc.data(swr_ch,:)/100)-4, 'b')
 plot(data.licks.tvec, (data.licks.data./5)-10, 'Color', [0.6 .6 .6])
 ylim([-10 length(data.S.t)+1])
 

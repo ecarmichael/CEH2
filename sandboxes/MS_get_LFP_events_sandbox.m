@@ -143,6 +143,28 @@ if cfg.check
     pause(3); close all;
 end
 
+%% contrast band
+if isfield(cfg, 'cont_filt')
+
+    cfg_f = [];
+    cfg_f.f = cfg.cont_filt.f; 
+    cfg_f.type = cfg.cont_filt.type; 
+    %cfg_f.type = 'fdesign'; 
+%     cfg_f.display_filter = 1
+    csc_con = FilterLFP(cfg_f,csc);
+    csc_con.data = abs(hilbert(csc_con.data)); 
+    csc_con.data(1,artif_idx) = 0; 
+    csc_con.data = zscore(csc_con.data);
+    
+    con_rm_idx = csc_con.data > cfg.cont_filt.zthresh; 
+
+    for iChan = 1:size(csc_filt.data,1)
+        csc_filt.data(iChan,con_rm_idx) = 0;
+        amp_filt.data(iChan,con_rm_idx) = 0;
+    end
+end
+
+
 
 %% isolate candidate events
 
@@ -237,12 +259,12 @@ end
 
 
 %% check for evnts with high raw varience. 'var_raw' is added as a events_out.usr field in CountCycles
-if isfield(cfg, 'var') && ~isempty(cfg.var)
+if isfield(cfg, 'var_raw') && ~isempty(cfg.var_raw)
     % cfg.var = [];
     % cfg.var.operation = '<';
     % cfg.var.threshold = 1;
-    events_out = SelectIV(cfg.var,events_out,'var_raw');
-    fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after raw varience thresholding (''var_raw'' %s %.2f removed).\n',length(events_out.tstart),cfg.var.operation, cfg.var.threshold);
+    events_out = SelectIV(cfg.var_raw,events_out,'var_raw');
+    fprintf('\n<strong>MS_SWR_Ca2</strong>: %d events remain after raw varience thresholding (''var_raw'' %s %.2f removed).\n',length(events_out.tstart),cfg.var_raw.operation, cfg.var_raw.threshold);
 end
 
 
@@ -254,21 +276,21 @@ if  isfield(cfg, 'artif_det') && ~isempty(cfg.artif_det)
 end
 
 
-% %% contrast band
-% if isfield(cfg, 'cont_filt')
-%     
+%% contrast band
+if isfield(cfg, 'cont_filt')
+
 %     cfg_f = [];
 %     cfg_f.f = cfg.cont_filt.f; cfg_f.type = 'fdesign'; 
 % %     cfg_f.display_filter = 1
 %     csc_con = FilterLFP(cfg_f,csc);
 %     csc_con.data = zscore(abs(hilbert(csc_con.data))); 
-%     
-%     for ii  = length(events_out.tstart):-1:1
-%        this_csc = restrict(csc_con, events_out.tstart(ii)-.5, events_out.tend(ii)+.5); 
-%        
-%        events_out.usr.contrast(ii) = nanmean(this_csc.data); 
-%     end
-% end
+
+    for ii  = length(events_out.tstart):-1:1
+       this_csc = restrict(csc_con, events_out.tstart(ii)-.5, events_out.tend(ii)+.5); 
+
+       events_out.usr.contrast(ii) = mean(this_csc.data, 'omitmissing'); 
+    end
+end
 % 
 
 %% add in the event number as a .usr
@@ -284,7 +306,7 @@ if cfg.check
     cfg_plot.mode = 'center';
     cfg_plot.width = .2;
     cfg_plot.target = csc.label{1};
-    cfg_plot.title = 'var_raw';
+    cfg_plot.title = 'contrast';
     PlotTSDfromIV(cfg_plot,events_out,csc);
     pause(3); close all;
 end
