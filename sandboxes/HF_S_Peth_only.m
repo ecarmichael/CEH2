@@ -252,7 +252,7 @@ for iS = 1:size(peth_gau,1)
 
     figure(iS);
     clf
-    subplot(3,1,1:2)
+    ax(1) = subplot(3,1,1:2);
     cla
     hold on;
     % Plot the PETH for each ITI
@@ -298,10 +298,10 @@ for iS = 1:size(peth_gau,1)
     set(gca, 'XTicklabel', [])
     ylim([0 length(u_val)+1])
     ylabel('pulse #');
-    xlim([-100 250])
+    xlim([-100 200])
 
 
-    subplot(3,1,3)
+    ax(2) = subplot(3,1,3);
     hold on;
        labels = {};
     for ii = 1:length(ITIs)
@@ -330,6 +330,7 @@ for iS = 1:size(peth_gau,1)
     xlim([-100 200])
     ylim([0 max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1])
 
+    linkaxes(ax, 'x')
 
     % % same thing but zoomned in
     %     subplot(4,1,3)
@@ -428,7 +429,7 @@ end
 %% plot the PETHS together
 
 
-iS = 14
+iS = 18
 
     figure(iS+100);
     clf
@@ -437,7 +438,7 @@ iS = 14
     hold on;
     % Plot the PETH for each ITI
     offset = 0;
-    for iT = 1:size(peth_gau,2)
+    for iT = 1%:size(peth_gau,2)
         u_val = unique(peth_T{iS, iT});
         for iV = 1:length(u_val)
             this_idx = peth_T{iS, iT} == u_val(iV);
@@ -487,13 +488,13 @@ iS = 14
     subplot(5,3,[13 14])
     hold on;
        labels = {};
-    for ii = 1:length(ITIs)
+    for ii = 1%:length(ITIs)
         rectangle('Position',[0, 0,ITIs(ii)*1000,  max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1], 'FaceColor',reds(iT,:), 'FaceAlpha',.2, 'EdgeColor','none')
         labels{ii} = [num2str(ITIs(ii)*1000) ' ms']; % | p = ' num2str(round(data.S_metrics{iS}.opto_red{ii}.pval, 3))];
     end
 
     % Plot the mean activity for each ITI
-    for iT = 1:size(peth_gau,2)
+    for iT = 1%:size(peth_gau,2)
         % plot(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'Color', 'k', 'LineWidth', 1.5);
         bar(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'faceColor', 'k', 'LineWidth', 1.5);
     end
@@ -522,4 +523,4 @@ iS = 14
     set(gcf,'units','normalized','outerposition',[0 0 .3 .5])
 
    % exportgraphics(gcf, [phy_dir filesep 'Jaws_opto_cell_' num2str(iS) '.pdf'], 'ContentType', 'vector');
-   print(gcf, '-dpdf', [phy_dir filesep 'opto_cell_' num2str(iS) '.pdf'])
+   % print(gcf, '-dpdf', [phy_dir filesep 'opto_cell_' num2str(iS) '.pdf'])
