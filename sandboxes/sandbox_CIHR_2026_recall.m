@@ -2,7 +2,7 @@
 
 % load some intermediate data
 
-load("HF2b3_TFC_D5.mat")
+load("HF1b3_TFC_D5.mat")
 
 
 %% align the vr to the recording. 
@@ -172,7 +172,7 @@ rectangle(gca, 'Position',[0 -.25 20 .25], 'FaceColor',r_ord(2,:), 'EdgeColor','
 rectangle(gca, 'Position',[20 -.25 15 .25], 'FaceColor',r_ord(end-1,:), 'EdgeColor','none' )
 rectangle(gca, 'Position',[35 -.25 20 .25], 'FaceColor',[.7 .7 .7], 'EdgeColor','none' )
 
-title("CS+ | context 1")
+title("CS+ | context 2")
 
 ylabel('Movement (a.u.)')
 

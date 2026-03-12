@@ -186,7 +186,7 @@ for iS = length(data_in.S.t):-1:1
                 [~,S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.pval] = ttest(l_fr, p_fr);
 
                 if iTi == 1
-                    opto_resp.(TTL_name{iO})(iS) = ttest(l_fr, p_fr);
+                    opto_resp.(['opto_' TTL_name{iO}])(iS, iTi) = ttest(l_fr, p_fr);
                 end
                 % else
                 % S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.pval = NaN;
@@ -203,15 +203,18 @@ data_out = data_in;
 data_out.S_metrics  = S_metrics; 
 
 %% quick check
-r_resp = NaN(length(S_metrics), 1); 
+r_resp = NaN(length(S_metrics), length(ITIs));
 for ii = 1:length(S_metrics)
-
-    fprintf('Red Response Cell #%.d, %.4f\n',ii,  S_metrics{ii}.opto_red{1}.pval)
-    r_resp(ii) = (S_metrics{ii}.opto_red{1}.pval < 0.05);
+    for jj = 1:length(S_metrics{ii}.(['opto_' TTL_name{iO}]))
+        fprintf('%s Response Cell #%.d, %.4f at %.0fms stim\n',TTL_name{iO},ii,  S_metrics{ii}.(['opto_' TTL_name{iO}]){jj}.pval, ITIs(jj)*1000); 
+        r_resp(ii, jj) = (S_metrics{ii}.(['opto_' TTL_name{iO}]){jj}.pval < 0.05);
+    end
 end
 
 for iO = 1:length(fieldnames(opto_resp))
-    fprintf('%s optoresponsive cells %.2f%% (%.d/%.d)\n',TTL_name{iO}, (sum(opto_resp.(TTL_name{iO}), 'omitmissing')./length(opto_resp.(TTL_name{iO})))*100, sum(opto_resp.(TTL_name{iO}), 'omitmissing'),length(opto_resp.(TTL_name{iO})))
+    for iti = 1:length(ITIs)
+        fprintf('%s optoresponsive cells %.2f%% (%.d/%.d)\n',TTL_name{iO}, (sum(opto_resp.(['opto_' TTL_name{iO}]), 'omitmissing')./length(opto_resp.(['opto_' TTL_name{iO}])))*100, sum(opto_resp.(['opto_' TTL_name{iO}]), 'omitmissing'),length(opto_resp.(['opto_' TTL_name{iO}])))
+    end
 end
 %% plotting Fr and ISI
 if plot_flag

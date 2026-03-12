@@ -88,14 +88,23 @@ data.S.usr = data.S.usr(sort_idx);
 spkColor = spkColor(sort_idx,:); 
 
 %% quick metrics
-S_metrics = []; 
-for iS = length(data.S.t):-1:1
-    S_metrics.fr(iS) = length(data.S.t{iS})./(ts_prime(end)-ts_prime(1));
-    S_metrics.ISI(iS) = mean(diff(data.S.t{iS}));
-    S_metrics.burst_idx(iS) = sum(diff(data.S.t{iS}) < .010) / sum(diff(data.S.t{iS}) > .010);
+
+if isfield(data, 'S_metrics')
+        S_metrics = [];
+    for iS = length(data.S.t):-1:1
+        S_metrics.fr(iS) = data.S_metrics{iS}.fr;
+        S_metrics.ISI(iS) = data.S_metrics{iS}.ISI;
+        S_metrics.burst_idx(iS) = data.S_metrics{iS}.burst_idx;
+    end
+else
+    S_metrics = [];
+    for iS = length(data.S.t):-1:1
+        S_metrics.fr(iS) = length(data.S.t{iS})./(ts_prime(end)-ts_prime(1));
+        S_metrics.ISI(iS) = mean(diff(data.S.t{iS}));
+        S_metrics.burst_idx(iS) = sum(diff(data.S.t{iS}) < .010) / sum(diff(data.S.t{iS}) > .010);
+    end
 end
-
-
+%%
 data_in = [S_metrics.fr; S_metrics.ISI; S_metrics.burst_idx]'; 
 figure(1)
 clf
@@ -250,33 +259,38 @@ for iS = 1:size(peth_gau,1)
     offset = 0;
     for iT = 1:size(peth_gau,2)
         u_val = unique(peth_T{iS, iT});
-        for iV = 1:length(u_val)
-            this_idx = peth_T{iS, iT} == u_val(iV);
-            if isempty(this_idx)
-                continue
+        if isempty(u_val)
+            continue
+        else
+            for iV = 1:length(u_val)
+                this_idx = peth_T{iS, iT} == u_val(iV);
+                if isempty(this_idx)
+                    continue
+                end
+
+                % % line plot
+                % nSpikes = length(peth_T{iS, iT}(this_idx));
+                % xvals = peth_T{iS, iT}(this_idx)';
+                % yvals = iC.*(1,nSpikes);
+                %
+                % xvals = xvals(:);
+                % yvals = yvals(:);
+                %
+                % if isempty(xvals) && isempty(yvals)
+                %     %             h(iC) = nan;
+                %     h{iC} = nan;
+                % else
+                %     %             h(iC) = plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth);
+                %     plot(xvals,yvals,'.','Color',cfg.spkColor(iC,:));
+                %     h{iC} = get(gca);
+                % end
+                % plot([peth_S{iS, iT}(this_idx)*1000, peth_S{iS, iT}(this_idx)*1000]', [peth_T{iS, iT}(this_idx)-0.5 + iT,peth_T{iS, iT}(this_idx)+0.5 + iT]', 'color', reds(iT,:), 'LineWidth',4)
+
+                plot(peth_S{iS, iT}(this_idx)*1000, peth_T{iS, iT}(this_idx)+0.5 + offset,'.', 'Color', reds(iT,:), 'MarkerSize', 10)
+                % disp(mode(peth_T{iS, iT}(this_idx)+ offset))
             end
-
-            % % line plot
-            % nSpikes = length(peth_T{iS, iT}(this_idx));
-            % xvals = peth_T{iS, iT}(this_idx)';
-            % yvals = iC.*(1,nSpikes);
-            % 
-            % xvals = xvals(:);
-            % yvals = yvals(:);
-            % 
-            % if isempty(xvals) && isempty(yvals)
-            %     %             h(iC) = nan;
-            %     h{iC} = nan;
-            % else
-            %     %             h(iC) = plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth);
-            %     plot(xvals,yvals,'.','Color',cfg.spkColor(iC,:));
-            %     h{iC} = get(gca);
-            % end
-            % plot([peth_S{iS, iT}(this_idx)*1000, peth_S{iS, iT}(this_idx)*1000]', [peth_T{iS, iT}(this_idx)-0.5 + iT,peth_T{iS, iT}(this_idx)+0.5 + iT]', 'color', reds(iT,:), 'LineWidth',4)
-
-            plot(peth_S{iS, iT}(this_idx)*1000, peth_T{iS, iT}(this_idx)+0.5 + offset,'.', 'Color', reds(iT,:), 'MarkerSize', 10)
-            % disp(mode(peth_T{iS, iT}(this_idx)+ offset))
         end
+    
         y_lim = ylim;
         offset = y_lim(2);
 
@@ -291,15 +305,18 @@ for iS = 1:size(peth_gau,1)
     hold on;
        labels = {};
     for ii = 1:length(ITIs)
+        if ~isempty(peth_gau{iS,iT})
         rectangle('Position',[0, 0,ITIs(ii)*1000,  max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1], 'FaceColor',reds(iT,:), 'FaceAlpha',.2, 'EdgeColor','none')
         labels{ii} = [num2str(ITIs(ii)*1000) ' ms']; % | p = ' num2str(round(data.S_metrics{iS}.opto_red{ii}.pval, 3))];
+                plot(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'Color', reds(iT,:), 'LineWidth', 1.5);
+
+        end
     end
 
     % Plot the mean activity for each ITI
-    for iT = 1:size(peth_gau,2)
-        plot(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'Color', reds(iT,:), 'LineWidth', 1.5);
-
-    end
+    % for iT = 1:size(peth_gau,2)
+    % 
+    % end
     xlabel('Time ms)');
     ylabel('Firing rate (Hz)');
 
@@ -411,7 +428,7 @@ end
 %% plot the PETHS together
 
 
-iS = 3
+iS = 14
 
     figure(iS+100);
     clf
@@ -464,7 +481,7 @@ iS = 3
     set(gca, 'XTicklabel', [])
     ylim([0 length(u_val)+1])
     ylabel('pulse #');
-    xlim([-100 250])
+    xlim([-100 200])
 
 
     subplot(5,3,[13 14])
@@ -487,16 +504,16 @@ iS = 3
 
  
     % legend(labels, 'Box', 'off')
-    xlim([-100 250])
+    xlim([-100 200])
     ylim([0 max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1])
 
 % add the pre post stats
 
   subplot(5,3,[3  6])
-  MS_bar_w_err(squeeze(peth_pre_fr(iS, iTi,:))', squeeze(peth_stim_fr(iS, iTi,:))', [.7 .7 .7; reds(1,:)], 1, 'ttest', 1:2)
+  MS_bar_w_err(squeeze(peth_pre_fr{iS, iTi})', squeeze(peth_stim_fr{iS, iTi})', [.7 .7 .7; reds(1,:)], 1, 'ttest', 1:2)
    ylabel('mean FR')
 
-  set(gca, 'XTickLabel', {'pre', 'Jaws'}, 'XTickLabelRotation', 45)
+  set(gca, 'XTickLabel', {'pre', 'opto'}, 'XTickLabelRotation', 45)
 
     cfg_fig =[]; 
     cfg_fig.ft_size = 8; 
@@ -505,4 +522,4 @@ iS = 3
     set(gcf,'units','normalized','outerposition',[0 0 .3 .5])
 
    % exportgraphics(gcf, [phy_dir filesep 'Jaws_opto_cell_' num2str(iS) '.pdf'], 'ContentType', 'vector');
-   print(gcf, '-dpdf', [phy_dir filesep 'Jaws_opto_cell_' num2str(iS) '.pdf'])
+   print(gcf, '-dpdf', [phy_dir filesep 'opto_cell_' num2str(iS) '.pdf'])
