@@ -1,5 +1,23 @@
 %% PETH only sandbox
 
+%% JAWS_opto3
+evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws2026-03-11_02-09-55_Opto3/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL';
+% csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 117'; 
+phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws2026-03-11_02-09-55_Opto3/kilosort';
+vr_fname = ''; 
+save_name = 'JAWS_opto3'; 
+TTL = {'6'};
+
+
+%% JAWS_opto2
+evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws2026-03-11_01-58-18_Opto2/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL';
+% csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 117'; 
+phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws2026-03-11_01-58-18_Opto2';
+vr_fname = ''; 
+save_name = 'JAWS_opto2'; 
+TTL = {'6'};
+
+
 %% JAWS_D1_1
 evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 101/experiment1/recording1/events/Acquisition_Board-100.acquisition_board/TTL';
 csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 117'; 
@@ -31,7 +49,6 @@ end
     
 
 evts_dir = regexprep([pc_name evts_dir], {'\', '/'}, {filesep, filesep});
-csc_dir = regexprep([pc_name csc_dir], {'\', '/'}, {filesep, filesep});
 phy_dir = regexprep([pc_name phy_dir], {'\', '/'}, {filesep, filesep});
 if ~isempty(vr_fname)
 vr_fname = regexprep([pc_name vr_fname], {'\', '/'}, {filesep, filesep});
@@ -88,7 +105,7 @@ clf
 xlabel('firing rate (Hz)')
 ylabel('ISI (log)')
 zlabel('burst index')
-set(gca, 'YScale', 'log')
+% set(gca, 'YScale', 'log')
 
 %% figure showing all the events
 
@@ -164,6 +181,8 @@ evt_t = data.evts.t{red_idx} ;
 e_d = evt_t(2,:) - evt_t(1,:);
 
 ITIs = unique(round(e_d, 3));
+peth_pre_fr = []; 
+peth_stim_fr = []; 
 
 for iTi = 1:length(ITIs)
 
@@ -207,8 +226,8 @@ for iTi = 1:length(ITIs)
         z_idx = nearest_idx(0, peth_IT{iS, iTi}); 
         t_end_idx = nearest_idx(t_on, peth_IT{iS, iTi});
 
-        peth_pre_fr(iS, iTi, :) = mean(peth_gau{iS,iTi}(z_idx - (t_end_idx- z_idx):z_idx,:),2); 
-        peth_stim_fr(iS, iTi, :) = mean(peth_gau{iS,iTi}(z_idx:t_end_idx,:),2); 
+        peth_pre_fr{iS, iTi} = mean(peth_gau{iS,iTi}(z_idx - (t_end_idx- z_idx):z_idx,:),2); 
+        peth_stim_fr{iS, iTi} = mean(peth_gau{iS,iTi}(z_idx:t_end_idx,:),2); 
 
 
     end
@@ -291,7 +310,7 @@ for iS = 1:size(peth_gau,1)
 
  
     legend(labels, 'Box', 'off')
-    xlim([-100 250])
+    xlim([-100 200])
     ylim([0 max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1])
 
 

@@ -1,11 +1,15 @@
-function [data_out] = HF_metrics(data_in, plot_flag, TTL)
+function [data_out] = HF_metrics(data_in, plot_flag, TTL, TTL_name)
 %% HF_Metrics:  computes simple spiking measures
 
 if nargin < 2
     plot_flag = 0;
     TTL = {'6', '7'};
+    TTL_name = TTL; 
 elseif nargin < 3
     TTL = {'6', '7'};
+    TTL_name = TTL;
+elseif nargin < 4
+    TTL_name = TTL;
 end
 
 % ToDo:
@@ -22,22 +26,22 @@ for iS = length(data_in.S.t):-1:1
     S_metrics{iS}.burst_idx = sum(diff(data_in.S.t{iS}) < .010) / sum(diff(data_in.S.t{iS}) > .010);
 
         
-    % autocorrelation
-    xbin_centers = -.025-0.001:0.001:0.025+0.001; % first and last bins are to be deleted later
-    ac = zeros(size(xbin_centers));
-
-    for iSpk = 1:length(data_in.S.t{iS})
-        relative_spk_t = data_in.S.t{iS} - data_in.S.t{iS}(iSpk);
-        ac = ac + hist(relative_spk_t,xbin_centers); % note that hist() puts all spikes outside the bin centers in the first and last bins! delete later.
-    end
-
-    xbin = xbin_centers(2:end-1); % remove unwanted bins
-    zero_idx = xbin == 0;
-    ac = ac(2:end-1);
-    ac(zero_idx) = 0;
-
-    S_metrics{iS}.auto_corr = ac;
-    S_metrics{iS}.auto_corr_xbin = xbin*1000;
+    % % autocorrelation
+    % xbin_centers = -.025-0.001:0.001:0.025+0.001; % first and last bins are to be deleted later
+    % ac = zeros(size(xbin_centers));
+    % 
+    % for iSpk = 1:length(data_in.S.t{iS})
+    %     relative_spk_t = data_in.S.t{iS} - data_in.S.t{iS}(iSpk);
+    %     ac = ac + hist(relative_spk_t,xbin_centers); % note that hist() puts all spikes outside the bin centers in the first and last bins! delete later.
+    % end
+    % 
+    % xbin = xbin_centers(2:end-1); % remove unwanted bins
+    % zero_idx = xbin == 0;
+    % ac = ac(2:end-1);
+    % ac(zero_idx) = 0;
+    % 
+    % S_metrics{iS}.auto_corr = ac;
+    % S_metrics{iS}.auto_corr_xbin = xbin*1000;
 
     % for internal plotting checks
     fr(iS) = S_metrics{iS}.fr;
@@ -48,9 +52,8 @@ for iS = length(data_in.S.t):-1:1
     c_red = [0.9153    0.2816    0.2878;
         0 0 1];
     
-    TTL_name = {'red', 'blue'};
 
-    for iO = 1:2
+    for iO = 1:length(TTL)
         if sum(contains(data_in.evts.label, TTL{iO}))
             this_TTL_idx = find(contains(data_in.evts.label, TTL{iO}));
 
@@ -168,6 +171,13 @@ for iS = length(data_in.S.t):-1:1
                 S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.ITI = mode(diff(evt_t));
                 S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.pre = p_fr;
                 S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.post = l_fr;
+
+                % mod idx from Neuropixel opto paper (a modulation index 
+                % (R1-R0)/(R1+R0) where R0 and R1 are firing rates before 
+                % and during stimulus, showing significantly activated 
+                % units (green) and inactivated units (purple) at p < 0.05 
+                % (paired t-test)
+                S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.mod_idx = (l_fr - p_fr)/(l_fr+p_fr);
 
                 S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.shuff_pre = shuff_l_fr;
                 S_metrics{iS}.(['opto_' TTL_name{iO}]){iTi}.shuff_post = shuff_p_fr;
