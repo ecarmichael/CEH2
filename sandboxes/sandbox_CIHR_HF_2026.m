@@ -27,7 +27,7 @@ end
 
 data.vr.pos.tvec = (data.vr.pos.tvec./1000)+tfc_on.tstart(1); 
 
-%% convert to evts
+%% convert to evts  
 labels = unique(data.vr.evt.label);
 phases = {'baseline', 'Tone', 'Trace', 'Puff'};
 
