@@ -2,12 +2,10 @@
 
 % load some intermediate data
 
-load("HF1b3_TFC_D5.mat")
+load("HF2b3_TFC_D5.mat")
 
 
 %% align the vr to the recording. 
-
-
 tfc_on = iv(data.evts.t{ismember(data.evts.label, '5')}(1,:), data.evts.t{ismember(data.evts.label, '5')}(2,:)); 
 
 % if the onset TTL from the arduino has more than one time, get the longest
