@@ -139,9 +139,9 @@ save_name = 'HF2b2_D5';
 %
 % save_name = 'HF2b2_D5_opto1';
 %% HF2b2_D5_opto_2
-evts_dir = ('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/HF2b2_2026-01-02_13-21-35_SS_test2/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL') ;
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/HF2b2_2026-01-02_13-21-35_SS_test2/Record Node 117';
-phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/HF2b2_SS_D5_Opto_cells';
+evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/HF2b2_2026-01-02_13-21-35_SS_test2/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL' ;
+csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/HF2b2_2026-01-02_13-21-35_SS_test2/Record Node 117';
+phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/HF2b2_SS_D5_Opto_cells';
 vr_fname = []; %'/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D3/HF2b2_D3_2025-12-18_14-08-34.csv';
 csc_idx = [1, 4, 6];
 swr_ch = 2;

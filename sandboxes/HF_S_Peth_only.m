@@ -88,7 +88,7 @@ data.S.usr = data.S.usr(sort_idx);
 spkColor = spkColor(sort_idx,:); 
 
 %% quick metrics
-S_metrics = []; 
+S_metrics = [];  
 for iS = length(data.S.t):-1:1
     S_metrics.fr(iS) = length(data.S.t{iS})./(ts_prime(end)-ts_prime(1));
     S_metrics.ISI(iS) = mean(diff(data.S.t{iS}));

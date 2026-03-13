@@ -196,8 +196,8 @@ z_vals = (mean_S_gau - mean(mean_S_gau(1:idx)))./mean(mean_S_gau(1:idx));
 
 
 %% display
-clf
 if  strcmp(cfg.plot, 'on')
+clf
 
 
     % spike raster
