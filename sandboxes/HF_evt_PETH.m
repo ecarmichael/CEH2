@@ -633,7 +633,7 @@ legend(blue_labels, 'Box', 'off')
 % grab the good intermediate sessions
 int_fname= dir('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/*.mat');
 
-keep_sess = {'HF2b2_D5_opto2.mat', 'HF2b2_D5.mat', 'HF2b2_D4'};
+keep_sess = {'HF2b2_D5_opto2.mat', 'HF2b2_D5.mat', 'HF2b2_D4.mat'}%, 'HF1b2_TFCD3_opto.mat', 'HF1b3_TFC_D5.mat', 'HF2b3_TFC_D3.mat', 'HF2b3_TFC_D5.mat', 'HF3b3_TFC_D3.mat'};
 all_sess = [];
 for ii = 1:length(int_fname)
     if contains(int_fname(ii).name, keep_sess)
@@ -651,10 +651,12 @@ for ii = length(s_names):-1:1
     cell = [];
 
     % prefill the responses
-            cell.red_resp = NaN(length(this_data.S.t), 4); 
+        cell.red_resp = NaN(length(this_data.S.t), 4); 
         cell.red_resp_dir = cell.red_resp; 
         cell.blue_resp = cell.red_resp;
         cell.blue_resp_dir = cell.red_resp; 
+        cell.red_mod_idx = cell.red_resp; 
+        cell.blue_mod_idx = cell.blue_resp; 
 
     for iC = length(this_data.S.t):-1:1
 
@@ -665,6 +667,7 @@ for ii = length(s_names):-1:1
         cell.ISI(iC) = this_data.S_metrics{iC}.ISI;
         % cell.shank(iC) = this_data.S.usr{iC}.shank;
         cell.pos(iC,:) = this_data.S.usr{iC}.pos;
+        % cell.mod_idx(iC) = this_data.u
 
 
         for iT = length(this_data.S_metrics{iC}.opto_red):-1:1
@@ -674,12 +677,14 @@ for ii = length(s_names):-1:1
             % red
             [~, cell.red_resp(iC, iT), ~, stats] = ttest(this_data.S_metrics{iC}.opto_red{iT}.pre, this_data.S_metrics{iC}.opto_red{iT}.post);
             cell.red_resp_dir(iC, iT) = sign(stats.tstat);
+            cell.red_mod_idx(iC, iT) = (this_data.S_metrics{iC}.opto_red{iT}.pre - this_data.S_metrics{iC}.opto_red{iT}.post)/ (this_data.S_metrics{iC}.opto_red{iT}.pre + this_data.S_metrics{iC}.opto_red{iT}.post);
         end % end reds
 
         for iT = length(this_data.S_metrics{iC}.opto_blue):-1:1
             % blue
             [~, cell.blue_resp(iC, iT), ~, stats] = ttest(this_data.S_metrics{iC}.opto_blue{iT}.pre, this_data.S_metrics{iC}.opto_blue{iT}.post);
             cell.blue_resp_dir(iC, iT) = sign(stats.tstat);
+            cell.blue_mod_idx(iC, iT) = (this_data.S_metrics{iC}.opto_blue{iT}.pre - this_data.S_metrics{iC}.opto_blue{iT}.post)/ (this_data.S_metrics{iC}.opto_blue{iT}.pre + this_data.S_metrics{iC}.opto_blue{iT}.post);
         end % end blues
     end % loop over cells
 
@@ -697,8 +702,12 @@ for ii = length(s_names):-1:1
 
         all_data.red_resp = [all_data.red_resp; cell.red_resp];
         all_data.red_resp_dir = [all_data.red_resp_dir; cell.red_resp_dir];
+        all_data.red_mod_idx = [all_data.red_mod_idx; cell.red_mod_idx];
+
         all_data.blue_resp = [all_data.blue_resp; cell.blue_resp];
         all_data.blue_resp_dir = [all_data.blue_resp_dir; cell.blue_resp_dir];
+        all_data.blue_mod_idx = [all_data.blue_mod_idx; cell.blue_mod_idx];
+
     end
 end% session
 
@@ -749,28 +758,42 @@ set(gca, 'XDir', 'reverse', 'yDir', 'reverse')
 % axis square
 
 SetFigure([], gcf)
+
+
 %%
 figure(102)
 cla
 hold on
 
-    scatter(all_data.pos(k_idx,1), all_data.pos(k_idx,2), 200,all_data.fr(k_idx), 'filled', 'Marker','o', 'DisplayName',['Shank ' num2str(ii) ' responsive'])
-    scatter(all_data.pos(~k_idx,1), all_data.pos(~k_idx,2), 200,all_data.fr(~k_idx), 'filled','Marker','d', 'MarkerFaceAlpha',.25, 'DisplayName',['not responsive'])
+    scatter(all_data.pos(k_idx,1), all_data.pos(k_idx,2),100,all_data.fr(k_idx), 'filled', 'Marker','o', 'DisplayName',['Shank ' num2str(ii) ' responsive'])
+    scatter(all_data.pos(~k_idx,1), all_data.pos(~k_idx,2),100,all_data.fr(~k_idx), 'filled','Marker','d', 'MarkerFaceAlpha',.1, 'DisplayName',['not responsive'])
 cb = colorbar;
-ylabel(cb,'Firing rate (Hz)','FontSize',16,'Rotation',90);
+ylabel(cb,'Firing rate (Hz)','FontSize',8,'Rotation',90);
     ylim([-100 0])
 
     ylabel('Probe depth (microns)')
     xlabel('Probe width (microns)')
-    text(250, 0, 'CA1', 'HorizontalAlignment','center', 'FontSize',22, 'VerticalAlignment','top')
-text(0, 0, '<-   distal', 'HorizontalAlignment','left', 'FontSize',22, 'VerticalAlignment','top')
-text(500, 0, 'intermediate   -> ', 'HorizontalAlignment','right', 'FontSize',22, 'VerticalAlignment','top')
+    text(250, 0, 'CA1', 'HorizontalAlignment','center', 'FontSize',8, 'VerticalAlignment','top')
+text(0, 0, '<-   distal', 'HorizontalAlignment','left', 'FontSize',8, 'VerticalAlignment','top')
+text(500, 0, 'intermediate   -> ', 'HorizontalAlignment','right', 'FontSize',8, 'VerticalAlignment','top')
 
-SetFigure([], gcf)
+% SetFigure([], gcf)
+
+
+cfg_fig =[];
+cfg_fig.ft_size = 8;
+SetFigure(cfg_fig, gcf, 1)
+
+set(gcf,'units','normalized','outerposition',[0 0 .25 .25])
+theme(gcf,'light')
+
+exportgraphics(gcf, 'Opto_prox_disal.pdf', 'ContentType', 'vector');
 
 %%
 figure(103)
-subplot(1,2,1)
+clf
+% subplot(2,4,[1 2 5 6] )
+subplot(2,4,1)
 r_10= (all_data.red_resp(:,1) < 0.05); 
 r_50= (all_data.red_resp(:,2) < 0.05); 
 r_100= (all_data.red_resp(:,3) < 0.05); 
@@ -789,6 +812,62 @@ red_map = hot(12);
 colororder([red_map(1:2:10,:); .7 .7 .7])
 
 title('Red light responses')
+
+subplot(2,4,3)
+cla
+hold on
+scatter(all_data.fr(~r_10), all_data.red_mod_idx(~r_10,1),50, [.7 .7 .7], 'filled')
+scatter(all_data.fr(r_10), all_data.red_mod_idx(r_10,1), 50, red_map(1,:), 'filled')
+ylim([-1 1]); xlim([0 100])
+set(gca, 'XScale', 'log', 'XTick', [1 10 20 50 100], 'XTickLabel', {'1' '10' '20' '50' '100'})
+axis square
+ylabel('Mod idx')
+title('10ms stim')
+
+
+subplot(2,4,4)
+cla
+hold on
+scatter(all_data.fr(~r_50), all_data.red_mod_idx(~r_50,2),50, [.7 .7 .7], 'filled')
+scatter(all_data.fr(r_50), all_data.red_mod_idx(r_50,2), 50, red_map(1,:), 'filled')
+ylim([-1 1]); xlim([0 100])
+set(gca, 'XScale', 'log', 'XTick', [1 10 20 50 100], 'XTickLabel', {'1' '10' '20' '50' '100'})
+axis square
+title('50ms stim')
+
+subplot(2,4,7)
+cla
+hold on
+scatter(all_data.fr(~r_100), all_data.red_mod_idx(~r_100,3),50, [.7 .7 .7], 'filled')
+scatter(all_data.fr(r_100), all_data.red_mod_idx(r_100,3), 50, red_map(1,:), 'filled')
+ylim([-1 1])
+xlim([0 100])
+set(gca, 'XScale', 'log', 'XTick', [1 10 20 50 100], 'XTickLabel', {'1' '10' '20' '50' '100'})
+axis square
+xlabel('firing rate (Hz)')
+ylabel('Mod idx')
+title('100ms stim')
+
+
+subplot(2,4,8)
+cla
+hold on
+scatter(all_data.fr(~r_250), all_data.red_mod_idx(~r_250,4),50, [.7 .7 .7], 'filled')
+scatter(all_data.fr(r_250), all_data.red_mod_idx(r_250,4), 50, red_map(1,:), 'filled')
+ylim([-1 1]); xlim([0 100])
+set(gca, 'XScale', 'log', 'XTick', [1 10 20 50 100], 'XTickLabel', {'1' '10' '20' '50' '100'})
+axis square
+title('250ms stim')
+xlabel('firing rate (Hz)')
+
+cfg_fig =[];
+cfg_fig.ft_size = 8;
+SetFigure(cfg_fig, gcf, 1)
+
+set(gcf,'units','normalized','outerposition',[0 0 .5 .5])
+theme(gcf,'light')
+
+exportgraphics(gcf, 'Opto_mod.pdf', 'ContentType', 'vector');
 
 % 
 % subplot(1,2,2)
