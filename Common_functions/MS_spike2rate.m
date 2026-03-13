@@ -16,9 +16,9 @@ end
 rate_tsd = tsd; 
 
 % construct internal tvec
-dt = mode(diff(tvec));
-t_edges = tvec(1):dt:tvec(end);
-t_centers = t_edges(1:end-1)+dt/2;
+% dt = mode(diff(tvec));
+t_edges = tvec(1):bin_s:tvec(end);
+t_centers = t_edges(1:end-1)+bin_s/2;
 
 %% loop over Spikes
 
@@ -29,19 +29,22 @@ for ii = length(S.t):-1:1
     spk_binned = spk_binned(1:end-1);
 
     % construct gaussian kernel
-    gauss_window = 1./dt;
-    gauss_SD = sig./dt; % 0.02 seconds (20ms) SD
-    gk = gausskernel(gauss_window,gauss_SD); gk = gk./dt; % normalize by binsize
+    gauss_window = 1./bin_s;
+    gauss_SD = sig./bin_s; % 0.02 seconds (20ms) SD
+    gk = gausskernel(gauss_window,gauss_SD); gk = gk./bin_s; % normalize by binsize
 
     % convolve
+    if sig == 0
+        rate_tsd.data(ii,:) = spk_binned;
+    else
     rate_tsd.data(ii,:) = conv2(spk_binned,gk,'same');
-    
+    end
     rate_tsd.label = S.label; 
 end
 
 rate_tsd.tvec = t_centers'; 
 rate_tsd.units = 'Hz'; 
 rate_tsd.cfg.history.mfun{end+1,1} = 'MS_spike2rate'; 
-rate_tsd.cfg.history.cfg{end+1,1}.dt = dt; 
+rate_tsd.cfg.history.cfg{end+1,1}.dt = bin_s; 
 rate_tsd.cfg.history.cfg{end,1}.sig = sig; 
 rate_tsd.cfg.history.cfg{end,1}.bin_s = bin_s; 

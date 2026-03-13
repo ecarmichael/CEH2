@@ -20,7 +20,7 @@ function [h] = MS_asmbly_ephys_raster(S, tvec, A_temp, A_proj, idx)
 %
 %% initialize
 
-if nargin < 4
+if nargin < 5
     idx = 5; 
 end
 
@@ -48,12 +48,12 @@ c_ord = MS_linspecer(length(idx));
     end
 
 %% plot the assembly templates
-n  =  length(idx); 
-m =  5;
+m  =  length(idx); 
+n =  5;
 s_idx = reshape(1:n*m, n, m)'; 
 A_cells = []; A_cells_id = []; 
 for ii = 1:length(idx)
-    subplot(n,m, s_idx(ii,1))
+    subplot(m,n, s_idx(ii,1))
     cla
     hold on
     stem(A_temp(:,ii), 'color', [.8 .8 .8 .2])
@@ -151,7 +151,7 @@ S_sort.label = S_sort.label(c_ids);
 
 %% plot the raster 
 
-ax(1) = subplot(n,m,sort(reshape(s_idx(1:end-1,2:end), 1, numel(s_idx(1:end-1,2:end)))));
+ax(1) = subplot(m,n,sort(reshape(s_idx(1:end-1,2:end), 1, numel(s_idx(1:end-1,2:end)))));
 cla
 cfg_mr.spkColor = s_c_ord; 
 cfg_mr.openNewFig = 0; 
@@ -159,7 +159,7 @@ h = MultiRaster(cfg_mr, S_sort);
 
 
 % plot the projections
-ax(2) = subplot(n,m,s_idx(end,2:end));
+ax(2) = subplot(m,n,s_idx(end,2:end));
 cla
 hold on
 for ii = idx

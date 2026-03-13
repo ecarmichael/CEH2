@@ -35,6 +35,11 @@ end
 rng(123, 'twister')
 %% convert the TS data into rates
 
+out = []; 
+out.data  = data_h; 
+
+% remove movement periods
+data_h(:,move_idx) = []; 
 %% try the assembly code....
 
 
@@ -53,6 +58,16 @@ end
 rng(123, 'twister')
 A_proj = assembly_activity(A_temp,data_h);
 
+% pad the movement periods with zeros
+if ~isempty(move_idx)
+    A_proj_z = zeros(size(A_proj,1), size(out.data,2)); 
+
+    for ii = 1:size(A_proj,1)
+    A_proj_z(ii,~move_idx) = A_proj(ii,:); 
+    end
+    A_proj = A_proj_z; 
+end
+
 
 %% shuffle distribution for assemblies
 rng(123,'twister')
@@ -69,7 +84,7 @@ for iS = nShuff:-1:1
     
     this_ass = assembly_patterns(shuff_data');
     if ~isempty(this_ass)
-        S_prog = assembly_activity(this_ass,shuff_data');
+        S_prog = assembly_activity(this_ass,shuff_data);
         
         wake_shuff_mat(iS,:) =  S_prog(1,:);
         keep_idx(iS) = 1;
@@ -97,4 +112,13 @@ shuff_stats.p99 = prctile(Ass_shuff, 99, 'all');
 
 
 w_thresh = prctile(wake_shuff_mat(wake_shuff_mat >0), 99, 'all');
+
+% collect everything
+
+
+out.A_temp = A_temp; 
+out.A_proj = A_proj;
+out.opts = opts; 
+out.shuff_stats = shuff_stats; 
+out.w_thresh = w_thresh; 
 

@@ -2,56 +2,56 @@
 
 %% JAWS_opto3
 evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws2026-03-11_02-09-55_Opto3/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL';
-% csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 117'; 
+% csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 117';
 phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws2026-03-11_02-09-55_Opto3/kilosort';
-vr_fname = ''; 
-save_name = 'JAWS_opto3'; 
+vr_fname = '';
+save_name = 'JAWS_opto3';
 TTL = {'6'};
 
 
 %% JAWS_opto2
 evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws2026-03-11_01-58-18_Opto2/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL';
-% csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 117'; 
+% csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 117';
 phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws2026-03-11_01-58-18_Opto2';
-vr_fname = ''; 
-save_name = 'JAWS_opto2'; 
+vr_fname = '';
+save_name = 'JAWS_opto2';
 TTL = {'6'};
 
 
 %% JAWS_D1_1
 evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 101/experiment1/recording1/events/Acquisition_Board-100.acquisition_board/TTL';
-csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 117'; 
+csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 117';
 phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/Jaws2_D1_1/kilosort4';
-vr_fname = ''; 
-csc_idx = [13]; 
-swr_ch = 1; 
-save_name = 'HF3b2_TFC_D4'; 
+vr_fname = '';
+csc_idx = [13];
+swr_ch = 1;
+save_name = 'HF3b2_TFC_D4';
 TTL = {'6'};
 
 %% JAWS_D1_2
 evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-21-05_D1_1/Record Node 101/experiment1/recording1/events/Acquisition_Board-100.acquisition_board/TTL';
-csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-21-05_D1_1/Record Node 117'; 
+csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-21-05_D1_1/Record Node 117';
 phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/Jaws2_D1_2/kilosort4';
-vr_fname = ''; 
-csc_idx = [13]; 
-swr_ch = 1; 
-save_name = 'HF3b2_TFC_D4'; 
+vr_fname = '';
+csc_idx = [13];
+swr_ch = 1;
+save_name = 'HF3b2_TFC_D4';
 TTL = {'6'};
 
 %% convert for PC
 if ispc
-    usr =getenv('USERNAME'); 
-    pc_name = ['C:\Users\' usr]; 
+    usr =getenv('USERNAME');
+    pc_name = ['C:\Users\' usr];
 else
-    usr =getenv('USER'); 
-    pc_name = ['/Users/' usr]; 
+    usr =getenv('USER');
+    pc_name = ['/Users/' usr];
 end
-    
+
 
 evts_dir = regexprep([pc_name evts_dir], {'\', '/'}, {filesep, filesep});
 phy_dir = regexprep([pc_name phy_dir], {'\', '/'}, {filesep, filesep});
 if ~isempty(vr_fname)
-vr_fname = regexprep([pc_name vr_fname], {'\', '/'}, {filesep, filesep});
+    vr_fname = regexprep([pc_name vr_fname], {'\', '/'}, {filesep, filesep});
 end
 
 
@@ -62,35 +62,34 @@ params = OE_load_params(phy_dir);
 
 data.S = OE_phy2TS(phy_dir, params);
 
-ts_prime = readNPY([phy_dir filesep 'timestamps.npy']); 
+ts_prime = readNPY([phy_dir filesep 'timestamps.npy']);
 
 data.evts = OE_load_binary_evts(evts_dir, ts_prime(1));
 
 
 % make a colour map for the shanks
-s_pos = []; 
+s_pos = [];
 for ii = length(data.S.usr):-1:1; s_pos(ii,:) = data.S.usr{ii}.pos; end
 
 [snk_u,~,  s_idx] = unique(round(s_pos(:,1)/100)); % group by 100s of micros
 
 c_ord = MS_linspecer(8);
-spkColor = ones(length(data.S.t),3); 
+spkColor = ones(length(data.S.t),3);
 for ii = 1:length(s_idx)
-    spkColor(ii,:) = c_ord(s_idx(ii),:); 
+    spkColor(ii,:) = c_ord(s_idx(ii),:);
 end
 
-[~, sort_idx] = sort(s_idx); 
+[~, sort_idx] = sort(s_idx);
 
-data.S.t = data.S.t(sort_idx); 
-data.S.label = data.S.label(sort_idx); 
-data.S.usr = data.S.usr(sort_idx); 
+data.S.t = data.S.t(sort_idx);
+data.S.label = data.S.label(sort_idx);
+data.S.usr = data.S.usr(sort_idx);
 
-spkColor = spkColor(sort_idx,:); 
+spkColor = spkColor(sort_idx,:);
 
 %% quick metrics
-
 if isfield(data, 'S_metrics')
-        S_metrics = [];
+    S_metrics = [];
     for iS = length(data.S.t):-1:1
         S_metrics.fr(iS) = data.S_metrics{iS}.fr;
         S_metrics.ISI(iS) = data.S_metrics{iS}.ISI;
@@ -105,10 +104,10 @@ else
     end
 end
 %%
-data_in = [S_metrics.fr; S_metrics.ISI; S_metrics.burst_idx]'; 
+data_in = [S_metrics.fr; S_metrics.ISI; S_metrics.burst_idx]';
 figure(1)
 clf
-[g_idx] = MS_kmean_scatter(data_in, 3, 1:length(data_in), 100); 
+[g_idx] = MS_kmean_scatter(data_in, 3, 1:length(data_in), 100);
 
 % scatter3(S_metrics.fr, S_metrics.ISI, S_metrics.burst_idx, 150, spkColor, 'filled')
 xlabel('firing rate (Hz)')
@@ -123,7 +122,9 @@ clf
 hold on
 
 cfg = []; cfg.openNewFig = 0;
-cfg.spkColor = spkColor; 
+if exist('spkColor', 'var')
+    cfg.spkColor = spkColor;
+end
 h = MultiRaster(cfg,data.S);
 
 ylim([0 length(data.S.t)+1])
@@ -151,7 +152,7 @@ figure(1012)
 clf
 hold on
 cfg = []; cfg.openNewFig = 0;
-cfg.spkColor = spkColor; 
+cfg.spkColor = spkColor;
 
 h = MultiRaster(cfg,data.S);
 ylim([ 0 length(data.S.t)+1])
@@ -180,7 +181,7 @@ end
 c_red = [0.9153    0.2816    0.2878];
 
 
-red_idx = find(contains(data.evts.label, TTL{1})); 
+red_idx = find(contains(data.evts.label, TTL{1}));
 
 window = [-1 1];
 bin_s = .025;
@@ -190,8 +191,8 @@ evt_t = data.evts.t{red_idx} ;
 e_d = evt_t(2,:) - evt_t(1,:);
 
 ITIs = unique(round(e_d, 3));
-peth_pre_fr = []; 
-peth_stim_fr = []; 
+peth_pre_fr = [];
+peth_stim_fr = [];
 
 for iTi = 1:length(ITIs)
 
@@ -231,12 +232,12 @@ for iTi = 1:length(ITIs)
         cfg_peth.plot = 'off';
         [peth_S{iS,iTi}, peth_IT{iS,iTi},peth_gau{iS,iTi}, ~, ~, ~, ~, ~, ~,peth_T{iS, iTi}] = SpikePETH_Shuff(cfg_peth, S, evt_t);
         % same thing but with the pre and post stim means (time matched)
-        t_on = ITIs(iTi); 
-        z_idx = nearest_idx(0, peth_IT{iS, iTi}); 
+        t_on = ITIs(iTi);
+        z_idx = nearest_idx(0, peth_IT{iS, iTi});
         t_end_idx = nearest_idx(t_on, peth_IT{iS, iTi});
 
-        peth_pre_fr{iS, iTi} = mean(peth_gau{iS,iTi}(z_idx - (t_end_idx- z_idx):z_idx,:),2); 
-        peth_stim_fr{iS, iTi} = mean(peth_gau{iS,iTi}(z_idx:t_end_idx,:),2); 
+        peth_pre_fr{iS, iTi} = mean(peth_gau{iS,iTi}(z_idx - (t_end_idx- z_idx):z_idx,:),2);
+        peth_stim_fr{iS, iTi} = mean(peth_gau{iS,iTi}(z_idx:t_end_idx,:),2);
 
 
     end
@@ -246,7 +247,7 @@ end
 
 %% plot the PETHS together
 reds = hot(8);
-reds = reds(2:end,:); 
+reds = reds(2:end,:);
 
 for iS = 1:size(peth_gau,1)
 
@@ -290,7 +291,7 @@ for iS = 1:size(peth_gau,1)
                 % disp(mode(peth_T{iS, iT}(this_idx)+ offset))
             end
         end
-    
+
         y_lim = ylim;
         offset = y_lim(2);
 
@@ -303,19 +304,19 @@ for iS = 1:size(peth_gau,1)
 
     ax(2) = subplot(3,1,3);
     hold on;
-       labels = {};
+    labels = {};
     for ii = 1:length(ITIs)
-        if ~isempty(peth_gau{iS,iT})
-        rectangle('Position',[0, 0,ITIs(ii)*1000,  max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1], 'FaceColor',reds(iT,:), 'FaceAlpha',.2, 'EdgeColor','none')
-        labels{ii} = [num2str(ITIs(ii)*1000) ' ms']; % | p = ' num2str(round(data.S_metrics{iS}.opto_red{ii}.pval, 3))];
-                plot(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'Color', reds(iT,:), 'LineWidth', 1.5);
+        if ~isempty(peth_gau{iS,iT}) && ~all(isnan(peth_gau{iS,iT}), 'all')
+            rectangle('Position',[0, 0,ITIs(ii)*1000,  max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1], 'FaceColor',reds(iT,:), 'FaceAlpha',.2, 'EdgeColor','none')
+            labels{ii} = [num2str(ITIs(ii)*1000) ' ms']; % | p = ' num2str(round(data.S_metrics{iS}.opto_red{ii}.pval, 3))];
+            plot(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'Color', reds(iT,:), 'LineWidth', 1.5);
 
         end
     end
 
     % Plot the mean activity for each ITI
     % for iT = 1:size(peth_gau,2)
-    % 
+    %
     % end
     xlabel('Time ms)');
     ylabel('Firing rate (Hz)');
@@ -323,13 +324,15 @@ for iS = 1:size(peth_gau,1)
     % if data.
 
     title(['PETH for Cell ' num2str(data.S.label{iS})])% ' | Shank: ' num2str(data.S.usr{iS}.shank)...
-        %' | x: ' num2str(round(data.S.usr{iS}.pos(1))), ' | y: ' num2str(round(data.S.usr{iS}.pos(2)))]);
+    %' | x: ' num2str(round(data.S.usr{iS}.pos(1))), ' | y: ' num2str(round(data.S.usr{iS}.pos(2)))]);
 
- 
+
     legend(labels, 'Box', 'off')
     xlim([-100 200])
-    ylim([0 max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1])
+    if ~isempty(peth_gau{iS,iT}) && ~all(isnan(peth_gau{iS,iT}), 'all')
 
+        ylim([0 max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1])
+    end
     linkaxes(ax, 'x')
 
     % % same thing but zoomned in
@@ -350,31 +353,31 @@ for iS = 1:size(peth_gau,1)
     %     end
     %     y_lim = ylim;
     %     offset = y_lim(2);
-    % 
+    %
     % end
     % ylabel('pulse #');
     % xlim([-150 150])
-    % 
+    %
     % subplot(4,1,4)
     % hold on;
     % % Plot the mean activity for each ITI
     % for iT = 1:size(peth_gau,2)
     %     plot(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'Color', reds(iT,:), 'LineWidth', 1.5);
-    % 
+    %
     % end
     % xlabel('Time ms)');
     % ylabel('Firing rate (Hz)');
     % % if data.
-    % 
+    %
     % title(['PETH for Cell ' num2str(iS)])% ' | Shank: ' num2str(data.S.usr{iS}.shank)...
     %     %' | x: ' num2str(round(data.S.usr{iS}.pos(1))), ' | y: ' num2str(round(data.S.usr{iS}.pos(2)))]);
-    % 
+    %
     % labels = {};
     % for ii = 1:length(ITIs)
     %     labels{ii} = [num2str(ITIs(ii)*1000) ' ms']; % | p = ' num2str(round(data.S_metrics{iS}.opto_red{ii}.pval, 3))];
     % end
     % xlim([-150 150])
-    % 
+    %
     % legend(labels, 'Box', 'off')
 
 end
@@ -385,7 +388,7 @@ red_labels = labels;
 
 xbin_centers = -10-0.01:0.01:10+0.01; % first and last bins are to be deleted later
 %ac = zeros(size(xbin_centers));
-ac = cell(1,length(data.S.t)); 
+ac = cell(1,length(data.S.t));
 
 parfor iC = 1:length(data.S.t)
     fprintf('%f.0,', iC)
@@ -398,8 +401,8 @@ parfor iC = 1:length(data.S.t)
         ac{iC} = ac{iC} + hist(relative_spk_t,xbin_centers); % note that hist() puts all spikes outside the bin centers in the first and last bins! delete later.
 
     end
-ac{iC} = ac{iC}(2:end-1);
-ac{iC}(zero_idx) = 0;
+    ac{iC} = ac{iC}(2:end-1);
+    ac{iC}(zero_idx) = 0;
 end
 fprintf('\n')
 
@@ -409,7 +412,7 @@ zero_idx = find(xbin == 0);
 
 %% plot the autocorr
 
-ac_ord = MS_linspecer(length(ac)); 
+ac_ord = MS_linspecer(length(ac));
 figure(201)
 clf
 hold on
@@ -417,8 +420,8 @@ for ii = 1:length(ac)
 
 
     this_data = ac{ii};
-    z_idx = nearest_idx(0, xbin); 
-    this_data(z_idx - 2:z_idx+2) = NaN; 
+    z_idx = nearest_idx(0, xbin);
+    this_data(z_idx - 2:z_idx+2) = NaN;
     plot(xbin, (this_data./max(this_data))+ii, 'color', ac_ord(ii,:), 'LineWidth',2)
 
 end
@@ -429,94 +432,107 @@ end
 %% plot the PETHS together
 
 
-iS = 18
+iS = 25; 
 
-    figure(iS+100);
-    clf
-    subplot(5,3,[1 2  4 5 7 8 10 11])
-    cla
-    hold on;
-    % Plot the PETH for each ITI
-    offset = 0;
-    for iT = 1%:size(peth_gau,2)
-        u_val = unique(peth_T{iS, iT});
-        for iV = 1:length(u_val)
-            this_idx = peth_T{iS, iT} == u_val(iV);
-            if isempty(this_idx)
-                continue
-            end
-
-            % % line plot
-            % nSpikes = length(peth_T{iS, iT}(this_idx));
-            % xvals = peth_T{iS, iT}(this_idx)';
-            % yvals = iC.*(1,nSpikes);
-            % 
-            % xvals = xvals(:);
-            % yvals = yvals(:);
-            % 
-            % if isempty(xvals) && isempty(yvals)
-            %     %             h(iC) = nan;
-            %     h{iC} = nan;
-            % else
-            %     %             h(iC) = plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth);
-            %     plot(xvals,yvals,'.','Color',cfg.spkColor(iC,:));
-            %     h{iC} = get(gca);
-            % end
-            plot([peth_S{iS, iT}(this_idx)*1000, peth_S{iS, iT}(this_idx)*1000]', [peth_T{iS, iT}(this_idx)-.5 + iT,peth_T{iS, iT}(this_idx)+.5 + iT]', 'color', 'k', 'LineWidth',1)
-
-            % plot(peth_S{iS, iT}(this_idx)*1000, peth_T{iS, iT}(this_idx)+0.5 + offset,'.', 'Color','k', 'MarkerSize', 10)
-            % disp(mode(peth_T{iS, iT}(this_idx)+ offset))
+figure(iS+100);
+clf
+ax(1) = subplot(6,3,[1 2 4 5]); 
+% subplot(5,3,[1 2  4 5 7 8 10 11])
+cla
+hold on;
+% Plot the PETH for each ITI
+offset = 0;
+for iT = 2%:size(peth_gau,2)
+    u_val = unique(peth_T{iS, iT});
+    for iV = 1:length(u_val)
+        this_idx = peth_T{iS, iT} == u_val(iV);
+        if isempty(this_idx)
+            continue
         end
 
-        y_lim = ylim;
-        offset = y_lim(2);
-        title(['PETH for Cell ' num2str(data.S.label{iS})])% ' | Shank: ' num2str(data.S.usr{iS}.shank)...
+        % % line plot
+        % nSpikes = length(peth_T{iS, iT}(this_idx));
+        % xvals = peth_T{iS, iT}(this_idx)';
+        % yvals = iC.*(1,nSpikes);
+        %
+        % xvals = xvals(:);
+        % yvals = yvals(:);
+        %
+        % if isempty(xvals) && isempty(yvals)
+        %     %             h(iC) = nan;
+        %     h{iC} = nan;
+        % else
+        %     %             h(iC) = plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth);
+        %     plot(xvals,yvals,'.','Color',cfg.spkColor(iC,:));
+        %     h{iC} = get(gca);
+        % end
+        plot([peth_S{iS, iT}(this_idx)*1000, peth_S{iS, iT}(this_idx)*1000]', [peth_T{iS, iT}(this_idx)-.5 + iT,peth_T{iS, iT}(this_idx)+.5 + iT]', 'color', 'k', 'LineWidth',1)
 
-        for ii = 1:length(ITIs)
-            r = rectangle('Position',[0, 0,ITIs(ii)*1000,  offset*1.1], 'FaceColor',reds(iT,:), 'FaceAlpha',.2, 'EdgeColor','none');
-            uistack(r, 'bottom'); 
-        end
-
-
-    end
-    set(gca, 'XTicklabel', [])
-    ylim([0 length(u_val)+1])
-    ylabel('pulse #');
-    xlim([-100 200])
-
-
-    subplot(5,3,[13 14])
-    hold on;
-       labels = {};
-    for ii = 1%:length(ITIs)
-        rectangle('Position',[0, 0,ITIs(ii)*1000,  max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1], 'FaceColor',reds(iT,:), 'FaceAlpha',.2, 'EdgeColor','none')
-        labels{ii} = [num2str(ITIs(ii)*1000) ' ms']; % | p = ' num2str(round(data.S_metrics{iS}.opto_red{ii}.pval, 3))];
+        % plot(peth_S{iS, iT}(this_idx)*1000, peth_T{iS, iT}(this_idx)+0.5 + offset,'.', 'Color','k', 'MarkerSize', 10)
+        % disp(mode(peth_T{iS, iT}(this_idx)+ offset))
     end
 
-    % Plot the mean activity for each ITI
-    for iT = 1%:size(peth_gau,2)
-        % plot(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'Color', 'k', 'LineWidth', 1.5);
-        bar(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'faceColor', 'k', 'LineWidth', 1.5);
-    end
-    xlabel('Time (ms)');
-    ylabel('Firing rate (Hz)');
+    y_lim = ylim;
+    offset = y_lim(2);
+    title(['PETH for Cell ' num2str(data.S.label{iS})])% ' | Shank: ' num2str(data.S.usr{iS}.shank)...
 
-        %' | x: ' num2str(round(data.S.usr{iS}.pos(1))), ' | y: ' num2str(round(data.S.usr{iS}.pos(2)))]);
+    % for ii 
+        r = rectangle('Position',[0, 0,ITIs(iT)*1000,  offset*1.1], 'FaceColor',reds(iT,:), 'FaceAlpha',.2, 'EdgeColor','none');
+        uistack(r, 'bottom');
+    % end
 
- 
-    % legend(labels, 'Box', 'off')
-    xlim([-100 200])
-    ylim([0 max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1])
+
+end
+set(gca, 'xtick', [])
+ylim([0 length(u_val)+1])
+ylabel('pulse #');
+xlim([-100 200])
+
+ax(2) = subplot(6,3,[7 8]); 
+% subplot(5,3,[13 14])
+hold on;
+labels = {};
+for ii = iT%:length(ITIs)
+    rectangle('Position',[0, 0,ITIs(ii)*1000,  max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1], 'FaceColor',reds(iT,:), 'FaceAlpha',.2, 'EdgeColor','none')
+    labels{ii} = [num2str(ITIs(ii)*1000) ' ms']; % | p = ' num2str(round(data.S_metrics{iS}.opto_red{ii}.pval, 3))];
+end
+
+% Plot the mean activity for each ITI
+for iT = iT%:size(peth_gau,2)
+    % plot(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'Color', 'k', 'LineWidth', 1.5);
+    bar(peth_IT{iS,iT}*1000, mean(peth_gau{iS,iT},2, 'omitnan')', 'faceColor', 'k', 'LineWidth', 1.5);
+end
+xlabel('Time (ms)');
+ylabel('Firing rate (Hz)');
+
+%' | x: ' num2str(round(data.S.usr{iS}.pos(1))), ' | y: ' num2str(round(data.S.usr{iS}.pos(2)))]);
+
+
+% legend(labels, 'Box', 'off')
+linkaxes(ax, 'x')
+xlim([-100 100])
+ylim([0 max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1])
 
 % add the pre post stats
 
+<<<<<<< HEAD
   subplot(5,3,[3  6])
   cla
   MS_bar_w_err(squeeze(peth_pre_fr{iS, iTi})', squeeze(peth_stim_fr{iS, iTi})', [.7 .7 .7; reds(1,:)], 1, 'ttest', 1:2)
    ylabel('mean FR')
+=======
+subplot(6,3,[3 6])
+% subplot(5,3,[3  6])
+MS_bar_w_err(squeeze(peth_pre_fr{iS, iT})', squeeze(peth_stim_fr{iS, iT})', [.7 .7 .7; reds(1,:)], 1, 'ttest', 1:2)
+ylabel('mean FR')
+>>>>>>> 6084faadd7b376db253af0b5ef2a2e20a03ec9aa
 
-  set(gca, 'XTickLabel', {'pre', 'opto'}, 'XTickLabelRotation', 45)
+set(gca, 'XTickLabel', {'pre', 'opto'}, 'XTickLabelRotation', 45)
+cfg_fig =[];
+cfg_fig.ft_size = 8;
+SetFigure(cfg_fig, gcf, 1)
 
+<<<<<<< HEAD
     cfg_fig =[]; 
     cfg_fig.ft_size = 8; 
     SetFigure(cfg_fig, gcf, 1)
@@ -525,3 +541,11 @@ iS = 18
 
    % exportgraphics(gcf, [phy_dir filesep 'Jaws_opto_cell_' num2str(iS) '.pdf'], 'ContentType', 'vector');
    print(gcf, '-dpdf', [strrep('HF2b2_2025-12-21_10-16-03_D4_2', '-', '_') 'opto_cell_' num2str(iS) '.pdf'])
+=======
+set(gcf,'units','normalized','outerposition',[0 0 .3 .5])
+theme(gcf,'light')
+% exportgraphics(gcf, [phy_dir filesep 'Jaws_opto_cell_' num2str(iS) '.pdf'], 'ContentType', 'vector');
+% print(gcf, '-dpdf', [phy_dir filesep 'opto_cell_' num2str(iS) '.pdf'])
+% print(gcf, '-dpdf', [strrep('HF2b2_2026-01-02_13-21-35_SS_test2', '-', '_') '_opto_cell_' num2str(iS) '_' num2str(ITIs(iT)*1000) 'ms' '.pdf'])
+exportgraphics(gcf, [strrep('HF2b2_2026-01-02_13-21-35_SS_test2', '-', '_') '_opto_cell_' num2str(iS) '_' num2str(ITIs(iT)*1000) 'ms' '.pdf'], 'ContentType', 'vector');
+>>>>>>> 6084faadd7b376db253af0b5ef2a2e20a03ec9aa

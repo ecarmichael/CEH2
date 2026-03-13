@@ -31,9 +31,10 @@ vr.info.time = strrep(fname(21:28), '-', '_');
 
 % set the time relative to the start of the protocol
 vr_tbl.time = vr_tbl.time - vr_tbl.time(1);
+vr_tbl.time = vr_tbl.time./1000; 
 
 % position (continuous)
-vr.pos = tsd(vr_tbl.time, abs(vr_tbl.encoderCount)); 
+vr.pos = tsd(vr_tbl.time, abs(vr_tbl.encoderCount)'); 
 
 % interpolate to get constant sampling rate
 dt = 0.02; 

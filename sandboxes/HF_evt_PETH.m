@@ -139,9 +139,9 @@ save_name = 'HF2b2_D5';
 %
 % save_name = 'HF2b2_D5_opto1';
 %% HF2b2_D5_opto_2
-evts_dir = ('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/HF2b2_2026-01-02_13-21-35_SS_test2/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL') ;
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/HF2b2_2026-01-02_13-21-35_SS_test2/Record Node 117';
-phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/HF2b2_SS_D5_Opto_cells';
+evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/HF2b2_2026-01-02_13-21-35_SS_test2/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL' ;
+csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/HF2b2_2026-01-02_13-21-35_SS_test2/Record Node 117';
+phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Kilo_inter/HF2b2_SS_D5_Opto_cells';
 vr_fname = []; %'/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/GoNoGo/HF2b2_D3/HF2b2_D3_2025-12-18_14-08-34.csv';
 csc_idx = [1, 4, 6];
 swr_ch = 2;
@@ -765,24 +765,35 @@ figure(102)
 cla
 hold on
 
-    scatter(all_data.pos(k_idx,1), all_data.pos(k_idx,2),500,all_data.fr(k_idx), 'filled', 'Marker','o', 'DisplayName',['Shank ' num2str(ii) ' responsive'])
-    scatter(all_data.pos(~k_idx,1), all_data.pos(~k_idx,2),500,all_data.fr(~k_idx), 'filled','Marker','d', 'MarkerFaceAlpha',.1, 'DisplayName',['not responsive'])
+    scatter(all_data.pos(k_idx,1), all_data.pos(k_idx,2),100,all_data.fr(k_idx), 'filled', 'Marker','o', 'DisplayName',['Shank ' num2str(ii) ' responsive'])
+    scatter(all_data.pos(~k_idx,1), all_data.pos(~k_idx,2),100,all_data.fr(~k_idx), 'filled','Marker','d', 'MarkerFaceAlpha',.1, 'DisplayName',['not responsive'])
 cb = colorbar;
-ylabel(cb,'Firing rate (Hz)','FontSize',16,'Rotation',90);
+ylabel(cb,'Firing rate (Hz)','FontSize',8,'Rotation',90);
     ylim([-100 0])
 
     ylabel('Probe depth (microns)')
     xlabel('Probe width (microns)')
-    text(250, 0, 'CA1', 'HorizontalAlignment','center', 'FontSize',22, 'VerticalAlignment','top')
-text(0, 0, '<-   distal', 'HorizontalAlignment','left', 'FontSize',22, 'VerticalAlignment','top')
-text(500, 0, 'intermediate   -> ', 'HorizontalAlignment','right', 'FontSize',22, 'VerticalAlignment','top')
+    text(250, 0, 'CA1', 'HorizontalAlignment','center', 'FontSize',8, 'VerticalAlignment','top')
+text(0, 0, '<-   distal', 'HorizontalAlignment','left', 'FontSize',8, 'VerticalAlignment','top')
+text(500, 0, 'intermediate   -> ', 'HorizontalAlignment','right', 'FontSize',8, 'VerticalAlignment','top')
 
-SetFigure([], gcf)
+% SetFigure([], gcf)
+
+
+cfg_fig =[];
+cfg_fig.ft_size = 8;
+SetFigure(cfg_fig, gcf, 1)
+
+set(gcf,'units','normalized','outerposition',[0 0 .25 .25])
+theme(gcf,'light')
+
+exportgraphics(gcf, 'Opto_prox_disal.pdf', 'ContentType', 'vector');
 
 %%
 figure(103)
 clf
-subplot(2,4,[1 2 5 6] )
+% subplot(2,4,[1 2 5 6] )
+subplot(2,4,1)
 r_10= (all_data.red_resp(:,1) < 0.05); 
 r_50= (all_data.red_resp(:,2) < 0.05); 
 r_100= (all_data.red_resp(:,3) < 0.05); 
@@ -848,6 +859,15 @@ set(gca, 'XScale', 'log', 'XTick', [1 10 20 50 100], 'XTickLabel', {'1' '10' '20
 axis square
 title('250ms stim')
 xlabel('firing rate (Hz)')
+
+cfg_fig =[];
+cfg_fig.ft_size = 8;
+SetFigure(cfg_fig, gcf, 1)
+
+set(gcf,'units','normalized','outerposition',[0 0 .5 .5])
+theme(gcf,'light')
+
+exportgraphics(gcf, 'Opto_mod.pdf', 'ContentType', 'vector');
 
 % 
 % subplot(1,2,2)
