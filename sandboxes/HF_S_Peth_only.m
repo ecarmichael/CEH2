@@ -511,6 +511,7 @@ iS = 18
 % add the pre post stats
 
   subplot(5,3,[3  6])
+  cla
   MS_bar_w_err(squeeze(peth_pre_fr{iS, iTi})', squeeze(peth_stim_fr{iS, iTi})', [.7 .7 .7; reds(1,:)], 1, 'ttest', 1:2)
    ylabel('mean FR')
 
@@ -523,4 +524,4 @@ iS = 18
     set(gcf,'units','normalized','outerposition',[0 0 .3 .5])
 
    % exportgraphics(gcf, [phy_dir filesep 'Jaws_opto_cell_' num2str(iS) '.pdf'], 'ContentType', 'vector');
-   % print(gcf, '-dpdf', [phy_dir filesep 'opto_cell_' num2str(iS) '.pdf'])
+   print(gcf, '-dpdf', [strrep('HF2b2_2025-12-21_10-16-03_D4_2', '-', '_') 'opto_cell_' num2str(iS) '.pdf'])
