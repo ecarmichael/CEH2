@@ -163,12 +163,14 @@ end
 % end
 
 %% assembly figure
+r_ord = winter(6);
+c_ord = MS_linspecer(9);
 
  MS_asmbly_ephys_raster(data.S, data.rate.tvec,data.asmbly.A_temp, data.asmbly.A_proj, 1:size(data.asmbly.A_proj,1))
 
  ylim([0 50])
 yline(data.asmbly.w_thresh, '--k')
-
+plot(data.csc.tvec, (data.csc.data(1,:)/50)-4, 'k')
 for ii = 1:length(log_iv.baseline.tstart)
     rectangle(gca, 'Position',[log_iv.baseline.tstart(ii) -1 log_iv.baseline.tstart(ii) - log_iv.baseline.tstart(ii) 1], 'FaceColor',[.7 .7 .7], 'EdgeColor','none' )
 end

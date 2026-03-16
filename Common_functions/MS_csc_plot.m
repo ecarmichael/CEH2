@@ -14,7 +14,7 @@ clf
 
 hold on
 
-for ii = 1:length(csc.data)
+for ii = 1:size(csc.data,1)
 
     plot(csc.tvec, csc.data(ii,:)+ii*offset)
     y_t(ii) = mean(csc.data(ii,:)+ii*offset); 
