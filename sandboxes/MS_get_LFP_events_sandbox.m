@@ -306,7 +306,7 @@ if cfg.check
     cfg_plot.mode = 'center';
     cfg_plot.width = .2;
     cfg_plot.target = csc.label{1};
-    cfg_plot.title = 'contrast';
+    cfg_plot.title = 'var';
     PlotTSDfromIV(cfg_plot,events_out,csc);
     pause(3); close all;
 end

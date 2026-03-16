@@ -69,20 +69,20 @@ cfg_swr.kernel.sd = csc.cfg.hdr{1}.SamplingFrequency/100;
 
 % artifact detection
 cfg_swr.artif_det.method = 'zscore';
-cfg_swr.artif_det.threshold = 3;
+cfg_swr.artif_det.threshold = 5;
 cfg_swr.artif_det.dcn = '>';
 cfg_swr.artif_det.rm_len = .2;
 cfg_swr.artif_det.minlen =.01; 
 
-% contrast band (theta)
-cfg_swr.cont_filt.f = [4 12]; 
-cfg_swr.cont_filt.type = 'cheby1';
-cfg_swr.cont_filt.zthresh = 1;
+% %contrast band (theta)
+% cfg_swr.cont_filt.f = [4 12]; 
+% cfg_swr.cont_filt.type = 'cheby1';
+% cfg_swr.cont_filt.zthresh = 3;
 
 % additional SWR detection
-cfg_swr.threshold =3;% in sd
+cfg_swr.threshold =2.5;% in sd
 cfg_swr.method = 'zscore';
-cfg_swr.min_len = 0.04; % mouse SWR: 40ms from Vandecasteele et al. 2014
+cfg_swr.min_len = 0.02; % mouse SWR: 40ms from Vandecasteele et al. 2014
 cfg_swr.merge_thr = 0.02; %merge events that are within 20ms of each other.
 
 %
@@ -100,9 +100,9 @@ cfg_swr.nCycles = 5; % number of cycles
 cfg_swr.nCycles_operation = '>='; % number of cycles
 
 % variaence
-cfg_swr.var_raw = [];
-cfg_swr.var_raw.operation = '<';
-cfg_swr.var_raw.threshold = 30;
+% cfg_swr.var_raw = [];
+% cfg_swr.var_raw.operation = '<';
+% cfg_swr.var_raw.threshold = 30;
 
 [SWR_evts, csc_filt] = MS_get_LFP_events_sandbox(cfg_swr, csc);
 
@@ -114,7 +114,7 @@ cfg_swr.var_raw.threshold = 30;
 % check quality.
 if plot_flag
     cfg_plot.display = 'iv'; %'iv';
-    cfg_plot.title = 'contrast';
+    cfg_plot.title = 'var';
     PlotTSDfromIV(cfg_plot, SWR_evts, csc)
     
 end

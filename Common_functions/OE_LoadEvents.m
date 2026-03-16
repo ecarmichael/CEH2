@@ -55,7 +55,7 @@ for ii = length(u_labels):-1:1
     this_idx =  evts_label ==  u_labels(ii);
     
     t{ii} = evts_ts(this_idx);
-    label{ii} = num2str(u_labels(ii));
+    label{ii} = num2str(u_labels(ii)+1); % convert from 0 index to 1 index
     
 end
 
