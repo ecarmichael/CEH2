@@ -102,7 +102,8 @@ csc.label = labels;
 
 
 % csc.tvec = ;
-csc.tvec = csc.tvec - csc.tvec(1) + (csc.tvec(1) - ts_prime(1)); % zero out the csc. 
+% csc.tvec = csc.tvec - csc.tvec(1) + (csc.tvec(1) - ts_prime(1)); % zero out the csc. 
+csc.tvec = csc.tvec - ts_prime(1); % zero out the csc. 
 
 cfg_in.decimateFactor = 15;
 csc = decimate_tsd(cfg_in, csc);
@@ -181,7 +182,7 @@ data_out.csc = csc;
 data_out.evts = evts;
 data_out.OE_evts = OE_evts;
 data_out.licks = rate_tsd;
-data_out.licks.data(end+1,:) = adc_f_tsd.data(1:end-1); 
+% data_out.licks.data(end+1,:) = adc_f_tsd.data(1:end-1); 
 data_out.licks.label{end+1} = 'Filt ADC'; 
 if ~isempty(vr_fname)
     data_out.vr = vr;
