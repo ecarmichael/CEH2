@@ -1,11 +1,11 @@
 %% sandbox_CIHR_SWR_opto
 
 
-evt_bin_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H2b32026-03-15_00-05-23_dSub_SWR/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-158.Rhythm Data/TTL';
+evt_bin_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_22-43-13_dSub_SWR/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-158.Rhythm Data/TTL';
 
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H2b32026-03-15_00-05-23_dSub_SWR/Record Node 117'; 
-swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H2b32026-03-15_00-05-23_dSub_SWR/Record Node 143';
-bin_dir =     '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H2b32026-03-15_00-05-23_dSub_SWR/Record Node 112/experiment1/recording1/continuous/Intan_RHD_USB-158.Rhythm Data';
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_22-43-13_dSub_SWR/Record Node 117'; 
+swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_22-43-13_dSub_SWR/Record Node 143';
+bin_dir =     '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_22-43-13_dSub_SWR/Record Node 112/experiment1/recording1/continuous/Intan_RHD_USB-158.Rhythm Data';
 
 % load the binary files
 
@@ -21,7 +21,8 @@ evts_csc = OE_LoadEvents();
 
 
 cd(csc_dir)
-cfg.fc = {'CH11', 'CH12', 'CH14'};
+cfg = []; 
+% cfg.fc = {'CH11', 'CH12', 'CH14'};
 csc = MS_LoadCSC_OE(cfg);
 
 csc.tvec = csc.tvec - ts_prime(1); 
@@ -66,21 +67,30 @@ mov_rate = MS_spike2rate(evts, csc.tvec, 0.1)
 
 %% count the SWR per condition
 
-swr_red = []; 
+swr_red = []; ctrl_red = []; 
+swr_blue = []; ctrl_blue = []; 
+
 for ii = length(evts.t{2}):-1:1
 
  this_data= restrict(swr, evts.t{2}(1,ii), evts.t{2}(2,ii)); 
-swr_red(ii) = length(this_data.tstart); 
+swr_red(ii) = length(this_data.tstart)/ (evts.t{2}(2,ii) - evts.t{2}(1,ii)); 
 
  this_data= restrict(swr, evts.t{2}(1,ii)-2.5, evts.t{2}(1,ii)); 
-ctrl_red(ii) = length(this_data.tstart); 
+ctrl_red(ii) = length(this_data.tstart)/ 2.5;  
 
 end
 
-swr_blue = []; 
 for ii = length(evts.t{3}):-1:1
 
  this_data= restrict(swr, evts.t{3}(1,ii), evts.t{3}(2,ii)); 
-swr_blue(ii) = length(this_data.tstart); 
+swr_blue(ii) = length(this_data.tstart)/ (evts.t{3}(2,ii) - evts.t{3}(1,ii)); 
 
+ this_data= restrict(swr, evts.t{3}(1,ii)-2.5, evts.t{3}(1,ii)); 
+ctrl_blue(ii) = length(this_data.tstart)/2.5;  
 end
+
+
+figure(201)
+clf
+MS_bar_w_err(ctrl_red, swr_red, [[.7 .7 .7]; c_ord(2,:)],1, 'ttest', [1 2])
+MS_bar_w_err(swr_red, swr_blue, [c_ord(2,:); c_ord(1,:)],1, 'ttest', [2 3])
