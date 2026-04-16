@@ -699,8 +699,6 @@ set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 
     exportgraphics(gcf, ['C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9\256_checks' filesep 'figS2_asmbly_mult_pre.pdf'])
 
 
-
-
     %%
     figure(103); clf
     subplot(2,4,1)
@@ -729,16 +727,6 @@ set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 
 
 
     subplot(2,4,5)
-    % [~,~,~,J_sig_stats] = MS_bar_w_err(J_sig(d_idx)*100, J_sig(off_idx)*100,[c_ord(1,:); .7 .7 .7], 1, 'ttest2');
-    % set(gca, 'XTickLabel', {'Within' 'Across'})
-    % ylabel('percentage of reactive assemblies')
-    %
-    %
-    % subplot(2,4,6)
-    % [~,~,~,J_n_stats] = MS_bar_w_err(J_n(d_idx)*100, J_n(off_idx)*100,[c_ord(1,:); .7 .7 .7], 1, 'ttest2');
-    % set(gca, 'XTickLabel', {'Within' 'Across'})
-    % ylabel('median alt:true reactivations')
-
 
     % subplot(2,4,7)
     [~,~,~,J_n_pval_stats] = MS_bar_w_err(J_n_pval(d_idx)*100, J_n_pval(off_idx)*100,[c_ord(1,:); .7 .7 .7], 1, 'ttest2');
@@ -821,15 +809,11 @@ set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 
         shuff_stats.p95 = prctile(Ass_shuff, 95, 'all');
         shuff_stats.p99 = prctile(Ass_shuff, 99, 'all');
 
-
-
         w_thresh(iA) = prctile(wake_shuff_mat(wake_shuff_mat >0), 99, 'all');
 
     end
 
     %% try the jaccard metric
-
-
     c_ord = MS_linspecer(5);
 
     for iS = 1:3
@@ -843,7 +827,7 @@ set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 
         % convert A_temp to only sig values
         for iA = 1:size(this_A,2)
 
-            %%
+            %
             idx = zscore(this_A(:,iA)) <1 ;
             this_A_pos =  this_A(:,iA);
             this_A_pos(idx)  = 0;
@@ -957,7 +941,6 @@ set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 
     end
 
     %% same thing but jst against shuffle
-
     c_ord = MS_linspecer(5);
 
     rng(123, 'twister'); % for reproducibility.
@@ -995,33 +978,6 @@ set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 
             % Alt_stats.p_val(ii) = mean(Alt_temp_shuff_pval);
         end
 
-
-        % % alternative session
-        %       rng(123, 'twister'); % for reproducibility.
-        %       [Alt_stats, shuff.data, shuff.proj] = MS_Asmbly_proj_thresh(A_out{jj}{1}.REM_Post_data, A_temp, 500, 99);
-        %       Alt_stats.p_val = [];
-        %       Alt_stats.rate = [];
-        %       Alt_stats.rate_p = [];
-        %
-        %       for ii = size(A_alt_proj,1):-1:1
-        %           Alt_stats.p_val(ii) = sum(sum(shuff.data > ReAct_stats.R_thresh,2) > sum(A_alt_proj(ii,:) > ReAct_stats.R_thresh))/ size(shuff.data,1);
-        %           Alt_stats.rate(ii) = sum(A_alt_proj(ii,:) > ReAct_stats.R_thresh) / ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
-        %           Alt_stats.shuff_rate = sum(shuff.data > ReAct_stats.R_thresh,2)./ ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
-        %           Alt_stats.rate_p(ii) = sum(Alt_stats.shuff_rate > Alt_stats.rate(ii)) / length(ReAct_stats.shuff_rate);
-        %       end
-
-
-        % % count the significant events per assembly on the jjth data
-        % J_proj_cnt = []; A_proj_cnt = [];
-        % for tt = size(A_alt_proj, 1):-1:1
-        %     J_proj_cnt(tt) = nnz(A_alt_proj(tt,:)>9); % count the number of sig reactivations
-        %     A_proj_cnt(tt) = nnz(A_REM_post_proj(tt,:)>9); % count the number of sig reactivations
-        % end
-        %
-        % J_sig(iA, jj) = sum(J_proj_cnt > 0)/length(J_proj_cnt); % get the percentage of assemblies exceeding the activation cut off.
-        % J_n(iA, jj) = median(J_proj_cnt./A_proj_cnt); % get the percentage of assemblies exceeding the activation cut off.
-        S_n_pval(iA) = sum(Ref_stats.p_val < 0.05)/sum(ReAct_stats.p_val < 0.05); % percent of jj assemblies passing the pval rest ./ number of real assemblies passing.
-
         for jj = size(Alt_temp_shuff_pval,2):-1:1
             this_shuff(jj) = sum(Alt_temp_shuff_pval(:,jj) < 0.05)/sum(ReAct_stats.p_val < 0.05);
         end
@@ -1049,48 +1005,8 @@ set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 
     set(gca, 'XDir', 'reverse')
     xlim([y_lim])
 
-    % % shuff data
-    %     % test if A_temps can be found in J-data
-    %
-    %     %make a shuffle data set
-    %     shuff_data= [];
-    %     for ii = 10:-1:1
-    %         for jj = 1:size(A_out{iA}{1}.REM_Post_data,2)
-    %         shuff_data(:,jj,ii) = circshift(A_out{iA}{1}.REM_Post_data(:,jj), round(MS_randn_range(1, 1, 1, size(A_out{iA}{1}.REM_Post_data,1))));
-    %         end
-    %     end
-    %
-    %     % loop over the shuffles
-    %     for ii = 1:10
-    %         rng(123, 'twister'); % for reproducibility.
-    %         A_alt_proj(:,:,ii) = assembly_activity(A_temp,shuff_data(:,:,ii)');
-    %
-    %         % trim the J_proj to be the same length as the A_proj
-    %         if length(A_alt_proj) > length(A_REM_post_proj)
-    %             A_alt_proj = A_alt_proj(:,1:length(A_REM_post_proj),:);
-    %         end
-    %
-    %
-    %         % alternative session
-    %         rng(123, 'twister'); % for reproducibility.
-    %         [Alt_stats, shuff.data, shuff.proj] = MS_Asmbly_proj_thresh(A_out{jj}{1}.REM_Post_data, A_temp, 500, 99);
-    %         Alt_stats.p_val = [];
-    %         Alt_stats.rate = [];
-    %         Alt_stats.rate_p = [];
-    %
-    %         for ii = size(A_alt_proj,1):-1:1
-    %             Alt_stats.p_val(ii) = sum(sum(shuff.data > ReAct_stats.R_thresh,2) > sum(A_alt_proj(ii,:) > ReAct_stats.R_thresh))/ size(shuff.data,1);
-    %             Alt_stats.rate(ii) = sum(A_alt_proj(ii,:) > ReAct_stats.R_thresh) / ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
-    %             Alt_stats.shuff_rate = sum(shuff.data > ReAct_stats.R_thresh,2)./ ((A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1))/60);
-    %             Alt_stats.rate_p(ii) = sum(Alt_stats.shuff_rate > Alt_stats.rate(ii)) / length(ReAct_stats.shuff_rate);
-    %         end
-    %
-    %     end
-    %
-
 
     %% shuffle data and ICA
-
     c_ord = MS_linspecer(5);
 
     rng(123, 'twister'); % for reproducibility.
@@ -1101,7 +1017,6 @@ set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 
     opts.Patterns.number_of_iterations = 500;
     opts.threshold.permutations_percentile= 95;
     opts.threshold.number_of_permutations= 500;
-
 
     % init vars for number of assemblies per session and the shuff stats
     shuff_num = 500;
@@ -1114,13 +1029,9 @@ set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 
 
         A_REM_post_proj = A_out{iA}{1}.REM_Post_proj;
 
-
-
         % test if A_temps can be found in J-data
         rng(123, 'twister'); % for reproducibility.
         A_alt_proj = assembly_activity(A_wake,A_out{iA}{1}.REM_Post_data');
-
-
     end
 
     %% run quick stats on the number of assemblies and the shuffle metrics
@@ -1141,34 +1052,18 @@ set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 
     J_sig = [];
     for iA = length(A_out):-1:1
 
-        % % number of awake assemblies and Shuff
-        % wake_nA(iA) = size(A_out{iA}{1}.P_proj,1);
-        % wake_shuf_nA(iA) = size(A_out{iA}{1}.P_proj,1);
-        %
-        % % number of awake in Pre REM
-        % wake_pre_nA(iA) = sum(A_out{iA}{1}.REM_Pre_stats.p_val < 0.05);
-        %
-        % % number of awake in Post REM
-        % wake_post_nA(iA) = sum(A_out{iA}{1}.REM_Post_stats.p_val < 0.05);
-
-
         % current assembly wieghts;
         A_wake = A_out{iA}{1}.P_temp;
 
         % apply the weights to other subjects
 
-
-
         for jj = length(A_out):-1:1
 
 
-
-            % if jj == iA
             J_data = A_out{jj}{1}.REM_post_in;
             A_data = A_out{jj}{1}.REM_post_in;
 
-            % test if A_temps can be found in J-data
-            % _proj = assembly_activity(A_temp,J_data');
+
 
             A_alt_proj = [];
             for tt = size(A_alt_proj, 1):-1:1
@@ -1179,70 +1074,6 @@ set(gca, 'Xtick', 1:3, 'XTickLabel', {'Pre REM', 'Wake', 'Post'}, 'Ytick', 1:3, 
 
             J_sig(iA, jj) = sum(A_alt_proj > 0)/length(A_alt_proj); % get the percentage of assemblies exceeding the activation cut off.
             J_sig(iA, jj) = sum(A_alt_proj > 0)/length(A_alt_proj); % get the percentage of assemblies exceeding the activation cut off.
-            %
-            % else
-            %     % try a circ shift for sanity
-            %     J_data = [];
-            %     % for iS = size(A_out{jj}{1}.REM_pre_in, 2):-1:1
-            %     %     J_data(:,iS) = circshift(A_out{jj}{1}.REM_post_in(:,iS), floor(MS_randn_range(1,1,1,length(J_data))));
-            %     % end
-            %     %
-            %
-            %     % for iShuff = 500:-1:1
-            %     %     % temporary data from session jj;
-            %     %     s_idx = randperm(size(A_out{jj}{1}.REM_post_in, 2));
-            %     %     J_data = A_out{jj}{1}.REM_pre_in(:, s_idx);
-            %     %
-            %     %     % test if A_temps can be found in J-data
-            %     %     T_proj = assembly_activity(A_temp,J_data');
-            %     %
-            %     %     J_proj = [];
-            %     %     for tt = size(T_proj, 1):-1:1
-            %     %         J_proj(tt) = sum(T_proj(tt,:)>9);
-            %     %     end
-            %     %     t_sigs(iShuff) = sum(J_proj > 0)/length(J_proj);
-            %     %
-            %     % end
-            %     J_sig(iA, jj) = mean(t_sigs);
-            % end
+
         end
-
-        % t_data.Binary = A_out{iA}{1}.wake_data;
-        % t_data.time = A_out{iA}{1}.wake_tvec;
-        %
-        %
-        % [T_temp, T_proj, wake_data, wake_tvec, r_thresh] = MS_PCA_ICA_only(A_out{iA}{1}.wake_data, ones(1,length(A_out{iA}{1}.wake_data)), A_out{iA}{1}.bins,method, opts);
-        %
-
-
-
-
-
-
     end
-
-    %%
-    % try a circ shift for sanity
-    J_data = [];
-    % for iS = size(A_out{jj}{1}.REM_pre_in, 2):-1:1
-    %     J_data(:,iS) = circshift(A_out{jj}{1}.REM_post_in(:,iS), floor(MS_randn_range(1,1,1,length(J_data))));
-    % end
-    %
-
-    % for iShuff = 500:-1:1
-    %     % temporary data from session jj;
-    %     s_idx = randperm(size(A_out{jj}{1}.REM_post_in, 2));
-    %     J_data = A_out{jj}{1}.REM_pre_in(:, s_idx);
-    %
-    %     % test if A_temps can be found in J-data
-    %     T_proj = assembly_activity(A_temp,J_data');
-    %
-    %     J_proj = [];
-    %     for tt = size(T_proj, 1):-1:1
-    %         J_proj(tt) = sum(T_proj(tt,:)>9);
-    %     end
-    %     t_sigs(iShuff) = sum(J_proj > 0)/length(J_proj);
-    %
-    % end
-    J_sig(iA, jj) = mean(t_sigs);
-
