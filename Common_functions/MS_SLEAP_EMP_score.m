@@ -74,7 +74,7 @@ table_out = table(subject', date_id', Closed_prct', Open_prct', Trans_prct', N_h
 
 
 %% split based on aTau
-table_out.geno = logical([0     0     0     0     0     1     0     1     1     0     0     0     1     1     0, ...
+table_out.geno = logical([0     0     0     0     0     0     0     1     1     0     0     0     1     1     0, ...
     1     1     0     0     0     0     0     0     0     0     0     ])'; 
 
 c_ord = MS_linspecer(4);
@@ -154,8 +154,8 @@ print(gcf, '-dpdf','Summary_rain.pdf')
 
 
 %% sample plot but bars
-table_out.geno = logical([0     0     0     0     0     1     0     1     1     0     0     0     1     1     0, ...
-    1     1     0     0     0     0     0     0     0     0     0     ])'; 
+%table_out.geno = logical([0     0     0     0     0     1     0     1     1     0     0     0     1     1     0, ...
+%    1     1     0     0     0     0     0     0     0     0     0     ])'; 
 
 c_ord = MS_linspecer(4);
 figure(909)
@@ -270,78 +270,91 @@ title('EPM')
 
 
 
-subplot(1,3,1)
+subplot(2,3,1)
 hold on
 [h_c, eb, sc, p, stats] = MS_bar_w_err(table_out.Closed_prct(table_out.geno ==0),table_out.Closed_prct(table_out.geno ==1) , c_ord(1:2,:),1, 'ttest2', [1 2]);
 fprintf('Closed ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
 
-h_c.FaceColor = 'none'; 
+sc{1}.SizeData  =5;
+sc{2}.SizeData  =5;
+sc{1}.MarkerEdgeColor = 'k';
+% h_c.FaceColor = 'none'; 
 h_c.EdgeColor = 'k'; 
-h_c.LineWidth = 1; 
-eb.LineWidth = 1.5;
+h_c.LineWidth = 1.5; 
+eb.LineWidth = 3;
 ylabel('% of time in closed arm')
 
 set(gca, 'xtick', 1:2, 'xticklabel', {'Tau -', 'Tau +'}, 'xTickLabelRotation' , 45)
-xlim([0 3])
+xlim([0 6])
 y_lim = ylim; 
 ylim([0 y_lim(2)])
 ax = gca; ax.LineWidth = 1.5;
 
 
-subplot(1,3,2)
+subplot(2,3,2)
 cla
 [h_c, eb, sc, p, stats] = MS_bar_w_err(table_out.Open_prct(table_out.geno ==0),table_out.Open_prct(table_out.geno ==1) , c_ord(1:2,:),1, 'ttest2', [1 2]);
 fprintf('Open %% ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
-h_c.FaceColor = 'none'; 
-h_c.EdgeColor = 'k';
-h_c.LineWidth = 1; 
+sc{1}.SizeData  =5;
+sc{2}.SizeData  =5;
+sc{1}.MarkerEdgeColor = 'k';
+% h_c.FaceColor = 'none'; 
+h_c.EdgeColor = 'k'; 
+h_c.LineWidth = 1.5; 
 eb.LineWidth = 1.5;
 
 box off
 ylabel('% of time in open arm')
-xlim([0 3])
+xlim([0 6])
 y_lim = ylim; 
 ylim([0 y_lim(2)])
 ax = gca; ax.LineWidth = 1.5;
 
 
-subplot(1,3,3)
+subplot(2,3,3)
 cla
 hold on
 [h_c, eb, sc, p, stats] = MS_bar_w_err(table_out.C2T(table_out.geno ==0),table_out.C2T(table_out.geno ==1) , c_ord(1:2,:),1, 'ttest2', [1 2]);
 fprintf('Closed-to-open transitions ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
 
-h_c.FaceColor = 'none'; 
+sc{1}.SizeData  =5;
+sc{2}.SizeData  =5;
+sc{1}.MarkerEdgeColor = 'k';
+% h_c.FaceColor = 'none'; 
 h_c.EdgeColor = 'k'; 
-h_c.LineWidth =1; 
+h_c.LineWidth = 1.5; 
 eb.LineWidth = 1.5;
 ylabel('Number of entries')
 y_lim = ylim; 
 
 [h_c, eb, sc, p, stats] = MS_bar_w_err(table_out.T2O(table_out.geno ==0),table_out.T2O(table_out.geno ==1) , c_ord(1:2,:),1, 'ttest2', [4 5]);
 fprintf('transition-to-open transitions ttest: df: %2.0f  tstat: %2.2f p: %2.3f\n', stats.df, stats.tstat, p)
-h_c.FaceColor = 'none'; 
+sc{1}.SizeData  =5;
+sc{2}.SizeData  =5;
+sc{1}.MarkerEdgeColor = 'k';
+% h_c.FaceColor = 'none'; 
 h_c.EdgeColor = 'k'; 
-h_c.LineWidth = 1; 
+h_c.LineWidth = 1.5; 
 eb.LineWidth = 1.5;
 
 % ylabel('Number of open arm entries')
 set(gca, 'xtick', [1.5 4.5], 'xticklabel', {'trans\newlinezone', 'open\newlinearm'})
 xlim([0 6])
 y_lim2 = ylim; 
-ylim([0 max([y_lim(2) y_lim2(2)])])
+ylim([0 ceil(max([y_lim(2) y_lim2(2)])/10)*10])
 ax = gca; ax.LineWidth = 1.5;
 
 
 cfg_fig = []; 
-cfg_fig.ft_size = 16; 
+cfg_fig.ft_size = 8; 
 SetFigure(cfg_fig, gcf, 1)
 % p = get(gcf, 'Position'); 
 % set(gcf, 'Position', [p(1), p(2) p(4)*.4 p(4)*.8])
-
+set(gcf, 'PaperUnits', 'inches', 'Units', 'inches');
 set(gcf,'PaperPositionMode','auto');         
 set(gcf,'PaperOrientation','landscape');
-set(gcf,'Position',[.2 .2 .6 .3]);
+% set(gcf,'Position',[.2 .2 .6 .3]);
+set(gcf, "PaperSize", [5 5])
 
 saveas(gcf, 'Summary_3.png')
 print(gcf, '-dpdf','Summary_3.pdf')
