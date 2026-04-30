@@ -31,16 +31,16 @@ elseif strcmp(computer, 'MACA64')
     
 else
     
-    codebase_dir = 'C:\Users\ecarm\Documents\GitHub\vandermeerlab\code-matlab\shared';
-    ca_dir = 'C:\Users\ecarm\Documents\GitHub\CEH2';
-    oasis_dir = 'C:\Users\ecarm\Documents\GitHub\OASIS_matlab';
+    codebase_dir = 'C:\Users\ecar\Documents\GitHub\vandermeerlab\code-matlab\shared';
+    ca_dir = 'C:\Users\ecar\Documents\GitHub\CEH2';
+    oasis_dir = 'C:\Users\ecar\Documents\GitHub\OASIS_matlab';
     
-    code_dir = 'C:\Users\ecarm\Downloads\Dos-Santos Assembly ICA\Dos-Santos Assembly ICA';
+    code_dir = 'C:\Users\ecar\Downloads\Dos-Santos Assembly ICA\Dos-Santos Assembly ICA';
     
-    RnR_dir = 'C:\Users\ecarm\Documents\GitHub\RnR_methods';
+    RnR_dir = 'C:\Users\ecar\Documents\GitHub\RnR_methods';
     
     % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
-    main_dir = 'C:\Users\ecarm\';
+    main_dir = 'C:\Users\ecar\';
     
 end
 
@@ -53,18 +53,19 @@ c_d = cd;
 addpath(genpath(ca_dir));
 addpath(genpath(codebase_dir))
 addpath(genpath(RnR_dir));
-
 addpath(genpath(code_dir))
 
-
 cd(c_d)
-
 
 move_thresh  = 9;
 bin_size = .5;
 
 inter_dir = strrep([main_dir 'Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\PC9'], '\', filesep);
 fig_dir = [inter_dir filesep 'checks'];
+
+% colors
+f_ord = [[253, 22, 26];[255, 179, 13]; [132, 147, 35];[67, 127, 151]; [0, 42, 95]]/255;
+
 
 %%  Extract assembly data
 
@@ -124,7 +125,6 @@ for ii = 1:length(f_list)
     
     if anx_idx(ii)== 0 && novel_idx(ii)==1
         %         B_out{ii} = Pipeline_Asmbly_append_preA(B_out{ii});
-        
     end
     
 end
@@ -158,24 +158,21 @@ A_out = B_out;
 clear B_out
 
 % remove pv1254 due to inconsistent running.
-
-
 exclude_mouse = {'pv1254'};
 
 for ii = length(A_out):-1:1
-    
     if contains(A_out{ii}{1}.info.subject, exclude_mouse)
         fprintf('Removing sesson: <strong>%s</strong>\n', A_out{ii}{1}.info.subject);
         rm_idx(ii) = true;
     else
         rm_idx(ii) = false;
     end
-    
 end
 
-A_out(rm_idx) = [];
+A_out(rm_idx) = []; % remove the sesssions
 
 
+% get the session types
 novel_idx = []; anx_idx = []; HS_idx = [];
 for iA = size(A_out,2):-1:1
     this_f = A_out{iA}{1}.info.session;
@@ -205,9 +202,11 @@ for iA = size(A_out,2):-1:1
     
 end
 
-
-
-%% collect the data
+% convert to logical 
+novel_idx= logical(novel_idx); 
+anx_idx = logical(anx_idx);
+HS_idx = logical(HS_idx); 
+%% simple counts of number of assemblies per condition
 
 Pre_n_Asmbly = []; Post_n_Asmbly = [];
 Pre_r_Asmbly = []; Post_r_Asmbly = [];
@@ -235,36 +234,51 @@ for iB = length(bin_size):-1:1
         
         keep_idx = logical(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05) & (A_out{iA}{iB}.REM_Post_stats.p_val <0.05);
         mean_ReAct_str(iA, iB) = mean(A_out{iA}{iB}.ReAct(keep_idx));
-        
-        
-        % apply the same thing to assemblies with coherent spatial tuning
-        % (only using zscore of the varience of the centroid position.
-        
-        
-        % pre
-        these_z_cent = []; these_z_peak = [];
-        for ii = length(A_out{iA}{iB}.map):-1:1
-            these_z_cent(ii) = A_out{iA}{iB}.map{ii}.cent_z;
-            these_z_peak(ii) = A_out{iA}{iB}.map{ii}.peak_z;
-        end
-        these_sig = A_out{iA}{iB}.REM_Pre_stats.p_val;
-        
-        S_Pre_n_Asmbly(iA,iB) = sum((these_sig <0.05) & (these_z_cent < -1.96));
-        S_Pre_r_Asmbly(iA,iB) = mean(A_out{iA}{iB}.REM_Pre_stats.rate((these_sig <0.05) & (these_z_cent < -1.96)));
-        
-        % post
-        these_sig = A_out{iA}{iB}.REM_Post_stats.p_val;
-        
-        S_Post_n_Asmbly(iA,iB) = sum((these_sig <0.05) & (these_z_cent < -1.96));
-        S_Post_r_Asmbly(iA,iB) = mean(A_out{iA}{iB}.REM_Post_stats.rate((these_sig <0.05) & (these_z_cent < -1.96)));
-        
-        
-        keep_idx = logical(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05) & (A_out{iA}{iB}.REM_Post_stats.p_val <0.05);
-        mean_S_ReAct_str(iA, iB) = mean(A_out{iA}{iB}.ReAct(keep_idx & (these_z_cent < -1.96)));
-        
+
+        sess_list{iA} = A_out{iA}{iB}.info.session;
+
     end
-    
 end
+
+fprintf('<strong>All Wake</strong> assemblies: <strong>%.0f +/-%2.2f</strong> \n', mean(wake_n_Asmbly(:, 1)), MS_SEM(wake_n_Asmbly(:, 1)))
+fprintf('<strong>All Pre </strong> assemblies: <strong>%.0f +/-%2.2f</strong> \n', mean(Pre_n_Asmbly(:, 1)), MS_SEM(Pre_n_Asmbly(:, 1)))
+fprintf('<strong>All Post</strong> assemblies: <strong>%.0f +/-%2.2f</strong> \n', mean(Post_n_Asmbly(:, 1)), MS_SEM(Post_n_Asmbly(:, 1)))
+
+fprintf('--------------------\n')
+fprintf('<strong>Novel Wake</strong> assemblies: <strong>%.0f +/-%2.2f</strong>   |   <strong>Familiar Wake</strong> assemblies: <strong>%.0f +/-%2.2f</strong>   |   <strong>HAT Wake</strong> assemblies: <strong>%.0f +/-%2.2f</strong>\n',...
+    mean(wake_n_Asmbly(novel_idx & ~anx_idx, 1)), MS_SEM(wake_n_Asmbly(novel_idx & ~anx_idx, 1)),mean(wake_n_Asmbly(~novel_idx & ~anx_idx, 1)), MS_SEM(wake_n_Asmbly(~novel_idx & ~anx_idx, 1)),...
+    mean(wake_n_Asmbly(novel_idx & anx_idx, 1)), MS_SEM(wake_n_Asmbly(novel_idx & anx_idx, 1)))
+
+fprintf('<strong>Novel Pre </strong> assemblies: <strong>%.0f +/-%2.2f</strong>    |   <strong>Familiar Pre </strong> assemblies: <strong>%.0f +/-%2.2f</strong>   |   <strong>HAT Pre </strong> assemblies: <strong>%.0f +/-%2.2f</strong>\n',...
+    mean(Pre_n_Asmbly(novel_idx & ~anx_idx, 1)), MS_SEM(Pre_n_Asmbly(novel_idx & ~anx_idx, 1)),mean(Pre_n_Asmbly(~novel_idx & ~anx_idx, 1)), MS_SEM(Pre_n_Asmbly(~novel_idx & ~anx_idx, 1)),...
+    mean(Pre_n_Asmbly(novel_idx & anx_idx, 1)), MS_SEM(Pre_n_Asmbly(novel_idx & anx_idx, 1)))
+
+fprintf('<strong>Novel Post</strong> assemblies: <strong>%.0f +/-%2.2f</strong>   |   <strong>Familiar Post</strong> assemblies: <strong>%.0f +/-%2.2f</strong>   |   <strong>HAT Post</strong> assemblies: <strong>%.0f +/-%2.2f</strong>\n',...
+    mean(Post_n_Asmbly(novel_idx & ~anx_idx, 1)), MS_SEM(Post_n_Asmbly(novel_idx & ~anx_idx, 1)), mean(Post_n_Asmbly(~novel_idx & ~anx_idx, 1)), MS_SEM(Post_n_Asmbly(~novel_idx & ~anx_idx, 1)),...
+     mean(Post_n_Asmbly(novel_idx & anx_idx, 1)), MS_SEM(Post_n_Asmbly(novel_idx & anx_idx, 1)))
+
+
+
+figure(100)
+clf; 
+
+subplot(3,4,1)
+MS_bar_w_err3(Pre_n_Asmbly(~anx_idx, 1)', wake_n_Asmbly(~anx_idx, 1)',Post_n_Asmbly(~anx_idx, 1)', [f_ord(4,:);f_ord(2,:); f_ord(5,:)],1, 'anova1', 1:3)
+set(gca, 'xticklabel', {'Pre' 'Wake' 'Post'}, 'XTickLabelRotation', 45);
+
+
+subplot(3,4,2)
+MS_bar_w_err(wake_n_Asmbly(novel_idx & ~anx_idx, 1), wake_n_Asmbly(~novel_idx & ~anx_idx, 1), [f_ord(2,:); f_ord(5,:)],1, 'ttest2', 1:2)
+set(gca, 'xticklabel', {'Novel' 'Familiar'}, 'XTickLabelRotation', 45);
+
+subplot(3,4,3)
+MS_bar_w_err(wake_n_Asmbly(~novel_idx & anx_idx, 1), wake_n_Asmbly(~novel_idx & anx_idx, 1), [f_ord(5,:); f_ord(1,:)],1, 'ttest2', 1:2)
+set(gca, 'xticklabel', {'Novel' 'Familiar'}, 'XTickLabelRotation', 45);
+
+subplot(3,4,4)
+MS_bar_w_err(wake_n_Asmbly(~anx_idx, 1), wake_n_Asmbly(anx_idx, 1), [f_ord(2,:); f_ord(5,:)],1, 'ttest2', 1:2)
+set(gca, 'xticklabel', {'Novel' 'Familiar'}, 'XTickLabelRotation', 45);
+
 
 %% plot the number of Assemblies pre and post.
 
@@ -1372,7 +1386,6 @@ tbl.Cond = nominal(tbl.Cond);
 
 %% plot number of significant assemblies
 c_ord = MS_linspecer(14);
-f_ord = [[253, 22, 26];[255, 179, 13]; [132, 147, 35];[67, 127, 151]; [0, 42, 95]]/255;
 
 y_lim = [0 max([nWake_A, nPre_A])];
 

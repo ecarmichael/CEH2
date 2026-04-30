@@ -88,14 +88,14 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
         else
             data_pool = [data_a, data_b, data_c];
         end
-        ylim([0 max(data_pool)*1.25])
+        ylim([0 max(data_pool)*1.3])
         x_lim = xlim; 
         if (0.5 > p(1)) && (p(1)> 0.01)
-            text(x_lim(end)*.9, max(data_pool, [], 'all')*.9, ['*overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
+            text(x_lim(end)*.9, max(data_pool, [], 'all')*1.3, ['*overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
         elseif (0.1 >= p(1)) && (p(1) >= 0.001)
-            text(x_lim(end), max(data_pool, [], 'all')*.9, ['** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
+            text(x_lim(end), max(data_pool, [], 'all')*1.3, ['** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
         elseif p(1) < 0.001
-            text(x_lim(end), max(data_pool, [], 'all')*.9, ['*** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
+            text(x_lim(end), max(data_pool, [], 'all')*1.3, ['*** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
         end
                    
     end
@@ -114,7 +114,7 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
         elseif (0.1 >= this_p) && (this_p >= 0.001)
             text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
         elseif this_p < 0.001
-            text(median(x_vals(1:2))*.95, max(data_pool, [], 'all')*1.15, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
         end
 
         plot(x_vals(1:2), [max(data_pool, [], 'all')*1.1 max(data_pool, [], 'all')*1.1], '-k', 'linewidth', 1)
