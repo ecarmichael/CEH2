@@ -259,15 +259,19 @@ fprintf('<strong>Novel Post</strong> assemblies: <strong>%.0f +/-%2.2f</strong> 
 
 
 
-figure(100)
-clf; 
+% pre wake post N
+fig = figure('Name','Assembly Quantification: Pre Wake Post', 'Units','inch','position',[0 0 6.5 4]);
+clf
+t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',[0 0 6.5 4]);
 
-subplot(3,4,1)
 MS_bar_w_err3(Pre_n_Asmbly(~anx_idx, 1)', wake_n_Asmbly(~anx_idx, 1)',Post_n_Asmbly(~anx_idx, 1)', [f_ord(4,:);f_ord(2,:); f_ord(5,:)],1, 'anova1', 1:3)
 set(gca, 'xticklabel', {'Pre' 'Wake' 'Post'}, 'XTickLabelRotation', 45);
 
+fig = figure('Name','Assembly Quantification', 'Units','inch','position',[0 0 6.5 4]);
+clf
+t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',[0 0 6.5 4]);
 
-subplot(3,4,2)
+% subplot(3,4,2)
 MS_bar_w_err(wake_n_Asmbly(novel_idx & ~anx_idx, 1), wake_n_Asmbly(~novel_idx & ~anx_idx, 1), [f_ord(2,:); f_ord(5,:)],1, 'ttest2', 1:2)
 set(gca, 'xticklabel', {'Novel' 'Familiar'}, 'XTickLabelRotation', 45);
 
@@ -279,6 +283,14 @@ subplot(3,4,4)
 MS_bar_w_err(wake_n_Asmbly(~anx_idx, 1), wake_n_Asmbly(anx_idx, 1), [f_ord(2,:); f_ord(5,:)],1, 'ttest2', 1:2)
 set(gca, 'xticklabel', {'Novel' 'Familiar'}, 'XTickLabelRotation', 45);
 
+
+% pre wake post Rate
+fig = figure('Name','Assembly Quantification (Rate): Pre - Post', 'Units','inch','position',[1 1 6.5 4]);
+clf
+t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',[1 1 6.5 4]);
+
+MS_bar_w_err(Pre_r_Asmbly(~anx_idx, 1)',Post_r_Asmbly(~anx_idx, 1)', [f_ord(4,:); f_ord(5,:)],1, 'ttest2', 1:2)
+set(gca, 'xticklabel', {'Pre' 'Wake' 'Post'}, 'XTickLabelRotation', 45);
 
 %% plot the number of Assemblies pre and post.
 
