@@ -260,20 +260,35 @@ fprintf('<strong>Novel Post</strong> assemblies: <strong>%.0f +/-%2.2f</strong> 
 
 
 % pre wake post N
-fig = figure('Name','Assembly Quantification: Pre Wake Post', 'Units','inch','position',[0 0 6.5 4]);
+f_pos = [2.5 2.5 4 5]; 
+
+fig = figure('Name','Assembly Quantification: Pre Wake Post', 'Units','inch','position',f_pos);
 clf
-t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',[0 0 6.5 4]);
+t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
 
-MS_bar_w_err3(Pre_n_Asmbly(~anx_idx, 1)', wake_n_Asmbly(~anx_idx, 1)',Post_n_Asmbly(~anx_idx, 1)', [f_ord(4,:);f_ord(2,:); f_ord(5,:)],1, 'anova1', 1:3)
-set(gca, 'xticklabel', {'Pre' 'Wake' 'Post'}, 'XTickLabelRotation', 45);
+[~, eb, sc] = MS_bar_w_err3(Pre_n_Asmbly(~anx_idx, 1)', wake_n_Asmbly(~anx_idx, 1)',Post_n_Asmbly(~anx_idx, 1)', [f_ord(4,:);f_ord(2,:); f_ord(5,:)],1, 'anova1', 1:3); 
+eb.LineWidth = 2; sc{1}.SizeData = 50; sc{2}.SizeData = 50; sc{3}.SizeData = 50; 
+ylabel('N Sig. Assemblies')
+set(gca, 'xticklabel', {'Pre' 'Wake' 'Post'}, 'XTickLabelRotation', 45, 'FontSize', 12);
+xlim([0 4])
 
-fig = figure('Name','Assembly Quantification', 'Units','inch','position',[0 0 6.5 4]);
+
+fig = figure('Name','Assembly Quantification Wake Novel - Familiar', 'Units','inch','position',f_pos);
 clf
-t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',[0 0 6.5 4]);
+t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
 
-% subplot(3,4,2)
-MS_bar_w_err(wake_n_Asmbly(novel_idx & ~anx_idx, 1), wake_n_Asmbly(~novel_idx & ~anx_idx, 1), [f_ord(2,:); f_ord(5,:)],1, 'ttest2', 1:2)
+[~, eb, sc] = MS_bar_w_err(wake_n_Asmbly(novel_idx & ~anx_idx, 1), wake_n_Asmbly(~novel_idx & ~anx_idx, 1), [f_ord(2,:); .5 .5 .5],1, 'ttest2', 1:2);
+sc{1}.SizeData = 50; sc{2}.SizeData = 50; 
 set(gca, 'xticklabel', {'Novel' 'Familiar'}, 'XTickLabelRotation', 45);
+ylabel('N Sig. Assemblies')
+eb.LineWidth = 2; 
+xlim([0 4])
+
+
+fig = figure('Name','Assembly Quantification Wake Novel - Familiar', 'Units','inch','position',f_pos);
+clf
+t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
+
 
 subplot(3,4,3)
 MS_bar_w_err(wake_n_Asmbly(~novel_idx & anx_idx, 1), wake_n_Asmbly(~novel_idx & anx_idx, 1), [f_ord(5,:); f_ord(1,:)],1, 'ttest2', 1:2)
@@ -285,9 +300,9 @@ set(gca, 'xticklabel', {'Novel' 'Familiar'}, 'XTickLabelRotation', 45);
 
 
 % pre wake post Rate
-fig = figure('Name','Assembly Quantification (Rate): Pre - Post', 'Units','inch','position',[1 1 6.5 4]);
+fig = figure('Name','Assembly Quantification (Rate): Pre - Post', 'Units','inch','position',f_pos);
 clf
-t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',[1 1 6.5 4]);
+t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
 
 MS_bar_w_err(Pre_r_Asmbly(~anx_idx, 1)',Post_r_Asmbly(~anx_idx, 1)', [f_ord(4,:); f_ord(5,:)],1, 'ttest2', 1:2)
 set(gca, 'xticklabel', {'Pre' 'Wake' 'Post'}, 'XTickLabelRotation', 45);

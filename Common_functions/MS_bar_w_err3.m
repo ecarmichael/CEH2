@@ -90,14 +90,18 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
         end
         ylim([0 max(data_pool)*1.3])
         x_lim = xlim; 
-        if (0.5 > p(1)) && (p(1)> 0.01)
+        if (0.05 > p(1)) && (p(1)> 0.01)
             text(x_lim(end)*.9, max(data_pool, [], 'all')*1.3, ['*overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
-        elseif (0.1 >= p(1)) && (p(1) >= 0.001)
+        elseif (0.01 >= p(1)) && (p(1) >= 0.001)
             text(x_lim(end), max(data_pool, [], 'all')*1.3, ['** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
         elseif p(1) < 0.001
             text(x_lim(end), max(data_pool, [], 'all')*1.3, ['*** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
         end
-                   
+                  if p(1) < 0.05
+                      fprintf('<strong>%s</strong> - F(<strong>%d</strong>,<strong>%d</strong>): <strong>%.2f</strong> \n',stats, stats_out.a_tbl{2,3},stats_out.a_tbl{3,3}, stats_out.a_tbl{2,5})
+                  else
+                      fprintf('<strong>%s</strong> - F(%d,%d): %.2f \n',stats, stats_out.a_tbl{2,3},stats_out.a_tbl{3,3}, stats_out.a_tbl{2,5})
+                  end
     end
 
     % 1 vs 2
@@ -109,9 +113,9 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
         else
             data_pool = [data_a, data_b];
         end
-        if (0.5 > this_p) && (this_p> 0.01)
+        if (0.05 > this_p) && (this_p> 0.01)
             text(median(x_vals(1:2)), max(data_pool, [], 'all')*1.15, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
-        elseif (0.1 >= this_p) && (this_p >= 0.001)
+        elseif (0.01 >= this_p) && (this_p >= 0.001)
             text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
         elseif this_p < 0.001
             text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
@@ -160,6 +164,27 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
 
         plot(x_vals(2:3), [max(data_pool, [], 'all')*1.05 max(data_pool, [], 'all')*1.05], '-k', 'linewidth', 1)
     end
+
+    % report the posthoc
+    if isfield(stats_out, 'm_tbl')
+        if stats_out.m_tbl{1,6} < 0.05
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b),  stats_out.m_tbl{1,6})
+        else
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f); p =  %.5f \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b),  stats_out.m_tbl{1,6})
+        end
+        if stats_out.m_tbl{2,6} < 0.05
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl{2,6})
+        else
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  %.5f \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl{2,6})
+        end
+        if stats_out.m_tbl{3,6} < 0.05
+            fprintf('Group B (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl{3,6})
+        else
+            fprintf('Group B (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  %.5f \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl{3,6})
+        end
+    end
+
+
 
 end
 

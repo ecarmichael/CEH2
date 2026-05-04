@@ -1,11 +1,11 @@
 function [hb, eb, sc, p, stats] =  MS_bar_w_err(data_a, data_b, color, data_flag, stats, x_vals)
 
 if nargin < 4
-    data_flag = 0; 
-    stats = []; 
-    x_vals = [1 2]; % where to put the plot. useful for putting multiple together. 
+    data_flag = 0;
+    stats = [];
+    x_vals = [1 2]; % where to put the plot. useful for putting multiple together.
 elseif nargin < 5
-    stats = []; 
+    stats = [];
     x_vals = [1 2];
 elseif nargin < 6
     x_vals = [1 2];
@@ -13,8 +13,8 @@ end
 
 if data_flag == 1
     hb = bar(x_vals, [mean(data_a, 'omitnan'), mean(data_b, 'omitnan')]', 'FaceColor', 'flat', 'EdgeColor','flat');
-    hb.CData(1,:) = color(1,:); 
-    hb.CData(2,:) = color(2,:); 
+    hb.CData(1,:) = color(1,:);
+    hb.CData(2,:) = color(2,:);
 end
 hold on
 
@@ -23,28 +23,44 @@ offsets_b = x_vals(2)+ sort(MS_randn_range(length(data_b), 1, -.1, .1));
 
 
 
-
+stats_test = stats; % keep the name for printing.
 if ~isempty(stats)
     switch stats
         case 'ttest'
             % disp('using ttest')
             [h, p, ~, stats] = ttest(data_a, data_b);
 
-            % add connections between points. 
+            % add connections between points.
 
             plot([offsets_a, offsets_b]', [data_a ;data_b], '-', 'Color', [.5 .5 .5])
+            eff_s = meanEffectSize(data_a, data_b, "Effect","cohen", 'Paired',true);
+
         case 'ttest2'
             % disp('using ttest2')
             [h, p, ~,stats] = ttest2(data_a, data_b);
-            
+            eff_s = meanEffectSize(data_a, data_b, "Effect","cohen");
+
         case 'ranksum'
             % disp('using ranksum')
             [h, p, ~,stats] = ranksum(data_a, data_b);
+            eff_s = meanEffectSize(data_a, data_b, "Effect","cohen");
+
+        case 'signrank'
+            % disp('using signrank')
+            [h, p, ~,stats] = signrank(data_a, data_b);
+
+            plot([offsets_a, offsets_b]', [data_a ;data_b], '-', 'Color', [.5 .5 .5])
+            eff_s = meanEffectSize(data_a, data_b, "Effect","cohen", 'Paired',true);
+
     end
-    
+
+    % compute the effect size.
+
+
+
     if ~isnan(h) && h == 1
         if size(data_a,2) == 1
-            data_pool = [data_a; data_b]; 
+            data_pool = [data_a; data_b];
         else
             data_pool = [data_a, data_b];
         end
@@ -55,27 +71,37 @@ if ~isempty(stats)
         elseif p < 0.001
             text(median(x_vals)*.95, max(data_pool, [], 'all')*1.1, '***', 'color', 'k', 'FontSize',10)
         end
-                   
+
         text(median(x_vals)*1.1, max(data_pool, [], 'all')*1.15, ['   p = ' num2str(p, 3)], 'color', 'k', 'FontSize',10)
 
         plot(x_vals, [max(data_pool, [], 'all')*1.05 max(data_pool, [], 'all')*1.05], '-k', 'linewidth', 1)
     end
+
+    if p(1) < 0.05
+        fprintf('<strong>%s</strong> - t(<strong>%d</strong>) = <strong>%.2f</strong>, p = <strong>%.2f</strong> ',stats_test, stats.df,stats.tstat, p)
+    else
+        fprintf('<strong>%s</strong> - t(%d) = %.2f, p = %.5f ',stats_test, stats.df,stats.tstat, p)
+    end
+
+    fprintf('| Cohen d = %.2f \n', eff_s.Effect);
+    fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f) \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b))
+
 end
 
 % add in the data points (after the lines) so they are the top layer
 if data_flag > 0 %&& length(data_a) == length(data_b)
-        sc{1} = scatter( offsets_a, data_a,15, 'markerfacecolor', 'k', 'MarkerEdgeColor', 'none');
+    sc{1} = scatter( offsets_a, data_a,15, 'markerfacecolor', 'k', 'MarkerEdgeColor', 'none');
     sc{2} = scatter(offsets_b, data_b,15,  'markerfacecolor', 'k', 'MarkerEdgeColor', 'none');
     % sc{1} = scatter( offsets_a, data_a,25, 'markerfacecolor', color(1,:), 'MarkerEdgeColor', [.2 .2 .2]);
     % sc{2} = scatter(offsets_b, data_b,25,  'markerfacecolor', color(2,:), 'MarkerEdgeColor', [.2 .2 .2]);
 else
-    sc = []; 
+    sc = [];
 end
 
 eb = errorbar(x_vals, [mean(data_a, 'omitnan'), mean(data_b,'omitnan')], [MS_SEM(data_a) ,MS_SEM(data_b)]);
 eb.LineStyle = 'none';
 eb.Color = [.2 .2 .2];
-eb.LineWidth =1; 
+eb.LineWidth =1;
 
 if ~exist('hb','var')
     hb = sc;
