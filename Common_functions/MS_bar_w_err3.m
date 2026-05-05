@@ -34,13 +34,19 @@ offsets_c = x_vals(3)+ sort(MS_randn_range(length(data_c), 1, -.1, .1));
 
 
 if ~isempty(stats)
-tbl = table(data_a', data_b', data_c', 'Variablenames', {'A', 'B', 'C'}); 
+    % zero-pad for uneven Ns
+d_mat = NaN(3, max([size(data_a,2),size(data_b,2), size(data_c,2)]));
+d_mat(1,1:length(data_a)) = data_a; 
+d_mat(2,1:length(data_b)) = data_b; 
+d_mat(3,1:length(data_c)) = data_c;
+% make a table
+tbl = table(d_mat(1,:)', d_mat(2,:)', d_mat(3,:)', 'Variablenames', {'A', 'B', 'C'}); 
 meas = table([1 2 3]', 'VariableNames',{'meas'});
 
     switch stats
         case 'anova1'
             % disp('using ttest')
-            [p,stats_out.a_tbl, stats_out.stats] = anova1([data_a; data_b; data_c]',[], 'off');
+            [p,stats_out.a_tbl, stats_out.stats] = anova1([d_mat(1,:)', d_mat(2,:)', d_mat(3,:)'],[], 'off');
             stats_out.stats.F = stats_out.a_tbl{2,5}; 
 
             if p(1) > 0.05; h =1; else h=0; end
@@ -51,7 +57,7 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
 
         case 'anova2'
             % disp('using ttest')
-            [p, stats_out.a_tbl, stats_out.stats] = anova2([data_a; data_b; data_c]', 3, "off");
+            [p, stats_out.a_tbl, stats_out.stats] = anova2([d_mat(1,:)', d_mat(2,:)', d_mat(3,:)']', 3, "off");
             stats_out.stats.F = stats_out.a_tbl{2,5}; 
             
             if p(1) < 0.05; h =1; else h=0; end
@@ -76,11 +82,17 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
         %     plot([offsets_a, offsets_b, offsets_c]', [data_a ;data_b; data_c], '-', 'Color', [.5 .5 .5])
         case 'KW' % nonparametric version of anova1
             % disp('using ks')
-            [h, p, stats_out.stats] = kruskalwallis([data_a; data_b; data_c]');
+            [h, p, stats_out.stats] = kruskalwallis([d_mat(1,:)', d_mat(2,:)', d_mat(3,:)']);
 
 
     end
-    
+
+    % print the results
+    if p(1) < 0.05
+        fprintf('<strong>%s</strong> - F(<strong>%d</strong>,<strong>%d</strong>): <strong>%.2f</strong> p = <strong>%.5f</strong>\n',stats, stats_out.a_tbl{2,3},stats_out.a_tbl{3,3}, stats_out.a_tbl{2,5}, stats_out.a_tbl{2,6})
+    else
+        fprintf('<strong>%s</strong> - F(%d,%d): %.2f p = %.5f\n',stats, stats_out.a_tbl{2,3},stats_out.a_tbl{3,3}, stats_out.a_tbl{2,5})
+    end
     % overall
     if ~isnan(h) && p(1) < 0.05
         if size(data_a,2) == 1
@@ -97,11 +109,6 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
         elseif p(1) < 0.001
             text(x_lim(end), max(data_pool, [], 'all')*1.3, ['*** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
         end
-                  if p(1) < 0.05
-                      fprintf('<strong>%s</strong> - F(<strong>%d</strong>,<strong>%d</strong>): <strong>%.2f</strong> \n',stats, stats_out.a_tbl{2,3},stats_out.a_tbl{3,3}, stats_out.a_tbl{2,5})
-                  else
-                      fprintf('<strong>%s</strong> - F(%d,%d): %.2f \n',stats, stats_out.a_tbl{2,3},stats_out.a_tbl{3,3}, stats_out.a_tbl{2,5})
-                  end
     end
 
     % 1 vs 2
@@ -184,7 +191,7 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
         end
     end
 
-
+fprintf('\n'); %extra spacing. 
 
 end
 

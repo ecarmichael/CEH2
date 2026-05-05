@@ -216,7 +216,7 @@ place.p_bins = PCs_properties.bins(1:end-1)+(mode(diff(PCs_properties.bins)))/2;
 A_temp = []; A_proj = []; wake_data = []; wake_tvec = [];
 for iB = length(bin_s):-1:1
     
-    [A_temp{iB}, A_proj{iB}, wake_data{iB}, wake_tvec{iB}, A_opts{iB}, ] = MS_PCA_ICA_only(ms_trk_cut, move_idx, bin_s(iB),method, opts);
+    [A_temp{iB}, A_proj{iB}, wake_data{iB}, wake_tvec{iB}, A_opts{iB},W_thresh{iB}, Shuff_struct{iB}] = MS_PCA_ICA_only(ms_trk_cut, move_idx, bin_s(iB),method, opts);
 end
 
 
@@ -338,6 +338,7 @@ for iB = length(bin_s):-1:1
     out{iB}.move_idx = move_idx; 
     out{iB}.wake_data = wake_data{iB}; 
     out{iB}.wake_tvec = wake_tvec{iB}; 
+    out{iB}.A_shuff = Shuff_struct{iB}; 
     % all templates
     out{iB}.A_temp = A_temp{iB};
     out{iB}.A_proj = A_proj{iB};

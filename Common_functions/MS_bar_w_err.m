@@ -84,7 +84,7 @@ if ~isempty(stats)
     end
 
     fprintf('| Cohen d = %.2f \n', eff_s.Effect);
-    fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f) \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b))
+    fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f) \n\n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b))
 
 end
 
