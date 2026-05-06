@@ -152,9 +152,9 @@ rng(123, "twister")
 for iA = length(A_out):-1:1 % loop over sessions
     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
         
-        [A_out{iA}{iB}.A_Shuff] = MS_Asbmly_Shuff(A_out{iA}{iB}.wake_data);
+        [A_out{iA}{iB}.A_Shuff] = MS_Asbmly_Shuff(A_out{iA}{iB}.wake_data, A_out{iA}{iB}.wake_tvec);
 
-        [A_out{iA}{iB}.A_W_Shuff] = MS_Asbmly_Weight_Shuff(A_out{iA}{iB}.P_temp,A_out{iA}{iB}.wake_data);
+        [A_out{iA}{iB}.A_W_Shuff] = MS_Asbmly_Weight_Shuff(A_out{iA}{iB}.P_temp,A_out{iA}{iB}.wake_data,A_out{iA}{iB}.wake_tvec);
 
 
     end
@@ -225,12 +225,17 @@ HS_idx = logical(HS_idx);
 Pre_n_Asmbly = []; Post_n_Asmbly = [];
 Pre_n_norm_Asmbly = []; Post_n_norm_Asmbly = [];
 Pre_r_Asmbly = []; Post_r_Asmbly = [];
+Pre_r_per_Asmbly = []; Post_r_per_Asmbly = []; 
 
 Pre_n_shuff = []; Post_n_shuff = [];
 Pre_r_shuff = []; Post_r_shuff = [];
-
+Assmbly_tbls = []; 
+% 
 for iB = length(bin_size):-1:1
-    
+    Pre_Rate = []; Pre_Sess = []; Pre_aNum = []; Pre_Cent = []; 
+    Post_Rate = []; Post_Sess = []; Post_aNum = [];  Post_Cent = []; 
+    Assmbly_tbls{iB}.Pre = [];     Assmbly_tbls{iB}.Post = []; 
+
     for iA = size(A_out,2):-1:1
         
         wake_n_Asmbly(iA, iB) = size(A_out{iA}{iB}.P_proj,1);
@@ -240,7 +245,6 @@ for iB = length(bin_size):-1:1
         
         Pre_r_Asmbly(iA,iB) = mean(A_out{iA}{iB}.REM_Pre_stats.rate(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05));
         
-
         % post
         Post_n_Asmbly(iA,iB) = sum(A_out{iA}{iB}.REM_Post_stats.p_val <0.05);
         Post_n_norm_Asmbly(iA, iB) = (Post_n_Asmbly(iA,iB) / wake_n_Asmbly(iA, iB))*100;
@@ -254,10 +258,42 @@ for iB = length(bin_size):-1:1
 
         sess_list{iA} = A_out{iA}{iB}.info.session;
 
-        % get the shuffle values per condition as well
+        % per assembly
+        Pre_r_per_Asmbly{iA,iB} = (A_out{iA}{iB}.REM_Pre_stats.rate(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05));
 
+        Post_r_per_Asmbly{iA,iB} = (A_out{iA}{iB}.REM_Post_stats.rate(A_out{iA}{iB}.REM_Post_stats.p_val <0.05));
 
+        Pre_Rate = [Pre_Rate; Pre_r_per_Asmbly{iA,iB}']; 
+        Pre_Sess = [Pre_Sess; repmat(iA, size(Pre_r_per_Asmbly{iA,iB}))']; 
+        Pre_aNum = [Pre_aNum; find(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05)']; 
+
+        s_a_idx = find(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05);
+        cent = [];
+        for ii = 1:length(s_a_idx)
+            m_temp = A_out{iA}{iB}.Place_map{s_a_idx(ii)}.map;
+            stats = regionprops(true(size(m_temp)), m_temp, 'WeightedCentroid');
+            cent(ii) = stats.WeightedCentroid(1);
+        end
+        Pre_Cent = [Pre_Cent; cent'];
+
+        % Post
+        Post_Rate = [Post_Rate; Post_r_per_Asmbly{iA,iB}']; 
+        Post_Sess = [Post_Sess; repmat(iA, size(Post_r_per_Asmbly{iA,iB}))']; 
+        Post_aNum = [Post_aNum; find(A_out{iA}{iB}.REM_Post_stats.p_val <0.05)']; 
+
+        % loop over assemblies and get the weighted centroids
+        s_a_idx = find(A_out{iA}{iB}.REM_Post_stats.p_val <0.05); 
+        cent = []; 
+        for ii = 1:length(s_a_idx)
+            m_temp = A_out{iA}{iB}.Place_map{s_a_idx(ii)}.map;
+            stats = regionprops(true(size(m_temp)), m_temp, 'WeightedCentroid');
+            cent(ii) = stats.WeightedCentroid(1); 
+        end
+        Post_Cent = [Post_Cent; cent'];
     end
+    Assmbly_tbls{iB}.Pre = table(Pre_Rate, Pre_Sess, Pre_aNum,Pre_Cent, Pre_Cent > 50, 'VariableNames', {'Rate', 'Sess', 'aNum', 'Cent', 'Open'}); 
+    Assmbly_tbls{iB}.Post = table(Post_Rate, Post_Sess, Post_aNum, Post_Cent, Post_Cent > 50, 'VariableNames', {'Rate', 'Sess', 'aNum', 'Cent', 'Open'}); 
+
 end
 
 fprintf('<strong>All Wake</strong> assemblies: <strong>%.0f +/-%2.2f</strong> \n', mean(wake_n_Asmbly(:, 1)), MS_SEM(wake_n_Asmbly(:, 1)))
@@ -278,6 +314,9 @@ fprintf('<strong>Novel Post</strong> assemblies: <strong>%.0f +/-%2.2f</strong> 
      mean(Post_n_Asmbly(novel_idx & anx_idx, 1)), MS_SEM(Post_n_Asmbly(novel_idx & anx_idx, 1)))
 
 
+n_idx = find(novel_idx & ~anx_idx);
+f_idx = find(~novel_idx & ~anx_idx);
+a_idx = find(novel_idx & anx_idx);
 
 % set up plots for counts
 f_pos = [1 1 6 4]; 
@@ -426,351 +465,74 @@ eb.LineWidth = 2;
 xlim([0 4])
 title('Pre-Post Anx ')
 
-% % Pre Novel vs Anxiety
-% subplot(2,4,1)
-% fprintf('<strong>Pre Nov - Anx Rate </strong> \n')
-% MS_bar_w_err(Pre_r_Asmbly(novel_idx & ~anx_idx, 1), Pre_r_Asmbly(novel_idx & anx_idx, 1), [.5 .5 .5; f_ord(1,:)],1, 'ttest2', 1:2); 
-% set(gca, 'xticklabel', {'Novel' 'Anx'}, 'XTickLabelRotation', 90);
-% ylabel('Reactivations/min')
-% eb.LineWidth = 2; 
-% xlim([0 4])
-% title('Pre Nov - Anx ')
+
+%% %%%% same thing but Rate per assembly
 
 
-% % Post Novel vs Anxiety
-% subplot(2,4,1)
-% fprintf('<strong>Post Nov - Anx Rate </strong> \n')
-% MS_bar_w_err(Post_r_Asmbly(novel_idx & ~anx_idx, 1), Post_r_Asmbly(novel_idx & anx_idx, 1), [.5 .5 .5; f_ord(1,:)],1, 'ttest2', 1:2); 
-% set(gca, 'xticklabel', {'Novel' 'Anx'}, 'XTickLabelRotation', 90);
-% ylabel('Reactivations/min')
-% eb.LineWidth = 2; 
-% xlim([0 4])
-% title('Post Nov - Anx ')
+% set up plots for counts
+f_pos = [4 5 6 4]; 
 
-
-
-% % Pre Fam vs Anxiety
-% subplot(2,4,2)
-% fprintf('<strong>Pre Fam - Anx Rate </strong> \n')
-% MS_bar_w_err(Pre_r_Asmbly(~novel_idx & ~anx_idx, 1), Pre_r_Asmbly(novel_idx & anx_idx, 1), [.5 .5 .5; f_ord(1,:)],1, 'ttest2', 1:2); 
-% set(gca, 'xticklabel', {'Fam' 'Anx'}, 'XTickLabelRotation', 90);
-% ylabel('Reactivations/min')
-% eb.LineWidth = 2; 
-% xlim([0 4])
-% title('Pre Fam - Anx ')
-
-
-% % Post Fam vs Anxiety
-% subplot(2,4,5)
-% fprintf('<strong>Post Fam - Anx Rate </strong> \n')
-% MS_bar_w_err(Post_r_Asmbly(~novel_idx & ~anx_idx, 1), Post_r_Asmbly(novel_idx & anx_idx, 1), [.5 .5 .5; f_ord(1,:)],1, 'ttest2', 1:2); 
-% set(gca, 'xticklabel', {'Fam' 'Anx'}, 'XTickLabelRotation', 90);
-% ylabel('Reactivations/min')
-% eb.LineWidth = 2; 
-% xlim([0 4])
-% title('Post Fam - Anx ')
-
-
-
-
-%% collect  control reactivation strength
-
-A_Pre_n = []; A_Post_n = [];
-A_Pre_r = []; A_Post_r = [];
-A_cent = []; A_peak = [];
-A_ReAct_all = [];
-
-SA_Pre_n = []; SA_Post_n = [];
-SA_Pre_r = []; SA_Post_r = [];
-SA_cent = []; SA_peak = [];
-
-A_ReAct = []; J_ReAct = [];
-SA_ReAct = []; SJ_ReAct = [];
-
-A_sub_list = []; J_sub_list = [];
-
-
-for iB = length(bin_size):-1:1
-    %     all_cent =
-    for iA = size(A_out,2):-1:1
-        
-        % wake
-        
-        
-        % pre
-        A_Pre_n(iA,iB) = sum(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05);
-        
-        A_Pre_r(iA,iB) = mean(A_out{iA}{iB}.REM_Pre_stats.rate(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05));
-        
-        % post
-        A_Post_a(iA,iB) = sum(A_out{iA}{iB}.REM_Post_stats.p_val <0.05);
-        
-        A_Post_r(iA,iB) = mean(A_out{iA}{iB}.REM_Post_stats.rate(A_out{iA}{iB}.REM_Post_stats.p_val <0.05));
-        
-        A_sub_list{iA} = A_out{iA}{iB}.info.subject;
-        
-        keep_idx = logical(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05) & (A_out{iA}{iB}.REM_Post_stats.p_val <0.05);
-        A_ReAct(iA, iB) = mean(A_out{iA}{iB}.ReAct(keep_idx));
-        
-        A_ReAct_all{iB}{iA} = mean(A_out{iA}{iB}.REM_Post_proj,2) - mean(A_out{iA}{iB}.REM_Pre_proj,2);
-        
-        % Coherent spatial maps
-        these_z_cent = []; these_z_peak = [];
-        for ii = length(A_out{iA}{iB}.map):-1:1
-            these_z_cent(ii) = A_out{iA}{iB}.map{ii}.cent_z;
-            these_z_peak(ii) = A_out{iA}{iB}.map{ii}.peak_z;
-            A_cent{iB}{iA}(ii) = A_out{iA}{iB}.map{ii}.cent_z;
-            A_peak{iB}{iA}(ii) = A_out{iA}{iB}.map{ii}.peak_z;
-        end
-        
-        
-        these_sig = A_out{iA}{iB}.REM_Pre_stats.p_val;
-        
-        SA_Pre_n(iA,iB) = sum((these_sig <0.05) & (these_z_cent < -1.96));
-        SA_Pre_r(iA,iB) = mean(A_out{iA}{iB}.REM_Pre_stats.rate((these_sig <0.05) & (these_z_cent < -1.96)));
-        
-        % post
-        these_sig = A_out{iA}{iB}.REM_Post_stats.p_val;
-        
-        SA_Post_n(iA,iB) = sum((these_sig <0.05) & (these_z_cent < -1.96));
-        SA_Post_r(iA,iB) = mean(A_out{iA}{iB}.REM_Post_stats.rate((these_sig <0.05) & (these_z_cent < -1.96)));
-        
-        
-        keep_idx = logical(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05) & (A_out{iA}{iB}.REM_Post_stats.p_val <0.05);
-        SA_ReAct(iA, iB) = mean(A_out{iA}{iB}.ReAct(keep_idx & (these_z_cent < -1.96)));
-    end
-end
-
-
-%% plot  novel VS familiar
-% A_out = A_all(1:11);
-
-HS_idx = logical(HS_idx(1:length(A_out)));
-n_idx = logical(novel_idx(1:length(A_out)));
-a_idx = logical(anx_idx(1:length(A_out)));
-lt1_idx = logical(lt1_idx(1:length(A_out)));
-lt5_idx = logical(lt5_idx(1:length(A_out)));
-H1_idx = logical(H1_idx(1:length(A_out)));
-H5_idx = logical(H5_idx(1:length(A_out)));
-
-
-n_idx = n_idx & ~HS_idx;
-a_idx = a_idx & ~HS_idx;
-f_idx = ~n_idx & ~HS_idx;
-
-
-% wider colours
-p_cord = MS_linspecer(16);
-c_ord = MS_linspecer(5);
-
-figure(4000)
+fig = figure('Name','Assembly Quantification: Rate per Assembly', 'Units','inch','position',f_pos);
 clf
-y_lim = [-.12 .12];
+t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
 
-subplot(2,4,1)
-data_a = A_ReAct(lt1_idx | H1_idx, iB);
-data_b = A_ReAct(lt5_idx | H5_idx, iB);
+pre_n_idx = ismember(Assmbly_tbls{iB}.Pre.Sess, n_idx); 
+pre_f_idx = ismember(Assmbly_tbls{iB}.Pre.Sess, f_idx); 
+pre_a_idx = ismember(Assmbly_tbls{iB}.Pre.Sess, a_idx); 
+post_n_idx = ismember(Assmbly_tbls{iB}.Post.Sess, n_idx); 
+post_f_idx = ismember(Assmbly_tbls{iB}.Post.Sess, f_idx); 
+post_a_idx = ismember(Assmbly_tbls{iB}.Post.Sess, a_idx); 
 
-hb = bar([nanmean(data_a), nanmean(data_b)]', 'FaceColor', c_ord(1,:), 'EdgeColor', 'k');
-hb.FaceColor = 'flat';
-hb.CData(2,:) = c_ord(2,:);
-hold on
-eb = errorbar([nanmean(data_a), nanmean(data_b)], [MS_SEM(data_a) ,MS_SEM(data_b)]);
-eb.LineStyle = 'none';
-eb.Color = 'k';
-set(gca,'xtick', 1:2, 'XTickLabel', {'novel', 'familiar'}, 'XTickLabelRotation', 45)
-ylabel('ReActivation Strength')
-ylim(y_lim);
-title('Control')
-
-subplot(2,4,2)
-data_a = A_ReAct(lt1_idx | lt5_idx, iB);
-data_b = A_ReAct(H1_idx | H5_idx, iB);
-data_c = A_ReAct(HS_idx, iB);
-
-hb = bar([nanmean(data_a), nanmean(data_b),nanmean(data_c)]', 'FaceColor', c_ord(1,:), 'EdgeColor', 'k');
-hb.FaceColor = 'flat';
-hb.CData(2,:) = c_ord(2,:);
-hb.CData(3,:) = c_ord(4,:);
-hold on
-eb = errorbar([nanmean(data_a), nanmean(data_b), nanmean(data_c)], [MS_SEM(data_a) ,MS_SEM(data_b), MS_SEM(data_c)]);
-eb.LineStyle = 'none';
-eb.Color = 'k';
-set(gca,'xtick', 1:3, 'XTickLabel', {'Linear', 'anxiety', 'switch'}, 'XTickLabelRotation', 45)
-ylim(y_lim);
-title('Control')
-
-% across conditions
+% N pre React across conditions
 subplot(2,4,3)
-data_a = A_ReAct(lt1_idx, iB);
-data_b = A_ReAct(lt5_idx, iB);
-data_c = A_ReAct(H1_idx, iB);
-data_d = A_ReAct(H5_idx, iB);
-data_e = A_ReAct(HS_idx, iB);
+fprintf('<strong>Pre Conditions Rate per Assembly</strong>\n')
+[~, eb] = MS_bar_w_err3(Assmbly_tbls{iB}.Pre.Rate(pre_n_idx)', Assmbly_tbls{iB}.Pre.Rate(pre_f_idx)', Assmbly_tbls{iB}.Pre.Rate(pre_a_idx)', [f_ord(4,:); .5 .5 .5;  f_ord(1,:)],1, 'anova1', 1:3); 
+set(gca, 'xticklabel', {'Novel' 'Familiar', "Anxiety"}, 'XTickLabelRotation', 90);
+ylabel('Reactivations/min')
+eb.LineWidth = 2; 
+xlim([0 4])
+title('Pre Conditions')
 
-
-hb = bar([nanmean(data_a), nanmean(data_b),nanmean(data_c) nanmean(data_d),nanmean(data_e)]', 'FaceColor', p_cord(1,:), 'EdgeColor', 'k');
-hb.FaceColor = 'flat';
-hb.CData(2,:) = p_cord(2,:);
-hb.CData(3,:) = p_cord(end-2,:);
-hb.CData(4,:) = p_cord(end-1,:);
-hb.CData(5,:) = p_cord(end-5,:);
-hold on
-eb = errorbar([nanmean(data_a), nanmean(data_b), nanmean(data_c) nanmean(data_d),nanmean(data_e)], [MS_SEM(data_a) ,MS_SEM(data_b), MS_SEM(data_c), MS_SEM(data_d), MS_SEM(data_e)]);
-eb.LineStyle = 'none';
-eb.Color = 'k';
-set(gca,'xtick', 1:5, 'XTickLabel', {'LT1', 'LT5', 'H1' , 'H5', 'switch'}, 'XTickLabelRotation', 45)
-ylim(y_lim);
-title('Control')
+% N Post React across conditionins
+subplot(2,4,4)
+fprintf('<strong>Post Conditions Rate</strong>\n')
+[~, eb] = MS_bar_w_err3(Assmbly_tbls{iB}.Post.Rate(post_n_idx)', Assmbly_tbls{iB}.Post.Rate(post_f_idx)', Assmbly_tbls{iB}.Post.Rate(post_a_idx)', [f_ord(4,:); .5 .5 .5;  f_ord(1,:)],1, 'anova1', 1:3); 
+set(gca, 'xticklabel', {'Novel' 'Familiar', "Anxiety"}, 'XTickLabelRotation', 90);
+ylabel('Reactivations/min')
+eb.LineWidth = 2; 
+xlim([0 4])
+title('Post Conditions')
 
 
 
-% Square_subplots
-
-SetFigure([],gcf)
-
-saveas(gcf,[fig_dir filesep 'ReAct_summary_p' num2str(bin_size(iB)) '.png'])
-
-%% check the assmbly reactivation strength against centorid Z
-% control
-HS_idx = logical(HS_idx(1:length(A_out)));
-n_idx = logical(novel_idx(1:length(A_out)));
-a_idx = logical(anx_idx(1:length(A_out)));
-
-n_idx = n_idx & ~HS_idx;
-a_idx = a_idx & ~HS_idx;
-f_idx = ~n_idx & ~HS_idx;
-
-lt1_idx = n_idx & ~a_idx & ~HS_idx;
-lt5_idx = ~n_idx & ~a_idx & ~HS_idx;
-
-H1_idx = n_idx & a_idx & ~HS_idx;
-H5_idx = ~n_idx & a_idx & ~HS_idx;
-
-A_n_cent = []; A_n_peak = []; A_n_ReAct = []; A_n_sub = [];
-A_f_cent = []; A_f_peak = []; A_f_ReAct = []; A_f_sub = [];
-
-A_h_cent = []; A_h_peak = []; A_h_ReAct = []; A_h_sub = [];
-A_l_cent = []; A_l_peak = []; A_l_ReAct = []; A_l_sub = [];
-
-for ii = 1:length(A_out)
-    
-    if ismember(ii, find(n_idx))
-        A_n_cent = [A_n_cent A_cent{iB}{ii}];
-        A_n_peak = [A_n_peak A_peak{iB}{ii}];
-        A_n_ReAct = [A_n_ReAct A_ReAct_all{iB}{ii}'];
-        A_n_sub = [A_n_sub repmat(ii, 1, length(A_ReAct_all{iB}{ii}))];
-    end
-    
-    if ismember(ii, find(f_idx))
-        A_f_cent = [A_f_cent A_cent{iB}{ii}];
-        A_f_peak = [A_f_peak A_peak{iB}{ii}];
-        A_f_ReAct = [A_f_ReAct A_ReAct_all{iB}{ii}'];
-        A_f_sub = [A_f_sub repmat(ii, 1, length(A_ReAct_all{iB}{ii}))];
-    end
-    
-end
-
-% control
-figure(5000)
-subplot(2,2,1)
-scatter(A_n_cent, A_n_ReAct, 35, A_n_sub, 'filled');
-[c, p] = corrcoef(A_n_cent, A_n_ReAct);
-text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
-xlabel('(<- coherent) Z Map centroid')
-ylabel('ReAct Str.')
-title('Control novel (Color by subject)')
-ylim([-1 1]);
-xlim([-5 5]);
-lsline
-
-subplot(2,2,2)
-scatter(A_f_cent, A_f_ReAct, 35, A_f_sub, 'filled', 'd');
-[c, p] = corrcoef(A_f_cent, A_f_ReAct);
-text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
-xlabel('(<- coherent) Z Map centroid')
-ylabel('ReAct Str.')
-title('familiar')
-ylim([-1 1]);
-xlim([-5 5]);
-lsline
-
-subplot(2,2,3)
-scatter(A_n_peak, A_n_ReAct, 35, A_n_sub, 'filled');
-[c, p] = corrcoef(A_n_peak, A_n_ReAct);
-text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
-ylabel('ReAct Str.')
-xlabel('(<- coherent) Z Map peak')
-ylim([-1 1]);
-xlim([-5 5]);
-lsline
-
-subplot(2,2,4)
-scatter(A_f_peak, A_f_ReAct, 35, A_f_sub, 'filled', 'd');
-[c, p] = corrcoef(A_f_peak, A_f_ReAct);
-text(-1, .7, ['r = ' num2str(c(1,2),2) ' p= ' num2str(p(1,2),2)], 'FontWeight', 'bold')
-xlabel('(<- coherent) Z Map peak')
-ylabel('ReAct Str.')
-ylim([-1 1]);
-xlim([-5 5]);
-lsline
+subplot(2,4,6)
+fprintf('<strong>Pre-Post Novel Rate</strong> \n')
+[~, eb] = MS_bar_w_err(Assmbly_tbls{iB}.Pre.Rate(pre_n_idx)', Assmbly_tbls{iB}.Post.Rate(post_n_idx)', [f_ord(4,:); f_ord(5,:)],1, 'ttest2', 1:2); 
+set(gca, 'xticklabel', {'Pre' 'Post'}, 'XTickLabelRotation', 90);
+ylabel('Reactivations/min')
+eb.LineWidth = 2; 
+xlim([0 4])
+title('Pre-Post Novel ')
 
 
-%% Collect the change in significant CCF
-pre_sig_cff = []; post_sig_cff = [];
-for iB = length(bin_size):-1:1
-    
-    for iS = size(A_out,2):-1:1
-        
-        pre_sig_cff(iS, iB) = A_out{iS}{iB}.REM_Pre_psig_cff;
-        post_sig_cff(iS, iB) = A_out{iS}{iB}.REM_Post_psig_cff;
-    end
-    
-    
-    figure(10+iB)
-    %     c_ord = MS_linspecer(4);
-    ax(1) = subplot(2,5,1);
-    cla
-    MS_bar_w_err(pre_sig_cff(n_idx,iB), post_sig_cff(n_idx,iB), c_ord(1,:), 1, s_test);
-    set(gca, 'XTickLabel', {'pre', 'post'})
-    title('novel');
-    %     title(['CCF sig (bin: ' num2str(bin_size(iB)) ')'])
-    ylabel({'Cross correlation'; '% significant of wake'})
-    
-    ax(2) = subplot(2,5,2);
-    cla
-    MS_bar_w_err(pre_sig_cff(f_idx,iB), post_sig_cff(f_idx,iB), c_ord(2,:), 1, s_test);
-    set(gca, 'XTickLabel', {'pre', 'post'})
-    title('familiar');
-    
-    
-    ax(3) = subplot(2,5,3);
-    cla
-    MS_bar_w_err(pre_sig_cff(lt1_idx | lt5_idx,iB), post_sig_cff(lt1_idx | lt5_idx,iB), c_ord(3,:), 1, s_test);
-    set(gca, 'XTickLabel', {'pre', 'post'})
-    title('Linear');
-    
-    
-    ax(4) = subplot(2,5,4);
-    cla
-    MS_bar_w_err(pre_sig_cff(H1_idx | H5_idx,iB), post_sig_cff(H1_idx | H5_idx,iB), c_ord(4,:), 1, s_test);
-    set(gca, 'XTickLabel', {'pre', 'post'})
-    title('Anxiety');
-    
-    ax(5) =  subplot(2,5,5);
-    cla
-    MS_bar_w_err(pre_sig_cff(H1_idx | H5_idx,iB), post_sig_cff(H1_idx | H5_idx,iB), c_ord(5,:), 1, s_test);
-    set(gca, 'XTickLabel', {'pre', 'post'})
-    title('switch');
-    
-    linkprop(ax, 'ylim')
-    ylim([0 max([pre_sig_cff,post_sig_cff], [], 'all')*1.1])
-    %     Square_subplots;
-    SetFigure([], gcf)
-    %     title('J20')
-    saveas(gcf,[fig_dir filesep 'cff_summary_p' num2str(strrep(bin_size(iB), '.', 'p')) '.png'])
-    
-end
+subplot(2,4,7)
+fprintf('<strong>Pre-Post Fam Rate</strong> \n')
+[~, eb] = MS_bar_w_err(Assmbly_tbls{iB}.Pre.Rate(pre_f_idx)', Assmbly_tbls{iB}.Post.Rate(post_f_idx)', [f_ord(4,:); f_ord(5,:)],1, 'ttest2', 1:2); 
+set(gca, 'xticklabel', {'Pre' 'Post'}, 'XTickLabelRotation',90);
+ylabel('Reactivations/min')
+eb.LineWidth = 2; 
+xlim([0 4])
+title('Pre-Post Fam ')
+
+% Pre Post Anxiety
+subplot(2,4,8)
+fprintf('<strong>Pre-Post Anx Rate </strong> \n')
+[~, eb] = MS_bar_w_err(Assmbly_tbls{iB}.Pre.Rate(pre_a_idx)', Assmbly_tbls{iB}.Post.Rate(post_a_idx)', [f_ord(4,:); f_ord(5,:)],1, 'ttest2', 1:2); 
+set(gca, 'xticklabel', {'Pre' 'Post'}, 'XTickLabelRotation', 90);
+ylabel('Reactivations/min')
+eb.LineWidth = 2; 
+xlim([0 4])
+title('Pre-Post Anx ')
 
 
 %% qualitfy reactivation saptial biases
@@ -863,39 +625,39 @@ figure(300)
 clf
 subplot(5,1,1)
 hold on
-bar(p_centr, nanmean(A_hist_pre(lt1_idx,:))./max(nanmean(A_hist_pre(lt1_idx,:))), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
-bar(p_centr, nanmean(A_hist_post(lt1_idx,:))./max(nanmean(A_hist_post(lt1_idx,:))),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+bar(p_centr, mean(A_hist_pre(novel_idx & ~anx_idx,:), 'omitnan')./max(mean(A_hist_pre(novel_idx & ~anx_idx,:), 'omitnan')), 1, 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(p_centr, mean(A_hist_post(novel_idx & ~anx_idx,:), 'omitnan')./max(mean(A_hist_post(novel_idx & ~anx_idx,:), 'omitnan')),1, 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
 set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 legend({'pre', 'post'}, 'box', 'off', 'Orientation', 'horizontal', 'Location', 'northwest')
 
 
 subplot(5,1,2)
 hold on
-bar(p_centr, nanmean(A_hist_pre(lt5_idx,:))./max(nanmean(A_hist_pre(lt5_idx,:))), 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
-bar(p_centr, nanmean(A_hist_post(lt5_idx,:))./max(nanmean(A_hist_post(lt5_idx,:))), 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+bar(p_centr, mean(A_hist_pre(~novel_idx & ~anx_idx,:))./max(nanmean(A_hist_pre(~novel_idx & ~anx_idx,:))), 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(p_centr, mean(A_hist_post(~novel_idx & ~anx_idx,:))./max(nanmean(A_hist_post(~novel_idx & ~anx_idx,:))), 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
 set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 
 subplot(5,1,3)
 hold on
-bar(p_centr, nanmean(A_hist_pre(H1_idx,:))./max(nanmean(A_hist_pre(H1_idx,:))), 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
-bar(p_centr, nanmean(A_hist_post(H1_idx,:))./max(nanmean(A_hist_post(H1_idx,:))), 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+bar(p_centr, mean(A_hist_pre(novel_idx & anx_idx,:))./max(nanmean(A_hist_pre(novel_idx & anx_idx,:))), 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(p_centr, mean(A_hist_post(novel_idx & anx_idx,:))./max(nanmean(A_hist_post(novel_idx & anx_idx,:))), 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
 set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 
 
 subplot(5,1,4)
 hold on
-bar(p_centr, nanmean(A_hist_pre(H5_idx,:))./max(nanmean(A_hist_pre(H5_idx,:))), 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
-bar(p_centr, nanmean(A_hist_post(H5_idx,:))./max(nanmean(A_hist_post(H5_idx,:))), 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+bar(p_centr, mean(A_hist_pre(~novel_idx & anx_idx,:))./max(mean(A_hist_pre(~novel_idx & anx_idx,:))), 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+bar(p_centr, mean(A_hist_post(~novel_idx & anx_idx,:))./max(mean(A_hist_post(~novel_idx & anx_idx,:))), 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
 set(gca, 'XTickLabel', [], 'YTick', [0 1]);
 
-subplot(5,1,5)
-hold on
-bar(p_centr, nanmean(A_hist_pre(HS_idx,:))./max(nanmean(A_hist_pre(HS_idx,:))), 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
-bar(p_centr, nanmean(A_hist_post(HS_idx,:))./max(nanmean(A_hist_post(HS_idx,:))), 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
-% stem(p_centr, nanmean(A_hist_pre(HS_idx,:))./max(nanmean(A_hist_pre(HS_idx,:))), 'color', a_ord(2,:));
-% stem(p_centr, nanmean(A_hist_post(HS_idx,:))./max(nanmean(A_hist_post(HS_idx,:))), 'color', a_ord(1,:));
-set(gca, 'YTick', [0 1], 'XTick', [0 100]);
-xlabel('position on track (cm)')
+% subplot(5,1,5)
+% hold on
+% bar(p_centr, nanmean(A_hist_pre(HS_idx,:))./max(nanmean(A_hist_pre(HS_idx,:))), 'facecolor', a_ord(2,:), 'FaceAlpha', .3);
+% bar(p_centr, nanmean(A_hist_post(HS_idx,:))./max(nanmean(A_hist_post(HS_idx,:))), 'facecolor', a_ord(1,:), 'FaceAlpha', .3);
+% % stem(p_centr, nanmean(A_hist_pre(HS_idx,:))./max(nanmean(A_hist_pre(HS_idx,:))), 'color', a_ord(2,:));
+% % stem(p_centr, nanmean(A_hist_post(HS_idx,:))./max(nanmean(A_hist_post(HS_idx,:))), 'color', a_ord(1,:));
+% set(gca, 'YTick', [0 1], 'XTick', [0 100]);
+% xlabel('position on track (cm)')
 
 
 

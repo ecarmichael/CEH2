@@ -24,7 +24,7 @@ all_shuff = [];
 
 Ass_shuff = NaN(1,nShuff);
 for iS = nShuff:-1:1
-    tic
+    
     shuff_data = NaN(size(data_h));
     for ic = 1:size(data_h,2)
         shuff_data(:,ic) = circshift(data_h(:,ic), floor(MS_randn_range(1,1,1,size(data_h,1))));

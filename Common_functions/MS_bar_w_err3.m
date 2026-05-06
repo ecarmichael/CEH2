@@ -103,11 +103,11 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
         ylim([0 max(data_pool)*1.3])
         x_lim = xlim; 
         if (0.05 > p(1)) && (p(1)> 0.01)
-            text(x_lim(end)*.9, max(data_pool, [], 'all')*1.3, ['*overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
+            text(x_lim(end)*.9, max(data_pool, [], 'all')*1.25, ['*overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
         elseif (0.01 >= p(1)) && (p(1) >= 0.001)
-            text(x_lim(end), max(data_pool, [], 'all')*1.3, ['** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
+            text(x_lim(end), max(data_pool, [], 'all')*1.25, ['** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
         elseif p(1) < 0.001
-            text(x_lim(end), max(data_pool, [], 'all')*1.3, ['*** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
+            text(x_lim(end), max(data_pool, [], 'all')*1.25, ['*** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
         end
     end
 
