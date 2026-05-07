@@ -535,6 +535,51 @@ xlim([0 4])
 title('Pre-Post Anx ')
 
 
+%% %%%% Spatial bias per reactivation
+
+
+% set up plots for counts
+f_pos = [4 5 6 4]; 
+
+fig = figure('Name','Assembly Quantification: Spatial bias', 'Units','inch','position',f_pos);
+clf
+t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
+
+% 
+subplot(2,4,3)
+fprintf('<strong>Post Novel open-closed rate</strong>\n')
+[~, eb] = MS_bar_w_err(Assmbly_tbls{iB}.Post.Rate(post_n_idx  & ~Assmbly_tbls{iB}.Post.Open)', Assmbly_tbls{iB}.Post.Rate(post_n_idx  & Assmbly_tbls{iB}.Post.Open)', [f_ord(4,:); f_ord(1,:)],1, 'ttest2', 1:2); 
+set(gca, 'xticklabel', {'Closed' 'Open',}, 'XTickLabelRotation', 90);
+ylabel('Reactivations/min')
+eb.LineWidth = 2; 
+xlim([0 4])
+title('Post Novel')
+
+subplot(2,4,4)
+fprintf('<strong>Post Fam open-closed rate</strong>\n')
+[~, eb] = MS_bar_w_err(Assmbly_tbls{iB}.Post.Rate(post_f_idx  & ~Assmbly_tbls{iB}.Post.Open)', Assmbly_tbls{iB}.Post.Rate(post_f_idx  & Assmbly_tbls{iB}.Post.Open)', [f_ord(5,:); f_ord(1,:)],1, 'ttest2', 1:2); 
+set(gca, 'xticklabel', {'Closed' 'Open',}, 'XTickLabelRotation', 90);
+ylabel('Reactivations/min')
+eb.LineWidth = 2; 
+xlim([0 4])
+title('Post Fam')
+
+
+subplot(2,4,5)
+fprintf('<strong>Post Anx open-closed rate</strong>\n')
+[~, eb] = MS_bar_w_err(Assmbly_tbls{iB}.Post.Rate(post_a_idx  & ~Assmbly_tbls{iB}.Post.Open)', Assmbly_tbls{iB}.Post.Rate(post_a_idx  & Assmbly_tbls{iB}.Post.Open)', [.5 .5 .5; f_ord(1,:)],1, 'ttest2', 1:2); 
+set(gca, 'xticklabel', {'Closed' 'Open',}, 'XTickLabelRotation', 90);
+ylabel('Reactivations/min')
+eb.LineWidth = 2; 
+xlim([0 4])
+title('Post Anx')
+
+subplot(2,4,1:2); cla
+hold on
+histogram(Assmbly_tbls{iB}.Post.Cent(post_n_idx),10:10:90, 'FaceColor',f_ord(4,:)); 
+histogram(Assmbly_tbls{iB}.Post.Cent(post_f_idx),10:10:90, 'FaceColor',f_ord(5,:)); 
+histogram(Assmbly_tbls{iB}.Post.Cent(post_a_idx),10:10:90, 'FaceColor',f_ord(1,:)); 
+
 %% qualitfy reactivation saptial biases
 
 data_in = A_out;
