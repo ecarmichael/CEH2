@@ -166,7 +166,7 @@ end
 r_ord = winter(6);
 c_ord = MS_linspecer(9);
 
- MS_asmbly_ephys_raster(data.S, data.rate.tvec,data.asmbly.A_temp, data.asmbly.A_proj, 1:size(data.asmbly.A_proj,1))
+ MS_asmbly_ephys_raster(data.S, data.rate.tvec,data.asmbly.A_temp, data.asmbly.A_proj, [1 4])
 
  ylim([0 50])
 yline(data.asmbly.w_thresh, '--k')

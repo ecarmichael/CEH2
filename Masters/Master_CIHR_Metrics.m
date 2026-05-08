@@ -15,7 +15,7 @@
 
 %% NOL %%%%%%%%
 if ispc
-data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\CIHR_NOL_2025'; 
+data_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\CIHR_2025\CIHR_NOL_2025'; 
 else
 data_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/CIHR_2025/CIHR_NOL_2025'; 
 end
@@ -350,6 +350,10 @@ ylabel({'Discrimination index'; '(Obj2 - Obj1)/(Obj1+obj2)'})
 % make a gittered scatter with the mouse labels to see if any odd sessions
 % are outliers. 
 
+% simple version
+
+
+figure(19200)
 
 %% plot draft without paired values.
 c_ord = MS_linspecer(8); 

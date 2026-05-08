@@ -108,7 +108,7 @@ wake_shuff_mat = [];
 
 Ass_shuff = NaN(1,nShuff);
 for iS = nShuff:-1:1
-    tic
+    % tic
     shuff_data = NaN(size(data_h));
     for ic = 1:size(data_h,2)
         shuff_data(:,ic) = circshift(data_h(:,ic), floor(MS_randn_range(1,1,1,size(data_h,1))));
@@ -116,7 +116,7 @@ for iS = nShuff:-1:1
     
     this_ass = assembly_patterns(shuff_data');
     if ~isempty(this_ass)
-        S_prog = assembly_activity(this_ass,shuff_data');
+        S_prog = assembly_activity(this_ass,shuff_data', opts);
         
         wake_shuff_mat(iS,:) =  S_prog(1,:);
         keep_idx(iS) = 1;
@@ -124,15 +124,12 @@ for iS = nShuff:-1:1
         wake_shuff_mat(iS,:) = NaN(1,length(shuff_data));
         keep_idx(iS) = 0;
     end
-    %     for ii = size(this_ass,2):-1:1
     
     if sum(max(this_ass) > 0.2) >0
         Ass_shuff(iS) = sum(max(this_ass) > 0.2);
     else
         Ass_shuff(iS) = 0;
     end
-    %     end
-    % fprintf('Shuff # %.0f found %.0f assemblies and took %2.2f seconds\n', iS, size(this_ass,2), toc)
 end
 
 shuff_stats.shuff_n = Ass_shuff; 
@@ -142,6 +139,7 @@ shuff_stats.p95 = prctile(Ass_shuff, 95, 'all');
 shuff_stats.p99 = prctile(Ass_shuff, 99, 'all');
 
 
+     fprintf('Shuff mean assemblies %.2f +/-%.2f \n', shuff_stats.mean, shuff_stats.sd)
 
 w_thresh = prctile(wake_shuff_mat(wake_shuff_mat >0), 99, 'all');
 
