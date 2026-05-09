@@ -22,7 +22,7 @@ evts_csc = OE_LoadEvents();
 
 cd(csc_dir)
 cfg = []; 
-% cfg.fc = {'CH11', 'CH12', 'CH14'};
+cfg.fc = {'CH20', 'CH27', 'CH28', 'CH30'}%{'CH11', 'CH12', 'CH14'};
 csc = MS_LoadCSC_OE(cfg);
 
 csc.tvec = csc.tvec - ts_prime(1); 
@@ -40,6 +40,14 @@ csc.label{1} = 'swr_mean';
 
 swr = MS_SWR_detector(csc, csc.label{1}); 
 
+
+%% only keep the long evts
+
+evt_len = evts.t{2}(2,:) - evts.t{2}(1,:); 
+
+rm_idx = evt_len < 2; 
+
+evts.t{2}(:,rm_idx) = []; 
 %% plot to see if everything is aligned
 c_ord = MS_linspecer(3); 
 
@@ -93,4 +101,5 @@ end
 figure(201)
 clf
 MS_bar_w_err(ctrl_red, swr_red, [[.7 .7 .7]; c_ord(2,:)],1, 'ttest', [1 2])
-MS_bar_w_err(swr_red, swr_blue, [c_ord(2,:); c_ord(1,:)],1, 'ttest', [2 3])
+MS_bar_w_err(swr_red, swr_blue, [c_ord(2,:); c_ord(1,:)],1, 'ttest2', [2 3])
+MS_bar_w_err(swr_blue, ctrl_blue, [c_ord(1,:); [.7 .7 .7]],1, 'ttest', [3 4])

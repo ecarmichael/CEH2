@@ -1,6 +1,17 @@
 %% PETH only sandbox
 
 %% JAWS_opto3
+evts_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_20-50-52_dSub_Opto1/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-158.Rhythm Data/TTL';
+% csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 117';
+phy_dir = '//Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_20-50-52_dSub_Opto1/kilosort4';
+vr_fname = '';
+save_name = 'H1b3_opto1';
+TTL = {'6'};
+
+
+
+
+%% JAWS_opto3
 evts_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws2026-03-11_02-09-55_Opto3/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-108.Rhythm Data/TTL';
 % csc_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws_test/JAWS22026-02-25_14-09-12_D1/Record Node 117';
 phy_dir = '/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/Jaws2026-03-11_02-09-55_Opto3/kilosort';
@@ -432,7 +443,7 @@ end
 %% plot the PETHS together
 
 
-iS = 25; 
+iS = 19; 
 
 figure(iS+100);
 clf
@@ -442,7 +453,7 @@ cla
 hold on;
 % Plot the PETH for each ITI
 offset = 0;
-for iT = 2%:size(peth_gau,2)
+for iT = 1%:size(peth_gau,2)
     u_val = unique(peth_T{iS, iT});
     for iV = 1:length(u_val)
         this_idx = peth_T{iS, iT} == u_val(iV);
@@ -486,7 +497,6 @@ end
 set(gca, 'xtick', [])
 ylim([0 length(u_val)+1])
 ylabel('pulse #');
-xlim([-100 200])
 
 ax(2) = subplot(6,3,[7 8]); 
 % subplot(5,3,[13 14])
@@ -510,42 +520,25 @@ ylabel('Firing rate (Hz)');
 
 % legend(labels, 'Box', 'off')
 linkaxes(ax, 'x')
-xlim([-100 100])
+xlim([-100 200])
 ylim([0 max(mean(peth_gau{iS,iT},2, 'omitnan')')*1.1])
 
 % add the pre post stats
 
-<<<<<<< HEAD
-  subplot(5,3,[3  6])
-  cla
-  MS_bar_w_err(squeeze(peth_pre_fr{iS, iTi})', squeeze(peth_stim_fr{iS, iTi})', [.7 .7 .7; reds(1,:)], 1, 'ttest', 1:2)
-   ylabel('mean FR')
-=======
+
 subplot(6,3,[3 6])
 % subplot(5,3,[3  6])
 MS_bar_w_err(squeeze(peth_pre_fr{iS, iT})', squeeze(peth_stim_fr{iS, iT})', [.7 .7 .7; reds(1,:)], 1, 'ttest', 1:2)
 ylabel('mean FR')
->>>>>>> 6084faadd7b376db253af0b5ef2a2e20a03ec9aa
 
 set(gca, 'XTickLabel', {'pre', 'opto'}, 'XTickLabelRotation', 45)
 cfg_fig =[];
 cfg_fig.ft_size = 8;
 SetFigure(cfg_fig, gcf, 1)
 
-<<<<<<< HEAD
-    cfg_fig =[]; 
-    cfg_fig.ft_size = 8; 
-    SetFigure(cfg_fig, gcf, 1)
-
-    set(gcf,'units','normalized','outerposition',[0 0 .3 .5])
-
-   % exportgraphics(gcf, [phy_dir filesep 'Jaws_opto_cell_' num2str(iS) '.pdf'], 'ContentType', 'vector');
-   print(gcf, '-dpdf', [strrep('HF2b2_2025-12-21_10-16-03_D4_2', '-', '_') 'opto_cell_' num2str(iS) '.pdf'])
-=======
 set(gcf,'units','normalized','outerposition',[0 0 .3 .5])
 theme(gcf,'light')
 % exportgraphics(gcf, [phy_dir filesep 'Jaws_opto_cell_' num2str(iS) '.pdf'], 'ContentType', 'vector');
 % print(gcf, '-dpdf', [phy_dir filesep 'opto_cell_' num2str(iS) '.pdf'])
 % print(gcf, '-dpdf', [strrep('HF2b2_2026-01-02_13-21-35_SS_test2', '-', '_') '_opto_cell_' num2str(iS) '_' num2str(ITIs(iT)*1000) 'ms' '.pdf'])
-exportgraphics(gcf, [strrep('HF2b2_2026-01-02_13-21-35_SS_test2', '-', '_') '_opto_cell_' num2str(iS) '_' num2str(ITIs(iT)*1000) 'ms' '.pdf'], 'ContentType', 'vector');
->>>>>>> 6084faadd7b376db253af0b5ef2a2e20a03ec9aa
+exportgraphics(gcf, [strrep('HF2b2__opto_D5_opto2', '-', '_') '_opto_cell_' num2str(iS) '_' num2str(ITIs(iT)*1000) 'ms' '.pdf'], 'ContentType', 'vector');

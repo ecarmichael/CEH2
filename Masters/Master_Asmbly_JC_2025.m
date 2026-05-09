@@ -22,9 +22,9 @@ elseif strcmp(computer, 'MACA64')
     ca_dir = '/Users/ecar/Documents/Github/CEH2';
     oasis_dir = '/Users/ecar/Documents/Github/OASIS_matlab';
     
-    code_dir = '/Users/ecar/Documents/Github/Dos-Santos Assembly ICA/Dos-Santos Assembly ICA';
+    code_dir = '/Users/ecar/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter/Git_repos/Dos-Santos Assembly ICA';
     
-    RnR_dir = '//Users/ecar/Documents/Github/RnR_methods';
+    % RnR_dir = '//Users/ecar/Documents/Github/RnR_methods';
     
     % data_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3' %C:\Users\ecarm\Dropbox (Williams Lab)\Williams Lab Team Folder\Eric\Maze_Ca\inter\pv1254\2021_12_17_pv1254_MZD3';
     main_dir = '/Users/ecar/';
@@ -155,7 +155,6 @@ for iA = length(A_out):-1:1 % loop over sessions
         [A_out{iA}{iB}.A_Shuff] = MS_Asbmly_Shuff(A_out{iA}{iB}.wake_data, A_out{iA}{iB}.wake_tvec);
 
         [A_out{iA}{iB}.A_W_Shuff] = MS_Asbmly_Weight_Shuff(A_out{iA}{iB}.P_temp,A_out{iA}{iB}.wake_data,A_out{iA}{iB}.wake_tvec);
-
 
     end
 end
@@ -467,8 +466,6 @@ title('Pre-Post Anx ')
 
 
 %% %%%% same thing but Rate per assembly
-
-
 % set up plots for counts
 f_pos = [4 5 6 4]; 
 
@@ -546,7 +543,7 @@ clf
 t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
 
 % 
-subplot(2,4,3)
+subplot(2,4,1)
 fprintf('<strong>Post Novel open-closed rate</strong>\n')
 [~, eb] = MS_bar_w_err(Assmbly_tbls{iB}.Post.Rate(post_n_idx  & ~Assmbly_tbls{iB}.Post.Open)', Assmbly_tbls{iB}.Post.Rate(post_n_idx  & Assmbly_tbls{iB}.Post.Open)', [f_ord(4,:); f_ord(1,:)],1, 'ttest2', 1:2); 
 set(gca, 'xticklabel', {'Closed' 'Open',}, 'XTickLabelRotation', 90);
@@ -555,7 +552,7 @@ eb.LineWidth = 2;
 xlim([0 4])
 title('Post Novel')
 
-subplot(2,4,4)
+subplot(2,4,2)
 fprintf('<strong>Post Fam open-closed rate</strong>\n')
 [~, eb] = MS_bar_w_err(Assmbly_tbls{iB}.Post.Rate(post_f_idx  & ~Assmbly_tbls{iB}.Post.Open)', Assmbly_tbls{iB}.Post.Rate(post_f_idx  & Assmbly_tbls{iB}.Post.Open)', [f_ord(5,:); f_ord(1,:)],1, 'ttest2', 1:2); 
 set(gca, 'xticklabel', {'Closed' 'Open',}, 'XTickLabelRotation', 90);
@@ -565,7 +562,7 @@ xlim([0 4])
 title('Post Fam')
 
 
-subplot(2,4,5)
+subplot(2,4,3)
 fprintf('<strong>Post Anx open-closed rate</strong>\n')
 [~, eb] = MS_bar_w_err(Assmbly_tbls{iB}.Post.Rate(post_a_idx  & ~Assmbly_tbls{iB}.Post.Open)', Assmbly_tbls{iB}.Post.Rate(post_a_idx  & Assmbly_tbls{iB}.Post.Open)', [.5 .5 .5; f_ord(1,:)],1, 'ttest2', 1:2); 
 set(gca, 'xticklabel', {'Closed' 'Open',}, 'XTickLabelRotation', 90);
@@ -574,11 +571,50 @@ eb.LineWidth = 2;
 xlim([0 4])
 title('Post Anx')
 
-subplot(2,4,1:2); cla
+subplot(2,4,5:6); cla
 hold on
-histogram(Assmbly_tbls{iB}.Post.Cent(post_n_idx),10:10:90, 'FaceColor',f_ord(4,:)); 
-histogram(Assmbly_tbls{iB}.Post.Cent(post_f_idx),10:10:90, 'FaceColor',f_ord(5,:)); 
-histogram(Assmbly_tbls{iB}.Post.Cent(post_a_idx),10:10:90, 'FaceColor',f_ord(1,:)); 
+h = histogram(Assmbly_tbls{iB}.Post.Cent(post_n_idx),10:5:90, 'FaceColor',f_ord(4,:), 'Normalization','percentage'); 
+y_lim = ylim; h_max(1) = y_lim(2); 
+
+histogram(Assmbly_tbls{iB}.Post.Cent(post_f_idx),10:5:90, 'FaceColor',f_ord(5,:), 'Normalization','percentage'); 
+y_lim = ylim; h_max(2) = y_lim(2); 
+
+histogram(Assmbly_tbls{iB}.Post.Cent(post_a_idx),10:5:90, 'FaceColor',f_ord(1,:), 'Normalization','percentage'); 
+y_lim = ylim; h_max(3) = y_lim(2); 
+
+ylabel('% Assemblies')
+xlabel({'Track Poisition (cm)'});% 'Closed  <-  |  ->   Open'})
+line([10 50], [max(h_max) max(h_max)]*1.1,'color', 'k', 'linewidth', 2)
+text(30, max(h_max)*1.1, 'Closed', 'VerticalAlignment','bottom', 'HorizontalAlignment','center')
+text(70, max(h_max)*1.1, 'Open', 'VerticalAlignment','bottom', 'HorizontalAlignment','center')
+legend({'Novel', 'Familiar', 'Anxiety'}, 'Location', 'Best');
+
+subplot(2,4,7:8); cla
+hold on
+h = histcounts(Assmbly_tbls{iB}.Post.Cent(post_n_idx),10:5:90); 
+plot(12.5:5:87.5, h, 'color', f_ord(4,:), 'linewidth', 2)
+skews(1) = skewness(h); 
+
+h = histcounts(Assmbly_tbls{iB}.Post.Cent(post_f_idx),10:5:90); 
+plot(12.5:5:87.5, h, 'color', f_ord(5,:), 'linewidth', 2)
+skews(2) = skewness(h); 
+
+h = histcounts(Assmbly_tbls{iB}.Post.Cent(post_a_idx),10:5:90); 
+plot(12.5:5:87.5, h, 'color', f_ord(1,:), 'linewidth', 2)
+skews(3) = skewness(h); 
+
+ylabel('% Assemblies')
+xlabel({'Track Poisition (cm)'});% 'Closed  <-  |  ->   Open'})
+line([10 50], [max(h_max) max(h_max)]*1.1,'color', 'k', 'linewidth', 2)
+text(30, max(h_max)*1.1, 'Closed', 'VerticalAlignment','bottom', 'HorizontalAlignment','center')
+text(70, max(h_max)*1.1, 'Open', 'VerticalAlignment','bottom', 'HorizontalAlignment','center')
+legend({num2str(skews(1)), num2str(skews(2)), num2str(skews(3))}, 'Location', 'Best');
+
+
+%% same thing for the pre and post template assemblies. 
+
+
+
 
 %% qualitfy reactivation saptial biases
 
