@@ -238,18 +238,23 @@ for iB = length(bin_size):-1:1
     for iA = size(A_out,2):-1:1
         
         wake_n_Asmbly(iA, iB) = size(A_out{iA}{iB}.P_proj,1);
+        wake_s_Asmbly(iA, iB) = A_out{iA}{iB}.A_Shuff.w_thresh; 
         % pre
         Pre_n_Asmbly(iA,iB) = sum(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05);
         Pre_n_norm_Asmbly(iA, iB) = (Pre_n_Asmbly(iA,iB) / wake_n_Asmbly(iA, iB))*100; 
         
         Pre_r_Asmbly(iA,iB) = mean(A_out{iA}{iB}.REM_Pre_stats.rate(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05));
-        
+        Pre_s_Asmbly(iA,iB) = A_out{iA}{iB}.REM_Pre_stats.R_thresh ;
+
         % post
         Post_n_Asmbly(iA,iB) = sum(A_out{iA}{iB}.REM_Post_stats.p_val <0.05);
         Post_n_norm_Asmbly(iA, iB) = (Post_n_Asmbly(iA,iB) / wake_n_Asmbly(iA, iB))*100;
 
         Post_r_Asmbly(iA,iB) = mean(A_out{iA}{iB}.REM_Post_stats.rate(A_out{iA}{iB}.REM_Post_stats.p_val <0.05));
         
+        Post_s_Asmbly(iA,iB) = A_out{iA}{iB}.REM_Post_stats.R_thresh ;
+
+
         sub_list{iA} = A_out{iA}{iB}.info.subject;
         
         keep_idx = logical(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05) & (A_out{iA}{iB}.REM_Post_stats.p_val <0.05);
@@ -332,6 +337,9 @@ ylabel('N Sig. Assemblies')
 set(gca, 'xticklabel', {'Pre' 'Wake' 'Post'}, 'XTickLabelRotation', 90, 'fontsize', 7);
 xlim([0 4])
 title('Pre Wake Post')
+line([1.65 2.35], [mean(wake_s_Asmbly),mean(wake_s_Asmbly)],'color', 'k', 'LineWidth',2 )
+line([.65 1.35], [mean(Pre_s_Asmbly),mean(Pre_s_Asmbly)],'color', 'k', 'LineWidth',2 )
+line([2.65 3.35], [mean(Post_s_Asmbly),mean(Post_s_Asmbly)],'color', 'k', 'LineWidth',2 )
 
 % N Wake React across conditions
 subplot(2,4,2)
@@ -614,6 +622,16 @@ legend({num2str(skews(1)), num2str(skews(2)), num2str(skews(3))}, 'Location', 'B
 %% same thing for the pre and post template assemblies. 
 
 
+
+
+
+
+%% get some example plots for the wake assemblies along with the weights and spatial tuning. 
+
+
+
+
+%% examples of Pre detect assemblies 
 
 
 %% qualitfy reactivation saptial biases
