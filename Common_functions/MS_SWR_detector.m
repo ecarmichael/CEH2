@@ -68,11 +68,11 @@ cfg_swr.kernel.samples = csc.cfg.hdr{1}.SamplingFrequency/100;
 cfg_swr.kernel.sd = csc.cfg.hdr{1}.SamplingFrequency/100;
 
 % artifact detection
-cfg_swr.artif_det.method = 'zscore';
-cfg_swr.artif_det.threshold = 5;
-cfg_swr.artif_det.dcn = '>';
-cfg_swr.artif_det.rm_len = .2;
-cfg_swr.artif_det.minlen =.01; 
+% cfg_swr.artif_det.method = 'zscore';
+% cfg_swr.artif_det.threshold = 8;
+% cfg_swr.artif_det.dcn = '>';
+% cfg_swr.artif_det.rm_len = .2;
+% cfg_swr.artif_det.minlen =.1; 
 
 % %contrast band (theta)
 % cfg_swr.cont_filt.f = [4 12]; 
