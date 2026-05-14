@@ -68,11 +68,11 @@ cfg_swr.kernel.samples = csc.cfg.hdr{1}.SamplingFrequency/100;
 cfg_swr.kernel.sd = csc.cfg.hdr{1}.SamplingFrequency/100;
 
 % artifact detection
-% cfg_swr.artif_det.method = 'zscore';
-% cfg_swr.artif_det.threshold = 8;
-% cfg_swr.artif_det.dcn = '>';
-% cfg_swr.artif_det.rm_len = .2;
-% cfg_swr.artif_det.minlen =.1; 
+cfg_swr.artif_det.method = 'zscore';
+cfg_swr.artif_det.threshold = 5;
+cfg_swr.artif_det.dcn = '>';
+cfg_swr.artif_det.rm_len = .2;
+cfg_swr.artif_det.minlen =.1; 
 
 % %contrast band (theta)
 % cfg_swr.cont_filt.f = [4 12]; 
@@ -80,7 +80,7 @@ cfg_swr.kernel.sd = csc.cfg.hdr{1}.SamplingFrequency/100;
 % cfg_swr.cont_filt.zthresh = 3;
 
 % additional SWR detection
-cfg_swr.threshold =2.5;% in sd
+cfg_swr.threshold =2;% in sd
 cfg_swr.method = 'zscore';
 cfg_swr.min_len = 0.02; % mouse SWR: 40ms from Vandecasteele et al. 2014
 cfg_swr.merge_thr = 0.02; %merge events that are within 20ms of each other.
@@ -114,7 +114,7 @@ cfg_swr.nCycles_operation = '>='; % number of cycles
 % check quality.
 if plot_flag
     cfg_plot.display = 'iv'; %'iv';
-    cfg_plot.title = 'var';
+    cfg_plot.title = 'num';
     PlotTSDfromIV(cfg_plot, SWR_evts, csc)
     
 end

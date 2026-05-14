@@ -1,14 +1,19 @@
 %% sandbox_CIHR_SWR_opto
 
 
-evt_bin_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_22-43-13_dSub_SWR/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-158.Rhythm Data/TTL';
+% evt_bin_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_22-43-13_dSub_SWR/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-158.Rhythm Data/TTL';
+% 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_22-43-13_dSub_SWR/Record Node 117'; 
+% swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_22-43-13_dSub_SWR/Record Node 143';
+% bin_dir =     '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_22-43-13_dSub_SWR/Record Node 112/experiment1/recording1/continuous/Intan_RHD_USB-158.Rhythm Data';
 
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_22-43-13_dSub_SWR/Record Node 117'; 
-swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_22-43-13_dSub_SWR/Record Node 143';
-bin_dir =     '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_22-43-13_dSub_SWR/Record Node 112/experiment1/recording1/continuous/Intan_RHD_USB-158.Rhythm Data';
+
+evt_bin_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H2b32026-03-15_00-05-23_dSub_SWR/Record Node 112/experiment1/recording1/events/Intan_RHD_USB-158.Rhythm Data/TTL';
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H2b32026-03-15_00-05-23_dSub_SWR/Record Node 117'; 
+swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H2b32026-03-15_00-05-23_dSub_SWR/Record Node 143';
+bin_dir =     '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H2b32026-03-15_00-05-23_dSub_SWR/Record Node 112/experiment1/recording1/continuous/Intan_RHD_USB-158.Rhythm Data';
 
 % load the binary files
-
 
 % evts = OE_load_binary_evts(evts_dir, );
 ts_prime = readNPY([bin_dir filesep 'timestamps.npy']); 
@@ -22,7 +27,7 @@ evts_csc = OE_LoadEvents();
 
 cd(csc_dir)
 cfg = []; 
-cfg.fc = {'CH20', 'CH27', 'CH28', 'CH30'}%{'CH11', 'CH12', 'CH14'};
+cfg.fc = {'CH4', 'CH8', 'CH12', 'CH16', 'CH20','CH24', 'CH27', 'CH28', 'CH30'}%{'CH11', 'CH12', 'CH14'};
 csc = MS_LoadCSC_OE(cfg);
 
 csc.tvec = csc.tvec - ts_prime(1); 

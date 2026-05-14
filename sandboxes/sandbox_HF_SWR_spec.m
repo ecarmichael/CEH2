@@ -1,11 +1,12 @@
 %% sandbox HF_SWR_spec
+% pox1
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\PoxR1\HF\Pox3265_2026-05-12_14-14-58_SWR2\Record Node 117'; 
+% swr_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\PoxR1\HF\Pox3265_2026-05-12_14-14-58_SWR2\Record Node 143'; 
+% csc_idx = [24, 34];
 
-csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\PoxR1\HF\Pox3265_2026-05-12_14-14-58_SWR2\Record Node 117'; 
+% ctrl
+csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\test_data\H1b32026-03-14_22-43-13_dSub_SWR\Record Node 117'
 
-swr_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\PoxR1\HF\Pox3265_2026-05-12_14-14-58_SWR2\Record Node 143'; 
-
-
-csc_idx = [24, 34];
 ts_prime = 0; 
 %% load the csc
 if isempty(csc_dir)
@@ -98,7 +99,7 @@ SWR_evts.t{2}(keep_idx) = [];
 
 %% offline SWR detection
 
-swrs = MS_SWR_detector(csc, 'CH64')
+swrs = MS_SWR_detector(csc, 'CH3')
 %% csc check
 
 figure(1010)
@@ -112,7 +113,7 @@ for ii = 1:size(csc.data,1)
 end
 set(gca, 'YTick', y_t, 'YTickLabel', lab)
 
-vline(SWR_evts.t{2}, 'r')
+% vline(SWR_evts.t{2}, 'r')
 
 %% SWR-Trigged average
 csc_idx = find(contains(csc.label, 'CH64'))
@@ -184,59 +185,56 @@ vline([110, 220, 330]./1000)
 
 
 %% get the spectrogram
-csc_ft = csc; 
-csc_ft.data = csc.data(2,:); 
-csc_ft.label = []; 
-csc_ft.label{1} = csc.label{2}; 
-figure(11)
-clf
 
-swr_centers = IVcenters(swrs); 
-psds = []; 
+
+%%
+
+this_csc = pox1.csc;
+this_swr = pox1.swrs; 
+
+csc_idx = contains(this_csc.label, pox1.csc_ft.label{1});
+
+csc_ft = this_csc; 
+csc_ft.data = this_csc.data(find(csc_idx),:); 
+csc_ft.label = []; 
+csc_ft.label{1} = this_csc.label{find(csc_idx)}; 
+
+
+
+swr_centers = IVcenters(this_swr); 
+
+[csc_ft_out, TFR] = Triggered_Spec_FT(csc_ft, swr_centers, [], 80:.5:200, [], [-.5 .5]);
+z_idx = nearest_idx3(0, TFR.time); 
+b_idx = [nearest_idx3(-.5, TFR.time), nearest_idx3(-.2, TFR.time)];  
+
+set(gcf,'Units','inch','position',[3 3 5 4]);
+xlim([-.05 .05]); ylabel('frequency (hz)'); xlabel('time from ripple center (ms)')
+set(gca,'xtick', -.05:0.025:.05); 
+set(gca, 'XTickLabel', get(gca, 'XTick')*1000)
+
 for ii = length(swr_centers):-1:1
-    [~, TFR] = Triggered_Spec_FT(csc_ft, swr_centers(ii), [], 80:.5:200, [], [-.5 .5], 0);
-    psds(ii, :) = squeeze(TFR.powspctrm(1,:,z_idx));
+    [~, TFR] = Triggered_Spec_FT(csc_ft, swr_centers(ii), [], 80:.5:200,  [], [-.5 .5], 0);
+    psds(ii, :) = (squeeze(TFR.powspctrm(1,:,z_idx)));% - mean(squeeze(TFR.powspctrm(1,:,b_idx(1):b_idx(2))), 2, 'omitmissing')')./std(mean(squeeze(TFR.powspctrm(1,:,b_idx(1):b_idx(2))), 2, 'omitmissing')');
 end
-[csc_ft_out, ~] = Triggered_Spec_FT(csc_ft, IVcenters(swrs), [], 80:.5:200, [], [-.5 .5]);
 
 
 %% average PSD per ripple
 
-z_idx = nearest_idx3(0, TFR.time); 
 % this_psd = squeeze(TFR.powspctrm(1,:,z_idx)); 
 
 figure(1013)
 clf
-yMean = mean(psds, 1);
-ySEM = std(psds, 0, 1) / sqrt(size(psds, 1));
+hold on
 
-% 3. Plot with shaded error bars
-% Note: shadedErrorBar takes (x, y, errBar)
-shadedErrorBar(TFR.freq, yMean, ySEM, 'lineprops', '-k');
+yMean = mean(ctrl_h2.psds, 1);
+ySEM = std(ctrl_h2.psds, 0, 1) / sqrt(size(ctrl_h2.psds, 1));
 
-
+shadedErrorBar(ctrl_h2.TFR.freq, yMean, ySEM, 'lineprops', '-k');
 
 
+yMean = mean(pox1.psds, 1);
+ySEM = std(pox1.psds, 0, 1) / sqrt(size(pox1.psds, 1));
 
-% cfg2 = [];
-% cfg2.output    = 'pow';
-% cfg2.channel   = 'all';
-% cfg2.method    = 'mtmfft';
-% cfg2.taper     = 'boxcar';
-% cfg2.foi       = 0.5:0.25:250;
-% base_freq_b    = ft_freqanalysis(cfg2, csc_ft);
-% 
-% cfg2.taper     = 'hanning';
-% base_freq_h    = ft_freqanalysis(cfg2, csc_ft);
-% 
-% cfg2.taper     = 'dpss'; % here the multitapers
-% cfg2.tapsmofrq = 4;
-% base_freq_d    = ft_freqanalysis(cfg2, csc_ft);
-% 
-% figure; hold on
-% plot(base_freq_b.freq, base_freq_b.powspctrm)
-% plot(base_freq_h.freq, base_freq_b.powspctrm)
-% plot(base_freq_d.freq, base_freq_b.powspctrm)
-% legend('4 sec boxcar', '4 secs hanning', '4 sec dpss');
-% xlabel('Frequency (Hz)');
-% ylabel('absolute power (uV^2)');
+shadedErrorBar(pox1.TFR.freq, yMean, ySEM, 'lineprops', '-r');
+
+%% session 2
