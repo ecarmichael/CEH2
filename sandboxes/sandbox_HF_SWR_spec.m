@@ -2,10 +2,10 @@
 
 csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\PoxR1\HF\Pox3265_2026-05-12_14-14-58_SWR2\Record Node 117'; 
 
-swr_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\PoxR1\HF\Pox3265_2026-05-12_14-14-58_SWR2\Record Node 143'
+swr_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\PoxR1\HF\Pox3265_2026-05-12_14-14-58_SWR2\Record Node 143'; 
 
 
-csc_idx = [];
+csc_idx = [24, 34];
 ts_prime = 0; 
 %% load the csc
 if isempty(csc_dir)
@@ -115,7 +115,7 @@ set(gca, 'YTick', y_t, 'YTickLabel', lab)
 vline(SWR_evts.t{2}, 'r')
 
 %% SWR-Trigged average
-csc_idx = find(contains(csc.label, 'CH57'))
+csc_idx = find(contains(csc.label, 'CH64'))
 
 STA = []; 
 win = 1; 
@@ -135,7 +135,7 @@ end
 
 figure(10)
 clf;
-
+subplot
 hold
 plot((0:length(STA)-1)./csc.cfg.hdr{1}.SamplingFrequency, mean(STA, 'omitmissing'))
 plot((0:length(STA)-1)./csc.cfg.hdr{1}.SamplingFrequency, mean(STA, 'omitmissing') +  std(STA), '--r')
@@ -182,3 +182,61 @@ histogram(diff(IVcenters(swrs)), 0:.01:1)
 vline([110, 220, 330]./1000)
 
 
+
+%% get the spectrogram
+csc_ft = csc; 
+csc_ft.data = csc.data(2,:); 
+csc_ft.label = []; 
+csc_ft.label{1} = csc.label{2}; 
+figure(11)
+clf
+
+swr_centers = IVcenters(swrs); 
+psds = []; 
+for ii = length(swr_centers):-1:1
+    [~, TFR] = Triggered_Spec_FT(csc_ft, swr_centers(ii), [], 80:.5:200, [], [-.5 .5], 0);
+    psds(ii, :) = squeeze(TFR.powspctrm(1,:,z_idx));
+end
+[csc_ft_out, ~] = Triggered_Spec_FT(csc_ft, IVcenters(swrs), [], 80:.5:200, [], [-.5 .5]);
+
+
+%% average PSD per ripple
+
+z_idx = nearest_idx3(0, TFR.time); 
+% this_psd = squeeze(TFR.powspctrm(1,:,z_idx)); 
+
+figure(1013)
+clf
+yMean = mean(psds, 1);
+ySEM = std(psds, 0, 1) / sqrt(size(psds, 1));
+
+% 3. Plot with shaded error bars
+% Note: shadedErrorBar takes (x, y, errBar)
+shadedErrorBar(TFR.freq, yMean, ySEM, 'lineprops', '-k');
+
+
+
+
+
+% cfg2 = [];
+% cfg2.output    = 'pow';
+% cfg2.channel   = 'all';
+% cfg2.method    = 'mtmfft';
+% cfg2.taper     = 'boxcar';
+% cfg2.foi       = 0.5:0.25:250;
+% base_freq_b    = ft_freqanalysis(cfg2, csc_ft);
+% 
+% cfg2.taper     = 'hanning';
+% base_freq_h    = ft_freqanalysis(cfg2, csc_ft);
+% 
+% cfg2.taper     = 'dpss'; % here the multitapers
+% cfg2.tapsmofrq = 4;
+% base_freq_d    = ft_freqanalysis(cfg2, csc_ft);
+% 
+% figure; hold on
+% plot(base_freq_b.freq, base_freq_b.powspctrm)
+% plot(base_freq_h.freq, base_freq_b.powspctrm)
+% plot(base_freq_d.freq, base_freq_b.powspctrm)
+% legend('4 sec boxcar', '4 secs hanning', '4 sec dpss');
+% xlabel('Frequency (Hz)');
+% ylabel('absolute power (uV^2)');

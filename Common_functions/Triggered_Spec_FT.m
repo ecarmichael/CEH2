@@ -1,4 +1,4 @@
-function Triggered_Spec_FT(csc, events, label, Freq_range, baseline, t_win)
+function [data_trl, TFR] = Triggered_Spec_FT(csc, events, label, Freq_range, baseline, t_win, plot_flag)
 %% Triggered_Spec_FT: wrapper function for generating an event triggered spectrogram using the FieldTrip ft_freqanalysis.
 %
 %
@@ -19,16 +19,22 @@ function Triggered_Spec_FT(csc, events, label, Freq_range, baseline, t_win)
 % TODO: add cfg configs
 %
 %% initialize
-if nargin  == 5
-    t_win = [-2.5 2.5]; 
+if nargin == 6
+        plot_flag = 1; 
+elseif nargin  == 5
+    t_win = [-2.5 2.5];
+    plot_flag = 1; 
 elseif nargin ==4
     baseline = []; 
     t_win = [-2.5 2.5]; 
+        plot_flag = 1; 
 elseif nargin ==3
+        plot_flag = 1; 
         t_win = [-2.5 2.5];
         baseline = []; 
     Freq_range = 2:.5:120;
 elseif nargin==2
+        plot_flag = 1; 
     label = [];
     t_win = [-2.5 2.5]; 
     baseline = []; 
@@ -64,10 +70,10 @@ data_trl = ft_redefinetrial(cfg,data_ft);
 cfg              = []; % start with empty cfg
 cfg.output       = 'pow';
 cfg.channel      = data_ft.label{1};
-cfg.method       = 'wavelet';
+cfg.method       = 'mtmconvol'; %'wavelet';
 cfg.taper        = 'hanning';
 cfg.foi          = Freq_range;%2:.5:120; % frequencies of interest
-% cfg.t_ftimwin    = ones(length(cfg.foi),1).*0.5;%20./cfg.foi;  % window size: fixed at 0.5s
+cfg.t_ftimwin    = ones(length(cfg.foi),1).*0.5;%20./cfg.foi;  % window size: fixed at 0.5s
 cfg.toi          = cfg_trl.twin(1):((1/data_trl.fsample)*2.5):cfg_trl.twin(end); % times of interest
 cfg.pad          = 'nextpow2'; % recommened by FT to make FFT more efficient.
 
@@ -87,6 +93,9 @@ if ~isempty(baseline)
 end
 cfg.baselinetype = 'zscore';
 cfg.title = freq_params_str;
-ft_singleplotTFR(cfg, TFR);
+if plot_flag
+    ft_singleplotTFR(cfg, TFR);
+    vline(0, '--k')
+end
 
-vline(0, '--k')
+% ft_singleplotER(cfg, TFR)
