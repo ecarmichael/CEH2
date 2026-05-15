@@ -148,20 +148,24 @@ xlim([.5 1.5])
 
 %% get Single Double Tripples as per Yamamato & Tonegawa Neuron 2017
 % https://www.cell.com/neuron/fulltext/S0896-6273(17)30857-7#sec-4
+this_swr = ctrl_h2.swrs; 
 
-swr_d = IVcenters(swrs); 
-single_off = swr_d > .200 | swr_d < .70; 
+swrs_c = IVcenters(this_swr); 
+
+swr_d = diff(swrs_c); 
+single_off = swr_d > .200 & swr_d > .70; 
 double_off = swr_d < .200 & swr_d > .70; 
 triple_off = swr_d > .200; 
 
 
-oe_swr_f = diff(SWR_evts.t{2}); 
+swr_type  = NaN(size(this_swr.tstart));
 
-swr_type  = NaN(size(swr_d));
-for ii = 1:length(swr_d)-1
-    if swr_d(ii+1) - swr_d(ii) > .200
+for ii = 1:length(this_swr.tstart)-1
+    d = this_swr.tstart(ii+1) - this_swr.tend(ii); 
+
+    if d > .200
     swr_type(ii) = 1;
-    elseif ((swr_d(ii+1) - swr_d(ii)) < .200) && ((swr_d(ii+1) - swr_d(ii)) >.70)
+    elseif (d < .200) && (d >.70)
     swr_type(ii) = 2;
     else
     swr_type(ii) = 0;
