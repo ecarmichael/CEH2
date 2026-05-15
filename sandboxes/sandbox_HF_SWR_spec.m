@@ -4,8 +4,13 @@
 % swr_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\PoxR1\HF\Pox3265_2026-05-12_14-14-58_SWR2\Record Node 143'; 
 % csc_idx = [24, 34];
 
+% pox 1_1
+csc_dir = '/Volumes/Transfer 1/Pox Recording/Pox3265_2026-05-12_14-03-46_SWR/Record Node 117'; 
+swr_dir = '/Volumes/Transfer 1/Pox Recording/Pox3265_2026-05-12_14-03-46_SWR/Record Node 143'; 
+csc_idx = [ 6     7    11    15    26    27    28    30    32    34]; % 26
+
 % ctrl
-csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\test_data\H1b32026-03-14_22-43-13_dSub_SWR\Record Node 117'
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\test_data\H1b32026-03-14_22-43-13_dSub_SWR\Record Node 117'
 
 ts_prime = 0; 
 %% load the csc
@@ -99,7 +104,7 @@ SWR_evts.t{2}(keep_idx) = [];
 
 %% offline SWR detection
 
-swrs = MS_SWR_detector(csc, 'CH3')
+swrs = MS_SWR_detector(csc, 'CH56')
 %% csc check
 
 figure(1010)
@@ -153,25 +158,34 @@ this_swr = ctrl_h2.swrs;
 swrs_c = IVcenters(this_swr); 
 
 swr_d = diff(swrs_c); 
-single_off = swr_d > .200 & swr_d > .70; 
-double_off = swr_d < .200 & swr_d > .70; 
+single_off = swr_d > .200 & swr_d > .070; 
+double_off = swr_d < .200 & swr_d > .070; 
 triple_off = swr_d > .200; 
 
 
 swr_type  = NaN(size(this_swr.tstart));
 
 for ii = 1:length(this_swr.tstart)-1
-    d = this_swr.tstart(ii+1) - this_swr.tend(ii); 
+    d = this_swr.tstart(ii+1:end) - this_swr.tend(ii); 
 
-    if d > .200
+    if d(1) > .200 && (d(1) >.070)
     swr_type(ii) = 1;
-    elseif (d < .200) && (d >.70)
+    elseif (d(1) <= .200) && (d(1) >.070)
     swr_type(ii) = 2;
+    elseif (length(d) > 2) &&(d(1) <= .200) && (d(1) >.070) && (d(2) <= .200) && (d(2) >.070)
+    swr_type(ii) = 3;
     else
     swr_type(ii) = 0;
     end
 end
+swr_type(end) = []; 
 
+
+figure(101)
+clf
+histogram(swr_type, 'Normalization','probability')
+set(gcf,'Units','inch','position',[3 3 5 4]);
+ylabel('probability'); xlabel('SWR type')
 %% histo of SWR diffs
 
 figure(1919)
