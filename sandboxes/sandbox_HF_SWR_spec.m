@@ -14,9 +14,7 @@
 phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-53-28_SWR2/kilosort4'; 
 csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-53-28_SWR2/Record Node 117'; 
 swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-53-28_SWR2/Record Node 143'; 
-swr_cur_iv = iv([csc.tvec(1) 3460 3484.5 3513.35 3805], [3400 3483.5 3512.35 3706 csc.tvec(end)]); 
-theta_cur_iv = iv([3400 3706],  [3460  3805]); 
-csc_idx = [ 5:16    20:30    32    33:36]; % 26
+csc_idx = 26; %[ 5:16    20:30    32    33:36]; % 26
 
 % ctrl
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\test_data\H1b32026-03-14_22-43-13_dSub_SWR\Record Node 117'
@@ -130,23 +128,15 @@ csc.cfg.hdr{end+1} = csc.cfg.hdr{end};
 end
 
 %% offline SWR detection
+%% pox2_4
+swr_cur_iv = iv([csc.tvec(1) 3460 3484.5 3513.35 3805], [3400 3483.5 3512.35 3706 csc.tvec(end)]); 
+theta_cur_iv = iv([3400 3706],  [3460  3805]); 
+
+csc_theta = restrict(csc, theta_cur_iv); 
+%%
 
 swrs = MS_SWR_detector(csc, 'CH53');
 
-% swrs.usr.gap = [swrs.tstart(2:end) - swrs.tend(1:end-1); NaN]; 
-% 
-% s_idx = swrs.usr.gap
-% 
-% cfg_s.operation = '>=';
-% cfg_s.threshold = .2; 
-% swrs_s  = SelectIV(cfg_s, swrs, 'gap');
-% 
-% swrs_s = DifferenceIV([], swrs_s, swrs)
-% 
-% cfg_m.gap = .200; 
-% swrs_trip = MergeIV(cfg_m, swrs); 
-% 
-% swrs_trip = DifferenceIV([], swrs_trip, swrs)
 %% csc check
 
 figure(1010)
@@ -162,73 +152,11 @@ set(gca, 'YTick', y_t, 'YTickLabel', lab)
 
 % vline(SWR_evts.t{2}, 'r')
 
-%% SWR-Trigged average
-csc_idx = find(contains(csc.label, 'CH64'))
-
-STA = []; 
-win = 1; 
-
-    startIdx = nearest_idx3(SWR_evts.t{2} - win, csc.tvec);
-    endIdx = nearest_idx3(SWR_evts.t{2} + win, csc.tvec);
-
-    
-
-for ii = length(SWR_evts.t{2})-50:-1:50
-
-    % Extract the segment of the csc data around the SWR event
-    STA(ii, :) = csc.data(csc_idx, startIdx(ii):endIdx(ii));
-
-
-end
-
-figure(10)
-clf;
-subplot
-hold
-plot((0:length(STA)-1)./csc.cfg.hdr{1}.SamplingFrequency, mean(STA, 'omitmissing'))
-plot((0:length(STA)-1)./csc.cfg.hdr{1}.SamplingFrequency, mean(STA, 'omitmissing') +  std(STA), '--r')
-plot((0:length(STA)-1)./csc.cfg.hdr{1}.SamplingFrequency, mean(STA, 'omitmissing') -  std(STA), '--r')
-
-
-xlim([.5 1.5])
-
-
 %% get Single Double Tripples as per Yamamato & Tonegawa Neuron 2017
 % https://www.cell.com/neuron/fulltext/S0896-6273(17)30857-7#sec-4
-this_swr = pox2_4.swrs; 
-this_csc = pox2_4.csc; 
+this_swr = ctrl_h2.swrs; 
+this_csc = ctrl_h2.csc;  
 
-% % swrs_c = IVcenters(this_swr); 
-% % swr_type  = NaN(size(this_swr.tstart));
-% % swr_d = diff(swrs_c); 
-% % s_idx = swr_d > .200 & swr_d > .070; 
-% % d_idx = swr_d <= .200 & swr_d > .070; 
-% % 
-% % swr_type(s_idx) = 1; 
-% % swr_type(d_idx) = 2; 
-% % 
-% % t_idx = false(size(swr_type)); 
-% % for ii = 1:length(swr_type)-1
-% %     if (swr_type(ii)) == 2 && (swr_type(ii+1) == 2)
-% %         t_idx(ii) = true;
-% %     end
-% % end
-% % 
-% % swr_type(t_idx) = 3; 
-% % swr_type([find(t_idx)+1 find(t_idx)+2]) = []; 
-% % 
-% % d_idx = false(size(swr_type)); 
-% % for ii = 1:length(swr_type)-1
-% %     if (swr_type(ii)) == 2 && (swr_type(ii+1) == 1)
-% %         d_idx(ii) = true;
-% %     end
-% % end
-% % 
-% % swr_type(find(d_idx)+1) = []; clf
-
-
-% 
-% 
 swr_type  = NaN(size(this_swr.tstart));
 
 for ii = 1:length(this_swr.tstart)-1
@@ -245,40 +173,12 @@ for ii = 1:length(this_swr.tstart)-1
     end
 end
 swr_type(end) = []; 
-% 
-% % remove the doubles at the end of another doubles
-% t_idx = zeros(size(swr_type)); 
-% for ii = 1:length(swr_type)-1
-%     if swr_type(ii) == 2 && swr_type(ii+1) == 2
-%         t_idx(ii) = 1; 
-%     end
-% end
-% swr_type(logical(t_idx)) = 3; 
-% swr_type([find(t_idx)+2 find(t_idx)+3]) = []; 
-% 
-% 
-% % remove the doubles at the end of another single
-% d_idx = zeros(size(swr_type)); 
-% for ii = 1:length(swr_type)-1
-%     if swr_type(ii) == 2 && swr_type(ii+1) == 1
-%         d_idx(ii) = 1; 
-%     end
-% end
-% 
-% swr_type(logical(d_idx)) = 2; 
-% swr_type(find(d_idx)+2) = []; 
 
-% % try using ivs
-% for ii = 1:length(this_swr.tstart) - 1
-% 
-%     if (ii < length(this_swr.tstart) - 2) && ((this_swr.tstart(ii+1) - this_swr.tend(ii)) < .200) && ((this_swr.tstart(ii+2) - this_swr.tend(ii+1)) < .200)
-%         swr_c(ii:ii) = 3; 
-% 
-%     elseif 
-%     end
-% 
-% end
+t_idx = [swr_type(1:end-2) == 3; 0; 0]; 
+swr_type([find(t_idx)+1 find(t_idx)+2]) = []; 
 
+d_idx = [swr_type(1:end-1) == 2; 0]; 
+swr_type(find(d_idx)+1) = []; 
 
 figure(101)
 clf
@@ -291,6 +191,26 @@ swr_types_rate = [sum(swr_type == 1) ./ (length(this_csc.tvec) / this_csc.cfg.hd
         sum(swr_type == 3) ./ (length(this_csc.tvec) / this_csc.cfg.hdr{1}.SamplingFrequency),...
             sum(swr_type == 4) ./ (length(this_csc.tvec) / this_csc.cfg.hdr{1}.SamplingFrequency)];
 
+swr_s = SelectIV([], this_swr, swr_type == 1); 
+swr_d = SelectIV([], this_swr, swr_type == 2); 
+swr_t = SelectIV([], this_swr, swr_type == 3); 
+
+%% collect the data
+load("all_data.mat")
+this_name = 'ctrl_h2'; 
+
+all_data.(this_name).csc = csc; 
+
+all_data.(this_name).swrs= swrs;
+all_data.(this_name).swr_rate = length(swrs.tstart) / (length(csc.tvec) ./ csc.cfg.hdr{1}.SamplingFrequency); 
+all_data.(this_name).swr_type= swr_type;
+all_data.(this_name).swr_type_rate= swr_types_rate;
+
+all_data.(this_name).swr_s= swr_s; 
+all_data.(this_name).swr_d= swr_d; 
+all_data.(this_name).swr_t= swr_t; 
+
+save('all_data.mat', 'all_data')
 %% histo of SWR diffs
 
 figure(1919)
@@ -360,4 +280,10 @@ ySEM = std(pox1.psds, 0, 1) / sqrt(size(pox1.psds, 1));
 
 shadedErrorBar(pox1.TFR.freq, yMean, ySEM, 'lineprops', '-r');
 
-%% session 2
+%% theta gamma mod
+
+CoMo = MS_phase_freq([], csc_theta, [6, 10], [30 100]);
+
+
+%% spectrogram 
+

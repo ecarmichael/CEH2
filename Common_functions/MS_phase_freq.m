@@ -31,8 +31,8 @@ function [CoMo,Phi_f, Amp_f] = MS_phase_freq(cfg_in, csc, phi_range, amp_range)
 cfg_def = [];
 cfg_def.P_win = [-2 2]; % range around the Phi freq of interest. 
 cfg_def.A_win = [-5 5]; % range around the Amp freq of interest. 
-cfg_def.P_step = 2; % step size in Hz
-cfg_def.A_step = 5; % step size in Hz
+cfg_def.P_step = .5; % step size in Hz
+cfg_def.A_step = 1; % step size in Hz
 cfg_def.channel = 1; % only use the first csc channel; 
 cfg_def.phi_bins = 18; 
 cfg = ProcessConfig(cfg_def, cfg_in);
@@ -72,10 +72,7 @@ for iP = length(Phi_f):-1:1
     
     for iA = length(Amp_f):-1:1
         
-        
-        
         %fprintf('Processing: Phi %.1f Amp %.1f\n',Phi_f(iP), Amp_f(iA))
-        
         
         this_f = Amp_f(iA)+cfg.A_win;
         
@@ -84,7 +81,6 @@ for iP = length(Phi_f):-1:1
         else
             method = 'butter';
         end
-        
         
         cfg_filt = [];
         cfg_filt.type = method;%'fdesign'; %the type of filter I want to use via filterlfp
@@ -95,19 +91,19 @@ for iP = length(Phi_f):-1:1
         
         csc_f = FilterLFP(cfg_filt, csc); % filter the raw LFP using
         
-        
         amp = abs(hilbert(csc_f.data(cfg.channel,:)));
-        
         
         % compute the ModIDX
         phi_bins = -pi:pi/cfg.phi_bins:pi;
         [~,bins_idx]= histc(phi, phi_bins); %This creates a vector with the corresponding bin of each phase
+
         %3. The phases are binned according to which phase they belong to and their
         %mean is calculated
         amp_means= zeros(1,length(unique(bins_idx)));
         for ii= 1: length(unique(bins_idx));
             amp_means(ii)= nanmean(amp(bins_idx == ii));
         end
+
         %4.Each mean amplitude is then divided by the sum over the bins
         phi_amp= amp_means/sum(amp_means);
         
