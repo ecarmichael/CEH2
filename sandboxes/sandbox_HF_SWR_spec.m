@@ -4,16 +4,35 @@
 % swr_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\PoxR1\HF\Pox3265_2026-05-12_14-14-58_SWR2\Record Node 143'; 
 % csc_idx = [24, 34];
 
-% pox 1_1
-csc_dir = '/Volumes/Transfer 1/Pox Recording/Pox3265_2026-05-12_14-03-46_SWR/Record Node 117'; 
-swr_dir = '/Volumes/Transfer 1/Pox Recording/Pox3265_2026-05-12_14-03-46_SWR/Record Node 143'; 
-csc_idx = [ 6     7    11    15    26    27    28    30    32    34]; % 26
+% % pox 1_2
+% phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_14-03-46_SWR/kilosort4'; 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_14-03-46_SWR/Record Node 117'; 
+% swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_14-03-46_SWR/Record Node 143'; 
+% csc_idx = [ 15    26     28    30    32    34]; % 26
+
+% pox_2_4
+phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-53-28_SWR2/kilosort4'; 
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-53-28_SWR2/Record Node 117'; 
+swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-53-28_SWR2/Record Node 143'; 
+swr_cur_iv = iv([csc.tvec(1) 3460 3484.5 3513.35 3805], [3400 3483.5 3512.35 3706 csc.tvec(end)]); 
+theta_cur_iv = iv([3400 3706],  [3460  3805]); 
+csc_idx = [ 5:16    20:30    32    33:36]; % 26
 
 % ctrl
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\test_data\H1b32026-03-14_22-43-13_dSub_SWR\Record Node 117'
 
 ts_prime = 0; 
+
+%% load the spikes if present
+
+params = OE_load_params(phy_dir);
+
+data.S = OE_phy2TS(phy_dir, params);
+
+ts_prime = readNPY([phy_dir filesep 'timestamps.npy']);
 %% load the csc
+
+ 
 if isempty(csc_dir)
     csc = []; 
     OE_evts =[]; 
@@ -102,9 +121,32 @@ keep_idx = iRi <.05;
 
 SWR_evts.t{2}(keep_idx) = []; 
 
+
+if length(csc_idx) > 2
+csc.data(end+1,:) = mean(csc.data); 
+
+csc.label{end+1} = 'mean'; 
+csc.cfg.hdr{end+1} = csc.cfg.hdr{end}; 
+end
+
 %% offline SWR detection
 
-swrs = MS_SWR_detector(csc, 'CH56')
+swrs = MS_SWR_detector(csc, 'CH53');
+
+% swrs.usr.gap = [swrs.tstart(2:end) - swrs.tend(1:end-1); NaN]; 
+% 
+% s_idx = swrs.usr.gap
+% 
+% cfg_s.operation = '>=';
+% cfg_s.threshold = .2; 
+% swrs_s  = SelectIV(cfg_s, swrs, 'gap');
+% 
+% swrs_s = DifferenceIV([], swrs_s, swrs)
+% 
+% cfg_m.gap = .200; 
+% swrs_trip = MergeIV(cfg_m, swrs); 
+% 
+% swrs_trip = DifferenceIV([], swrs_trip, swrs)
 %% csc check
 
 figure(1010)
@@ -153,32 +195,89 @@ xlim([.5 1.5])
 
 %% get Single Double Tripples as per Yamamato & Tonegawa Neuron 2017
 % https://www.cell.com/neuron/fulltext/S0896-6273(17)30857-7#sec-4
-this_swr = ctrl_h2.swrs; 
+this_swr = pox2_4.swrs; 
+this_csc = pox2_4.csc; 
 
-swrs_c = IVcenters(this_swr); 
+% % swrs_c = IVcenters(this_swr); 
+% % swr_type  = NaN(size(this_swr.tstart));
+% % swr_d = diff(swrs_c); 
+% % s_idx = swr_d > .200 & swr_d > .070; 
+% % d_idx = swr_d <= .200 & swr_d > .070; 
+% % 
+% % swr_type(s_idx) = 1; 
+% % swr_type(d_idx) = 2; 
+% % 
+% % t_idx = false(size(swr_type)); 
+% % for ii = 1:length(swr_type)-1
+% %     if (swr_type(ii)) == 2 && (swr_type(ii+1) == 2)
+% %         t_idx(ii) = true;
+% %     end
+% % end
+% % 
+% % swr_type(t_idx) = 3; 
+% % swr_type([find(t_idx)+1 find(t_idx)+2]) = []; 
+% % 
+% % d_idx = false(size(swr_type)); 
+% % for ii = 1:length(swr_type)-1
+% %     if (swr_type(ii)) == 2 && (swr_type(ii+1) == 1)
+% %         d_idx(ii) = true;
+% %     end
+% % end
+% % 
+% % swr_type(find(d_idx)+1) = []; clf
 
-swr_d = diff(swrs_c); 
-single_off = swr_d > .200 & swr_d > .070; 
-double_off = swr_d < .200 & swr_d > .070; 
-triple_off = swr_d > .200; 
 
-
+% 
+% 
 swr_type  = NaN(size(this_swr.tstart));
 
 for ii = 1:length(this_swr.tstart)-1
     d = this_swr.tstart(ii+1:end) - this_swr.tend(ii); 
 
-    if d(1) > .200 && (d(1) >.070)
-    swr_type(ii) = 1;
-    elseif (d(1) <= .200) && (d(1) >.070)
-    swr_type(ii) = 2;
-    elseif (length(d) > 2) &&(d(1) <= .200) && (d(1) >.070) && (d(2) <= .200) && (d(2) >.070)
+    if (length(d) > 2) &&(d(1) <= .200) && (d(1) >.070) && (d(2) <= .400) && (d(2) >.070)
     swr_type(ii) = 3;
+    elseif (d(1) <= .200) && (d(1) >.070)
+        swr_type(ii) = 2;
+    elseif d(1) > .200 && (d(1) >.070)
+        swr_type(ii) = 1;
     else
-    swr_type(ii) = 0;
+    swr_type(ii) = 4;
     end
 end
 swr_type(end) = []; 
+% 
+% % remove the doubles at the end of another doubles
+% t_idx = zeros(size(swr_type)); 
+% for ii = 1:length(swr_type)-1
+%     if swr_type(ii) == 2 && swr_type(ii+1) == 2
+%         t_idx(ii) = 1; 
+%     end
+% end
+% swr_type(logical(t_idx)) = 3; 
+% swr_type([find(t_idx)+2 find(t_idx)+3]) = []; 
+% 
+% 
+% % remove the doubles at the end of another single
+% d_idx = zeros(size(swr_type)); 
+% for ii = 1:length(swr_type)-1
+%     if swr_type(ii) == 2 && swr_type(ii+1) == 1
+%         d_idx(ii) = 1; 
+%     end
+% end
+% 
+% swr_type(logical(d_idx)) = 2; 
+% swr_type(find(d_idx)+2) = []; 
+
+% % try using ivs
+% for ii = 1:length(this_swr.tstart) - 1
+% 
+%     if (ii < length(this_swr.tstart) - 2) && ((this_swr.tstart(ii+1) - this_swr.tend(ii)) < .200) && ((this_swr.tstart(ii+2) - this_swr.tend(ii+1)) < .200)
+%         swr_c(ii:ii) = 3; 
+% 
+%     elseif 
+%     end
+% 
+% end
 
 
 figure(101)
@@ -186,6 +285,12 @@ clf
 histogram(swr_type, 'Normalization','probability')
 set(gcf,'Units','inch','position',[3 3 5 4]);
 ylabel('probability'); xlabel('SWR type')
+
+swr_types_rate = [sum(swr_type == 1) ./ (length(this_csc.tvec) / this_csc.cfg.hdr{1}.SamplingFrequency),...
+    sum(swr_type == 2) ./ (length(this_csc.tvec) / this_csc.cfg.hdr{1}.SamplingFrequency), ...
+        sum(swr_type == 3) ./ (length(this_csc.tvec) / this_csc.cfg.hdr{1}.SamplingFrequency),...
+            sum(swr_type == 4) ./ (length(this_csc.tvec) / this_csc.cfg.hdr{1}.SamplingFrequency)];
+
 %% histo of SWR diffs
 
 figure(1919)
@@ -207,10 +312,10 @@ vline([110, 220, 330]./1000)
 
 %%
 
-this_csc = pox1.csc;
-this_swr = pox1.swrs; 
+this_csc = pox1_2.csc;
+this_swr = pox1_2.swrs; 
 
-csc_idx = contains(this_csc.label, pox1.csc_ft.label{1});
+csc_idx = contains(this_csc.label, 'mean');
 
 csc_ft = this_csc; 
 csc_ft.data = this_csc.data(find(csc_idx),:); 
