@@ -1,7 +1,7 @@
 %% sandbox HF_SWR_spec
-% pox1
-% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\PoxR1\HF\Pox3265_2026-05-12_14-14-58_SWR2\Record Node 117'; 
-% swr_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\PoxR1\HF\Pox3265_2026-05-12_14-14-58_SWR2\Record Node 143'; 
+% pox1_2
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_14-03-46_SWR/Record Node 117'; 
+% swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_14-03-46_SWR/Record Node 143'; 
 % csc_idx = [24, 34];
 
 % % pox 1_2
@@ -10,15 +10,48 @@
 % swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_14-03-46_SWR/Record Node 143'; 
 % csc_idx = [ 15    26     28    30    32    34]; % 26
 
-% pox_2_4
-phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-53-28_SWR2/kilosort4'; 
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-53-28_SWR2/Record Node 117'; 
-swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-53-28_SWR2/Record Node 143'; 
-csc_idx = 26; %[ 5:16    20:30    32    33:36]; % 26
+% pox 2_1
+% phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-16-12_SWR/kilosort4'; 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-16-12_SWR/Record Node 117'; 
+% swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-16-12_SWR/Record Node 143'; 
+% % csc_idx = [ 15    26     28    30    32    34]; % 26
+
+% % % % pox_2_2
+% % % phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-30-53_SWR/kilosort4'; 
+% % % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-30-53_SWR/Record Node 117'; 
+% % % swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-30-53_SWR/Record Node 143'; 
+% % % % csc_idx = 26; %[ 5:16    20:30    32    33:36]; % 26
+
+% % % % pox_2_3
+% % % phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-39-33_SWR2/kilosort4'; 
+% % % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-39-33_SWR2/Record Node 117'; 
+% % % swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-39-33_SWR2/Record Node 143'; 
+% % % csc_idx = [24 28 30]; %26; %[ 5:16    20:30    32    33:36]; % 26
+
+% % pox_2_4
+% phy_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-53-28_SWR2/kilosort4'; 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-53-28_SWR2/Record Node 117'; 
+% swr_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/PoxR1/HF/Pox3265_2026-05-12_15-53-28_SWR2/Record Node 143'; 
+% csc_idx = 26; %[ 5:16    20:30    32    33:36]; % 26
 
 % ctrl
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\test_data\H1b32026-03-14_22-43-13_dSub_SWR\Record Node 117'
 
+% ctrl H1
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/test_data/H1b32026-03-14_22-43-13_dSub_SWR/Record Node 117'
+% csc_idx = [24 28 30]; 
+
+% ctrl 3b3
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H3b3/HF3b3_2026-03-03_13-21-54_D2_Hab/Record Node 117'
+% csc_idx = [14]; 
+
+% ctrl_h1b3
+% Xcsc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H1b3/habituation/HF1b3_2026-03-01_18-53-32_D1_Hab/Record Node 117'; 
+% csc_idx = [29:2:42]; 
+
+% ctrl_h2b3_hab 2
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H2b3/HF2b3_2026-03-02_13-26-03_D1_Hab/Record Node 143'; 
+% csc_idx = [ 1:2:34]; 
 ts_prime = 0; 
 
 %% load the spikes if present
@@ -110,14 +143,7 @@ OE_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs);
 
 end
 
-% grab the SWR times
-evts_list = dir([swr_dir filesep '*Data*.events']);
-SWR_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs);
-
-iRi = diff(SWR_evts.t{2}); 
-keep_idx = iRi <.05; 
-
-SWR_evts.t{2}(keep_idx) = []; 
+%
 
 
 if length(csc_idx) > 2
@@ -127,15 +153,34 @@ csc.label{end+1} = 'mean';
 csc.cfg.hdr{end+1} = csc.cfg.hdr{end}; 
 end
 
-%% offline SWR detection
-%% pox2_4
-swr_cur_iv = iv([csc.tvec(1) 3460 3484.5 3513.35 3805], [3400 3483.5 3512.35 3706 csc.tvec(end)]); 
-theta_cur_iv = iv([3400 3706],  [3460  3805]); 
 
-csc_theta = restrict(csc, theta_cur_iv); 
+%% grab the SWR times
+evts_list = dir([swr_dir filesep '*Data*.events']);
+SWR_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs);
+
+iRi = diff(SWR_evts.t{2}); 
+keep_idx = iRi <.05; 
+
+SWR_evts.t{2}(keep_idx) = []; 
+%% trim if needed
+% ctrl_h1
+% swr_cut_iv = iv([csc.tvec(1) 385 460 940 1580], [350  440 560 1140 1840 ])
+
+%ctrl 3b3
+swr_cut_iv = iv([360 1340 1520 3180], [500 1440 1580 3240]); 
+
+% pox1_1
+% swr_cur_iv = iv([csc.tvec(1) 555], [515 csc.tvec(end)]); 
+% theta_cur_iv = iv([3400 3706],  [3460  3805]); 
+
+% % pox2_4
+% swr_cur_iv = iv([csc.tvec(1) 3460 3484.5 3513.35 3805], [3400 3483.5 3512.35 3706 csc.tvec(end)]); 
+% theta_cur_iv = iv([3400 3706],  [3460  3805]); 
+
+% csc_theta = restrict(csc, theta_cur_iv); 
 %%
 
-swrs = MS_SWR_detector(csc, 'CH53');
+swrs = MS_SWR_detector(csc, 'CH8');
 
 %% csc check
 
@@ -154,8 +199,8 @@ set(gca, 'YTick', y_t, 'YTickLabel', lab)
 
 %% get Single Double Tripples as per Yamamato & Tonegawa Neuron 2017
 % https://www.cell.com/neuron/fulltext/S0896-6273(17)30857-7#sec-4
-this_swr = ctrl_h2.swrs; 
-this_csc = ctrl_h2.csc;  
+% this_swr = ctrl_h3b3.swrs; 
+% this_csc = ctrl_h3b3.csc;  thi
 
 swr_type  = NaN(size(this_swr.tstart));
 
@@ -197,7 +242,7 @@ swr_t = SelectIV([], this_swr, swr_type == 3);
 
 %% collect the data
 load("all_data.mat")
-this_name = 'ctrl_h2'; 
+this_name = 'ctrl_h2b3_d3'; 
 
 all_data.(this_name).csc = csc; 
 
@@ -232,8 +277,8 @@ vline([110, 220, 330]./1000)
 
 %%
 
-this_csc = pox1_2.csc;
-this_swr = pox1_2.swrs; 
+this_csc = ctrl_h1.csc;
+this_swr = ctrl_h1.swrs; 
 
 csc_idx = contains(this_csc.label, 'mean');
 
@@ -282,8 +327,156 @@ shadedErrorBar(pox1.TFR.freq, yMean, ySEM, 'lineprops', '-r');
 
 %% theta gamma mod
 
-CoMo = MS_phase_freq([], csc_theta, [6, 10], [30 100]);
+[CoMo,Phi_f, Amp_f]= MS_phase_freq([], csc_theta, [4, 12], [20 120]);
 
-
+figure(10111)
+clf
+imagesc(Phi_f, Amp_f, CoMo')
+title('Pox2_4')
 %% spectrogram 
+
+
+%%  bar plot with some stats
+
+all_pox_rate = [all_data.pox1_1.swr_rate, all_data.pox1_2.swr_rate , all_data.pox2_4.swr_rate]; 
+all_ctr_rate = [all_data.ctrl_h1.swr_rate, all_data.ctrl_h2.swr_rate , all_data.ctrl_h3b3.swr_rate, all_data.ctrl_h2b3_d1.swr_rate,...
+    all_data.ctrl_h2b3_d3.swr_rate]; 
+
+% type rate
+all_pox_type = [all_data.pox1_1.swr_type_rate;   all_data.pox1_2.swr_type_rate; all_data.pox2_4.swr_type_rate]; 
+all_ctr_type = [all_data.ctrl_h1.swr_type_rate; all_data.ctrl_h2.swr_type_rate; all_data.ctrl_h3b3.swr_type_rate;...
+    all_data.ctrl_h2b3_d1.swr_type_rate; all_data.ctrl_h2b3_d3.swr_type_rate]; 
+
+
+% get the ripple durations
+f = fieldnames(all_data); 
+for ii = 1:length(f)
+    [all_data.(f{ii}).swr_type_prob , b] = histcounts(all_data.(f{ii}).swr_type,.5:1:4.5, 'Normalization','probability'); 
+
+    % type rate
+    all_data.(f{ii}).swr_dur = all_data.(f{ii}).swrs.tend - all_data.(f{ii}).swrs.tstart;
+
+end
+
+% type prob
+all_pox_prob = [all_data.pox1_1.swr_type_prob;   all_data.pox1_2.swr_type_prob; all_data.pox2_4.swr_type_prob]; 
+all_ctr_prob = [all_data.ctrl_h1.swr_type_prob; all_data.ctrl_h2.swr_type_prob; all_data.ctrl_h3b3.swr_type_prob;...
+    all_data.ctrl_h2b3_d1.swr_type_prob; all_data.ctrl_h2b3_d3.swr_type_prob]; 
+
+
+
+all_pox_dur = [all_data.pox1_1.swr_dur; all_data.pox1_2.swr_dur; all_data.pox2_4.swr_dur]; 
+all_ctr_dur = [all_data.ctrl_h1.swr_dur; all_data.ctrl_h2.swr_dur; all_data.ctrl_h3b3.swr_dur; all_data.ctrl_h2b3_d1.swr_dur; ...
+    all_data.ctrl_h2b3_d3.swr_dur]; 
+
+% plots
+c_ord = [0.502 0.502 0.502 ; .8 0 0]; 
+
+
+figure(999)
+set(gcf,'Units','inch','position',[3 3 3.5 2.5]);
+clf; 
+hold on
+
+[h, eb, sc] = MS_bar_w_err(all_ctr_prob(:,1), all_pox_prob(:,1), c_ord, 1, 'ttest2', [1 1.5])
+% sc{1}.MarkerFaceColor = c_ord(1,:); sc{2}.MarkerFaceColor = c_ord(2,:);
+
+MS_bar_w_err(all_ctr_prob(:,2), all_pox_prob(:,2), c_ord, 1, 'ttest2', [2 2.5])
+MS_bar_w_err(all_ctr_prob(:,3), all_pox_prob(:,3), c_ord, 1, 'ttest2', [3 3.5])
+MS_bar_w_err(all_ctr_prob(:,4), all_pox_prob(:,4), c_ord, 1, 'ttest2', [4 4.5])
+
+xlim([.75 4.75]); %ylim([0 .3])
+set(gca, "XTick", [1.25 2.25 3.25 4.25], 'XTickLabel', {'1x', '2x', '3x', 'Other'},...
+    'YTick', 0:.25:1, 'TickDir', 'out')
+ylabel('probability')
+vline(5, 'k')
+% legend('aTau-', 'aTau+')
+
+
+figure(909)
+set(gcf,'Units','inch','position',[3 3 3.5 2.5]);
+clf
+hold on
+
+MS_bar_w_err(all_ctr_type(:,1), all_pox_type(:,1), c_ord, 1, 'ttest2', [1 1.5]); 
+% sc{1}.MarkerFaceColor = c_ord(1,:); sc{2}.MarkerFaceColor = c_ord(2,:);
+
+MS_bar_w_err(all_ctr_type(:,2), all_pox_type(:,2), c_ord, 1, 'ttest2', [2 2.5])
+MS_bar_w_err(all_ctr_type(:,3), all_pox_type(:,3), c_ord, 1, 'ttest2', [3 3.5])
+MS_bar_w_err(all_ctr_type(:,4), all_pox_type(:,4), c_ord, 1, 'ttest2', [4 4.5])
+
+xlim([.75 4.75]); ylim([0 .3])
+set(gca, "XTick", [1.25 2.25 3.25 4.25], 'XTickLabel', {'1x', '2x', '3x', 'Other'},...
+    'YTick', 0:.1:.3, 'TickDir', 'out');
+ylabel('SWR rate (Hz)')
+vline(5, 'k')
+% legend('aTau-', 'aTau+')
+
+
+
+figure(998)
+clf
+set(gcf,'Units','inch','position',[3 3 3.5 2.5]);
+[~, ~, ~, p, stats] =MS_bar_w_err(all_ctr_type(:,1), all_pox_type(:,1), c_ord, 1, 'ttest2', [1 1.5]); 
+
+% [~, ~, ~, p, stats] = MS_bar_w_err(all_ctr_dur, all_pox_dur, c_ord, 1, 'ttest2', [1 1.5]); 
+% sc{1}.MarkerFaceColor = c_ord(1,:); sc{2}.MarkerFaceColor = c_ord(2,:);
+fprintf('SWR rate: t(%.0f): %.2f, p = %.3f\n',stats.df, stats.tstat, p )
+
+xlim([.75 4.75]); ylim([0 .3])
+set(gca, "XTick", [1.25 2.25 3.25 4.25], 'XTickLabel', {'1x', '2x', '3x', 'Other'},...
+    'YTick', 0:.1:.3, 'TickDir', 'out')
+ylabel('SWR rate (Hz)')
+vline(5, 'k')
+
+
+figure(997)
+clf
+set(gcf,'Units','inch','position',[3 3 3.5 2.5]);
+% [~, ~, ~, p, stats] = MS_bar_w_err(all_ctr_dur*1000, all_pox_dur*1000, c_ord, 1, 'ttest2', [1 1.5]);
+MS_rain_plot([all_ctr_dur; all_pox_dur]', [zeros(1,length(all_ctr_dur)), ones(1,length(all_pox_dur))]', c_ord, 'ttest2', [1 3])
+% [~, ~, ~, p, stats] = MS_bar_w_err(all_ctr_dur*1000, all_pox_dur*1000, c_ord, 1, 'ttest2', [1 1.5]);
+% sc{1}.MarkerFaceColor = c_ord(1,:); sc{2}.MarkerFaceColor = c_ord(2,:);
+fprintf('SWR dur: t(%.0f): %.2f, p = %.3f\n',stats.df, stats.tstat, p )
+
+ylim([.75 6.75]); xlim([0 .12])
+set(gca, "yTick", [1.25 3.25 ], 'yTickLabel', {'aTau-', 'aTau+'}, 'TickDir', 'out', 'XTick', [0:.05:.1]);
+set(gca, 'XTickLabel', get(gca, 'xtick').*1000)
+    %'YTick', 0:.1:.3)
+xlabel('SWR duration (ms)')
+%% quick glm
+
+t_type = table([1 2 3 4 5 6 7 8]', [repmat({'Pox'}, 3, 1); repmat({'Ctrl'}, 5, 1)], [all_pox_type(:,1); all_ctr_type(:,1)],...
+    [all_pox_type(:,2); all_ctr_type(:,2)], [all_pox_type(:,2); all_ctr_type(:,2)],[all_pox_type(:,4); all_ctr_type(:,4)],...
+    'VariableNames',{'Subject', 'Group', 'SWR1', 'SWR2', 'SWR3', 'SWR4'}); 
+
+withinDesign = table([1 2 3 4]', 'VariableNames', {'type'});
+
+rm = fitrm(t_type, 'SWR1-SWR4~ Group', 'WithinDesign', withinDesign);
+
+ranovaTable = ranova(rm); 
+
+fprintf('SWR type\n')
+display(ranovaTable)
+
+Tukey_table = multcompare(rm,'Group', 'By', 'type'); 
+
+
+
+
+t_prob = table([1 2 3 4 5 6 7 8]', [repmat({'Pox'}, 3, 1); repmat({'Ctrl'}, 5, 1)], [all_pox_prob(:,1); all_ctr_prob(:,1)],...
+    [all_pox_prob(:,2); all_ctr_prob(:,2)], [all_pox_prob(:,2); all_ctr_prob(:,2)],[all_pox_prob(:,4); all_ctr_prob(:,4)],...
+    'VariableNames',{'Subject', 'Group', 'SWR1', 'SWR2', 'SWR3', 'SWR4'}); 
+
+withinDesign = table([1 2 3 4]', 'VariableNames', {'type'});
+
+rm = fitrm(t_prob, 'SWR1-SWR4~ Group', 'WithinDesign', withinDesign);
+
+ranovaTable = ranova(rm); 
+
+fprintf('SWR Prob\n')
+display(ranovaTable)
+
+Tukey_table = multcompare(rm,'Group', 'By', 'type'); 
+
 

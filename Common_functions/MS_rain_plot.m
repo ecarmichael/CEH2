@@ -29,7 +29,11 @@ Q = quantile(Y,[0.25 0.75 0.5 0.02 0.98]);
 
 % density plot
 scale_val = (.5 - max(a)) ; 
-ax(ii).h{1} = patch(b,(-a)*10*scale_val+x_vals(ii), color(ii,:));
+a_n = (-a)*scale_val; 
+a_n = (a_n./max(a_n))+.5; 
+ax(ii).h{1} = patch(b,a_n+x_vals(ii), color(ii,:));
+
+% ax(ii).h{1} = patch(b,(-a)*10*scale_val+x_vals(ii), color(ii,:));
 
 % rotate(ax(ii).h{1}, [0 1 0], 90)
 set(ax(ii).h{1}, 'FaceColor', color(ii,:));
@@ -38,7 +42,9 @@ set(ax(ii).h{1}, 'LineWidth', 2);
 
 
 % box
-
+% data
+ax(ii).sc{1} = scatter(Y, x_vals(ii)+sort(MS_randn_range(length(Y), 1, 0,.2)) +.1 ,10,  color(ii,:), 'filled');
+    
 % mean line
 ax(ii).h{3} = line([Q(3) Q(3)],[0.1 0] + x_vals(ii),'col','k','LineWidth',2);
 % h{2} = rectangle('Position',[Q(1) ii Q(2)-Q(1) .5]);
@@ -50,9 +56,7 @@ ax(ii).h{5} = line([Q(2) Q(2)],[0.05 0] + x_vals(ii),'col',[color(ii,:) 1],'Line
 ax(ii).h{6} = line([Q(5) Q(5)], [0.05 0] + x_vals(ii),'col',[color(ii,:) .5],'LineWidth',2);
 ax(ii).h{7} = line([Q(4) Q(4)],[0.05 0] + x_vals(ii),'col',[color(ii,:) .5],'LineWidth',2);
     
-% data
-ax(ii).sc{1} = scatter(Y, x_vals(ii)+sort(MS_randn_range(length(Y), 1, 0,.2)) +.1 ,25,  color(ii,:), 'filled');
-    
+
 
 end
 
