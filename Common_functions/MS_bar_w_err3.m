@@ -91,7 +91,7 @@ meas = table([1 2 3]', 'VariableNames',{'meas'});
     if p(1) < 0.05
         fprintf('<strong>%s</strong> - F(<strong>%d</strong>,<strong>%d</strong>): <strong>%.2f</strong> p = <strong>%.5f</strong>\n',stats, stats_out.a_tbl{2,3},stats_out.a_tbl{3,3}, stats_out.a_tbl{2,5}, stats_out.a_tbl{2,6})
     else
-        fprintf('<strong>%s</strong> - F(%d,%d): %.2f p = %.5f\n',stats, stats_out.a_tbl{2,3},stats_out.a_tbl{3,3}, stats_out.a_tbl{2,5})
+        fprintf('<strong>%s</strong> - F(%d,%d): %.2f p = %.5f \n',stats, stats_out.a_tbl{2,3},stats_out.a_tbl{3,3}, stats_out.a_tbl{2,5}, stats_out.a_tbl{2,6})
     end
     % overall
     if ~isnan(h) && p(1) < 0.05

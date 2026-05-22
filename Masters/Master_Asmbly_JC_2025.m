@@ -160,6 +160,49 @@ for iA = length(A_out):-1:1 % loop over sessions
 end
 
 
+%% recompute the event based reactivaton strength as mean react strength above the R thresh. 
+
+for iA = length(A_out):-1:1 % loop over sessions
+    for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
+        
+        %post
+        post_R_str = NaN(1,size(A_out{iA}{iB}.REM_Post_proj,1),1);
+
+        s_idx = find(A_out{iA}{iB}.REM_Post_stats.p_val <0.05); 
+
+        this_proj = A_out{iA}{iB}.REM_Post_proj(s_idx,:); 
+
+        for ii = size(this_proj,1):-1:1
+            post_R_str(s_idx(ii)) = mean(this_proj(ii,this_proj(ii,:) > A_out{iA}{iB}.REM_Post_stats.R_thresh)); 
+            post_R_str_vec(s_idx(ii)) = mean(this_proj(ii,:)); 
+
+        end
+
+        %pre
+        pre_R_str = NaN(1,size(A_out{iA}{iB}.REM_Pre_proj,1));
+
+        s_idx = find(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05); 
+
+        this_proj = A_out{iA}{iB}.REM_Pre_proj(s_idx,:); 
+
+        for ii = size(this_proj,1):-1:1
+            pre_R_str(s_idx(ii)) = mean(this_proj(ii,this_proj(ii,:) > A_out{iA}{iB}.REM_Pre_stats.R_thresh));
+            pre_R_str_vec(s_idx(ii)) = mean(this_proj(ii,:)); 
+        end
+
+        k_idx = (A_out{iA}{iB}.REM_Post_stats.p_val <0.05) & (A_out{iA}{iB}.REM_Pre_stats.p_val <0.05);
+        % get the React Str for the assemblies. 
+        [A_out{iA}{iB}.React_str] = post_R_str - pre_R_str;
+        [A_out{iA}{iB}.React_str_vec] = post_R_str_vec(k_idx) - pre_R_str_vec(k_idx);
+
+        [A_out{iA}{iB}.REM_Pre_React_str] = pre_R_str;
+        [A_out{iA}{iB}.REM_post_React_str] = post_R_str;
+
+    end
+end
+
+
+%% get the wake assembly rate map using the Proj.  No need to norm for occ since they are continuous. 
 %% load data that has been processed.
 
 method = 'binary';
@@ -228,13 +271,14 @@ Pre_r_per_Asmbly = []; Post_r_per_Asmbly = [];
 
 Pre_n_shuff = []; Post_n_shuff = [];
 Pre_r_shuff = []; Post_r_shuff = [];
-Assmbly_tbls = []; 
+Assmbly_tbls = [];     React_str = [];  React_str_vec = []; 
+React_str_all = []; React_str_all_vec = []; 
+
 % 
 for iB = length(bin_size):-1:1
     Pre_Rate = []; Pre_Sess = []; Pre_aNum = []; Pre_Cent = []; 
     Post_Rate = []; Post_Sess = []; Post_aNum = [];  Post_Cent = []; 
     Assmbly_tbls{iB}.Pre = [];     Assmbly_tbls{iB}.Post = []; 
-
     for iA = size(A_out,2):-1:1
         
         wake_n_Asmbly(iA, iB) = size(A_out{iA}{iB}.P_proj,1);
@@ -286,15 +330,28 @@ for iB = length(bin_size):-1:1
         Post_aNum = [Post_aNum; find(A_out{iA}{iB}.REM_Post_stats.p_val <0.05)']; 
 
         % loop over assemblies and get the weighted centroids
+        these_maps = []; 
         s_a_idx = find(A_out{iA}{iB}.REM_Post_stats.p_val <0.05); 
         cent = []; 
         for ii = 1:length(s_a_idx)
             m_temp = A_out{iA}{iB}.Place_map{s_a_idx(ii)}.map;
             stats = regionprops(true(size(m_temp)), m_temp, 'WeightedCentroid');
             cent(ii) = stats.WeightedCentroid(1); 
+
+            % collect the maps
+            % these_maps(ii,:) = A_out{iA}{iB}.Place_map{s_a_idx(ii)}.map_mean; 
         end
         Post_Cent = [Post_Cent; cent'];
+
+        % reactivation strength
+        React_str(iA, iB) =  mean(A_out{iA}{iB}.React_str, 'omitnan'); 
+        React_str_all = [React_str_all, [A_out{iA}{iB}.React_str(~isnan(A_out{iA}{iB}.React_str)); repmat(iA, size(A_out{iA}{iB}.React_str(~isnan(A_out{iA}{iB}.React_str))))]]; 
+       
+        React_str_vec(iA, iB) =  mean(A_out{iA}{iB}.React_str_vec, 'omitnan'); 
+        React_str_all_vec = [React_str_all_vec, [A_out{iA}{iB}.React_str_vec(~isnan(A_out{iA}{iB}.React_str_vec)); repmat(iA, size(A_out{iA}{iB}.React_str_vec(~isnan(A_out{iA}{iB}.React_str_vec))))]]; 
+
     end
+    % Maps_wake = these_maps
     Assmbly_tbls{iB}.Pre = table(Pre_Rate, Pre_Sess, Pre_aNum,Pre_Cent, Pre_Cent > 50, 'VariableNames', {'Rate', 'Sess', 'aNum', 'Cent', 'Open'}); 
     Assmbly_tbls{iB}.Post = table(Post_Rate, Post_Sess, Post_aNum, Post_Cent, Post_Cent > 50, 'VariableNames', {'Rate', 'Sess', 'aNum', 'Cent', 'Open'}); 
 
@@ -475,18 +532,7 @@ title('Pre-Post Anx ')
 
 %% %%%% same thing but Rate per assembly
 % set up plots for counts
-f_pos = [4 5 6 4]; 
 
-fig = figure('Name','Assembly Quantification: Rate per Assembly', 'Units','inch','position',f_pos);
-clf
-t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
-
-pre_n_idx = ismember(Assmbly_tbls{iB}.Pre.Sess, n_idx); 
-pre_f_idx = ismember(Assmbly_tbls{iB}.Pre.Sess, f_idx); 
-pre_a_idx = ismember(Assmbly_tbls{iB}.Pre.Sess, a_idx); 
-post_n_idx = ismember(Assmbly_tbls{iB}.Post.Sess, n_idx); 
-post_f_idx = ismember(Assmbly_tbls{iB}.Post.Sess, f_idx); 
-post_a_idx = ismember(Assmbly_tbls{iB}.Post.Sess, a_idx); 
 
 % N pre React across conditions
 subplot(2,4,3)
@@ -540,6 +586,50 @@ xlim([0 4])
 title('Pre-Post Anx ')
 
 
+%% React Str
+f_pos = [4 5 6 4]; 
+
+fig = figure('Name','Assembly Quantification: Reactivation Str', 'Units','inch','position',f_pos);
+clf
+t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
+
+
+subplot(2,4,1)
+fprintf('<strong>React Str (post-pre) </strong>\n')
+[~, eb] = MS_bar_w_err3(React_str(n_idx)', React_str(f_idx)',React_str(a_idx)', [f_ord(4,:); .5 .5 .5;  f_ord(1,:)],1, 'anova1', 1:3); 
+set(gca, 'xticklabel', {'Novel' 'Familiar', "Anxiety"}, 'XTickLabelRotation', 90);
+ylabel('React Str (pre-post)')
+eb.LineWidth = 2; 
+xlim([0 4])
+title('React Str')
+
+subplot(2,4,5)
+fprintf('<strong>React Str (post-pre) </strong>\n')
+[~, eb] = MS_bar_w_err3(React_str_all(1,ismember(React_str_all(2,:), n_idx))', React_str_all(1,ismember(React_str_all(2,:), f_idx))',React_str_all(1,ismember(React_str_all(2,:), a_idx))', [f_ord(4,:); .5 .5 .5;  f_ord(1,:)],1, 'anova1', 1:3); 
+set(gca, 'xticklabel', {'Novel' 'Familiar', "Anxiety"}, 'XTickLabelRotation', 90);
+ylabel('React Str (pre-post)')
+eb.LineWidth = 2; 
+xlim([0 4])
+title('React Str')
+
+subplot(2,4,2)
+fprintf('<strong>React Str (post-pre) (Vector) </strong>\n')
+[~, eb] = MS_bar_w_err3(React_str_vec(n_idx)', React_str_vec(f_idx)',React_str_vec(a_idx)', [f_ord(4,:); .5 .5 .5;  f_ord(1,:)],1, 'anova1', 1:3); 
+set(gca, 'xticklabel', {'Novel' 'Familiar', "Anxiety"}, 'XTickLabelRotation', 90);
+ylabel('React Str (pre-post) [Vector]')
+eb.LineWidth = 2; 
+xlim([0 4])
+title('React Str')
+
+subplot(2,4,6)
+fprintf('<strong>React Str (post-pre) (Vector) </strong>\n')
+[~, eb] = MS_bar_w_err3(React_str_all_vec(1,ismember(React_str_all_vec(2,:), n_idx))', React_str_all_vec(1,ismember(React_str_all_vec(2,:), f_idx))',React_str_all_vec(1,ismember(React_str_all_vec(2,:), a_idx))', [f_ord(4,:); .5 .5 .5;  f_ord(1,:)],1, 'anova1', 1:3); 
+set(gca, 'xticklabel', {'Novel' 'Familiar', "Anxiety"}, 'XTickLabelRotation', 90);
+ylabel('React Str (pre-post) [Vector]')
+eb.LineWidth = 2; 
+xlim([0 4])
+title('React Str')
+
 %% %%%% Spatial bias per reactivation
 
 
@@ -557,7 +647,7 @@ fprintf('<strong>Post Novel open-closed rate</strong>\n')
 set(gca, 'xticklabel', {'Closed' 'Open',}, 'XTickLabelRotation', 90);
 ylabel('Reactivations/min')
 eb.LineWidth = 2; 
-xlim([0 4])
+xlim([0 4]); ylim([0 5]); 
 title('Post Novel')
 
 subplot(2,4,2)
@@ -566,7 +656,7 @@ fprintf('<strong>Post Fam open-closed rate</strong>\n')
 set(gca, 'xticklabel', {'Closed' 'Open',}, 'XTickLabelRotation', 90);
 ylabel('Reactivations/min')
 eb.LineWidth = 2; 
-xlim([0 4])
+xlim([0 4]); ylim([0 5]); 
 title('Post Fam')
 
 
@@ -576,7 +666,7 @@ fprintf('<strong>Post Anx open-closed rate</strong>\n')
 set(gca, 'xticklabel', {'Closed' 'Open',}, 'XTickLabelRotation', 90);
 ylabel('Reactivations/min')
 eb.LineWidth = 2; 
-xlim([0 4])
+xlim([0 4]); ylim([0 5]); 
 title('Post Anx')
 
 subplot(2,4,5:6); cla
@@ -621,12 +711,22 @@ legend({num2str(skews(1)), num2str(skews(2)), num2str(skews(3))}, 'Location', 'B
 
 %% same thing for the pre and post template assemblies. 
 
+% set up plots 
+f_pos = [4 5 6 4]; 
+fig = figure('Name','Assembly Quantification: Spatial bias', 'Units','inch','position',f_pos);
+clf
+t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
 
+for iA = 1:length(A_out)
+maps_pre = 
+
+subplot(imagesc())
 
 
 
 
 %% get some example plots for the wake assemblies along with the weights and spatial tuning. 
+
 
 
 
