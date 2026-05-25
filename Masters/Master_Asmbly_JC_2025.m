@@ -147,64 +147,8 @@ A_out = A_out(1:11);
 % save([main_dir  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
 % % end
 
-%% collect the chance level of wake assemblies per session
-rng(123, "twister")
-for iA = length(A_out):-1:1 % loop over sessions
-    for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
-        
-        [A_out{iA}{iB}.A_Shuff] = MS_Asbmly_Shuff(A_out{iA}{iB}.wake_data, A_out{iA}{iB}.wake_tvec);
-
-        [A_out{iA}{iB}.A_W_Shuff] = MS_Asbmly_Weight_Shuff(A_out{iA}{iB}.P_temp,A_out{iA}{iB}.wake_data,A_out{iA}{iB}.wake_tvec);
-
-    end
-end
-
-
-%% recompute the event based reactivaton strength as mean react strength above the R thresh. 
-
-for iA = length(A_out):-1:1 % loop over sessions
-    for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
-        
-        %post
-        post_R_str = NaN(1,size(A_out{iA}{iB}.REM_Post_proj,1),1);
-
-        s_idx = find(A_out{iA}{iB}.REM_Post_stats.p_val <0.05); 
-
-        this_proj = A_out{iA}{iB}.REM_Post_proj(s_idx,:); 
-
-        for ii = size(this_proj,1):-1:1
-            post_R_str(s_idx(ii)) = mean(this_proj(ii,this_proj(ii,:) > A_out{iA}{iB}.REM_Post_stats.R_thresh)); 
-            post_R_str_vec(s_idx(ii)) = mean(this_proj(ii,:)); 
-
-        end
-
-        %pre
-        pre_R_str = NaN(1,size(A_out{iA}{iB}.REM_Pre_proj,1));
-
-        s_idx = find(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05); 
-
-        this_proj = A_out{iA}{iB}.REM_Pre_proj(s_idx,:); 
-
-        for ii = size(this_proj,1):-1:1
-            pre_R_str(s_idx(ii)) = mean(this_proj(ii,this_proj(ii,:) > A_out{iA}{iB}.REM_Pre_stats.R_thresh));
-            pre_R_str_vec(s_idx(ii)) = mean(this_proj(ii,:)); 
-        end
-
-        k_idx = (A_out{iA}{iB}.REM_Post_stats.p_val <0.05) & (A_out{iA}{iB}.REM_Pre_stats.p_val <0.05);
-        % get the React Str for the assemblies. 
-        [A_out{iA}{iB}.React_str] = post_R_str - pre_R_str;
-        [A_out{iA}{iB}.React_str_vec] = post_R_str_vec(k_idx) - pre_R_str_vec(k_idx);
-
-        [A_out{iA}{iB}.REM_Pre_React_str] = pre_R_str;
-        [A_out{iA}{iB}.REM_post_React_str] = post_R_str;
-
-    end
-end
-
-
-%% get the wake assembly rate map using the Proj.  No need to norm for occ since they are continuous. 
-%% load data that has been processed.
-
+%% %%%%%%%%%%%%%%%  load data that has been processed. %%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 method = 'binary';
 
 load([main_dir  strrep('Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\Assembly\inter\B_out_', '\', filesep) method '.mat'], 'B_out')
@@ -262,6 +206,62 @@ end
 novel_idx= logical(novel_idx); 
 anx_idx = logical(anx_idx);
 HS_idx = logical(HS_idx); 
+
+
+%% collect the chance level of wake assemblies per session
+rng(123, "twister")
+for iA = length(A_out):-1:1 % loop over sessions
+    for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
+        
+        [A_out{iA}{iB}.A_Shuff] = MS_Asbmly_Shuff(A_out{iA}{iB}.wake_data, A_out{iA}{iB}.wake_tvec);
+
+        [A_out{iA}{iB}.A_W_Shuff] = MS_Asbmly_Weight_Shuff(A_out{iA}{iB}.P_temp,A_out{iA}{iB}.wake_data,A_out{iA}{iB}.wake_tvec);
+
+    end
+end
+
+
+%% recompute the event based reactivaton strength as mean react strength above the R thresh. 
+
+for iA = length(A_out):-1:1 % loop over sessions
+    for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
+        
+        %post
+        post_R_str = NaN(1,size(A_out{iA}{iB}.REM_Post_proj,1),1);
+
+        s_idx = find(A_out{iA}{iB}.REM_Post_stats.p_val <0.05); 
+
+        this_proj = A_out{iA}{iB}.REM_Post_proj(s_idx,:); 
+
+        for ii = size(this_proj,1):-1:1
+            post_R_str(s_idx(ii)) = mean(this_proj(ii,this_proj(ii,:) > A_out{iA}{iB}.REM_Post_stats.R_thresh)); 
+            post_R_str_vec(s_idx(ii)) = mean(this_proj(ii,:)); 
+
+        end
+
+        %pre
+        pre_R_str = NaN(1,size(A_out{iA}{iB}.REM_Pre_proj,1));
+
+        s_idx = find(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05); 
+
+        this_proj = A_out{iA}{iB}.REM_Pre_proj(s_idx,:); 
+
+        for ii = size(this_proj,1):-1:1
+            pre_R_str(s_idx(ii)) = mean(this_proj(ii,this_proj(ii,:) > A_out{iA}{iB}.REM_Pre_stats.R_thresh));
+            pre_R_str_vec(s_idx(ii)) = mean(this_proj(ii,:)); 
+        end
+
+        k_idx = (A_out{iA}{iB}.REM_Post_stats.p_val <0.05) & (A_out{iA}{iB}.REM_Pre_stats.p_val <0.05);
+        % get the React Str for the assemblies. 
+        [A_out{iA}{iB}.React_str] = post_R_str - pre_R_str;
+        [A_out{iA}{iB}.React_str_vec] = post_R_str_vec(k_idx) - pre_R_str_vec(k_idx);
+
+        [A_out{iA}{iB}.REM_Pre_React_str] = pre_R_str;
+        [A_out{iA}{iB}.REM_post_React_str] = post_R_str;
+
+    end
+end
+
 %% simple counts of number of assemblies per condition
 
 Pre_n_Asmbly = []; Post_n_Asmbly = [];
@@ -281,16 +281,20 @@ for iB = length(bin_size):-1:1
     Assmbly_tbls{iB}.Pre = [];     Assmbly_tbls{iB}.Post = []; 
     for iA = size(A_out,2):-1:1
         
+        % count the assemblies
+
+        % WAKE
         wake_n_Asmbly(iA, iB) = size(A_out{iA}{iB}.P_proj,1);
         wake_s_Asmbly(iA, iB) = A_out{iA}{iB}.A_Shuff.w_thresh; 
-        % pre
+
+        % PRE
         Pre_n_Asmbly(iA,iB) = sum(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05);
         Pre_n_norm_Asmbly(iA, iB) = (Pre_n_Asmbly(iA,iB) / wake_n_Asmbly(iA, iB))*100; 
         
         Pre_r_Asmbly(iA,iB) = mean(A_out{iA}{iB}.REM_Pre_stats.rate(A_out{iA}{iB}.REM_Pre_stats.p_val <0.05));
         Pre_s_Asmbly(iA,iB) = A_out{iA}{iB}.REM_Pre_stats.R_thresh ;
 
-        % post
+        % POST
         Post_n_Asmbly(iA,iB) = sum(A_out{iA}{iB}.REM_Post_stats.p_val <0.05);
         Post_n_norm_Asmbly(iA, iB) = (Post_n_Asmbly(iA,iB) / wake_n_Asmbly(iA, iB))*100;
 
@@ -339,7 +343,7 @@ for iB = length(bin_size):-1:1
             cent(ii) = stats.WeightedCentroid(1); 
 
             % collect the maps
-            % these_maps(ii,:) = A_out{iA}{iB}.Place_map{s_a_idx(ii)}.map_mean; 
+            these_maps(ii,:) = A_out{iA}{iB}.Place_map{s_a_idx(ii)}.map_mean; 
         end
         Post_Cent = [Post_Cent; cent'];
 
@@ -350,12 +354,31 @@ for iB = length(bin_size):-1:1
         React_str_vec(iA, iB) =  mean(A_out{iA}{iB}.React_str_vec, 'omitnan'); 
         React_str_all_vec = [React_str_all_vec, [A_out{iA}{iB}.React_str_vec(~isnan(A_out{iA}{iB}.React_str_vec)); repmat(iA, size(A_out{iA}{iB}.React_str_vec(~isnan(A_out{iA}{iB}.React_str_vec))))]]; 
 
+
+        % Get the 'rate map' of the assembly. 
+        this_wake_tvec = A_out{iA}{iB}.wake_tvec; 
+        this_wake_pos = A_out{iA}{iB}.behav.position(A_out{iA}{iB}.move_idx,1);
+        this_wake_pos_tvec = A_out{iA}{iB}.behav.time(A_out{iA}{iB}.move_idx,1)./1000;
+        [ this_wake_pos_int] = interp1(this_wake_pos_tvec, this_wake_pos, this_wake_tvec, 'linear', 'extrap');
+
+        A_out{iA}{iB}.wake_asmbly_maps = MS_Asmbly_ratemap(this_wake_pos_int, A_out{iA}{iB}.P_proj(s_a_idx,:), 0:5:100);
+
+
+
     end
     % Maps_wake = these_maps
     Assmbly_tbls{iB}.Pre = table(Pre_Rate, Pre_Sess, Pre_aNum,Pre_Cent, Pre_Cent > 50, 'VariableNames', {'Rate', 'Sess', 'aNum', 'Cent', 'Open'}); 
     Assmbly_tbls{iB}.Post = table(Post_Rate, Post_Sess, Post_aNum, Post_Cent, Post_Cent > 50, 'VariableNames', {'Rate', 'Sess', 'aNum', 'Cent', 'Open'}); 
 
 end
+
+% get the sess_indicies for the table
+pre_n_idx = ismember(Assmbly_tbls{iB}.Pre.Sess, n_idx); 
+pre_f_idx = ismember(Assmbly_tbls{iB}.Pre.Sess, f_idx); 
+pre_a_idx = ismember(Assmbly_tbls{iB}.Pre.Sess, a_idx); 
+post_n_idx = ismember(Assmbly_tbls{iB}.Post.Sess, n_idx); 
+post_f_idx = ismember(Assmbly_tbls{iB}.Post.Sess, f_idx); 
+post_a_idx = ismember(Assmbly_tbls{iB}.Post.Sess, a_idx); 
 
 fprintf('<strong>All Wake</strong> assemblies: <strong>%.0f +/-%2.2f</strong> \n', mean(wake_n_Asmbly(:, 1)), MS_SEM(wake_n_Asmbly(:, 1)))
 fprintf('<strong>All Pre </strong> assemblies: <strong>%.0f +/-%2.2f</strong> \n', mean(Pre_n_Asmbly(:, 1)), MS_SEM(Pre_n_Asmbly(:, 1)))
@@ -379,8 +402,9 @@ n_idx = find(novel_idx & ~anx_idx);
 f_idx = find(~novel_idx & ~anx_idx);
 a_idx = find(novel_idx & anx_idx);
 
+%% plot basic stats
 % set up plots for counts
-f_pos = [1 1 6 4]; 
+f_pos = [1 6 6.25 3.4]; 
 
 % N wake React all conditions
 fig = figure('Name','Assembly Quantification: Pre Wake Post N. Sig. Assemblies', 'Units','inch','position',f_pos);
@@ -388,15 +412,36 @@ clf
 t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
 subplot(2,4,1)
 fprintf('<strong>Pre Wake Post</strong>\n')
-[h, eb] = MS_bar_w_err3(Pre_n_Asmbly(~anx_idx, 1)', wake_n_Asmbly(~anx_idx, 1)',Post_n_Asmbly(~anx_idx, 1)', [f_ord(4,:);f_ord(2,:); f_ord(5,:)],1, 'anova1', 1:3); 
-eb.LineWidth = .8; h.LineWidth = .8; 
+[h, eb, sc] = MS_bar_w_err3(Pre_n_Asmbly(~anx_idx, 1)', wake_n_Asmbly(~anx_idx, 1)',Post_n_Asmbly(~anx_idx, 1)', [f_ord(4,:);f_ord(2,:); f_ord(5,:)],1, 'anova1', 1:3); 
+eb.LineWidth = .5; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 10; sc{2}.SizeData = 10; sc{3}.SizeData = 10; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4)
 ylabel('N Sig. Assemblies')
-set(gca, 'xticklabel', {'Pre' 'Wake' 'Post'}, 'XTickLabelRotation', 90, 'fontsize', 7);
-xlim([0 4])
+set(gca, 'xticklabel', {'Pre' 'Wake' 'Post'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 3.5])
 title('Pre Wake Post')
-line([1.65 2.35], [mean(wake_s_Asmbly),mean(wake_s_Asmbly)],'color', 'k', 'LineWidth',2 )
-line([.65 1.35], [mean(Pre_s_Asmbly),mean(Pre_s_Asmbly)],'color', 'k', 'LineWidth',2 )
-line([2.65 3.35], [mean(Post_s_Asmbly),mean(Post_s_Asmbly)],'color', 'k', 'LineWidth',2 )
+line([1.6 2.4], [mean(wake_s_Asmbly),mean(wake_s_Asmbly)],'color', hex2rgb('#808080'), 'LineWidth',1, 'linestyle', '--' )
+line([.6 1.4], [mean(Pre_s_Asmbly),mean(Pre_s_Asmbly)],'color', hex2rgb('#808080'), 'LineWidth',1 , 'linestyle', '--')
+line([2.6 3.4], [mean(Post_s_Asmbly),mean(Post_s_Asmbly)],'color', hex2rgb('#808080'), 'LineWidth',1 , 'linestyle', '--')
+
+% stats for actual vs shuffle
+[h, p, CI, stats] = ttest2(wake_s_Asmbly, wake_n_Asmbly(~anx_idx, 1));
+if h 
+    fprintf('Wake N Sig vs shuffle: <strong>shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f</strong>\n', mean(wake_s_Asmbly),177, MS_SEM(wake_s_Asmbly), stats.df, stats.tstat, p)
+else
+    fprintf('Wake N Sig vs shuffle: shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(wake_s_Asmbly),177, MS_SEM(wake_s_Asmbly), stats.df, stats.tstat, p)
+end
+
+[h, p, CI, stats] = ttest2(Post_s_Asmbly, Post_n_Asmbly(~anx_idx, 1));
+if h 
+    fprintf('Post N Sig vs shuffle: <strong>shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f</strong>\n', mean(Post_s_Asmbly),177, MS_SEM(Post_s_Asmbly), stats.df, stats.tstat, p)
+else
+    fprintf('Post N Sig vs shuffle: shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(Post_s_Asmbly),177, MS_SEM(Post_s_Asmbly), stats.df, stats.tstat, p)
+end
 
 % N Wake React across conditions
 subplot(2,4,2)
@@ -470,7 +515,7 @@ title('Pre-Post Anx ')
 
 %%%%%% same thing but Rate
 % set up plots for counts
-f_pos = [3 3 6 4]; 
+f_pos = [3 8 6 4]; 
 
 fig = figure('Name','Assembly Quantification: Rate', 'Units','inch','position',f_pos);
 clf
@@ -488,7 +533,6 @@ xlim([0 4])
 title('Pre Conditions')
 
 % N Post React across conditionins
-
 subplot(2,4,4)
 fprintf('<strong>Post Conditions Rate</strong>\n')
 MS_bar_w_err3(Post_r_Asmbly(novel_idx & ~anx_idx, 1)', Post_r_Asmbly(~novel_idx & ~anx_idx, 1)', Post_r_Asmbly(novel_idx & anx_idx, 1)', [f_ord(5,:); .5 .5 .5;  f_ord(1,:)],1, 'anova1', 1:3); 
@@ -499,7 +543,7 @@ xlim([0 4])
 title('Post Conditions')
 
 
-
+% Pre Post novel
 subplot(2,4,6)
 fprintf('<strong>Pre-Post Novel Rate</strong> \n')
 MS_bar_w_err(Pre_r_Asmbly(novel_idx & ~anx_idx, 1), Post_r_Asmbly(novel_idx & ~anx_idx, 1), [f_ord(4,:); f_ord(5,:)],1, 'ttest2', 1:2); 
@@ -509,7 +553,7 @@ eb.LineWidth = 2;
 xlim([0 4])
 title('Pre-Post Novel ')
 
-
+% Pre Post Fam
 subplot(2,4,7)
 fprintf('<strong>Pre-Post Fam Rate</strong> \n')
 MS_bar_w_err(Pre_r_Asmbly(~novel_idx & ~anx_idx, 1), Post_r_Asmbly(~novel_idx & ~anx_idx, 1), [f_ord(4,:); f_ord(5,:)],1, 'ttest2', 1:2); 
@@ -529,10 +573,13 @@ eb.LineWidth = 2;
 xlim([0 4])
 title('Pre-Post Anx ')
 
-
-%% %%%% same thing but Rate per assembly
+%%%% same thing but Rate per assembly
 % set up plots for counts
+f_pos = [6 12 6 4]; 
 
+fig = figure('Name','Assembly Quantification: Rate per Assembly', 'Units','inch','position',f_pos);
+clf
+t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
 
 % N pre React across conditions
 subplot(2,4,3)
@@ -554,8 +601,7 @@ eb.LineWidth = 2;
 xlim([0 4])
 title('Post Conditions')
 
-
-
+% Pre Post Novel
 subplot(2,4,6)
 fprintf('<strong>Pre-Post Novel Rate</strong> \n')
 [~, eb] = MS_bar_w_err(Assmbly_tbls{iB}.Pre.Rate(pre_n_idx)', Assmbly_tbls{iB}.Post.Rate(post_n_idx)', [f_ord(4,:); f_ord(5,:)],1, 'ttest2', 1:2); 
@@ -565,7 +611,7 @@ eb.LineWidth = 2;
 xlim([0 4])
 title('Pre-Post Novel ')
 
-
+% Pre Post Fam
 subplot(2,4,7)
 fprintf('<strong>Pre-Post Fam Rate</strong> \n')
 [~, eb] = MS_bar_w_err(Assmbly_tbls{iB}.Pre.Rate(pre_f_idx)', Assmbly_tbls{iB}.Post.Rate(post_f_idx)', [f_ord(4,:); f_ord(5,:)],1, 'ttest2', 1:2); 
@@ -587,12 +633,11 @@ title('Pre-Post Anx ')
 
 
 %% React Str
-f_pos = [4 5 6 4]; 
+f_pos = [4 1 6 4]; 
 
 fig = figure('Name','Assembly Quantification: Reactivation Str', 'Units','inch','position',f_pos);
 clf
 t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
-
 
 subplot(2,4,1)
 fprintf('<strong>React Str (post-pre) </strong>\n')
@@ -613,7 +658,7 @@ xlim([0 4])
 title('React Str')
 
 subplot(2,4,2)
-fprintf('<strong>React Str (post-pre) (Vector) </strong>\n')
+fprintf('<strong>React Str (post-pre) (sess Vector) </strong>\n')
 [~, eb] = MS_bar_w_err3(React_str_vec(n_idx)', React_str_vec(f_idx)',React_str_vec(a_idx)', [f_ord(4,:); .5 .5 .5;  f_ord(1,:)],1, 'anova1', 1:3); 
 set(gca, 'xticklabel', {'Novel' 'Familiar', "Anxiety"}, 'XTickLabelRotation', 90);
 ylabel('React Str (pre-post) [Vector]')
@@ -634,7 +679,7 @@ title('React Str')
 
 
 % set up plots for counts
-f_pos = [4 5 6 4]; 
+f_pos = [10 1 6 4]; 
 
 fig = figure('Name','Assembly Quantification: Spatial bias', 'Units','inch','position',f_pos);
 clf
@@ -671,41 +716,53 @@ title('Post Anx')
 
 subplot(2,4,5:6); cla
 hold on
-h = histogram(Assmbly_tbls{iB}.Post.Cent(post_n_idx),10:5:90, 'FaceColor',f_ord(4,:), 'Normalization','percentage'); 
-y_lim = ylim; h_max(1) = y_lim(2); 
 
-histogram(Assmbly_tbls{iB}.Post.Cent(post_f_idx),10:5:90, 'FaceColor',f_ord(5,:), 'Normalization','percentage'); 
-y_lim = ylim; h_max(2) = y_lim(2); 
+[n_p, edges] = histcounts(Assmbly_tbls{iB}.Post.Cent(post_n_idx),10:5:90, 'Normalization','percentage'); 
 
-histogram(Assmbly_tbls{iB}.Post.Cent(post_a_idx),10:5:90, 'FaceColor',f_ord(1,:), 'Normalization','percentage'); 
-y_lim = ylim; h_max(3) = y_lim(2); 
+[n_f, ~] = histcounts(Assmbly_tbls{iB}.Post.Cent(post_f_idx),10:5:90, 'Normalization','percentage'); 
+
+[n_a, ~] = histcounts(Assmbly_tbls{iB}.Post.Cent(post_a_idx),10:5:90, 'Normalization','percentage'); 
+
+bin_cent = edges(1:end-1) + diff(edges)/2;
+
+% bar plot
+b = bar(bin_cent, [n_p; n_f; n_a],.75, 'stacked'); 
+b(1).FaceColor = f_ord(4,:);
+b(2).FaceColor = f_ord(5,:);
+b(3).FaceColor = f_ord(1,:);
+
+y_lim = ylim; 
 
 ylabel('% Assemblies')
 xlabel({'Track Poisition (cm)'});% 'Closed  <-  |  ->   Open'})
-line([10 50], [max(h_max) max(h_max)]*1.1,'color', 'k', 'linewidth', 2)
-text(30, max(h_max)*1.1, 'Closed', 'VerticalAlignment','bottom', 'HorizontalAlignment','center')
-text(70, max(h_max)*1.1, 'Open', 'VerticalAlignment','bottom', 'HorizontalAlignment','center')
+line([10 50], [max(y_lim) max(y_lim)]*1.1,'color', 'k', 'linewidth', 2)
+text(30, y_lim(2)*1.1, 'Closed', 'VerticalAlignment','bottom', 'HorizontalAlignment','center')
+text(70, y_lim(2)*1.1, 'Open', 'VerticalAlignment','bottom', 'HorizontalAlignment','center')
 legend({'Novel', 'Familiar', 'Anxiety'}, 'Location', 'Best');
+ylim([0 y_lim(2)*1.1])
 
 subplot(2,4,7:8); cla
 hold on
-h = histcounts(Assmbly_tbls{iB}.Post.Cent(post_n_idx),10:5:90); 
-plot(12.5:5:87.5, h, 'color', f_ord(4,:), 'linewidth', 2)
-skews(1) = skewness(h); 
+h_n = histcounts(Assmbly_tbls{iB}.Post.Cent(post_n_idx),10:5:90); 
+plot(12.5:5:87.5, h_n, 'color', f_ord(4,:), 'linewidth', 2)
+skews(1) = skewness(h_n); 
 
-h = histcounts(Assmbly_tbls{iB}.Post.Cent(post_f_idx),10:5:90); 
-plot(12.5:5:87.5, h, 'color', f_ord(5,:), 'linewidth', 2)
-skews(2) = skewness(h); 
+h_f = histcounts(Assmbly_tbls{iB}.Post.Cent(post_f_idx),10:5:90); 
+plot(12.5:5:87.5, h_f, 'color', f_ord(5,:), 'linewidth', 2)
+skews(2) = skewness(h_f); 
 
-h = histcounts(Assmbly_tbls{iB}.Post.Cent(post_a_idx),10:5:90); 
-plot(12.5:5:87.5, h, 'color', f_ord(1,:), 'linewidth', 2)
-skews(3) = skewness(h); 
+h_a = histcounts(Assmbly_tbls{iB}.Post.Cent(post_a_idx),10:5:90); 
+plot(12.5:5:87.5, h_a, 'color', f_ord(1,:), 'linewidth', 2)
+skews(3) = skewness(h_a); 
 
+y_lim = ylim; 
 ylabel('% Assemblies')
 xlabel({'Track Poisition (cm)'});% 'Closed  <-  |  ->   Open'})
-line([10 50], [max(h_max) max(h_max)]*1.1,'color', 'k', 'linewidth', 2)
-text(30, max(h_max)*1.1, 'Closed', 'VerticalAlignment','bottom', 'HorizontalAlignment','center')
-text(70, max(h_max)*1.1, 'Open', 'VerticalAlignment','bottom', 'HorizontalAlignment','center')
+line([10 50], [max(y_lim) max(y_lim)]*1.1,'color', 'k', 'linewidth', 2)
+text(30, y_lim(2)*1.1, 'Closed', 'VerticalAlignment','bottom', 'HorizontalAlignment','center')
+text(70, y_lim(2)*1.1, 'Open', 'VerticalAlignment','bottom', 'HorizontalAlignment','center')
+legend({'Novel', 'Familiar', 'Anxiety'}, 'Location', 'Best');
+ylim([0 y_lim(2)*1.1])
 legend({num2str(skews(1)), num2str(skews(2)), num2str(skews(3))}, 'Location', 'Best');
 
 
@@ -718,10 +775,9 @@ clf
 t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
 
 for iA = 1:length(A_out)
-maps_pre = 
+% maps_pre = 
 
-subplot(imagesc())
-
+end
 
 
 
@@ -733,6 +789,11 @@ subplot(imagesc())
 
 %% examples of Pre detect assemblies 
 
+
+
+%% %%%%%%%%%%%%%%%%%%%  OLD CODE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% qualitfy reactivation saptial biases
 
