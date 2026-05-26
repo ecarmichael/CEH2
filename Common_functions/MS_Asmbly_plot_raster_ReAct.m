@@ -211,18 +211,18 @@ set(gca, 'YTickLabel', 10.^y_val, 'linewidth', 1);
  
 if strcmpi(REM_proj, 'pREM_proj')
 
-            yline(log10(A_in.pREM_stats.R_thresh), '--', 'color', [.7 .7 .7]); 
+    yline(log10(A_in.pREM_stats.R_thresh), '--', 'color', [.7 .7 .7]);
 
 else
-        yline(log10(A_in.([REM{1} 'stats']).R_thresh), '--', 'color', [.7 .7 .7]); 
+    yline(log10(A_in.([REM{1} 'stats']).R_thresh), '--', 'color', [.7 .7 .7]);
 end
-    legend([leg_val 'Sig thresh.'], 'Orientation', 'horizontal', 'box', 'off')
+legend([leg_val 'Sig thresh.'], 'Orientation', 'horizontal', 'box', 'off')
 
-    linkaxes(ax,'x'); 
-    colormap(ax(1), c_map); 
-    colormap(ax(3), c_map); 
-    
-    xlim([A_in.(REM_tvec)(1) A_in.(REM_tvec)(end)])
+linkaxes(ax,'x');
+colormap(ax(1), c_map);
+colormap(ax(3), c_map);
+
+xlim([A_in.(REM_tvec)(1) A_in.(REM_tvec)(end)])
     
     %% save the figure
     if ~isempty(fig_dir)
