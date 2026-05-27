@@ -243,6 +243,19 @@ for iA = length(A_out):-1:1 % loop over sessions
 end
 
 clearvars pre_R_str post_R_str pre_R_str_vec post_R_str_vec k_idx s_idx this*
+
+%% get the pre detected assembly stats and the rexpression in wake as well as the wake assemblies present in pre-rem on novel (already have this). 
+for iA = length(A_out):-1:1 % loop over sessions
+    for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
+
+     A_out{iA} = Pipeline_Asmbly_append_preA(A_out{iA});
+
+
+
+    end
+
+end
+
 %% simple counts of number of assemblies per condition
 
 Pre_n_Asmbly = []; Post_n_Asmbly = [];
@@ -527,7 +540,7 @@ title('Post Conditions')
 
 subplot(2,4,5)
 fprintf('<strong>Wake Novel - Fam</strong> \n')
-[~, eb, sc] = MS_bar_w_err(wake_n_Asmbly(novel_idx & ~anx_idx, 1), wake_n_Asmbly(~novel_idx & ~anx_idx, 1), [f_ord(2,:); .5 .5 .5],1, 'ttest2', 1:2);
+[~, eb, sc] = MS_bar_w_err(wake_n_Asmbly(novel_idx & ~anx_idx, 1), wake_n_Asmbly(~novel_idx & ~anx_idx, 1), [f_ord(2,:);hex2rgb('#808080')],1, 'ttest2', 1:2);
 set(gca, 'xticklabel', {'Novel' 'Familiar'}, 'XTickLabelRotation', 90);
 ylabel('N Sig. Assemblies')
 eb.LineWidth = 2; 
@@ -536,7 +549,7 @@ title('Wake Novel - Fam')
 
 subplot(2,4,6)
 fprintf('<strong>Pre-Post Novel</strong> \n')
-MS_bar_w_err(Pre_n_norm_Asmbly(novel_idx & ~anx_idx, 1), Post_n_norm_Asmbly(novel_idx & ~anx_idx, 1), [f_ord(4,:); f_ord(5,:)],1, 'ttest2', 1:2); 
+MS_bar_w_err(Post_n_norm_Asmbly(novel_idx & ~anx_idx, 1), Post_n_norm_Asmbly(~novel_idx & ~anx_idx, 1), [f_ord(2,:); hex2rgb('#808080')],1, 'ttest2', 1:2); 
 set(gca, 'xticklabel', {'Pre' 'Post'}, 'XTickLabelRotation', 90);
 ylabel('% of Wake Assemblies'); ylim([0 100]);
 eb.LineWidth = 2; 
@@ -682,9 +695,9 @@ end
 
 subplot(2,4,7); cla
 fprintf('<strong>Rate wake vs Shuff</strong>\n')
-[h, p, stats] = MS_rain_plot(wake_r_tbl{1}.Rate(~wake_a_idx),wake_r_tbl{1}.ctrl(~wake_a_idx),[f_ord(2,:); hex2rgb('#808080')],'ttest2', 1:2);
+[h, p, stats] = MS_rain_plot(wake_r_tbl{1}.Rate(~wake_a_idx),wake_r_tbl{1}.ctrl(~wake_a_idx),[f_ord(2,:); hex2rgb('#808080')],'ttest2', 1:2, 'wiskers');
 
-h(1).sc{1}.SizeData = 2.5; h(2).sc{1}.SizeData = 2.5; 
+h(1).sc{1}.SizeData = 1; h(2).sc{1}.SizeData = 1; 
 % h(1).sc{1}.MarkerEdgeColor = 'none'; h(2).sc{1}.MarkerEdgeColor = 'none'; 
 % 
 % set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2, 'LineWidth', 1)
@@ -703,9 +716,9 @@ end
 % subplot(2,4,8); cla
 hold on
 fprintf('<strong>Rate POST vs Shuff</strong>\n')
-[h, p, stats] = MS_rain_plot(POST_r_tbl{1}.Rate(~post_r_a_idx),POST_r_tbl{1}.ctrl(~post_r_a_idx),[f_ord(5,:); hex2rgb('#808080')],'ttest2', 3:4);
+[h, p, stats] = MS_rain_plot(POST_r_tbl{1}.Rate(~post_r_a_idx),POST_r_tbl{1}.ctrl(~post_r_a_idx),[f_ord(5,:); hex2rgb('#808080')],'ttest2', 3:4, 'wiskers');
 
-h(1).sc{1}.SizeData = 2.5; h(2).sc{1}.SizeData = 2.5; 
+h(1).sc{1}.SizeData = 1; h(2).sc{1}.SizeData = 1; 
 h(1).sc{1}.MarkerEdgeColor = 'none'; h(2).sc{1}.MarkerEdgeColor = 'none'; 
 
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'LineWidth', 1)
