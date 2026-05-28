@@ -56,6 +56,12 @@ f_ord = [[253, 22, 26];[255, 179, 13]; [132, 147, 35];[67, 127, 151]; [0, 42, 95
 
 rng(123, "twister") % set RNG for reproducibility
 
+    opts.threshold.method = 'MarcenkoPastur';
+    opts.Patterns.method = 'ICA';
+    opts.Patterns.number_of_iterations = 500;
+    opts.threshold.permutations_percentile= 95;
+    opts.threshold.number_of_permutations= 500;
+
 %%  Extract assembly data
 
 % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
@@ -244,16 +250,15 @@ end
 
 clearvars pre_R_str post_R_str pre_R_str_vec post_R_str_vec k_idx s_idx this*
 
-%% get the pre detected assembly stats and the rexpression in wake as well as the wake assemblies present in pre-rem on novel (already have this). 
+%% get the pre and post detected assembly stats and the rexpression in wake as well as the wake assemblies present in pre-rem on novel (already have this). 
 for iA = length(A_out):-1:1 % loop over sessions
     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
 
-     A_out{iA} = Pipeline_Asmbly_append_preA(A_out{iA});
+     A_out{iA} = Pipeline_Asmbly_append_preA(A_out{iA}, opts);
 
-
+     A_out{iA} = Pipeline_Asmbly_append_postA(A_out{iA}, opts);
 
     end
-
 end
 
 %% simple counts of number of assemblies per condition
@@ -329,7 +334,11 @@ for iB = length(bin_size):-1:1
             % collect the maps
             these_maps(ii,:) = A_out{iA}{iB}.Place_map{s_a_idx(ii)}.map_mean;
         end
-        PRE_Cent = [PRE_Cent; cent'];
+        PRE_Cent = [PRE_Cent, cent];
+
+        % Fill in NaN for the centroids to match the shuffles
+        % PRE_Cent = [PRE_Cent, nan(1,length(A_out{iA}{iB}.REM_Pre_stats.shuff_rate))];
+
         PRE_map = [PRE_map, these_maps'];
 
 
@@ -367,7 +376,11 @@ for iB = length(bin_size):-1:1
             % collect the maps
             these_maps(ii,:) = A_out{iA}{iB}.Place_map{s_a_idx(ii)}.map_mean; 
         end
-        POST_Cent = [POST_Cent; cent'];
+        POST_Cent = [POST_Cent, cent];
+
+             % Fill in NaN for the centroids to match the shuffles
+        % POST_Cent = [POST_Cent, nan(1,length(A_out{iA}{iB}.REM_Post_stats.shuff_rate))];
+
         POST_map = [POST_map, these_maps'];
 
 
@@ -414,8 +427,8 @@ for iB = length(bin_size):-1:1
 
     end
     % Maps_wake = these_maps
-    Assmbly_tbls{iB}.Pre = table(Pre_Rate, Pre_Sess, Pre_aNum,PRE_Cent, PRE_Cent > 50, 'VariableNames', {'Rate', 'Sess', 'aNum', 'Cent', 'Open'}); 
-    Assmbly_tbls{iB}.Post = table(Post_Rate, Post_Sess, Post_aNum, POST_Cent, POST_Cent > 50, 'VariableNames', {'Rate', 'Sess', 'aNum', 'Cent', 'Open'}); 
+    Assmbly_tbls{iB}.Pre = table(Pre_Rate, Pre_Sess, Pre_aNum,PRE_Cent', (PRE_Cent > 50)', 'VariableNames', {'Rate', 'Sess', 'aNum', 'Cent', 'Open'}); 
+    Assmbly_tbls{iB}.Post = table(Post_Rate, Post_Sess, Post_aNum, POST_Cent', (POST_Cent > 50)', 'VariableNames', {'Rate', 'Sess', 'aNum', 'Cent', 'Open'}); 
 
     % wake table
     wake_r_tbl{iB} = table(wake_ctrl', wake_rate', wake_Sess',wake_aNum',  'VariableNames',{'ctrl', 'Rate', 'Sess', 'aNum'});
@@ -579,7 +592,7 @@ title('Pre-Post Anx ')
 %% Figure 2: Wake n Assemblies and Post REM vs shuffles
 
 f_pos = [1 6 6.25 3.4]; 
-figure(997)
+figure(1002)
 clf
 set(gcf,'Units','inch','OuterPosition',f_pos);
 
@@ -745,6 +758,191 @@ end
 
 % save it
 exportgraphics(gcf, [fig_dir filesep 'Assembly_aRate.pdf'], 'ContentType', 'vector');
+
+%% Figure 4: Wake n Assemblies and Post REM vs shuffles
+
+f_pos = [1 6 6.25 3.4]; 
+figure(1004)
+clf
+set(gcf,'Units','inch','OuterPosition',f_pos);
+
+% wake assemblies present in novel pre-task REM sleep
+
+% Plot wake assemblies for pre-task REM sleep
+subplot(2,4,1)
+fprintf('<strong>Pre-Post Novel</strong> \n')
+[h, eb, sc, p, stats] = MS_bar_w_err(Pre_n_norm_Asmbly(novel_idx & ~anx_idx, 1), Post_n_norm_Asmbly(novel_idx & ~anx_idx, 1), [f_ord(4,:); f_ord(5,:)],1, 'ttest2', 1:2); 
+eb.LineWidth = .5; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 10; sc{2}.SizeData = 10; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
+ylabel('% of Wake Assemblies'); ylim([0 100]);
+set(gca, 'xticklabel', {'Pre' 'Post'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 3.5])
+if p < 0.05 
+    fprintf('% wake in novel Pre vs post: <strong> Pre mean:  %.2f%s %.2f | post mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(Pre_n_norm_Asmbly(novel_idx & ~anx_idx, 1)),177, MS_SEM(Pre_n_norm_Asmbly(novel_idx & ~anx_idx, 1)),...
+        mean(Post_n_norm_Asmbly(novel_idx & ~anx_idx, 1)),177, MS_SEM(Post_n_norm_Asmbly(novel_idx & ~anx_idx, 1)),stats.df, stats.tstat, p)
+else
+    fprintf('% wake in novel Pre vs post: Pre mean:  %.2f%s %.2f | post mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(Pre_n_norm_Asmbly(novel_idx & ~anx_idx, 1)),177, MS_SEM(Pre_n_norm_Asmbly(novel_idx & ~anx_idx, 1)),...
+        mean(Post_n_norm_Asmbly(novel_idx & ~anx_idx, 1)),177, MS_SEM(Post_n_norm_Asmbly(novel_idx & ~anx_idx, 1)),stats.df, stats.tstat, p)
+end
+
+
+%% Figure 5: Anxiety vs familiar
+
+f_pos = [1 6 6.25 3.4]; 
+figure(1005)
+clf
+set(gcf,'Units','inch','OuterPosition',f_pos);
+
+
+% number of Sig A fam vs Anx
+data_1 = wake_n_Asmbly(~novel_idx & ~anx_idx);
+data_2 = wake_n_Asmbly(anx_idx);
+
+subplot(2,4,1)
+fprintf('<strong>Sess: Ctrl vs Anx Wake N. Sig A:</strong> \n')
+[h, eb, sc, p, stats] = MS_bar_w_err(data_1,data_2, [hex2rgb('#808080'); f_ord(1,:)],1, 'ttest2', 1:2); 
+eb.LineWidth = 1; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = 1; h.FaceColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = f_ord(1,:); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
+ylabel({'Num. wake'; 'assemblies'})
+set(gca,'xticklabel', {'Ctrl' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 3.5])
+
+if p < 0.05 
+    fprintf('% N. A | Ctlr vs Anx: <strong> Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
+else
+    fprintf('% N. A | Ctlr vs Anx: Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
+end
+
+
+% number of Sig A fam vs Anx
+data_1 = wake_r_tbl{1}.Rate(wake_f_idx & ~wake_r_tbl{1}.ctrl);
+data_2 = wake_r_tbl{1}.Rate(wake_a_idx & ~wake_r_tbl{1}.ctrl);
+
+subplot(2,4,5)
+fprintf('<strong>Sess: Ctrl vs Anx Wake Rate A:</strong> \n')
+[h, eb, sc, p, stats] = MS_bar_w_err(data_1,data_2, [hex2rgb('#808080'); f_ord(1,:)],1, 'ttest2', 1:2); 
+eb.LineWidth = 1; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = 1; h.FaceColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = f_ord(1,:); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+ylim([0 5])
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
+ylabel({'Mean Wake'; 'Activations/min'})
+set(gca, 'ytick', [0 2.5 5],'xticklabel', {'Ctrl' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 3.5])
+
+if p < 0.05 
+    fprintf('% Rate | Ctlr vs Anx: <strong> Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
+else
+    fprintf('% Rate | Ctlr vs Anx: Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
+end
+
+% number of Sig A fam vs Anx
+data_1 = wake_r_Asmbly(~novel_idx & ~anx_idx);
+data_2 = wake_r_Asmbly(anx_idx);
+
+subplot(2,4,6)
+fprintf('<strong>Sess: Ctrl vs Anx Wake Rate:</strong> \n')
+[h, eb, sc, p, stats] = MS_bar_w_err(data_1,data_2, [hex2rgb('#808080'); f_ord(1,:)],1, 'ttest2', 1:2); 
+eb.LineWidth = 1; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = 1; h.FaceColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = f_ord(1,:); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
+ylabel({'Num. wake'; 'assemblies'})
+set(gca,'xticklabel', {'Ctrl' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 3.5])
+
+if p < 0.05 
+    fprintf('% M. Rate | Ctlr vs Anx: <strong> Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
+else
+    fprintf('% M. Rate | Ctlr vs Anx: Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
+end
+
+% post REM N assemblies
+data_1 = Post_n_Asmbly(~novel_idx & ~anx_idx);
+data_2 = Post_n_Asmbly(anx_idx);
+
+subplot(2,4,3)
+fprintf('<strong>Sess: Ctrl vs Anx Post N. Sig A:</strong> \n')
+[h, eb, sc, p, stats] = MS_bar_w_err(data_1,data_2, [hex2rgb('#808080'); f_ord(1,:)],1, 'ttest2', 1:2); 
+eb.LineWidth = 1; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = 1; h.FaceColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = f_ord(1,:); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
+ylabel({'Num. wake'; 'assemblies'})
+set(gca,'xticklabel', {'Ctrl' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 3.5])
+
+if p < 0.05 
+    fprintf('% N. A | Ctlr vs Anx: <strong> Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
+else
+    fprintf('% N. A | Ctlr vs Anx: Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
+end
+
+
+% Plot wake assemblies for pre-task REM sleep
+subplot(2,4,7)
+fprintf('<strong>Ctrl vs Anx Post Rate:</strong> \n')
+[h, eb, sc, p, stats] = MS_bar_w_err(Assmbly_tbls{iB}.Post.Rate(post_f_idx), Assmbly_tbls{iB}.Post.Rate(post_a_idx), [hex2rgb('#808080'); f_ord(1,:)],1, 'ttest2', 1:2); 
+eb.LineWidth = 1; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = 1; h.FaceColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = f_ord(1,:); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+ylim([0 5])
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
+ylabel('Reactivations/min')
+set(gca, 'ytick', [0 2.5 5],'xticklabel', {'Ctrl' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 3.5])
+
+if p < 0.05 
+    fprintf('%     Rate |Ctlr vs Anx: <strong> Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(Assmbly_tbls{iB}.Post.Rate(post_f_idx)),177, MS_SEM(Assmbly_tbls{iB}.Post.Rate(post_f_idx)),...
+        mean(Assmbly_tbls{iB}.Post.Rate(post_a_idx)),177, MS_SEM(Assmbly_tbls{iB}.Post.Rate(post_a_idx)),stats.df, stats.tstat, p)
+else
+    fprintf('%     Rate |Ctlr vs Anx: Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(Assmbly_tbls{iB}.Post.Rate(post_f_idx)),177, MS_SEM(Assmbly_tbls{iB}.Post.Rate(post_f_idx)),...
+        mean(Assmbly_tbls{iB}.Post.Rate(post_a_idx)),177, MS_SEM(Assmbly_tbls{iB}.Post.Rate(post_a_idx)),stats.df, stats.tstat, p)
+end
+
+
+% mean rate across sessions
+subplot(2,4,8)
+fprintf('<strong>Sess: Ctrl vs Anx Rate:</strong> \n')
+[h, eb, sc, p, stats] = MS_bar_w_err(Post_r_Asmbly(~novel_idx & ~anx_idx),Post_r_Asmbly(anx_idx), [hex2rgb('#808080'); f_ord(1,:)],1, 'ttest2', 1:2); 
+eb.LineWidth = 1; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = 1; h.FaceColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = f_ord(1,:); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+ylim([0 5])
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
+ylabel({'Mean'; 'Reactivations/min'})
+set(gca, 'ytick', [0 2.5 5],'xticklabel', {'Ctrl' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 3.5])
+
+if p < 0.05 
+    fprintf('% Ctlr vs Anx: <strong> Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(Post_r_Asmbly(~novel_idx & ~anx_idx)),177, MS_SEM(Post_r_Asmbly(~novel_idx & ~anx_idx)),...
+        mean(Assmbly_tbls{iB}.Post.Rate(anx_idx)),177, MS_SEM(Post_r_Asmbly(anx_idx)),stats.df, stats.tstat, p)
+else
+    fprintf('% Ctlr vs Anx:  Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(Post_r_Asmbly(~novel_idx & ~anx_idx)),177, MS_SEM(Post_r_Asmbly(~novel_idx & ~anx_idx)),...
+        mean(Assmbly_tbls{iB}.Post.Rate(anx_idx)),177, MS_SEM(Post_r_Asmbly(anx_idx)),stats.df, stats.tstat, p)
+end
+
+exportgraphics(gcf, [fig_dir filesep 'Fig_4_Anx.pdf'], 'ContentType', 'vector');
+
 %% %%%% same thing but Rate
 % set up plots for counts
 f_pos = [3 6 6 4]; clf; 
@@ -767,8 +965,6 @@ set(gca, 'xticklabel', {'Pre' 'REM Post'}, 'XTickLabelRotation', 0, 'fontsize', 
 xlim([0.5 3.5])
 line([1.6 2.4], [mean(Post_r_shuff),mean(Post_r_shuff)],'color', hex2rgb('#808080'), 'LineWidth',1, 'linestyle', '--' )
 line([.6 1.4], [mean(Pre_r_shuff),mean(Pre_r_shuff)],'color', hex2rgb('#808080'), 'LineWidth',1 , 'linestyle', '--')
-
-
 
 
 %Rate pre React across conditions
@@ -956,7 +1152,16 @@ title('Post Fam')
 
 subplot(2,4,3)
 fprintf('<strong>Post Anx open-closed rate</strong>\n')
-[~, eb] = MS_bar_w_err(Assmbly_tbls{iB}.Post.Rate(post_a_idx  & ~Assmbly_tbls{iB}.Post.Open)', Assmbly_tbls{iB}.Post.Rate(post_a_idx  & Assmbly_tbls{iB}.Post.Open)', [.5 .5 .5; f_ord(1,:)],1, 'ttest2', 1:2); 
+[h, eb, sc, stats] = MS_bar_w_err(Assmbly_tbls{iB}.Post.Rate(post_a_idx  & ~Assmbly_tbls{iB}.Post.Open)', Assmbly_tbls{iB}.Post.Rate(post_a_idx  & Assmbly_tbls{iB}.Post.Open)', [.5 .5 .5; f_ord(1,:)],1, 'ttest2', 1:2); 
+set(gca, 'xticklabel', {'Closed' 'Open',}, 'XTickLabelRotation', 90);
+ylabel('Reactivations/min')
+eb.LineWidth = 2; 
+xlim([0 4]); ylim([0 5]); 
+title('Post Anx')
+
+subplot(2,4,4)
+fprintf('<strong>Wake Anx open-closed rate</strong>\n')
+[h, eb, sc, stats] = MS_bar_w_err(Assmbly_tbls{iB}.Post.Rate(post_a_idx  & ~Assmbly_tbls{iB}.Post.Open)', Assmbly_tbls{iB}.Post.Rate(post_a_idx  & Assmbly_tbls{iB}.Post.Open)', [.5 .5 .5; f_ord(1,:)],1, 'ttest2', 1:2); 
 set(gca, 'xticklabel', {'Closed' 'Open',}, 'XTickLabelRotation', 90);
 ylabel('Reactivations/min')
 eb.LineWidth = 2; 
@@ -1016,17 +1221,6 @@ legend({num2str(skews(1)), num2str(skews(2)), num2str(skews(3))}, 'Location', 'B
 
 
 %% same thing for the pre and post template assemblies. 
-
-% set up plots 
-f_pos = [4 5 6 4]; 
-fig = figure('Name','Assembly Quantification: Spatial bias', 'Units','inch','position',f_pos);
-clf
-t = tiledlayout(6,4,'TileSpacing','compact','Units','inches','OuterPosition',f_pos);
-
-for iA = 1:length(A_out)
-% maps_pre = 
-
-end
 
 
 

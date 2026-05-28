@@ -1,4 +1,4 @@
-function A_in = Pipeline_Asmbly_append_preA(A_in)
+function A_in = Pipeline_Asmbly_append_preA(A_in, opts)
 %% check the pre_rem for assemblies, remove assemblies without positive weights, apply assemblies to the wake track data
 
 for ii = 1:length(A_in)
@@ -18,8 +18,12 @@ for ii = 1:length(A_in)
         A_in{ii}.pREM_A_pos = [];
         continue
     else
+        if ~isfield(A_in{ii}.info, 'opts')
+            A_in{ii}.info.opts = opts;
+        end
 
         REM_temp_all = assembly_patterns(A_in{ii}.REM_Pre_data', A_in{ii}.info.opts);
+
 
         if isempty(REM_temp_all)
             fprintf('%.0f Assemblies found in Pre REM (%.2fs binsize)\n',size(REM_temp_all,2), A_in{ii}.info.bin)
