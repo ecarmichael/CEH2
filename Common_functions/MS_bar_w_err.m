@@ -70,6 +70,8 @@ if ~isempty(stats)
             text(median(x_vals)*.975, max(data_pool, [], 'all')*1.1, '**', 'color', 'k', 'FontSize',10)
         elseif p < 0.001
             text(median(x_vals)*.95, max(data_pool, [], 'all')*1.1, '***', 'color', 'k', 'FontSize',10)
+                    elseif p < 0.0001
+            text(median(x_vals)*.95, max(data_pool, [], 'all')*1.1, '****', 'color', 'k', 'FontSize',10)
         end
 
         text(median(x_vals)*1.1, max(data_pool, [], 'all')*1.15, ['   p = ' num2str(p, 3)], 'color', 'k', 'FontSize',10)
@@ -78,7 +80,7 @@ if ~isempty(stats)
     end
 
     if p(1) < 0.05
-        fprintf('<strong>%s</strong> - t(<strong>%d</strong>) = <strong>%.2f</strong>, p = <strong>%.2f</strong> ',stats_test, stats.df,stats.tstat, p)
+        fprintf('<strong>%s</strong> - t(<strong>%d</strong>) = <strong>%.2f</strong>, p = <strong>%.5f</strong> ',stats_test, stats.df,stats.tstat, p)
     else
         fprintf('<strong>%s</strong> - t(%d) = %.2f, p = %.5f ',stats_test, stats.df,stats.tstat, p)
     end
