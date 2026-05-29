@@ -1233,6 +1233,36 @@ legend({num2str(skews(1)), num2str(skews(2)), num2str(skews(3))}, 'Location', 'B
 %% examples of Pre detect assemblies 
 
 
+figure(4001); clf; figure(4002); clf; 
+map_idx = 1:2:12; 
+loc_idx = 2:2:12; 
+iA = 6; 
+% for iA = length(A_out):-1:1 % loop over sessions
+%     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
+% 
+figure(4001)
+        for ii = 1:length(A_out{iA}{iB}.pREM_Place_map)
+            % subplot(4,6,map_idx(ii))
+            subplot(4,6,ii)
+            [~, s_idx] = sort(A_out{iA}{iB}.pREM_Place_map{ii}.cent);
+            imagesc(A_out{iA}{iB}.pREM_Place_map{ii}.map(s_idx,:))
+            % location on track
+            c_ord = MS_linspecer(length(s_idx)); 
+            % subplot(4,6,loc_idx(ii))
+            % hold on
+            % for jj = 1:length(s_idx)
+            %     text(0, A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc(s_idx(jj)), num2str(s_idx(jj)), 'color', c_ord(ii,:));
+            % end
+        end
+
+figure(4002)
+        for ii = 1:length(A_out{iA}{iB}.postREM_Place_map)
+            subplot(4,6,ii+12)
+            [~, s_idx] = sort(A_out{iA}{iB}.postREM_Place_map{ii}.cent);
+            imagesc(A_out{iA}{iB}.postREM_Place_map{ii}.map(s_idx,:))
+        end
+    %     end
+    % end
 
 %% %%%%%%%%%%%%%%%%%%%  OLD CODE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
