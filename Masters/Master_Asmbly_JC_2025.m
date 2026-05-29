@@ -801,7 +801,7 @@ set(gcf,'Units','inch','OuterPosition',f_pos);
 
 % number of Sig A fam vs Anx
 data_1 = wake_n_Asmbly(~novel_idx & ~anx_idx);
-data_2 = wake_n_Asmbly(anx_idx);
+data_2 = wake_n_Asmbly(novel_idx & anx_idx);
 
 subplot(2,4,1)
 fprintf('<strong>Sess: Ctrl vs Anx Wake N. Sig A:</strong> \n')
@@ -849,7 +849,7 @@ end
 
 % number of Sig A fam vs Anx
 data_1 = wake_r_Asmbly(~novel_idx & ~anx_idx);
-data_2 = wake_r_Asmbly(anx_idx);
+data_2 = wake_r_Asmbly(novel_idx & anx_idx);
 
 subplot(2,4,6)
 fprintf('<strong>Sess: Ctrl vs Anx Wake Rate:</strong> \n')
@@ -872,7 +872,7 @@ end
 
 % post REM N assemblies
 data_1 = Post_n_Asmbly(~novel_idx & ~anx_idx);
-data_2 = Post_n_Asmbly(anx_idx);
+data_2 = Post_n_Asmbly(novel_idx & anx_idx);
 
 subplot(2,4,3)
 fprintf('<strong>Sess: Ctrl vs Anx Post N. Sig A:</strong> \n')
@@ -888,16 +888,19 @@ set(gca,'xticklabel', {'Ctrl' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
 
 if p < 0.05 
-    fprintf('% N. A | Ctlr vs Anx: <strong> Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
+    fprintf('% N. A | Fam vs Anx: <strong> Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
 else
-    fprintf('% N. A | Ctlr vs Anx: Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
+    fprintf('% N. A | Fam vs Anx: Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
 end
 
 
 % Plot wake assemblies for pre-task REM sleep
 subplot(2,4,7)
 fprintf('<strong>Ctrl vs Anx Post Rate:</strong> \n')
-[h, eb, sc, p, stats] = MS_bar_w_err(Assmbly_tbls{iB}.Post.Rate(post_f_idx), Assmbly_tbls{iB}.Post.Rate(post_a_idx), [hex2rgb('#808080'); f_ord(1,:)],1, 'ttest2', 1:2); 
+data_1 = Assmbly_tbls{iB}.Post.Rate(post_f_idx & ~post_a_idx);
+data_2 = Assmbly_tbls{iB}.Post.Rate(post_a_idx );
+
+[h, eb, sc, p, stats] = MS_bar_w_err(data_1, data_2, [hex2rgb('#808080'); f_ord(1,:)],1, 'ttest2', 1:2); 
 eb.LineWidth = 1; %eb.Color = 'k'; eb.LineStyle = "--"; 
 h.LineWidth = 1; h.FaceColor = "none";
 sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
@@ -906,22 +909,20 @@ sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none';
 ylim([0 5])
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
 ylabel('Reactivations/min')
-set(gca, 'ytick', [0 2.5 5],'xticklabel', {'Ctrl' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+set(gca, 'ytick', [0 2.5 5],'xticklabel', {'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
 
 if p < 0.05 
-    fprintf('%     Rate |Ctlr vs Anx: <strong> Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(Assmbly_tbls{iB}.Post.Rate(post_f_idx)),177, MS_SEM(Assmbly_tbls{iB}.Post.Rate(post_f_idx)),...
-        mean(Assmbly_tbls{iB}.Post.Rate(post_a_idx)),177, MS_SEM(Assmbly_tbls{iB}.Post.Rate(post_a_idx)),stats.df, stats.tstat, p)
+    fprintf('% Rate| Fam vs Anx: <strong> Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
 else
-    fprintf('%     Rate |Ctlr vs Anx: Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(Assmbly_tbls{iB}.Post.Rate(post_f_idx)),177, MS_SEM(Assmbly_tbls{iB}.Post.Rate(post_f_idx)),...
-        mean(Assmbly_tbls{iB}.Post.Rate(post_a_idx)),177, MS_SEM(Assmbly_tbls{iB}.Post.Rate(post_a_idx)),stats.df, stats.tstat, p)
+    fprintf('% Rate | Fam vs Anx: Ctlr mean:  %.2f%s %.2f | Anx mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(data_1),177, MS_SEM(data_2), mean(data_1),177, MS_SEM(data_2),stats.df, stats.tstat, p)
 end
 
 
 % mean rate across sessions
 subplot(2,4,8)
 fprintf('<strong>Sess: Ctrl vs Anx Rate:</strong> \n')
-[h, eb, sc, p, stats] = MS_bar_w_err(Post_r_Asmbly(~novel_idx & ~anx_idx),Post_r_Asmbly(anx_idx), [hex2rgb('#808080'); f_ord(1,:)],1, 'ttest2', 1:2); 
+[h, eb, sc, p, stats] = MS_bar_w_err(Post_r_Asmbly(~novel_idx & ~anx_idx),Post_r_Asmbly(novel_idx & anx_idx), [hex2rgb('#808080'); f_ord(1,:)],1, 'ttest2', 1:2); 
 eb.LineWidth = 1; %eb.Color = 'k'; eb.LineStyle = "--"; 
 h.LineWidth = 1; h.FaceColor = "none";
 sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
@@ -941,7 +942,7 @@ else
         mean(Assmbly_tbls{iB}.Post.Rate(anx_idx)),177, MS_SEM(Post_r_Asmbly(anx_idx)),stats.df, stats.tstat, p)
 end
 
-exportgraphics(gcf, [fig_dir filesep 'Fig_4_Anx.pdf'], 'ContentType', 'vector');
+exportgraphics(gcf, [fig_dir filesep 'Fig_5_Anx.pdf'], 'ContentType', 'vector');
 
 %% %%%% same thing but Rate
 % set up plots for counts
@@ -1234,32 +1235,50 @@ legend({num2str(skews(1)), num2str(skews(2)), num2str(skews(3))}, 'Location', 'B
 
 
 figure(4001); clf; figure(4002); clf; 
-map_idx = 1:2:12; 
-loc_idx = 2:2:12; 
-iA = 6; 
+map_idx = 1:2:25; 
+loc_idx = 2:2:25; 
+iA = 3; 
 % for iA = length(A_out):-1:1 % loop over sessions
 %     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
 % 
 figure(4001)
         for ii = 1:length(A_out{iA}{iB}.pREM_Place_map)
             % subplot(4,6,map_idx(ii))
-            subplot(4,6,ii)
+            subplot(5,10,map_idx(ii))
             [~, s_idx] = sort(A_out{iA}{iB}.pREM_Place_map{ii}.cent);
-            imagesc(A_out{iA}{iB}.pREM_Place_map{ii}.map(s_idx,:))
+            imagesc(A_out{iA}{iB}.pREM_Place_map{ii}.map(s_idx,:)')
+            set(gca, 'ydir', 'normal')
             % location on track
             c_ord = MS_linspecer(length(s_idx)); 
-            % subplot(4,6,loc_idx(ii))
-            % hold on
-            % for jj = 1:length(s_idx)
-            %     text(0, A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc(s_idx(jj)), num2str(s_idx(jj)), 'color', c_ord(ii,:));
-            % end
+            subplot(5,10,loc_idx(ii))
+            hold on
+            for jj = 1:length(A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc)
+                scale_val = A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val(jj)./max(A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val);
+                plot( A_out{iA}{iB}.pREM_wake_P_loc{ii}.win_time,  A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc_mat(jj,:),'color', [c_ord(ii,:) scale_val], 'LineWidth',2)
+                % text(0, A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc(jj), num2str(jj), 'color', c_ord(ii,:));
+            end
+            xlim([-2 2]); ylim([0 100])
         end
 
-figure(4002)
+        figure(4002)
         for ii = 1:length(A_out{iA}{iB}.postREM_Place_map)
-            subplot(4,6,ii+12)
+            % subplot(4,6,map_idx(ii))
+            subplot(5,10,map_idx(ii))
             [~, s_idx] = sort(A_out{iA}{iB}.postREM_Place_map{ii}.cent);
-            imagesc(A_out{iA}{iB}.postREM_Place_map{ii}.map(s_idx,:))
+            imagesc(A_out{iA}{iB}.postREM_Place_map{ii}.map(s_idx,:)')
+            set(gca, 'ydir', 'normal')
+
+
+            % location on track
+            c_ord = MS_linspecer(length(s_idx)); 
+            subplot(5,10,loc_idx(ii))
+            hold on
+            for jj = 1:length(A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc)
+                scale_val = A_out{iA}{iB}.postREM_wake_P_loc{ii}.peak_val(jj)./max(A_out{iA}{iB}.postREM_wake_P_loc{ii}.peak_val);
+                plot( A_out{iA}{iB}.postREM_wake_P_loc{ii}.win_time,  A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc_mat(jj,:),'color', [c_ord(ii,:) scale_val], 'LineWidth',2)
+                % text(0, A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc(jj), num2str(jj), 'color', c_ord(ii,:));
+            end
+            xlim([-2 2]); ylim([0 100])
         end
     %     end
     % end
