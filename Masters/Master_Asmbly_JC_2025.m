@@ -56,7 +56,7 @@ f_ord = [[253, 22, 26];[255, 179, 13]; [132, 147, 35];[67, 127, 151]; [0, 42, 95
 
 rng(123, "twister") % set RNG for reproducibility
 
-%%  Extract assembly data
+%% Extract assembly data
 
 % cd('/home/williamslab/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter')
 
