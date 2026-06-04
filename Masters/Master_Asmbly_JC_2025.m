@@ -261,6 +261,10 @@ for iA = length(A_out):-1:1 % loop over sessions
     end
 end
 
+
+%% quantify participation of cells in assembly reactivations
+
+
 %% simple counts of number of assemblies per condition
 
 Pre_n_Asmbly = []; Post_n_Asmbly = [];
