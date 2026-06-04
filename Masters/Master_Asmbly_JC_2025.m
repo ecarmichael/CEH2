@@ -263,6 +263,78 @@ end
 
 
 %% quantify participation of cells in assembly reactivations
+all_p_diff_mem = [];  all_p_diff_n_mem = []; sess_id = [];
+for iA = 1:length(A_out) % loop over sessions
+    for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
+
+        % wake
+        [p, p_in_mem, p_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.P_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.wake_data, A_out{iA}{iB}.A_Shuff.w_thresh);
+
+        % pre (wake templates)
+        [p_pre, pre_in_mem, pre_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.REM_Pre_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.REM_Pre_data, A_out{iA}{iB}.REM_Pre_stats.R_thresh);
+
+        % post (wake temps)
+        [p_post, post_in_mem, post_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.REM_Post_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.REM_Post_data, A_out{iA}{iB}.REM_Post_stats.R_thresh);
+
+        % get the relative changes in participation (cell x cell0 in each assembly.
+        p_diff_in = []; p_diff_out = [];
+        for ii =length(p):-1:1
+            if isempty(p_pre{ii}) || isempty(p_post{ii})
+                 A_out{iA}{iB}.p_diff_mem = nan; 
+                 A_out{iA}{iB}.p_diff_n_mem = nan;
+            else
+            p_diff_in{ii} = (p_post{ii}.in_A./p_post{ii}.out_A) ./ (p_pre{ii}.in_A./p_pre{ii}.out_A);
+            p_diff_in{ii}(isinf(p_diff_in{ii})) =nan;
+            % p_diff_out{ii} = (p_post{ii}.out_A - p_pre{ii}.out_A);
+            A_out{iA}{iB}.p_diff_mem(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx), 'omitmissing');
+            A_out{iA}{iB}.p_diff_n_mem(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx), 'omitmissing');
+            end
+        end
+
+        % collect them all
+
+% participation difference
+all_p_diff_mem = [all_p_diff_mem, A_out{iA}{iB}.p_diff_mem];
+all_p_diff_n_mem = [all_p_diff_n_mem, A_out{iA}{iB}.p_diff_n_mem];
+sess_id = [sess_id, repmat(iA, size(A_out{iA}{iB}.p_diff_mem))]; 
+
+    end
+end
+n_idx = find(novel_idx & ~anx_idx);
+f_idx = find(~novel_idx & ~anx_idx);
+a_idx = find(novel_idx & anx_idx);
+
+p_n_idx = ismember(sess_id, n_idx); 
+p_f_idx = ismember(sess_id, f_idx); 
+p_a_idx = ismember(sess_id, a_idx); 
+
+f_pos = [1 6 6.25 3.4]; 
+figure(1002)
+clf
+set(gcf,'Units','inch','OuterPosition',f_pos);
+
+
+subplot(2,4,1)
+fprintf('<strong>diff participation: Nov Fam Anx</strong>\n')
+data1 = all_p_diff_mem(p_n_idx); 
+data2 = all_p_diff_mem(p_f_idx); 
+data3 = all_p_diff_mem(p_a_idx); 
+
+[h, eb, sc] = MS_bar_w_err3(data1, data2, data3, [f_ord(2,:);f_ord(5,:); f_ord(1,:)],1, 'anova1', 1:3);
+% MS_bar_w_err3(Pre_n_Asmbly(~anx_idx, 1)', wake_n_Asmbly(~anx_idx, 1)',Post_n_Asmbly(~anx_idx, 1)', [f_ord(4,:);f_ord(2,:); f_ord(5,:)],1, 'anova1', 1:3); 
+eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 10; sc{2}.SizeData = 10; sc{3}.SizeData = 10; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'log')
+ylabel('post-pre participation')
+set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 3.5])
+% line([1.6 2.4], [mean(data2),mean(data2)],'color', hex2rgb('#808080'), 'LineWidth',1, 'linestyle', '--' )
+% line([.6 1.4], [mean(data1),mean(data1)],'color', hex2rgb('#808080'), 'LineWidth',1 , 'linestyle', '--')
+% line([2.6 3.4], [mean(data3),mean(data3)],'color', hex2rgb('#808080'), 'LineWidth',1 , 'linestyle', '--')
 
 
 %% simple counts of number of assemblies per condition
@@ -1241,7 +1313,7 @@ legend({num2str(skews(1)), num2str(skews(2)), num2str(skews(3))}, 'Location', 'B
 figure(4001); clf; figure(4002); clf; 
 map_idx = 1:2:25; 
 loc_idx = 2:2:25; 
-iA = 3; 
+iA = 12; 
 % for iA = length(A_out):-1:1 % loop over sessions
 %     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
 % 
