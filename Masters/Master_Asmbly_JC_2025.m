@@ -333,8 +333,8 @@ p_a_idx = ismember(sess_id, a_idx);
 % f_pos = [1 6 6.25 3.4]; 
 figure(1002)
 clf
-% set(gcf,'Units','inch','OuterPosition',f_pos);
-
+set(gcf,'Units','inch','OuterPosition',f_pos);
+y_scale = 'linear'; y_lim = [0 700];
 % for memeber cells
 subplot(2,4,1)
 fprintf('<strong>diff participation members: Nov Fam Anx</strong>\n')
@@ -346,15 +346,15 @@ data3 = all_p_diff_mem(p_a_idx);
 % MS_bar_w_err3(Pre_n_Asmbly(~anx_idx, 1)', wake_n_Asmbly(~anx_idx, 1)',Post_n_Asmbly(~anx_idx, 1)', [f_ord(4,:);f_ord(2,:); f_ord(5,:)],1, 'anova1', 1:3); 
 eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
 h.LineWidth = .8; h.EdgeColor = "none";
-sc{1}.SizeData = 10; sc{2}.SizeData = 10; sc{3}.SizeData = 10; 
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; 
 sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
 sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
 
-set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'log')
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
 ylabel({'post-pre participation %'; 'members'})
 set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
-ylim([0 1000])
+ylim(y_lim)
 
 % for non-memeber cells
 subplot(2,4,5)
@@ -367,20 +367,20 @@ data3 = all_p_diff_n_mem(p_a_idx);
 % MS_bar_w_err3(Pre_n_Asmbly(~anx_idx, 1)', wake_n_Asmbly(~anx_idx, 1)',Post_n_Asmbly(~anx_idx, 1)', [f_ord(4,:);f_ord(2,:); f_ord(5,:)],1, 'anova1', 1:3); 
 eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
 h.LineWidth = .8; h.EdgeColor = "none";
-sc{1}.SizeData = 10; sc{2}.SizeData = 10; sc{3}.SizeData = 10; 
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; 
 sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
 sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
 
-set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'log')
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
 ylabel({'post-pre participation %'; 'non-members'})
 set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
-ylim([0 1000])
+ylim(y_lim)
 
 
 % Open vs closed
 % OPEN for memeber cells
-subplot(2,4,2)
+subplot(2,4,4)
 fprintf('<strong>diff participation members Open vs closed</strong>\n')
 data1 = all_p_diff_mem_open(p_a_idx); 
 data2 = all_p_diff_mem_close(p_a_idx); 
@@ -388,19 +388,19 @@ data2 = all_p_diff_mem_close(p_a_idx);
 
 [h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 1:2);
 eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
-h.LineWidth = .8; h.EdgeColor = "none";
-sc{1}.SizeData = 10; sc{2}.SizeData = 10; 
-sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); 
+h.LineWidth = 1; h.FaceColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = f_ord(1,:); 
 sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
 
-set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'log')
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
 ylabel({'post-pre participation %'; 'members'})
 set(gca, 'xticklabel', {'Open' 'Closed'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
-ylim([0 1000])
+ylim(y_lim)
 
 % for non-memeber cells
-subplot(2,4,6)
+subplot(2,4,8)
 fprintf('<strong>diff participation non-members Open vs closed</strong>\n')
 data1 = all_p_diff_n_mem_open(p_a_idx); 
 data2 = all_p_diff_n_mem_close(p_a_idx); 
@@ -408,16 +408,15 @@ data2 = all_p_diff_n_mem_close(p_a_idx);
 
 [h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 1:2);
 eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
-h.LineWidth = .8; h.EdgeColor = "none";
-sc{1}.SizeData = 10; sc{2}.SizeData = 10; 
-sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); 
+h.LineWidth = 1; h.FaceColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = f_ord(1,:); 
 sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
-
-set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'log')
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
 ylabel({'post-pre participation %'; 'members'})
 set(gca, 'xticklabel', {'Open' 'Closed'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
-ylim([0 1000])
+ylim(y_lim)
 
 % save
 exportgraphics(gcf, [fig_dir filesep 'Assembly_participation.pdf'], 'ContentType', 'vector');

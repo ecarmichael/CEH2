@@ -104,13 +104,13 @@ if ~isempty(stats)
         x_lim = xlim;
         % add the sig markers
         if (0.05 > p(1)) && (p(1)> 0.01)
-            text(x_lim(end)*.9, max(data_pool, [], 'all')*1.25, ['*overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
+            text(x_lim(end)*.9, max(data_pool, [], 'all')*1.25, ['*overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','right')
         elseif (0.01 >= p(1)) && (p(1) >= 0.001)
-            text(x_lim(end), max(data_pool, [], 'all')*1.25, ['** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
+            text(x_lim(end), max(data_pool, [], 'all')*1.25, ['** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','right')
         elseif p(1) < 0.001
-            text(x_lim(end), max(data_pool, [], 'all')*1.25, ['*** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
+            text(x_lim(end), max(data_pool, [], 'all')*1.25, ['*** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','right')
         elseif p(1) < 0.0001
-            text(x_lim(end), max(data_pool, [], 'all')*1.25, ['**** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',10, 'HorizontalAlignment','right')
+            text(x_lim(end), max(data_pool, [], 'all')*1.25, ['**** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','right')
         end
     end
 
@@ -124,13 +124,13 @@ if ~isempty(stats)
             data_pool = [data_a, data_b];
         end
         if (0.05 > this_p) && (this_p> 0.01)
-            text(median(x_vals(1:2)), max(data_pool, [], 'all')*1.15, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median(x_vals(1:2)), max(data_pool, [], 'all')*1.15, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
         elseif (0.01 >= this_p) && (this_p >= 0.001)
-            text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
         elseif this_p < 0.001
-            text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
         elseif this_p < 0.0001
-            text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['**** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['**** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
         end
 
         plot(x_vals(1:2), [max(data_pool, [], 'all')*1.1 max(data_pool, [], 'all')*1.1], '-k', 'linewidth', 1)
@@ -146,13 +146,13 @@ if ~isempty(stats)
             data_pool = [data_a, data_c];
         end
         if (0.5 > this_p) && (this_p> 0.01)
-            text(median([x_vals(1) x_vals(3)]), max(data_pool, [], 'all')*1.05, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median([x_vals(1) x_vals(3)]), max(data_pool, [], 'all')*1.05, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
         elseif (0.1 >= this_p) && (this_p >= 0.001)
-            text(median([x_vals(1) x_vals(3)])*.975, max(data_pool, [], 'all')*1.05, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median([x_vals(1) x_vals(3)])*.975, max(data_pool, [], 'all')*1.05, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
         elseif this_p < 0.001
-            text(median([x_vals(1) x_vals(3)])*.95, max(data_pool, [], 'all')*1.05, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median([x_vals(1) x_vals(3)])*.95, max(data_pool, [], 'all')*1.05, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
         elseif this_p < 0.0001
-            text(median([x_vals(1) x_vals(3)])*.925, max(data_pool, [], 'all')*1.05, ['**** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median([x_vals(1) x_vals(3)])*.925, max(data_pool, [], 'all')*1.05, ['**** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
         end
 
         plot([x_vals(1) x_vals(3)], [max(data_pool, [], 'all')*1.025 max(data_pool, [], 'all')*1.025], '-k', 'linewidth', 1)
@@ -169,13 +169,13 @@ if ~isempty(stats)
             data_pool = [data_b, data_c];
         end
         if (0.5 > this_p) && (this_p> 0.01)
-            text(median(x_vals(2:3)), max(data_pool, [], 'all')*1.1, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median(x_vals(2:3)), max(data_pool, [], 'all')*1.1, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
         elseif (0.1 >= this_p) && (this_p >= 0.001)
-            text(median(x_vals(2:3))*.975, max(data_pool, [], 'all')*1.1, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median(x_vals(2:3))*.975, max(data_pool, [], 'all')*1.1, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
         elseif this_p < 0.001
-            text(median(x_vals(2:3))*.95, max(data_pool, [], 'all')*1.1, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median(x_vals(2:3))*.95, max(data_pool, [], 'all')*1.1, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
         elseif this_p < 0.0001
-            text(median(x_vals(2:3))*.95, max(data_pool, [], 'all')*1.1, ['**** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',10)
+            text(median(x_vals(2:3))*.95, max(data_pool, [], 'all')*1.1, ['**** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
         end
 
         plot(x_vals(2:3), [max(data_pool, [], 'all')*1.05 max(data_pool, [], 'all')*1.05], '-k', 'linewidth', 1)
