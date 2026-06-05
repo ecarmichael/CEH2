@@ -264,6 +264,8 @@ end
 
 %% quantify participation of cells in assembly reactivations
 all_p_diff_mem = [];  all_p_diff_n_mem = []; sess_id = [];
+all_p_diff_mem_open = []; all_p_diff_mem_close = []; 
+all_p_diff_n_mem_open = []; all_p_diff_n_mem_close = []; 
 for iA = 1:length(A_out) % loop over sessions
     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
 
@@ -288,7 +290,18 @@ for iA = 1:length(A_out) % loop over sessions
             % p_diff_out{ii} = (p_post{ii}.out_A - p_pre{ii}.out_A);
             A_out{iA}{iB}.p_diff_mem(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx), 'omitmissing');
             A_out{iA}{iB}.p_diff_n_mem(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx), 'omitmissing');
-            end
+
+         
+            cent_idx = logical(A_out{iA}{iB}.place.bins(A_out{iA}{iB}.place.centroids+1) > 50); % is the cell tuned to the open arm in the anx session. 
+
+            A_out{iA}{iB}.p_diff_mem_open(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & cent_idx), 'omitmissing');
+            A_out{iA}{iB}.p_diff_n_mem_open(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & cent_idx), 'omitmissing');
+
+            A_out{iA}{iB}.p_diff_mem_close(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
+            A_out{iA}{iB}.p_diff_n_mem_close(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
+
+
+        end
         end
 
         % collect them all
@@ -296,6 +309,15 @@ for iA = 1:length(A_out) % loop over sessions
 % participation difference
 all_p_diff_mem = [all_p_diff_mem, A_out{iA}{iB}.p_diff_mem];
 all_p_diff_n_mem = [all_p_diff_n_mem, A_out{iA}{iB}.p_diff_n_mem];
+
+% open
+all_p_diff_mem_open = [all_p_diff_mem_open, A_out{iA}{iB}.p_diff_mem_open];
+all_p_diff_n_mem_open = [all_p_diff_n_mem_open, A_out{iA}{iB}.p_diff_n_mem_open];
+
+% close
+all_p_diff_mem_close = [all_p_diff_mem_close, A_out{iA}{iB}.p_diff_mem_close];
+all_p_diff_n_mem_close = [all_p_diff_n_mem_close, A_out{iA}{iB}.p_diff_n_mem_close];
+
 sess_id = [sess_id, repmat(iA, size(A_out{iA}{iB}.p_diff_mem))]; 
 
     end
@@ -328,10 +350,11 @@ sc{1}.SizeData = 10; sc{2}.SizeData = 10; sc{3}.SizeData = 10;
 sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
 sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
 
-set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'linear')
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'log')
 ylabel({'post-pre participation %'; 'members'})
-set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 14);
+set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
+ylim([0 1000])
 
 % for non-memeber cells
 subplot(2,4,5)
@@ -348,10 +371,57 @@ sc{1}.SizeData = 10; sc{2}.SizeData = 10; sc{3}.SizeData = 10;
 sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
 sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
 
-set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'linear')
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'log')
 ylabel({'post-pre participation %'; 'non-members'})
 set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
+ylim([0 1000])
+
+
+% Open vs closed
+% OPEN for memeber cells
+subplot(2,4,2)
+fprintf('<strong>diff participation members Open vs closed</strong>\n')
+data1 = all_p_diff_mem_open(p_a_idx); 
+data2 = all_p_diff_mem_close(p_a_idx); 
+% data3 = all_p_diff_mem_open(p_a_idx); 
+
+[h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 1:2);
+eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 10; sc{2}.SizeData = 10; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'log')
+ylabel({'post-pre participation %'; 'members'})
+set(gca, 'xticklabel', {'Open' 'Closed'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 3.5])
+ylim([0 1000])
+
+% for non-memeber cells
+subplot(2,4,6)
+fprintf('<strong>diff participation non-members Open vs closed</strong>\n')
+data1 = all_p_diff_n_mem_open(p_a_idx); 
+data2 = all_p_diff_n_mem_close(p_a_idx); 
+% data3 = all_p_diff_mem_open(p_a_idx); 
+
+[h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 1:2);
+eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 10; sc{2}.SizeData = 10; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'log')
+ylabel({'post-pre participation %'; 'members'})
+set(gca, 'xticklabel', {'Open' 'Closed'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 3.5])
+ylim([0 1000])
+
+% save
+exportgraphics(gcf, [fig_dir filesep 'Assembly_participation.pdf'], 'ContentType', 'vector');
+
 
 %% simple counts of number of assemblies per condition
 
