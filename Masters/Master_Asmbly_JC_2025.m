@@ -283,7 +283,7 @@ for iA = 1:length(A_out) % loop over sessions
                  A_out{iA}{iB}.p_diff_mem = nan; 
                  A_out{iA}{iB}.p_diff_n_mem = nan;
             else
-            p_diff_in{ii} = (p_post{ii}.in_A./p_post{ii}.out_A) ./ (p_pre{ii}.in_A./p_pre{ii}.out_A);
+            p_diff_in{ii} = ((p_post{ii}.in_A./p_post{ii}.out_A) ./ (p_pre{ii}.in_A./p_pre{ii}.out_A))*100;
             p_diff_in{ii}(isinf(p_diff_in{ii})) =nan;
             % p_diff_out{ii} = (p_post{ii}.out_A - p_pre{ii}.out_A);
             A_out{iA}{iB}.p_diff_mem(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx), 'omitmissing');
@@ -308,14 +308,14 @@ p_n_idx = ismember(sess_id, n_idx);
 p_f_idx = ismember(sess_id, f_idx); 
 p_a_idx = ismember(sess_id, a_idx); 
 
-f_pos = [1 6 6.25 3.4]; 
+% f_pos = [1 6 6.25 3.4]; 
 figure(1002)
 clf
-set(gcf,'Units','inch','OuterPosition',f_pos);
+% set(gcf,'Units','inch','OuterPosition',f_pos);
 
-
+% for memeber cells
 subplot(2,4,1)
-fprintf('<strong>diff participation: Nov Fam Anx</strong>\n')
+fprintf('<strong>diff participation members: Nov Fam Anx</strong>\n')
 data1 = all_p_diff_mem(p_n_idx); 
 data2 = all_p_diff_mem(p_f_idx); 
 data3 = all_p_diff_mem(p_a_idx); 
@@ -328,14 +328,30 @@ sc{1}.SizeData = 10; sc{2}.SizeData = 10; sc{3}.SizeData = 10;
 sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
 sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
 
-set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'log')
-ylabel('post-pre participation')
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'linear')
+ylabel({'post-pre participation %'; 'members'})
+set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 14);
+xlim([0.5 3.5])
+
+% for non-memeber cells
+subplot(2,4,5)
+fprintf('<strong>diff participation non-members: Nov Fam Anx</strong>\n')
+data1 = all_p_diff_n_mem(p_n_idx); 
+data2 = all_p_diff_n_mem(p_f_idx); 
+data3 = all_p_diff_n_mem(p_a_idx); 
+
+[h, eb, sc] = MS_bar_w_err3(data1, data2, data3, [f_ord(2,:);f_ord(5,:); f_ord(1,:)],1, 'anova1', 1:3);
+% MS_bar_w_err3(Pre_n_Asmbly(~anx_idx, 1)', wake_n_Asmbly(~anx_idx, 1)',Post_n_Asmbly(~anx_idx, 1)', [f_ord(4,:);f_ord(2,:); f_ord(5,:)],1, 'anova1', 1:3); 
+eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 10; sc{2}.SizeData = 10; sc{3}.SizeData = 10; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', 'linear')
+ylabel({'post-pre participation %'; 'non-members'})
 set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
-% line([1.6 2.4], [mean(data2),mean(data2)],'color', hex2rgb('#808080'), 'LineWidth',1, 'linestyle', '--' )
-% line([.6 1.4], [mean(data1),mean(data1)],'color', hex2rgb('#808080'), 'LineWidth',1 , 'linestyle', '--')
-% line([2.6 3.4], [mean(data3),mean(data3)],'color', hex2rgb('#808080'), 'LineWidth',1 , 'linestyle', '--')
-
 
 %% simple counts of number of assemblies per condition
 
