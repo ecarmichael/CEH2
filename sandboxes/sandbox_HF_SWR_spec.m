@@ -50,8 +50,13 @@
 % csc_idx = [29:2:42]; 
 
 % ctrl_h2b3_hab 2
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H2b3/HF2b3_2026-03-02_13-26-03_D1_Hab/Record Node 143'; 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H2b3/HF2b3_2026-03-02_13-26-03_D1_Hab/Record Node 143'; 
 % csc_idx = [ 1:2:34]; 
+% ts_prime = 0; 
+% 
+% pox2217_tl4
+csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox2217_2026-06-12_14-50-13_LT4\Record Node 117'; 
+csc_idx = 45; %1:4:96;
 ts_prime = 0; 
 
 %% load the spikes if present
@@ -180,7 +185,7 @@ swr_cut_iv = iv([360 1340 1520 3180], [500 1440 1580 3240]);
 % csc_theta = restrict(csc, theta_cur_iv); 
 %%
 
-swrs = MS_SWR_detector(csc, 'CH8');
+swrs = MS_SWR_detector(csc, 'CH75');
 
 %% csc check
 
