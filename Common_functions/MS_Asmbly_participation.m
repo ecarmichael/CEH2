@@ -40,7 +40,7 @@ for iA = size(Temp_in,2):-1:1
     % check the data for the cell by cell activity across each reactivation
     A_part= [];
 
-    if isempty(R_idx)
+    if isempty(R_idx)  || length(R_idx) < 3
         continue
     else
         for iR = length(R_idx):-1:1

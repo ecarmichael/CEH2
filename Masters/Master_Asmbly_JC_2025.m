@@ -292,7 +292,7 @@ for iA = 1:length(A_out) % loop over sessions
         % get the relative changes in participation (cell x cell0 in each assembly.
         p_diff_in = []; p_diff_out = [];
         for ii =length(p):-1:1
-            if isempty(p_pre{ii}) || isempty(p_post{ii})
+            if isempty(p_pre{ii}) || isempty(p_post{ii}) 
                 A_out{iA}{iB}.p_diff_mem = nan;
                 A_out{iA}{iB}.p_diff_n_mem = nan;
             else
@@ -393,7 +393,7 @@ f_pos = [1 6 6.25 3.4];
 figure(1002)
 clf
 set(gcf,'Units','inch','OuterPosition',f_pos);
-y_scale = 'linear'; y_lim = [0 7];
+y_scale = 'linear'; y_lim = [0 7]; y_t = [0.1 1 10]; 
 % for memeber cells
 subplot(2,4,1)
 fprintf('<strong>diff participation members: Nov Fam Anx</strong>\n')
@@ -413,10 +413,12 @@ set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 
 ylabel({'post-pre participation (fold change)'; 'members'})
 set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
-ylim(y_lim)
+yline(1, '--', 'color', hex2rgb('#808080'));
+% ylim(y_lim)
+% set(gca, 'ytick', y_t); 
 
 % for non-memeber cells
-subplot(2,4,5)
+subplot(2,4,5); cla
 fprintf('<strong>diff participation non-members: Nov Fam Anx</strong>\n')
 data1 = all_p_diff_n_mem(p_n_idx); 
 data2 = all_p_diff_n_mem(p_f_idx); 
@@ -434,7 +436,10 @@ set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 
 ylabel({'post-pre participation (fold change)'; 'non-members'})
 set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
-ylim(y_lim)
+yline(1, '--', 'color', hex2rgb('#808080'));
+
+% ylim(y_lim)
+% set(gca, 'ytick', y_t); 
 
 
 % PRE VS WAKE
@@ -545,7 +550,10 @@ set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 
 ylabel({'post-pre participation %'; 'members'})
 set(gca, 'xticklabel', {'Open' 'Closed'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
-ylim(y_lim)
+yline(1, '--', 'color', hex2rgb('#808080'));
+
+% ylim(y_lim)
+% set(gca, 'ytick', y_t); 
 
 % for non-memeber cells
 subplot(2,4,8)
@@ -564,7 +572,9 @@ set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 
 ylabel({'post-pre participation %'; 'members'})
 set(gca, 'xticklabel', {'Open' 'Closed'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
-ylim(y_lim)
+yline(1, '--', 'color', hex2rgb('#808080'));
+% ylim(y_lim)
+% set(gca, 'ytick', y_t); 
 
 % save
 exportgraphics(gcf, [fig_dir filesep 'Assembly_participation.pdf'], 'ContentType', 'vector');
