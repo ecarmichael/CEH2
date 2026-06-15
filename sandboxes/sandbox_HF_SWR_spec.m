@@ -50,10 +50,34 @@
 % csc_idx = [29:2:42]; 
 
 % ctrl_h2b3_hab 2
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H2b3/HF2b3_2026-03-02_13-26-03_D1_Hab/Record Node 143'; 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/TFC/H2b3/HF2b3_2026-03-02_13-26-03_D1_Hab/Record Node 143'; 
 % csc_idx = [ 1:2:34]; 
-ts_prime = 0; 
+% ts_prime = 0; 
 
+%pox2217_LT2
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-10_11-27-27_LT2/Record Node 117'; 
+% csc_idx = [ 1:2:34]; 
+% ts_prime = 0; 
+
+%pox2217_LT3
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-11_13-03-39_LT3/Record Node 117'; 
+% csc_idx = 1:2:32; 
+% ts_prime = 0; 
+
+%pox2217_LT4
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-12_14-50-13_LT4/Record Node 117'; 
+% csc_idx = 39; %1:2:96; 
+% ts_prime = 0; 
+
+%pox3265_LT2
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-10_12-35-40_LT2/Record Node 117'; 
+% csc_idx = 9; 
+% ts_prime = 0; 
+
+%pox3265_LT4
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-12_16-28-07_LT4/Record Node 117'; 
+csc_idx = 1:2:64; 
+ts_prime = 0; 
 %% load the spikes if present
 
 params = OE_load_params(phy_dir);
@@ -154,34 +178,6 @@ csc.cfg.hdr{end+1} = csc.cfg.hdr{end};
 end
 
 
-%% grab the SWR times
-evts_list = dir([swr_dir filesep '*Data*.events']);
-SWR_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs);
-
-iRi = diff(SWR_evts.t{2}); 
-keep_idx = iRi <.05; 
-
-SWR_evts.t{2}(keep_idx) = []; 
-%% trim if needed
-% ctrl_h1
-% swr_cut_iv = iv([csc.tvec(1) 385 460 940 1580], [350  440 560 1140 1840 ])
-
-%ctrl 3b3
-swr_cut_iv = iv([360 1340 1520 3180], [500 1440 1580 3240]); 
-
-% pox1_1
-% swr_cur_iv = iv([csc.tvec(1) 555], [515 csc.tvec(end)]); 
-% theta_cur_iv = iv([3400 3706],  [3460  3805]); 
-
-% % pox2_4
-% swr_cur_iv = iv([csc.tvec(1) 3460 3484.5 3513.35 3805], [3400 3483.5 3512.35 3706 csc.tvec(end)]); 
-% theta_cur_iv = iv([3400 3706],  [3460  3805]); 
-
-% csc_theta = restrict(csc, theta_cur_iv); 
-%%
-
-swrs = MS_SWR_detector(csc, 'CH8');
-
 %% csc check
 
 figure(1010)
@@ -196,6 +192,42 @@ end
 set(gca, 'YTick', y_t, 'YTickLabel', lab)
 
 % vline(SWR_evts.t{2}, 'r')
+
+% %% grab the SWR times
+% evts_list = dir([swr_dir filesep '*Data*.events']);
+% SWR_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs);
+% 
+% iRi = diff(SWR_evts.t{2}); 
+% keep_idx = iRi <.05; 
+% 
+% SWR_evts.t{2}(keep_idx) = []; 
+%% trim if needed
+% ctrl_h1
+% swr_cut_iv = iv([csc.tvec(1) 385 460 940 1580], [350  440 560 1140 1840 ])
+
+%ctrl 3b3
+% swr_cut_iv = iv([360 1340 1520 3180], [500 1440 1580 3240]); 
+
+% pox2217_tl2
+% swr_cut = iv(410, 1335);
+
+% pox3265_TL2
+swr_cut = iv([780, 1140 1320 2055], [920, 1280, 1420 2250])
+
+% pox1_1
+% swr_cur_iv = iv([csc.tvec(1) 555], [515 csc.tvec(end)]); 
+% theta_cur_iv = iv([3400 3706],  [3460  3805]); 
+
+% % pox2_4
+% swr_cur_iv = iv([csc.tvec(1) 3460 3484.5 3513.35 3805], [3400 3483.5 3512.35 3706 csc.tvec(end)]); 
+% theta_cur_iv = iv([3400 3706],  [3460  3805]); 
+
+% csc_theta = restrict(csc, theta_cur_iv); 
+%%
+
+swrs = MS_SWR_detector(csc, 'mean');
+
+
 
 %% get Single Double Tripples as per Yamamato & Tonegawa Neuron 2017
 % https://www.cell.com/neuron/fulltext/S0896-6273(17)30857-7#sec-4
@@ -242,7 +274,7 @@ swr_t = SelectIV([], this_swr, swr_type == 3);
 
 %% collect the data
 load("all_data.mat")
-this_name = 'ctrl_h2b3_d3'; 
+this_name = 'pox_3265_tl4'; 
 
 all_data.(this_name).csc = csc; 
 
@@ -277,10 +309,10 @@ vline([110, 220, 330]./1000)
 
 %%
 
-this_csc = ctrl_h1.csc;
-this_swr = ctrl_h1.swrs; 
+this_csc = all_data.pox_3265_tl2.csc;
+this_swr = all_data.pox_3265_tl2.swrs; 
 
-csc_idx = contains(this_csc.label, 'mean');
+csc_idx = contains(this_csc.label, this_swr.cfg.history.cfg{2}.target);
 
 csc_ft = this_csc; 
 csc_ft.data = this_csc.data(find(csc_idx),:); 
@@ -338,36 +370,65 @@ title('Pox2_4')
 
 %%  bar plot with some stats
 
-all_pox_rate = [all_data.pox1_1.swr_rate, all_data.pox1_2.swr_rate , all_data.pox2_4.swr_rate]; 
-all_ctr_rate = [all_data.ctrl_h1.swr_rate, all_data.ctrl_h2.swr_rate , all_data.ctrl_h3b3.swr_rate, all_data.ctrl_h2b3_d1.swr_rate,...
-    all_data.ctrl_h2b3_d3.swr_rate]; 
+% split the data into control and pox
 
-% type rate
-all_pox_type = [all_data.pox1_1.swr_type_rate;   all_data.pox1_2.swr_type_rate; all_data.pox2_4.swr_type_rate]; 
-all_ctr_type = [all_data.ctrl_h1.swr_type_rate; all_data.ctrl_h2.swr_type_rate; all_data.ctrl_h3b3.swr_type_rate;...
-    all_data.ctrl_h2b3_d1.swr_type_rate; all_data.ctrl_h2b3_d3.swr_type_rate]; 
-
-
-% get the ripple durations
 f = fieldnames(all_data); 
+all_pox_rate = []; all_pox_type = []; 
+all_pox_prob = []; all_pox_dur = []; 
+all_ctr_rate = []; all_ctr_type = []; 
+all_ctr_prob = []; all_ctr_dur = []; 
+
 for ii = 1:length(f)
+
+
     [all_data.(f{ii}).swr_type_prob , b] = histcounts(all_data.(f{ii}).swr_type,.5:1:4.5, 'Normalization','probability'); 
 
     % type rate
     all_data.(f{ii}).swr_dur = all_data.(f{ii}).swrs.tend - all_data.(f{ii}).swrs.tstart;
 
+    if contains(f{ii}, 'pox_2') 
+        all_pox_rate = [all_pox_rate; all_data.(f{ii}).swr_rate']; 
+        all_pox_type = [all_pox_type; all_data.(f{ii}).swr_type_rate]; 
+        all_pox_prob = [all_pox_prob; all_data.(f{ii}).swr_type_prob]; 
+        all_pox_dur = [all_pox_dur; all_data.(f{ii}).swr_dur]; 
+    else%if contains(f{ii}, 'pox_3') 
+        all_ctr_rate = [all_ctr_rate; all_data.(f{ii}).swr_rate']; 
+        all_ctr_type = [all_ctr_type; all_data.(f{ii}).swr_type_rate]; 
+        all_ctr_prob = [all_ctr_prob; all_data.(f{ii}).swr_type_prob]; 
+        all_ctr_dur = [all_ctr_dur; all_data.(f{ii}).swr_dur]; 
+    end
 end
 
-% type prob
-all_pox_prob = [all_data.pox1_1.swr_type_prob;   all_data.pox1_2.swr_type_prob; all_data.pox2_4.swr_type_prob]; 
-all_ctr_prob = [all_data.ctrl_h1.swr_type_prob; all_data.ctrl_h2.swr_type_prob; all_data.ctrl_h3b3.swr_type_prob;...
-    all_data.ctrl_h2b3_d1.swr_type_prob; all_data.ctrl_h2b3_d3.swr_type_prob]; 
+% all_pox_rate = [all_data.pox1_1.swr_rate, all_data.pox1_2.swr_rate , all_data.pox2_4.swr_rate, all_data.pox_2217_tl2.swr_rate, all_data.pox_3265_tl2.swr_rate]; 
+% all_ctr_rate = [all_data.ctrl_h1.swr_rate, all_data.ctrl_h2.swr_rate , all_data.ctrl_h3b3.swr_rate, all_data.ctrl_h2b3_d1.swr_rate,...
+%     all_data.ctrl_h2b3_d3.swr_rate]; 
+% 
+% % type rate
+% all_pox_type = [all_data.pox1_1.swr_type_rate;   all_data.pox1_2.swr_type_rate; all_data.pox2_4.swr_type_rate; all_data.pox_2217_tl2.swr_type_rate; all_data.pox_3265_tl2.swr_type_rate]; 
+% all_ctr_type = [all_data.ctrl_h1.swr_type_rate; all_data.ctrl_h2.swr_type_rate; all_data.ctrl_h3b3.swr_type_rate;...
+%     all_data.ctrl_h2b3_d1.swr_type_rate; all_data.ctrl_h2b3_d3.swr_type_rate]; 
+% 
 
+% % get the ripple durations
+% f = fieldnames(all_data); 
+% for ii = 1:length(f)
+%     [all_data.(f{ii}).swr_type_prob , b] = histcounts(all_data.(f{ii}).swr_type,.5:1:4.5, 'Normalization','probability'); 
+% 
+%     % type rate
+%     all_data.(f{ii}).swr_dur = all_data.(f{ii}).swrs.tend - all_data.(f{ii}).swrs.tstart;
+% 
+% end
 
-
-all_pox_dur = [all_data.pox1_1.swr_dur; all_data.pox1_2.swr_dur; all_data.pox2_4.swr_dur]; 
-all_ctr_dur = [all_data.ctrl_h1.swr_dur; all_data.ctrl_h2.swr_dur; all_data.ctrl_h3b3.swr_dur; all_data.ctrl_h2b3_d1.swr_dur; ...
-    all_data.ctrl_h2b3_d3.swr_dur]; 
+% % type prob
+% all_pox_prob = [all_data.pox1_1.swr_type_prob;   all_data.pox1_2.swr_type_prob; all_data.pox2_4.swr_type_prob; all_data.pox_2217_tl2.swr_type_prob; all_data.pox_3265_tl2.swr_type_prob]; 
+% all_ctr_prob = [all_data.ctrl_h1.swr_type_prob; all_data.ctrl_h2.swr_type_prob; all_data.ctrl_h3b3.swr_type_prob;...
+%     all_data.ctrl_h2b3_d1.swr_type_prob; all_data.ctrl_h2b3_d3.swr_type_prob]; 
+% 
+% 
+% 
+% all_pox_dur = [all_data.pox1_1.swr_dur; all_data.pox1_2.swr_dur; all_data.pox2_4.swr_dur; all_data.pox_2217_tl2.swr_dur; all_data.pox_3265_tl2.swr_dur]; 
+% all_ctr_dur = [all_data.ctrl_h1.swr_dur; all_data.ctrl_h2.swr_dur; all_data.ctrl_h3b3.swr_dur; all_data.ctrl_h2b3_d1.swr_dur; ...
+%     all_data.ctrl_h2b3_d3.swr_dur]; 
 
 % plots
 c_ord = [0.502 0.502 0.502 ; .8 0 0]; 
@@ -378,7 +439,7 @@ set(gcf,'Units','inch','position',[3 3 3.5 2.5]);
 clf; 
 hold on
 
-[h, eb, sc] = MS_bar_w_err(all_ctr_prob(:,1), all_pox_prob(:,1), c_ord, 1, 'ttest2', [1 1.5])
+[h, eb, sc] = MS_bar_w_err(all_ctr_prob(:,1), all_pox_prob(:,1), c_ord, 1, 'ttest2', [1 1.5]); 
 % sc{1}.MarkerFaceColor = c_ord(1,:); sc{2}.MarkerFaceColor = c_ord(2,:);
 
 MS_bar_w_err(all_ctr_prob(:,2), all_pox_prob(:,2), c_ord, 1, 'ttest2', [2 2.5])
@@ -434,19 +495,19 @@ figure(997)
 clf
 set(gcf,'Units','inch','position',[3 3 3.5 2.5]);
 % [~, ~, ~, p, stats] = MS_bar_w_err(all_ctr_dur*1000, all_pox_dur*1000, c_ord, 1, 'ttest2', [1 1.5]);
-MS_rain_plot([all_ctr_dur; all_pox_dur]', [zeros(1,length(all_ctr_dur)), ones(1,length(all_pox_dur))]', c_ord, 'ttest2', [1 3])
+MS_rain_plot([all_ctr_dur; all_pox_dur]', [zeros(1,length(all_ctr_dur)), ones(1,length(all_pox_dur))]', c_ord, 'ttest2', [1 3]); 
 % [~, ~, ~, p, stats] = MS_bar_w_err(all_ctr_dur*1000, all_pox_dur*1000, c_ord, 1, 'ttest2', [1 1.5]);
 % sc{1}.MarkerFaceColor = c_ord(1,:); sc{2}.MarkerFaceColor = c_ord(2,:);
 fprintf('SWR dur: t(%.0f): %.2f, p = %.3f\n',stats.df, stats.tstat, p )
 
 ylim([.75 6.75]); xlim([0 .12])
-set(gca, "yTick", [1.25 3.25 ], 'yTickLabel', {'aTau-', 'aTau+'}, 'TickDir', 'out', 'XTick', [0:.05:.1]);
+set(gca, "yTick", [1.25 3.25 ], 'yTickLabel', {'aTau-', 'aTau+'}, 'TickDir', 'out', 'XTick', 0:.05:.1);
 set(gca, 'XTickLabel', get(gca, 'xtick').*1000)
     %'YTick', 0:.1:.3)
 xlabel('SWR duration (ms)')
 %% quick glm
 
-t_type = table([1 2 3 4 5 6 7 8]', [repmat({'Pox'}, 3, 1); repmat({'Ctrl'}, 5, 1)], [all_pox_type(:,1); all_ctr_type(:,1)],...
+t_type = table([1:(size(all_pox_prob,1)+size(all_ctr_prob,1))]', [repmat({'Pox'}, size(all_pox_type,1), 1); repmat({'Ctrl'}, size(all_ctr_type,1), 1)], [all_pox_type(:,1); all_ctr_type(:,1)],...
     [all_pox_type(:,2); all_ctr_type(:,2)], [all_pox_type(:,2); all_ctr_type(:,2)],[all_pox_type(:,4); all_ctr_type(:,4)],...
     'VariableNames',{'Subject', 'Group', 'SWR1', 'SWR2', 'SWR3', 'SWR4'}); 
 
@@ -464,7 +525,7 @@ Tukey_table = multcompare(rm,'Group', 'By', 'type');
 
 
 
-t_prob = table([1 2 3 4 5 6 7 8]', [repmat({'Pox'}, 3, 1); repmat({'Ctrl'}, 5, 1)], [all_pox_prob(:,1); all_ctr_prob(:,1)],...
+t_prob = table([1:(size(all_pox_prob,1)+size(all_ctr_prob,1))]', [repmat({'Pox'}, size(all_pox_prob,1), 1); repmat({'Ctrl'}, size(all_ctr_prob,1), 1)], [all_pox_prob(:,1); all_ctr_prob(:,1)],...
     [all_pox_prob(:,2); all_ctr_prob(:,2)], [all_pox_prob(:,2); all_ctr_prob(:,2)],[all_pox_prob(:,4); all_ctr_prob(:,4)],...
     'VariableNames',{'Subject', 'Group', 'SWR1', 'SWR2', 'SWR3', 'SWR4'}); 
 

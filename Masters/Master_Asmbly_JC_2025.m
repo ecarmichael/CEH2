@@ -266,6 +266,17 @@ end
 all_p_diff_mem = [];  all_p_diff_n_mem = []; sess_id = [];
 all_p_diff_mem_open = []; all_p_diff_mem_close = []; 
 all_p_diff_n_mem_open = []; all_p_diff_n_mem_close = []; 
+
+% pre vs wake
+all_p_wake_diff_mem = [];  all_p_wake_diff_n_mem = []; 
+all_p_wake_diff_mem_open = []; all_p_wake_diff_mem_close = []; 
+all_p_wake_diff_n_mem_open = []; all_p_wake_diff_n_mem_close = []; 
+
+% wake vs post
+all_p_wp_diff_mem = [];  all_p_wp_diff_n_mem = []; 
+all_p_wp_diff_mem_open = []; all_p_wp_diff_mem_close = []; 
+all_p_wp_diff_n_mem_open = []; all_p_wp_diff_n_mem_close = []; 
+
 for iA = 1:length(A_out) % loop over sessions
     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
 
@@ -282,26 +293,53 @@ for iA = 1:length(A_out) % loop over sessions
         p_diff_in = []; p_diff_out = [];
         for ii =length(p):-1:1
             if isempty(p_pre{ii}) || isempty(p_post{ii})
-                 A_out{iA}{iB}.p_diff_mem = nan; 
-                 A_out{iA}{iB}.p_diff_n_mem = nan;
+                A_out{iA}{iB}.p_diff_mem = nan;
+                A_out{iA}{iB}.p_diff_n_mem = nan;
             else
-            p_diff_in{ii} = ((p_post{ii}.in_A./p_post{ii}.out_A) ./ (p_pre{ii}.in_A./p_pre{ii}.out_A))*100;
-            p_diff_in{ii}(isinf(p_diff_in{ii})) =nan;
-            % p_diff_out{ii} = (p_post{ii}.out_A - p_pre{ii}.out_A);
-            A_out{iA}{iB}.p_diff_mem(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx), 'omitmissing');
-            A_out{iA}{iB}.p_diff_n_mem(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx), 'omitmissing');
-
-         
-            cent_idx = logical(A_out{iA}{iB}.place.bins(A_out{iA}{iB}.place.centroids+1) > 50); % is the cell tuned to the open arm in the anx session. 
-
-            A_out{iA}{iB}.p_diff_mem_open(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & cent_idx), 'omitmissing');
-            A_out{iA}{iB}.p_diff_n_mem_open(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & cent_idx), 'omitmissing');
-
-            A_out{iA}{iB}.p_diff_mem_close(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
-            A_out{iA}{iB}.p_diff_n_mem_close(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                p_diff_in{ii} = ((p_post{ii}.in_A./p_post{ii}.out_A) ./ (p_pre{ii}.in_A./p_pre{ii}.out_A));
+                p_diff_in{ii}(isinf(p_diff_in{ii})) =nan;
+                % p_diff_out{ii} = (p_post{ii}.out_A - p_pre{ii}.out_A);
+                A_out{iA}{iB}.p_diff_mem(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx), 'omitmissing');
+                A_out{iA}{iB}.p_diff_n_mem(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx), 'omitmissing');
 
 
-        end
+                cent_idx = logical(A_out{iA}{iB}.place.bins(A_out{iA}{iB}.place.centroids+1) > 50); % is the cell tuned to the open arm in the anx session.
+
+                A_out{iA}{iB}.p_diff_mem_open(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & cent_idx), 'omitmissing');
+                A_out{iA}{iB}.p_diff_n_mem_open(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & cent_idx), 'omitmissing');
+
+                A_out{iA}{iB}.p_diff_mem_close(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                A_out{iA}{iB}.p_diff_n_mem_close(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                
+                % same but for pre vs task;
+                p_wake_diff_in{ii} = ((p{ii}.in_A./p{ii}.out_A) ./ (p_pre{ii}.in_A./p_pre{ii}.out_A));
+                p_wake_diff_in{ii}(isinf(p_wake_diff_in{ii})) =nan;
+                % p_diff_out{ii} = (p_post{ii}.out_A - p_pre{ii}.out_A);
+                A_out{iA}{iB}.p_wake_diff_mem(ii) = mean(p_wake_diff_in{ii}(p_pre{ii}.mem_idx), 'omitmissing');
+                A_out{iA}{iB}.p_wake_diff_n_mem(ii) = mean(p_wake_diff_in{ii}(~p_pre{ii}.mem_idx), 'omitmissing');
+
+                A_out{iA}{iB}.p_wake_diff_mem_open(ii) = mean(p_wake_diff_in{ii}(p_pre{ii}.mem_idx & cent_idx), 'omitmissing');
+                A_out{iA}{iB}.p_wake_diff_n_mem_open(ii) = mean(p_wake_diff_in{ii}(~p_pre{ii}.mem_idx & cent_idx), 'omitmissing');
+
+                A_out{iA}{iB}.p_wake_diff_mem_close(ii) = mean(p_wake_diff_in{ii}(p_pre{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                A_out{iA}{iB}.p_wake_diff_n_mem_close(ii) = mean(p_wake_diff_in{ii}(~p_pre{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                
+
+                % same but for post vs task;
+                p_wp_diff_in{ii} = ((p_post{ii}.in_A./p{ii}.out_A) ./ (p{ii}.in_A./p{ii}.out_A));
+                p_wp_diff_in{ii}(isinf(p_wp_diff_in{ii})) =nan;
+                % p_diff_out{ii} = (p_post{ii}.out_A - p_pre{ii}.out_A);
+                A_out{iA}{iB}.p_wp_diff_mem(ii) = mean(p_wp_diff_in{ii}(p_pre{ii}.mem_idx), 'omitmissing');
+                A_out{iA}{iB}.p_wp_diff_n_mem(ii) = mean(p_wp_diff_in{ii}(~p_pre{ii}.mem_idx), 'omitmissing');
+
+                A_out{iA}{iB}.p_wp_diff_mem_open(ii) = mean(p_wp_diff_in{ii}(p_pre{ii}.mem_idx & cent_idx), 'omitmissing');
+                A_out{iA}{iB}.p_wp_diff_n_mem_open(ii) = mean(p_wp_diff_in{ii}(~p_pre{ii}.mem_idx & cent_idx), 'omitmissing');
+
+                A_out{iA}{iB}.p_wp_diff_mem_close(ii) = mean(p_wp_diff_in{ii}(p_pre{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                A_out{iA}{iB}.p_wp_diff_n_mem_close(ii) = mean(p_wp_diff_in{ii}(~p_pre{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                
+
+            end
         end
 
         % collect them all
@@ -310,13 +348,34 @@ for iA = 1:length(A_out) % loop over sessions
 all_p_diff_mem = [all_p_diff_mem, A_out{iA}{iB}.p_diff_mem];
 all_p_diff_n_mem = [all_p_diff_n_mem, A_out{iA}{iB}.p_diff_n_mem];
 
+all_p_wake_diff_mem = [all_p_wake_diff_mem, A_out{iA}{iB}.p_wake_diff_mem];
+all_p_wake_diff_n_mem = [all_p_wake_diff_n_mem, A_out{iA}{iB}.p_wake_diff_n_mem];
+
+all_p_wp_diff_mem = [all_p_wp_diff_mem, A_out{iA}{iB}.p_wp_diff_mem];
+all_p_wp_diff_n_mem = [all_p_wp_diff_n_mem, A_out{iA}{iB}.p_wp_diff_n_mem];
+
+
 % open
 all_p_diff_mem_open = [all_p_diff_mem_open, A_out{iA}{iB}.p_diff_mem_open];
 all_p_diff_n_mem_open = [all_p_diff_n_mem_open, A_out{iA}{iB}.p_diff_n_mem_open];
 
+all_p_wake_diff_mem_open = [all_p_wake_diff_mem_open, A_out{iA}{iB}.p_wake_diff_mem_open];
+all_p_wake_diff_n_mem_open = [all_p_wake_diff_n_mem_open, A_out{iA}{iB}.p_wake_diff_n_mem_open];
+
+all_p_wp_diff_mem_open = [all_p_wp_diff_mem_open, A_out{iA}{iB}.p_wp_diff_mem_open];
+all_p_wp_diff_n_mem_open = [all_p_wp_diff_n_mem_open, A_out{iA}{iB}.p_wp_diff_n_mem_open];
+
+
 % close
 all_p_diff_mem_close = [all_p_diff_mem_close, A_out{iA}{iB}.p_diff_mem_close];
 all_p_diff_n_mem_close = [all_p_diff_n_mem_close, A_out{iA}{iB}.p_diff_n_mem_close];
+
+all_p_wake_diff_mem_close = [all_p_wake_diff_mem_close, A_out{iA}{iB}.p_wake_diff_mem_close];
+all_p_wake_diff_n_mem_close = [all_p_wake_diff_n_mem_close, A_out{iA}{iB}.p_wake_diff_n_mem_close];
+
+all_p_wp_diff_mem_close = [all_p_wp_diff_mem_close, A_out{iA}{iB}.p_wp_diff_mem_close];
+all_p_wp_diff_n_mem_close = [all_p_wp_diff_n_mem_close, A_out{iA}{iB}.p_wp_diff_n_mem_close];
+
 
 sess_id = [sess_id, repmat(iA, size(A_out{iA}{iB}.p_diff_mem))]; 
 
@@ -330,11 +389,11 @@ p_n_idx = ismember(sess_id, n_idx);
 p_f_idx = ismember(sess_id, f_idx); 
 p_a_idx = ismember(sess_id, a_idx); 
 
-% f_pos = [1 6 6.25 3.4]; 
+f_pos = [1 6 6.25 3.4]; 
 figure(1002)
 clf
 set(gcf,'Units','inch','OuterPosition',f_pos);
-y_scale = 'linear'; y_lim = [0 700];
+y_scale = 'linear'; y_lim = [0 7];
 % for memeber cells
 subplot(2,4,1)
 fprintf('<strong>diff participation members: Nov Fam Anx</strong>\n')
@@ -343,7 +402,7 @@ data2 = all_p_diff_mem(p_f_idx);
 data3 = all_p_diff_mem(p_a_idx); 
 
 [h, eb, sc] = MS_bar_w_err3(data1, data2, data3, [f_ord(2,:);f_ord(5,:); f_ord(1,:)],1, 'anova1', 1:3);
-% MS_bar_w_err3(Pre_n_Asmbly(~anx_idx, 1)', wake_n_Asmbly(~anx_idx, 1)',Post_n_Asmbly(~anx_idx, 1)', [f_ord(4,:);f_ord(2,:); f_ord(5,:)],1, 'anova1', 1:3); 
+% [h, p, stats] = MS_rain_plot([data1, data2, data3],[zeros(size(data1)), ones(size(data2)), ones(size(data2))+1], [f_ord(2,:); hex2rgb('#808080'); 1 0 0],'anova1', 1:3, 'wiskers');
 eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
 h.LineWidth = .8; h.EdgeColor = "none";
 sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; 
@@ -351,7 +410,7 @@ sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#80
 sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
 
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
-ylabel({'post-pre participation %'; 'members'})
+ylabel({'post-pre participation (fold change)'; 'members'})
 set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
 ylim(y_lim)
@@ -372,11 +431,100 @@ sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#80
 sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
 
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
-ylabel({'post-pre participation %'; 'non-members'})
+ylabel({'post-pre participation (fold change)'; 'non-members'})
 set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
 ylim(y_lim)
 
+
+% PRE VS WAKE
+% % for memeber cells
+% subplot(2,4,2)
+% fprintf('<strong>PRE WAKE diff participation members: Nov Fam Anx</strong>\n')
+% data1 = all_p_wake_diff_mem(p_n_idx); 
+% data2 = all_p_wake_diff_mem(p_f_idx); 
+% data3 = all_p_wake_diff_mem(p_a_idx); 
+% 
+% [h, eb, sc] = MS_bar_w_err3(data1, data2, data3, [f_ord(2,:);f_ord(5,:); f_ord(1,:)],1, 'anova1', 1:3);
+% % [h, p, stats] = MS_rain_plot([data1, data2, data3],[zeros(size(data1)), ones(size(data2)), ones(size(data2))+1], [f_ord(2,:); hex2rgb('#808080'); 1 0 0],'anova1', 1:3, 'wiskers');
+% eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
+% h.LineWidth = .8; h.EdgeColor = "none";
+% sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; 
+% sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
+% sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
+% 
+% set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
+% ylabel({'wake-pre participation %'; 'members'})
+% set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+% xlim([0.5 3.5])
+% ylim([0 3000])
+% 
+% 
+% % for non memeber cells
+% subplot(2,4,6)
+% fprintf('<strong>PRE WAKE diff participation non-members: Nov Fam Anx</strong>\n')
+% data1 = all_p_wake_diff_n_mem(p_n_idx); 
+% data2 = all_p_wake_diff_n_mem(p_f_idx); 
+% data3 = all_p_wake_diff_n_mem(p_a_idx); 
+% 
+% [h, eb, sc] = MS_bar_w_err3(data1, data2, data3, [f_ord(2,:);f_ord(5,:); f_ord(1,:)],1, 'anova1', 1:3);
+% % [h, p, stats] = MS_rain_plot([data1, data2, data3],[zeros(size(data1)), ones(size(data2)), ones(size(data2))+1], [f_ord(2,:); hex2rgb('#808080'); 1 0 0],'anova1', 1:3, 'wiskers');
+% eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
+% h.LineWidth = .8; h.EdgeColor = "none";
+% sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; 
+% sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
+% sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
+% 
+% set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
+% ylabel({'wake-pre participation %'; 'non-members'})
+% set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+% xlim([0.5 3.5])
+% ylim([0 3000])
+
+
+% WAKE vs POST
+% % for memeber cells
+% subplot(2,4,3)
+% fprintf('<strong>PRE WAKE diff participation members: Nov Fam Anx</strong>\n')
+% data1 = all_p_wp_diff_mem(p_n_idx); 
+% data2 = all_p_wp_diff_mem(p_f_idx); 
+% data3 = all_p_wp_diff_mem(p_a_idx); 
+% 
+% [h, eb, sc] = MS_bar_w_err3(data1, data2, data3, [f_ord(2,:);f_ord(5,:); f_ord(1,:)],1, 'anova1', 1:3);
+% % [h, p, stats] = MS_rain_plot([data1, data2, data3],[zeros(size(data1)), ones(size(data2)), ones(size(data2))+1], [f_ord(2,:); hex2rgb('#808080'); 1 0 0],'anova1', 1:3, 'wiskers');
+% eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
+% h.LineWidth = .8; h.EdgeColor = "none";
+% sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; 
+% sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
+% sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
+% 
+% set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
+% ylabel({'post/wake participation %'; 'members'})
+% set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+% xlim([0.5 3.5])
+% ylim(y_lim)
+% 
+% 
+% % for non memeber cells
+% subplot(2,4,7)
+% fprintf('<strong>PRE WAKE diff participation non-members: Nov Fam Anx</strong>\n')
+% data1 = all_p_wp_diff_n_mem(p_n_idx); 
+% data2 = all_p_wp_diff_n_mem(p_f_idx); 
+% data3 = all_p_wp_diff_n_mem(p_a_idx); 
+% 
+% [h, eb, sc] = MS_bar_w_err3(data1, data2, data3, [f_ord(2,:);f_ord(5,:); f_ord(1,:)],1, 'anova1', 1:3);
+% % [h, p, stats] = MS_rain_plot([data1, data2, data3],[zeros(size(data1)), ones(size(data2)), ones(size(data2))+1], [f_ord(2,:); hex2rgb('#808080'); 1 0 0],'anova1', 1:3, 'wiskers');
+% eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
+% h.LineWidth = .8; h.EdgeColor = "none";
+% sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; 
+% sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
+% sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
+% 
+% set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
+% ylabel({'post/wake participation %'; 'non-members'})
+% set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+% xlim([0.5 3.5])
+% ylim(y_lim)
 
 % Open vs closed
 % OPEN for memeber cells
