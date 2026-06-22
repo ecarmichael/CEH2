@@ -3,15 +3,15 @@ function [hb, eb, sc, p, stats_out] =  MS_bar_w_err3(data_a, data_b,data_c, colo
 
 if nargin < 4
     data_flag = 1;
-    stats = 'anova2';
+    stats = 'anova1';
     x_vals = [1 2 3]; % where to put the plot. useful for putting multiple together.
     color = MS_linspecer(3);
 elseif nargin < 5
     data_flag = 1;
-    stats = 'anova2';
+    stats = 'anova1';
     x_vals = [1 2 3]; % where to put the plot. useful for putting multiple together.
 elseif nargin < 6
-    stats = 'anova2';
+    stats = 'anova1';
     x_vals = [1 2 3];
 elseif nargin < 7
     x_vals = [1 2 3];
@@ -43,6 +43,9 @@ if ~isempty(stats)
     tbl = table(d_mat(1,:)', d_mat(2,:)', d_mat(3,:)', 'Variablenames', {'A', 'B', 'C'});
     meas = table([1 2 3]', 'VariableNames',{'meas'});
 
+    withinTbl = table([1 2 3]', 'VariableNames', {'Rep'});
+    withinTbl.Rep = categorical(withinTbl.Rep);
+
     switch stats
         case 'anova1'
             % disp('using ttest')
@@ -54,6 +57,13 @@ if ~isempty(stats)
             [results, means] = multcompare(stats_out.stats, 'display', 'off');
             stats_out.m_tbl =  array2table([results,means],"VariableNames", ...
                 ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value","Mean","Standard Error"]);
+
+                % print the results
+    if p(1) < 0.05
+        fprintf('<strong>%s</strong> - F(<strong>%d</strong>,<strong>%d</strong>): <strong>%.2f</strong> p = <strong>%.5f</strong>\n',stats, stats_out.a_tbl{2,3},stats_out.stats.df, stats_out.stats.F, stats_out.a_tbl{2,6})
+    else
+        fprintf('<strong>%s</strong> - F(%d,%d): %.2f p = %.5f \n',stats, stats_out.a_tbl{2,3},stats_out.stats.df, stats_out.stats.F, stats_out.a_tbl{2,6})
+    end
 
         case 'anova2'
             % disp('using ttest')
@@ -69,17 +79,46 @@ if ~isempty(stats)
             plot([offsets_a, offsets_b]', [data_a ,data_b]', '-', 'Color', [.5 .5 .5])
             plot([offsets_b, offsets_c]', [data_b ,data_c]', '-', 'Color', [.5 .5 .5])
 
+    % print the results
+    if p(1) < 0.05
+        fprintf('<strong>%s</strong> - F(<strong>%d</strong>,<strong>%d</strong>): <strong>%.2f</strong> p = <strong>%.5f</strong>\n',stats, stats_out.a_tbl{2,3},stats_out.stats.df, stats_out.stats.F, stats_out.a_tbl{2,6})
+    else
+        fprintf('<strong>%s</strong> - F(%d,%d): %.2f p = %.5f \n',stats, stats_out.a_tbl{2,3},stats_out.stats.df, stats_out.stats.F, stats_out.a_tbl{2,6})
+    end
 
-            % case 'ranova'
-            %     % disp('using ttest2')
-            %     rm = fitrm(tbl, 'A-C ~ 1', 'WithinDesign',meas);
-            %     [stats_out.r_tbl, ~, ~, h] = ranova(rm);
-            %
-            %     % reconstruct to match ANOVA
-            %
-            %     results = multcompare(rm,'meas');
-            %     % add connections between points.
-            %     plot([offsets_a, offsets_b, offsets_c]', [data_a ;data_b; data_c], '-', 'Color', [.5 .5 .5])
+            case 'ranova'
+                disp('using RANOVA')
+                rm = fitrm(tbl, 'A-C ~ 1', 'WithinDesign',withinTbl);
+
+                stats_out.r_tbl = ranova(rm,'WithinModel', 'Rep');
+
+                
+
+                p = stats_out.r_tbl.pValue(3); 
+
+                if p(1) < 0.05; h =1; else h=0; end
+
+                % reconstruct to match ANOVA
+
+                [stats_out.m_tbl] = multcompare(rm, 'Rep', 'ComparisonType', 'bonferroni'); 
+
+            stats_out.m_tbl =  stats_out.m_tbl([1,2,4],:); 
+            stats_out.m_tbl = renamevars(stats_out.m_tbl, "Rep_1", "Group A");
+            stats_out.m_tbl = renamevars(stats_out.m_tbl, "Rep_2", "Group B");
+            stats_out.m_tbl = renamevars(stats_out.m_tbl, "pValue", "P-value");
+
+
+            % add connections between points.
+            plot([offsets_a, offsets_b]', [data_a ,data_b]', '-', 'Color', [.5 .5 .5])
+            plot([offsets_b, offsets_c]', [data_b ,data_c]', '-', 'Color', [.5 .5 .5])
+
+    % print the results
+    if p(1) < 0.05
+        fprintf('<strong>%s</strong> - F(<strong>%d</strong>,<strong>%d</strong>): <strong>%.2f</strong> p = <strong>%.5f</strong>\n',stats, stats_out.r_tbl.DF(3),stats_out.r_tbl.DF(4), stats_out.r_tbl.pValue(3), p)
+    else
+        fprintf('<strong>%s</strong> - F(%d,%d): %.2f p = %.5f \n',stats, stats_out.r_tbl.DF(3),stats_out.r_tbl.DF(4), stats_out.r_tbl.pValue(3), p)
+    end
+
         case 'KW' % nonparametric version of anova1
             % disp('using ks')
             [h, p, stats_out.stats] = kruskalwallis([d_mat(1,:)', d_mat(2,:)', d_mat(3,:)']);
@@ -87,12 +126,7 @@ if ~isempty(stats)
 
     end
 
-    % print the results
-    if p(1) < 0.05
-        fprintf('<strong>%s</strong> - F(<strong>%d</strong>,<strong>%d</strong>): <strong>%.2f</strong> p = <strong>%.5f</strong>\n',stats, stats_out.a_tbl{2,3},stats_out.stats.df, stats_out.stats.F, stats_out.a_tbl{2,6})
-    else
-        fprintf('<strong>%s</strong> - F(%d,%d): %.2f p = %.5f \n',stats, stats_out.a_tbl{2,3},stats_out.stats.df, stats_out.stats.F, stats_out.a_tbl{2,6})
-    end
+
     % overall
     if ~isnan(h) && p(1) < 0.05
         if size(data_a,2) == 1
@@ -183,20 +217,20 @@ if ~isempty(stats)
 
     % report the posthoc
     if isfield(stats_out, 'm_tbl')
-        if stats_out.m_tbl{1,6} < 0.05
-            fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b),  stats_out.m_tbl{1,6})
+        if stats_out.m_tbl.("P-value")(1) < 0.05
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b),  stats_out.m_tbl.("P-value")(1))
         else
-            fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f); p =  %.5f \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b),  stats_out.m_tbl{1,6})
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f); p =  %.5f \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b),  stats_out.m_tbl.("P-value")(1))
         end
-        if stats_out.m_tbl{2,6} < 0.05
-            fprintf('Group A (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl{2,6})
+        if stats_out.m_tbl.("P-value")(3) < 0.05
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl.("P-value")(2))
         else
-            fprintf('Group A (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  %.5f \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl{2,6})
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  %.5f \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl.("P-value")(2))
         end
-        if stats_out.m_tbl{3,6} < 0.05
-            fprintf('Group B (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl{3,6})
+        if stats_out.m_tbl.("P-value")(3) < 0.05
+            fprintf('Group B (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl.("P-value")(3))
         else
-            fprintf('Group B (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  %.5f \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl{3,6})
+            fprintf('Group B (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  %.5f \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_c, 'omitnan'),MS_SEM(data_c), stats_out.m_tbl.("P-value")(3))
         end
     end
 

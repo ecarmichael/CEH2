@@ -72,7 +72,7 @@ set(gcf,'Units','inch','OuterPosition',f_pos);
 
 subplot(2,4,1); cla
 fprintf('<strong>Hypno Ratio</strong>: \n')
-[h, eb, sc, p, stats] = MS_bar_w_err3(all_hypno_ratio(:,1),all_hypno_ratio(:,3),all_hypno_ratio(:,2),[ hex2rgb('#808080'); hex2rgb('#437F97'); hex2rgb('#849323')] , 1, 'anova2', 1:3);
+[h, eb, sc, p, stats] = MS_bar_w_err3(all_hypno_ratio(:,1)*100,all_hypno_ratio(:,3)*100,all_hypno_ratio(:,2)*100,[ hex2rgb('#808080'); hex2rgb('#437F97'); hex2rgb('#849323')] , 1, 'ranova', 1:3);
 eb.LineWidth = .5; %eb.Color = 'k'; eb.LineStyle = "--"; 
 h.LineWidth = .8; h.EdgeColor = "none";
 sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; 

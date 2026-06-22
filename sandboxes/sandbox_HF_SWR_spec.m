@@ -81,9 +81,18 @@
 % ts_prime = 0; 
 
 %pox3265_LT4
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-12_16-28-07_LT4/Record Node 117'; 
-csc_idx = 1:2:64; 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-12_16-28-07_LT4/Record Node 117'; 
+% csc_idx = 1:2:96; 
+% ts_prime = 0; 
+% csc_idx = {'CH122'}; 
+
+%pox3567_LT3
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-17_11-37-15_LT3/Record Node 117'; 
+csc_idx = 1:2:96; 
 ts_prime = 0; 
+% csc_idx = {'CH124'}; 
+csc_idx = {'CH135'}; % Sub
+
 %% load the spikes if present
 
 params = OE_load_params(phy_dir);
@@ -144,10 +153,10 @@ for ii = 1:length(csc_list)
         labels{ii} = info.header.channel;
         csc.cfg.hdr{ii} = info.header;
         csc.cfg.hdr{ii}.SamplingFrequency = info.header.sampleRate;
-
+        csc.data = [csc.data, NaN(length(csc.data),length(csc_list)-1)]; % pad the NaNa
     else
         [data, ~, info] = load_open_ephys_data([csc_list(ii).folder filesep csc_list(ii).name]);
-        csc.data =[csc.data, data];
+        csc.data(:,ii) =  data;
         labels{ii} = info.header.channel;
         csc.cfg.hdr{ii} = info.header;
         csc.cfg.hdr{ii}.SamplingFrequency = info.header.sampleRate;
@@ -207,6 +216,30 @@ set(gca, 'YTick', y_t, 'YTickLabel', lab)
 % keep_idx = iRi <.05; 
 % 
 % SWR_evts.t{2}(keep_idx) = []; 
+
+%% get teh movement if present in the evts
+
+move_ts = ts({OE_evts.t{contains(OE_evts.label, '8')}}); 
+
+mov_rate  = MS_spike2rate(move_ts, csc.tvec)
+
+
+cfg_mov = []; 
+cfg_mov.threshold = .001;
+cfg_mov.dcn = '<';
+cfg_mov.operation = '<';
+cfg_mov.minlen = .5;
+
+mov_iv = TSDtoIV(cfg_mov, mov_rate);
+
+% pad movement 
+
+cfg_resize.d = [+.5 -.5]; 
+
+mov_iv = ResizeIV(cfg_resize, mov_iv); 
+
+
+csc_r = restrict(csc, mov_iv); 
 %% trim if needed
 % ctrl_h1
 % swr_cut_iv = iv([csc.tvec(1) 385 460 940 1580], [350  440 560 1140 1840 ])
@@ -218,7 +251,7 @@ set(gca, 'YTick', y_t, 'YTickLabel', lab)
 % swr_cut = iv(410, 1335);
 
 % pox3265_TL2
-swr_cut = iv([780, 1140 1320 2055], [920, 1280, 1420 2250])
+% swr_cut = iv([780, 1140 1320 2055], [920, 1280, 1420 2250])
 
 % pox1_1
 % swr_cur_iv = iv([csc.tvec(1) 555], [515 csc.tvec(end)]); 
@@ -231,9 +264,16 @@ swr_cut = iv([780, 1140 1320 2055], [920, 1280, 1420 2250])
 % csc_theta = restrict(csc, theta_cur_iv); 
 %%
 
-swrs = MS_SWR_detector(csc, 'mean');
+if length(csc_r.label) == 1
+swrs = MS_SWR_detector(csc_r,csc.label{1});
 
+else
 
+swrs = MS_SWR_detector(csc_r, 'mean');
+end
+
+this_swr = swrs; 
+this_csc = csc_r; 
 
 %% get Single Double Tripples as per Yamamato & Tonegawa Neuron 2017
 % https://www.cell.com/neuron/fulltext/S0896-6273(17)30857-7#sec-4
@@ -280,7 +320,7 @@ swr_t = SelectIV([], this_swr, swr_type == 3);
 
 %% collect the data
 load("all_data.mat")
-this_name = 'pox_3265_tl4'; 
+this_name = 'pox_3557_tl3'; 
 
 all_data.(this_name).csc = csc; 
 
@@ -293,30 +333,53 @@ all_data.(this_name).swr_s= swr_s;
 all_data.(this_name).swr_d= swr_d; 
 all_data.(this_name).swr_t= swr_t; 
 
+all_data.(this_name).mov= mov_iv; 
+all_data.(this_name).evts=OE_evts;
+
 save('all_data.mat', 'all_data')
-%% histo of SWR diffs
+% %% histo of SWR diffs
+% 
+% figure(1919)
+% subplot(2,2,1)
+% histogram(swrs.tend{2}), 0:.01:1)
+% vline([110, 220, 330]./1000)
+% 
+% subplot(2,2,3)
+% % pie([])
+% 
+% subplot(2,2,2)
+% histogram(diff(IVcenters(swrs)), 0:.01:1)
+% vline([110, 220, 330]./1000)
 
-figure(1919)
-subplot(2,2,1)
-histogram(diff(SWR_evts.t{2}), 0:.01:1)
-vline([110, 220, 330]./1000)
 
-subplot(2,2,3)
-% pie([])
+%% SUB SWRS
 
-subplot(2,2,2)
-histogram(diff(IVcenters(swrs)), 0:.01:1)
-vline([110, 220, 330]./1000)
+load("all_data_sub.mat")
+this_name = 'pox_3557_tl3'; 
 
+all_data.(this_name).csc = csc; 
 
+all_data.(this_name).swrs= swrs;
+all_data.(this_name).swr_rate = length(swrs.tstart) / (length(csc.tvec) ./ csc.cfg.hdr{1}.SamplingFrequency); 
+all_data.(this_name).swr_type= swr_type;
+all_data.(this_name).swr_type_rate= swr_types_rate;
+
+all_data.(this_name).swr_s= swr_s; 
+all_data.(this_name).swr_d= swr_d; 
+all_data.(this_name).swr_t= swr_t; 
+
+all_data.(this_name).mov= mov_iv; 
+all_data.(this_name).evts=OE_evts;
+
+save('all_data_sub.mat', 'all_data')
 
 %% get the spectrogram
 
 
 %%
 
-this_csc = all_data.pox_3265_tl2.csc;
-this_swr = all_data.pox_3265_tl2.swrs; 
+this_csc = all_data.(this_name).csc;
+this_swr = all_data.(this_name).swrs; 
 
 csc_idx = contains(this_csc.label, this_swr.cfg.history.cfg{2}.target);
 
@@ -365,12 +428,12 @@ shadedErrorBar(pox1.TFR.freq, yMean, ySEM, 'lineprops', '-r');
 
 %% theta gamma mod
 
-[CoMo,Phi_f, Amp_f]= MS_phase_freq([], csc_theta, [4, 12], [20 120]);
-
-figure(10111)
-clf
-imagesc(Phi_f, Amp_f, CoMo')
-title('Pox2_4')
+% [CoMo,Phi_f, Amp_f]= MS_phase_freq([], csc_theta, [4, 12], [20 120]);
+% 
+% figure(10111)
+% clf
+% imagesc(Phi_f, Amp_f, CoMo')
+% title('Pox2_4')
 %% spectrogram 
 
 
@@ -392,7 +455,7 @@ for ii = 1:length(f)
     % type rate
     all_data.(f{ii}).swr_dur = all_data.(f{ii}).swrs.tend - all_data.(f{ii}).swrs.tstart;
 
-    if contains(f{ii}, 'pox_2') 
+    if contains(f{ii}, 'pox_3') 
         all_pox_rate = [all_pox_rate; all_data.(f{ii}).swr_rate']; 
         all_pox_type = [all_pox_type; all_data.(f{ii}).swr_type_rate]; 
         all_pox_prob = [all_pox_prob; all_data.(f{ii}).swr_type_prob]; 

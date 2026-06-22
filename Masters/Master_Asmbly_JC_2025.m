@@ -393,76 +393,111 @@ f_pos = [1 6 6.25 3.4];
 figure(1002)
 clf
 set(gcf,'Units','inch','OuterPosition',f_pos);
-y_scale = 'linear'; y_lim = [0 7]; y_t = [0.1 1 10]; 
+y_scale = 'log'; y_lim = [0 10]; y_t = [0.1 1 10]; y_lim2 = [0 3]; 
 % for memeber cells
 subplot(2,4,1)
-fprintf('<strong>diff participation members: Nov Fam Anx</strong>\n')
-data1 = all_p_diff_mem(p_n_idx); 
-data2 = all_p_diff_mem(p_f_idx); 
-data3 = all_p_diff_mem(p_a_idx); 
+fprintf('<strong>diff participation members: Fam Anx</strong>\n')
+% data1 = all_p_diff_mem(p_n_idx); 
+data1 = all_p_diff_mem(p_f_idx); 
+data2 = all_p_diff_mem(p_a_idx); 
 
-[h, eb, sc] = MS_bar_w_err3(data1, data2, data3, [f_ord(2,:);f_ord(5,:); f_ord(1,:)],1, 'anova1', 1:3);
+[h, eb, sc] = MS_bar_w_err(data1, data2, [f_ord(5,:); f_ord(1,:)],1, 'ttest2', 1:2);
+% [h, eb, sc] = MS_bar_w_err3(data1, data2, data3, [f_ord(2,:);f_ord(5,:); f_ord(1,:)],1, 'anova1', 1:3);
 % [h, p, stats] = MS_rain_plot([data1, data2, data3],[zeros(size(data1)), ones(size(data2)), ones(size(data2))+1], [f_ord(2,:); hex2rgb('#808080'); 1 0 0],'anova1', 1:3, 'wiskers');
 eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
 h.LineWidth = .8; h.EdgeColor = "none";
-sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; 
-sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
-sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; %sc{3}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); %sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; %sc{3}.MarkerEdgeColor = 'none'; 
 
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
 ylabel({'post-pre participation (fold change)'; 'members'})
-set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
-xlim([0.5 3.5])
+set(gca, 'xticklabel', {'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7, 'ytick', [0 .1 1 10]);
+xlim([0.5 2.5])
 yline(1, '--', 'color', hex2rgb('#808080'));
-% ylim(y_lim)
+ylim(y_lim)
 % set(gca, 'ytick', y_t); 
+y_t = get(gca, 'ytick'); 
 
 % for non-memeber cells
 subplot(2,4,5); cla
 fprintf('<strong>diff participation non-members: Nov Fam Anx</strong>\n')
-data1 = all_p_diff_n_mem(p_n_idx); 
-data2 = all_p_diff_n_mem(p_f_idx); 
-data3 = all_p_diff_n_mem(p_a_idx); 
+% data1 = all_p_diff_n_mem(p_n_idx); 
+data1 = all_p_diff_n_mem(p_f_idx); 
+data2 = all_p_diff_n_mem(p_a_idx); 
 
-[h, eb, sc] = MS_bar_w_err3(data1, data2, data3, [f_ord(2,:);f_ord(5,:); f_ord(1,:)],1, 'anova1', 1:3);
+[h, eb, sc] = MS_bar_w_err(data1, data2, [f_ord(5,:); f_ord(1,:)],1, 'ttest2', 1:2);
+% [h, eb, sc] = MS_bar_w_err3(data1, data2, data3, [f_ord(2,:);f_ord(5,:); f_ord(1,:)],1, 'anova1', 1:3);
 % MS_bar_w_err3(Pre_n_Asmbly(~anx_idx, 1)', wake_n_Asmbly(~anx_idx, 1)',Post_n_Asmbly(~anx_idx, 1)', [f_ord(4,:);f_ord(2,:); f_ord(5,:)],1, 'anova1', 1:3); 
 eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
 h.LineWidth = .8; h.EdgeColor = "none";
-sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; 
-sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
-sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; %sc{3}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); %sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; %sc{3}.MarkerEdgeColor = 'none'; 
+
+ylim(y_lim)
 
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
 ylabel({'post-pre participation (fold change)'; 'non-members'})
-set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
-xlim([0.5 3.5])
+set(gca, 'xticklabel', {'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7, 'ytick', [0 .1 1 10]);
+xlim([0.5 2.5])
 yline(1, '--', 'color', hex2rgb('#808080'));
+% yticks(y_t)
 
-% ylim(y_lim)
 % set(gca, 'ytick', y_t); 
 
 
-% PRE VS WAKE
-% % for memeber cells
-% subplot(2,4,2)
-% fprintf('<strong>PRE WAKE diff participation members: Nov Fam Anx</strong>\n')
-% data1 = all_p_wake_diff_mem(p_n_idx); 
-% data2 = all_p_wake_diff_mem(p_f_idx); 
-% data3 = all_p_wake_diff_mem(p_a_idx); 
-% 
-% [h, eb, sc] = MS_bar_w_err3(data1, data2, data3, [f_ord(2,:);f_ord(5,:); f_ord(1,:)],1, 'anova1', 1:3);
-% % [h, p, stats] = MS_rain_plot([data1, data2, data3],[zeros(size(data1)), ones(size(data2)), ones(size(data2))+1], [f_ord(2,:); hex2rgb('#808080'); 1 0 0],'anova1', 1:3, 'wiskers');
-% eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
-% h.LineWidth = .8; h.EdgeColor = "none";
-% sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; 
-% sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); 
-% sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; sc{3}.MarkerEdgeColor = 'none'; 
-% 
-% set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
-% ylabel({'wake-pre participation %'; 'members'})
-% set(gca, 'xticklabel', {'Novel' 'Fam' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
-% xlim([0.5 3.5])
-% ylim([0 3000])
+% novel vs Fam
+% for memeber cells
+subplot(2,4,2); cla
+fprintf('<strong>Post/Pre diff participation members: Nov Fam </strong>\n')
+data1 = all_p_diff_mem(p_n_idx); 
+data2 = all_p_diff_mem(p_f_idx); 
+
+[h, eb, sc] = MS_bar_w_err(data1, data2, [f_ord(2,:);f_ord(5,:)],1, 'ttest2', 1:2);
+% [h, p, stats] = MS_rain_plot([data1, data2],[zeros(size(data1)), ones(size(data2))], [f_ord(2,:); hex2rgb('#808080')],'ttest2', 1:2, 'wiskers');
+eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none';
+xlim([0 3])
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
+ylabel({'post-pre participation (fold change)'; 'members'})
+set(gca, 'xticklabel', {'Nov' 'Fam'}, 'XTickLabelRotation', 0, 'fontsize', 7, 'ytick', [0 .1 1 10]);
+xlim([0.5 2.5])
+yline(1, '--', 'color', hex2rgb('#808080'));
+ylim(y_lim)
+% set(gca, 'ytick', y_t); 
+y_t = get(gca, 'ytick'); 
+
+
+% novel vs Fam
+% for non-memeber cells
+subplot(2,4,6); cla
+fprintf('<strong>Post/Prediff participation non-members: Nov Fam</strong>\n')
+data1 = all_p_diff_n_mem(p_n_idx); 
+data2 = all_p_diff_n_mem(p_f_idx); 
+
+[h, eb, sc] = MS_bar_w_err(data1, data2, [f_ord(2,:);f_ord(5,:)],1, 'ttest2', 1:2);
+% [h, p, stats] = MS_rain_plot([data1, data2],[zeros(size(data1)), ones(size(data2))], [f_ord(2,:); hex2rgb('#808080')],'ttest2', 1:2, 'wiskers');
+eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none';
+xlim([0 3])
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
+ylabel({'post-pre participation'; 'non-members'})
+set(gca, 'xticklabel', {'Nov' 'Fam'}, 'XTickLabelRotation', 0, 'fontsize', 7, 'ytick', [0 .1 1 10]);
+xlim([0.5 2.5])
+yline(1, '--', 'color', hex2rgb('#808080'));
+ylim(y_lim)
+% set(gca, 'ytick', y_t); 
+y_t = get(gca, 'ytick'); 
+
 % 
 % 
 % % for non memeber cells
@@ -548,11 +583,10 @@ sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none';
 
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
 ylabel({'post-pre participation %'; 'members'})
-set(gca, 'xticklabel', {'Open' 'Closed'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+set(gca, 'xticklabel', {'Open' 'Closed'}, 'XTickLabelRotation', 0, 'fontsize', 7, 'ytick', [0 .1 1 10]);
 xlim([0.5 3.5])
 yline(1, '--', 'color', hex2rgb('#808080'));
-
-% ylim(y_lim)
+ylim(y_lim)
 % set(gca, 'ytick', y_t); 
 
 % for non-memeber cells
@@ -570,10 +604,10 @@ sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = f_ord(1,:);
 sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
 ylabel({'post-pre participation %'; 'members'})
-set(gca, 'xticklabel', {'Open' 'Closed'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+set(gca, 'xticklabel', {'Open' 'Closed'}, 'XTickLabelRotation', 0, 'fontsize', 7,'ytick', [0 .1 1 10]);
 xlim([0.5 3.5])
 yline(1, '--', 'color', hex2rgb('#808080'));
-% ylim(y_lim)
+ylim(y_lim)
 % set(gca, 'ytick', y_t); 
 
 % save
@@ -981,10 +1015,13 @@ else
 end
 
 
-% split vs shuffle only
-subplot(2,4,5); cla
+% wake vs REM 
+subplot(2,4,4); cla
 fprintf('<strong>n Sig wake vs Shuff</strong>\n')
-[h, eb, sc, p, stats] = MS_bar_w_err(wake_n_Asmbly(~anx_idx, 1)',wake_s_Asmbly(~anx_idx, 1)', [f_ord(2,:); hex2rgb('#808080')],1, 'ttest', 1:2); 
+data_1 = wake_n_Asmbly(~anx_idx, 1); 
+data_2 = Post_n_Asmbly(~anx_idx, 1); 
+
+[h, eb, sc, p, stats] = MS_bar_w_err(data_1',data_2', [f_ord(2,:); hex2rgb('#808080')],1, 'ttest', 1:2); 
 eb.LineWidth = .5; %eb.Color = 'k'; eb.LineStyle = "--"; 
 h.LineWidth = .8; h.EdgeColor = "none";
 sc{1}.SizeData = 10; sc{2}.SizeData = 10; 
@@ -996,16 +1033,47 @@ ylabel('N Sig. Assemblies')
 set(gca, 'xticklabel', {'Wake' 'Shuff'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
 if p < 0.05 
-    fprintf('Wake N Sig vs shuffle: <strong> Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(Post_n_Asmbly(~anx_idx, 1)),177, MS_SEM(Post_n_Asmbly(~anx_idx, 1)),...
-        mean(wake_s_Asmbly(~anx_idx, 1)),177, MS_SEM(wake_s_Asmbly(~anx_idx, 1)),stats.df, stats.tstat, p)
+    fprintf('Wake N Sig vs REM: <strong> Wake mean:  %.2f%s %.2f | REM mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(data_1, 'omitmissing'),177, MS_SEM(data_1),...
+        mean(data_2, 'omitmissing'),177, MS_SEM(data_2),stats.df, stats.tstat, p)
 else
-    fprintf('Wake N Sig vs shuffle: Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(wake_n_Asmbly(~anx_idx, 1)),177, MS_SEM(wake_n_Asmbly(~anx_idx, 1)),...
-        mean(wake_s_Asmbly(~anx_idx, 1)),177, MS_SEM(wake_s_Asmbly(~anx_idx, 1)),stats.df, stats.tstat, p)
+    fprintf('Wake N Sig vs REM: Wake mean:  %.2f%s %.2f | REM mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(data_1, 'omitmissing'),177, MS_SEM(data_1),...
+        mean(data_2, 'omitmissing'),177, MS_SEM(data_2),stats.df, stats.tstat, p)
+end
+
+
+
+% split vs shuffle only
+subplot(2,4,5); cla
+fprintf('<strong>n Sig wake vs Shuff</strong>\n')
+data_1 = wake_n_Asmbly(~anx_idx, 1); 
+data_2 = wake_s_Asmbly(~anx_idx, 1); 
+
+[h, eb, sc, p, stats] = MS_bar_w_err(data_1',data_2', [f_ord(2,:); hex2rgb('#808080')],1, 'ttest', 1:2); 
+eb.LineWidth = .5; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 10; sc{2}.SizeData = 10; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = 'k'; 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4)
+ylabel('N Sig. Assemblies')
+set(gca, 'xticklabel', {'Wake' 'Shuff'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 3.5])
+if p < 0.05 
+    fprintf('Wake N Sig vs shuffle: <strong> Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(data_1, 'omitmissing'),177, MS_SEM(data_1),...
+        mean(data_1, 'omitmissing'),177, MS_SEM(data_2),stats.df, stats.tstat, p)
+else
+    fprintf('Wake N Sig vs shuffle: Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(data_1, 'omitmissing'),177, MS_SEM(data_1),...
+        mean(data_1, 'omitmissing'),177, MS_SEM(data_2),stats.df, stats.tstat, p)
 end
 
 subplot(2,4,6); cla
 fprintf('<strong>n Sig Post vs Shuff</strong>\n')
-[h, eb, sc, p, stats] = MS_bar_w_err(Post_n_Asmbly(~anx_idx, 1)',Post_s_Asmbly(~anx_idx, 1)', [f_ord(5,:); hex2rgb('#808080')],1, 'ttest', 1:2); 
+
+data_3 = Post_n_Asmbly(~anx_idx, 1); 
+data_4 = Post_s_Asmbly(~anx_idx, 1); 
+
+[h, eb, sc, p, stats] = MS_bar_w_err(data_3',data_4', [f_ord(5,:); hex2rgb('#808080')],1, 'ttest', 1:2); 
 eb.LineWidth = .5; %eb.Color = 'k'; eb.LineStyle = "--"; 
 h.LineWidth = .8; h.EdgeColor = "none";
 sc{1}.SizeData = 10; sc{2}.SizeData = 10; 
@@ -1017,16 +1085,17 @@ ylabel('N Sig. Assemblies')
 set(gca, 'xticklabel', {'Post' 'Shuff'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
 if p < 0.05 
-    fprintf('Wake N Sig vs shuffle: <strong> Post mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(Post_n_Asmbly(~anx_idx, 1)),177, MS_SEM(Post_n_Asmbly(~anx_idx, 1)),...
-        mean(Post_s_Asmbly(~anx_idx, 1)),177, MS_SEM(Post_s_Asmbly(~anx_idx, 1)),stats.df, stats.tstat, p)
+    fprintf('REM N Sig vs shuffle: <strong> Post mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(data_3, 'omitmissing'),177, MS_SEM(data_3),...
+        mean(data_4, 'omitmissing'),177, MS_SEM(data_4),stats.df, stats.tstat, p)
 else
-    fprintf('Wake N Sig vs shuffle: Post mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(Post_n_Asmbly(~anx_idx, 1)),177, MS_SEM(Post_n_Asmbly(~anx_idx, 1)),...
-        mean(Post_s_Asmbly(~anx_idx, 1)),177, MS_SEM(Post_s_Asmbly(~anx_idx, 1)),stats.df, stats.tstat, p)
+    fprintf('REM N Sig vs shuffle: Post mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(data_3, 'omitmissing'),177, MS_SEM(data_4),...
+        mean(data_4, 'omitmissing'),177, MS_SEM(data_4),stats.df, stats.tstat, p)
 end
 
 
 subplot(2,4,7); cla
 fprintf('<strong>Rate wake vs Shuff</strong>\n')
+
 [h, p, stats] = MS_rain_plot(wake_r_tbl{1}.Rate(~wake_a_idx),wake_r_tbl{1}.ctrl(~wake_a_idx),[f_ord(2,:); hex2rgb('#808080')],'ttest2', 1:2, 'wiskers');
 
 h(1).sc{1}.SizeData = 1; h(2).sc{1}.SizeData = 1; 
@@ -1048,7 +1117,7 @@ end
 % subplot(2,4,8); cla
 hold on
 fprintf('<strong>Rate POST vs Shuff</strong>\n')
-[h, p, stats] = MS_rain_plot(POST_r_tbl{1}.Rate(~post_r_a_idx),POST_r_tbl{1}.ctrl(~post_r_a_idx),[f_ord(5,:); hex2rgb('#808080')],'ttest2', 3:4, 'wiskers');
+[h, p, stats] = MS_rain_plot(POST_r_tbl{1}.Rate(~post_r_a_idx & post_r_n_idx),POST_r_tbl{1}.ctrl(~post_r_a_idx & post_r_n_idx),[f_ord(5,:); hex2rgb('#808080')],'ttest2', 3:4, 'wiskers');
 
 h(1).sc{1}.SizeData = 1; h(2).sc{1}.SizeData = 1; 
 h(1).sc{1}.MarkerEdgeColor = 'none'; h(2).sc{1}.MarkerEdgeColor = 'none'; 
@@ -1059,7 +1128,7 @@ set(gca,'ytick', 1:4, 'yticklabel', {'Wake', 'Shuff', 'Post' 'Shuff'}, 'yTickLab
 ylim([.5 4.5]); xlim([0 8])
 
 if p < 0.05 
-    fprintf('POST aRate vs shuffle: <strong> Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),...
+    fprintf('POST aRate vs shuffle: <strong> Post aRate mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),...
         mean(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),stats.df, stats.tstat, p)
 else
     fprintf('POST aRate vs shuffle: Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),...
@@ -1078,6 +1147,108 @@ end
 % save it
 exportgraphics(gcf, [fig_dir filesep 'Assembly_aRate.pdf'], 'ContentType', 'vector');
 
+%% MultiComps
+ 
+% N assemblies wake vs REM vs shuffles
+
+% [p, tbl, stats] = anova2([data_1, data_2, data_3, data_4]);
+
+% make a table
+N_sig_tbl = array2table([data_1, data_2, data_3, data_4], 'VariableNames', {'Wake', 'Wake S', 'REM', 'REM_S'});
+
+N_sig_tbl2 = table([data_1; data_2; data_3; data_4],categorical([zeros(size(data_1)); ones(size(data_2)); ones(size(data_3))+1;ones(size(data_4))+2]),...
+    categorical([zeros(size(data_1)); zeros(size(data_2)); ones(size(data_3));ones(size(data_4))]),...
+    categorical([zeros(size(data_1)); ones(size(data_2)); zeros(size(data_3));ones(size(data_4))]),...
+    'VariableNames', {'NSig', 'Type', 'Grp', 'Ctrl'});
+
+[p, tbl, stats, terms] = anovan(N_sig_tbl2.NSig,{N_sig_tbl2.Ctrl N_sig_tbl2.Grp},'model',2,'varnames',{'Ctrl','Grp'})
+% [c, m, h, names] = multcompare(stats);
+
+
+[results,~,~,gnames]  = multcompare(stats,"Dimension",[1 2]);
+
+tbl = array2table(results,"VariableNames", ...
+    ["Group","Control Group","Lower Limit","Difference","Upper Limit","P-value"]);
+tbl.("Group") = gnames(tbl.("Group"));
+tbl.("Control Group") = gnames(tbl.("Control Group")); 
+
+
+% within design
+withinDesign = table(categorical([1 1 2 2].'), categorical([1 2 1 2].'), 'VariableNames', {'cond', 'shuff'}); % within-desing
+
+% withinDesign = table([1, 2, 3, 4]', 'VariableNames', {'Type'});
+
+% Fit the RM
+rm = fitrm(N_sig_tbl, 'Wake-REM_S ~ 1', 'WithinDesign', withinDesign);
+
+ranovatbl = ranova(rm,'withinmodel', 'cond*shuff');
+
+% partial eta for condition above: 0.8146203
+
+% post-hoc TK
+posthoc_results = multcompare(rm, 'cond');
+
+
+
+% Rate of Reactivations across assemblies for wake and Post REM. 
+rate_tbl = table(double([wake_r_tbl{1}.Rate(~wake_a_idx);  POST_r_tbl{1}.Rate(~post_r_a_idx)]),...
+    categorical([wake_r_tbl{1}.ctrl(~wake_a_idx); POST_r_tbl{1}.ctrl(~post_r_a_idx)+2]),...
+    categorical([wake_r_tbl{1}.ctrl(~wake_a_idx); POST_r_tbl{1}.ctrl(~post_r_a_idx)]),...
+    categorical([zeros(size(wake_r_tbl{1}.ctrl(~wake_a_idx))); ones(size(POST_r_tbl{1}.ctrl(~post_r_a_idx)))]), 'VariableNames', {'Rate', 'Type', 'Ctrl', 'Grp'}); 
+
+% glm for better estimate
+mdl = fitglme(rate_tbl, 'Rate ~ Ctrl*Grp'); %Ctrl * Grp');
+
+
+% make a simpel table
+% pad for uneven
+% rate_tbl2 = array2table(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)',...
+%     wake_r_tbl{1}.Rate(~wake_a_idx & wake_r_tbl{1}.ctrl)',...
+%     POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)',...
+%     POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl)',...
+%     'VariableNames', {'Wake', 'Wake S', 'REM', 'REM_S'});
+
+
+
+% repeated measures anova
+withinDesign = table(categorical([1 1 2 2].'), categorical([1 2 1 2].'), 'VariableNames', {'cond', 'shuff'}); % within-desing
+
+% withinDesign = table([1, 2, 3, 4]', 'VariableNames', {'Type'});
+
+% Fit the RM
+rm = fitrm(N_sig_tbl, 'Wake-REM_S ~ 1', 'WithinDesign', withinDesign);
+
+ranovatbl = ranova(rm,'withinmodel', 'cond*shuff');
+
+% partial eta for condition above: 0.8146203
+
+% post-hoc TK
+posthoc_results = multcompare(rm, 'cond');
+
+
+
+% simple anova. 
+% [p, tbl,stats] = anova1(rate_tbl.Rate, rate_tbl.Type)
+
+% c = multcompare(stats);
+% stats = anova(mdl)
+
+% [results,~,~,gnames]  = multcompare(stats,"Dimension",[1 2]);
+% 
+% tbl = array2table(results,"VariableNames", ...
+%     ["Group","Control Group","Lower Limit","Difference","Upper Limit","P-value"]);
+% tbl.("Group") = gnames(tbl.("Group"));
+% tbl.("Control Group") = gnames(tbl.("Control Group")); 
+% 
+% [p, tbl, stats, terms] = anovan(rate_tbl.Rate, {rate_tbl.Ctrl, rate_tbl.Grp}, 'model', 2,'varnames', {'Ctrl'; 'Grp'})
+% 
+% [c, m, h, names] = multcompare(stats, 'Dimension', 1);
+
+
+% disp(glme.CoefficientNames)
+% [~, stats] = anova(glme, 'Type', 2)
+% 
+% [pValue, FStat, coeffValue] = coefTest(glme, [0 1, -1, 0]);
 %% Figure 4: Wake n Assemblies and Post REM vs shuffles
 
 f_pos = [1 6 6.25 3.4]; 
@@ -1556,33 +1727,41 @@ legend({num2str(skews(1)), num2str(skews(2)), num2str(skews(3))}, 'Location', 'B
 figure(4001); clf; figure(4002); clf; 
 map_idx = 1:2:25; 
 loc_idx = 2:2:25; 
-iA = 12; 
+iA = 6; 
 % for iA = length(A_out):-1:1 % loop over sessions
 %     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
 % 
 figure(4001)
         for ii = 1:length(A_out{iA}{iB}.pREM_Place_map)
             % subplot(4,6,map_idx(ii))
-            subplot(5,10,map_idx(ii))
+            subplot(4,8,map_idx(ii))
             [~, s_idx] = sort(A_out{iA}{iB}.pREM_Place_map{ii}.cent);
             imagesc(A_out{iA}{iB}.pREM_Place_map{ii}.map(s_idx,:)')
+            colormap(viridis)
             set(gca, 'ydir', 'normal')
             % location on track
             c_ord = MS_linspecer(length(s_idx)); 
-            subplot(5,10,loc_idx(ii))
+            subplot(4,8,loc_idx(ii))
             hold on
-            for jj = 1:length(A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc)
-                scale_val = A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val(jj)./max(A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val);
-                plot( A_out{iA}{iB}.pREM_wake_P_loc{ii}.win_time,  A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc_mat(jj,:),'color', [c_ord(ii,:) scale_val], 'LineWidth',2)
+            for jj = length(A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc):-1:1
+                scale_val(jj) = A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val(jj)./max(A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val);
                 % text(0, A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc(jj), num2str(jj), 'color', c_ord(ii,:));
             end
+            scale_val = normalize(scale_val, 'range',[.25 1]);
+            for jj = 1:length(A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc)
+                plot( A_out{iA}{iB}.pREM_wake_P_loc{ii}.win_time,  A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc_mat(jj,:),'color', [c_ord(ii,:) scale_val(jj)], 'LineWidth',2)
+            end
+
             xlim([-2 2]); ylim([0 100])
         end
+
+        exportgraphics(gcf, [fig_dir filesep 'Novel Pre assembly maps.pdf'], 'ContentType', 'vector');
+
 
         figure(4002)
         for ii = 1:length(A_out{iA}{iB}.postREM_Place_map)
             % subplot(4,6,map_idx(ii))
-            subplot(5,10,map_idx(ii))
+            subplot(4,8,map_idx(ii))
             [~, s_idx] = sort(A_out{iA}{iB}.postREM_Place_map{ii}.cent);
             imagesc(A_out{iA}{iB}.postREM_Place_map{ii}.map(s_idx,:)')
             set(gca, 'ydir', 'normal')
@@ -1590,7 +1769,7 @@ figure(4001)
 
             % location on track
             c_ord = MS_linspecer(length(s_idx)); 
-            subplot(5,10,loc_idx(ii))
+            subplot(4,8,loc_idx(ii))
             hold on
             for jj = 1:length(A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc)
                 scale_val = A_out{iA}{iB}.postREM_wake_P_loc{ii}.peak_val(jj)./max(A_out{iA}{iB}.postREM_wake_P_loc{ii}.peak_val);
@@ -1601,6 +1780,10 @@ figure(4001)
         end
     %     end
     % end
+
+    %% examples
+
+    MS_Asmbly_plot_raster_ReAct_figure(A_out{iA}{iB}, fig_dir, 'REM_Post_data', [ 9 7 12 10])
 
 %% %%%%%%%%%%%%%%%%%%%  OLD CODE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

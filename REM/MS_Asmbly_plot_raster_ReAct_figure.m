@@ -84,14 +84,45 @@ set(gcf, 'units','inches', 'position',[0 0 1.5 1]*6, 'innerposition',[0 0 1.5 1]
 
 
 if isstr(type) == 1
+
+%     ax(1) = subplot(3, 1, 1);
+%         imagesc(A_in.(REM_tvec), 1:size(act_array,2),  act_array')
+% 
+%       ylim([0.5 length(c_list)+0.5])
+% %         set(gca, 'YTick', c_step(2:end) - diff(c_step)/2, 'YTickLabel',c_label, 'xticklabel', [])
+%         set(gca, 'XTickLabel', [], 'yticklabels', []); 
+%         h = get(gca);
+%         h.XAxis.TickLength = [ 0 0];
+
 ax(1) = subplot(3, 1, 2);
     cla
     hold on
     off_set = 0; these_idx = [];
     
     if strcmpi(type, 'act_mat')
-        imagesc(A_in.(REM_tvec), 1:size(act_array,2),  act_array')
-        ylim([0.5 length(c_list)+0.5])
+        % imagesc(A_in.(REM_tvec), 1:size(act_array,2),  act_array')
+
+        x_step = mode(diff(A_in.(REM_tvec)));
+        % % make an imagesc a vector. 
+        matrix = act_array'; % Example data
+        [rows, cols] = size(matrix);
+
+        for r = 1:rows
+            for c = 1:cols
+                % Calculate color based on your chosen colormap manually
+                % or use individual patch/rectangle face properties
+                if matrix(r,c) ~= 0
+                    % rectangle('Position', [c-1, rows-r, 1, 1], ...
+                    %           'FaceColor', 'none', ... % Example RGB logic
+                    %           'EdgeColor', 'none');
+                    rectangle('Position', [A_in.(REM_tvec)(c), rows-r, x_step, 1], ...
+                        'FaceColor', c_map(matrix(r,c)+1,:), ... % Example RGB logic
+                        'EdgeColor', 'none');
+                end
+            end
+        end
+
+        % ylim([0.5 length(c_list)+0.5])
 %         set(gca, 'YTick', c_step(2:end) - diff(c_step)/2, 'YTickLabel',c_label, 'xticklabel', [])
         set(gca, 'XTickLabel', [], 'yticklabels', []); 
         h = get(gca);
@@ -256,5 +287,6 @@ SetFigure(cfg, gcf)
             end
 
         print(gcf,  [fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_' sleep_phase '_raster.pdf'], '-dpdf','-r0')
+        exportgraphics(gcf, [fig_dir filesep A_in.info.subject '_' A_in.info.session '_' strrep(num2str(A_in.info.bin), '.', 'p') 's_bin_' sleep_phase '_raster_vec.pdf'], 'ContentType', 'vector', 'Resolution',600);
 
     end
