@@ -86,13 +86,34 @@
 % ts_prime = 0; 
 % csc_idx = {'CH122'}; 
 
+%pox3567_LT1  No SWRS?
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3567_2026-06-15_16-29-44_LT1\Record Node 117'; 
+% csc_idx = 1:2:96; 
+% ts_prime = 0; 
+% csc_idx = {'CH124'}; 
+% csc_idx = {'CH135'}; % Sub
+
+%pox3567_LT2
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3567_2026-06-16_21-53-24_LT2\Record Node 117'; 
+% csc_idx = 1:2:96; 
+% ts_prime = 0; 
+% % csc_idx = {'CH113'}; 
+% csc_idx = {'CH143'}; % Sub
+
 %pox3567_LT3
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-17_11-37-15_LT3/Record Node 117'; 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-17_11-37-15_LT3/Record Node 117'; 
+% csc_idx = 1:2:96; 
+% ts_prime = 0; 
+% % csc_idx = {'CH124'}; 
+% csc_idx = {'CH135'}; % Sub
+
+%pox3567_LT3
+csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-17_10-03-06_LT3\Record Node 117'; 
 csc_idx = 1:2:96; 
 ts_prime = 0; 
-% csc_idx = {'CH124'}; 
-csc_idx = {'CH135'}; % Sub
-
+% csc_idx = {'CH117'}; 
+csc_idx = {'CH143'}; % Sub
+% 
 %% load the spikes if present
 
 params = OE_load_params(phy_dir);
@@ -320,7 +341,7 @@ swr_t = SelectIV([], this_swr, swr_type == 3);
 
 %% collect the data
 load("all_data.mat")
-this_name = 'pox_3557_tl3'; 
+this_name = 'pox_3568_tl3'; 
 
 all_data.(this_name).csc = csc; 
 
@@ -355,7 +376,7 @@ save('all_data.mat', 'all_data')
 %% SUB SWRS
 
 load("all_data_sub.mat")
-this_name = 'pox_3557_tl3'; 
+this_name = 'pox_3567_tl3'; 
 
 all_data.(this_name).csc = csc; 
 
