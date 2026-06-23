@@ -393,7 +393,7 @@ f_pos = [1 6 6.25 3.4];
 figure(1002)
 clf
 set(gcf,'Units','inch','OuterPosition',f_pos);
-y_scale = 'log'; y_lim = [0 10]; y_t = [0.1 1 10]; y_lim2 = [0 3]; 
+y_scale = 'linear'; y_lim = [0 10]; y_t = [0.1 1 10]; y_lim2 = [0 3]; 
 % for memeber cells
 subplot(2,4,1)
 fprintf('<strong>diff participation members: Fam Anx</strong>\n')

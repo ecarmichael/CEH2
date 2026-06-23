@@ -67,12 +67,16 @@
 
 %pox2217_LT3
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-11_13-03-39_LT3/Record Node 117'; 
-% csc_idx = 1:2:32; 
+% csc_idx = 1:4:96; 
 % ts_prime = 0; 
+% csc_idx = {'CH9', 'CH137'}; % ; 
+% csc_idx = {'CH137'}; % sub; 
 
 %pox2217_LT4
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-12_14-50-13_LT4/Record Node 117'; 
-% csc_idx = 39; %1:2:96; 
+% csc_idx = 32:4:96; %39; %1:2:96; 
+% csc_idx = {'CH74'}; 
+% csc_idx = {'160'}; % Sub
 % ts_prime = 0; 
 
 %pox3265_LT2
@@ -85,6 +89,14 @@
 % csc_idx = 1:2:96; 
 % ts_prime = 0; 
 % csc_idx = {'CH122'}; 
+
+%pox3265_LT5
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-13_21-59-55_LT5/Record Node 117'; 
+% csc_idx = 1:4:96; 
+ts_prime = 0; 
+csc_idx = {'CH51'};
+% csc_idx = {'CH149'}
+
 
 %pox3567_LT1  No SWRS?
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3567_2026-06-15_16-29-44_LT1\Record Node 117'; 
@@ -107,20 +119,28 @@
 % % csc_idx = {'CH124'}; 
 % csc_idx = {'CH135'}; % Sub
 
-%pox3567_LT3
-csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-17_10-03-06_LT3\Record Node 117'; 
-csc_idx = 1:2:96; 
-ts_prime = 0; 
-% csc_idx = {'CH117'}; 
-csc_idx = {'CH143'}; % Sub
+%pox3568_LT3
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-17_10-03-06_LT3\Record Node 117'; 
+% csc_idx = 1:2:96; 
+% ts_prime = 0; 
+% % csc_idx = {'CH117'}; 
+% csc_idx = {'CH143'}; % Sub
+
+
+%pox3567_LT4
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-18_12-06-54_LT4/Record Node 117'; 
+% csc_idx = 1:2:96; 
+% ts_prime = 0; 
+% % csc_idx = {'CH117'}; 
+% csc_idx = {'CH143'}; % Sub
 % 
 %% load the spikes if present
-
-params = OE_load_params(phy_dir);
-
-data.S = OE_phy2TS(phy_dir, params);
-
-ts_prime = readNPY([phy_dir filesep 'timestamps.npy']);
+% 
+% params = OE_load_params(phy_dir);
+% 
+% data.S = OE_phy2TS(phy_dir, params);
+% 
+% ts_prime = readNPY([phy_dir filesep 'timestamps.npy']);
 %% load the csc
 
  
@@ -341,7 +361,7 @@ swr_t = SelectIV([], this_swr, swr_type == 3);
 
 %% collect the data
 load("all_data.mat")
-this_name = 'pox_3568_tl3'; 
+this_name = 'pox_3265_tl5'; 
 
 all_data.(this_name).csc = csc; 
 
@@ -376,7 +396,7 @@ save('all_data.mat', 'all_data')
 %% SUB SWRS
 
 load("all_data_sub.mat")
-this_name = 'pox_3567_tl3'; 
+this_name = 'pox_3265_tl5'; 
 
 all_data.(this_name).csc = csc; 
 
@@ -399,8 +419,8 @@ save('all_data_sub.mat', 'all_data')
 
 %%
 
-this_csc = all_data.(this_name).csc;
-this_swr = all_data.(this_name).swrs; 
+% this_csc = all_data.(this_name).csc;
+% this_swr = all_data.(this_name).swrs; 
 
 csc_idx = contains(this_csc.label, this_swr.cfg.history.cfg{2}.target);
 
@@ -631,3 +651,27 @@ display(ranovaTable)
 Tukey_table = multcompare(rm,'Group', 'By', 'type'); 
 
 
+%% simple center offset histogram 
+
+sub_cent = IVcenters(sub_swrs); 
+ca1_cent = IVcenters(ca1_swrs); 
+pair_swr = []; 
+for ii = length(ca1_cent):-1:1
+this_d = sub_cent - ca1_cent(ii); 
+
+
+co_evt = find(abs(this_d) < .50);
+
+if isempty(co_evt) || length(co_evt) > 1
+    pair_swr(ii) = NaN; 
+else
+    pair_swr(ii) = this_d(co_evt); 
+end
+end
+
+figure(8898)
+clf
+
+histogram(pair_swr(~isnan(pair_swr))*1000, [-25:1:25])
+xline(0, '--k', 'LineWidth',1)
+axis('square')
