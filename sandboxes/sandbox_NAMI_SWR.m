@@ -1,13 +1,30 @@
 %% sandbox_NAMI_Sub_SWR
+% 
 
+%pox2217_TFCD1
+csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox2217_2026-06-16_16-29-44_TFC_D1\Record Node 117';
+csc_idx = 1:4:96;
+ts_prime = 0;
+% csc_idx = {'CH51', 'CH143'};
 
 %pox3567_TFCD1
-csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3567_2026-06-20_17-44-01_TFCD1\Record Node 117';
-% csc_idx = 1:4:96;
-ts_prime = 0;
-csc_idx = {'CH51', 'CH143'};
-% csc_idx = {'CH143'}; % Sub
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3567_2026-06-20_17-44-01_TFCD1\Record Node 117';
+% % csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH51', 'CH143'};
 
+
+%pox3256_TFCD1  %% no ripples at all? 
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-16_18-09-08_TFC_D1\Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH51', 'CH143'};
+
+%pox3256_TFCD3  %% no ripples at all? 
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-16_18-09-08_TFC_D1\Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH51', 'CH143'};
 %% load the spikes if present
 %
 % params = OE_load_params(phy_dir);
