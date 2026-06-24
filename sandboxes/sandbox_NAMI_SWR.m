@@ -219,23 +219,41 @@ swr_sub_base = restrict(this_data.swrs_sub, tone_t_on-30, tone_t_on);
 fprintf('Ca1 SWRs in baseline: <strong>%d</strong>   |    Sub SWRs in baseline: <strong>%d</strong> \n',...
     length(swr_ca1_base.tstart),  length(swr_sub_base.tstart))
 
-
 % get the tone 1 periods 
+tone_t_1 = sort([this_data.evts.t{4}(1:2:end))
 
+swr_ca1_t1 = restrict(this_data.swrs_ca1, tone_t_1); 
+swr_sub_t1 = restrict(this_data.swrs_sub, tone_t_1); 
 
-
+fprintf('Ca1 SWRs in tone 1 periods: <strong>%d</strong>   |    Sub SWRs in tone 1 peroids: <strong>%d</strong> \n',...
+    length(swr_ca1_t1.tstart),  length(swr_sub_t1.tstart))
 
 % get the tone 2 periods
+tone_t_2 = sort([this_data.evts.t{5}(1:2:end))
 
+swr_ca1_t2 = restrict(this_data.swrs_ca1, tone_t_2); 
+swr_sub_t2 = restrict(this_data.swrs_sub, tone_t_2); 
+
+fprintf('Ca1 SWRs in tone 2 periods: <strong>%d</strong>   |    Sub SWRs in tone 2 peroids: <strong>%d</strong> \n',...
+    length(swr_ca1_t2.tstart),  length(swr_sub_t2.tstart))
 
 
 % tone 1 trace period (20 sec after end of tone)
 
+swr_ca1_t1trace = restrict(this_data.swrs_ca1, tone_t_1, tone_t_1 + 20); 
+swr_sub_t1trace = restrict(this_data.swrs_sub, tone_t_1, tone_t_1 + 20); 
+
+fprintf('Ca1 SWRs in tone 1 trace period: <strong>%d</strong>   |    Sub SWRs in tone 1 trace period: <strong>%d</strong> \n',...
+    length(swr_ca1_t1trace.tstart),  length(swr_sub_t1trace.tstart))
 
 
-% tone 2 trace period 
+% tone 2 trace period (20 sec after end of tone)
 
+swr_ca1_t2trace = restrict(this_data.swrs_ca1, tone_t_2, tone_t_2 + 20); 
+swr_sub_t2trace = restrict(this_data.swrs_sub, tone_t_2, tone_t_2 + 20); 
 
+fprintf('Ca1 SWRs in tone 2 trace period: <strong>%d</strong>   |    Sub SWRs in tone 2 trace period: <strong>%d</strong> \n',...
+    length(swr_ca1_t2trace.tstart),  length(swr_sub_t2trace.tstart))
 
 
 
