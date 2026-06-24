@@ -202,19 +202,62 @@ fprintf('Sub SWRs in Pre: <strong>%d</strong> \n', length(swr_sub_pre.tstart))
 swr_ca1_post = restrict(this_data.swrs_ca1, this_data.evts.t{2}(2), this_data.csc.tvec(end)); 
 
 %sub 
-swr_sub_post = restrict(this_data.swrs_ca1, this_data.evts.t{2}(2), this_data.csc.tvec(end)); 
+swr_sub_post = restrict(this_data.swrs_sub, this_data.evts.t{2}(2), this_data.csc.tvec(end)); 
 
 fprintf('Ca1 SWRs in Post: <strong>%d</strong> \n', length(swr_ca1_post.tstart))
 
 fprintf('Sub SWRs in Post: <strong>%d</strong> \n', length(swr_sub_post.tstart))
 
 
+% get the baseline periods (30s before any tone) inside the TFC
+dur = 30; 
+tone_t_on = sort([this_data.evts.t{4}(1:2:end); this_data.evts.t{5}(1:2:end)]);
+
+swr_ca1_base = restrict(this_data.swrs_ca1, tone_t_on-30, tone_t_on); 
+swr_sub_base = restrict(this_data.swrs_sub, tone_t_on-30, tone_t_on); 
+
+fprintf('Ca1 SWRs in baseline: <strong>%d</strong>   |    Sub SWRs in baseline: <strong>%d</strong> \n',...
+    length(swr_ca1_base.tstart),  length(swr_sub_base.tstart))
+
+
+% get the tone 1 periods 
+
+
+
+
+% get the tone 2 periods
+
+
+
+% tone 1 trace period (20 sec after end of tone)
+
+
+
+% tone 2 trace period 
 
 
 
 
 
 
+
+
+%% plots to check everything
+
+figure(101)  % make a plot (with specific number)
+clf % clear the current plot
+
+hold on % keep things on the same plot
+
+% plot the data
+plot(all_TFC.pox_3567_TFCD1.csc.tvec, all_TFC.pox_3567_TFCD1.csc.data(1:2,:))
+
+
+% add some vertical lines
+xline(tone_t_on-30, 'y')
+
+% add some fancy verical lines
+xline(all_TFC.pox_3567_TFCD1.evts.t{5}(1:2:end), 'k', 'LineWidth',3)
 
 
 
