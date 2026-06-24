@@ -58,7 +58,6 @@
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox2217_2026-06-12_14-50-13_LT4\Record Node 117';
 % csc_idx = 45; %1:4:96;
 % ts_prime = 0;
-% =======
 
 %pox2217_LT2
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-10_11-27-27_LT2/Record Node 117';
@@ -66,8 +65,7 @@
 % ts_prime = 0;
 
 %pox2217_LT3
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-11_13-03-39_LT3/Record Node 117';
-% csc_idx = 65:96;
+
 % ts_prime = 0;
 % csc_idx = {'CH9', 'CH137'}; % ;
 % csc_idx = {'CH137'}; % sub;
@@ -81,14 +79,24 @@
 
 %pox3265_LT2
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-10_12-35-40_LT2/Record Node 117';
-% csc_idx = 9;
+% csc_idx = 1:4:96;
+ %csc_idx = {'CH75'};
+ % csc_idx = {'CH141'}; % sub
+% ts_prime = 0;
+
+%pox3265_LT3
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-11_15-25-30_LT3/Record Node 117';
+% csc_idx = 1:4:96;
+ %csc_idx = {'CH75'};
+ % csc_idx = {'CH141'}; % sub
 % ts_prime = 0;
 
 %pox3265_LT4
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-12_16-28-07_LT4/Record Node 117';
-% csc_idx = 1:2:96;
+% csc_idx = 1:4:96;
 % ts_prime = 0;
-% csc_idx = {'CH122'};
+% csc_idx = {'CH122'}; % sub
+% csc_idx = {'CH141'}; % sub
 
 %pox3265_LT5
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-13_21-59-55_LT5/Record Node 117';
@@ -97,6 +105,13 @@
 % csc_idx = {'CH51'};
 % csc_idx = {'CH149'}
 
+
+%pox3265_TFCD1
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-16_18-09-08_TFC_D1/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH51'};
+% csc_idx = {'CH141'} % sub but no SWR
 
 %pox3567_LT1  No SWRS?
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3567_2026-06-15_16-29-44_LT1\Record Node 117';
@@ -119,12 +134,26 @@
 % % csc_idx = {'CH124'};
 % csc_idx = {'CH135'}; % Sub
 
+%pox3568_LT1
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-15_11-58-52_LT1/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH63'};
+% csc_idx = {'CH158'}; % Sub
 
-%pox3567_LT4
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-18_12-06-54_LT4/Record Node 117';
+%pox3568_LT3
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-17_10-03-06_LT3/Record Node 117';
 % csc_idx = 1:2:96;
 % ts_prime = 0;
-% % csc_idx = {'CH117'};
+% csc_idx = {'CH117'};
+% csc_idx = {'CH143'}; % Sub
+
+
+%pox3567_LT4
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-18_12-06-54_LT4/Record Node 117';
+csc_idx = 1:4:96;
+ts_prime = 0;
+% csc_idx = {'CH117'};
 % csc_idx = {'CH143'}; % Sub
 
 
@@ -370,6 +399,7 @@ swr_t = SelectIV([], this_swr, swr_type == 3);
 
 %% collect the data
 load("all_data.mat")
+
 this_name = 'pox_3567_TFCD1';
 
 all_data.(this_name).csc = csc;
@@ -405,7 +435,7 @@ save('all_data.mat', 'all_data')
 %% SUB SWRS
 
 load("all_data_sub.mat")
-this_name = 'pox_3265_tl5';
+this_name = 'pox_3568_tl3';
 
 all_data.(this_name).csc = csc;
 
@@ -489,7 +519,7 @@ shadedErrorBar(pox1.TFR.freq, yMean, ySEM, 'lineprops', '-r');
 
 %%  bar plot with some stats
 
-% split the data into control and pox
+% split the data into control and poxexo
 
 f = fieldnames(all_data);
 all_pox_rate = []; all_pox_type = [];
@@ -505,7 +535,7 @@ for ii = 1:length(f)
     % type rate
     all_data.(f{ii}).swr_dur = all_data.(f{ii}).swrs.tend - all_data.(f{ii}).swrs.tstart;
 
-    if contains(f{ii}, 'pox_3')
+    if contains(f{ii}, 'pox_3265')
         all_pox_rate = [all_pox_rate; all_data.(f{ii}).swr_rate'];
         all_pox_type = [all_pox_type; all_data.(f{ii}).swr_type_rate];
         all_pox_prob = [all_pox_prob; all_data.(f{ii}).swr_type_prob];
@@ -624,6 +654,22 @@ set(gca, "yTick", [1.25 3.25 ], 'yTickLabel', {'aTau-', 'aTau+'}, 'TickDir', 'ou
 set(gca, 'XTickLabel', get(gca, 'xtick').*1000)
 %'YTick', 0:.1:.3)
 xlabel('SWR duration (ms)')
+
+
+figure(995)
+clf
+set(gcf,'Units','inch','position',[3 3 3.5 2.5]);
+[~, ~, ~, p, stats] = MS_bar_w_err(all_ctr_rate, all_pox_rate, c_ord, 1, 'ttest2', [1 2]);
+% MS_rain_plot([all_ctr_dur; all_pox_dur]', [zeros(1,length(all_ctr_dur)), ones(1,length(all_pox_dur))]', c_ord, 'ttest2', [1 3]);
+% [~, ~, ~, p, stats] = MS_bar_w_err(all_ctr_dur*1000, all_pox_dur*1000, c_ord, 1, 'ttest2', [1 1.5]);
+% sc{1}.MarkerFaceColor = c_ord(1,:); sc{2}.MarkerFaceColor = c_ord(2,:);
+fprintf('SWR dur: t(%.0f): %.2f, p = %.3f\n',stats.df, stats.tstat, p )
+
+xlim([0 4]); %xlim([0 .12])
+set(gca, 'xTickLabel', {'aTau-', 'aTau+'}, 'TickDir', 'out', 'xTick',[1 2]);
+% set(gca, 'XTickLabel', get(gca, 'xtick').*1000)
+%'YTick', 0:.1:.3)
+xlabel('SWR rate (Hz)')
 %% quick glm
 
 t_type = table([1:(size(all_pox_prob,1)+size(all_ctr_prob,1))]', [repmat({'Pox'}, size(all_pox_type,1), 1); repmat({'Ctrl'}, size(all_ctr_type,1), 1)], [all_pox_type(:,1); all_ctr_type(:,1)],...
