@@ -239,18 +239,20 @@ fprintf('Ca1 SWRs in tone 2 periods: <strong>%d</strong>   |    Sub SWRs in tone
 
 
 % tone 1 trace period (20 sec after end of tone)
+tone_t_1end = sort([this_data.evts.t{4}(2:2:end))
 
-swr_ca1_t1trace = restrict(this_data.swrs_ca1, tone_t_1, tone_t_1 + 20); 
-swr_sub_t1trace = restrict(this_data.swrs_sub, tone_t_1, tone_t_1 + 20); 
+swr_ca1_t1trace = restrict(this_data.swrs_ca1, tone_t_1end, tone_t_1end + 20); 
+swr_sub_t1trace = restrict(this_data.swrs_sub, tone_t_1end, tone_t_1end + 20); 
 
 fprintf('Ca1 SWRs in tone 1 trace period: <strong>%d</strong>   |    Sub SWRs in tone 1 trace period: <strong>%d</strong> \n',...
     length(swr_ca1_t1trace.tstart),  length(swr_sub_t1trace.tstart))
 
 
 % tone 2 trace period (20 sec after end of tone)
+tone_t_2end = sort([this_data.evts.t{5}(2:2:end))
 
-swr_ca1_t2trace = restrict(this_data.swrs_ca1, tone_t_2, tone_t_2 + 20); 
-swr_sub_t2trace = restrict(this_data.swrs_sub, tone_t_2, tone_t_2 + 20); 
+swr_ca1_t2trace = restrict(this_data.swrs_ca1, tone_t_2end, tone_t_2end + 20); 
+swr_sub_t2trace = restrict(this_data.swrs_sub, tone_t_2end, tone_t_2end + 20); 
 
 fprintf('Ca1 SWRs in tone 2 trace period: <strong>%d</strong>   |    Sub SWRs in tone 2 trace period: <strong>%d</strong> \n',...
     length(swr_ca1_t2trace.tstart),  length(swr_sub_t2trace.tstart))
