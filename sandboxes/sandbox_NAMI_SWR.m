@@ -220,16 +220,16 @@ fprintf('Ca1 SWRs in baseline: <strong>%d</strong>   |    Sub SWRs in baseline: 
     length(swr_ca1_base.tstart),  length(swr_sub_base.tstart))
 
 % get the tone 1 periods 
-tone_t_1 = sort([this_data.evts.t{4}(1:2:end))
+tone_t_1 = sort([this_data.evts.t{4}(1:2:end)) %what does sort mean and is this correct
 
-swr_ca1_t1 = restrict(this_data.swrs_ca1, tone_t_1); 
+swr_ca1_t1 = restrict(this_data.swrs_ca1, tone_t_1, %how long are the tones??); 
 swr_sub_t1 = restrict(this_data.swrs_sub, tone_t_1); 
 
 fprintf('Ca1 SWRs in tone 1 periods: <strong>%d</strong>   |    Sub SWRs in tone 1 peroids: <strong>%d</strong> \n',...
     length(swr_ca1_t1.tstart),  length(swr_sub_t1.tstart))
 
 % get the tone 2 periods
-tone_t_2 = sort([this_data.evts.t{5}(1:2:end))
+tone_t_2 = sort([this_data.evts.t{5}(1:2:end)])
 
 swr_ca1_t2 = restrict(this_data.swrs_ca1, tone_t_2); 
 swr_sub_t2 = restrict(this_data.swrs_sub, tone_t_2); 
@@ -239,7 +239,7 @@ fprintf('Ca1 SWRs in tone 2 periods: <strong>%d</strong>   |    Sub SWRs in tone
 
 
 % tone 1 trace period (20 sec after end of tone)
-tone_t_1end = sort([this_data.evts.t{4}(2:2:end))
+tone_t_1end = sort([this_data.evts.t{4}(2:2:end)])
 
 swr_ca1_t1trace = restrict(this_data.swrs_ca1, tone_t_1end, tone_t_1end + 20); 
 swr_sub_t1trace = restrict(this_data.swrs_sub, tone_t_1end, tone_t_1end + 20); 
