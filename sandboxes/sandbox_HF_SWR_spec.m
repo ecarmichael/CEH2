@@ -66,9 +66,9 @@
 % ts_prime = 0; 
 
 %pox2217_LT3
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-11_13-03-39_LT3/Record Node 117'; 
-% csc_idx = 1:4:96; 
-% ts_prime = 0; 
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-11_13-03-39_LT3/Record Node 117'; 
+csc_idx = 1:45; 
+ts_prime = 0; 
 % csc_idx = {'CH9', 'CH137'}; % ; 
 % csc_idx = {'CH137'}; % sub; 
 
@@ -91,10 +91,10 @@
 % csc_idx = {'CH122'}; 
 
 %pox3265_LT5
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-13_21-59-55_LT5/Record Node 117'; 
-% csc_idx = 1:4:96; 
-ts_prime = 0; 
-csc_idx = {'CH51'};
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-13_21-59-55_LT5/Record Node 117'; 
+% % csc_idx = 1:4:96; 
+% ts_prime = 0; 
+% csc_idx = {'CH51'};
 % csc_idx = {'CH149'}
 
 
