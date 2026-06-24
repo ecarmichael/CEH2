@@ -66,9 +66,9 @@
 % ts_prime = 0;
 
 %pox2217_LT3
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-11_13-03-39_LT3/Record Node 117';
-csc_idx = 65:96;
-ts_prime = 0;
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-11_13-03-39_LT3/Record Node 117';
+% csc_idx = 65:96;
+% ts_prime = 0;
 % csc_idx = {'CH9', 'CH137'}; % ;
 % csc_idx = {'CH137'}; % sub;
 
@@ -119,13 +119,6 @@ ts_prime = 0;
 % % csc_idx = {'CH124'};
 % csc_idx = {'CH135'}; % Sub
 
-%pox3568_LT3
-% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-17_10-03-06_LT3\Record Node 117';
-% csc_idx = 1:2:96;
-% ts_prime = 0;
-% % csc_idx = {'CH117'};
-% csc_idx = {'CH143'}; % Sub
-
 
 %pox3567_LT4
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-18_12-06-54_LT4/Record Node 117';
@@ -133,7 +126,22 @@ ts_prime = 0;
 % ts_prime = 0;
 % % csc_idx = {'CH117'};
 % csc_idx = {'CH143'}; % Sub
-%
+
+
+%pox3567_TFCD1
+csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3567_2026-06-20_17-44-01_TFCD1\Record Node 117';
+% csc_idx = 1:4:96;
+ts_prime = 0;
+csc_idx = {'CH51'};
+% csc_idx = {'CH143'}; % Sub
+
+
+%pox3568_LT3
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-17_10-03-06_LT3\Record Node 117';
+% csc_idx = 1:2:96;
+% ts_prime = 0;
+% % csc_idx = {'CH117'};
+% csc_idx = {'CH143'}; % Sub
 %% load the spikes if present
 %
 % params = OE_load_params(phy_dir);
@@ -263,7 +271,7 @@ set(gca, 'YTick', y_t, 'YTickLabel', lab)
 
 move_ts = ts({OE_evts.t{contains(OE_evts.label, '8')}});
 
-mov_rate  = MS_spike2rate(move_ts, csc.tvec)
+mov_rate  = MS_spike2rate(move_ts, csc.tvec);
 
 
 cfg_mov = [];
@@ -362,7 +370,7 @@ swr_t = SelectIV([], this_swr, swr_type == 3);
 
 %% collect the data
 load("all_data.mat")
-this_name = 'pox_3265_tl5';
+this_name = 'pox_3567_TFCD1';
 
 all_data.(this_name).csc = csc;
 
