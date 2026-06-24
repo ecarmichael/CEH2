@@ -198,7 +198,15 @@ fprintf('Sub SWRs in Pre: <strong>%d</strong> \n', length(swr_sub_pre.tstart))
 
 % restrict data to the post period. 
 
+% ca1
+swr_ca1_post = restrict(this_data.swrs_ca1, this_data.evts.t{2}(2), this_data.csc.tvec(end)); 
 
+%sub 
+swr_sub_post = restrict(this_data.swrs_ca1, this_data.evts.t{2}(2), this_data.csc.tvec(end)); 
+
+fprintf('Ca1 SWRs in Post: <strong>%d</strong> \n', length(swr_ca1_post.tstart))
+
+fprintf('Sub SWRs in Post: <strong>%d</strong> \n', length(swr_sub_post.tstart))
 
 
 
