@@ -2,6 +2,7 @@
 % 
 
 %pox2217_TFCD1
+<<<<<<< HEAD
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-16_16-29-44_TFC_D1/Record Node 117';
 % csc_idx = 1:4:96;
 % ts_prime = 0;
@@ -13,6 +14,12 @@ csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/
 csc_idx = 1:4:96;
 ts_prime = 0;
 % csc_idx = {'CH5', 'CH9','CH63' 'CH51' 'CH55', 'CH63'}; % no good Sub SWR
+=======
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox2217_2026-06-16_16-29-44_TFC_D1\Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH51', 'CH143'};
+>>>>>>> d7769ccbcb83ccb742b6ef73e7a73270c22cce3e
 
 %pox3567_TFCD1
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3567_2026-06-20_17-44-01_TFCD1\Record Node 117';
@@ -28,10 +35,17 @@ ts_prime = 0;
 % csc_idx = {'CH51', 'CH143'};
 
 %pox3256_TFCD3  %% no ripples at all? 
-% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-16_18-09-08_TFC_D1\Record Node 117';
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-18_16-10-31_TFC_D3\Record Node 117';
 % csc_idx = 1:4:96;
 % ts_prime = 0;
 % csc_idx = {'CH51', 'CH143'};
+
+
+%pox3256_TFCD4  %% 
+csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-19_21-06-37_TFCD4\Record Node 117';
+csc_idx = 1:4:96;
+ts_prime = 0;
+csc_idx = {'CH119', 'CH145'}; % CH71 and 115 are also decent for CA1
 %% load the spikes if present
 %
 % params = OE_load_params(phy_dir);
