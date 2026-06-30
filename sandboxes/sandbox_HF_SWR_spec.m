@@ -150,18 +150,18 @@
 
 
 %pox3567_LT4
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-18_12-06-54_LT4/Record Node 117';
-csc_idx = 1:4:96;
-ts_prime = 0;
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-18_12-06-54_LT4/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
 % csc_idx = {'CH117'};
 % csc_idx = {'CH143'}; % Sub
 
 
 %pox3567_TFCD1
-csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3567_2026-06-20_17-44-01_TFCD1\Record Node 117';
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3567_2026-06-20_17-44-01_TFCD1\Record Node 117';
 % csc_idx = 1:4:96;
-ts_prime = 0;
-csc_idx = {'CH51'};
+% ts_prime = 0;
+% csc_idx = {'CH51'};
 % csc_idx = {'CH143'}; % Sub
 
 
@@ -584,7 +584,7 @@ c_ord = [0.502 0.502 0.502 ; .8 0 0];
 
 
 figure(999)
-set(gcf,'Units','inch','position',[3 3 3.5 2.5]);
+set(gcf,'Units','inch','position',[3 3 3.5*1.5 2.5]);
 clf;
 hold on
 

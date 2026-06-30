@@ -2,10 +2,17 @@
 % 
 
 %pox2217_TFCD1
-csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox2217_2026-06-16_16-29-44_TFC_D1\Record Node 117';
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-16_16-29-44_TFC_D1/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH5', 'CH9','CH63' 'CH51' 'CH55', 'CH63'}; % no good Sub SWR
+
+
+%pox2217_TFCD1
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-10_11-27-27_LT2/Record Node 117';
 csc_idx = 1:4:96;
 ts_prime = 0;
-% csc_idx = {'CH51', 'CH143'};
+% csc_idx = {'CH5', 'CH9','CH63' 'CH51' 'CH55', 'CH63'}; % no good Sub SWR
 
 %pox3567_TFCD1
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3567_2026-06-20_17-44-01_TFCD1\Record Node 117';
