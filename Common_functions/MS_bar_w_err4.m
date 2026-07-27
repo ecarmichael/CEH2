@@ -1,0 +1,347 @@
+function [hb, eb, sc, p, stats_out] =  MS_bar_w_err4(data_a, data_b,data_c,data_d, color, data_flag, stats, x_vals)
+
+
+if nargin < 4
+    data_flag = 1;
+    stats = 'anova1';
+    x_vals = [1 2 3]; % where to put the plot. useful for putting multiple together.
+    color = MS_linspecer(3);
+elseif nargin < 5
+    data_flag = 1;
+    stats = 'anova1';
+    x_vals = [1 2 3]; % where to put the plot. useful for putting multiple together.
+elseif nargin < 6
+    stats = 'anova1';
+    x_vals = [1 2 3];
+elseif nargin < 7
+    x_vals = [1 2 3];
+end
+
+if data_flag == 1
+    hb = bar(x_vals, [mean(data_a, 'omitnan'), mean(data_b, 'omitnan'), mean(data_c, 'omitnan'), mean(data_d, 'omitnan')]', 'FaceColor', 'flat', 'EdgeColor','flat');
+    hb.CData(1,:) = color(1,:);
+    hb.CData(2,:) = color(2,:);
+    hb.CData(3,:) = color(3,:);
+    hb.CData(4,:) = color(4,:);
+
+end
+hold on
+
+offsets_a = x_vals(1)+ sort(MS_randn_range(length(data_a), 1, -.1, .1));
+offsets_b = x_vals(2)+ sort(MS_randn_range(length(data_b), 1, -.1, .1));
+offsets_c = x_vals(3)+ sort(MS_randn_range(length(data_c), 1, -.1, .1));
+offsets_d = x_vals(4)+ sort(MS_randn_range(length(data_d), 1, -.1, .1));
+
+
+
+
+if ~isempty(stats)
+    % zero-pad for uneven Ns
+    d_mat = NaN(4, max([size(data_a,2),size(data_b,2), size(data_c,2), size(data_d,2)]));
+    d_mat(1,1:length(data_a)) = data_a;
+    d_mat(2,1:length(data_b)) = data_b;
+    d_mat(3,1:length(data_c)) = data_c;
+    d_mat(4,1:length(data_d)) = data_d;
+
+    % make a table
+    tbl = table(d_mat(1,:)', d_mat(2,:)', d_mat(3,:)', d_mat(4,:)', 'Variablenames', {'A', 'B', 'C', 'D'});
+    % meas = table([1 2 3 4]', 'VariableNames',{'meas'});
+
+    withinTbl = table([1 2 3 4]', 'VariableNames', {'Rep'});
+    withinTbl.Rep = categorical(withinTbl.Rep);
+
+    switch stats
+        case 'anova1'
+            % disp('using ttest')
+            [p,stats_out.a_tbl, stats_out.stats] = anova1(d_mat',[], 'off');
+            stats_out.stats.F = stats_out.a_tbl{2,5};
+
+            if p(1) > 0.05; h =1; else h=0; end
+
+            [results, means] = multcompare(stats_out.stats, 'display', 'off');
+            stats_out.stats.std = means(:,2); 
+
+            stats_out.m_tbl =  array2table(results,"VariableNames", ...
+                ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
+
+                % print the results
+    if p(1) < 0.05
+        fprintf('<strong>%s</strong> - F(<strong>%d</strong>,<strong>%d</strong>): <strong>%.2f</strong> p = <strong>%.5f</strong>\n',stats, stats_out.a_tbl{2,3},stats_out.stats.df, stats_out.stats.F, stats_out.a_tbl{2,6})
+    else
+        fprintf('<strong>%s</strong> - F(%d,%d): %.2f p = %.5f \n',stats, stats_out.a_tbl{2,3},stats_out.stats.df, stats_out.stats.F, stats_out.a_tbl{2,6})
+    end
+
+        case 'anova2'
+            % disp('using ttest')
+            [p, stats_out.a_tbl, stats_out.stats] = anova2([d_mat(1,:)', d_mat(2,:)', d_mat(3,:)' d_mat(4,:)'], size([d_mat(1,:)', d_mat(2,:)', d_mat(3,:)', d_mat(4,:)'],1), "off");
+            stats_out.stats.F = stats_out.a_tbl{2,5};
+
+            if p(1) < 0.05; h =1; else h=0; end
+
+            [results, means] = multcompare(stats_out.stats,  'display', 'off');
+            stats_out.m_tbl =  array2table([results,means],"VariableNames", ...
+                ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value","Mean","Standard Error"]);
+
+            plot([offsets_a, offsets_b]', [data_a ,data_b]', '-', 'Color', [.5 .5 .5])
+            plot([offsets_b, offsets_c]', [data_b ,data_c]', '-', 'Color', [.5 .5 .5])
+            plot([offsets_c, offsets_d]', [data_c ,data_d]', '-', 'Color', [.5 .5 .5])
+
+
+    % print the results
+    if p(1) < 0.05
+        fprintf('<strong>%s</strong> - F(<strong>%d</strong>,<strong>%d</strong>): <strong>%.2f</strong> p = <strong>%.5f</strong>\n',stats, stats_out.a_tbl{2,3},stats_out.stats.df, stats_out.stats.F, stats_out.a_tbl{2,6})
+    else
+        fprintf('<strong>%s</strong> - F(%d,%d): %.2f p = %.5f \n',stats, stats_out.a_tbl{2,3},stats_out.stats.df, stats_out.stats.F, stats_out.a_tbl{2,6})
+    end
+
+            case 'ranova'
+                error('Not tested yet')
+            %     disp('using RANOVA')
+            %     rm = fitrm(tbl, 'A-C ~ 1', 'WithinDesign',withinTbl);
+            % 
+            %     stats_out.r_tbl = ranova(rm,'WithinModel', 'Rep');
+            % 
+            % 
+            % 
+            %     p = stats_out.r_tbl.pValue(3); 
+            % 
+            %     if p(1) < 0.05; h =1; else h=0; end
+            % 
+            %     % reconstruct to match ANOVA
+            % 
+            %     [stats_out.m_tbl] = multcompare(rm, 'Rep', 'ComparisonType', 'bonferroni'); 
+            % 
+            % stats_out.m_tbl =  stats_out.m_tbl([1,2,4],:); 
+            % stats_out.m_tbl = renamevars(stats_out.m_tbl, "Rep_1", "Group A");
+            % stats_out.m_tbl = renamevars(stats_out.m_tbl, "Rep_2", "Group B");
+            % stats_out.m_tbl = renamevars(stats_out.m_tbl, "pValue", "P-value");
+            % 
+            % 
+            % % add connections between points.
+            % plot([offsets_a, offsets_b]', [data_a ,data_b]', '-', 'Color', [.5 .5 .5])
+            % plot([offsets_b, offsets_c]', [data_b ,data_c]', '-', 'Color', [.5 .5 .5])
+
+    % print the results
+    if p(1) < 0.05
+        fprintf('<strong>%s</strong> - F(<strong>%d</strong>,<strong>%d</strong>): <strong>%.2f</strong> p = <strong>%.5f</strong>\n',stats, stats_out.r_tbl.DF(3),stats_out.r_tbl.DF(4), stats_out.r_tbl.pValue(3), p)
+    else
+        fprintf('<strong>%s</strong> - F(%d,%d): %.2f p = %.5f \n',stats, stats_out.r_tbl.DF(3),stats_out.r_tbl.DF(4), stats_out.r_tbl.pValue(3), p)
+    end
+
+        case 'KW' % nonparametric version of anova1
+            % disp('using ks')
+            [h, p, stats_out.stats] = kruskalwallis([d_mat(1,:)', d_mat(2,:)', d_mat(3,:)']);
+
+
+    end
+
+
+    % overall
+    if ~isnan(h) && p(1) < 0.05
+        if size(data_a,2) == 1
+            data_pool = [data_a; data_b; data_c; data_d];
+        else
+            data_pool = [data_a, data_b, data_c, data_d];
+        end
+        ylim([0 max(data_pool)*1.3])
+        x_lim = xlim;
+        % add the sig markers
+        if (0.05 > p(1)) && (p(1)> 0.01)
+            text(x_lim(end)*.9, max(data_pool, [], 'all')*1.25, ['*overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','right')
+        elseif (0.01 >= p(1)) && (p(1) >= 0.001)
+            text(x_lim(end), max(data_pool, [], 'all')*1.25, ['** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','right')
+        elseif p(1) < 0.001
+            text(x_lim(end), max(data_pool, [], 'all')*1.25, ['*** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','right')
+        elseif p(1) < 0.0001
+            text(x_lim(end), max(data_pool, [], 'all')*1.25, ['**** overall p = ' num2str(p(1), 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','right')
+        end
+    end
+
+    % 1 vs 2
+    this_p = stats_out.m_tbl.("P-value")(1);
+
+    if ~isnan(this_p) && this_p < 0.05
+
+        if (0.05 > this_p) && (this_p> 0.01)
+            text(median(x_vals(1:2)), max(data_pool, [], 'all')*1.15, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        elseif (0.01 >= this_p) && (this_p >= 0.001)
+            text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        elseif this_p < 0.001
+            text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        elseif this_p < 0.0001
+            text(median(x_vals(1:2))*.975, max(data_pool, [], 'all')*1.15, ['**** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        end
+
+        plot(x_vals(1:2), [max(data_pool, [], 'all')*1.1 max(data_pool, [], 'all')*1.1], '-k', 'linewidth', 1)
+        plot([x_vals(1) x_vals(1)], [max(data_pool, [], 'all')*1.075 max(data_pool, [], 'all')*1.1], '-k', 'linewidth', 1)
+        plot([x_vals(2) x_vals(2)], [max(data_pool, [], 'all')*1.075 max(data_pool, [], 'all')*1.1], '-k', 'linewidth', 1)
+
+    end
+
+    % 1 vs 3
+    this_p = stats_out.m_tbl.("P-value")(2);
+
+    if ~isnan(this_p) && this_p < 0.05
+        if (0.5 > this_p) && (this_p> 0.01)
+            text(median([x_vals(1) x_vals(3)]), max(data_pool, [], 'all')*1.15, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
+        elseif (0.1 >= this_p) && (this_p >= 0.001)
+            text(median([x_vals(1) x_vals(3)])*.975, max(data_pool, [], 'all')*1.15, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
+        elseif this_p < 0.001
+            text(median([x_vals(1) x_vals(3)])*.95, max(data_pool, [], 'all')*1.15, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
+        elseif this_p < 0.0001
+            text(median([x_vals(1) x_vals(3)])*.925, max(data_pool, [], 'all')*1.15, ['**** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
+        end
+
+        plot([x_vals(1) x_vals(3)], [max(data_pool, [], 'all')*1.0 max(data_pool, [], 'all')*1.1], '-k', 'linewidth', 1)
+        plot([x_vals(1) x_vals(1)], [max(data_pool, [], 'all')*1.075 max(data_pool, [], 'all')*1.1], '-k', 'linewidth', 1)
+        plot([x_vals(3) x_vals(3)], [max(data_pool, [], 'all')*1.075 max(data_pool, [], 'all')*1.1], '-k', 'linewidth', 1)
+
+    end
+
+
+    % 1 vs 4
+    this_p = stats_out.m_tbl.("P-value")(3);
+
+    if ~isnan(this_p) && this_p < 0.05
+
+        if (0.5 > this_p) && (this_p> 0.01)
+            text(median([x_vals(1) x_vals(4)]), max(data_pool, [], 'all')*1.15, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
+        elseif (0.1 >= this_p) && (this_p >= 0.001)
+            text(median([x_vals(1) x_vals(4)])*.975, max(data_pool, [], 'all')*1.15, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
+        elseif this_p < 0.001
+            text(median([x_vals(1) x_vals(4)])*.95, max(data_pool, [], 'all')*1.15, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
+        elseif this_p < 0.0001
+            text(median([x_vals(1) x_vals(4)])*.95, max(data_pool, [], 'all')*1.15, ['**** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8)
+        end
+
+        plot([x_vals(1) x_vals(4)], [max(data_pool, [], 'all')*1.1 max(data_pool, [], 'all')*1.1], '-k', 'linewidth', 1);
+        plot([x_vals(1) x_vals(1)], [max(data_pool, [], 'all')*1.075 max(data_pool, [], 'all')*1.1], '-k', 'linewidth', 1)
+        plot([x_vals(4) x_vals(4)], [max(data_pool, [], 'all')*1.075 max(data_pool, [], 'all')*1.1], '-k', 'linewidth', 1)
+    end
+
+% 2 vs 3
+    this_p = stats_out.m_tbl.("P-value")(4);
+
+    if ~isnan(this_p) && this_p < 0.05
+
+        if (0.5 > this_p) && (this_p> 0.01)
+            text(median(x_vals(2:3)), max(data_pool, [], 'all')*1.25, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        elseif (0.1 >= this_p) && (this_p >= 0.001)
+            text(median(x_vals(2:3))*.975, max(data_pool, [], 'all')*1.25, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        elseif this_p < 0.001
+            text(median(x_vals(2:3))*.95, max(data_pool, [], 'all')*1.25, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        elseif this_p < 0.0001
+            text(median(x_vals(2:3))*.95, max(data_pool, [], 'all')*1.25, ['**** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        end
+
+        plot(x_vals(2:3), [max(data_pool, [], 'all')*1.2 max(data_pool, [], 'all')*1.2], '-k', 'linewidth', 1)
+        plot([x_vals(2) x_vals(2)], [max(data_pool, [], 'all')*1.175 max(data_pool, [], 'all')*1.2], '-k', 'linewidth', 1)
+        plot([x_vals(3) x_vals(3)], [max(data_pool, [], 'all')*1.175 max(data_pool, [], 'all')*1.2], '-k', 'linewidth', 1)
+
+    end
+
+    % 2 v 4
+        this_p = stats_out.m_tbl.("P-value")(5);
+    if ~isnan(this_p) && this_p < 0.05
+
+        if (0.5 > this_p) && (this_p> 0.01)
+            text(median([x_vals(2) x_vals(4)]), max(data_pool, [], 'all')*1.25, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        elseif (0.1 >= this_p) && (this_p >= 0.001)
+            text(median([x_vals(2) x_vals(4)])*.975, max(data_pool, [], 'all')*1.25, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        elseif this_p < 0.001
+            text(median([x_vals(2) x_vals(4)])*.95, max(data_pool, [], 'all')*1.25, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        elseif this_p < 0.0001
+            text(median([x_vals(2) x_vals(4)])*.95, max(data_pool, [], 'all')*1.25, ['**** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        end
+
+        plot([x_vals(2) x_vals(4)], [max(data_pool, [], 'all')*1.2 max(data_pool, [], 'all')*1.2], '-k', 'linewidth', 1)
+        plot([x_vals(2) x_vals(2)], [max(data_pool, [], 'all')*1.175 max(data_pool, [], 'all')*1.2], '-k', 'linewidth', 1)
+        plot([x_vals(4) x_vals(4)], [max(data_pool, [], 'all')*1.175 max(data_pool, [], 'all')*1.2], '-k', 'linewidth', 1)
+
+    end
+
+    % 3 v 4
+    this_p = stats_out.m_tbl.("P-value")(6);
+    if ~isnan(this_p) && this_p < 0.05
+
+        if (0.5 > this_p) && (this_p> 0.01)
+            text(median([x_vals(3) x_vals(4)]), max(data_pool, [], 'all')*1.35, ['* p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        elseif (0.1 >= this_p) && (this_p >= 0.001)
+            text(median([x_vals(2) x_vals(4)])*.975, max(data_pool, [], 'all')*1.35, ['** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        elseif this_p < 0.001
+            text(median([x_vals(3) x_vals(4)])*.95, max(data_pool, [], 'all')*1.35, ['*** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        elseif this_p < 0.0001
+            text(median([x_vals(3) x_vals(4)])*.95, max(data_pool, [], 'all')*1.35, ['**** p = ' num2str(this_p, 3)], 'color', 'k', 'FontSize',8, 'HorizontalAlignment','center')
+        end
+
+        plot([x_vals(3) x_vals(4)], [max(data_pool, [], 'all')*1.3 max(data_pool, [], 'all')*1.3], '-k', 'linewidth', 1)
+        plot([x_vals(3) x_vals(3)], [max(data_pool, [], 'all')*1.275 max(data_pool, [], 'all')*1.3], '-k', 'linewidth', 1)
+        plot([x_vals(4) x_vals(4)], [max(data_pool, [], 'all')*1.275 max(data_pool, [], 'all')*1.3], '-k', 'linewidth', 1)
+
+    end
+
+    % report the posthoc
+    if isfield(stats_out, 'm_tbl')
+        
+        if stats_out.m_tbl.("P-value")(1) < 0.05
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b),  stats_out.m_tbl.("P-value")(1))
+        else
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f); p =  %.5f \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b),  stats_out.m_tbl.("P-value")(1))
+        end
+        if stats_out.m_tbl.("P-value")(2) < 0.05
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl.("P-value")(2))
+        else
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  %.5f \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl.("P-value")(2))
+        end
+        if stats_out.m_tbl.("P-value")(3) < 0.05
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group D (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(3))
+        else
+            fprintf('Group A (%.2f +/- %.2f)  Vs Group D (%.2f +/- %.2f); p =  %.5f \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(3))
+        end
+
+        if stats_out.m_tbl.("P-value")(4) < 0.05
+            fprintf('Group B (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl.("P-value")(4))
+        else
+            fprintf('Group B (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  %.5f \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_c, 'omitnan'),MS_SEM(data_c), stats_out.m_tbl.("P-value")(4))
+        end
+
+        if stats_out.m_tbl.("P-value")(5) < 0.05
+            fprintf('Group B (%.2f +/- %.2f)  Vs Group D (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(5))
+        else
+            fprintf('Group B (%.2f +/- %.2f)  Vs Group D (%.2f +/- %.2f); p =  %.5f \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_d, 'omitnan'),MS_SEM(data_d), stats_out.m_tbl.("P-value")(5))
+        end
+
+        if stats_out.m_tbl.("P-value")(6) < 0.05
+            fprintf('Group C (%.2f +/- %.2f)  Vs Group D (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_c, 'omitnan'),MS_SEM(data_c),mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(6))
+        else
+            fprintf('Group C (%.2f +/- %.2f)  Vs Group D (%.2f +/- %.2f); p =  %.5f \n',mean(data_c, 'omitnan'),MS_SEM(data_c),mean(data_d, 'omitnan'),MS_SEM(data_d), stats_out.m_tbl.("P-value")(6))
+        end
+    end
+
+    fprintf('\n'); %extra spacing.
+
+end
+
+% add in the data points (after the lines) so they are the top layer
+if data_flag > 0 %&& length(data_a) == length(data_b)
+    sc{1} = scatter( offsets_a, data_a,15, 'markerfacecolor', 'k', 'MarkerEdgeColor', 'none');
+    sc{2} = scatter(offsets_b, data_b,15,  'markerfacecolor', 'k', 'MarkerEdgeColor', 'none');
+    sc{3} = scatter(offsets_c, data_c,15,  'markerfacecolor', 'k', 'MarkerEdgeColor', 'none');
+    sc{4} = scatter(offsets_d, data_d,15,  'markerfacecolor', 'k', 'MarkerEdgeColor', 'none');
+
+    % sc{1} = scatter( offsets_a, data_a,25, 'markerfacecolor', color(1,:), 'MarkerEdgeColor', [.2 .2 .2]);
+    % sc{2} = scatter(offsets_b, data_b,25,  'markerfacecolor', color(2,:), 'MarkerEdgeColor', [.2 .2 .2]);
+else
+    sc = [];
+end
+
+eb = errorbar(x_vals, [mean(data_a, 'omitnan'), mean(data_b,'omitnan'), mean(data_c,'omitnan'), mean(data_d,'omitnan')], [MS_SEM(data_a) ,MS_SEM(data_b), MS_SEM(data_c),MS_SEM(data_d)], -[MS_SEM(data_a) ,MS_SEM(data_b),MS_SEM(data_c), MS_SEM(data_d)]);
+eb.LineStyle = 'none';
+eb.Color = [.2 .2 .2 .2];
+eb.LineWidth =1;
+eb(1).CapSize = eb(1).CapSize*2;
+
+if ~exist('hb','var')
+    hb = sc;
+end
+

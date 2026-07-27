@@ -1,32 +1,83 @@
 %% sandbox_NAMI_Sub_SWR
 % 
 
-%pox2217_TFCD1
-<<<<<<< HEAD
+%%%%%   2217   %%%%%%% 
+
+%pox2217_TFCD1 % no good sub SWR
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-16_16-29-44_TFC_D1/Record Node 117';
 % csc_idx = 1:4:96;
 % ts_prime = 0;
-% csc_idx = {'CH5', 'CH9','CH63' 'CH51' 'CH55', 'CH63'}; % no good Sub SWR
+% csc_idx = {'CH59'}; % no good Sub SWR
 
-
-%pox2217_TFCD1
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-10_11-27-27_LT2/Record Node 117';
-csc_idx = 1:4:96;
-ts_prime = 0;
-% csc_idx = {'CH5', 'CH9','CH63' 'CH51' 'CH55', 'CH63'}; % no good Sub SWR
-=======
-% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox2217_2026-06-16_16-29-44_TFC_D1\Record Node 117';
+%pox2217_TFCD2 % no good SWR not done. 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-17_13-41-15_TFC_D2/Record Node 117';
 % csc_idx = 1:4:96;
 % ts_prime = 0;
-% csc_idx = {'CH51', 'CH143'};
->>>>>>> d7769ccbcb83ccb742b6ef73e7a73270c22cce3e
+% csc_idx = {'CH13'} % no good swr. 
 
-%pox3567_TFCD1
-% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3567_2026-06-20_17-44-01_TFCD1\Record Node 117';
-% % csc_idx = 1:4:96;
+%pox2217_TFCD3  split recordings need to merge. Might be a pain. 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-18_14-26-43_TFC_D3/Record Node 117';
+% csc_idx = 1:4:96;
 % ts_prime = 0;
-% csc_idx = {'CH51', 'CH143'};
+% csc_idx = {'CH119', 'CH157'};
 
+
+%pox2217_TFCD4 Good Ca1 but Sub is weak.  Done
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-19_13-37-05_TFC_D4/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH59', 'CH157'};
+
+%pox2217_TFCD5 Done mild SWR on Sub
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-20_22-52-37_TFCD5/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH124', 'CH145'};
+
+
+%%%%%   3567   %%%%%%% 
+
+%pox3567_TFCD1 % done some sub swr, no spikes yet. 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-20_17-44-01_TFCD1/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH51', 'CH141'};
+
+%pox3567_TFCD2  done good Sub SWR, okay Ca1
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-21_15-41-32_TFCD2/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH63', 'CH133'};
+
+%pox3567_TFCD3 % NO SWR??!?!
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-22_13-44-28_TFCD3/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH51', 'CH141'};
+
+%pox3567_TFCD4 % done no spikes yet
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-23_15-53-07_TFCD4/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH63', 'CH153'};
+
+% pox3567_TFCD5 % Done nice CA1 and good Sub
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-24_14-10-03_TFCD5/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH5', 'CH153'};
+
+
+%%%%%   3568   %%%%%%% 
+
+%pox3568_TFCD1 % Good CA1 and Sub. Needs Spikes. 
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-20_12-49-38_TFCD1/Record Node 117';
+csc_idx = 1:4:96;
+ts_prime = 0;
+csc_idx = {'CH55', 'CH141'};
+
+
+%%%%%   3256   Pox %%%%%%% 
 
 %pox3256_TFCD1  %% no ripples at all? 
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-16_18-09-08_TFC_D1\Record Node 117';
@@ -34,25 +85,49 @@ ts_prime = 0;
 % ts_prime = 0;
 % csc_idx = {'CH51', 'CH143'};
 
-%pox3256_TFCD3  %% no ripples at all? 
+%pox3256_TFCD3  %% 
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-18_16-10-31_TFC_D3\Record Node 117';
 % csc_idx = 1:4:96;
 % ts_prime = 0;
 % csc_idx = {'CH51', 'CH143'};
 
 
-%pox3256_TFCD4  %% 
-csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-19_21-06-37_TFCD4\Record Node 117';
-csc_idx = 1:4:96;
-ts_prime = 0;
-csc_idx = {'CH119', 'CH145'}; % CH71 and 115 are also decent for CA1
+%pox3256_TFCD4  %% done. CA1 great no Sub. Needs spikes. 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-19_21-06-37_TFCD4/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH119', 'CH145'}; % CH71 and 115 are also decent for CA1
+
+%pox3256_TFCD5 TO DO
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-20_21-00-10_TFCD5/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH119', 'CH145'}; % CH71 and 115 are also decent for CA1
 %% load the spikes if present
 %
-% params = OE_load_params(phy_dir);
+params = OE_load_params(phy_dir);
+
+S = OE_phy2TS(phy_dir, params);
+%split into CA1 and Sub (sub channels are >132)
+ch = []; 
+ts_prime = readNPY([phy_dir filesep 'timestamps.npy']);
+ts_prime = ts_prime(1);
+
+for ii = length(S.label):-1:1
+    ch(ii) = str2double(S.label{ii}(1:strfind(S.label{ii}, '-')-1)); 
+    % S.t{ii} = S.t{ii} %+ts_prime; % add the time offset back. 
+end
+S.loc = ch < 128; 
+c_ord = MS_linspecer(2);
+S.c_ord = [winter(sum(S.loc==1)); repmat(c_ord(1,:),sum(S.loc==0),1)]; 
+
+neb = nebula(round(length(S.t)/1.5)); 
+win = winter(round(length(S.t)/1.5));
+S.c_ord = [win(1:sum(S.loc==1),:); flipud(neb(end-sum(S.loc==1):end,:))]; 
+
+
 %
-% data.S = OE_phy2TS(phy_dir, params);
-%
-% ts_prime = readNPY([phy_dir filesep 'timestamps.npy']);
+
 %% load the csc
 
 
@@ -124,7 +199,7 @@ else
 
     % csc.tvec = ;
     % csc.tvec = csc.tvec - csc.tvec(1) + (csc.tvec(1) - ts_prime(1)); % zero out the csc.
-    csc.tvec = csc.tvec - ts_prime(1); % zero out the csc.
+    % csc.tvec = csc.tvec - ts_prime(1); % zero out the csc.
 
     cfg_in.decimateFactor = 15;
     csc = decimate_tsd(cfg_in, csc);
@@ -136,7 +211,17 @@ else
 
 end
 
+% session info
 
+parts = strsplit(csc_dir, filesep); 
+s_idx = contains(parts, '2026'); % find the folder containing '2026' since all the sessions of interest are from this time. 
+sess = parts{s_idx}; 
+subject = lower(sess(strfind(sess, 'Pox'): strfind(sess, 'Pox')+6));
+if contains(sess, 'TFC')
+    sess_id = strrep(sess(strfind(sess, 'TFC'):end), '_', '');
+else
+    sess_id = sess(strfind(sess, 'LT'):end);
+end
 
 %% csc check
 
@@ -190,15 +275,18 @@ csc_r = restrict(csc, mov_iv);
 
     swrs_ca1 = MS_SWR_detector(csc_r,csc.label{1});
 
-
+% manually select
+% swr_k = MS_manual_IV_selection(csc, swrs_ca1, .2);
+% swrs_ca1 = SelectIV([], swrs_ca1, logical(swr_k))
 %%   Detect Sub SWRS
 close all
     swrs_sub = MS_SWR_detector(csc_r,csc.label{2});
 
-
+% swr_k = MS_manual_IV_selection(csc, swrs_sub, .2);
+% swrs_sub = SelectIV([], swrs_sub, logical(swr_k))
 %% collect the data
 load("all_TFC.mat")
-this_name = 'pox_3567_TFCD1';
+this_name = [subject '_' sess_id];
 
 all_TFC.(this_name).csc = csc;
 
@@ -216,7 +304,104 @@ all_TFC.(this_name).evts=OE_evts;
 save('all_TFC.mat', 'all_TFC')
 
 
+%% Figure 2a-d Show sample SWRS along with the raw, filtered, and spike slignments
+% this_sess = all_TFC; 
 
+% prep some data by pulling out the ca1 and sub LFPs
+
+% filter the LFP into a lower range:
+cfg = []; 
+cfg.f = [1 400];
+csc_f = FilterLFP(cfg, csc); 
+
+ca1 = csc_f; 
+ca1.data(2,:) = []; %remove the second channel; 
+ca1.label = []; 
+ca1.label{1} = 'Ca1'; 
+
+sub = csc_f; 
+sub.data(1,:) = []; %remove the second channel; 
+sub.label = []; 
+sub.label{1} = 'Sub'; 
+
+
+figure(201) % multiraster to show spiking
+clf
+
+set(gcf,'Units','inch','OuterPosition',[1 6 4 8]);
+
+% subplot(6,1,1:4)
+
+cfg = []; 
+cfg.spkColor = S.c_ord; % premade colours.  Can also use the S.loc logical for Ca1 (1) or Sub (0)
+cfg.SpikeHeight = .5; 
+cfg.lfpHeight = 20;
+cfg.lfpSpacing =15; 
+cfg.lfp(1) = ca1; 
+cfg.lfp(2) = sub;
+cfg.evt = swrs_ca1; 
+cfg.openNewFig = 0; % stops it from opening a new figure 
+MultiRaster(cfg, S)
+
+% add in some multi unit activity
+hold on
+
+cfg = []; 
+cfg.tvec = csc.tvec; 
+cfg.sigma = 0.005; 
+% Ca1 MUA
+S_ca = S; 
+S_ca.t(~S.loc) = []; 
+mua = getMUA(cfg, S_ca); % get the smoothed multiunit activity; 
+plot(mua.tvec, MS_norm_range(mua.data, 0, 10) - 10,'color',  S.c_ord(1,:))
+
+% Sub MUA
+S_sub = S; 
+S_sub.t(S.loc) = []; 
+mua = getMUA(cfg, S_sub); % get the smoothed multiunit activity; 
+c_idx = find(~S.loc); % just to get the first of the colour range
+plot(mua.tvec, MS_norm_range(mua.data, 0, 10) - 25,'color',  S.c_ord(c_idx(1),:))
+
+xlim([181.5 182.5])
+ylim([-40 80])
+
+%% NAMI TODO: plot some examples of the filtering and SWR detection. 
+% this will compliment the above plot with one subplot for CA1 and Sub each
+% with a hold on that keeps the filtered trace, the zscored amplitude, and
+% the 2sd threshold. 
+% 
+% you should have the elements you need in that filtering script you made a
+% while back.  In case you don't have access to that. Remember that the
+% abslute of the Hilbert transform [abs(hilbert(csc_f.data(1,:)))] is how
+% you extract the amplitude. 
+%
+% bonus points for having the filtered traces match the colours of the MUA
+% in the above plot. Also making the amplitue plot thicker with a linewidth
+% of 2, and having the threshold be a dashed line. 
+
+% filter into the SWR band csc_f.data(1,:) is CA1 and csc_f.data(2,:) will
+% be the subiculum channel.  
+cfg = []; 
+cfg.f = [125 200];
+csc_f = FilterLFP(cfg, csc); 
+
+
+% keep the plot sizes consistent. 
+figure(202) 
+clf
+set(gcf,'Units','inch','OuterPosition',[1 6 4 8]);
+
+% plot the Ca1 data
+subplot(2,1,1)
+hold on
+
+xlim([181.5 182.5]) % x limits for the nice SWR in the above plot
+
+% plot the Subiculum data
+subplot(2,1,2)
+hold on
+
+xlim([181.5 182.5])
 %% chopping data
 
 % grab some data
@@ -282,6 +467,8 @@ fprintf('Ca1 SWRs in baseline: <strong>%d</strong>   |    Sub SWRs in baseline: 
 
 %% plots to check everything
 
+% this_sess = 
+
 figure(101)  % make a plot (with specific number)
 clf % clear the current plot
 
@@ -296,12 +483,6 @@ xline(tone_t_on-30, 'y')
 
 % add some fancy verical lines
 xline(all_TFC.pox_3567_TFCD1.evts.t{5}(1:2:end), 'k', 'LineWidth',3)
-
-
-
-
-
-
 
 
 
