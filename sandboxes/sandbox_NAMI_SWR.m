@@ -70,12 +70,37 @@
 
 %%%%%   3568   %%%%%%% 
 
-%pox3568_TFCD1 % Good CA1 and Sub. Needs Spikes. 
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-20_12-49-38_TFCD1/Record Node 117';
-csc_idx = 1:4:96;
-ts_prime = 0;
-csc_idx = {'CH55', 'CH141'};
+%pox3568_TFCD1 % DONE Good CA1 and Sub. Needs Spikes. 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-20_12-49-38_TFCD1/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH55', 'CH141'};
 
+%pox3568_TFCD2 % DONE Best CA1 and SWR, no Spikes yet. 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-21_17-05-21_TFCD2/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH124', 'CH149'};
+
+%pox3568_TFCD3 % DONE CA1 good, no Sub SWR. 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-22_14-58-53_TFCD3/Record Node 117';
+% csc_idx = [1 5 9 65:77]; %csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH71', 'CH145'};
+
+% pox3568_TFCD4 % DONE great CA1 and SWR (some spike contamination) needs Spikes. 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-23_18-12-36_TFCD4/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH63', 'CH157'};
+
+
+% pox3568_TFCD5 % Great Sub SWR and good CA1 (some spike contam). Needs
+% spikes.
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-24_16-56-18_TFCD5/Record Node 117';
+% csc_idx = 65:77; %1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH13', 'CH134'};
 
 %%%%%   3256   Pox %%%%%%% 
 
@@ -126,10 +151,9 @@ win = winter(round(length(S.t)/1.5));
 S.c_ord = [win(1:sum(S.loc==1),:); flipud(neb(end-sum(S.loc==1):end,:))]; 
 
 
-%
+
 
 %% load the csc
-
 
 if isempty(csc_dir)
     csc = [];
@@ -303,7 +327,18 @@ all_TFC.(this_name).evts=OE_evts;
 
 save('all_TFC.mat', 'all_TFC')
 
+%% split out the all_TFC for speed. 
 
+f_list  = fieldnames(all_TFC);
+
+data = []; 
+for iF = 1:length(f_list)
+    data.(f_list{iF}) = all_TFC.(f_list{iF}); 
+
+save([f_list{iF} '.mat'], 'data'); 
+data = []; 
+
+end
 %% Figure 2a-d Show sample SWRS along with the raw, filtered, and spike slignments
 % this_sess = all_TFC; 
 
@@ -562,8 +597,6 @@ ca1_cent = IVcenters(ca1_swrs);
 pair_swr = [];
 for ii = length(ca1_cent):-1:1
     this_d = sub_cent - ca1_cent(ii);
-
-
     co_evt = find(abs(this_d) < .50);
 
     if isempty(co_evt) || length(co_evt) > 1

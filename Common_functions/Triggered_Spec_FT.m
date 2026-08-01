@@ -93,7 +93,8 @@ if ~isempty(baseline)
 end
 cfg.baselinetype = 'zscore';
 cfg.title = freq_params_str;
-if plot_flag
+if plot_flag == 1
+    cfg.figure = 'yes'; 
     ft_singleplotTFR(cfg, TFR);
     vline(0, '--k')
 end

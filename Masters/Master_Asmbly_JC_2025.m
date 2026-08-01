@@ -2185,6 +2185,19 @@ colormap(inferno)
 exportgraphics(gcf, [fig_dir filesep 'Fig5_Target_Ref_mat.pdf'], 'ContentType', 'vector');
 
 
+
+%% count the amount of time in REM per sessions
+REM_dur = []; 
+
+for iA = length(A_out):-1:1
+    REM_dur(iA,1) = A_out{iA}{1}.REM_Pre_tvec(end) - A_out{iA}{1}.REM_Pre_tvec(1);  % time in seconds. 
+    REM_dur(iA,2) = A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1);  
+end
+
+
+fprintf('PRE REM duration:  mean = %.3f +/- %.2f min\n',mean(REM_dur(:,1)/60, 'omitmissing'), std(REM_dur(:,1)/60, 'omitmissing'))
+fprintf('Post REM duration: mean = %.2f +/- %.2f min\n',mean(REM_dur(:,2)/60, 'omitmissing'), std(REM_dur(:,2)/60, 'omitmissing'))
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% %%%%%%%%%%%%%%%%%%%  OLD CODE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
