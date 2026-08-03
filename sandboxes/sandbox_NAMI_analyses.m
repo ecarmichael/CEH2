@@ -54,6 +54,8 @@ this_sess.swrs_ca1_std  = IntersectIV([], this_sess.swrs_ca1, this_sess.swrs_sub
 
 %% make an event triggered spectrogram of the CA1 and Sub SWRs relative to the CA1 center using fieldtrip. 
 
+% skip this if you don't want to deal with fieldtrip.
+
 % get things ready for field trip.  You will need to clone the fieldtrip
 % repo and initialize it by moving to the fieldtrip folder in matlab and
 % running ft_defaults. 
