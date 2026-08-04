@@ -758,7 +758,7 @@ ylim(y_lim)
 set(gca, 'ytick', y_t); 
 
 % save
-exportgraphics(gcf, [fig_dir filesep 'Assembly_participation.pdf'], 'ContentType', 'vector');
+% exportgraphics(gcf, [fig_dir filesep 'Assembly_participation.pdf'], 'ContentType', 'vector');
 
 
 
