@@ -266,6 +266,9 @@ end
 % keep in mind that for pv1191 HAT the track is the opposite as the other
 % sessions. 
 p_open = nan(1,length(A_out));
+switch_idx = false(size(p_open)); 
+H5_idx = switch_idx; 
+H1_idx = switch_idx; 
 
 for iA = length(A_out):-1:1 % loop over sessions
     if  strcmp(A_out{iA}{1}.info.session, 'HATDSwitch') 
@@ -280,7 +283,16 @@ for iA = length(A_out):-1:1 % loop over sessions
         p_open(iA) = sum(A_out{iA}{1}.behav.position(A_out{iA}{1}.move_idx,1) < 50)/sum(A_out{iA}{1}.move_idx);
     end
 
+    if strcmp(A_out{iA}{1}.info.session, 'HATDSwitch') 
+        switch_idx(iA) = true; 
+    elseif strcmp(A_out{iA}{1}.info.session, 'HATD5') 
+        H5_idx(iA) = true; 
+    elseif strcmp(A_out{iA}{1}.info.session, 'HATD1') 
+        H1_idx(iA) = true;
+    end
+
 end
+
 
 %% quantify participation of cells in assembly reactivations
 
@@ -450,6 +462,9 @@ p_a_idx = ismember(sess_id, a_idx);
 p_af_idx = ismember(sess_id, af_idx); 
 p_hats_idx = ismember(sess_id, aswitch_idx); 
 
+
+%% Fig 1002 plot the HAT member participation 
+
 f_pos = [1 6 6.25 3.4]; 
 figure(1002)
 clf
@@ -566,14 +581,14 @@ y_t = get(gca, 'ytick');
 % Fam vs all Anx
 % for memeber cells
 subplot(2,4,3); cla
-fprintf('<strong>Post/Prediff participation members: Fam v Anx v Fam Anx v Anx S/strong>\n')
+fprintf('<strong>Post/Prediff participation members: Fam v Anx v Fam Anx v Anx S</strong>\n')
 data1 = all_p_diff_mem(p_f_idx); 
 data2 = all_p_diff_mem(p_a_idx); 
 data3 = all_p_diff_mem(p_af_idx); 
 data4 = all_p_diff_mem(p_hats_idx); 
 
 
-[h, eb, sc] = MS_bar_w_err4(data1, data2, data3,data4, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'anova1', 1:4);
+[h, eb, sc] = MS_bar_w_err4(data1, data2, data3,data4, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'anova1', 1:4,{'Fam' 'Anx', 'Fam Anx', 'Anx Switch'});
 eb.LineWidth = 1; eb.CapSize = 6; 
 h.LineWidth = .8; h.EdgeColor = "none";
 sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; sc{4}.SizeData = 5; 
@@ -591,14 +606,14 @@ y_t = get(gca, 'ytick');
 
 
 subplot(2,4,7); cla
-fprintf('<strong>Post/Prediff participation non-members: Fam v Anx v Fam Anx v Anx S/strong>\n')
+fprintf('<strong>Post/Prediff participation non-members: Fam v Anx v Fam Anx v Anx S </strong>\n')
 data1 = all_p_diff_n_mem(p_f_idx); 
 data2 = all_p_diff_n_mem(p_a_idx); 
 data3 = all_p_diff_n_mem(p_af_idx); 
 data4 = all_p_diff_n_mem(p_hats_idx); 
 
 
-[h, eb, sc] = MS_bar_w_err4(data1, data2, data3,data4, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'anova1', 1:4);
+[h, eb, sc] = MS_bar_w_err4(data1, data2, data3,data4, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'anova1', 1:4,{'Fam' 'Anx', 'Fam Anx', 'Anx Switch'});
 eb.LineWidth = 1; eb.CapSize = 6; 
 h.LineWidth = .8; h.EdgeColor = "none";
 sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; sc{4}.SizeData = 5; 
@@ -766,6 +781,23 @@ set(gcf,'Units','inch','OuterPosition',f_pos);
 
 
 subplot(2,4,1)
+[h, eb, sc] = MS_bar_w_err4(p_open(~novel_idx & ~anx_idx)*100, p_open(H1_idx)*100, p_open(H5_idx)*100, p_open(switch_idx)*100, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'anova1', 1:4, {'Fam' 'Anx', 'Fam Anx', 'Anx Switch'});
+eb.LineWidth = 1; eb.CapSize = 6; 
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; sc{4}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); sc{4}.MarkerFaceColor = hex2rgb('#808080');
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none';  sc{3}.MarkerEdgeColor = 'none';  sc{4}.MarkerEdgeColor = 'none';
+xlim([0 4])
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4)
+ylabel('% Open')
+set(gca, 'xticklabel', {'Fam' 'Anx', 'Fam Anx', 'Anx Switch'}, 'XTickLabelRotation', 0, 'fontsize', 7)% 'ytick', [0 .1 1 10]);
+xlim([0.5 4.5])
+yline(1, '--', 'color', hex2rgb('#808080'));
+ylim([0 100])
+
+
+subplot(2,4,4)
 hold on
 scatter(p_data_mem, all_p_diff_mem(ismember(sess_id, a_idx)),55, 'k', 'filled')
 
@@ -792,7 +824,7 @@ ylabel({'pariticipation'; 'Members'})
 ylim([0 8]); yline(1, '--', 'color', [.7 .7 .7], 'linewidth',2)
 
 
-subplot(2,4,5)
+subplot(2,4,8)
 hold on
 scatter(p_data_n_mem, all_p_diff_n_mem(ismember(sess_id, a_idx)),55, 'k', 'filled')
 % add corr line
@@ -815,6 +847,38 @@ text(min(p_data_n_mem), max( y(~nan_idx)), corrText, ...
     'FontSize', 8);
 ylabel({'pariticipation'; 'non-Members'})
 ylim([0 2]); yline(1, '--', 'color', [.7 .7 .7], 'linewidth',2)
+
+
+exportgraphics(gcf, [fig_dir filesep 'FigS_HAT.pdf'], 'ContentType', 'vector');
+
+
+%% get the behaviour plots for each fam and axiety sessions
+figure(1013)
+clf
+set(gcf,'Units','inch','OuterPosition',[1 6 6.25*2 5]);
+
+plt_idx = [3 12 13 15 5 9 14 17 4 8 16 2 7 11 18  ]; 
+
+for ii = 1:length(plt_idx)
+    if ii < 12
+        c = '#FD161A';
+    else
+        c = '#FFFFFF';
+    end
+    subplot(2,8,ii)
+    hold on
+    rectangle('Position',[0, 0, 50, A_out{plt_idx(ii)}{1}.behav.time(end)], 'facecolor', hex2rgb(c), 'EdgeColor', 'none', 'facealpha', .2)
+    plot(A_out{plt_idx(ii)}{1}.behav.position(:,1),A_out{plt_idx(ii)}{1}.behav.time, 'k', 'linewidth',2)
+    xlim([0 100]); ylim([0 A_out{plt_idx(ii)}{1}.behav.time(end)])
+    box off
+    set(gca, 'xtick', [], 'ytick', []);
+    title([A_out{plt_idx(ii)}{1}.info.subject '_' A_out{plt_idx(ii)}{1}.info.session], 'FontSize',7)
+    if ii == 1
+        ylabel('Time', 'FontSize',7)
+    end
+end
+
+exportgraphics(gcf, [fig_dir filesep 'FigS_HAT_trace.pdf'], 'ContentType', 'vector');
 
 %% grab the number of detectable assemblies across conditions for the novel day
 x_cond_mat = []; 
