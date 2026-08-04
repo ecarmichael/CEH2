@@ -286,7 +286,7 @@ for iA = length(A_out):-1:1 % loop over sessions
     if strcmp(A_out{iA}{1}.info.session, 'HATDSwitch') 
         switch_idx(iA) = true; 
     elseif strcmp(A_out{iA}{1}.info.session, 'HATD5') 
-        H5_idx(ii) = true; 
+        H5_idx(iA) = true; 
     elseif strcmp(A_out{iA}{1}.info.session, 'HATD1') 
         H1_idx(iA) = true;
     end
@@ -462,6 +462,9 @@ p_a_idx = ismember(sess_id, a_idx);
 p_af_idx = ismember(sess_id, af_idx); 
 p_hats_idx = ismember(sess_id, aswitch_idx); 
 
+
+%% Fig 1002 plot the HAT member participation 
+
 f_pos = [1 6 6.25 3.4]; 
 figure(1002)
 clf
@@ -578,14 +581,14 @@ y_t = get(gca, 'ytick');
 % Fam vs all Anx
 % for memeber cells
 subplot(2,4,3); cla
-fprintf('<strong>Post/Prediff participation members: Fam v Anx v Fam Anx v Anx S/strong>\n')
+fprintf('<strong>Post/Prediff participation members: Fam v Anx v Fam Anx v Anx S</strong>\n')
 data1 = all_p_diff_mem(p_f_idx); 
 data2 = all_p_diff_mem(p_a_idx); 
 data3 = all_p_diff_mem(p_af_idx); 
 data4 = all_p_diff_mem(p_hats_idx); 
 
 
-[h, eb, sc] = MS_bar_w_err4(data1, data2, data3,data4, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'anova1', 1:4);
+[h, eb, sc] = MS_bar_w_err4(data1, data2, data3,data4, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'anova1', 1:4,{'Fam' 'Anx', 'Fam Anx', 'Anx Switch'});
 eb.LineWidth = 1; eb.CapSize = 6; 
 h.LineWidth = .8; h.EdgeColor = "none";
 sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; sc{4}.SizeData = 5; 
@@ -603,14 +606,14 @@ y_t = get(gca, 'ytick');
 
 
 subplot(2,4,7); cla
-fprintf('<strong>Post/Prediff participation non-members: Fam v Anx v Fam Anx v Anx S/strong>\n')
+fprintf('<strong>Post/Prediff participation non-members: Fam v Anx v Fam Anx v Anx S </strong>\n')
 data1 = all_p_diff_n_mem(p_f_idx); 
 data2 = all_p_diff_n_mem(p_a_idx); 
 data3 = all_p_diff_n_mem(p_af_idx); 
 data4 = all_p_diff_n_mem(p_hats_idx); 
 
 
-[h, eb, sc] = MS_bar_w_err4(data1, data2, data3,data4, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'anova1', 1:4);
+[h, eb, sc] = MS_bar_w_err4(data1, data2, data3,data4, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'anova1', 1:4,{'Fam' 'Anx', 'Fam Anx', 'Anx Switch'});
 eb.LineWidth = 1; eb.CapSize = 6; 
 h.LineWidth = .8; h.EdgeColor = "none";
 sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; sc{4}.SizeData = 5; 

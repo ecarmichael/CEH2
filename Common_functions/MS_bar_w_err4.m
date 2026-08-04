@@ -1,25 +1,25 @@
 function [hb, eb, sc, p, stats_out] =  MS_bar_w_err4(data_a, data_b,data_c,data_d, color, data_flag, stats, x_vals, grp_labels)
 
 
-if nargin < 4
+if nargin < 5
     data_flag = 1;
     stats = 'anova1';
     x_vals = [1 2 3]; % where to put the plot. useful for putting multiple together.
     color = MS_linspecer(3);
     grp_labels = {'Group A', 'Group B', 'Group C', 'Group D'};
-elseif nargin < 5
+elseif nargin < 6
     data_flag = 1;
     stats = 'anova1';
     x_vals = [1 2 3]; % where to put the plot. useful for putting multiple together.
     grp_labels = {'Group A', 'Group B', 'Group C', 'Group D'};
-elseif nargin < 6
+elseif nargin < 7
     stats = 'anova1';
     x_vals = [1 2 3];
     grp_labels = {'Group A', 'Group B', 'Group C', 'Group D'};
-elseif nargin < 7
+elseif nargin < 8
     x_vals = [1 2 3];
     grp_labels = {'Group A', 'Group B', 'Group C', 'Group D'};
-elseif nargin < 8
+elseif nargin < 9
     grp_labels = {'Group A', 'Group B', 'Group C', 'Group D'};
 end
 
