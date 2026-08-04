@@ -1970,63 +1970,62 @@ legend({num2str(skews(1)), num2str(skews(2)), num2str(skews(3))}, 'Location', 'B
 
 %% examples of Pre detect assemblies 
 
-
 figure(4001); clf; figure(4002); clf; 
 map_idx = 1:2:25; 
 loc_idx = 2:2:25; 
 iA = 6; 
 % for iA = length(A_out):-1:1 % loop over sessions
 %     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
-% 
+%
 figure(4001)
-        for ii = 1:length(A_out{iA}{iB}.pREM_Place_map)
-            % subplot(4,6,map_idx(ii))
-            subplot(4,8,map_idx(ii))
-            [~, s_idx] = sort(A_out{iA}{iB}.pREM_Place_map{ii}.cent);
-            imagesc(A_out{iA}{iB}.pREM_Place_map{ii}.map(s_idx,:)')
-            colormap(viridis)
-            set(gca, 'ydir', 'normal')
-            % location on track
-            c_ord = MS_linspecer(length(s_idx)); 
-            subplot(4,8,loc_idx(ii))
-            hold on
-            for jj = length(A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc):-1:1
-                scale_val(jj) = A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val(jj)./max(A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val);
-                % text(0, A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc(jj), num2str(jj), 'color', c_ord(ii,:));
-            end
-            scale_val = normalize(scale_val, 'range',[.25 1]);
-            for jj = 1:length(A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc)
-                plot( A_out{iA}{iB}.pREM_wake_P_loc{ii}.win_time,  A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc_mat(jj,:),'color', [c_ord(ii,:) scale_val(jj)], 'LineWidth',2)
-            end
+for ii = 1:length(A_out{iA}{iB}.pREM_Place_map)
+    % subplot(4,6,map_idx(ii))
+    subplot(4,8,map_idx(ii))
+    [~, s_idx] = sort(A_out{iA}{iB}.pREM_Place_map{ii}.cent);
+    imagesc(A_out{iA}{iB}.pREM_Place_map{ii}.map(s_idx,:)')
+    colormap(viridis)
+    set(gca, 'ydir', 'normal')
+    % location on track
+    c_ord = MS_linspecer(length(s_idx));
+    subplot(4,8,loc_idx(ii))
+    hold on
+    for jj = length(A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc):-1:1
+        scale_val(jj) = A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val(jj)./max(A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val);
+        % text(0, A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc(jj), num2str(jj), 'color', c_ord(ii,:));
+    end
+    scale_val = normalize(scale_val, 'range',[.25 1]);
+    for jj = 1:length(A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc)
+        plot( A_out{iA}{iB}.pREM_wake_P_loc{ii}.win_time,  A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc_mat(jj,:),'color', [c_ord(ii,:) scale_val(jj)], 'LineWidth',2)
+    end
 
-            xlim([-2 2]); ylim([0 100])
-        end
+    xlim([-2 2]); ylim([0 100])
+end
 
-        exportgraphics(gcf, [fig_dir filesep 'Novel Pre assembly maps.pdf'], 'ContentType', 'vector');
-
-
-        figure(4002)
-        for ii = 1:length(A_out{iA}{iB}.postREM_Place_map)
-            % subplot(4,6,map_idx(ii))
-            subplot(4,8,map_idx(ii))
-            [~, s_idx] = sort(A_out{iA}{iB}.postREM_Place_map{ii}.cent);
-            imagesc(A_out{iA}{iB}.postREM_Place_map{ii}.map(s_idx,:)')
-            set(gca, 'ydir', 'normal')
+exportgraphics(gcf, [fig_dir filesep 'Novel Pre assembly maps.pdf'], 'ContentType', 'vector');
 
 
-            % location on track
-            c_ord = MS_linspecer(length(s_idx)); 
-            subplot(4,8,loc_idx(ii))
-            hold on
-            for jj = 1:length(A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc)
-                scale_val = A_out{iA}{iB}.postREM_wake_P_loc{ii}.peak_val(jj)./max(A_out{iA}{iB}.postREM_wake_P_loc{ii}.peak_val);
-                plot( A_out{iA}{iB}.postREM_wake_P_loc{ii}.win_time,  A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc_mat(jj,:),'color', [c_ord(ii,:) scale_val], 'LineWidth',2)
-                % text(0, A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc(jj), num2str(jj), 'color', c_ord(ii,:));
-            end
-            xlim([-2 2]); ylim([0 100])
-        end
-    %     end
-    % end
+figure(4002)
+for ii = 1:length(A_out{iA}{iB}.postREM_Place_map)
+    % subplot(4,6,map_idx(ii))
+    subplot(4,8,map_idx(ii))
+    [~, s_idx] = sort(A_out{iA}{iB}.postREM_Place_map{ii}.cent);
+    imagesc(A_out{iA}{iB}.postREM_Place_map{ii}.map(s_idx,:)')
+    set(gca, 'ydir', 'normal')
+
+
+    % location on track
+    c_ord = MS_linspecer(length(s_idx));
+    subplot(4,8,loc_idx(ii))
+    hold on
+    for jj = 1:length(A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc)
+        scale_val = A_out{iA}{iB}.postREM_wake_P_loc{ii}.peak_val(jj)./max(A_out{iA}{iB}.postREM_wake_P_loc{ii}.peak_val);
+        plot( A_out{iA}{iB}.postREM_wake_P_loc{ii}.win_time,  A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc_mat(jj,:),'color', [c_ord(ii,:) scale_val], 'LineWidth',2)
+        % text(0, A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc(jj), num2str(jj), 'color', c_ord(ii,:));
+    end
+    xlim([-2 2]); ylim([0 100])
+end
+%     end
+% end
 
 
 %% Fig4 'Pre REM' example
@@ -2082,9 +2081,7 @@ for iA = length(A_out):-1:1
     % nReAct_Rate(:,:,iA) = this_ReAct.nReAct_Rate./max(this_ReAct.nReAct_Rate, [], 'all');
     A_ReAct_Rate(:,:,iA) = this_ReAct.A_ReAct_Rate./max(this_ReAct.A_ReAct_Rate, [], 'all');
     labels = this_ReAct.info.labels;
-    
-    
-    
+        
 end
 
 figure(7778)
