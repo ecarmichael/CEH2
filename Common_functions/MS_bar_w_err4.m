@@ -1,4 +1,4 @@
-function [hb, eb, sc, p, stats_out] =  MS_bar_w_err4(data_a, data_b,data_c,data_d, color, data_flag, stats, x_vals)
+function [hb, eb, sc, p, stats_out] =  MS_bar_w_err4(data_a, data_b,data_c,data_d, color, data_flag, stats, x_vals, grp_labels)
 
 
 if nargin < 4
@@ -6,15 +6,21 @@ if nargin < 4
     stats = 'anova1';
     x_vals = [1 2 3]; % where to put the plot. useful for putting multiple together.
     color = MS_linspecer(3);
+    grp_labels = {'Group A', 'Group B', 'Group C', 'Group D'};
 elseif nargin < 5
     data_flag = 1;
     stats = 'anova1';
     x_vals = [1 2 3]; % where to put the plot. useful for putting multiple together.
+    grp_labels = {'Group A', 'Group B', 'Group C', 'Group D'};
 elseif nargin < 6
     stats = 'anova1';
     x_vals = [1 2 3];
+    grp_labels = {'Group A', 'Group B', 'Group C', 'Group D'};
 elseif nargin < 7
     x_vals = [1 2 3];
+    grp_labels = {'Group A', 'Group B', 'Group C', 'Group D'};
+elseif nargin < 8
+    grp_labels = {'Group A', 'Group B', 'Group C', 'Group D'};
 end
 
 if data_flag == 1
@@ -44,7 +50,7 @@ if ~isempty(stats)
     d_mat(4,1:length(data_d)) = data_d;
 
     % make a table
-    tbl = table(d_mat(1,:)', d_mat(2,:)', d_mat(3,:)', d_mat(4,:)', 'Variablenames', {'A', 'B', 'C', 'D'});
+    tbl = table(d_mat(1,:)', d_mat(2,:)', d_mat(3,:)', d_mat(4,:)', 'Variablenames', grp_labels);
     % meas = table([1 2 3 4]', 'VariableNames',{'meas'});
 
     withinTbl = table([1 2 3 4]', 'VariableNames', {'Rep'});
@@ -284,37 +290,37 @@ if ~isempty(stats)
     if isfield(stats_out, 'm_tbl')
         
         if stats_out.m_tbl.("P-value")(1) < 0.05
-            fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b),  stats_out.m_tbl.("P-value")(1))
+            fprintf('%s (%.2f +/- %.2f)  Vs %s (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',grp_labels{1}, mean(data_a, 'omitnan'),MS_SEM(data_a),grp_labels{2},mean(data_b, 'omitnan'),MS_SEM(data_b),  stats_out.m_tbl.("P-value")(1))
         else
-            fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f); p =  %.5f \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b),  stats_out.m_tbl.("P-value")(1))
+            fprintf('%s (%.2f +/- %.2f)  Vs %s (%.2f +/- %.2f); p =  %.5f \n',grp_labels{1}, mean(data_a, 'omitnan'),MS_SEM(data_a),grp_labels{2},mean(data_b, 'omitnan'),MS_SEM(data_b),  stats_out.m_tbl.("P-value")(1))
         end
         if stats_out.m_tbl.("P-value")(2) < 0.05
-            fprintf('Group A (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl.("P-value")(2))
+            fprintf('%s (%.2f +/- %.2f)  Vs %s (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',grp_labels{1},mean(data_a, 'omitnan'),MS_SEM(data_a),grp_labels{3},mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl.("P-value")(2))
         else
             fprintf('Group A (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  %.5f \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl.("P-value")(2))
         end
         if stats_out.m_tbl.("P-value")(3) < 0.05
-            fprintf('Group A (%.2f +/- %.2f)  Vs Group D (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(3))
+            fprintf('%s (%.2f +/- %.2f)  Vs %s (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',grp_labels{1},mean(data_a, 'omitnan'),MS_SEM(data_a),grp_labels{4},mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(3))
         else
-            fprintf('Group A (%.2f +/- %.2f)  Vs Group D (%.2f +/- %.2f); p =  %.5f \n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(3))
+            fprintf('%s (%.2f +/- %.2f)  Vs %s (%.2f +/- %.2f); p =  %.5f \n',grp_labels{1},mean(data_a, 'omitnan'),MS_SEM(data_a),grp_labels{4},mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(3))
         end
 
         if stats_out.m_tbl.("P-value")(4) < 0.05
-            fprintf('Group B (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl.("P-value")(4))
+            fprintf('%s (%.2f +/- %.2f)  Vs %s(%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',grp_labels{2},mean(data_b, 'omitnan'),MS_SEM(data_b),grp_labels{3},mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl.("P-value")(4))
         else
-            fprintf('Group B (%.2f +/- %.2f)  Vs Group C (%.2f +/- %.2f); p =  %.5f \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_c, 'omitnan'),MS_SEM(data_c), stats_out.m_tbl.("P-value")(4))
+            fprintf('%s (%.2f +/- %.2f)  Vs %s(%.2f +/- %.2f); p =  %.5f\n',grp_labels{2},mean(data_b, 'omitnan'),MS_SEM(data_b),grp_labels{3},mean(data_c, 'omitnan'),MS_SEM(data_c),  stats_out.m_tbl.("P-value")(4))
         end
 
         if stats_out.m_tbl.("P-value")(5) < 0.05
-            fprintf('Group B (%.2f +/- %.2f)  Vs Group D (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(5))
+            fprintf('%s (%.2f +/- %.2f)  Vs %s (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',grp_labels{2},mean(data_b, 'omitnan'),MS_SEM(data_b),grp_labels{4},mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(5))
         else
-            fprintf('Group B (%.2f +/- %.2f)  Vs Group D (%.2f +/- %.2f); p =  %.5f \n',mean(data_b, 'omitnan'),MS_SEM(data_b),mean(data_d, 'omitnan'),MS_SEM(data_d), stats_out.m_tbl.("P-value")(5))
+            fprintf('%s (%.2f +/- %.2f)  Vs %s (%.2f +/- %.2f); p =  %.5\n',grp_labels{2},mean(data_b, 'omitnan'),MS_SEM(data_b),grp_labels{4},mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(5))
         end
 
         if stats_out.m_tbl.("P-value")(6) < 0.05
-            fprintf('Group C (%.2f +/- %.2f)  Vs Group D (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',mean(data_c, 'omitnan'),MS_SEM(data_c),mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(6))
+            fprintf('%s(%.2f +/- %.2f)  Vs %s (%.2f +/- %.2f); p =  <strong>%.5f</strong> \n',grp_labels{3},mean(data_c, 'omitnan'),MS_SEM(data_c),grp_labels{4},mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(6))
         else
-            fprintf('Group C (%.2f +/- %.2f)  Vs Group D (%.2f +/- %.2f); p =  %.5f \n',mean(data_c, 'omitnan'),MS_SEM(data_c),mean(data_d, 'omitnan'),MS_SEM(data_d), stats_out.m_tbl.("P-value")(6))
+            fprintf('%s(%.2f +/- %.2f)  Vs %s (%.2f +/- %.2f); p =  %.5f \n',grp_labels{3},mean(data_c, 'omitnan'),MS_SEM(data_c),grp_labels{4},mean(data_d, 'omitnan'),MS_SEM(data_d),  stats_out.m_tbl.("P-value")(6))
         end
     end
 
