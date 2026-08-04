@@ -255,8 +255,10 @@ for iA = length(A_out):-1:1 % loop over sessions
     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
 
      A_out{iA} = Pipeline_Asmbly_append_preA(A_out{iA}, opts);
+     fprintf('<strong>%s</strong> - %s Appending pre ...', A_out{iA}{1}.info.subject,  A_out{iA}{1}.info.session)
 
      A_out{iA} = Pipeline_Asmbly_append_postA(A_out{iA}, opts);
+     fprintf('post \n')
 
     end
 end
@@ -759,6 +761,7 @@ set(gca, 'ytick', y_t);
 exportgraphics(gcf, [fig_dir filesep 'Assembly_participation.pdf'], 'ContentType', 'vector');
 
 
+
 %% Check if there is a correlation between open arm 
 % p_a_idx = ismember(sess_id, a_idx(1)); 
 
@@ -849,10 +852,10 @@ ylabel({'pariticipation'; 'non-Members'})
 ylim([0 2]); yline(1, '--', 'color', [.7 .7 .7], 'linewidth',2)
 
 
-exportgraphics(gcf, [fig_dir filesep 'FigS_HAT.pdf'], 'ContentType', 'vector');
+% exportgraphics(gcf, [fig_dir filesep 'FigS_HAT.pdf'], 'ContentType', 'vector');
 
 
-%% get the behaviour plots for each fam and axiety sessions
+%% Figure S 6:  get the behaviour plots for each fam and axiety sessions
 figure(1013)
 clf
 set(gcf,'Units','inch','OuterPosition',[1 6 6.25*2 5]);
@@ -867,7 +870,11 @@ for ii = 1:length(plt_idx)
     end
     subplot(2,8,ii)
     hold on
-    rectangle('Position',[0, 0, 50, A_out{plt_idx(ii)}{1}.behav.time(end)], 'facecolor', hex2rgb(c), 'EdgeColor', 'none', 'facealpha', .2)
+    if strcmp(A_out{plt_idx(ii)}{1}.info.session, 'HATDSwitch') || (strcmp(A_out{plt_idx(ii)}{1}.info.subject, 'pv1191') && strcmp(A_out{plt_idx(ii)}{1}.info.session, 'HATD1'))
+        rectangle('Position',[50, 0, 100, A_out{plt_idx(ii)}{1}.behav.time(end)], 'facecolor', hex2rgb(c), 'EdgeColor', 'none', 'facealpha', .2)
+    else
+        rectangle('Position',[0, 0, 50, A_out{plt_idx(ii)}{1}.behav.time(end)], 'facecolor', hex2rgb(c), 'EdgeColor', 'none', 'facealpha', .2)
+    end
     plot(A_out{plt_idx(ii)}{1}.behav.position(:,1),A_out{plt_idx(ii)}{1}.behav.time, 'k', 'linewidth',2)
     xlim([0 100]); ylim([0 A_out{plt_idx(ii)}{1}.behav.time(end)])
     box off
@@ -878,7 +885,7 @@ for ii = 1:length(plt_idx)
     end
 end
 
-exportgraphics(gcf, [fig_dir filesep 'FigS_HAT_trace.pdf'], 'ContentType', 'vector');
+% exportgraphics(gcf, [fig_dir filesep 'FigS_HAT_trace.pdf'], 'ContentType', 'vector');
 
 %% grab the number of detectable assemblies across conditions for the novel day
 x_cond_mat = []; 
@@ -916,9 +923,9 @@ for ii = 1:size(A_out{iA}{iB}.P_proj,1)
 end
 
 x_cond_mat(1,2, iA) = sum(p_proj);
+
 % wake - pre
 x_cond_mat(1,3, iA) = sum(A_out{iA}{iB}.REM_Post_stats.p_val<0.05);
-
 
     end
 end
@@ -1456,7 +1463,7 @@ else
 end
 
 % save it
-exportgraphics(gcf, [fig_dir filesep 'Assembly_aRate.pdf'], 'ContentType', 'vector');
+% exportgraphics(gcf, [fig_dir filesep 'Fig_2_Assembly_aRate.pdf'], 'ContentType', 'vector');
 
 %% MultiComps
  
@@ -1520,7 +1527,6 @@ mdl = fitglme(rate_tbl, 'Rate ~ Ctrl*Grp'); %Ctrl * Grp');
 %     'VariableNames', {'Wake', 'Wake S', 'REM', 'REM_S'});
 
 
-
 % repeated measures anova
 withinDesign = table(categorical([1 1 2 2].'), categorical([1 2 1 2].'), 'VariableNames', {'cond', 'shuff'}); % within-desing
 
@@ -1535,7 +1541,6 @@ ranovatbl = ranova(rm,'withinmodel', 'cond*shuff');
 
 % post-hoc TK
 posthoc_results = multcompare(rm, 'cond');
-
 
 
 % simple anova. 
@@ -2255,14 +2260,23 @@ for iA = length(A_out):-1:1
     REM_dur(iA,2) = A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1);  
 end
 
-
-fprintf('PRE REM duration:  mean = %.3f +/- %.2f min\n',mean(REM_dur(:,1)/60, 'omitmissing'), std(REM_dur(:,1)/60, 'omitmissing'))
+fprintf('\n<strong>REM durations</strong>\n')
+fprintf('PRE REM duration:  mean = %.2f +/- %.2f min\n',mean(REM_dur(:,1)/60, 'omitmissing'), std(REM_dur(:,1)/60, 'omitmissing'))
 fprintf('Post REM duration: mean = %.2f +/- %.2f min\n',mean(REM_dur(:,2)/60, 'omitmissing'), std(REM_dur(:,2)/60, 'omitmissing'))
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% %%%%%%%%%%%%%%%%%%%  OLD CODE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%  OLD CODE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% qualitfy reactivation saptial biases
 
