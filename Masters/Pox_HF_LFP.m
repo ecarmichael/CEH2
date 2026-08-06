@@ -147,6 +147,9 @@ title('Power Values Comparison');
 set(gca, 'XTick', 1.5:2:8.5,'TickLabelInterpreter','tex', 'XTickLabel', { 'Theta', 'Low\newlineGamma',  'Mid\newlineGamma', 'Ripples'});
 set(gca, 'fontsize', 8);
 
+
+subplot(2,2,4); 
+
 % anovan 
 pow_mat_norm = pow_mat(:,2:end)./pow_mat(:,1); 
 type = categorical([ones(1,size(pow_mat_norm,1)), 2*ones(1,size(pow_mat_norm,1)), 3*ones(1,size(pow_mat_norm,1)), 4*ones(1,size(pow_mat_norm,1))])';
@@ -160,14 +163,28 @@ pox = logical([pox_idx; pox_idx; pox_idx; pox_idx]);
 tbl = array2table(results,"VariableNames", ...
     ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
 tbl.("Group A")=gnames(tbl.("Group A"));
-tbl.("Group B")=gnames(tbl.("Group B"))
+tbl.("Group B")=gnames(tbl.("Group B"));
+
 %% same thing but for Ca1
+clear
 
 load('all_data.mat')
 
 % keep only the TL sessions
 
-s_list = fieldnames(all_data); 
+s_list = fieldnames(all_data);
+% only keep the LT or TFC days
+k_idx = false(size(s_list));
+for ii = 1:length(s_list)
+    if contains(s_list{ii}, 'tl')
+        k_idx(ii) = true;
+    end
+    if contains(s_list{ii}, '2217_tl4')
+        k_idx(ii) = false;
+    end
+end
+
+s_list(~k_idx) = []; 
 pox_idx = nan(size(s_list)); 
 pow_mat = NaN(length(s_list),5); 
 psd = []; 
@@ -231,3 +248,91 @@ for ii = length(s_list):-1:1
 end
 
 pox_idx = logical(pox_idx); 
+
+%%  quick Psd comparisons
+
+figure(100)
+set(gcf,'Units','pixels','position',fig_size); % helpful to keep the figures the same size. 
+
+clf
+
+subplot(2,2,1)
+hold on
+ctrl_pxx = []; pox_pxx = []; 
+
+for ii = length(psd):-1:1
+    pxx(ii,:) = 10*log10(psd{ii}.pxx)./max(10*log10(psd{ii}.pxx)); 
+end
+
+
+
+% plot(psd{ii}.f, mean(pxx(~pox_idx,:)), 'k', 'LineWidth',2)
+% plot(psd{ii}.f, mean(pxx(pox_idx,:)), 'r', 'LineWidth',2)
+
+% remove the notch indices for a cleaner plot. 
+notch_idx = nearest_idx([58 62 118 122 178 182 238 242], psd{ii}.f);
+keep_idx = ones(size(psd{ii}.f)); 
+keep_idx([notch_idx(1):notch_idx(2), notch_idx(3):notch_idx(4), notch_idx(5):notch_idx(6), notch_idx(7):notch_idx(8)]) = 0;
+keep_idx = logical(keep_idx); 
+
+% err = (std(pxx(~pox_idx,:),0,1, 'omitmissing')./sqrt(size(pxx(~pox_idx,:),1)))
+h = shadedErrorBar(psd{ii}.f(keep_idx), mean(pxx(~pox_idx,keep_idx)),MS_SEM_vec(pxx(~pox_idx,keep_idx)));
+h.mainLine.LineWidth = 2; 
+
+% plot the Pox
+h = shadedErrorBar(psd{ii}.f(keep_idx), mean(pxx(pox_idx,keep_idx)),MS_SEM_vec(pxx(pox_idx,keep_idx))); 
+h.mainLine.Color = c_ord(2,:); 
+h.mainLine.LineWidth = 2; 
+h.patch.FaceColor = h.mainLine.Color; 
+h.patch.EdgeColor = h.mainLine.Color;
+h.edge(1).Color = h.mainLine.Color; 
+h.edge(2).Color = h.mainLine.Color; 
+
+
+
+% Set axis labels and title for the plot
+xlabel('Frequency (Hz)');
+ylabel('Normalized Power');
+title('Power Spectral Density Comparison');
+legend({'Control', 'Pox'}, 'Location', 'Best', 'Box','off');
+
+xlim([0 250])
+
+set(gca, 'fontsize', 8)
+
+title('CA1')
+
+% plot the power values
+subplot(2,2,2); 
+cla
+hold on
+x_mat = [1, 2; 3, 4; 5, 6; 7, 8]; 
+% plot them
+for ii = 2:5
+    MS_bar_w_err(pow_mat(~pox_idx,ii)./pow_mat(~pox_idx,1), pow_mat(pox_idx,ii)./pow_mat(pox_idx,1), [.8 .8 .8; c_ord(2,:)], 1, 'ttest2', x_mat(ii-1,:))
+end
+
+% Finalize the power plot with appropriate labels and settings
+xlabel('Power Bands');
+ylabel('Normalized Power');
+title('Power Values Comparison');
+set(gca, 'XTick', 1.5:2:8.5,'TickLabelInterpreter','tex', 'XTickLabel', { 'Theta', 'Low\newlineGamma',  'Mid\newlineGamma', 'Ripples'});
+set(gca, 'fontsize', 8);
+
+
+subplot(2,2,4); 
+
+% anovan 
+pow_mat_norm = pow_mat(:,2:end)./pow_mat(:,1); 
+type = categorical([ones(1,size(pow_mat_norm,1)), 2*ones(1,size(pow_mat_norm,1)), 3*ones(1,size(pow_mat_norm,1)), 4*ones(1,size(pow_mat_norm,1))])';
+pox = logical([pox_idx; pox_idx; pox_idx; pox_idx]); 
+
+[p,~,stats] = anovan([pow_mat_norm(:,1); pow_mat_norm(:,2); pow_mat_norm(:,3); pow_mat_norm(:,4)],...
+    {type pox},'model',2,'varnames',{'band','pox'}); 
+
+[results,~,~,gnames] = multcompare(stats,"Dimension",[1 2]);
+
+tbl = array2table(results,"VariableNames", ...
+    ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
+tbl.("Group A")=gnames(tbl.("Group A"));
+tbl.("Group B")=gnames(tbl.("Group B"));
