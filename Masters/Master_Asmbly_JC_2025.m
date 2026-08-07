@@ -255,27 +255,66 @@ for iA = length(A_out):-1:1 % loop over sessions
     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
 
      A_out{iA} = Pipeline_Asmbly_append_preA(A_out{iA}, opts);
+     fprintf('<strong>%s</strong> - %s Appending pre ...', A_out{iA}{1}.info.subject,  A_out{iA}{1}.info.session)
 
      A_out{iA} = Pipeline_Asmbly_append_postA(A_out{iA}, opts);
+     fprintf('post \n')
 
     end
 end
 
 
+%% get the % time in the open/closed arms from each session. 
+% keep in mind that for pv1191 HAT the track is the opposite as the other
+% sessions. 
+p_open = nan(1,length(A_out));
+switch_idx = false(size(p_open)); 
+H5_idx = switch_idx; 
+H1_idx = switch_idx; 
+
+for iA = length(A_out):-1:1 % loop over sessions
+    if  strcmp(A_out{iA}{1}.info.session, 'HATDSwitch') 
+        p_open(iA) = sum(A_out{iA}{1}.behav.position(A_out{iA}{1}.move_idx,1) > 50)/sum(A_out{iA}{1}.move_idx);
+
+    elseif iA == 12 &&  strcmp(A_out{iA}{1}.info.session, 'HATDSwitch')
+        p_open(iA) = sum(A_out{iA}{1}.behav.position(A_out{iA}{1}.move_idx,1) < 50)/sum(A_out{iA}{1}.move_idx);
+    elseif iA == 12
+        p_open(iA) = sum(A_out{iA}{1}.behav.position(A_out{iA}{1}.move_idx,1) > 50)/sum(A_out{iA}{1}.move_idx);
+
+    else
+        p_open(iA) = sum(A_out{iA}{1}.behav.position(A_out{iA}{1}.move_idx,1) < 50)/sum(A_out{iA}{1}.move_idx);
+    end
+
+    if strcmp(A_out{iA}{1}.info.session, 'HATDSwitch') 
+        switch_idx(iA) = true; 
+    elseif strcmp(A_out{iA}{1}.info.session, 'HATD5') 
+        H5_idx(iA) = true; 
+    elseif strcmp(A_out{iA}{1}.info.session, 'HATD1') 
+        H1_idx(iA) = true;
+    end
+
+end
+
+
 %% quantify participation of cells in assembly reactivations
-all_p_diff_mem = [];  all_p_diff_n_mem = []; sess_id = [];
+
+sess_id = []; all_cent = []; all_cent_loc = [];
+
+all_p_diff_mem = [];  all_p_diff_n_mem = []; 
 all_p_diff_mem_open = []; all_p_diff_mem_close = []; 
 all_p_diff_n_mem_open = []; all_p_diff_n_mem_close = []; 
 
-% pre vs wake
-all_p_wake_diff_mem = [];  all_p_wake_diff_n_mem = []; 
-all_p_wake_diff_mem_open = []; all_p_wake_diff_mem_close = []; 
-all_p_wake_diff_n_mem_open = []; all_p_wake_diff_n_mem_close = []; 
+% % pre vs wake
+% all_p_wake_diff_mem = [];  all_p_wake_diff_n_mem = []; 
+% all_p_wake_diff_mem_open = []; all_p_wake_diff_mem_close = []; 
+% all_p_wake_diff_n_mem_open = []; all_p_wake_diff_n_mem_close = []; 
+% 
+% % wake vs post
+% all_p_wp_diff_mem = [];  all_p_wp_diff_n_mem = []; 
+% all_p_wp_diff_mem_open = []; all_p_wp_diff_mem_close = []; 
+% all_p_wp_diff_n_mem_open = []; all_p_wp_diff_n_mem_close = []; 
 
-% wake vs post
-all_p_wp_diff_mem = [];  all_p_wp_diff_n_mem = []; 
-all_p_wp_diff_mem_open = []; all_p_wp_diff_mem_close = []; 
-all_p_wp_diff_n_mem_open = []; all_p_wp_diff_n_mem_close = []; 
+% for the centroid bias
 
 for iA = 1:length(A_out) % loop over sessions
     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
@@ -290,11 +329,12 @@ for iA = 1:length(A_out) % loop over sessions
         [p_post, post_in_mem, post_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.REM_Post_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.REM_Post_data, A_out{iA}{iB}.REM_Post_stats.R_thresh);
 
         % get the relative changes in participation (cell x cell0 in each assembly.
-        p_diff_in = []; p_diff_out = [];
+        p_diff_in = []; p_diff_out = []; A_cent = NaN(size(p)); A_cent_loc = []; 
         for ii =length(p):-1:1
             if isempty(p_pre{ii}) || isempty(p_post{ii}) 
-                A_out{iA}{iB}.p_diff_mem = nan;
-                A_out{iA}{iB}.p_diff_n_mem = nan;
+                A_out{iA}{iB}.p_diff_mem(ii) = nan;
+                A_out{iA}{iB}.p_diff_n_mem(ii) = nan;
+                A_cent_loc(ii) = nan; 
             else
                 p_diff_in{ii} = ((p_post{ii}.in_A./p_post{ii}.out_A) ./ (p_pre{ii}.in_A./p_pre{ii}.out_A));
                 p_diff_in{ii}(isinf(p_diff_in{ii})) =nan;
@@ -303,41 +343,67 @@ for iA = 1:length(A_out) % loop over sessions
                 A_out{iA}{iB}.p_diff_n_mem(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx), 'omitmissing');
 
 
-                cent_idx = logical(A_out{iA}{iB}.place.bins(A_out{iA}{iB}.place.centroids+1) > 50); % is the cell tuned to the open arm in the anx session.
+                % get the weighted centroid of the assembly.
+                m_temp = A_out{iA}{iB}.Place_map{ii}.map;
+                m_temp(isnan(m_temp)) = 0; 
+                stats = regionprops(true(size(m_temp)), m_temp, 'WeightedCentroid');
+                this_cent = stats.WeightedCentroid(1);
+                A_cent_loc(ii) = this_cent; 
+            
 
-                A_out{iA}{iB}.p_diff_mem_open(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & cent_idx), 'omitmissing');
-                A_out{iA}{iB}.p_diff_n_mem_open(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & cent_idx), 'omitmissing');
-
-                A_out{iA}{iB}.p_diff_mem_close(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
-                A_out{iA}{iB}.p_diff_n_mem_close(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                % case specific, determine if the assembly is biased to the
+                % open or closed arms. 
+                if  strcmp(A_out{iA}{1}.info.session, 'HATDSwitch')
+                    A_cent(ii) = this_cent > 50; 
+                    cent_idx = logical(A_out{iA}{iB}.place.bins(A_out{iA}{iB}.place.centroids+1) > 50); % is the cell tuned to the open arm in the anx session.
+                elseif iA == 12 &&  strcmp(A_out{iA}{1}.info.session, 'HATDSwitch')
+                    A_cent(ii) = this_cent  < 50;
+                    cent_idx = logical(A_out{iA}{iB}.place.bins(A_out{iA}{iB}.place.centroids+1) < 50); % is the cell tuned to the open arm in the anx session.
+                elseif iA == 12
+                    A_cent(ii) = this_cent > 50;
+                    cent_idx = logical(A_out{iA}{iB}.place.bins(A_out{iA}{iB}.place.centroids+1) > 50); % is the cell tuned to the open arm in the anx session.
+                else           
+                    A_cent(ii) = this_cent  < 50;
+                    cent_idx = logical(A_out{iA}{iB}.place.bins(A_out{iA}{iB}.place.centroids+1) < 50); % is the cell tuned to the open arm in the anx session.
+                end
                 
+
+                % % cell by cell basis
+                % A_out{iA}{iB}.p_diff_mem_open(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & cent_idx), 'omitmissing');
+                % A_out{iA}{iB}.p_diff_n_mem_open(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & cent_idx), 'omitmissing');
+                % 
+                % A_out{iA}{iB}.p_diff_mem_close(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                % A_out{iA}{iB}.p_diff_n_mem_close(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                % 
+
                 % same but for pre vs task;
-                p_wake_diff_in{ii} = ((p{ii}.in_A./p{ii}.out_A) ./ (p_pre{ii}.in_A./p_pre{ii}.out_A));
-                p_wake_diff_in{ii}(isinf(p_wake_diff_in{ii})) =nan;
-                % p_diff_out{ii} = (p_post{ii}.out_A - p_pre{ii}.out_A);
-                A_out{iA}{iB}.p_wake_diff_mem(ii) = mean(p_wake_diff_in{ii}(p_pre{ii}.mem_idx), 'omitmissing');
-                A_out{iA}{iB}.p_wake_diff_n_mem(ii) = mean(p_wake_diff_in{ii}(~p_pre{ii}.mem_idx), 'omitmissing');
+                % p_wake_diff_in{ii} = ((p{ii}.in_A./p{ii}.out_A) ./ (p_pre{ii}.in_A./p_pre{ii}.out_A));
+                % p_wake_diff_in{ii}(isinf(p_wake_diff_in{ii})) =nan;
+                % % p_diff_out{ii} = (p_post{ii}.out_A - p_pre{ii}.out_A);
 
-                A_out{iA}{iB}.p_wake_diff_mem_open(ii) = mean(p_wake_diff_in{ii}(p_pre{ii}.mem_idx & cent_idx), 'omitmissing');
-                A_out{iA}{iB}.p_wake_diff_n_mem_open(ii) = mean(p_wake_diff_in{ii}(~p_pre{ii}.mem_idx & cent_idx), 'omitmissing');
+                % A_out{iA}{iB}.p_wake_diff_mem(ii) = mean(p_wake_diff_in{ii}(p_pre{ii}.mem_idx), 'omitmissing');
+                % A_out{iA}{iB}.p_wake_diff_n_mem(ii) = mean(p_wake_diff_in{ii}(~p_pre{ii}.mem_idx), 'omitmissing');
 
-                A_out{iA}{iB}.p_wake_diff_mem_close(ii) = mean(p_wake_diff_in{ii}(p_pre{ii}.mem_idx & ~cent_idx), 'omitmissing');
-                A_out{iA}{iB}.p_wake_diff_n_mem_close(ii) = mean(p_wake_diff_in{ii}(~p_pre{ii}.mem_idx & ~cent_idx), 'omitmissing');
-                
+                % A_out{iA}{iB}.p_wake_diff_mem_open(ii) = mean(p_wake_diff_in{ii}(p_pre{ii}.mem_idx & cent_idx), 'omitmissing');
+                % A_out{iA}{iB}.p_wake_diff_n_mem_open(ii) = mean(p_wake_diff_in{ii}(~p_pre{ii}.mem_idx & cent_idx), 'omitmissing');
+                % 
+                % A_out{iA}{iB}.p_wake_diff_mem_close(ii) = mean(p_wake_diff_in{ii}(p_pre{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                % A_out{iA}{iB}.p_wake_diff_n_mem_close(ii) = mean(p_wake_diff_in{ii}(~p_pre{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                % 
 
                 % same but for post vs task;
-                p_wp_diff_in{ii} = ((p_post{ii}.in_A./p{ii}.out_A) ./ (p{ii}.in_A./p{ii}.out_A));
-                p_wp_diff_in{ii}(isinf(p_wp_diff_in{ii})) =nan;
-                % p_diff_out{ii} = (p_post{ii}.out_A - p_pre{ii}.out_A);
-                A_out{iA}{iB}.p_wp_diff_mem(ii) = mean(p_wp_diff_in{ii}(p_pre{ii}.mem_idx), 'omitmissing');
-                A_out{iA}{iB}.p_wp_diff_n_mem(ii) = mean(p_wp_diff_in{ii}(~p_pre{ii}.mem_idx), 'omitmissing');
+                % p_wp_diff_in{ii} = ((p_post{ii}.in_A./p{ii}.out_A) ./ (p{ii}.in_A./p{ii}.out_A));
+                % p_wp_diff_in{ii}(isinf(p_wp_diff_in{ii})) =nan;
+                % % p_diff_out{ii} = (p_post{ii}.out_A - p_pre{ii}.out_A);
+                % A_out{iA}{iB}.p_wp_diff_mem(ii) = mean(p_wp_diff_in{ii}(p_pre{ii}.mem_idx), 'omitmissing');
+                % A_out{iA}{iB}.p_wp_diff_n_mem(ii) = mean(p_wp_diff_in{ii}(~p_pre{ii}.mem_idx), 'omitmissing');
 
-                A_out{iA}{iB}.p_wp_diff_mem_open(ii) = mean(p_wp_diff_in{ii}(p_pre{ii}.mem_idx & cent_idx), 'omitmissing');
-                A_out{iA}{iB}.p_wp_diff_n_mem_open(ii) = mean(p_wp_diff_in{ii}(~p_pre{ii}.mem_idx & cent_idx), 'omitmissing');
-
-                A_out{iA}{iB}.p_wp_diff_mem_close(ii) = mean(p_wp_diff_in{ii}(p_pre{ii}.mem_idx & ~cent_idx), 'omitmissing');
-                A_out{iA}{iB}.p_wp_diff_n_mem_close(ii) = mean(p_wp_diff_in{ii}(~p_pre{ii}.mem_idx & ~cent_idx), 'omitmissing');
-                
+                % A_out{iA}{iB}.p_wp_diff_mem_open(ii) = mean(p_wp_diff_in{ii}(p_pre{ii}.mem_idx & cent_idx), 'omitmissing');
+                % A_out{iA}{iB}.p_wp_diff_n_mem_open(ii) = mean(p_wp_diff_in{ii}(~p_pre{ii}.mem_idx & cent_idx), 'omitmissing');
+                % 
+                % A_out{iA}{iB}.p_wp_diff_mem_close(ii) = mean(p_wp_diff_in{ii}(p_pre{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                % A_out{iA}{iB}.p_wp_diff_n_mem_close(ii) = mean(p_wp_diff_in{ii}(~p_pre{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                % 
 
             end
         end
@@ -348,52 +414,64 @@ for iA = 1:length(A_out) % loop over sessions
 all_p_diff_mem = [all_p_diff_mem, A_out{iA}{iB}.p_diff_mem];
 all_p_diff_n_mem = [all_p_diff_n_mem, A_out{iA}{iB}.p_diff_n_mem];
 
-all_p_wake_diff_mem = [all_p_wake_diff_mem, A_out{iA}{iB}.p_wake_diff_mem];
-all_p_wake_diff_n_mem = [all_p_wake_diff_n_mem, A_out{iA}{iB}.p_wake_diff_n_mem];
-
-all_p_wp_diff_mem = [all_p_wp_diff_mem, A_out{iA}{iB}.p_wp_diff_mem];
-all_p_wp_diff_n_mem = [all_p_wp_diff_n_mem, A_out{iA}{iB}.p_wp_diff_n_mem];
-
-
-% open
-all_p_diff_mem_open = [all_p_diff_mem_open, A_out{iA}{iB}.p_diff_mem_open];
-all_p_diff_n_mem_open = [all_p_diff_n_mem_open, A_out{iA}{iB}.p_diff_n_mem_open];
-
-all_p_wake_diff_mem_open = [all_p_wake_diff_mem_open, A_out{iA}{iB}.p_wake_diff_mem_open];
-all_p_wake_diff_n_mem_open = [all_p_wake_diff_n_mem_open, A_out{iA}{iB}.p_wake_diff_n_mem_open];
-
-all_p_wp_diff_mem_open = [all_p_wp_diff_mem_open, A_out{iA}{iB}.p_wp_diff_mem_open];
-all_p_wp_diff_n_mem_open = [all_p_wp_diff_n_mem_open, A_out{iA}{iB}.p_wp_diff_n_mem_open];
+% all_p_wake_diff_mem = [all_p_wake_diff_mem, A_out{iA}{iB}.p_wake_diff_mem];
+% all_p_wake_diff_n_mem = [all_p_wake_diff_n_mem, A_out{iA}{iB}.p_wake_diff_n_mem];
+% 
+% all_p_wp_diff_mem = [all_p_wp_diff_mem, A_out{iA}{iB}.p_wp_diff_mem];
+% all_p_wp_diff_n_mem = [all_p_wp_diff_n_mem, A_out{iA}{iB}.p_wp_diff_n_mem];
 
 
-% close
-all_p_diff_mem_close = [all_p_diff_mem_close, A_out{iA}{iB}.p_diff_mem_close];
-all_p_diff_n_mem_close = [all_p_diff_n_mem_close, A_out{iA}{iB}.p_diff_n_mem_close];
+% % open
+% all_p_diff_mem_open = [all_p_diff_mem_open, A_out{iA}{iB}.p_diff_mem_open];
+% all_p_diff_n_mem_open = [all_p_diff_n_mem_open, A_out{iA}{iB}.p_diff_n_mem_open];
 
-all_p_wake_diff_mem_close = [all_p_wake_diff_mem_close, A_out{iA}{iB}.p_wake_diff_mem_close];
-all_p_wake_diff_n_mem_close = [all_p_wake_diff_n_mem_close, A_out{iA}{iB}.p_wake_diff_n_mem_close];
+% all_p_wake_diff_mem_open = [all_p_wake_diff_mem_open, A_out{iA}{iB}.p_wake_diff_mem_open];
+% all_p_wake_diff_n_mem_open = [all_p_wake_diff_n_mem_open, A_out{iA}{iB}.p_wake_diff_n_mem_open];
+% 
+% all_p_wp_diff_mem_open = [all_p_wp_diff_mem_open, A_out{iA}{iB}.p_wp_diff_mem_open];
+% all_p_wp_diff_n_mem_open = [all_p_wp_diff_n_mem_open, A_out{iA}{iB}.p_wp_diff_n_mem_open];
 
-all_p_wp_diff_mem_close = [all_p_wp_diff_mem_close, A_out{iA}{iB}.p_wp_diff_mem_close];
-all_p_wp_diff_n_mem_close = [all_p_wp_diff_n_mem_close, A_out{iA}{iB}.p_wp_diff_n_mem_close];
 
+% % close
+% all_p_diff_mem_close = [all_p_diff_mem_close, A_out{iA}{iB}.p_diff_mem_close];
+% all_p_diff_n_mem_close = [all_p_diff_n_mem_close, A_out{iA}{iB}.p_diff_n_mem_close];
+% 
+% all_p_wake_diff_mem_close = [all_p_wake_diff_mem_close, A_out{iA}{iB}.p_wake_diff_mem_close];
+% all_p_wake_diff_n_mem_close = [all_p_wake_diff_n_mem_close, A_out{iA}{iB}.p_wake_diff_n_mem_close];
+% 
+% all_p_wp_diff_mem_close = [all_p_wp_diff_mem_close, A_out{iA}{iB}.p_wp_diff_mem_close];
+% all_p_wp_diff_n_mem_close = [all_p_wp_diff_n_mem_close, A_out{iA}{iB}.p_wp_diff_n_mem_close];
 
+fprintf('Cent: %.0d | %.0d S \n', length(A_cent), length(repmat(iA, size(A_out{iA}{iB}.p_diff_mem))))
 sess_id = [sess_id, repmat(iA, size(A_out{iA}{iB}.p_diff_mem))]; 
+all_cent = [all_cent, A_cent]; 
+all_cent_loc = [all_cent_loc, A_cent_loc]; 
 
     end
 end
+
+
 n_idx = find(novel_idx & ~anx_idx);
 f_idx = find(~novel_idx & ~anx_idx);
 a_idx = find(novel_idx & anx_idx);
+af_idx = find(~novel_idx & anx_idx & ~HS_idx);
+aswitch_idx = find(HS_idx);
+
 
 p_n_idx = ismember(sess_id, n_idx); 
 p_f_idx = ismember(sess_id, f_idx); 
 p_a_idx = ismember(sess_id, a_idx); 
+p_af_idx = ismember(sess_id, af_idx); 
+p_hats_idx = ismember(sess_id, aswitch_idx); 
+
+
+%% Fig 1002 plot the HAT member participation 
 
 f_pos = [1 6 6.25 3.4]; 
 figure(1002)
 clf
 set(gcf,'Units','inch','OuterPosition',f_pos);
-y_scale = 'linear'; y_lim = [0 10]; y_t = [0.1 1 10]; y_lim2 = [0 3]; 
+y_scale = 'log'; y_lim = [0 10]; y_t = [0.1 1 10]; y_lim2 = [0 3]; 
 % for memeber cells
 subplot(2,4,1)
 fprintf('<strong>diff participation members: Fam Anx</strong>\n')
@@ -498,6 +576,62 @@ ylim(y_lim)
 % set(gca, 'ytick', y_t); 
 y_t = get(gca, 'ytick'); 
 
+
+
+%%% compare Fam Anx FamAX and Switch?
+
+% Fam vs all Anx
+% for memeber cells
+subplot(2,4,3); cla
+fprintf('<strong>Post/Prediff participation members: Fam v Anx v Fam Anx v Anx S</strong>\n')
+data1 = all_p_diff_mem(p_f_idx); 
+data2 = all_p_diff_mem(p_a_idx); 
+data3 = all_p_diff_mem(p_af_idx); 
+data4 = all_p_diff_mem(p_hats_idx); 
+
+
+[h, eb, sc] = MS_bar_w_err4(data1, data2, data3,data4, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'anova1', 1:4,{'Fam' 'Anx', 'Fam Anx', 'Anx Switch'});
+eb.LineWidth = 1; eb.CapSize = 6; 
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; sc{4}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); sc{4}.MarkerFaceColor = hex2rgb('#808080');
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none';  sc{3}.MarkerEdgeColor = 'none';  sc{4}.MarkerEdgeColor = 'none';
+xlim([0 4])
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
+ylabel({'post-pre participation'; 'members'})
+set(gca, 'xticklabel', {'Fam' 'Anx', 'Fam Anx', 'Anx Switch'}, 'XTickLabelRotation', 0, 'fontsize', 7)% 'ytick', [0 .1 1 10]);
+xlim([0.5 4.5])
+yline(1, '--', 'color', hex2rgb('#808080'));
+ylim(y_lim)
+y_t = get(gca, 'ytick'); 
+
+
+subplot(2,4,7); cla
+fprintf('<strong>Post/Prediff participation non-members: Fam v Anx v Fam Anx v Anx S </strong>\n')
+data1 = all_p_diff_n_mem(p_f_idx); 
+data2 = all_p_diff_n_mem(p_a_idx); 
+data3 = all_p_diff_n_mem(p_af_idx); 
+data4 = all_p_diff_n_mem(p_hats_idx); 
+
+
+[h, eb, sc] = MS_bar_w_err4(data1, data2, data3,data4, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'anova1', 1:4,{'Fam' 'Anx', 'Fam Anx', 'Anx Switch'});
+eb.LineWidth = 1; eb.CapSize = 6; 
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; sc{4}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); sc{4}.MarkerFaceColor = hex2rgb('#808080');
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none';  sc{3}.MarkerEdgeColor = 'none';  sc{4}.MarkerEdgeColor = 'none';
+xlim([0 4])
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
+ylabel({'post-pre participation'; 'non-members'})
+set(gca, 'xticklabel', {'Fam' 'Anx', 'Fam Anx', 'Anx Switch'}, 'XTickLabelRotation', 0, 'fontsize', 7)%, 'ytick', [0 .1 1 10]);
+xlim([0.5 4.5])
+yline(1, '--', 'color', hex2rgb('#808080'));
+ylim(y_lim)
+y_t = get(gca, 'ytick'); 
+
+
 % 
 % 
 % % for non memeber cells
@@ -570,11 +704,19 @@ y_t = get(gca, 'ytick');
 % OPEN for memeber cells
 subplot(2,4,4)
 fprintf('<strong>diff participation members Open vs closed</strong>\n')
-data1 = all_p_diff_mem_open(p_a_idx); 
-data2 = all_p_diff_mem_close(p_a_idx); 
+data1 = all_p_diff_mem(p_a_idx & all_cent == 1); 
+data2 = all_p_diff_mem(p_a_idx & all_cent == 0);
 % data3 = all_p_diff_mem_open(p_a_idx); 
 
+% fam anx data to scale the log plot properly. 
+data1 = all_p_diff_mem(p_f_idx); 
+data2 = all_p_diff_mem(p_a_idx); 
 [h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 1:2);
+
+% actual data
+data1 = all_p_diff_mem(p_a_idx & all_cent == 0); 
+data2 = all_p_diff_mem(p_a_idx & all_cent == 1);
+[h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 3:4);
 eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
 h.LineWidth = 1; h.FaceColor = "none";
 sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
@@ -583,20 +725,25 @@ sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none';
 
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
 ylabel({'post-pre participation %'; 'members'})
-set(gca, 'xticklabel', {'Open' 'Closed'}, 'XTickLabelRotation', 0, 'fontsize', 7, 'ytick', [0 .1 1 10]);
-xlim([0.5 3.5])
+set(gca, 'xticklabel', {'Closed' 'Open'}, 'XTickLabelRotation', 45, 'fontsize', 7, 'ytick', [0 .1 1 10]);
+xlim([2.5 5.5])
 yline(1, '--', 'color', hex2rgb('#808080'));
 ylim(y_lim)
-% set(gca, 'ytick', y_t); 
+set(gca, 'ytick', y_t); 
 
 % for non-memeber cells
 subplot(2,4,8)
 fprintf('<strong>diff participation non-members Open vs closed</strong>\n')
-data1 = all_p_diff_n_mem_open(p_a_idx); 
-data2 = all_p_diff_n_mem_close(p_a_idx); 
-% data3 = all_p_diff_mem_open(p_a_idx); 
 
+% fam vs anx for scaling
+data1 = all_p_diff_n_mem(p_f_idx); 
+data2 = all_p_diff_n_mem(p_a_idx); 
 [h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 1:2);
+
+% real data
+data1 = all_p_diff_n_mem(p_a_idx & all_cent == 0); 
+data2 = all_p_diff_n_mem(p_a_idx & all_cent == 1);
+[h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 3:4);
 eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
 h.LineWidth = 1; h.FaceColor = "none";
 sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
@@ -605,14 +752,185 @@ sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none';
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'yscale', y_scale)
 ylabel({'post-pre participation %'; 'members'})
 set(gca, 'xticklabel', {'Open' 'Closed'}, 'XTickLabelRotation', 0, 'fontsize', 7,'ytick', [0 .1 1 10]);
-xlim([0.5 3.5])
+xlim([2.5 5.5])
 yline(1, '--', 'color', hex2rgb('#808080'));
 ylim(y_lim)
-% set(gca, 'ytick', y_t); 
+set(gca, 'ytick', y_t); 
 
 % save
-exportgraphics(gcf, [fig_dir filesep 'Assembly_participation.pdf'], 'ContentType', 'vector');
+% exportgraphics(gcf, [fig_dir filesep 'Assembly_participation.pdf'], 'ContentType', 'vector');
 
+
+
+%% Check if there is a correlation between open arm 
+% p_a_idx = ismember(sess_id, a_idx(1)); 
+
+% convert to two arrays
+p_data_mem = [repmat(p_open(a_idx(1)), size(all_p_diff_mem(ismember(sess_id, a_idx(1))))),...
+    repmat(p_open(a_idx(2)), size(all_p_diff_mem(ismember(sess_id, a_idx(2))))),...
+    repmat(p_open(a_idx(3)), size(all_p_diff_mem(ismember(sess_id, a_idx(3))))),...
+    repmat(p_open(a_idx(4)), size(all_p_diff_mem(ismember(sess_id, a_idx(4)))))]; 
+
+p_data_n_mem = [repmat(p_open(a_idx(1)), size(all_p_diff_n_mem(ismember(sess_id, a_idx(1))))),...
+    repmat(p_open(a_idx(2)), size(all_p_diff_n_mem(ismember(sess_id, a_idx(2))))),...
+    repmat(p_open(a_idx(3)), size(all_p_diff_n_mem(ismember(sess_id, a_idx(3))))),...
+    repmat(p_open(a_idx(4)), size(all_p_diff_n_mem(ismember(sess_id, a_idx(4)))))]; 
+
+
+f_pos = [1 6 6.25 3.4]; 
+figure(1012)
+clf
+set(gcf,'Units','inch','OuterPosition',f_pos);
+
+
+subplot(2,4,1)
+[h, eb, sc] = MS_bar_w_err4(p_open(~novel_idx & ~anx_idx)*100, p_open(H1_idx)*100, p_open(H5_idx)*100, p_open(switch_idx)*100, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'anova1', 1:4, {'Fam' 'Anx', 'Fam Anx', 'Anx Switch'});
+eb.LineWidth = 1; eb.CapSize = 6; 
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; sc{4}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = hex2rgb('#808080'); sc{3}.MarkerFaceColor = hex2rgb('#808080'); sc{4}.MarkerFaceColor = hex2rgb('#808080');
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none';  sc{3}.MarkerEdgeColor = 'none';  sc{4}.MarkerEdgeColor = 'none';
+xlim([0 4])
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4)
+ylabel('% Open')
+set(gca, 'xticklabel', {'Fam' 'Anx', 'Fam Anx', 'Anx Switch'}, 'XTickLabelRotation', 0, 'fontsize', 7)% 'ytick', [0 .1 1 10]);
+xlim([0.5 4.5])
+yline(1, '--', 'color', hex2rgb('#808080'));
+ylim([0 100])
+
+
+subplot(2,4,4)
+hold on
+scatter(p_data_mem, all_p_diff_mem(ismember(sess_id, a_idx)),55, 'k', 'filled')
+
+% add corr line
+h = lsline; 
+h.LineWidth = 2;
+h.Color = 'r';
+
+% correlation coefficient
+nan_idx = isnan(all_p_diff_mem(ismember(sess_id, a_idx))); 
+y = all_p_diff_mem(ismember(sess_id, a_idx)); 
+
+[R, P] = corrcoef(p_data_mem(~nan_idx),  y(~nan_idx));
+r2 = R(1,2)^2; % Pearson's
+corrText = sprintf('r^2 = %.2f\np=%.3f\n', r2, P(1,2));
+% Adjust the coordinates [min(x), max(y)] to best fit your data's scale
+text(min(p_data_mem), max( y(~nan_idx)), corrText, ...
+    'VerticalAlignment', 'middle', ...
+    'BackgroundColor', 'none', ...
+    'EdgeColor', 'none', ...
+    'FontSize', 8);
+
+ylabel({'pariticipation'; 'Members'})
+ylim([0 8]); yline(1, '--', 'color', [.7 .7 .7], 'linewidth',2)
+
+
+subplot(2,4,8)
+hold on
+scatter(p_data_n_mem, all_p_diff_n_mem(ismember(sess_id, a_idx)),55, 'k', 'filled')
+% add corr line
+h = lsline; 
+h.LineWidth = 2;
+h.Color = 'r';
+
+% correlation coefficient
+nan_idx = isnan(all_p_diff_n_mem(ismember(sess_id, a_idx))); 
+y = all_p_diff_n_mem(ismember(sess_id, a_idx)); 
+
+[R, P] = corrcoef(p_data_n_mem(~nan_idx),  y(~nan_idx));
+r2 = R(1,2)^2; % Pearson's
+corrText = sprintf('r^2 = %.2f\np=%.3f\n', r2, P(1,2));
+% Adjust the coordinates [min(x), max(y)] to best fit your data's scale
+text(min(p_data_n_mem), max( y(~nan_idx)), corrText, ...
+    'VerticalAlignment', 'middle', ...
+    'BackgroundColor', 'none', ...
+    'EdgeColor', 'none', ...
+    'FontSize', 8);
+ylabel({'pariticipation'; 'non-Members'})
+ylim([0 2]); yline(1, '--', 'color', [.7 .7 .7], 'linewidth',2)
+
+
+% exportgraphics(gcf, [fig_dir filesep 'FigS_HAT.pdf'], 'ContentType', 'vector');
+
+
+%% Figure S 6:  get the behaviour plots for each fam and axiety sessions
+figure(1013)
+clf
+set(gcf,'Units','inch','OuterPosition',[1 6 6.25*2 5]);
+
+plt_idx = [3 12 13 15 5 9 14 17 4 8 16 2 7 11 18  ]; 
+
+for ii = 1:length(plt_idx)
+    if ii < 12
+        c = '#FD161A';
+    else
+        c = '#FFFFFF';
+    end
+    subplot(2,8,ii)
+    hold on
+    if strcmp(A_out{plt_idx(ii)}{1}.info.session, 'HATDSwitch') || (strcmp(A_out{plt_idx(ii)}{1}.info.subject, 'pv1191') && strcmp(A_out{plt_idx(ii)}{1}.info.session, 'HATD1'))
+        rectangle('Position',[50, 0, 100, A_out{plt_idx(ii)}{1}.behav.time(end)], 'facecolor', hex2rgb(c), 'EdgeColor', 'none', 'facealpha', .2)
+    else
+        rectangle('Position',[0, 0, 50, A_out{plt_idx(ii)}{1}.behav.time(end)], 'facecolor', hex2rgb(c), 'EdgeColor', 'none', 'facealpha', .2)
+    end
+    plot(A_out{plt_idx(ii)}{1}.behav.position(:,1),A_out{plt_idx(ii)}{1}.behav.time, 'k', 'linewidth',2)
+    xlim([0 100]); ylim([0 A_out{plt_idx(ii)}{1}.behav.time(end)])
+    box off
+    set(gca, 'xtick', [], 'ytick', []);
+    title([A_out{plt_idx(ii)}{1}.info.subject '_' A_out{plt_idx(ii)}{1}.info.session], 'FontSize',7)
+    if ii == 1
+        ylabel('Time', 'FontSize',7)
+    end
+end
+
+% exportgraphics(gcf, [fig_dir filesep 'FigS_HAT_trace.pdf'], 'ContentType', 'vector');
+
+%% grab the number of detectable assemblies across conditions for the novel day
+x_cond_mat = []; 
+for iA = length(A_out):-1:1 % loop over sessions
+    for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
+
+
+% Wake detected vs others
+% wake - pre
+x_cond_mat(2,1, iA) = sum(A_out{iA}{iB}.REM_Pre_stats.p_val<0.05);
+
+% wake - pre
+p_proj = []; 
+for ii = 1:size(A_out{iA}{iB}.P_proj,1)
+    p_proj(ii) = sum(A_out{iA}{iB}.P_proj(ii,:) > A_out{iA}{iB}.A_W_Shuff.w_thresh(ii)) > 0 ; 
+end
+x_cond_mat(2,2, iA) = sum(p_proj);
+
+% wake - post
+x_cond_mat(2,3, iA) = sum(A_out{iA}{iB}.REM_Post_stats.p_val<0.05);
+
+
+% Pre detected vs others
+% pre - pre
+p_proj = []; 
+for ii = size(A_out{iA}{iB}.pREM_proj,1):-1:1
+    p_proj(ii) = sum(A_out{iA}{iB}.pREM_proj(ii,:) > A_out{iA}{iB}.pREM_stats.R_thresh) > 0;
+end
+x_cond_mat(1,1, iA) = sum(p_proj);
+
+% pre - wake
+p_proj = []; 
+for ii = 1:size(A_out{iA}{iB}.P_proj,1)
+    p_proj(ii) = sum(A_out{iA}{iB}.P_proj(ii,:) > A_out{iA}{iB}.A_W_Shuff.w_thresh(ii)) > 0 ; 
+end
+
+x_cond_mat(1,2, iA) = sum(p_proj);
+
+% wake - pre
+x_cond_mat(1,3, iA) = sum(A_out{iA}{iB}.REM_Post_stats.p_val<0.05);
+
+    end
+end
+
+    % [REM_pre_proj{iB},REM_pre_stats{iB}, REM_pre_data{iB}, REM_pre_tvec{iB}, REM_Pre_shuff{iB}] = MS_Asmbly_ReAct(cfg_ReAct, REM_pre_data_in, P_temp{iB} ,ms_trk_cut,  bin_s(iB));
 
 %% simple counts of number of assemblies per condition
 
@@ -1145,7 +1463,7 @@ else
 end
 
 % save it
-exportgraphics(gcf, [fig_dir filesep 'Assembly_aRate.pdf'], 'ContentType', 'vector');
+% exportgraphics(gcf, [fig_dir filesep 'Fig_2_Assembly_aRate.pdf'], 'ContentType', 'vector');
 
 %% MultiComps
  
@@ -1209,7 +1527,6 @@ mdl = fitglme(rate_tbl, 'Rate ~ Ctrl*Grp'); %Ctrl * Grp');
 %     'VariableNames', {'Wake', 'Wake S', 'REM', 'REM_S'});
 
 
-
 % repeated measures anova
 withinDesign = table(categorical([1 1 2 2].'), categorical([1 2 1 2].'), 'VariableNames', {'cond', 'shuff'}); % within-desing
 
@@ -1224,7 +1541,6 @@ ranovatbl = ranova(rm,'withinmodel', 'cond*shuff');
 
 % post-hoc TK
 posthoc_results = multcompare(rm, 'cond');
-
 
 
 % simple anova. 
@@ -1723,71 +2039,244 @@ legend({num2str(skews(1)), num2str(skews(2)), num2str(skews(3))}, 'Location', 'B
 
 %% examples of Pre detect assemblies 
 
-
 figure(4001); clf; figure(4002); clf; 
 map_idx = 1:2:25; 
 loc_idx = 2:2:25; 
 iA = 6; 
 % for iA = length(A_out):-1:1 % loop over sessions
 %     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
-% 
+%
 figure(4001)
-        for ii = 1:length(A_out{iA}{iB}.pREM_Place_map)
-            % subplot(4,6,map_idx(ii))
-            subplot(4,8,map_idx(ii))
-            [~, s_idx] = sort(A_out{iA}{iB}.pREM_Place_map{ii}.cent);
-            imagesc(A_out{iA}{iB}.pREM_Place_map{ii}.map(s_idx,:)')
-            colormap(viridis)
-            set(gca, 'ydir', 'normal')
-            % location on track
-            c_ord = MS_linspecer(length(s_idx)); 
-            subplot(4,8,loc_idx(ii))
-            hold on
-            for jj = length(A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc):-1:1
-                scale_val(jj) = A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val(jj)./max(A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val);
-                % text(0, A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc(jj), num2str(jj), 'color', c_ord(ii,:));
-            end
-            scale_val = normalize(scale_val, 'range',[.25 1]);
-            for jj = 1:length(A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc)
-                plot( A_out{iA}{iB}.pREM_wake_P_loc{ii}.win_time,  A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc_mat(jj,:),'color', [c_ord(ii,:) scale_val(jj)], 'LineWidth',2)
-            end
+for ii = 1:length(A_out{iA}{iB}.pREM_Place_map)
+    % subplot(4,6,map_idx(ii))
+    subplot(4,8,map_idx(ii))
+    [~, s_idx] = sort(A_out{iA}{iB}.pREM_Place_map{ii}.cent);
+    imagesc(A_out{iA}{iB}.pREM_Place_map{ii}.map(s_idx,:)')
+    colormap(viridis)
+    set(gca, 'ydir', 'normal')
+    % location on track
+    c_ord = MS_linspecer(length(s_idx));
+    subplot(4,8,loc_idx(ii))
+    hold on
+    for jj = length(A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc):-1:1
+        scale_val(jj) = A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val(jj)./max(A_out{iA}{iB}.pREM_wake_P_loc{ii}.peak_val);
+        % text(0, A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc(jj), num2str(jj), 'color', c_ord(ii,:));
+    end
+    scale_val = normalize(scale_val, 'range',[.25 1]);
+    for jj = 1:length(A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc)
+        plot( A_out{iA}{iB}.pREM_wake_P_loc{ii}.win_time,  A_out{iA}{iB}.pREM_wake_P_loc{ii}.loc_mat(jj,:),'color', [c_ord(ii,:) scale_val(jj)], 'LineWidth',2)
+    end
 
-            xlim([-2 2]); ylim([0 100])
-        end
+    xlim([-2 2]); ylim([0 100])
+end
 
-        exportgraphics(gcf, [fig_dir filesep 'Novel Pre assembly maps.pdf'], 'ContentType', 'vector');
-
-
-        figure(4002)
-        for ii = 1:length(A_out{iA}{iB}.postREM_Place_map)
-            % subplot(4,6,map_idx(ii))
-            subplot(4,8,map_idx(ii))
-            [~, s_idx] = sort(A_out{iA}{iB}.postREM_Place_map{ii}.cent);
-            imagesc(A_out{iA}{iB}.postREM_Place_map{ii}.map(s_idx,:)')
-            set(gca, 'ydir', 'normal')
+exportgraphics(gcf, [fig_dir filesep 'Novel Pre assembly maps.pdf'], 'ContentType', 'vector');
 
 
-            % location on track
-            c_ord = MS_linspecer(length(s_idx)); 
-            subplot(4,8,loc_idx(ii))
-            hold on
-            for jj = 1:length(A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc)
-                scale_val = A_out{iA}{iB}.postREM_wake_P_loc{ii}.peak_val(jj)./max(A_out{iA}{iB}.postREM_wake_P_loc{ii}.peak_val);
-                plot( A_out{iA}{iB}.postREM_wake_P_loc{ii}.win_time,  A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc_mat(jj,:),'color', [c_ord(ii,:) scale_val], 'LineWidth',2)
-                % text(0, A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc(jj), num2str(jj), 'color', c_ord(ii,:));
-            end
-            xlim([-2 2]); ylim([0 100])
-        end
-    %     end
-    % end
+figure(4002)
+for ii = 1:length(A_out{iA}{iB}.postREM_Place_map)
+    % subplot(4,6,map_idx(ii))
+    subplot(4,8,map_idx(ii))
+    [~, s_idx] = sort(A_out{iA}{iB}.postREM_Place_map{ii}.cent);
+    imagesc(A_out{iA}{iB}.postREM_Place_map{ii}.map(s_idx,:)')
+    set(gca, 'ydir', 'normal')
 
-    %% examples
 
-    MS_Asmbly_plot_raster_ReAct_figure(A_out{iA}{iB}, fig_dir, 'REM_Post_data', [ 9 7 12 10])
+    % location on track
+    c_ord = MS_linspecer(length(s_idx));
+    subplot(4,8,loc_idx(ii))
+    hold on
+    for jj = 1:length(A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc)
+        scale_val = A_out{iA}{iB}.postREM_wake_P_loc{ii}.peak_val(jj)./max(A_out{iA}{iB}.postREM_wake_P_loc{ii}.peak_val);
+        plot( A_out{iA}{iB}.postREM_wake_P_loc{ii}.win_time,  A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc_mat(jj,:),'color', [c_ord(ii,:) scale_val], 'LineWidth',2)
+        % text(0, A_out{iA}{iB}.postREM_wake_P_loc{ii}.loc(jj), num2str(jj), 'color', c_ord(ii,:));
+    end
+    xlim([-2 2]); ylim([0 100])
+end
+%     end
+% end
 
-%% %%%%%%%%%%%%%%%%%%%  OLD CODE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Fig4 'Pre REM' example
+
+P_idx = [];
+for ii = length(A_out):-1:1
+    if strcmpi(A_out{ii}{1}.info.subject, 'pv1060') &&  strcmpi(A_out{ii}{1}.info.session, 'LTD1')
+        P_idx(ii) = true;
+    else
+        P_idx(ii) = false;
+    end
+end
+
+P_idx = find(P_idx);
+
+this_data = A_out{P_idx}{1};
+
+MS_Asmbly_plot_raster_ReAct(this_data,[], 'pREM_data',[1 2 5 6])
+
+xlim([0 90])
+set(gca, 'xtick', 0:30:90)
+set(gcf,'PaperUnits','inches', 'Units', 'inches');
+set(gcf, 'position', [5 5 7 2])
+set(gcf,'PaperSize', [7, 2]);
+set(gca,'xlimmode','manual','ylimmode','manual')
+exportgraphics(gcf, [fig_dir filesep 'Fig4_example_' A_out{P_idx}{1}.info.subject '_' A_out{P_idx}{1}.info.session '.pdf'], 'ContentType', 'vector');
+
+% print(gcf, '-dpdf', [fig_dir filesep 'Fig4_example_' A_out{P_idx}{1}.info.subject '_' A_out{P_idx}{1}.info.session '.pdf'])
+
+% % post ASBMLY in wake
+% MS_Asmbly_plot_REM_wake_raster_figure(this_data,'Post',[])
+    % MS_Asmbly_plot_raster_ReAct_figure(A_out{iA}{iB}, fig_dir, 'REM_Post_data', [ 9 7 12 10])
+
+%% ReActivation stats across training/testing sets
+nReAct = NaN(3,3,length(A_out));
+nA_ReAct = nReAct;
+nReAct_Rate = nReAct;
+A_ReAct_Rate = nReAct;
+
+d_list = {'LTD1','LTD5', 'HATD1', 'HATD5', 'HATDSwitch'};
+sub_list = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252'};
+for iA = length(A_out):-1:1
+    
+    D_idx = find(contains(d_list,A_out{iA}{1}.info.session));
+    %     fprintf('%s\n', d_list{D_idx});
+    S_idx = find(contains(sub_list,A_out{iA}{1}.info.subject));
+    %     fprintf('%s - %s\n', A_out{iA}{1}.info.subject, sub_list{S_idx});
+    this_ReAct = MS_Asmbly_ReAct_Matrix(A_out{iA}{1});
+    
+    
+    nReAct(:,:,iA) = this_ReAct.nReAct;%./max(this_ReAct.nReAct, [], 'all');
+    nA_ReAct(:,:,iA) = this_ReAct.nA_ReAct./max(this_ReAct.nA_ReAct, [], 'all');
+    % nReAct_Rate(:,:,iA) = this_ReAct.nReAct_Rate./max(this_ReAct.nReAct_Rate, [], 'all');
+    A_ReAct_Rate(:,:,iA) = this_ReAct.A_ReAct_Rate./max(this_ReAct.A_ReAct_Rate, [], 'all');
+    labels = this_ReAct.info.labels;
+        
+end
+
+figure(7778)
+m = 4;
+subplot(m,4,1)
+imagesc(nanmean(nReAct(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
+set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+title('number of reactivations'); colorbar; caxis([0 inf]);
+ylabel({'LTD1'; 'Target'});
+
+subplot(m,4,2)
+imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
+set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+title('number of assemblies reactivated'); colorbar;clim([0 1]);
+
+% subplot(m,4,3)
+% imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+% title('Rate(nA ./ length of recording)');colorbar; caxis([0 1]);
+
+subplot(m,4,4)
+imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
+set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+title('ReAct Rate per assembly');     colorbar; clim([0 1]);
+
+
+% LTD5
+subplot(m,4,5)
+imagesc(nanmean(nReAct(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
+set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+colorbar;  clim([0 inf]);
+ylabel({'LTD5'; 'Target'});
+
+
+subplot(m,4,6)
+imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
+set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+colorbar; clim([0 1]);
+
+% subplot(m,4,7)
+% imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+% colorbar; caxis([0 1]);
+
+subplot(m,4,8)
+imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
+set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+colorbar; clim([0 1]);
+
+
+% HAT1
+subplot(m,4,9)
+
+imagesc(nanmean(nReAct(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
+set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+colorbar; clim([0 inf]);
+ylabel({'HAT1'; 'Target'});
+
+subplot(m,4,10)
+imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
+set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+colorbar; clim([0 1]);
+
+% subplot(m,4,11)
+% imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+% colorbar; caxis([0 1]);
+
+subplot(m,4,12)
+imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
+set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+colorbar; clim([0 1]);
+
+% HAT5
+subplot(m,4,13)
+
+imagesc(nanmean(nReAct(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
+set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+colorbar; %caxis([0 1]);
+ylabel({'HAT5'; 'Target'});
+
+subplot(m,4,14)
+imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
+set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+colorbar; clim([0 1]);
+% 
+% subplot(m,4,15)
+% imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+% colorbar; caxis([0 1]);
+
+subplot(m,4,16)
+imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
+set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+colorbar; clim([0 1]);
+
+colormap(inferno)
+exportgraphics(gcf, [fig_dir filesep 'Fig5_Target_Ref_mat.pdf'], 'ContentType', 'vector');
+
+
+
+%% count the amount of time in REM per sessions
+REM_dur = []; 
+
+for iA = length(A_out):-1:1
+    REM_dur(iA,1) = A_out{iA}{1}.REM_Pre_tvec(end) - A_out{iA}{1}.REM_Pre_tvec(1);  % time in seconds. 
+    REM_dur(iA,2) = A_out{iA}{1}.REM_Post_tvec(end) - A_out{iA}{1}.REM_Post_tvec(1);  
+end
+
+fprintf('\n<strong>REM durations</strong>\n')
+fprintf('PRE REM duration:  mean = %.2f +/- %.2f min\n',mean(REM_dur(:,1)/60, 'omitmissing'), std(REM_dur(:,1)/60, 'omitmissing'))
+fprintf('Post REM duration: mean = %.2f +/- %.2f min\n',mean(REM_dur(:,2)/60, 'omitmissing'), std(REM_dur(:,2)/60, 'omitmissing'))
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%  OLD CODE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% qualitfy reactivation saptial biases
 
@@ -3282,162 +3771,7 @@ hdf5write(fname, '/F_REM_post_xlim', int16([0 60]),'WriteMode', 'append');
 
 
 
-%% Fig4 'Pre REM' example
 
-P_idx = [];
-for ii = length(A_out):-1:1
-    
-    if strcmpi(A_out{ii}{1}.info.subject, 'pv1060') &&  strcmpi(A_out{ii}{1}.info.session, 'LTD1')
-        P_idx(ii) = true;
-    else
-        P_idx(ii) = false;
-    end
-    
-end
-
-P_idx = find(P_idx);
-
-
-
-
-
-this_data = A_out{P_idx}{1};
-
-
-MS_Asmbly_plot_raster_ReAct(this_data,[], 'pREM_data',[1 2 5 6])
-
-
-xlim([1 90])
-set(gcf,'PaperUnits','inches', 'Units', 'inches');
-set(gcf, 'position', [5 5 7 2])
-set(gcf,'PaperSize', [7, 2]);
-set(gca,'xlimmode','manual','ylimmode','manual')
-print(gcf, '-dpdf', [fig_dir filesep 'Fig4_example.pdf'])
-
-% post ASBMLY in wake
-
-MS_Asmbly_plot_REM_wake_raster_figure(this_data,'Post',[])
-
-%% ReActivation stats across training/testing sets
-nReAct = NaN(3,3,length(A_out));
-nA_ReAct = nReAct;
-nReAct_Rate = nReAct;
-A_ReAct_Rate = nReAct;
-
-d_list = {'LTD1','LTD5', 'HATD1', 'HATD5', 'HATDSwitch'};
-sub_list = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252'};
-for iA = length(A_out):-1:1
-    
-    D_idx = find(contains(d_list,A_out{iA}{1}.info.session));
-    %     fprintf('%s\n', d_list{D_idx});
-    S_idx = find(contains(sub_list,A_out{iA}{1}.info.subject));
-    %     fprintf('%s - %s\n', A_out{iA}{1}.info.subject, sub_list{S_idx});
-    this_ReAct = MS_Asmbly_ReAct_Matrix(A_out{iA}{1});
-    
-    
-    nReAct(:,:,iA) = this_ReAct.nReAct./max(this_ReAct.nReAct, [], 'all');
-    nA_ReAct(:,:,iA) = this_ReAct.nA_ReAct./max(this_ReAct.nA_ReAct, [], 'all');
-    nReAct_Rate(:,:,iA) = this_ReAct.nReAct_Rate./max(this_ReAct.nReAct_Rate, [], 'all');
-    A_ReAct_Rate(:,:,iA) = this_ReAct.A_ReAct_Rate./max(this_ReAct.A_ReAct_Rate, [], 'all');
-    labels = this_ReAct.info.labels;
-    
-    
-    
-end
-
-figure(7778)
-m = 4;
-subplot(m,4,1)
-imagesc(nanmean(nReAct(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-title('number of reactivations'); colorbar;caxis([0 1]);
-ylabel({'LTD1'; 'Training'});
-
-subplot(m,4,2)
-imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-title('number of assemblies reactivated'); colorbar;caxis([0 1]);
-
-subplot(m,4,3)
-imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-title('Rate(nA ./ length of recording)');colorbar; caxis([0 1]);
-
-subplot(m,4,4)
-imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-title('ReAct Rate per assembly');     colorbar; caxis([0 1]);
-
-
-% LTD5
-subplot(m,4,5)
-imagesc(nanmean(nReAct(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-colorbar; caxis([0 1]);
-ylabel({'LTD5'; 'Training'});
-
-
-subplot(m,4,6)
-imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-colorbar; caxis([0 1]);
-
-subplot(m,4,7)
-imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-colorbar; caxis([0 1]);
-
-subplot(m,4,8)
-imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-colorbar; caxis([0 1]);
-
-
-% HAT1
-subplot(m,4,9)
-
-imagesc(nanmean(nReAct(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-colorbar; caxis([0 1]);
-ylabel({'HAT1'; 'Training'});
-
-subplot(m,4,10)
-imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-colorbar; caxis([0 1]);
-
-subplot(m,4,11)
-imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-colorbar; caxis([0 1]);
-
-subplot(m,4,12)
-imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-colorbar; caxis([0 1]);
-
-% HAT5
-subplot(m,4,13)
-
-imagesc(nanmean(nReAct(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-colorbar; caxis([0 1]);
-ylabel({'HAT5'; 'Training'});
-
-subplot(m,4,14)
-imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-colorbar; caxis([0 1]);
-
-subplot(m,4,15)
-imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-colorbar; caxis([0 1]);
-
-subplot(m,4,16)
-imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-colorbar; caxis([0 1]);
 
 %% check the bias in assemblies
 

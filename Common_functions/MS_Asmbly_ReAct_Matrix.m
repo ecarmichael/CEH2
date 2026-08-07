@@ -43,8 +43,8 @@ else
 % Pre.pos = this_data.pREM_A_pos;
 % Pre.temp = this_data.pREM_temp;
 thresh.Pre = this_data.pREM_stats.R_thresh;
-thresh.Wake.Wake = 10;
-thresh.Pre = this_data.pREM_stats.R_thresh;
+thresh.Wake = this_data.A_W_Shuff.w_thresh;
+thresh.Post = this_data.postREM_stats.R_thresh;
 
 
 data.Pre.Pre.proj = this_data.pREM_proj;
@@ -66,7 +66,7 @@ data.Post.Post.proj = this_data.postREM_proj;
 
 %% loop over states and make a matrix
 
-states = {'Post','Pre','Wake'};
+states = {'Pre','Wake', 'Post'};
 ReAct_mat = []; ReAct_n = []; ReAct_nA_ep = []; ReAct_rate = [];
 labels = {};
 
@@ -74,15 +74,28 @@ labels = {};
 for ii = 1:length(states)
     for jj = 1:length(states)
         
-        this_nReact = sum(data.(states{ii}).(states{jj}).proj > 10,2);
+                this_nReact = []; 
+
+        if jj == 3 && ii ==2
+            this_nReact  = this_data.REM_Post_stats.p_val < .05; 
+        elseif jj == 1 && ii ==2
+            this_nReact  = this_data.REM_Pre_stats.p_val < .05; 
+        elseif jj == 2 && ii ==2
+            for kk  = size(data.(states{ii}).(states{jj}).proj,1):-1:1
+                this_nReact(kk) = sum(data.(states{ii}).(states{jj}).proj(kk,:) > thresh.(states{jj})(kk),2);
+            end
+
+        else
+            this_nReact= sum(data.(states{ii}).(states{jj}).proj > thresh.(states{ii}),2);
+        end
         
-        ReAct_mat(jj, ii) = sum(this_nReact(this_nReact >0));
+        ReAct_mat(jj, ii) = sum(this_nReact >0);
         
         ReAct_n(jj, ii) = length(this_nReact(this_nReact >0));
 
         ReAct_pA(jj, ii) = sum(this_nReact >0)./length(this_nReact);
 
-        ReAct_nA_ep(jj, ii) = sum(this_nReact(this_nReact >0))./ (length(data.(states{ii}).(states{jj}).proj)*this_data.bins);
+        % ReAct_nA_ep(jj, ii) = sum(this_nReact >0)./ (length(data.(states{ii}).(states{jj}).proj)*this_data.bins);
         
         ReAct_rate(jj, ii) = mean(this_nReact(this_nReact >0)./ (length(data.(states{ii}).(states{jj}).proj)*this_data.bins));
         

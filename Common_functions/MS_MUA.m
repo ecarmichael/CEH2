@@ -45,5 +45,5 @@ end
 mua  = tsd(tvec, all_S_bin'); 
 % smoothing
 
-smoothed_MUA = imgaussfilt(mua.data, sigma);
+smoothed_MUA = imgaussfilt(mua.data, sigma,'Padding', 'replicate');
 mua.data = smoothed_MUA;
