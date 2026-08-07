@@ -2,7 +2,7 @@
 
 
 
-% Initialize some things: 
+% Initialize some things: clear
 
 
 c_ord = MS_linspecer(5); %generate a few nice colours. 
@@ -284,44 +284,137 @@ swr_counts(1,4) = length(swr_sub_atyp_pre.tstart);
 swr_counts_rows{1} = 'Pre'; 
 
 
-
 % NAMI TO DO:  same as above for the other measures. 
 % restrict data to the post period. 
-
 % ca1
 swr_ca1_post = restrict(this_sess.swrs_ca1, this_sess.evts.t{2}(2), this_sess.csc.tvec(end)); 
 %sub 
 swr_sub_post = restrict(this_sess.swrs_sub, this_sess.evts.t{2}(2), this_sess.csc.tvec(end)); 
+swr_sub_std_post = restrict(this_sess.swrs_sub_std, this_sess.evts.t{2}(2), this_sess.csc.tvec(end)); 
+swr_sub_atyp_post = restrict(this_sess.swrs_sub_atyp, this_sess.evts.t{2}(2), this_sess.csc.tvec(end)); 
 
 fprintf('Ca1 SWRs in Post: <strong>%d</strong> \n', length(swr_ca1_post.tstart))
-
 fprintf('Sub SWRs in Post: <strong>%d</strong> \n', length(swr_sub_post.tstart))
+fprintf('std Sub SWRs in Post: <strong>%d</strong> \n', length(wr_sub_std_post.tstart))
+fprintf('atyp Sub SWRs in Post: <strong>%d</strong> \n',length(swr_sub_atyp_post.tstart))
+
+% fill in the table. 
+swr_counts(2,1) = length(swr_ca1_post.tstart); 
+swr_counts(2,2) = length(swr_sub_post.tstart); 
+swr_counts(2,3) = length(swr_sub_std_post.tstart); 
+swr_counts(2,4) = length(swr_sub_atyp_post.tstart); 
+% add a label for the rows
+swr_counts_rows{2} = 'Post'; 
 
 
 % get the baseline periods (30s before any tone) inside the TFC
 dur = 30; 
 tone_t_on = sort([this_sess.evts.t{4}(1:2:end); this_sess.evts.t{5}(1:2:end)]);
-
+%ca1
 swr_ca1_base = restrict(this_sess.swrs_ca1, tone_t_on-30, tone_t_on); 
+%sub
 swr_sub_base = restrict(this_sess.swrs_sub, tone_t_on-30, tone_t_on); 
+swr_sub_std_base = restrict(this_sess.swrs_sub_std, tone_t_on-30, tone_t_on);
+swr_sub_atyp_base = restrict(this_sess.swrs_sub_atyp, tone_t_on-30, tone_t_on);
 
-fprintf('Ca1 SWRs in baseline: <strong>%d</strong>   |    Sub SWRs in baseline: <strong>%d</strong> \n',...
-    length(swr_ca1_base.tstart),  length(swr_sub_base.tstart))
+fprintf('Ca1 SWRs in baseline: <strong>%d</strong> \n', length(swr_ca1_base.tsart))
+fprintf('Sub SWRs in baseline: <strong>%d</strong> \n', length(swr_sub_base.tstart))
+fprintf('std Sub SWRs in baseline: <strong>%d</strong> \n', length(swr_sub_std_base.tstart))
+fprintf('atyp Sub SWRs in baseline: <strong>%d</strong> \n', length(swr_sub_atyp_base.tstart))
 
+% fill in the table. 
+swr_counts(3,1) = length(swr_ca1_base.tstart); 
+swr_counts(3,2) = length(swr_sub_base.tstart); 
+swr_counts(3,3) = length(swr_sub_std_base.tstart); 
+swr_counts(3,4) = length(swr_sub_atyp_base.tstart); 
+% add a label for the rows
+swr_counts_rows{3} = ['Baseline']; 
 
 
 % NAMI To Do:  same as above for the specific behaviour periods. 
 % get the tone 1 periods 
+tone_t_1 = sort([this_data.evts.t{4}(1:2:end)]) 
 
+swr_ca1_t1 = restrict(this_data.swrs_ca1, tone_t_1, tone_t_1 +20); 
+swr_sub_t1 = restrict(this_data.swrs_sub, tone_t_1, tone_t_1 +20); 
+swr_sub_std_t1 = restrict(this_data.swrs_sub_std, tone_t_1, tone_t_1 +20); 
+swr_sub_atyp_t1 = restrict(this_data.swrs_sub_atyp, tone_t_1, tone_t_1 +20); 
 
+fprintf('Ca1 SWRs in tone 1: <strong>%d</strong> \n', length(swr_ca1_t1.tsart))
+fprintf('Sub SWRs in tone 1: <strong>%d</strong> \n', length(swr_sub_t1.tstart))
+fprintf('std Sub SWRs in tone 1: <strong>%d</strong> \n', length(swr_sub_std_t1.tstart))
+fprintf('atyp Sub SWRs in tone 1: <strong>%d</strong> \n', length(swr_sub_atyp_t1.tstart))
 
+% fill in the table. 
+swr_counts(4,1) = length(swr_ca1_t1.tstart); 
+swr_counts(4,2) = length(swr_sub_t1.tstart); 
+swr_counts(4,3) = length(swr_sub_std_t1.tstart); 
+swr_counts(4,4) = length(swr_sub_atyp_t1.tstart); 
+% add a label for the rows
+swr_counts_rows{4} = ['Tone 1'];
 
 % get the tone 2 periods
 
+tone_t_2 = sort([this_data.evts.t{5}(1:2:end)])
 
+swr_ca1_t2 = restrict(this_data.swrs_ca1, tone_t_2, tone_t_2 + 20); 
+swr_sub_t2 = restrict(this_data.swrs_sub, tone_t_2, tone_t_2 + 20); 
+swr_sub_std_t2 = restrict(this_data.swrs_sub_std, tone_t_2, tone_t_2 +20); 
+swr_sub_atyp_t2 = restrict(this_data.swrs_sub_atyp, tone_t_2, tone_t_2 +20); 
+
+fprintf('Ca1 SWRs in tone 2: <strong>%d</strong> \n', length(swr_ca1_t2.tsart))
+fprintf('Sub SWRs in tone 2: <strong>%d</strong> \n', length(swr_sub_t2.tstart))
+fprintf('std Sub SWRs in tone 2: <strong>%d</strong> \n', length(swr_sub_std_t2.tstart))
+fprintf('atyp Sub SWRs in tone 2: <strong>%d</strong> \n', length(swr_sub_atyp_t2.tstart))
+
+% fill in the table. 
+swr_counts(5,1) = length(swr_ca1_t2.tstart); 
+swr_counts(5,2) = length(swr_sub_t2.tstart); 
+swr_counts(5,3) = length(swr_sub_std_t2.tstart); 
+swr_counts(5,4) = length(swr_sub_atyp_t2.tstart); 
+% add a label for the rows
+swr_counts_rows{5} = ['Tone 2'];
 
 % tone 1 trace period (20 sec after end of tone)
 
+tone_t_1end = sort([this_data.evts.t{4}(2:2:end)])
 
+swr_ca1_t1trace = restrict(this_data.swrs_ca1, tone_t_1end, tone_t_1end + 20); 
+swr_sub_t1trace = restrict(this_data.swrs_sub, tone_t_1end, tone_t_1end + 20); 
+swr_sub_std_t1trace = restrict(this_data.swrs_sub_std, tone_t_1end, tone_t_1end + 20); 
+swr_sub_atyp_t1trace = restrict(this_data.swrs_sub_atyp, tone_t_1end, tone_t_1end + 20); 
+
+fprintf('Ca1 SWRs in tone 1 trace: <strong>%d</strong> \n', length(swr_ca1_t1trace.tsart))
+fprintf('Sub SWRs in tone 1 trace: <strong>%d</strong> \n', length(swr_sub_t1trace.tstart))
+fprintf('std Sub SWRs in tone 1 trace: <strong>%d</strong> \n', length(swr_sub_std_t1trace.tstart))
+fprintf('atyp Sub SWRs in tone 1 trace: <strong>%d</strong> \n', length(swr_sub_atyp_t2trace.tstart))
+
+% fill in the table. 
+swr_counts(6,1) = length(swr_ca1_t1trace.tstart); 
+swr_counts(6,2) = length(swr_sub_t1trace.tstart); 
+swr_counts(6,3) = length(swr_sub_std_t1trace.tstart); 
+swr_counts(6,4) = length(swr_sub_atyp_t1trace.tstart); 
+% add a label for the rows
+swr_counts_rows{6} = ['Tone 1 trace'];
 
 % tone 2 trace period 
+
+tone_t_2end = sort([this_data.evts.t{5}(2:2:end)])
+
+swr_ca1_t2trace = restrict(this_data.swrs_ca1, tone_t_2end, tone_t_2end + 20); 
+swr_sub_t2trace = restrict(this_data.swrs_sub, tone_t_2end, tone_t_2end + 20); 
+swr_sub_std_t2trace = restrict(this_data.swrs_sub_std, tone_t_2end, tone_t_2end + 20); 
+swr_sub_atyp_t2trace = restrict(this_data.swrs_sub_atyp, tone_t_2end, tone_t_2end + 20); 
+
+fprintf('Ca1 SWRs in tone 2 trace: <strong>%d</strong> \n', length(swr_ca1_t2trace.tsart))
+fprintf('Sub SWRs in tone 2 trace: <strong>%d</strong> \n', length(swr_sub_t2trace.tstart))
+fprintf('std Sub SWRs in tone 2 trace: <strong>%d</strong> \n', length(swr_sub_std_t2trace.tstart))
+fprintf('atyp Sub SWRs in tone 2 trace: <strong>%d</strong> \n', length(swr_sub_atyp_t2trace.tstart))
+
+% fill in the table. 
+swr_counts(7,1) = length(swr_ca1_t1trace.tstart); 
+swr_counts(7,2) = length(swr_sub_t1trace.tstart); 
+swr_counts(7,3) = length(swr_sub_std_t1trace.tstart); 
+swr_counts(7,4) = length(swr_sub_atyp_t1trace.tstart); 
+% add a label for the rows
+swr_counts_rows{7} = ['Tone 2 trace'];
