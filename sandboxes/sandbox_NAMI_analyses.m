@@ -43,6 +43,7 @@ for ii = length(sub_cent):-1:1
     end
 end
 
+% check for why the number of std or atyp don't sum to total Ca1/Sub. 
 
 % make a new set of events for Ca1 leading or Sub leading 
 this_sess.swrs_sub_atyp = SelectIV([], this_sess.swrs_sub, pair_swr < 0); 
@@ -295,7 +296,7 @@ swr_sub_atyp_post = restrict(this_sess.swrs_sub_atyp, this_sess.evts.t{2}(2), th
 
 fprintf('Ca1 SWRs in Post: <strong>%d</strong> \n', length(swr_ca1_post.tstart))
 fprintf('Sub SWRs in Post: <strong>%d</strong> \n', length(swr_sub_post.tstart))
-fprintf('std Sub SWRs in Post: <strong>%d</strong> \n', length(wr_sub_std_post.tstart))
+fprintf('std Sub SWRs in Post: <strong>%d</strong> \n', length(swr_sub_std_post.tstart))
 fprintf('atyp Sub SWRs in Post: <strong>%d</strong> \n',length(swr_sub_atyp_post.tstart))
 
 % fill in the table. 
@@ -317,7 +318,7 @@ swr_sub_base = restrict(this_sess.swrs_sub, tone_t_on-30, tone_t_on);
 swr_sub_std_base = restrict(this_sess.swrs_sub_std, tone_t_on-30, tone_t_on);
 swr_sub_atyp_base = restrict(this_sess.swrs_sub_atyp, tone_t_on-30, tone_t_on);
 
-fprintf('Ca1 SWRs in baseline: <strong>%d</strong> \n', length(swr_ca1_base.tsart))
+fprintf('Ca1 SWRs in baseline: <strong>%d</strong> \n', length(swr_ca1_base.tstart))
 fprintf('Sub SWRs in baseline: <strong>%d</strong> \n', length(swr_sub_base.tstart))
 fprintf('std Sub SWRs in baseline: <strong>%d</strong> \n', length(swr_sub_std_base.tstart))
 fprintf('atyp Sub SWRs in baseline: <strong>%d</strong> \n', length(swr_sub_atyp_base.tstart))
@@ -333,14 +334,14 @@ swr_counts_rows{3} = ['Baseline'];
 
 % NAMI To Do:  same as above for the specific behaviour periods. 
 % get the tone 1 periods 
-tone_t_1 = sort([this_data.evts.t{4}(1:2:end)]) 
+tone_t_1 = sort([this_sess.evts.t{4}(1:2:end)]) 
 
-swr_ca1_t1 = restrict(this_data.swrs_ca1, tone_t_1, tone_t_1 +20); 
-swr_sub_t1 = restrict(this_data.swrs_sub, tone_t_1, tone_t_1 +20); 
-swr_sub_std_t1 = restrict(this_data.swrs_sub_std, tone_t_1, tone_t_1 +20); 
-swr_sub_atyp_t1 = restrict(this_data.swrs_sub_atyp, tone_t_1, tone_t_1 +20); 
+swr_ca1_t1 = restrict(this_sess.swrs_ca1, tone_t_1, tone_t_1 +20); 
+swr_sub_t1 = restrict(this_sess.swrs_sub, tone_t_1, tone_t_1 +20); 
+swr_sub_std_t1 = restrict(this_sess.swrs_sub_std, tone_t_1, tone_t_1 +20); 
+swr_sub_atyp_t1 = restrict(this_sess.swrs_sub_atyp, tone_t_1, tone_t_1 +20); 
 
-fprintf('Ca1 SWRs in tone 1: <strong>%d</strong> \n', length(swr_ca1_t1.tsart))
+fprintf('Ca1 SWRs in tone 1: <strong>%d</strong> \n', length(swr_ca1_t1.tstart))
 fprintf('Sub SWRs in tone 1: <strong>%d</strong> \n', length(swr_sub_t1.tstart))
 fprintf('std Sub SWRs in tone 1: <strong>%d</strong> \n', length(swr_sub_std_t1.tstart))
 fprintf('atyp Sub SWRs in tone 1: <strong>%d</strong> \n', length(swr_sub_atyp_t1.tstart))
@@ -355,14 +356,14 @@ swr_counts_rows{4} = ['Tone 1'];
 
 % get the tone 2 periods
 
-tone_t_2 = sort([this_data.evts.t{5}(1:2:end)])
+tone_t_2 = sort([this_sess.evts.t{5}(1:2:end)])
 
-swr_ca1_t2 = restrict(this_data.swrs_ca1, tone_t_2, tone_t_2 + 20); 
-swr_sub_t2 = restrict(this_data.swrs_sub, tone_t_2, tone_t_2 + 20); 
-swr_sub_std_t2 = restrict(this_data.swrs_sub_std, tone_t_2, tone_t_2 +20); 
-swr_sub_atyp_t2 = restrict(this_data.swrs_sub_atyp, tone_t_2, tone_t_2 +20); 
+swr_ca1_t2 = restrict(this_sess.swrs_ca1, tone_t_2, tone_t_2 + 20); 
+swr_sub_t2 = restrict(this_sess.swrs_sub, tone_t_2, tone_t_2 + 20); 
+swr_sub_std_t2 = restrict(this_sess.swrs_sub_std, tone_t_2, tone_t_2 +20); 
+swr_sub_atyp_t2 = restrict(this_sess.swrs_sub_atyp, tone_t_2, tone_t_2 +20); 
 
-fprintf('Ca1 SWRs in tone 2: <strong>%d</strong> \n', length(swr_ca1_t2.tsart))
+fprintf('Ca1 SWRs in tone 2: <strong>%d</strong> \n', length(swr_ca1_t2.tstart))
 fprintf('Sub SWRs in tone 2: <strong>%d</strong> \n', length(swr_sub_t2.tstart))
 fprintf('std Sub SWRs in tone 2: <strong>%d</strong> \n', length(swr_sub_std_t2.tstart))
 fprintf('atyp Sub SWRs in tone 2: <strong>%d</strong> \n', length(swr_sub_atyp_t2.tstart))
@@ -377,17 +378,17 @@ swr_counts_rows{5} = ['Tone 2'];
 
 % tone 1 trace period (20 sec after end of tone)
 
-tone_t_1end = sort([this_data.evts.t{4}(2:2:end)])
+tone_t_1end = sort([this_sess.evts.t{4}(2:2:end)])
 
-swr_ca1_t1trace = restrict(this_data.swrs_ca1, tone_t_1end, tone_t_1end + 20); 
-swr_sub_t1trace = restrict(this_data.swrs_sub, tone_t_1end, tone_t_1end + 20); 
-swr_sub_std_t1trace = restrict(this_data.swrs_sub_std, tone_t_1end, tone_t_1end + 20); 
-swr_sub_atyp_t1trace = restrict(this_data.swrs_sub_atyp, tone_t_1end, tone_t_1end + 20); 
+swr_ca1_t1trace = restrict(this_sess.swrs_ca1, tone_t_1end, tone_t_1end + 20); 
+swr_sub_t1trace = restrict(this_sess.swrs_sub, tone_t_1end, tone_t_1end + 20); 
+swr_sub_std_t1trace = restrict(this_sess.swrs_sub_std, tone_t_1end, tone_t_1end + 20); 
+swr_sub_atyp_t1trace = restrict(this_sess.swrs_sub_atyp, tone_t_1end, tone_t_1end + 20); 
 
-fprintf('Ca1 SWRs in tone 1 trace: <strong>%d</strong> \n', length(swr_ca1_t1trace.tsart))
+fprintf('Ca1 SWRs in tone 1 trace: <strong>%d</strong> \n', length(swr_ca1_t1trace.tstart))
 fprintf('Sub SWRs in tone 1 trace: <strong>%d</strong> \n', length(swr_sub_t1trace.tstart))
 fprintf('std Sub SWRs in tone 1 trace: <strong>%d</strong> \n', length(swr_sub_std_t1trace.tstart))
-fprintf('atyp Sub SWRs in tone 1 trace: <strong>%d</strong> \n', length(swr_sub_atyp_t2trace.tstart))
+fprintf('atyp Sub SWRs in tone 1 trace: <strong>%d</strong> \n', length(swr_sub_atyp_t1trace.tstart))
 
 % fill in the table. 
 swr_counts(6,1) = length(swr_ca1_t1trace.tstart); 
@@ -399,14 +400,14 @@ swr_counts_rows{6} = ['Tone 1 trace'];
 
 % tone 2 trace period 
 
-tone_t_2end = sort([this_data.evts.t{5}(2:2:end)])
+tone_t_2end = sort([this_sess.evts.t{5}(2:2:end)])
 
-swr_ca1_t2trace = restrict(this_data.swrs_ca1, tone_t_2end, tone_t_2end + 20); 
-swr_sub_t2trace = restrict(this_data.swrs_sub, tone_t_2end, tone_t_2end + 20); 
-swr_sub_std_t2trace = restrict(this_data.swrs_sub_std, tone_t_2end, tone_t_2end + 20); 
-swr_sub_atyp_t2trace = restrict(this_data.swrs_sub_atyp, tone_t_2end, tone_t_2end + 20); 
+swr_ca1_t2trace = restrict(this_sess.swrs_ca1, tone_t_2end, tone_t_2end + 20); 
+swr_sub_t2trace = restrict(this_sess.swrs_sub, tone_t_2end, tone_t_2end + 20); 
+swr_sub_std_t2trace = restrict(this_sess.swrs_sub_std, tone_t_2end, tone_t_2end + 20); 
+swr_sub_atyp_t2trace = restrict(this_sess.swrs_sub_atyp, tone_t_2end, tone_t_2end + 20); 
 
-fprintf('Ca1 SWRs in tone 2 trace: <strong>%d</strong> \n', length(swr_ca1_t2trace.tsart))
+fprintf('Ca1 SWRs in tone 2 trace: <strong>%d</strong> \n', length(swr_ca1_t2trace.tstart))
 fprintf('Sub SWRs in tone 2 trace: <strong>%d</strong> \n', length(swr_sub_t2trace.tstart))
 fprintf('std Sub SWRs in tone 2 trace: <strong>%d</strong> \n', length(swr_sub_std_t2trace.tstart))
 fprintf('atyp Sub SWRs in tone 2 trace: <strong>%d</strong> \n', length(swr_sub_atyp_t2trace.tstart))
@@ -418,3 +419,8 @@ swr_counts(7,3) = length(swr_sub_std_t1trace.tstart);
 swr_counts(7,4) = length(swr_sub_atyp_t1trace.tstart); 
 % add a label for the rows
 swr_counts_rows{7} = ['Tone 2 trace'];
+
+
+% convert to proportions
+
+swr_prop = swr_counts ./ swr_counts(:,2);
