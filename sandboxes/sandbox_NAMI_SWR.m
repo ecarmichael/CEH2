@@ -76,8 +76,8 @@
 % ts_prime = 0;
 % csc_idx = {'CH55', 'CH141'};
 
-%pox3568_TFCD2 % DONE Best CA1 and SWR, no Spikes yet. 
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-21_17-05-21_TFCD2/Record Node 117';
+%pox3568_TFCD2 % DONE Best CA1 and SWR, Spikes. 
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
 % csc_idx = 1:4:96;
 % ts_prime = 0;
 % csc_idx = {'CH124', 'CH149'};
@@ -89,15 +89,15 @@
 % csc_idx = {'CH71', 'CH145'};
 
 % pox3568_TFCD4 % DONE great CA1 and SWR (some spike contamination) needs Spikes. 
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-23_18-12-36_TFCD4/Record Node 117';
-% csc_idx = 1:4:96;
-% ts_prime = 0;
-% csc_idx = {'CH63', 'CH157'};
+csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-23_18-12-36_TFCD4\Record Node 117';
+csc_idx = 1:4:96;
+ts_prime = 0;
+csc_idx = {'CH63', 'CH157'};
 
 
 % pox3568_TFCD5 % Great Sub SWR and good CA1 (some spike contam). Needs
 % spikes.
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-24_16-56-18_TFCD5/Record Node 117';
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-24_16-56-18_TFCD5\Record Node 117';
 % csc_idx = 65:77; %1:4:96;
 % ts_prime = 0;
 % csc_idx = {'CH13', 'CH134'};
@@ -110,8 +110,14 @@
 % ts_prime = 0;
 % csc_idx = {'CH51', 'CH143'};
 
-%pox3256_TFCD3  %% 
-% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-18_16-10-31_TFC_D3\Record Node 117';
+% pox3256_TFCD2 no ripples?
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-17_15-59-53_TFCD2\Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH119', 'CH157'};
+
+% pox3256_TFCD3  %% no swr?? but has spikes
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-18_16-10-31_TFCD3\Record Node 117';
 % csc_idx = 1:4:96;
 % ts_prime = 0;
 % csc_idx = {'CH51', 'CH143'};
@@ -124,10 +130,10 @@
 % csc_idx = {'CH119', 'CH145'}; % CH71 and 115 are also decent for CA1
 
 %pox3256_TFCD5 TO DO
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-20_21-00-10_TFCD5/Record Node 117';
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-20_21-00-10_TFCD5\Record Node 117';
 % csc_idx = 1:4:96;
 % ts_prime = 0;
-% csc_idx = {'CH119', 'CH145'}; % CH71 and 115 are also decent for CA1
+% csc_idx = {'CH75', 'CH149'}; % CH71 and 115 are also decent for CA1
 %% load the spikes if present
 %
 params = OE_load_params(phy_dir);
@@ -140,16 +146,16 @@ ts_prime = ts_prime(1);
 
 for ii = length(S.label):-1:1
     ch(ii) = str2double(S.label{ii}(1:strfind(S.label{ii}, '-')-1)); 
-    % S.t{ii} = S.t{ii} %+ts_prime; % add the time offset back. 
+    S.t{ii} = S.t{ii}+ts_prime; % add the time offset back. 
 end
 S.loc = ch < 128; 
-c_ord = MS_linspecer(2);
-S.c_ord = [winter(sum(S.loc==1)); repmat(c_ord(1,:),sum(S.loc==0),1)]; 
+% c_ord = MS_linspecer(2);
+% S.c_ord = [winter(sum(S.loc==1)); flipud(nebula(sum(S.loc==0)))]%repmat(c_ord(1,:),sum(S.loc==0),1)]; 
 
 neb = nebula(round(length(S.t)/1.5)); 
 win = winter(round(length(S.t)/1.5));
-S.c_ord = [win(1:sum(S.loc==1),:); flipud(neb(end-sum(S.loc==1):end,:))]; 
-
+S.c_ord = [win(1:sum(S.loc==1),:); flipud(neb(end-sum(S.loc==0)+1:end,:))]; 
+% 
 
 
 
@@ -325,7 +331,15 @@ OE_evts.label = {'context' 'TFC_on' 'mov', 'tone1', 'tone2', 'lick', 'eye'};
 
 all_TFC.(this_name).evts=OE_evts;
 
+if exist('S', 'var')
+    all_TFC.(this_name).S=S;
+end
 save('all_TFC.mat', 'all_TFC')
+
+data = []; 
+data.(this_name) = all_TFC.(this_name); 
+
+save([this_name '.mat'], 'data')
 
 %% split out the all_TFC for speed. 
 
@@ -347,7 +361,7 @@ end
 % filter the LFP into a lower range:
 cfg = []; 
 cfg.f = [1 400];
-csc_f = FilterLFP(cfg, csc); 
+csc_f = FilterLFP(cfg, data.(this_name).csc); 
 
 ca1 = csc_f; 
 ca1.data(2,:) = []; %remove the second channel; 
@@ -363,42 +377,81 @@ sub.label{1} = 'Sub';
 figure(201) % multiraster to show spiking
 clf
 
-set(gcf,'Units','inch','OuterPosition',[1 6 4 8]);
+% set(gcf,'Units','inch','OuterPosition',[1 6 4 8]);
 
 % subplot(6,1,1:4)
 
 cfg = []; 
-cfg.spkColor = S.c_ord; % premade colours.  Can also use the S.loc logical for Ca1 (1) or Sub (0)
+cfg.spkColor = data.(this_name).S.c_ord; % premade colours.  Can also use the S.loc logical for Ca1 (1) or Sub (0)
 cfg.SpikeHeight = .5; 
-cfg.lfpHeight = 20;
+cfg.lfpHeight = 15;
 cfg.lfpSpacing =15; 
 cfg.lfp(1) = ca1; 
 cfg.lfp(2) = sub;
-cfg.evt = swrs_ca1; 
+cfg.evt = data.(this_name).swrs_ca1; 
 cfg.openNewFig = 0; % stops it from opening a new figure 
-MultiRaster(cfg, S)
+MultiRaster(cfg, data.(this_name).S)
 
 % add in some multi unit activity
 hold on
 
-cfg = []; 
-cfg.tvec = csc.tvec; 
-cfg.sigma = 0.005; 
+cfg_mua = []; 
+cfg_mua.tvec = data.(this_name).csc.tvec; 
+cfg_mua.sigma = 0.01; 
 % Ca1 MUA
-S_ca = S; 
-S_ca.t(~S.loc) = []; 
-mua = getMUA(cfg, S_ca); % get the smoothed multiunit activity; 
-plot(mua.tvec, MS_norm_range(mua.data, 0, 10) - 10,'color',  S.c_ord(1,:))
+S_ca = data.(this_name).S; 
+S_ca.t(~data.(this_name).S.loc) = []; 
+S_ca.label(~S.loc) = [];
+S_ca.usr(~S.loc) = [];
+mua = getMUA(cfg_mua, S_ca); % get the smoothed multiunit activity; 
+plot(mua.tvec, MS_norm_range(mua.data, 0, cfg.lfpHeight) - cfg.lfpHeight,'color', data.(this_name). S.c_ord(1,:))
 
 % Sub MUA
-S_sub = S; 
-S_sub.t(S.loc) = []; 
-mua = getMUA(cfg, S_sub); % get the smoothed multiunit activity; 
+S_sub = data.(this_name).S;
+S_sub.t(data.(this_name).S.loc) = [];
+S_sub.label(S.loc) = [];
+S_sub.usr(S.loc) = [];
+mua = getMUA(cfg_mua, S_sub); % get the smoothed multiunit activity;
 c_idx = find(~S.loc); % just to get the first of the colour range
-plot(mua.tvec, MS_norm_range(mua.data, 0, 10) - 25,'color',  S.c_ord(c_idx(1),:))
+plot(mua.tvec, MS_norm_range(mua.data, 0, cfg.lfpHeight) - cfg.lfpHeight-cfg.lfpSpacing,'color',  data.(this_name).S.c_ord(c_idx(1),:))
 
-xlim([181.5 182.5])
-ylim([-40 80])
+% xlim([181.5 182.5])
+xlim([1237.75 1238.75])
+
+ylim([-40 length(data.(this_name).S.t)+2])
+
+%% same thing but two plots
+cfg = []; 
+cfg.spkColor = data.(this_name).S.c_ord(S.loc,:); % premade colours.  Can also use the S.loc logical for Ca1 (1) or Sub (0)
+cfg.SpikeHeight = .5; 
+cfg.lfpHeight = 15;
+cfg.lfpSpacing =15; 
+cfg.lfp(1) = ca1; 
+cfg.evt = data.(this_name).swrs_ca1; 
+cfg.openNewFig = 0; % stops it from opening a new figure 
+
+    figure('KeyPressFcn',@navigate) % if you want to preserve the x-axis navigation
+
+    ax1 = subplot(211);
+    MultiRaster(cfg,S_ca)
+mua = getMUA(cfg_mua, S_ca); % get the smoothed multiunit activity; 
+plot(mua.tvec, MS_norm_range(mua.data, 0, cfg.lfpHeight) - cfg.lfpHeight,'color', data.(this_name). S.c_ord(1,:))
+ylim([-25 sum(S.loc)+2])
+
+
+cfg.spkColor = data.(this_name).S.c_ord(~S.loc,:); % premade colours.  Can also use the S.loc logical for Ca1 (1) or Sub (0)
+cfg.lfp(1) = sub;
+cfg.evt = data.(this_name).swrs_sub; 
+
+ax2 = subplot(212);
+MultiRaster(cfg,S_sub)
+mua = getMUA(cfg_mua, S_sub); % get the smoothed multiunit activity;
+plot(mua.tvec, MS_norm_range(mua.data, 0, cfg.lfpHeight) - cfg.lfpHeight,'color',  data.(this_name).S.c_ord(c_idx(1),:))
+ylim([-25 sum(~S.loc)+2])
+
+linkaxes([ax1 ax2],'x'); % for navigation to work on both axes simultaneously
+
+xlim([1237.75 1238.75])
 
 %% NAMI TODO: plot some examples of the filtering and SWR detection. 
 % this will compliment the above plot with one subplot for CA1 and Sub each

@@ -15,7 +15,7 @@ ft_size = 12;  %font size
 % but this is for later. 
 
 %% start with a nice session and generate some simple plots.  
-fname = 'pox3568_TFCD5'; % 3568 TFCD2/4/5 are all nice. 
+fname = 'pox3568_TFCD4'; % 3568 TFCD2/4/5 are all nice. 
 
 this_sess = load([fname '.mat']); 
 
@@ -43,6 +43,7 @@ for ii = length(sub_cent):-1:1
     end
 end
 
+% check for why the number of std or atyp don't sum to total Ca1/Sub. 
 
 % make a new set of events for Ca1 leading or Sub leading 
 this_sess.swrs_sub_atyp = SelectIV([], this_sess.swrs_sub, pair_swr < 0); 
@@ -51,6 +52,7 @@ this_sess.swrs_sub_std = SelectIV([], this_sess.swrs_sub, pair_swr > 0);
 % find the CA1 SWRs that overlap with each Sub SWR type
 this_sess.swrs_ca1_atyp  = IntersectIV([], this_sess.swrs_ca1, this_sess.swrs_sub_atyp); 
 this_sess.swrs_ca1_std  = IntersectIV([], this_sess.swrs_ca1, this_sess.swrs_sub_std); 
+
 
 %% make an event triggered spectrogram of the CA1 and Sub SWRs relative to the CA1 center using fieldtrip. 
 
@@ -154,6 +156,97 @@ title(sprintf('Mean: %.2f ms, Std: %.2f ms', meanOffset * 1000, stdOffset * 1000
 
 set(gca, 'FontSize',ft_size)
 axis("square")
+
+
+%% NAMI TODO: plot some examples of the filtering and SWR detection. 
+% this will compliment the above plot with one subplot for CA1 and Sub each
+% with a hold on that keeps the filtered trace, the zscored amplitude, and
+% the 2sd threshold. 
+% 
+% you should have the elements you need in that filtering script you made a
+% while back.  In case you don't have access to that. Remember that the
+% abslute of the Hilbert transform [abs(hilbert(csc_f.data(1,:)))] is how
+% you extract the amplitude. 
+%
+% bonus points for having the filtered traces match the colours of the MUA
+% in the above plot. Also making the amplitue plot thicker with a linewidth
+% of 2, and having the threshold be a dashed line. 
+
+% filter into the SWR band csc_f.data(1,:) is CA1 and csc_f.data(2,:) will
+% be the subiculum channel.  
+cfg = []; 
+cfg.f = [125 200];
+csc_f = FilterLFP(cfg, csc); 
+
+
+% keep the plot sizes consistent. 
+figure(202) 
+clf
+set(gcf,'Units','inch','OuterPosition',[1 6 4 8]);
+
+% plot the Ca1 data
+subplot(2,1,1)
+hold on
+
+xlim([181.5 182.5]) % x limits for the nice SWR in the above plot
+
+% plot the Subiculum data
+subplot(2,1,2)
+hold on
+
+xlim([181.5 182.5])
+
+
+%% quantify the participation of cells in the SWRs
+
+% std
+S_out_ca1_std =[]; 
+for ii = length(this_sess.swrs_ca1_std.tstart):-1:1
+    
+    this_S = restrict(this_sess.S, this_sess.swrs_ca1_std.tstart(ii), this_sess.swrs_ca1_std.tend(ii));
+    dur = this_sess.swrs_ca1_std.tend(ii) - this_sess.swrs_ca1_std.tstart(ii);
+
+    for iS = length(this_S.t):-1:1
+        S_out_ca1_std(ii,iS) = length(this_S.t{iS}) / dur;
+    end
+end
+
+% std
+S_out_sub_std =[]; 
+for ii = length(this_sess.swrs_sub_std.tstart):-1:1
+    
+    this_S = restrict(this_sess.S, this_sess.swrs_sub_std.tstart(ii), this_sess.swrs_sub_std.tend(ii));
+    dur = this_sess.swrs_sub_std.tend(ii) - this_sess.swrs_sub_std.tstart(ii);
+
+    for iS = length(this_S.t):-1:1
+        S_out_sub_std(ii,iS) = length(this_S.t{iS}) / dur;
+    end
+end
+
+% atyp
+S_out_sub_atyp =[]; 
+for ii = length(this_sess.swrs_sub_atyp.tstart):-1:1
+    
+    this_S = restrict(this_sess.S, this_sess.swrs_sub_atyp.tstart(ii), this_sess.swrs_sub_atyp.tend(ii));
+    dur = this_sess.swrs_sub_atyp.tend(ii) - this_sess.swrs_sub_atyp.tstart(ii);
+
+    for iS = length(this_S.t):-1:1
+        S_out_sub_atyp(ii,iS) = length(this_S.t{iS}) /dur;
+    end
+end
+
+% get the mean values
+Spk_ca1 = mean(S_out_ca1_std, 1);
+Spk_sub_std = mean(S_out_sub_std, 1);
+Spk_sub_atyp = mean(S_out_sub_atyp, 1);
+
+figure(301)
+clf
+subplot(2,2,1)
+MS_bar_w_err(Spk_sub_std(this_sess.S.loc),  Spk_sub_atyp(this_sess.S.loc), c_ord(2:3,:), 1, 'ttest', 1:2)
+
+subplot(2,2,2)
+MS_bar_w_err(Spk_sub_std(~this_sess.S.loc),  Spk_sub_atyp(~this_sess.S.loc), c_ord(2:3,:), 1, 'ttest', 1:2)
 
 
 %% Quantify the occurence of both types of SWRS within the task phases. 
@@ -326,3 +419,8 @@ swr_counts(7,3) = length(swr_sub_std_t1trace.tstart);
 swr_counts(7,4) = length(swr_sub_atyp_t1trace.tstart); 
 % add a label for the rows
 swr_counts_rows{7} = ['Tone 2 trace'];
+
+
+% convert to proportions
+
+swr_prop = swr_counts ./ swr_counts(:,2);
