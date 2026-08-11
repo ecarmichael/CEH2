@@ -1,20 +1,32 @@
-function [hb, eb, sc, p, stats] =  MS_bar_w_err(data_a, data_b, color, data_flag, stats, x_vals)
+function [hb, eb, sc, p, stats] =  MS_bar_w_err(data_a, data_b, color, data_flag, stats, x_vals, hollow)
 
 if nargin < 4
     data_flag = 0;
     stats = [];
     x_vals = [1 2]; % where to put the plot. useful for putting multiple together.
+    hollow = 0;
 elseif nargin < 5
     stats = [];
     x_vals = [1 2];
+    hollow = 0;
 elseif nargin < 6
     x_vals = [1 2];
+    hollow = 0;
+elseif nargin < 7
+    hollow = 0;
 end
 
 if data_flag == 1
     hb = bar(x_vals, [mean(data_a, 'omitnan'), mean(data_b, 'omitnan')]', 'FaceColor', 'flat', 'EdgeColor','flat');
     hb.CData(1,:) = color(1,:);
-    hb.CData(2,:) = color(2,:);
+    hb.EdgeColor = color(1,:);
+    hb.LineWidth = 2;
+    if hollow == 1
+                 hb.CData(2,:) = [1 1 1];
+    else
+                 hb.CData(1,:) = color(2,:);
+
+    end
 end
 hold on
 
@@ -34,7 +46,7 @@ if ~isempty(stats)
 
             plot([offsets_a, offsets_b]', [data_a ;data_b], '-', 'Color', [.5 .5 .5])
             eff_s = meanEffectSize(data_a, data_b, "Effect","cohen", 'Paired',true);
-
+            stats_test = 'paired t-test'; 
         case 'ttest2'
             % disp('using ttest2')
             [h, p, ~,stats] = ttest2(data_a, data_b);
