@@ -56,10 +56,10 @@
 % csc_idx = {'CH51', 'CH141'};
 
 %pox3567_TFCD4 % done no spikes yet 
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-23_15-53-07_TFCD4/Record Node 117';
-% csc_idx = 1:4:96;
-% ts_prime = 0;
-% csc_idx = {'CH63', 'CH153'};
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-23_15-53-07_TFCD4/Record Node 117';
+csc_idx = 60:96;
+ts_prime = 0;
+csc_idx = {'CH63', 'CH145', 'CH149', 'CH150',  'CH154', 'CH158'};
 
 % pox3567_TFCD5 % Done nice CA1 and good Sub
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-24_14-10-03_TFCD5/Record Node 117';
@@ -89,10 +89,10 @@
 % csc_idx = {'CH71', 'CH145'};
 
 % pox3568_TFCD4 % DONE great CA1 and SWR (some spike contamination) needs Spikes. 
-csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-23_18-12-36_TFCD4\Record Node 117';
-csc_idx = 1:4:96;
-ts_prime = 0;
-csc_idx = {'CH63', 'CH157'};
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-23_18-12-36_TFCD4\Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH63', 'CH157'};
 
 
 % pox3568_TFCD5 % Great Sub SWR and good CA1 (some spike contam). Needs
@@ -148,12 +148,12 @@ for ii = length(S.label):-1:1
     ch(ii) = str2double(S.label{ii}(1:strfind(S.label{ii}, '-')-1)); 
     S.t{ii} = S.t{ii}+ts_prime; % add the time offset back. 
 end
-S.loc = ch < 128; 
+S.loc = logical(ch < 128); 
 % c_ord = MS_linspecer(2);
 % S.c_ord = [winter(sum(S.loc==1)); flipud(nebula(sum(S.loc==0)))]%repmat(c_ord(1,:),sum(S.loc==0),1)]; 
 
-neb = nebula(round(length(S.t)/1.5)); 
-win = winter(round(length(S.t)/1.5));
+neb = nebula(round(sum(S.loc==0)*1.5)); 
+win = winter(round(sum(S.loc==1)*1.5));
 S.c_ord = [win(1:sum(S.loc==1),:); flipud(neb(end-sum(S.loc==0)+1:end,:))]; 
 % 
 
@@ -243,7 +243,7 @@ end
 
 % session info
 
-parts = strsplit(csc_dir, filesep); 
+parts = strsplit(csc_dir,'/'); 
 s_idx = contains(parts, '2026'); % find the folder containing '2026' since all the sessions of interest are from this time. 
 sess = parts{s_idx}; 
 subject = lower(sess(strfind(sess, 'Pox'): strfind(sess, 'Pox')+6));
@@ -253,6 +253,14 @@ else
     sess_id = sess(strfind(sess, 'LT'):end);
 end
 
+
+%% make an average LFP channel if needed
+
+% csc.data(2,:) = mean(csc.data(2:end,:)); 
+% csc.label{2} = 'sub_mean'; 
+% csc.label(3:end) = []; 
+% csc.data(3:end,:) = []; 
+% csc.cfg.hdr(3:end) = []; 
 %% csc check
 
 figure(1010)
@@ -416,9 +424,12 @@ c_idx = find(~S.loc); % just to get the first of the colour range
 plot(mua.tvec, MS_norm_range(mua.data, 0, cfg.lfpHeight) - cfg.lfpHeight-cfg.lfpSpacing,'color',  data.(this_name).S.c_ord(c_idx(1),:))
 
 % xlim([181.5 182.5])
-xlim([1237.75 1238.75])
-
+% xlim([1237.75 1238.75])
+xlim([1251.4 1253.4])
 ylim([-40 length(data.(this_name).S.t)+2])
+
+
+    exportgraphics(gcf, ['MultiRaster_merge_' this_name '.pdf'], 'ContentType', 'vector');
 
 %% same thing but two plots
 cfg = []; 
@@ -451,7 +462,9 @@ ylim([-25 sum(~S.loc)+2])
 
 linkaxes([ax1 ax2],'x'); % for navigation to work on both axes simultaneously
 
-xlim([1237.75 1238.75])
+% xlim([1237.75 1238.75])
+xlim([1251.9 1252.9])
+    exportgraphics(gcf, ['MultiRaster_' this_name '_zoom.pdf'], 'ContentType', 'vector');
 
 %% NAMI TODO: plot some examples of the filtering and SWR detection. 
 % this will compliment the above plot with one subplot for CA1 and Sub each

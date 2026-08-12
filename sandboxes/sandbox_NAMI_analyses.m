@@ -3,7 +3,7 @@
 
 
 %% loop over all the sessions of interest. Ultimately you will be able to loop over the sessions and hold the metrics of interest in order to get some session/subject level comparisons.
-f_list = dir('pox*TFC*.mat');
+f_list = dir('pox*.mat');
 k_idx = ones(length(f_list),1);
 
 
@@ -18,8 +18,19 @@ for iS = 1:length(f_list)
     % Extract the session data for further analysis
     this_sess = this_sess.data.(fname{1}); % Access the first field of the session data
 
-    out.sess{iS} = fname{1}(strfind(fname{1}, '_')+1:end);
-    out.sub{iS} = fname{1}(1:strfind(fname{1}, '_'));
+    % if length(strfind(fname{1}, '_')) > 1
+    numText = regexp(fname{1}, '-?\d+\.?\d*', 'match', 'once');
+    u_idx = strfind(fname{1}, '_'); 
+
+        out.sess{iS} = upper(fname{1}(u_idx(end)+1:end));
+        out.sub{iS} = ['pox' numText];
+
+        if contains(out.sess{iS}, 'TL')
+            out.sess{iS} = strrep(out.sess{iS}, 'TL', 'LT'); 
+        end
+
+    % end
+
 
     %%
     if isfield(this_sess, 'S')
@@ -28,7 +39,7 @@ for iS = 1:length(f_list)
 
     disp(length(this_sess.swrs_ca1.tstart) )
 
-    if length(this_sess.swrs_ca1.tstart) < 200
+    if length(this_sess.swrs_sub.tstart) < 200
         k_idx(iS) = 0;
         continue
     end
@@ -40,11 +51,11 @@ for iS = 1:length(f_list)
     % loop over the events and find pairs and their offest
 
     pair_swr = []; % make an empty place to put things.
-    offset_max = .5; % max time between CA1 peak and Sub peak + or minus.
+    offset_max = .75; % max time between CA1 peak and Sub peak + or minus.
 
     for ii = length(sub_cent):-1:1
         this_d = sub_cent(ii) - ca1_cent;
-        co_evt = find(abs(this_d) < .50);
+        co_evt = find(abs(this_d) < offset_max);
 
         if isempty(co_evt) || length(co_evt) > 1
             pair_swr(ii) = NaN;
@@ -56,8 +67,8 @@ for iS = 1:length(f_list)
     % check for why the number of std or atyp don't sum to total Ca1/Sub.
 
     % make a new set of events for Ca1 leading or Sub leading
-    this_sess.swrs_sub_atyp = SelectIV([], this_sess.swrs_sub, pair_swr < 0);
-    this_sess.swrs_sub_std = SelectIV([], this_sess.swrs_sub, pair_swr > 0);
+    this_sess.swrs_sub_atyp = SelectIV([], this_sess.swrs_sub, pair_swr < -0.01);
+    this_sess.swrs_sub_std = SelectIV([], this_sess.swrs_sub, pair_swr > 0.01);
 
     % find the CA1 SWRs that overlap with each Sub SWR type
     this_sess.swrs_ca1_atyp  = IntersectIV([], this_sess.swrs_ca1, this_sess.swrs_sub_atyp);
@@ -134,8 +145,57 @@ for iS = 1:length(f_list)
     % I would do this an array with some structure like this (rows are
     % conditions (pre, post, reward,...) and columns are the 4 types of SWR.
 
-    swr_counts = []; % empty it to start.
+    swr_counts = NaN(7,4); % empty it to start.
     swr_counts_labels = {'Ca1', 'Sub', 'Std', 'Atyp'}; % labels for later.
+
+
+    % for the LT sessions only get the pre (first 5mins as pre) and the
+    % post (last 5mins)
+    if contains(out.sess{iS}, 'LT')
+        swr_ca1_pre = restrict(this_sess.swrs_ca1, this_sess.csc.tvec(1), this_sess.csc.tvec(1)+(5*60));
+        swr_sub_pre = restrict(this_sess.swrs_sub, this_sess.csc.tvec(1),this_sess.csc.tvec(1)+(5*60));
+        swr_sub_std_pre = restrict(this_sess.swrs_sub_std, this_sess.csc.tvec(1), this_sess.csc.tvec(1)+(5*60));
+        swr_sub_atyp_pre = restrict(this_sess.swrs_sub_atyp, this_sess.csc.tvec(1), this_sess.csc.tvec(1)+(5*60));
+
+        fprintf('Ca1 SWRs in Pre: <strong>%d</strong> \n', length(swr_ca1_pre.tstart))
+        fprintf('Sub SWRs in Pre: <strong>%d</strong> \n', length(swr_sub_pre.tstart))
+        fprintf('std Sub SWRs in Pre: <strong>%d</strong> \n', length(swr_sub_std_pre.tstart))
+        fprintf('atyp Sub SWRs in Pre: <strong>%d</strong> \n', length(swr_sub_atyp_pre.tstart))
+
+        % fill in the table. Coule be done in one line using a concatenation, but
+        % this keeps it easy.
+        swr_counts(1,1) = length(swr_ca1_pre.tstart);
+        swr_counts(1,2) = length(swr_sub_pre.tstart);
+        swr_counts(1,3) = length(swr_sub_std_pre.tstart);
+        swr_counts(1,4) = length(swr_sub_atyp_pre.tstart);
+        % add a label for the rows
+        swr_counts_rows{1} = 'Pre';
+
+
+        % NAMI TO DO:  same as above for the other measures.
+        % restrict data to the post period.
+        % ca1
+        swr_ca1_post = restrict(this_sess.swrs_ca1,  this_sess.csc.tvec(end) - (5*60), this_sess.csc.tvec(end));
+        %sub
+        swr_sub_post = restrict(this_sess.swrs_sub, this_sess.csc.tvec(end) - (5*60), this_sess.csc.tvec(end));
+        swr_sub_std_post = restrict(this_sess.swrs_sub_std, this_sess.csc.tvec(end) - (5*60), this_sess.csc.tvec(end));
+        swr_sub_atyp_post = restrict(this_sess.swrs_sub_atyp, this_sess.csc.tvec(end) - (5*60), this_sess.csc.tvec(end));
+
+        fprintf('Ca1 SWRs in Post: <strong>%d</strong> \n', length(swr_ca1_post.tstart))
+        fprintf('Sub SWRs in Post: <strong>%d</strong> \n', length(swr_sub_post.tstart))
+        fprintf('std Sub SWRs in Post: <strong>%d</strong> \n', length(swr_sub_std_post.tstart))
+        fprintf('atyp Sub SWRs in Post: <strong>%d</strong> \n',length(swr_sub_atyp_post.tstart))
+
+        % fill in the table.
+        swr_counts(2,1) = length(swr_ca1_post.tstart);
+        swr_counts(2,2) = length(swr_sub_post.tstart);
+        swr_counts(2,3) = length(swr_sub_std_post.tstart);
+        swr_counts(2,4) = length(swr_sub_atyp_post.tstart);
+        % add a label for the rows
+        swr_counts_rows{2} = 'Post';
+
+
+    else
 
     % restrict data to the pre task baseline
     % ca1
@@ -296,7 +356,7 @@ for iS = 1:length(f_list)
     % add a label for the rows
     swr_counts_rows{7} = 'Tone 2 trace';
 
-
+    end
     % convert to proportions
 
     out.swr_prop{iS} = swr_counts ./ (swr_counts(:,3) + swr_counts(:,4));
@@ -304,6 +364,23 @@ for iS = 1:length(f_list)
 
     clearvars -except iS out f_list k_idx
 end % end cross sessions.
+
+
+%% separate analysis using spike data
+for f_list = dir('pox*.mat');
+k_idx = ones(length(f_list),1);
+
+
+for iS = 1:length(f_list)
+    
+
+
+
+
+end
+end
+
+
 
 
 %% intra session stats
@@ -318,10 +395,10 @@ Spk_pyr = cell2mat(out.Spk_rate) < 20;
 
 
 % collect the behaviours.
-hab_idx = contains(out.sess, '1') | contains(out.sess, '2');
-train_idx = contains(out.sess, '3');
-test_idx = contains(out.sess, '4') | contains(out.sess, '5');
-
+hab_idx = contains(out.sess, 'TFCD1') | contains(out.sess, 'TFCD2');
+train_idx = contains(out.sess, 'TFCD3');
+test_idx = contains(out.sess, 'TFCD4') | contains(out.sess, 'TFCD5');
+LT_idx = contains(out.sess, 'LT'); 
 pox_idx = contains(out.sub, '3265'); 
 k_idx = logical(k_idx'); 
 
@@ -341,7 +418,7 @@ end
 swr_prop.hab = prop_mat(:,:,~pox_idx & hab_idx & k_idx); 
 swr_prop.train = prop_mat(:,:,~pox_idx & train_idx & k_idx); 
 swr_prop.test = prop_mat(:,:,~pox_idx & test_idx & k_idx); 
-swr_prop.all = prop_mat(:,:,~pox_idx &  k_idx); 
+swr_prop.all = prop_mat(:,:,~pox_idx & ~LT_idx & k_idx); 
 
 
 
@@ -365,38 +442,35 @@ if plot_flag == 1
     figure(301)
     clf
     subplot(2,2,1)
-    MS_bar_w_err(Spk_std(Spk_loc& Spk_pyr),  Spk_atyp(Spk_loc& Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2);
+    MS_bar_w_err(Spk_std(Spk_loc& Spk_pyr),  Spk_atyp(Spk_loc& Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2, 1);
     ylim([0 100])
     set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100], 'YTickLabel', {'0','1', '10', '100'},'fontsize', 10)
     title('Ca1 Pyramidal Cells')
     ylabel({'Within Ripple';'Firing Rate (Hz)'})
 
-    subplot(2,2,2)
-    [hb, eb, sc, p, stats]= MS_bar_w_err(Spk_std(~Spk_loc& Spk_pyr),  Spk_atyp(~Spk_loc& Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2);
-    % hb(1).FaceColor = 'flat';
-    hb(1).EdgeColor = 'none';
-    hb(1).FaceAlpha = 0.5;
 
+    subplot(2,2,2)
+    [hb, eb, sc, p, stats]= MS_bar_w_err(Spk_std(~Spk_loc& Spk_pyr),  Spk_atyp(~Spk_loc& Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2, 1);
     ylim([0 100])
     set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100], 'YTickLabel', {'0','1', '10', '100'},'fontsize', 10)
     title('Sub Pyramidal Cells')
 
 
     %
-    %  subplot(2,2,3)
-    %  MS_bar_w_err(Spk_std(Spk_loc & ~Spk_pyr),  Spk_atyp(Spk_loc & ~Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2);
-    %  ylim([0 200])
-    %  set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100], 'YTickLabel', {'0','1', '10', '100'},'fontsize', 10)
-    %  title('Ca1 interneurons')
-    %  ylabel({'Within Ripple';'Firing Rate (Hz)'})
-    %
-    %  subplot(2,2,4)
-    % [hb, eb, sc, p, stats]= MS_bar_w_err(Spk_std(~Spk_loc& ~Spk_pyr),  Spk_atyp(~Spk_loc & ~Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2);
-    % % hb.E
-    % hb.FaceColor = 'none';
-    %     ylim([0 200])
-    %  set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100], 'YTickLabel', {'0','1', '10', '100'},'fontsize', 10)
-    %  title('Sub interneurons')
+     subplot(2,2,3)
+     MS_bar_w_err(Spk_std(Spk_loc & ~Spk_pyr),  Spk_atyp(Spk_loc & ~Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2);
+     ylim([0 200])
+     set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100], 'YTickLabel', {'0','1', '10', '100'},'fontsize', 10)
+     title('Ca1 interneurons')
+     ylabel({'Within Ripple';'Firing Rate (Hz)'})
+
+     subplot(2,2,4)
+    [hb, eb, sc, p, stats]= MS_bar_w_err(Spk_std(~Spk_loc& ~Spk_pyr),  Spk_atyp(~Spk_loc & ~Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2);
+    % hb.E
+    hb.FaceColor = 'none';
+        ylim([0 200])
+     set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100], 'YTickLabel', {'0','1', '10', '100'},'fontsize', 10)
+     title('Sub interneurons')
 
 
     exportgraphics(gcf, [fig_dir filesep 'Spikes_in_SWRs.pdf'], 'ContentType', 'vector');
@@ -427,60 +501,79 @@ end
 figure(3005)
 clf
 
-% overall
 cond = 'all';
-subplot(2,2,1)
+subplot(2,3,1)
 cla
-h1 = MS_bar_w_err(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(1:2,4,:), 'omitmissing'))', [c_ord(2,:); c_ord(2,:)], 1, 'ttest', 1:2, 1);
+h1 = MS_bar_w_err(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(1:2,4,:), 'omitmissing'))', [c_ord(1,:); c_ord(1,:)], 1, 'ttest', 1:2, 1);
+ylim([0 1.25])
+set(gca, 'xtick', [1.5], 'XTickLabel', {'pre+post'})
 
-MS_bar_w_err(squeeze(swr_prop.(cond)(3,3,:))', squeeze(swr_prop.(cond)(3,4,:))', [c_ord(1,:); c_ord(1,:)], 1, 'ttest', 4:5,1);
-MS_bar_w_err(squeeze(mean(swr_prop.(cond)(4:5,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(4:5,4,:), 'omitmissing'))', [c_ord(3,:); c_ord(3,:)], 1, 'ttest', 7:8,1);
-MS_bar_w_err(squeeze(mean(swr_prop.(cond)(6:7,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(6:7,4,:), 'omitmissing'))', [c_ord(4,:); c_ord(4,:)], 1, 'ttest', 10:11,1);
+legend(h1, 'Std', 'box', 'off')
+title(['Sub SWRs in ' cond ' '])
+ylabel('Portion of SWRs')
 
-set(gca, 'xtick', [1.5 4.5 7.5 10.5], 'XTickLabel', {'pre-post', 'baseline', 'tones', 'trace'})
-
+cond = 'all';
+subplot(2,3,4)
+cla
+h1 = MS_bar_w_err(squeeze(swr_prop.(cond)(1,3,:))', squeeze(swr_prop.(cond)(2,3,:))', [c_ord(1,:)*.75; c_ord(1,:)], 1, 'ttest', 1:2);
+h1.EdgeColor = 'none';
+ylim([0 1.25])
+set(gca, 'xtick', [1 2], 'XTickLabel', {'pre', 'post'})
+ylabel('Portion of SWRs')
 title(['Sub SWRs in ' cond ' '])
 
-cond = 'hab';
-subplot(2,2,2)
+
+% overall
+cond = 'all';
+subplot(2,3,2)
 cla
-h1 = MS_bar_w_err(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(1:2,4,:), 'omitmissing'))', [c_ord(2,:); c_ord(2,:)], 1, 'ttest', 1:2, 1);
+MS_bar_w_err4(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(swr_prop.(cond)(3,3,:))',...
+    squeeze(mean(swr_prop.(cond)(4:5,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(6:7,3,:), 'omitmissing'))',...
+    c_ord(1:4,:), 1, 'anova1', 1:4, {'pre+post', 'baseline', 'tones', 'trace'});
 
-MS_bar_w_err(squeeze(swr_prop.(cond)(3,3,:))', squeeze(swr_prop.(cond)(3,4,:))', [c_ord(1,:); c_ord(1,:)], 1, 'ttest', 4:5,1);
-MS_bar_w_err(squeeze(mean(swr_prop.(cond)(4:5,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(4:5,4,:), 'omitmissing'))', [c_ord(3,:); c_ord(3,:)], 1, 'ttest', 7:8,1);
-MS_bar_w_err(squeeze(mean(swr_prop.(cond)(6:7,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(6:7,4,:), 'omitmissing'))', [c_ord(4,:); c_ord(4,:)], 1, 'ttest', 10:11,1);
+ylim([0 1.25])
+set(gca,'XTickLabel', {'pre+post', 'baseline', 'tones', 'trace'})
 
-set(gca, 'xtick', [1.5 4.5 7.5 10.5], 'XTickLabel', {'pre-post', 'baseline', 'tones', 'trace'})
+title(['Sub SWRs in ' cond ' '])
+ylabel('Portion of standard SWRs')
 
+cond = 'hab';
+subplot(2,3,3)
+cla
+MS_bar_w_err4(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(swr_prop.(cond)(3,3,:))',...
+    squeeze(mean(swr_prop.(cond)(4:5,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(6:7,3,:), 'omitmissing'))',...
+    c_ord(1:4,:), 1, 'anova1', 1:4, {'pre+post', 'baseline', 'tones', 'trace'});
+
+ylim([0 1.25])
+set(gca,'XTickLabel', {'pre+post', 'baseline', 'tones', 'trace'})
 title(['Sub SWRs in ' cond ' '])
 
 
 cond = 'train';
-subplot(2,2,3)
+subplot(2,3,5)
 cla
-h1 = MS_bar_w_err(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(1:2,4,:), 'omitmissing'))', [c_ord(2,:); c_ord(2,:)], 1, 'ttest', 1:2, 1);
+MS_bar_w_err4(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(3,3,:), 'omitmissing'))',...
+    squeeze(mean(swr_prop.(cond)(4:5,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(6:7,3,:), 'omitmissing'))',...
+    c_ord(1:4,:), 1, [], 1:4, {'pre+post', 'baseline', 'tones', 'trace'})
 
-MS_bar_w_err(squeeze(swr_prop.(cond)(3,3,:))', squeeze(swr_prop.(cond)(3,4,:))', [c_ord(1,:); c_ord(1,:)], 1, 'ttest', 4:5,1);
-MS_bar_w_err(squeeze(mean(swr_prop.(cond)(4:5,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(4:5,4,:), 'omitmissing'))', [c_ord(3,:); c_ord(3,:)], 1, 'ttest', 7:8,1);
-MS_bar_w_err(squeeze(mean(swr_prop.(cond)(6:7,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(6:7,4,:), 'omitmissing'))', [c_ord(4,:); c_ord(4,:)], 1, 'ttest', 10:11,1);
-
-set(gca, 'xtick', [1.5 4.5 7.5 10.5], 'XTickLabel', {'pre-post', 'baseline', 'tones', 'trace'})
-
+ylim([0 1.25])
+set(gca,'XTickLabel', {'pre+post', 'baseline', 'tones', 'trace'})
 title(['Sub SWRs in ' cond ' '])
-
 
 cond = 'test';
-subplot(2,2,4)
+subplot(2,3,6)
 cla
-h1 = MS_bar_w_err(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(1:2,4,:), 'omitmissing'))', [c_ord(2,:); c_ord(2,:)], 1, 'ttest', 1:2, 1);
+MS_bar_w_err4(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))',squeeze(swr_prop.(cond)(3,3,:))',...
+    squeeze(mean(swr_prop.(cond)(4:5,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(6:7,3,:), 'omitmissing'))',...
+    c_ord(1:4,:), 1, 'anova1', 1:4, {'pre+post', 'baseline', 'tones', 'trace'});
 
-MS_bar_w_err(squeeze(swr_prop.(cond)(3,3,:))', squeeze(swr_prop.(cond)(3,4,:))', [c_ord(1,:); c_ord(1,:)], 1, 'ttest', 4:5,1);
-MS_bar_w_err(squeeze(mean(swr_prop.(cond)(4:5,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(4:5,4,:), 'omitmissing'))', [c_ord(3,:); c_ord(3,:)], 1, 'ttest', 7:8,1);
-MS_bar_w_err(squeeze(mean(swr_prop.(cond)(6:7,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(6:7,4,:), 'omitmissing'))', [c_ord(4,:); c_ord(4,:)], 1, 'ttest', 10:11,1);
-
-set(gca, 'xtick', [1.5 4.5 7.5 10.5], 'XTickLabel', {'pre-post', 'baseline', 'tones', 'trace'})
+ylim([0 1.25])
+set(gca,'XTickLabel', {'pre+post', 'baseline', 'tones', 'trace'})
 
 title(['Sub SWRs in ' cond ' '])
+
+    exportgraphics(gcf, [fig_dir filesep 'task_phase.pdf'], 'ContentType', 'vector');
+
 %% make an event triggered spectrogram of the CA1 and Sub SWRs relative to the CA1 center using fieldtrip.
 
 % skip this if you don't want to deal with fieldtrip.
