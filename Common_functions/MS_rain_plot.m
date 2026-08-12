@@ -130,7 +130,7 @@ if ~isempty(stats)
         end
 
         % 3 way ploting
-         if p(1) < 0.05
+    if p(1) < 0.05
         fprintf('<strong>%s</strong> - F(<strong>%d</strong>,<strong>%d</strong>): <strong>%.2f</strong> p = <strong>%.5f</strong>\n',stats, stats_out.a_tbl{2,3},stats_out.stats.df, stats_out.stats.F, stats_out.a_tbl{2,6})
     else
         fprintf('<strong>%s</strong> - F(%d,%d): %.2f p = %.5f \n',stats, stats_out.a_tbl{2,3},stats_out.stats.df, stats_out.stats.F, stats_out.a_tbl{2,6})
@@ -261,20 +261,20 @@ if ~isempty(stats)
                 [h, p,~, stats_out] = ranksum(data_in(group_idx == grps(1)), data_in(group_idx == grps(2)));
                 eff_s = meanEffectSize(data_in(group_idx == grps(1)), data_in(group_idx == grps(2)), "Effect","cohen");
         end
-            if h
-        x_lim = xlim;
-        if (0.5 > p) && (p > 0.01)
-            text(max(data_in)+((x_lim(2)-x_lim(1))*.25),median(x_vals), '*', 'color', 'k', 'FontSize',10)
-        elseif (0.1 >= p) && (p >= 0.001)
-            text(max(data_in)+((x_lim(2)-x_lim(1))*.25),median(x_vals)*.95, '**', 'color', 'k', 'FontSize',10)
-        elseif p < 0.001
-            text(max(data_in)+((x_lim(2)-x_lim(1))*.25),median(x_vals)*.925, '***', 'color', 'k', 'FontSize',10)
-        elseif p < 0.0001
-            text(max(data_in)+((x_lim(2)-x_lim(1))*.25),median(x_vals)*.9, '****', 'color', 'k', 'FontSize',10)
+        if h
+            x_lim = xlim;
+            if (0.5 > p) && (p > 0.01)
+                text(max(data_in)+((x_lim(2)-x_lim(1))*.25),median(x_vals), '*', 'color', 'k', 'FontSize',10)
+            elseif (0.1 >= p) && (p >= 0.001)
+                text(max(data_in)+((x_lim(2)-x_lim(1))*.25),median(x_vals)*.95, '**', 'color', 'k', 'FontSize',10)
+            elseif p < 0.001
+                text(max(data_in)+((x_lim(2)-x_lim(1))*.25),median(x_vals)*.925, '***', 'color', 'k', 'FontSize',10)
+            elseif p < 0.0001
+                text(max(data_in)+((x_lim(2)-x_lim(1))*.25),median(x_vals)*.9, '****', 'color', 'k', 'FontSize',10)
+            end
+            % plot(max(data_in)+((x_lim(2)-x_lim(1))*.25),median(x_vals),  '*', 'color', 'k')
+            plot([max(data_in)+((x_lim(2)-x_lim(1))*.2) max(data_in)+((x_lim(2)-x_lim(1))*.2)], x_vals, '-k', 'linewidth', 1.5)
         end
-        % plot(max(data_in)+((x_lim(2)-x_lim(1))*.25),median(x_vals),  '*', 'color', 'k')
-        plot([max(data_in)+((x_lim(2)-x_lim(1))*.2) max(data_in)+((x_lim(2)-x_lim(1))*.2)], x_vals, '-k', 'linewidth', 1.5)
-    end
 
     if p(1) < 0.05
         fprintf('<strong>%s</strong> - t(<strong>%d</strong>) = <strong>%.2f</strong>, p = <strong>%.4f</strong> ',stats, stats_out.df,stats_out.tstat, p)
@@ -282,8 +282,8 @@ if ~isempty(stats)
         fprintf('<strong>%s</strong> - t(%d) = %.2f, p = %.5f ',stats, stats_out.df,stats_out.tstat, p)
     end
 
-    fprintf('| Cohen d = %.2f \n', eff_s.Effect);
-    fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f) \n\n',mean(data_in(group_idx == grps(1)), 'omitnan'),MS_SEM(data_in(group_idx == grps(1))),...
+    fprintf('| Cohen d = %.3f \n', eff_s.Effect);
+    fprintf('Group A (%.3f +/- %.3f)  Vs Group B (%.3f +/- %.3f) \n\n',mean(data_in(group_idx == grps(1)), 'omitnan'),MS_SEM(data_in(group_idx == grps(1))),...
         mean(data_in(group_idx == grps(2)), 'omitnan'),MS_SEM(data_in(group_idx == grps(2))))
 
     end
