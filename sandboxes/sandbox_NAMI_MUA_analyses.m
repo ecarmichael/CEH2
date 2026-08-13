@@ -245,11 +245,11 @@ for ii = length(out.mua_prop):-1:1
     end
 end
 
-mua_prop.all = prop_mat(:,:,~pox_idx ); 
+mua_prop.all = prop_mat(:,:,~pox_idx )*100; 
 
-mua_prop.hab = prop_mat(:,:,~pox_idx & hab_idx ); 
+mua_prop.hab = prop_mat(:,:,~pox_idx & hab_idx )*100; 
 % mua_prop.train = prop_mat(:,:,~pox_idx & train_idx & k_idx); 
-mua_prop.test = prop_mat(:,:,~pox_idx & test_idx ); 
+mua_prop.test = prop_mat(:,:,~pox_idx & test_idx )*100; 
 
 
 
@@ -262,22 +262,27 @@ fig_size = [100, 100, 500, 400]; % for consistent figure sizes.
 ft_size = 12;  %font size
 plot_flag =1;
 
-fig_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Inter_data\HF_Sub_SWR\Nami_figs';
-
+if ispc
+    fig_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Inter_data\HF_Sub_SWR\Nami_figs';
+else
+    fig_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/HF_Sub_SWR/Nami_figs';
+end
 
 %% plot the CCF for the Ca1 and Sub MUA peaks; 
     figure(1919)
     clf
+    subplot(2,2,1)
     plot(mua_ccf_tvec*1000, mua_ccf./max(mua_ccf,[],2));
     hold on
-    plot(mua_ccf_tvec*1000, mean(mua_ccf./max(mua_ccf,[],2)));
+    plot(mua_ccf_tvec*1000, mean(mua_ccf./max(mua_ccf,[],2)), 'k', 'LineWidth',2);
     
-    set(gca, 'xtick', -500:250:500, 'ytick', 0:.25:1)
+    legend('Sess 1', 'Sess 2', 'Sess 3', 'Sess 4', 'Sess 5', 'Mean', 'box', 'off')
+    set(gca, 'xtick', -50:25:50, 'ytick', 0:.25:1)
     ylabel({'Cross-correlation'; '(normalized)'})
     xlabel('Time from Ca1 Burst (ms)')
-    axis square
+    % axis square
 
-        % exportgraphics(gcf, [fig_dir filesep 'ccf_mua.pdf'], 'ContentType', 'vector');
+    exportgraphics(gcf, [fig_dir filesep 'ccf_mua.pdf'], 'ContentType', 'vector');
 
 %% get the proportion of SWRs per task phase
 
@@ -288,21 +293,21 @@ cond = 'all';
 subplot(2,3,1)
 cla
 h1 = MS_bar_w_err(squeeze(mean(mua_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(mean(mua_prop.(cond)(1:2,4,:), 'omitmissing'))', [c_ord(1,:); c_ord(1,:)], 1, 'ttest', 1:2, 1);
-ylim([0 1.25])
+ylim([0 100])
 set(gca, 'xtick', [1.5], 'XTickLabel', {'pre+post'})
 
 legend(h1, 'Std', 'box', 'off')
 title(['Sub SWRs in ' cond ' '])
-ylabel('Portion of bursts')
+ylabel('% of Bursts')
 
 cond = 'all';
 subplot(2,3,4)
 cla
-h1 = MS_bar_w_err(squeeze(mua_prop.(cond)(1,3,:))', squeeze(mua_prop.(cond)(2,3,:))', [c_ord(1,:)*.75; c_ord(1,:)], 1, 'ttest', 1:2);
+h1 = MS_bar_w_err(squeeze(mua_prop.(cond)(1,4,:))', squeeze(mua_prop.(cond)(2,4,:))', [c_ord(1,:)*.75; c_ord(1,:)], 1, 'ttest', 1:2);
 h1.EdgeColor = 'none';
-ylim([0 1.25])
+ylim([0 100])
 set(gca, 'xtick', [1 2], 'XTickLabel', {'pre', 'post'})
-ylabel('Portion of Ca1 leadings bursts')
+ylabel('% of Atypical Bursts')
 title(['Sub bursts in ' cond ' '])
 
 
@@ -310,24 +315,24 @@ title(['Sub bursts in ' cond ' '])
 cond = 'all';
 subplot(2,3,2)
 cla
-MS_bar_w_err4(squeeze(mean(mua_prop.(cond)(1:2,3,:), 'omitmissing')), squeeze(mua_prop.(cond)(3,3,:)),...
-    squeeze(mean(mua_prop.(cond)(4:5,3,:), 'omitmissing')), squeeze(mean(mua_prop.(cond)(6:7,3,:), 'omitmissing')),...
+MS_bar_w_err4(squeeze(mean(mua_prop.(cond)(1:2,4,:), 'omitmissing')), squeeze(mua_prop.(cond)(3,4,:)),...
+    squeeze(mean(mua_prop.(cond)(4:5,4,:), 'omitmissing')), squeeze(mean(mua_prop.(cond)(6:7,4,:), 'omitmissing')),...
     c_ord(1:4,:), 1, 'anova2', 1:4, {'pre+post', 'baseline', 'tones', 'trace'});
 
-ylim([0 1.25])
+ylim([0 100])
 set(gca,'XTickLabel', {'pre+post', 'baseline', 'tones', 'trace'})
 
 title(['Sub bursts in ' cond ' '])
-ylabel('Portion of Ca1 leadings bursts')
+ylabel('% of Atypical Bursts')
 
 cond = 'hab';
 subplot(2,3,3)
 cla
-MS_bar_w_err4(squeeze(mean(mua_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(mua_prop.(cond)(3,3,:))',...
-    squeeze(mean(mua_prop.(cond)(4:5,3,:), 'omitmissing'))', squeeze(mean(mua_prop.(cond)(6:7,3,:), 'omitmissing'))',...
+MS_bar_w_err4(squeeze(mean(mua_prop.(cond)(1:2,4,:), 'omitmissing'))', squeeze(mua_prop.(cond)(3,4,:))',...
+    squeeze(mean(mua_prop.(cond)(4:5,4,:), 'omitmissing'))', squeeze(mean(mua_prop.(cond)(6:7,4,:), 'omitmissing'))',...
     c_ord(1:4,:), 1, [], 1:4, {'pre+post', 'baseline', 'tones', 'trace'});
 
-ylim([0 1.25])
+ylim([0 100])
 set(gca,'XTickLabel', {'pre+post', 'baseline', 'tones', 'trace'})
 title(['Sub bursts in ' cond ' '])
 
@@ -346,11 +351,11 @@ title(['Sub bursts in ' cond ' '])
 cond = 'test';
 subplot(2,3,6)
 cla
-MS_bar_w_err4(squeeze(mean(mua_prop.(cond)(1:2,3,:), 'omitmissing')),squeeze(mua_prop.(cond)(3,3,:)),...
-    squeeze(mean(mua_prop.(cond)(4:5,3,:), 'omitmissing')), squeeze(mean(mua_prop.(cond)(6:7,3,:), 'omitmissing')),...
+MS_bar_w_err4(squeeze(mean(mua_prop.(cond)(1:2,4,:), 'omitmissing')),squeeze(mua_prop.(cond)(3,4,:)),...
+    squeeze(mean(mua_prop.(cond)(4:5,4,:), 'omitmissing')), squeeze(mean(mua_prop.(cond)(6:7,4,:), 'omitmissing')),...
     c_ord(1:4,:), 1, 'anova2', 1:4, {'pre+post', 'baseline', 'tones', 'trace'});
 
-ylim([0 1.25])
+ylim([0 100])
 set(gca,'XTickLabel', {'pre+post', 'baseline', 'tones', 'trace'})
 
 title(['Sub bursts in ' cond ' '])
