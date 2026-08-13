@@ -366,21 +366,6 @@ for iS = 1:length(f_list)
 end % end cross sessions.
 
 
-%% separate analysis using spike data
-for f_list = dir('pox*.mat');
-k_idx = ones(length(f_list),1);
-
-
-for iS = 1:length(f_list)
-    
-
-
-
-
-end
-end
-
-
 
 
 %% intra session stats
@@ -415,10 +400,10 @@ for ii = length(out.swr_prop):-1:1
 end
 
 
-swr_prop.hab = prop_mat(:,:,~pox_idx & hab_idx & k_idx); 
-swr_prop.train = prop_mat(:,:,~pox_idx & train_idx & k_idx); 
-swr_prop.test = prop_mat(:,:,~pox_idx & test_idx & k_idx); 
-swr_prop.all = prop_mat(:,:,~pox_idx & ~LT_idx & k_idx); 
+swr_prop.hab = prop_mat(:,:,~pox_idx & hab_idx & k_idx)*100; 
+swr_prop.train = prop_mat(:,:,~pox_idx & train_idx & k_idx)*100; 
+swr_prop.test = prop_mat(:,:,~pox_idx & test_idx & k_idx)*100; 
+swr_prop.all = prop_mat(:,:,~pox_idx & ~LT_idx & k_idx)*100; 
 
 
 
@@ -432,7 +417,11 @@ fig_size = [100, 100, 500, 400]; % for consistent figure sizes.
 ft_size = 12;  %font size
 plot_flag =1;
 
-fig_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Inter_data\HF_Sub_SWR\Nami_figs';
+if ispc
+    fig_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Inter_data\HF_Sub_SWR\Nami_figs';
+else
+    fig_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/HF_Sub_SWR/Nami_figs';
+end
 
 %% plot all of the data from across the subjects  %%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -505,21 +494,21 @@ cond = 'all';
 subplot(2,3,1)
 cla
 h1 = MS_bar_w_err(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(1:2,4,:), 'omitmissing'))', [c_ord(1,:); c_ord(1,:)], 1, 'ttest', 1:2, 1);
-ylim([0 1.25])
+ylim([0 100])
 set(gca, 'xtick', [1.5], 'XTickLabel', {'pre+post'})
 
 legend(h1, 'Std', 'box', 'off')
 title(['Sub SWRs in ' cond ' '])
-ylabel('Portion of SWRs')
+ylabel('% of Sub SWRs')
 
 cond = 'all';
 subplot(2,3,4)
 cla
-h1 = MS_bar_w_err(squeeze(swr_prop.(cond)(1,3,:))', squeeze(swr_prop.(cond)(2,3,:))', [c_ord(1,:)*.75; c_ord(1,:)], 1, 'ttest', 1:2);
+h1 = MS_bar_w_err(squeeze(swr_prop.(cond)(1,4,:))', squeeze(swr_prop.(cond)(2,4,:))', [c_ord(1,:)*.75; c_ord(1,:)], 1, 'ttest', 1:2);
 h1.EdgeColor = 'none';
-ylim([0 1.25])
+ylim([0 100])
 set(gca, 'xtick', [1 2], 'XTickLabel', {'pre', 'post'})
-ylabel('Portion of SWRs')
+ylabel('% of Atypical Sub SWRs')
 title(['Sub SWRs in ' cond ' '])
 
 
@@ -527,24 +516,36 @@ title(['Sub SWRs in ' cond ' '])
 cond = 'all';
 subplot(2,3,2)
 cla
-MS_bar_w_err4(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(swr_prop.(cond)(3,3,:))',...
-    squeeze(mean(swr_prop.(cond)(4:5,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(6:7,3,:), 'omitmissing'))',...
-    c_ord(1:4,:), 1, 'anova1', 1:4, {'pre+post', 'baseline', 'tones', 'trace'});
+data1 = squeeze(mean(swr_prop.(cond)(1:2,4,:), 'omitmissing'))'; 
+data2 = squeeze(swr_prop.(cond)(3,4,:))';
+data3 = squeeze(mean(swr_prop.(cond)(4:5,4,:), 'omitmissing'))'; 
+data4 = squeeze(mean(swr_prop.(cond)(6:7,4,:), 'omitmissing'))';
 
-ylim([0 1.25])
+n_idx = isnan(sum([data1; data2; data3; data4])); 
+
+MS_bar_w_err4(data1(~n_idx)',data2(~n_idx)', data3(~n_idx)', data4(~n_idx)',...
+    c_ord(1:4,:), 1, 'anova2', 1:4, {'pre+post', 'baseline', 'tones', 'trace'});
+
+ylim([0 100])
 set(gca,'XTickLabel', {'pre+post', 'baseline', 'tones', 'trace'})
 
 title(['Sub SWRs in ' cond ' '])
-ylabel('Portion of standard SWRs')
+ylabel('% of Atypical Sub SWRs')
 
 cond = 'hab';
 subplot(2,3,3)
 cla
-MS_bar_w_err4(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(swr_prop.(cond)(3,3,:))',...
-    squeeze(mean(swr_prop.(cond)(4:5,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(6:7,3,:), 'omitmissing'))',...
-    c_ord(1:4,:), 1, 'anova1', 1:4, {'pre+post', 'baseline', 'tones', 'trace'});
+data1 = squeeze(mean(swr_prop.(cond)(1:2,4,:), 'omitmissing'))'; 
+data2 = squeeze(swr_prop.(cond)(3,4,:))';
+data3 = squeeze(mean(swr_prop.(cond)(4:5,4,:), 'omitmissing'))'; 
+data4 = squeeze(mean(swr_prop.(cond)(6:7,4,:), 'omitmissing'))';
 
-ylim([0 1.25])
+n_idx = isnan(sum([data1; data2; data3; data4])); 
+
+MS_bar_w_err4(data1(~n_idx)',data2(~n_idx)', data3(~n_idx)', data4(~n_idx)',...
+    c_ord(1:4,:), 1, 'anova2', 1:4, {'pre+post', 'baseline', 'tones', 'trace'});
+
+ylim([0 100])
 set(gca,'XTickLabel', {'pre+post', 'baseline', 'tones', 'trace'})
 title(['Sub SWRs in ' cond ' '])
 
@@ -552,22 +553,28 @@ title(['Sub SWRs in ' cond ' '])
 cond = 'train';
 subplot(2,3,5)
 cla
-MS_bar_w_err4(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(3,3,:), 'omitmissing'))',...
-    squeeze(mean(swr_prop.(cond)(4:5,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(6:7,3,:), 'omitmissing'))',...
-    c_ord(1:4,:), 1, [], 1:4, {'pre+post', 'baseline', 'tones', 'trace'})
+MS_bar_w_err4(squeeze(mean(swr_prop.(cond)(1:2,4,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(3,4,:), 'omitmissing'))',...
+    squeeze(mean(swr_prop.(cond)(4:5,4,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(6:7,4,:), 'omitmissing'))',...
+    c_ord(1:4,:), 1, [], 1:4, {'pre+post', 'baseline', 'tones', 'trace'});
 
-ylim([0 1.25])
+ylim([0 100])
 set(gca,'XTickLabel', {'pre+post', 'baseline', 'tones', 'trace'})
 title(['Sub SWRs in ' cond ' '])
 
 cond = 'test';
 subplot(2,3,6)
 cla
-MS_bar_w_err4(squeeze(mean(swr_prop.(cond)(1:2,3,:), 'omitmissing'))',squeeze(swr_prop.(cond)(3,3,:))',...
-    squeeze(mean(swr_prop.(cond)(4:5,3,:), 'omitmissing'))', squeeze(mean(swr_prop.(cond)(6:7,3,:), 'omitmissing'))',...
-    c_ord(1:4,:), 1, 'anova1', 1:4, {'pre+post', 'baseline', 'tones', 'trace'});
+data1 = squeeze(mean(swr_prop.(cond)(1:2,4,:), 'omitmissing'))'; 
+data2 = squeeze(swr_prop.(cond)(3,4,:))';
+data3 = squeeze(mean(swr_prop.(cond)(4:5,4,:), 'omitmissing'))'; 
+data4 = squeeze(mean(swr_prop.(cond)(6:7,4,:), 'omitmissing'))';
 
-ylim([0 1.25])
+n_idx = isnan(sum([data1; data2; data3; data4])); 
+
+MS_bar_w_err4(data1(~n_idx)',data2(~n_idx)', data3(~n_idx)', data4(~n_idx)',...
+    c_ord(1:4,:), 1, 'anova2', 1:4, {'pre+post', 'baseline', 'tones', 'trace'});
+
+ylim([0 100])
 set(gca,'XTickLabel', {'pre+post', 'baseline', 'tones', 'trace'})
 
 title(['Sub SWRs in ' cond ' '])

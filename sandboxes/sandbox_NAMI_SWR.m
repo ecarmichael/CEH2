@@ -124,10 +124,10 @@
 
 
 %pox3256_TFCD4  %% done. CA1 great no Sub. Needs spikes. 
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-19_21-06-37_TFCD4/Record Node 117';
-% csc_idx = 1:4:96;
-% ts_prime = 0;
-% csc_idx = {'CH119', 'CH145'}; % CH71 and 115 are also decent for CA1
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-19_21-06-37_TFCD4/Record Node 117';
+csc_idx = 1:4:96;
+ts_prime = 0;
+csc_idx = {'CH119', 'CH145'}; % CH71 and 115 are also decent for CA1
 
 %pox3256_TFCD5 TO DO
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-20_21-00-10_TFCD5\Record Node 117';
