@@ -28,24 +28,37 @@ spike_ind = readNPY([data_dir filesep 'spike_times.npy']);
 spike_times = double(spike_ind)/spike_struct.sample_rate; % from  https://github.com/cortex-lab/spikes/blob/master/preprocessing/phyHelpers/loadKSdir.m
 spike_clusters = readNPY([data_dir filesep 'spike_clusters.npy']);
 
-% chan_shanks = readNPY([data_dir filesep 'channel_shanks.npy']); % not what I thought it was.
-chan_pos= readNPY([data_dir filesep 'spike_positions.npy']);
-% chan_map= readNPY([data_dir filesep 'channel_map.npy']);
-% chan_temp= readNPY([data_dir filesep 'templates.npy']);
+chan_shanks = readNPY([data_dir filesep 'channel_shanks.npy']); % not what I thought it was.
+spk_pos= readNPY([data_dir filesep 'spike_positions.npy']);
+chan_map= readNPY([data_dir filesep 'channel_map.npy']);
+
+chan_pos= readNPY([data_dir filesep 'channel_positions.npy']);
 
  % cgsFile = fullfile(data_dir, 'cluster_group.tsv')
+
 
 fid = fopen([data_dir filesep 'cluster_group.tsv']);
 C = textscan(fid, '%s%s');
 fclose(fid);
 
 fid = fopen([data_dir filesep 'cluster_info.tsv']);
-I= textscan(fid, '%s%s%s%s%s%s');
+I= textscan(fid, '%s%s%s%s%s%s%s%s%s%s%s');
 fclose(fid);
 
-I =I{6}(3:2:end); 
-I = str2double(I); 
+% split out the cluster info into arrays. 
+usr = []; 
+for ii = 1:length(I)
+    if ismember(ii, [4 9])
+            usr.(I{ii}{1}) = I{ii}(2:end); 
+    else
+    usr.(I{ii}{1}) = str2double(I{ii}(2:end)); 
+    end
+end
 
+% I =I{6}(2:end); 
+% I = str2double(I); 
+
+usr_params = fieldnames(usr); 
 
 cids = cellfun(@str2num, C{1}(2:end), 'uni', false);
 ise = cellfun(@isempty, cids);
@@ -75,14 +88,26 @@ cgs(isUns) = 3;
 % end
 %% extract the good units
 good_clusters_ids = cids(isGood);
+idx = find(isGood);
+
+% sort based on channel order. 
+[~, s_idx] = sort(usr.ch(idx)); 
+idx = idx(s_idx); 
+good_clusters_ids = good_clusters_ids(s_idx);
+
 S = [];
 S.type = 'ts';
 for ii = length(good_clusters_ids):-1:1
     S.t{ii} = (spike_times(spike_clusters == good_clusters_ids(ii)));
-    S.label{ii} = [num2str(good_clusters_ids(ii)) '-' num2str(I(ii))]; 
+    S.label{ii} = [num2str(usr.ch(idx(ii))) '-' num2str(usr.cluster_id(idx(ii)))]; 
     % S.usr{ii}.shank = chan_shanks(ii); 
-    S.usr{ii}.pos = chan_pos(ii,:); 
-    % S.usr{ii}.temp = chan_temp(:,:, ii); 
+    % S.usr{ii}.pos(:) = chan_pos(ii,:); 
+    % S.usr{ii}.chan = double(chan_map(ii)); 
+end
+
+% update the usr fields. 
+for ii = 1:length(usr_params)
+S.usr.(usr_params{ii})  = usr.(usr_params{ii})(idx);
 end
 
 S.cfg.history.mfun{1} = mfilename;
