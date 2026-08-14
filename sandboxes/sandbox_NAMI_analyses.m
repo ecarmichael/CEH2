@@ -579,7 +579,7 @@ set(gca,'XTickLabel', {'pre+post', 'baseline', 'tones', 'trace'})
 
 title(['Sub SWRs in ' cond ' '])
 
-    exportgraphics(gcf, [fig_dir filesep 'task_phase.pdf'], 'ContentType', 'vector');
+    % exportgraphics(gcf, [fig_dir filesep 'task_phase.pdf'], 'ContentType', 'vector');
 
 %% make an event triggered spectrogram of the CA1 and Sub SWRs relative to the CA1 center using fieldtrip.
 
