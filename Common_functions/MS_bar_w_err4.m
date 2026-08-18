@@ -344,6 +344,10 @@ else
     sc = [];
 end
 
+% set the group names on the xlabel
+
+set(gca, 'xtick', x_vals, 'XTickLabel', grp_labels);
+
 eb = errorbar(x_vals, [mean(data_a, 'omitnan'), mean(data_b,'omitnan'), mean(data_c,'omitnan'), mean(data_d,'omitnan')], [MS_SEM(data_a) ,MS_SEM(data_b), MS_SEM(data_c),MS_SEM(data_d)], -[MS_SEM(data_a) ,MS_SEM(data_b),MS_SEM(data_c), MS_SEM(data_d)]);
 eb.LineStyle = 'none';
 eb.Color = [.2 .2 .2 .2];

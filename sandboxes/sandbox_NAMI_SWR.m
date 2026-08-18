@@ -77,10 +77,10 @@
 % csc_idx = {'CH55', 'CH141'};
 
 %pox3568_TFCD2 % DONE Best CA1 and SWR, Spikes. 
-% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
-% csc_idx = 1:4:96;
-% ts_prime = 0;
-% csc_idx = {'CH124', 'CH149'};
+csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
+csc_idx = 1:4:96;
+ts_prime = 0;
+csc_idx = {'CH124', 'CH149'};
 
 %pox3568_TFCD3 % DONE CA1 good, no Sub SWR. 
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-22_14-58-53_TFCD3/Record Node 117';
@@ -124,10 +124,10 @@
 
 
 %pox3256_TFCD4  %% done. CA1 great no Sub. Needs spikes. 
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-19_21-06-37_TFCD4/Record Node 117';
-csc_idx = 1:4:96;
-ts_prime = 0;
-csc_idx = {'CH119', 'CH145'}; % CH71 and 115 are also decent for CA1
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-19_21-06-37_TFCD4/Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH119', 'CH145'}; % CH71 and 115 are also decent for CA1
 
 %pox3256_TFCD5 TO DO
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-20_21-00-10_TFCD5\Record Node 117';
@@ -145,10 +145,10 @@ ts_prime = readNPY([phy_dir filesep 'timestamps.npy']);
 ts_prime = ts_prime(1);
 
 for ii = length(S.label):-1:1
-    ch(ii) = S.usr.chan; %str2double(S.label{ii}(1:strfind(S.label{ii}, '-')-1)); 
+    % ch(ii) = S.usr.ch(ii); %str2double(S.label{ii}(1:strfind(S.label{ii}, '-')-1)); 
     S.t{ii} = S.t{ii}+ts_prime; % add the time offset back. 
 end
-S.loc = logical(S.u < 128); 
+S.loc = logical(S.usr.ch < 64); 
 % c_ord = MS_linspecer(2);
 % S.c_ord = [winter(sum(S.loc==1)); flipud(nebula(sum(S.loc==0)))]%repmat(c_ord(1,:),sum(S.loc==0),1)]; 
 
@@ -243,7 +243,7 @@ end
 
 % session info
 
-parts = strsplit(csc_dir,'/'); 
+parts = strsplit(csc_dir,filesep); 
 s_idx = contains(parts, '2026'); % find the folder containing '2026' since all the sessions of interest are from this time. 
 sess = parts{s_idx}; 
 subject = lower(sess(strfind(sess, 'Pox'): strfind(sess, 'Pox')+6));
@@ -410,7 +410,7 @@ cfg_mua.sigma = 0.01;
 S_ca = data.(this_name).S; 
 S_ca.t(~data.(this_name).S.loc) = []; 
 S_ca.label(~S.loc) = [];
-S_ca.usr(~S.loc) = [];
+% S_ca.usr(~S.loc) = [];
 mua = getMUA(cfg_mua, S_ca); % get the smoothed multiunit activity; 
 plot(mua.tvec, MS_norm_range(mua.data, 0, cfg.lfpHeight) - cfg.lfpHeight,'color', data.(this_name). S.c_ord(1,:))
 
@@ -418,7 +418,7 @@ plot(mua.tvec, MS_norm_range(mua.data, 0, cfg.lfpHeight) - cfg.lfpHeight,'color'
 S_sub = data.(this_name).S;
 S_sub.t(data.(this_name).S.loc) = [];
 S_sub.label(S.loc) = [];
-S_sub.usr(S.loc) = [];
+% S_sub.usr(S.loc) = [];
 mua = getMUA(cfg_mua, S_sub); % get the smoothed multiunit activity;
 c_idx = find(~S.loc); % just to get the first of the colour range
 plot(mua.tvec, MS_norm_range(mua.data, 0, cfg.lfpHeight) - cfg.lfpHeight-cfg.lfpSpacing,'color',  data.(this_name).S.c_ord(c_idx(1),:))
