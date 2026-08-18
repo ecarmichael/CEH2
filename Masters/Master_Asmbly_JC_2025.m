@@ -855,6 +855,26 @@ ylim([0 2]); yline(1, '--', 'color', [.7 .7 .7], 'linewidth',2)
 % exportgraphics(gcf, [fig_dir filesep 'FigS_HAT.pdf'], 'ContentType', 'vector');
 
 
+%% Figure 5 detected assemblies across conditions. 
+
+% num_a_mat = [];
+% cfg_ReAct.nShuff = 500;
+% cfg_ReAct.thresh = 99;
+% 
+% for ii  = 1:length(A_out)
+% 
+%         this_bin = A_out{iA}{1}.bins; 
+%         this_target = A_out{iA}{1}.REM_Post_data;  
+%         this_ref = A_out{iA}{1}.postREM_temp;  
+% 
+% 
+%         [REM_pre_proj{iB},REM_pre_stats{iB}, REM_pre_data{iB}, REM_pre_tvec{iB}, REM_Pre_shuff{iB}] = MS_Asmbly_ReAct(...
+%             cfg_ReAct, this_target, this_ref ,ms_trk_cut,  this_bin);
+% 
+% 
+% 
+% end
+
 %% Figure S 6:  get the behaviour plots for each fam and axiety sessions
 figure(1013)
 clf
@@ -2129,128 +2149,162 @@ exportgraphics(gcf, [fig_dir filesep 'Fig4_example_' A_out{P_idx}{1}.info.subjec
     % MS_Asmbly_plot_raster_ReAct_figure(A_out{iA}{iB}, fig_dir, 'REM_Post_data', [ 9 7 12 10])
 
 %% ReActivation stats across training/testing sets
-nReAct = NaN(3,3,length(A_out));
-nA_ReAct = nReAct;
-nReAct_Rate = nReAct;
-A_ReAct_Rate = nReAct;
-
-d_list = {'LTD1','LTD5', 'HATD1', 'HATD5', 'HATDSwitch'};
-sub_list = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252'};
-for iA = length(A_out):-1:1
-    
-    D_idx = find(contains(d_list,A_out{iA}{1}.info.session));
-    %     fprintf('%s\n', d_list{D_idx});
-    S_idx = find(contains(sub_list,A_out{iA}{1}.info.subject));
-    %     fprintf('%s - %s\n', A_out{iA}{1}.info.subject, sub_list{S_idx});
-    this_ReAct = MS_Asmbly_ReAct_Matrix(A_out{iA}{1});
-    
-    
-    nReAct(:,:,iA) = this_ReAct.nReAct;%./max(this_ReAct.nReAct, [], 'all');
-    nA_ReAct(:,:,iA) = this_ReAct.nA_ReAct./max(this_ReAct.nA_ReAct, [], 'all');
-    % nReAct_Rate(:,:,iA) = this_ReAct.nReAct_Rate./max(this_ReAct.nReAct_Rate, [], 'all');
-    A_ReAct_Rate(:,:,iA) = this_ReAct.A_ReAct_Rate./max(this_ReAct.A_ReAct_Rate, [], 'all');
-    labels = this_ReAct.info.labels;
-        
-end
-
-figure(7778)
-m = 4;
-subplot(m,4,1)
-imagesc(nanmean(nReAct(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
-title('number of reactivations'); colorbar; caxis([0 inf]);
-ylabel({'LTD1'; 'Target'});
-
-subplot(m,4,2)
-imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
-title('number of assemblies reactivated'); colorbar;clim([0 1]);
-
-% subplot(m,4,3)
-% imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
-% set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-% title('Rate(nA ./ length of recording)');colorbar; caxis([0 1]);
-
-subplot(m,4,4)
-imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
-title('ReAct Rate per assembly');     colorbar; clim([0 1]);
-
-
-% LTD5
-subplot(m,4,5)
-imagesc(nanmean(nReAct(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
-colorbar;  clim([0 inf]);
-ylabel({'LTD5'; 'Target'});
-
-
-subplot(m,4,6)
-imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
-colorbar; clim([0 1]);
-
-% subplot(m,4,7)
-% imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
-% set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-% colorbar; caxis([0 1]);
-
-subplot(m,4,8)
-imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
-colorbar; clim([0 1]);
-
-
-% HAT1
-subplot(m,4,9)
-
-imagesc(nanmean(nReAct(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
-colorbar; clim([0 inf]);
-ylabel({'HAT1'; 'Target'});
-
-subplot(m,4,10)
-imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
-colorbar; clim([0 1]);
-
-% subplot(m,4,11)
-% imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
-% set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-% colorbar; caxis([0 1]);
-
-subplot(m,4,12)
-imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
-colorbar; clim([0 1]);
-
-% HAT5
-subplot(m,4,13)
-
-imagesc(nanmean(nReAct(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
-colorbar; %caxis([0 1]);
-ylabel({'HAT5'; 'Target'});
-
-subplot(m,4,14)
-imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
-colorbar; clim([0 1]);
+% nReAct = NaN(3,3,length(A_out));
+% nA_ReAct = nReAct;
+% nReAct_Rate = nReAct;
+% A_ReAct_Rate = nReAct;
 % 
-% subplot(m,4,15)
-% imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
-% set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
-% colorbar; caxis([0 1]);
-
-subplot(m,4,16)
-imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
-set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
-colorbar; clim([0 1]);
-
-colormap(inferno)
-exportgraphics(gcf, [fig_dir filesep 'Fig5_Target_Ref_mat.pdf'], 'ContentType', 'vector');
-
-
+% d_list = {'LTD1','LTD5', 'HATD1', 'HATD5', 'HATDSwitch'};
+% sub_list = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252'};
+% for iA = length(A_out):-1:1
+% 
+%     D_idx = find(contains(d_list,A_out{iA}{1}.info.session));
+%     %     fprintf('%s\n', d_list{D_idx});
+%     S_idx = find(contains(sub_list,A_out{iA}{1}.info.subject));
+%     %     fprintf('%s - %s\n', A_out{iA}{1}.info.subject, sub_list{S_idx});
+%     this_ReAct = MS_Asmbly_ReAct_Matrix(A_out{iA}{1});
+% 
+% 
+%     nReAct(:,:,iA) = this_ReAct.nReAct;%./max(this_ReAct.nReAct, [], 'all');
+%     nA_ReAct(:,:,iA) = this_ReAct.nA_ReAct./max(this_ReAct.nA_ReAct, [], 'all');
+%     % nReAct_Rate(:,:,iA) = this_ReAct.nReAct_Rate./max(this_ReAct.nReAct_Rate, [], 'all');
+%     A_ReAct_Rate(:,:,iA) = this_ReAct.A_ReAct_Rate./max(this_ReAct.A_ReAct_Rate, [], 'all');
+%     labels = this_ReAct.info.labels;
+% 
+% end
+% 
+% %%
+% figure(7778)
+% m = 4;
+% subplot(m,4,1)
+% imagesc(nanmean(nReAct(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+% title('number of reactivations'); colorbar; caxis([0 inf]);
+% ylabel({'LTD1'; 'Target'});
+% 
+% subplot(m,4,2)
+% imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+% title('number of assemblies reactivated'); colorbar;clim([0 1]);
+% 
+% % subplot(m,4,3)
+% % imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
+% % set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+% % title('Rate(nA ./ length of recording)');colorbar; caxis([0 1]);
+% 
+% subplot(m,4,4)
+% imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 0)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+% title('ReAct Rate per assembly');     colorbar; clim([0 1]);
+% 
+% 
+% % LTD5
+% subplot(m,4,5)
+% imagesc(nanmean(nReAct(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+% colorbar;  clim([0 inf]);
+% ylabel({'LTD5'; 'Target'});
+% 
+% 
+% subplot(m,4,6)
+% imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+% colorbar; clim([0 1]);
+% 
+% % subplot(m,4,7)
+% % imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
+% % set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+% % colorbar; caxis([0 1]);
+% 
+% subplot(m,4,8)
+% imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 0)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+% colorbar; clim([0 1]);
+% 
+% 
+% % HAT1
+% subplot(m,4,9)
+% 
+% imagesc(nanmean(nReAct(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+% colorbar; clim([0 inf]);
+% ylabel({'HAT1'; 'Target'});
+% 
+% subplot(m,4,10)
+% imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+% colorbar; clim([0 1]);
+% 
+% % subplot(m,4,11)
+% % imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
+% % set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+% % colorbar; caxis([0 1]);
+% 
+% subplot(m,4,12)
+% imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 1 & anx_idx == 1)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+% colorbar; clim([0 1]);
+% 
+% % HAT5
+% subplot(m,4,13)
+% 
+% imagesc(nanmean(nReAct(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+% colorbar; %caxis([0 1]);
+% ylabel({'HAT5'; 'Target'});
+% 
+% subplot(m,4,14)
+% imagesc(nanmean(nA_ReAct(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+% colorbar; clim([0 1]);
+% % 
+% % subplot(m,4,15)
+% % imagesc(nanmean(nReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
+% % set(gca, 'xtick', 1:3, 'xticklabels', {'post', 'wake', 'pre'}, 'ytick', 1:3, 'yticklabels', {'post', 'wake', 'pre'})
+% % colorbar; caxis([0 1]);
+% 
+% subplot(m,4,16)
+% imagesc(nanmean(A_ReAct_Rate(:,:,(novel_idx == 0 & anx_idx == 1)), 3));
+% set(gca, 'xtick', 1:3, 'xticklabels', {'pre', 'wake', 'post'}, 'ytick', 1:3, 'yticklabels', {'pre', 'wake', 'post'})
+% colorbar; clim([0 1]);
+% 
+% colormap(inferno)
+% exportgraphics(gcf, [fig_dir filesep 'Fig5_Target_Ref_mat.pdf'], 'ContentType', 'vector');
+% 
+% 
+% %% Same nReact matrix but across sessions for each condition
+% 
+% nReAct_x = NaN(3,3,length(A_out), length(A_out));
+% % nA_ReAct = nReAct_x;
+% % nReAct_Rate = nReAct_x;
+% % A_ReAct_Rate = nReAct_x;
+% 
+% d_list = {'LTD1','LTD5', 'HATD1', 'HATD5', 'HATDSwitch'};
+% sub_list = {'pv1043', 'pv1060', 'pv1069', 'pv1191', 'pv1192', 'pv1252'};
+% 
+% for iA = length(A_out):-1:1
+% 
+%     for iAlt = length(A_out):-1:1
+% 
+%         if iA == iAlt
+%             continue
+%         else
+%             % D_idx = find(contains(d_list,A_out{iA}{1}.info.session));
+%             %     fprintf('%s\n', d_list{D_idx});
+%             % S_idx = find(contains(sub_list,A_out{iA}{1}.info.subject));
+%             %     fprintf('%s - %s\n', A_out{iA}{1}.info.subject, sub_list{S_idx});
+%             this_ReAct = MS_Asmbly_ReAct_across_Matrix(A_out{iAlt}{1}, A_out{iA}{1});
+% 
+%         end
+% 
+%     nReAct_x(:,:,iA, iAtl) = this_ReAct.nReAct;%./max(this_ReAct.nReAct, [], 'all');
+%     % nA_ReAct(:,:,iA,iAtl) = this_ReAct.nA_ReAct./max(this_ReAct.nA_ReAct, [], 'all');
+%     % nReAct_Rate(:,:,iA) = this_ReAct.nReAct_Rate./max(this_ReAct.nReAct_Rate, [], 'all');
+%     % A_ReAct_Rate(:,:,iA,iAtl) = this_ReAct.A_ReAct_Rate./max(this_ReAct.A_ReAct_Rate, [], 'all');
+%     labels = this_ReAct.info.labels;
+% 
+%     end
+% end
 
 %% count the amount of time in REM per sessions
 REM_dur = []; 

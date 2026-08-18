@@ -1,5 +1,5 @@
-function ReAct_out = MS_Asmbly_ReAct_Matrix(this_data, plot_flag)
-%% MS_Asmbly_ReAct_Matrix: count the number of 'siginificant' replays per training - testing pairs (PRE, Wake, Post).
+function ReAct_out = MS_Asmbly_ReAct_across_Matrix(target_data, ref_data, plot_flag)
+%% MS_Asmbly_ReAct_across_Matrix: count the number of 'siginificant' replays per training - testing pairs (PRE, Wake, Post) across sessions. 
 %
 %
 %
@@ -19,11 +19,11 @@ function ReAct_out = MS_Asmbly_ReAct_Matrix(this_data, plot_flag)
 %
 %% initialize
 
-if nargin < 2
+if nargin < 3
     plot_flag = 0;
 end
 %% split the data into target and reference sets
-if isempty(this_data.pREM_temp)
+if isempty(ref_data.pREM_temp)
     
     
 ReAct_out = [];
@@ -42,32 +42,32 @@ ReAct_out.info.descriptions{4} = 'A_ReAct_Rate: ReAct Rate per assemblys [mean(t
 else
 % Pre.pos = this_data.pREM_A_pos;
 % Pre.temp = this_data.pREM_temp;
-thresh.Pre = this_data.pREM_stats.R_thresh;
-thresh.Wake = this_data.A_W_Shuff.w_thresh;
-thresh.Post = this_data.postREM_stats.R_thresh;
+thresh.Pre = ref_data.pREM_stats.R_thresh;
+thresh.Wake = ref_data.A_W_Shuff.w_thresh;
+thresh.Post = ref_data.postREM_stats.R_thresh;
 
 %
-shuff.Pre = this_data.pREM_shuff.data;
-shuff.Wake = this_data.A_W_Shuff.shuff_proj;
-shuff.Post = this_data.postREM_shuff.data;
+shuff.Pre = ref_data.pREM_shuff.data;
+shuff.Wake = ref_data.A_W_Shuff.shuff_proj;
+shuff.Post = ref_data.postREM_shuff.data;
 
 
-data.Pre.Pre.proj = this_data.pREM_proj;
-data.Pre.Wake.proj = this_data.pREM_Wake_proj;
-% get the post proj
-data.Pre.Post.proj = assembly_activity(this_data.pREM_temp, this_data.REM_Post_data');
+% pre
+data.Pre.Pre.proj = assembly_activity(ref_data.pREM_temp, target_data.REM_Pre_data');
+data.Pre.Wake.proj = assembly_activity(ref_data.pREM_temp, target_data.wake_data');
+data.Pre.Post.proj = assembly_activity(ref_data.pREM_temp, target_data.REM_Post_data');
 
 
 % wake
-data.Wake.Pre.proj = this_data.REM_Pre_proj;
-data.Wake.Wake.proj = this_data.P_proj;
-data.Wake.Post.proj =  this_data.REM_Post_proj;
+data.Wake.Pre.proj = assembly_activity(ref_data.P_temp, target_data.REM_Pre_data');
+data.Wake.Wake.proj = assembly_activity(ref_data.P_temp, target_data.wake_data');
+data.Wake.Post.proj =  assembly_activity(ref_data.P_temp, target_data.REM_Post_data');
 
 % post
-data.Post.Pre.proj = assembly_activity(this_data.postREM_temp, this_data.REM_Pre_data');
-data.Post.Wake.proj = this_data.pREM_Wake_proj;
-% get the post proj
-data.Post.Post.proj = this_data.postREM_proj;
+data.Post.Pre.proj = assembly_activity(ref_data.postREM_temp, target_data.REM_Pre_data');
+data.Post.Wake.proj = assembly_activity(ref_data.postREM_temp, target_data.wake_data');
+data.Post.Post.proj = assembly_activity(ref_data.postREM_temp, target_data.REM_Post_data');
+
 
 %% loop over states and make a matrix
 
@@ -82,15 +82,15 @@ for ii = 1:length(states)
                 this_nReact = []; 
 
         if jj == 3 && ii ==2
-            this_nReact  = this_data.REM_Post_stats.p_val < .05; 
+            this_nReact  = ref_data.REM_Post_stats.p_val < .05; 
 
         elseif jj == 1 && ii ==2
-            this_nReact  = this_data.REM_Pre_stats.p_val < .05; 
+            this_nReact  = ref_data.REM_Pre_stats.p_val < .05; 
 
         elseif jj == 2 && ii ==2
             for kk  = size(data.(states{ii}).(states{jj}).proj,1):-1:1
                 this_nReact(kk) = sum(data.(states{ii}).(states{jj}).proj(kk,:) > thresh.(states{jj})(kk),2);
-                % % get the shuffle and zscore the number of events. 
+                % get the shuffle and zscore the number of events. 
                 % this_shuff = sum(squeeze(shuff.(states{jj})(:,kk,:)) > thresh.(states{jj})(kk),2); 
                 % % get the zscored number compared to shuffle for each
                 % % assembly.
@@ -109,13 +109,13 @@ for ii = 1:length(states)
 
         % ReAct_nA_ep(jj, ii) = sum(this_nReact >0)./ (length(data.(states{ii}).(states{jj}).proj)*this_data.bins);
         
-        ReAct_rate(jj, ii) = mean(this_nReact(this_nReact >0)./ (length(data.(states{ii}).(states{jj}).proj)*this_data.bins));
+        ReAct_rate(jj, ii) = mean(this_nReact(this_nReact >0)./ (length(data.(states{ii}).(states{jj}).proj)*ref_data.bins));
         
         labels{jj, ii} = ['tar-' states{jj} ' : ref-' states{ii}];
     end
 end
 
-
+%%
 if plot_flag
     figure(767)
     subplot(1,5,1)
