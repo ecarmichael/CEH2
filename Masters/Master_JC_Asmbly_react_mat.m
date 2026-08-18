@@ -628,6 +628,8 @@ react_z_mat(2,3) = mean(post.wake.this_z(~isinf(post.wake.this_z)), 'omitmissing
 
 % check the number of naïve assemblies vs chance. 
 
+pre_only_mat = pre.wake.this_z([1 6 10]) ; 
+
 
 
 %% summary images 
