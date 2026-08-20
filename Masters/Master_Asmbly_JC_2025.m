@@ -369,12 +369,12 @@ for iA = 1:length(A_out) % loop over sessions
                 
 
                 % % cell by cell basis
-                % A_out{iA}{iB}.p_diff_mem_open(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & cent_idx), 'omitmissing');
-                % A_out{iA}{iB}.p_diff_n_mem_open(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & cent_idx), 'omitmissing');
-                % 
-                % A_out{iA}{iB}.p_diff_mem_close(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
-                % A_out{iA}{iB}.p_diff_n_mem_close(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
-                % 
+                A_out{iA}{iB}.p_diff_mem_open(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & cent_idx), 'omitmissing');
+                A_out{iA}{iB}.p_diff_n_mem_open(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & cent_idx), 'omitmissing');
+
+                A_out{iA}{iB}.p_diff_mem_close(ii) = mean(p_diff_in{ii}(p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
+                A_out{iA}{iB}.p_diff_n_mem_close(ii) = mean(p_diff_in{ii}(~p_post{ii}.mem_idx & ~cent_idx), 'omitmissing');
+
 
                 % same but for pre vs task;
                 % p_wake_diff_in{ii} = ((p{ii}.in_A./p{ii}.out_A) ./ (p_pre{ii}.in_A./p_pre{ii}.out_A));
@@ -422,8 +422,8 @@ all_p_diff_n_mem = [all_p_diff_n_mem, A_out{iA}{iB}.p_diff_n_mem];
 
 
 % % open
-% all_p_diff_mem_open = [all_p_diff_mem_open, A_out{iA}{iB}.p_diff_mem_open];
-% all_p_diff_n_mem_open = [all_p_diff_n_mem_open, A_out{iA}{iB}.p_diff_n_mem_open];
+all_p_diff_mem_open = [all_p_diff_mem_open, A_out{iA}{iB}.p_diff_mem_open];
+all_p_diff_n_mem_open = [all_p_diff_n_mem_open, A_out{iA}{iB}.p_diff_n_mem_open];
 
 % all_p_wake_diff_mem_open = [all_p_wake_diff_mem_open, A_out{iA}{iB}.p_wake_diff_mem_open];
 % all_p_wake_diff_n_mem_open = [all_p_wake_diff_n_mem_open, A_out{iA}{iB}.p_wake_diff_n_mem_open];
@@ -433,9 +433,9 @@ all_p_diff_n_mem = [all_p_diff_n_mem, A_out{iA}{iB}.p_diff_n_mem];
 
 
 % % close
-% all_p_diff_mem_close = [all_p_diff_mem_close, A_out{iA}{iB}.p_diff_mem_close];
-% all_p_diff_n_mem_close = [all_p_diff_n_mem_close, A_out{iA}{iB}.p_diff_n_mem_close];
-% 
+all_p_diff_mem_close = [all_p_diff_mem_close, A_out{iA}{iB}.p_diff_mem_close];
+all_p_diff_n_mem_close = [all_p_diff_n_mem_close, A_out{iA}{iB}.p_diff_n_mem_close];
+
 % all_p_wake_diff_mem_close = [all_p_wake_diff_mem_close, A_out{iA}{iB}.p_wake_diff_mem_close];
 % all_p_wake_diff_n_mem_close = [all_p_wake_diff_n_mem_close, A_out{iA}{iB}.p_wake_diff_n_mem_close];
 % 
@@ -472,8 +472,10 @@ figure(1002)
 clf
 set(gcf,'Units','inch','OuterPosition',f_pos);
 y_scale = 'log'; y_lim = [0 10]; y_t = [0.1 1 10]; y_lim2 = [0 3]; 
+
+% FAM VS ANX
 % for memeber cells
-subplot(2,4,1)
+subplot(2,4,2)
 fprintf('<strong>diff participation members: Fam Anx</strong>\n')
 % data1 = all_p_diff_mem(p_n_idx); 
 data1 = all_p_diff_mem(p_f_idx); 
@@ -497,9 +499,10 @@ ylim(y_lim)
 % set(gca, 'ytick', y_t); 
 y_t = get(gca, 'ytick'); 
 
+% FAM VS ANX
 % for non-memeber cells
-subplot(2,4,5); cla
-fprintf('<strong>diff participation non-members: Nov Fam Anx</strong>\n')
+subplot(2,4,6); cla
+fprintf('<strong>diff participation non-members: Fam Anx</strong>\n')
 % data1 = all_p_diff_n_mem(p_n_idx); 
 data1 = all_p_diff_n_mem(p_f_idx); 
 data2 = all_p_diff_n_mem(p_a_idx); 
@@ -525,9 +528,9 @@ yline(1, '--', 'color', hex2rgb('#808080'));
 % set(gca, 'ytick', y_t); 
 
 
-% novel vs Fam
+% NOVEL VS FAM
 % for memeber cells
-subplot(2,4,2); cla
+subplot(2,4,1); cla
 fprintf('<strong>Post/Pre diff participation members: Nov Fam </strong>\n')
 data1 = all_p_diff_mem(p_n_idx); 
 data2 = all_p_diff_mem(p_f_idx); 
@@ -551,9 +554,9 @@ ylim(y_lim)
 y_t = get(gca, 'ytick'); 
 
 
-% novel vs Fam
+% NOVEL VS FAM
 % for non-memeber cells
-subplot(2,4,6); cla
+subplot(2,4,5); cla
 fprintf('<strong>Post/Prediff participation non-members: Nov Fam</strong>\n')
 data1 = all_p_diff_n_mem(p_n_idx); 
 data2 = all_p_diff_n_mem(p_f_idx); 
@@ -704,18 +707,18 @@ y_t = get(gca, 'ytick');
 % OPEN for memeber cells
 subplot(2,4,4)
 fprintf('<strong>diff participation members Open vs closed</strong>\n')
-data1 = all_p_diff_mem(p_a_idx & all_cent == 1); 
-data2 = all_p_diff_mem(p_a_idx & all_cent == 0);
-% data3 = all_p_diff_mem_open(p_a_idx); 
-
-% fam anx data to scale the log plot properly. 
-data1 = all_p_diff_mem(p_f_idx); 
-data2 = all_p_diff_mem(p_a_idx); 
-[h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 1:2);
+% data1 = all_p_diff_mem(p_a_idx & all_cent == 1); 
+% data2 = all_p_diff_mem(p_a_idx & all_cent == 0);
+% % data3 = all_p_diff_mem_open(p_a_idx); 
+% 
+% % fam anx data to scale the log plot properly. 
+data1 = all_p_diff_mem_open(p_a_idx); 
+data2 = all_p_diff_mem_close(p_a_idx); 
+% [h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 1:2);
 
 % actual data
-data1 = all_p_diff_mem(p_a_idx & all_cent == 0); 
-data2 = all_p_diff_mem(p_a_idx & all_cent == 1);
+% data1 = all_p_diff_mem(p_a_idx & all_cent == 0); 
+% data2 = all_p_diff_mem(p_a_idx & all_cent == 1);
 [h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 3:4);
 eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
 h.LineWidth = 1; h.FaceColor = "none";
@@ -736,13 +739,13 @@ subplot(2,4,8)
 fprintf('<strong>diff participation non-members Open vs closed</strong>\n')
 
 % fam vs anx for scaling
-data1 = all_p_diff_n_mem(p_f_idx); 
-data2 = all_p_diff_n_mem(p_a_idx); 
-[h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 1:2);
+data1 = all_p_diff_n_mem_open(p_a_idx); 
+data2 = all_p_diff_n_mem_close(p_a_idx); 
+% [h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 1:2);
 
 % real data
-data1 = all_p_diff_n_mem(p_a_idx & all_cent == 0); 
-data2 = all_p_diff_n_mem(p_a_idx & all_cent == 1);
+% data1 = all_p_diff_n_mem(p_a_idx & all_cent == 0); 
+% data2 = all_p_diff_n_mem(p_a_idx & all_cent == 1);
 [h, eb, sc] = MS_bar_w_err(data1, data2, [hex2rgb('#808080');f_ord(1,:)],1, 'ttest2', 3:4);
 eb.LineWidth = 1; eb.CapSize = 6; %eb.Color = 'k'; eb.LineStyle = "--"; eb
 h.LineWidth = 1; h.FaceColor = "none";
@@ -762,7 +765,8 @@ set(gca, 'ytick', y_t);
 
 
 
-%% Check if there is a correlation between open arm 
+%% ANXIETY TRACK 
+%Check if there is a correlation between open arms 
 % p_a_idx = ismember(sess_id, a_idx(1)); 
 
 % convert to two arrays
@@ -1431,7 +1435,51 @@ else
 end
 
 
+% WAKE vs POST VS SHUFF  N
+
+
 subplot(2,4,7); cla
+% fprintf('<strong>Rate wake vs Shuff</strong>\n')
+% 
+data_1 = wake_n_Asmbly(~anx_idx, 1); 
+data_2 = wake_s_Asmbly(~anx_idx, 1); 
+% 
+% [h, p, stats] = MS_rain_plot([data_1; data_2], [ones(size(data_1)), ones(size(data_2))*2], [f_ord(2,:); hex2rgb('#808080')],'ttest2', 1:2, 'wiskers');
+[h, eb, sc, p, stats] = MS_bar_w_err(data_1',data_2', [f_ord(2,:); hex2rgb('#808080')],1, 'ttest', 1:2); 
+
+
+eb.LineWidth = .5; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 10; sc{2}.SizeData = 10; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = 'k'; 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+
+hold on
+fprintf('<strong>Rate POST vs Shuff</strong>\n')
+
+data_3 = Post_n_Asmbly(~anx_idx, 1); 
+data_4 = Post_s_Asmbly(~anx_idx, 1); 
+
+% [h, p, stats] = MS_rain_plot([data_1; data_2], [ones(size(data_1)), ones(size(data_2))*2], [f_ord(5,:); hex2rgb('#808080')],'ttest2', 1:2, 'wiskers');
+[h, eb, sc, p, stats] = MS_bar_w_err(data_3',data_4', [f_ord(5,:); hex2rgb('#808080')],1, 'ttest', 4:5); 
+
+
+eb.LineWidth = .5; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 10; sc{2}.SizeData = 10; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = 'k'; 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
+ylabel('N Sig. Assemblies')
+set(gca,'xtick', [1 2 4 5], 'xticklabel', {'Wake', 'Shuff', 'Post' 'Shuff'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 5.5])
+
+
+
+
+% WAKE vs POST vs SHUFF RATE
+subplot(2,4,8); cla
 fprintf('<strong>Rate wake vs Shuff</strong>\n')
 
 [h, p, stats] = MS_rain_plot(wake_r_tbl{1}.Rate(~wake_a_idx),wake_r_tbl{1}.ctrl(~wake_a_idx),[f_ord(2,:); hex2rgb('#808080')],'ttest2', 1:2, 'wiskers');
@@ -1489,7 +1537,10 @@ end
  
 % N assemblies wake vs REM vs shuffles
 
-% [p, tbl, stats] = anova2([data_1, data_2, data_3, data_4]);
+data_1 = wake_n_Asmbly(~anx_idx, 1); 
+data_2 = wake_s_Asmbly(~anx_idx, 1); 
+data_3 = Post_n_Asmbly(~anx_idx, 1); 
+data_4 = Post_s_Asmbly(~anx_idx, 1); 
 
 % make a table
 N_sig_tbl = array2table([data_1, data_2, data_3, data_4], 'VariableNames', {'Wake', 'Wake S', 'REM', 'REM_S'});

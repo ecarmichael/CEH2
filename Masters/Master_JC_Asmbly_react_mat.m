@@ -90,6 +90,9 @@ React_labels{3,1} = 'Ref_pre_tar_post';
 ReAct{1, 2} = MS_Asmbly_x_check(A_out, 'wake', 'pre');
 React_labels{1,2} = 'Ref_wake_tar_pre'; 
 
+ReAct{2, 2} = MS_Asmbly_x_check(A_out, 'wake', 'wake');
+React_labels{1,2} = 'Ref_wake_tar_wake'; 
+
 ReAct{3, 2} = MS_Asmbly_x_check(A_out, 'wake', 'post');
 React_labels{3,2} = 'Ref_wake_tar_post'; 
 
@@ -99,6 +102,8 @@ React_labels{1,3} = 'Ref_post_tar_pre';
 ReAct{2, 3} = MS_Asmbly_x_check(A_out, 'post', 'wake');
 React_labels{2,3} = 'Ref_post_tar_wake'; 
 
+
+sess_ord = [1 6 10 2 7 11 18 3 12 13 15 4 8 16 5 9 14 17]; 
 %% collect the novel sessions
 
 react_mat = NaN(3,3); 
@@ -107,13 +112,15 @@ pre = []; wake = []; post = [];
 
 % restrict to novel day only
 novel_idx = [1 6 10]; 
-idx = 1:size(ReAct{2,1}.J_n_ass,1);
+idx = 1:size(ReAct{2,1}.P_r_ass,1);
 
 
 % Pre temp wake data
-this_react = ReAct{2,1}.J_n_ass; 
 this_idx = novel_idx; 
+this_type = 'P_r_ass'; 
 
+
+this_react = ReAct{2,1}.(this_type); 
 for ii = this_idx
     k_idx = idx ~=ii;
     pre.wake.this_n(ii) = this_react(ii,ii);
@@ -127,7 +134,7 @@ react_z_mat(2,1) = mean(pre.wake.this_z(this_idx), 'omitmissing');
 
 
 % Pre temp post data
-this_react = ReAct{3,1}.J_n_ass; 
+this_react = ReAct{3,1}.(this_type); 
 
 for ii = this_idx
     k_idx = idx ~=ii;
@@ -142,7 +149,7 @@ react_z_mat(3,1) = mean(pre.post.this_z(this_idx), 'omitmissing');
 
 
 % wake temp pre data
-this_react = ReAct{1,2}.J_n_ass; 
+this_react = ReAct{1,2}.(this_type); 
 
 for ii = this_idx
     k_idx = idx ~=ii;
@@ -157,7 +164,7 @@ react_z_mat(1,2) = mean(wake.pre.this_z(this_idx), 'omitmissing');
 
 
 % wake temp pre data
-this_react = ReAct{3,2}.J_n_ass; 
+this_react = ReAct{3,2}.(this_type); 
 
 for ii = this_idx
     k_idx = idx ~=ii;
@@ -172,7 +179,7 @@ react_z_mat(3,2) = mean(wake.post.this_z(this_idx), 'omitmissing');
 
 
 % post temp pre data
-this_react = ReAct{1,3}.J_n_ass; 
+this_react = ReAct{1,3}.(this_type);  
 
 for ii = this_idx
     k_idx = idx ~=ii;
@@ -187,7 +194,7 @@ react_z_mat(1,3) = mean(post.pre.this_z(this_idx), 'omitmissing');
 
 
 % post temp wake data
-this_react = ReAct{2,3}.J_n_ass; 
+this_react = ReAct{2,3}.(this_type);  
 
 for ii = this_idx
     k_idx = idx ~=ii;
@@ -202,42 +209,46 @@ react_z_mat(2,3) = mean(post.wake.this_z(this_idx), 'omitmissing');
 
 
 %% summary images 
-figure(1012)
 
-subplot(2,2,1)
-imagesc(1:3,1:3,react_mat)
+f_pos = [1 6 6.25*1.5 3.4*1.5]; 
+figure(1012)
+clf
+set(gcf,'Units','inch','OuterPosition',f_pos);
+
+subplot(2,4,1)
+imagesc(1:3,1:3,react_mat*100)
 
 title('N Sig React Assemblies')
 cd = colorbar;
 cd.Position = cd.Position +[0.05 0 0 0];
-clim([0 max(react_mat,[],  'all')]);
+clim([0 max(react_mat*100,[],  'all')]);
 axis square
 ylabel('Target')
 xlabel('Ref')
 colormap(inferno)
 set(gca, 'xtick', 1:3, 'xticklabel', {'Pre', 'Wake', 'Post'},'ytick', 1:3,  'YTickLabel', {'Pre', 'Wake', 'Post'})
 
-MS_imagesc_append_values(react_mat,1:3,1:3)
+MS_imagesc_append_values(react_mat*100,1:3,1:3)
 
 
 
-subplot(2,2,2)
-imagesc(1:3,1:3,react_alt_mat)
+subplot(2,4,2)
+imagesc(1:3,1:3,react_alt_mat*100)
 
 title('Alt Sig React Assemblies')
 cd = colorbar;
 cd.Position = cd.Position +[0.05 0 0 0];
-clim([0 max(react_mat,[],  'all')]);
+clim([0 max(react_mat*100,[],  'all')]);
 axis square
 ylabel('Target')
 xlabel('Ref')
 colormap(inferno)
 set(gca, 'xtick', 1:3, 'xticklabel', {'Pre', 'Wake', 'Post'},'ytick', 1:3,  'YTickLabel', {'Pre', 'Wake', 'Post'})
 
-MS_imagesc_append_values(react_alt_mat,1:3,1:3)
+MS_imagesc_append_values(react_alt_mat*100,1:3,1:3)
 
 
-subplot(2,2,3)
+subplot(2,4,3)
 imagesc(1:3,1:3,react_z_mat)
 
 title('Z Sig React Assemblies')
@@ -251,15 +262,32 @@ xlabel('Ref')
 colormap(inferno)
 set(gca, 'xtick', 1:3, 'xticklabel', {'Pre', 'Wake', 'Post'},'ytick', 1:3,  'YTickLabel', {'Pre', 'Wake', 'Post'})
 
-MS_imagesc_append_values(react_mat,1:3,1:3)
+MS_imagesc_append_values(react_mat*100,1:3,1:3)
 
 
-subplot(2,2,4)
+subplot(2,4,5)
 cla
 MS_bar_w_err4(pre.wake.this_z(novel_idx), pre.post.this_z(novel_idx), post.wake.this_z(novel_idx), post.pre.this_z(novel_idx), [MS_linspecer(4)], 1, 'anova1', [ 1 2 4 5], {'pre-wake', ...
     'pre-post', 'post-wake', 'post-pre'})
 ylim([0 12])
 yline(2, '--k')
+
+
+subplot(2,4,6)
+cla
+MS_bar_w_err(pre.wake.this_n(novel_idx)*100, pre.wake.this_alt_n(novel_idx)*100, [MS_linspecer(2)], 1, 'ttest', [1 2],1); 
+ylim([0 120])
+
+subplot(2,4,7)
+cla
+MS_bar_w_err(wake.pre.this_n(novel_idx)*100, wake.pre.this_alt_n(novel_idx)*100, [MS_linspecer(2)], 1, 'ttest', [1 2],1); 
+ylim([0 120])
+
+subplot(2,4,8)
+cla
+MS_bar_w_err(post.pre.this_n(novel_idx)*100, post.pre.this_alt_n(novel_idx)*100, [MS_linspecer(2)], 1, 'ttest', [1 2],1); 
+ylim([0 120])
+
 
 % set(gca, 'xtick', 1:3, 'xticklabel', {'Pre', 'Wake', 'Post'},'ytick', 1:3,  'YTickLabel', {'Pre', 'Wake', 'Post'})
 
@@ -274,11 +302,11 @@ pre = []; wake = []; post = [];
 
 % restrict to novel day only
 fam_idx = [2 7 11 18]; 
-idx = 1:size(ReAct{2,1}.J_n_ass,1);
+idx = 1:size(ReAct{2,1}.(this_type),1);
 
 
 % Pre temp wake data
-this_react = ReAct{2,1}.J_n_ass; 
+this_react = ReAct{2,1}.(this_type); 
 this_idx = fam_idx; 
 
 for ii = this_idx
@@ -294,7 +322,7 @@ react_z_mat(2,1) = mean(pre.wake.this_z(this_idx), 'omitmissing');
 
 
 % Pre temp post data
-this_react = ReAct{3,1}.J_n_ass; 
+this_react = ReAct{3,1}.(this_type); 
 
 for ii = this_idx
     k_idx = idx ~=ii;
@@ -309,7 +337,7 @@ react_z_mat(3,1) = mean(pre.post.this_z(this_idx), 'omitmissing');
 
 
 % wake temp pre data
-this_react = ReAct{1,2}.J_n_ass; 
+this_react = ReAct{1,2}.(this_type); 
 
 for ii = this_idx
     k_idx = idx ~=ii;
@@ -324,7 +352,7 @@ react_z_mat(1,2) = mean(wake.pre.this_z(this_idx), 'omitmissing');
 
 
 % wake temp pre data
-this_react = ReAct{3,2}.J_n_ass; 
+this_react = ReAct{3,2}.(this_type); 
 
 for ii = this_idx
     k_idx = idx ~=ii;
@@ -339,7 +367,7 @@ react_z_mat(3,2) = mean(wake.post.this_z(this_idx), 'omitmissing');
 
 
 % post temp pre data
-this_react = ReAct{1,3}.J_n_ass; 
+this_react = ReAct{1,3}.(this_type); 
 
 for ii = this_idx
     k_idx = idx ~=ii;
@@ -354,7 +382,7 @@ react_z_mat(1,3) = mean(post.pre.this_z(this_idx), 'omitmissing');
 
 
 % post temp wake data
-this_react = ReAct{2,3}.J_n_ass; 
+this_react = ReAct{2,3}.(this_type);  
 
 for ii = this_idx
     k_idx = idx ~=ii;
@@ -373,44 +401,46 @@ react_z_mat(2,3) = mean(post.wake.this_z(this_idx), 'omitmissing');
 
 
 %% summary images 
+f_pos = [1 6 6.25*1.5 3.4*1.5]; 
 figure(1013)
 clf
+set(gcf,'Units','inch','OuterPosition',f_pos);
 
-subplot(2,2,1)
-imagesc(1:3,1:3,react_mat)
+subplot(2,4,1)
+imagesc(1:3,1:3,react_mat*100);
 
-title('N Sig React Assemblies')
+title('% Sig React Assemblies')
 cd = colorbar;
 cd.Position = cd.Position +[0.05 0 0 0];
-clim([0 max(react_mat,[],  'all')]);
+clim([0 max(react_mat*100,[],  'all')]);
 axis square
 ylabel('Target')
 xlabel('Ref')
 colormap(inferno)
-set(gca, 'xtick', 1:3, 'xticklabel', {'Pre', 'Wake', 'Post'},'ytick', 1:3,  'YTickLabel', {'Pre', 'Wake', 'Post'})
+set(gca, 'xtick', 1:3, 'xticklabel', {'Pre', 'Wake', 'Post'},'ytick', 1:3,  'YTickLabel', {'Pre', 'Wake', 'Post'});
 
-MS_imagesc_append_values(react_mat,1:3,1:3)
+MS_imagesc_append_values(react_mat*100,1:3,1:3)
 
 
 
-subplot(2,2,2)
-imagesc(1:3,1:3,react_alt_mat)
+subplot(2,4,2)
+imagesc(1:3,1:3,react_alt_mat*100);
 
 title('Alt Sig React Assemblies')
 cd = colorbar;
 cd.Position = cd.Position +[0.05 0 0 0];
-clim([0 max(react_mat,[],  'all')]);
+clim([0 max(react_mat*100,[],  'all')]);
 axis square
 ylabel('Target')
 xlabel('Ref')
 colormap(inferno)
-set(gca, 'xtick', 1:3, 'xticklabel', {'Pre', 'Wake', 'Post'},'ytick', 1:3,  'YTickLabel', {'Pre', 'Wake', 'Post'})
+set(gca, 'xtick', 1:3, 'xticklabel', {'Pre', 'Wake', 'Post'},'ytick', 1:3,  'YTickLabel', {'Pre', 'Wake', 'Post'});
 
 MS_imagesc_append_values(react_alt_mat,1:3,1:3)
 
 
-subplot(2,2,3)
-imagesc(1:3,1:3,react_z_mat)
+subplot(2,4,3)
+imagesc(1:3,1:3,react_z_mat);
 
 title('Z Sig React Assemblies')
 cd = colorbar;
@@ -421,21 +451,113 @@ axis square
 ylabel('Target')
 xlabel('Ref')
 colormap(inferno)
-set(gca, 'xtick', 1:3, 'xticklabel', {'Pre', 'Wake', 'Post'},'ytick', 1:3,  'YTickLabel', {'Pre', 'Wake', 'Post'})
+set(gca, 'xtick', 1:3, 'xticklabel', {'Pre', 'Wake', 'Post'},'ytick', 1:3,  'YTickLabel', {'Pre', 'Wake', 'Post'});
 
-MS_imagesc_append_values(react_mat,1:3,1:3)
+MS_imagesc_append_values(react_mat*100,1:3,1:3)
 
 
-subplot(2,2,4)
+subplot(2,4,5)
 cla
 MS_bar_w_err4(pre.wake.this_z(this_idx), pre.post.this_z(this_idx), post.wake.this_z(this_idx), post.pre.this_z(this_idx), [MS_linspecer(4)], 1, 'anova1', [ 1 2 4 5], {'pre-wake', ...
-    'pre-post', 'post-wake', 'post-pre'})
+    'pre-post', 'post-wake', 'post-pre'});
 ylim([0 12])
 yline(2, '--k')
 
 % set(gca, 'xtick', 1:3, 'xticklabel', {'Pre', 'Wake', 'Post'},'ytick', 1:3,  'YTickLabel', {'Pre', 'Wake', 'Post'})
 
+subplot(2,4,6)
+cla
+MS_bar_w_err(pre.wake.this_n(fam_idx)*100, pre.wake.this_alt_n(fam_idx)*100, [MS_linspecer(2)], 1, 'ttest', [1 2],1); 
+ylim([0 120])
+
+subplot(2,4,7)
+cla
+MS_bar_w_err(wake.pre.this_n(fam_idx)*100, wake.pre.this_alt_n(fam_idx)*100, [MS_linspecer(2)], 1, 'ttest', [1 2],1); 
+ylim([0 120])
+
 exportgraphics(gcf, ['Fig5_asmbly_react_x_check_fam.pdf'])
+
+%% Figure 2G
+f_ord = [[253, 22, 26];[255, 179, 13]; [132, 147, 35];[67, 127, 151]; [0, 42, 95]]/255;
+
+
+% grab the data:
+% wake temp pre data
+
+this_idx = sort([novel_idx fam_idx]); 
+this_type = 'J_n_ass'; 
+this_react = ReAct{2,2}.(this_type); 
+
+for ii = 1:length(this_react)
+    k_idx = idx ~=ii;
+    wake_in_wake.this_n(ii) = this_react(ii,ii);
+    wake_in_wake.this_alt_n(ii) = mean(this_react(ii,k_idx), "omitmissing");
+    wake_in_wake.this_z(ii) = (this_react(ii,ii) - mean(this_react(ii,k_idx), "omitmissing")) / std(this_react(ii,k_idx), "omitmissing");
+    if isinf(wake_in_wake.this_z(ii)); wake_in_wake.this_z(ii) = NaN; end
+    nWake(ii) = size(A_out{ii}{1}.P_proj,1); 
+end
+
+
+this_react = ReAct{3,2}.(this_type); 
+
+for ii = 1:length(this_react)
+    k_idx = idx ~=ii;
+    wake_in_post.this_n(ii) = this_react(ii,ii);
+    wake_in_post.this_alt_n(ii) = mean(this_react(ii,k_idx), "omitmissing");
+    wake_in_post.this_z(ii) = (this_react(ii,ii) - mean(this_react(ii,k_idx), "omitmissing")) / std(this_react(ii,k_idx), "omitmissing");
+    if isinf(wake_in_post.this_z(ii)); wake_in_post.this_z(ii) = NaN; end
+end
+
+
+data_1 = nWake(this_idx); 
+data_2 = wake_in_wake.this_alt_n(this_idx);
+data_3 = wake_in_post.this_n(this_idx); 
+data_4 = wake_in_post.this_alt_n(this_idx); 
+
+
+% plot
+f_pos = [1 6 6.25*1.5 3.4*1.5]; 
+figure(200)
+clf
+set(gcf,'Units','inch','OuterPosition',f_pos);
+
+subplot(2,4,1)
+  
+% [h, p, stats] = MS_rain_plot([data_1; data_2], [ones(size(data_1)), ones(size(data_2))*2], [f_ord(2,:); hex2rgb('#808080')],'ttest2', 1:2, 'wiskers');
+[h, eb, sc, p, stats] = MS_bar_w_err(data_1,data_2, [f_ord(2,:); hex2rgb('#808080')],1, 'ttest', 1:2); 
+
+
+eb.LineWidth = .5; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 10; sc{2}.SizeData = 10; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = 'k'; 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+
+hold on
+fprintf('<strong>Rate POST vs Shuff</strong>\n')
+
+
+
+% [h, p, stats] = MS_rain_plot([data_1; data_2], [ones(size(data_1)), ones(size(data_2))*2], [f_ord(5,:); hex2rgb('#808080')],'ttest2', 1:2, 'wiskers');
+[h, eb, sc, p, stats] = MS_bar_w_err(data_3,data_4, [f_ord(5,:); hex2rgb('#808080')],1, 'ttest', 4:5); 
+
+
+eb.LineWidth = .5; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = .8; h.EdgeColor = "none";
+sc{1}.SizeData = 10; sc{2}.SizeData = 10; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = 'k'; 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
+ylabel('N Sig. Assemblies')
+set(gca,'xtick', [1 2 4 5], 'xticklabel', {'Wake', 'Shuff', 'Post' 'Shuff'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 5.5])
+
+
+% stats:
+
+
+
 
 %% Check the reactivations in the Post REM using the wake templates for within session, across sessions, and against shuffles.
 
