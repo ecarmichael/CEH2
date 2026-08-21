@@ -1,11 +1,25 @@
 %% sandbox_NAMI_MUA_analyses
 
-
+% keep_idx = []; 
+% for ii = 1:length(f_list)
+%     this_sess = load([f_list((ii)).name]);
+%         fname = fieldnames(this_sess.data);
+%     % Extract the session data for further analysis
+%     this_sess = this_sess.data.(fname{1}); % Access the first field of the session data
+% 
+% if isfield(this_sess, 'S')
+%     disp(ii)
+%     keep_idx(ii) = 1;
+% else
+%     keep_idx(ii) = 0;
+% end
+% end
+% 
 
 %% loop over all the sessions of interest. Ultimately you will be able to loop over the sessions and hold the metrics of interest in order to get some session/subject level comparisons.
 f_list = dir('pox*.mat');
 
-S_idx =  [3 12 13 16 18]; 
+S_idx =  [3 11 12 13 15 16 18]; 
 
 for iS = 1:length(S_idx)
     % fname = 'pox3568_TFCD4'; % 3568 TFCD2/4/5 are all nice.
@@ -37,21 +51,18 @@ for iS = 1:length(S_idx)
     cfg_rate = [];
     cfg_rate.DetectGaps = 1;
     this_sess.S = MS_spike_rates(this_sess.S, this_sess.csc.tvec, 2);
-    for ii = length(this_sess.S.usr):-1:1
-        out.Spk_rate{iS}(ii) = this_sess.S.usr{ii}.rate;
-    end
+    % for ii = length(this_sess.S.usr.fr):-1:1
+    %     out.Spk_rate{iS}(ii) = this_sess.S.usr{ii}.rate;
+    % end
 
-    pyr_idx = out.Spk_rate{iS} < 20; 
+    pyr_idx = this_sess.S.usr.fr < 20; 
 
     cfg_mua = [];
     cfg_mua.tvec = this_sess.csc.tvec;
     cfg_mua.sigma = 0.005;
     
     % Ca1 MUA
-    S_ca = this_sess.S;
-    S_ca.t(~this_sess.S.loc | ~pyr_idx) = [];
-    S_ca.label(~this_sess.S.loc| ~pyr_idx) = [];
-    S_ca.usr(~this_sess.S.loc| ~pyr_idx) = [];
+    S_ca  = SelectTS([], this_sess.S, ~this_sess.S.loc | ~pyr_idx);
     mua = getMUA(cfg_mua, S_ca); % get the smoothed multiunit activity;
     % plot(mua.tvec, zscore(mua.data),'color', this_sess.S.c_ord(2,:))
     % convert to TS for peaks
@@ -59,10 +70,8 @@ for iS = 1:length(S_idx)
     ca1_ts = ts({pk_idx}, {'Ca1'}); 
 
     % Sub MUA
-    S_sub = this_sess.S;
-    S_sub.t(this_sess.S.loc | ~pyr_idx) = [];
-    S_sub.label(this_sess.S.loc| ~pyr_idx) = [];
-    S_sub.usr(this_sess.S.loc| ~pyr_idx) = [];
+    S_sub = SelectTS([], this_sess.S, this_sess.S.loc | ~pyr_idx);
+
     mua_sub = getMUA(cfg_mua, S_sub); % get the smoothed multiunit activity;
         % plot(mua_sub.tvec, zscore(mua_sub.data),'color', this_sess.S.c_ord(2,:))
     % convert to TS for peaks

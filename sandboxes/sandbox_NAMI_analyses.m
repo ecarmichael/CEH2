@@ -125,14 +125,12 @@ for iS = 1:length(f_list)
         out.Spk_ca1{iS} = mean(S_out_ca1_std, 1); % not used here.
         out.Spk_sub_std{iS} = mean(S_out_sub_std, 1);
         out.Spk_sub_atyp{iS} = mean(S_out_sub_atyp, 1);
-        out.Spk_loc{iS} = this_sess.S.loc;
+        out.Spk_loc{iS} = this_sess.S.loc';
         cfg_rate = [];
         cfg_rate.DetectGaps = 1;
         this_sess.S = MS_spike_rates(this_sess.S, this_sess.csc.tvec, 2);
-        for ii = length(this_sess.S.usr):-1:1
-            out.Spk_rate{iS}(ii) = this_sess.S.usr{ii}.rate;
-        end
 
+        out.Spk_rate{iS} = this_sess.S.usr.rate; 
     end
 
 
@@ -376,7 +374,8 @@ end % end cross sessions.
 Spk_std = cell2mat(out.Spk_sub_std);
 Spk_atyp = cell2mat(out.Spk_sub_atyp);
 Spk_loc = logical(cell2mat(out.Spk_loc));
-Spk_pyr = cell2mat(out.Spk_rate) < 20;
+Spk_pyr = cell2mat(out.Spk_rate) < 10 ;
+Spk_rate = cell2mat(out.Spk_rate);
 
 
 % collect the behaviours.
@@ -430,15 +429,15 @@ end
 if plot_flag == 1
     figure(301)
     clf
-    subplot(2,2,1)
-    MS_bar_w_err(Spk_std(Spk_loc& Spk_pyr),  Spk_atyp(Spk_loc& Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2, 1);
+    subplot(2,3,1)
+    MS_bar_w_err(Spk_std(Spk_loc& Spk_pyr ),  Spk_atyp(Spk_loc& Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2, 1);
     ylim([0 100])
     set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100], 'YTickLabel', {'0','1', '10', '100'},'fontsize', 10)
     title('Ca1 Pyramidal Cells')
     ylabel({'Within Ripple';'Firing Rate (Hz)'})
 
 
-    subplot(2,2,2)
+    subplot(2,3,2)
     [hb, eb, sc, p, stats]= MS_bar_w_err(Spk_std(~Spk_loc& Spk_pyr),  Spk_atyp(~Spk_loc& Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2, 1);
     ylim([0 100])
     set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100], 'YTickLabel', {'0','1', '10', '100'},'fontsize', 10)
@@ -446,14 +445,14 @@ if plot_flag == 1
 
 
     %
-     subplot(2,2,3)
+     subplot(2,3,4)
      MS_bar_w_err(Spk_std(Spk_loc & ~Spk_pyr),  Spk_atyp(Spk_loc & ~Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2);
      ylim([0 200])
      set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100], 'YTickLabel', {'0','1', '10', '100'},'fontsize', 10)
      title('Ca1 interneurons')
      ylabel({'Within Ripple';'Firing Rate (Hz)'})
 
-     subplot(2,2,4)
+     subplot(2,3,5)
     [hb, eb, sc, p, stats]= MS_bar_w_err(Spk_std(~Spk_loc& ~Spk_pyr),  Spk_atyp(~Spk_loc & ~Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2);
     % hb.E
     hb.FaceColor = 'none';
@@ -462,7 +461,12 @@ if plot_flag == 1
      title('Sub interneurons')
 
 
-    exportgraphics(gcf, [fig_dir filesep 'Spikes_in_SWRs.pdf'], 'ContentType', 'vector');
+     subplot(2,3,3)
+     c = MS_linspecer(2); 
+
+     scatter(Spk_std - Spk_atyp, Spk_rate, 10,Spk_loc, 'filled')
+        
+    % exportgraphics(gcf, [fig_dir filesep 'Spikes_in_SWRs.pdf'], 'ContentType', 'vector');
 end
 
 

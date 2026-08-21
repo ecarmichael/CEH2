@@ -77,10 +77,10 @@
 % csc_idx = {'CH55', 'CH141'};
 
 %pox3568_TFCD2 % DONE Best CA1 and SWR, Spikes. 
-csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
-csc_idx = 1:4:96;
-ts_prime = 0;
-csc_idx = {'CH124', 'CH149'};
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
+% csc_idx = 1:4:96;
+% ts_prime = 0;
+% csc_idx = {'CH124', 'CH149'};
 
 %pox3568_TFCD3 % DONE CA1 good, no Sub SWR. 
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-22_14-58-53_TFCD3/Record Node 117';
@@ -429,7 +429,7 @@ plot(mua.tvec, MS_norm_range(mua.data, 0, cfg.lfpHeight) - cfg.lfpHeight-cfg.lfp
 ylim([-40 length(data.(this_name).S.t)+2])
 
 
-    exportgraphics(gcf, ['MultiRaster_merge_' this_name '.pdf'], 'ContentType', 'vector');
+    % exportgraphics(gcf, ['MultiRaster_merge_' this_name '.pdf'], 'ContentType', 'vector');
 
 %% same thing but two plots
 cfg = []; 
@@ -464,7 +464,7 @@ linkaxes([ax1 ax2],'x'); % for navigation to work on both axes simultaneously
 
 % xlim([1237.75 1238.75])
 xlim([1251.9 1252.9])
-    exportgraphics(gcf, ['MultiRaster_' this_name '_zoom.pdf'], 'ContentType', 'vector');
+    % exportgraphics(gcf, ['MultiRaster_' this_name '_zoom.pdf'], 'ContentType', 'vector');
 
 %% NAMI TODO: plot some examples of the filtering and SWR detection. 
 % this will compliment the above plot with one subplot for CA1 and Sub each
