@@ -46,6 +46,9 @@ for iS = 1:length(S_idx)
     % end
 
 
+    %% get the monosynaptic metrics
+
+    mono = MS_mono_metrics(this_sess.S); 
     %% Get the relative timing of each Sub MUA compared to the nearest Ca1 SWR
 
     cfg_rate = [];
