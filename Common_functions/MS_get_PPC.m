@@ -92,15 +92,14 @@ id = strrep(spk_chan, '-', '_');
 %% 
 
 
-if cfg.continue && exist([cfg.inter_dir  filesep 'PPC' sess_id '_' id '_' lfp_chan '.mat'], 'file')
-    load([cfg.inter_dir  filesep 'PPC' sess_id '_' id '_' lfp_chan '.mat'], 'PPC')
-
-    ppc_fields = fieldnames(PPC);
+% if cfg.continue && exist([cfg.inter_dir  filesep 'PPC' sess_id '_' id '_' lfp_chan '.mat'], 'file')
+%     load([cfg.inter_dir  filesep 'PPC' sess_id '_' id '_' lfp_chan '.mat'], 'PPC')
+% 
+%     ppc_fields = fieldnames(PPC);
+% 
+% 
+%     Block_num = find(~contains(Blocks, ppc_fields))
     
-        
-    Block_num = find(~contains(Blocks, ppc_fields))
-    
-    for iB = 
 %%
 for iB = Block_num
     close all

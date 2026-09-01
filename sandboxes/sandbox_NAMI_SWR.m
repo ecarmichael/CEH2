@@ -71,9 +71,9 @@
 %%%%%   3568   %%%%%%% 
 
 %pox3568_TFCD1 % DONE Good CA1 and Sub. Needs Spikes. 
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-20_12-49-38_TFCD1/Record Node 117';
-% csc_idx = 1:4:96;
-% ts_prime = 0;
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-20_12-49-38_TFCD1/Record Node 117';
+csc_idx = 1:96;
+ts_prime = 0;
 % csc_idx = {'CH55', 'CH141'};
 
 %pox3568_TFCD2 % DONE Best CA1 and SWR, Spikes. 
@@ -207,23 +207,28 @@ else
     % get the first channel with the time vector.
     ii = 1;
     [data, tvec, info] = load_open_ephys_data([csc_list(ii).folder filesep csc_list(ii).name]);
-    csc = tsd(tvec, data);
+    csc = tsd(tvec, data');
     labels{ii} = info.header.channel;
     csc.cfg.hdr{ii} = info.header;
     csc.cfg.hdr{ii}.SamplingFrequency = info.header.sampleRate;
     % csc.data = [csc.data, NaN(length(csc.data),length(csc_list)-1)]; % pad the NaNa
 
+    cfg_in.decimateFactor = 15;
+    csc = decimate_tsd(cfg_in, csc);
+
     for ii = length(csc_list):-1:2
         [data, ~, info] = load_open_ephys_data([csc_list(ii).folder filesep csc_list(ii).name]);
-        csc.data(:,ii) =  data;
+
+        csc.data(ii,:) = decimate(data,cfg_in.decimateFactor)';
+
         labels{ii} = info.header.channel;
         csc.cfg.hdr{ii} = info.header;
-        csc.cfg.hdr{ii}.SamplingFrequency = info.header.sampleRate;
+        csc.cfg.hdr{ii}.SamplingFrequency = info.header.sampleRate ./ cfg_in.decimateFactor;
 
     end
     fs = csc.cfg.hdr{1}.SamplingFrequency;
 
-    csc.data = csc.data';
+    % csc.data = csc.data';
     csc.label = labels;
 
 
@@ -231,8 +236,8 @@ else
     % csc.tvec = csc.tvec - csc.tvec(1) + (csc.tvec(1) - ts_prime(1)); % zero out the csc.
     % csc.tvec = csc.tvec - ts_prime(1); % zero out the csc.
 
-    cfg_in.decimateFactor = 15;
-    csc = decimate_tsd(cfg_in, csc);
+    % cfg_in.decimateFactor = 15;
+    % csc = decimate_tsd(cfg_in, csc);
 
     % load the OE version of the events.
     evts_list = dir([csc_dir filesep '*Data*.events']);
@@ -243,7 +248,7 @@ end
 
 % session info
 
-parts = strsplit(csc_dir,filesep); 
+parts = strsplit(csc_dir,'/'); 
 s_idx = contains(parts, '2026'); % find the folder containing '2026' since all the sessions of interest are from this time. 
 sess = parts{s_idx}; 
 subject = lower(sess(strfind(sess, 'Pox'): strfind(sess, 'Pox')+6));
@@ -347,7 +352,7 @@ save('all_TFC.mat', 'all_TFC')
 data = []; 
 data.(this_name) = all_TFC.(this_name); 
 
-save([this_name '.mat'], 'data')
+save([this_name '.mat'], 'data', '-v7.3')
 
 %% split out the all_TFC for speed. 
 
