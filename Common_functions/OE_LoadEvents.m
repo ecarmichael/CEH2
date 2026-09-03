@@ -1,4 +1,4 @@
-function Evt_out = OE_LoadEvents(fname, Fs)
+function Evt_out = OE_LoadEvents(fname, Fs, offset)
 %% OE_LoadEvents: load the *.events file from OE
 %
 %
@@ -36,6 +36,9 @@ if nargin <1
     
     Fs = 30000; 
     disp('No Fs specified. Assuming 30kHz...')
+    offset = 0; 
+elseif nargin < 2
+    offset = 0; 
 end
 
 
@@ -54,7 +57,7 @@ for ii = length(u_labels):-1:1
    
     this_idx =  evts_label ==  u_labels(ii);
     
-    t{ii} = evts_ts(this_idx);
+    t{ii} = evts_ts(this_idx) - offset; 
     label{ii} = num2str(u_labels(ii)+1); % convert from 0 index to 1 index
     
 end
@@ -69,5 +72,6 @@ Evt_out.label= label;
 Evt_out.cfg.history.mfun{1} = mfilename;
 Evt_out.cfg.history.cfg{1} = [];
 Evt_out.cfg.hdr{1} = evts_hdr; 
+Evt_out.cfg.hdr{1}.offset = offset;
 
 

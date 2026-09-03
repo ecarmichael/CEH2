@@ -74,7 +74,7 @@
 csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-20_12-49-38_TFCD1/Record Node 117';
 csc_idx = 1:96;
 ts_prime = 0;
-% csc_idx = {'CH55', 'CH141'};
+swr_idx = {'CH55', 'CH141'};
 
 %pox3568_TFCD2 % DONE Best CA1 and SWR, Spikes. 
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
@@ -136,6 +136,11 @@ ts_prime = 0;
 % csc_idx = {'CH75', 'CH149'}; % CH71 and 115 are also decent for CA1
 %% load the spikes if present
 %
+% if ~exist('phy_dir', 'var') && exist('csc_dir', 'var')
+%     parts = strsplit(csc_dir, '/');
+%     phy_dir = fullfile(parts{1:end-1}, 'kilosort4'); % Construct phy_dir from csc_dir
+% end
+% cd(phy_dir)
 params = OE_load_params(phy_dir);
 
 S = OE_phy2TS(phy_dir, params);
@@ -146,7 +151,7 @@ ts_prime = ts_prime(1);
 
 for ii = length(S.label):-1:1
     % ch(ii) = S.usr.ch(ii); %str2double(S.label{ii}(1:strfind(S.label{ii}, '-')-1)); 
-    S.t{ii} = S.t{ii}+ts_prime; % add the time offset back. 
+    % S.t{ii} = S.t{ii}+ts_prime; % add the time offset back. 
 end
 S.loc = logical(S.usr.ch < 64); 
 % c_ord = MS_linspecer(2);
@@ -160,6 +165,14 @@ S.c_ord = [win(1:sum(S.loc==1),:); flipud(neb(end-sum(S.loc==0)+1:end,:))];
 
 
 %% load the csc
+
+% sort the channels based on the probe config
+% csc_names = {'CH54', 'CH4', 'CH60', 'CH58', 'CH62', 'CH15', 'CH64', 'CH56', 'CH6', 'CH11', 'CH8', 'CH52', 'CH16', 'CH12', 'CH50',...
+
+T = readtable([csc_dir filesep 'settings.xml']);
+csc_names = T.index_1Attribute(3,:);
+k_idx =  logical(T.enabledAttribute(3,:));
+csc_names(~k_idx) = []; 
 
 if isempty(csc_dir)
     csc = [];
@@ -187,7 +200,7 @@ else
         temp_list = [];
 
         for ii = 1:length(csc_idx)
-            temp_idx = find(contains(csc_name, [csc_idx{ii} '.continuous']));
+            temp_idx = find(contains(csc_name, ['CH' num2str(csc_names(csc_idx(ii))) '.continuous']));
             if length(temp_idx) > 1
                 error('Too many csc files containing this name')
             end
@@ -231,10 +244,10 @@ else
     % csc.data = csc.data';
     csc.label = labels;
 
-
-    % csc.tvec = ;
+    csc_prime = csc.tvec(1); 
+    csc.tvec = csc.tvec - csc.tvec(1); 
     % csc.tvec = csc.tvec - csc.tvec(1) + (csc.tvec(1) - ts_prime(1)); % zero out the csc.
-    % csc.tvec = csc.tvec - ts_prime(1); % zero out the csc.
+    % csc.tvec = csc.tvec + ts_prime(1); % zero out the csc.
 
     % cfg_in.decimateFactor = 15;
     % csc = decimate_tsd(cfg_in, csc);
@@ -242,7 +255,7 @@ else
     % load the OE version of the events.
     evts_list = dir([csc_dir filesep '*Data*.events']);
 
-    OE_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs);
+    OE_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs, 0);
 
 end
 

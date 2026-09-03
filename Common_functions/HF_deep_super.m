@@ -126,8 +126,8 @@ for ii = 1:length(shank)
     tvec = tvec - tvec(1);
     tvec = tvec - win;
 
-    rippleAvg = median(rippleAvg,3);
-    rippleAvg_f = median(rippleAvg_f,3);
+    rippleAvg = mean(rippleAvg,3);
+    rippleAvg_f = mean(rippleAvg_f,3);
 
     
     % get the flip point based on Petersen et al. The polarity of the 
@@ -136,7 +136,8 @@ for ii = 1:length(shank)
     % species (rats and mice). The algorith will look for the point where 
     % the polarity of the sharp-wave flips.
 
-    
+    d_idx = nearest_idx([-.0408, -0.0128], tvec);
+    ripple_diff = mean(rippleAvg(:,d_idx(1):d_idx(2)),2); 
 
 
 
@@ -186,6 +187,25 @@ for ii = 1:length(shank)
     end
     ylim([min(ycoords(this_ch))-50 max(ycoords(this_ch))+50])
 
+
+
+    subplot(2,3, 3)
+    cla
+    hold on
+    b=bar(ycoords(this_ch), ripple_diff');
+    b.FaceColor = 'flat';
+    b.CData = flipud(c_ord);
+    b.EdgeColor = 'none';
+
+    % eb = errorbar(ycoords(this_ch), mean(ripplePow,2, 'omitnan'), MS_SEM_vec(ripplePow'), 'vertical');
+    % eb.LineStyle = 'none';
+    % eb.Color = [.2 .2 .2];
+    % eb.LineWidth =1;
+
+
+    view(90,90)
+    xlim([min(ycoords(this_ch))-50 max(ycoords(this_ch))+50])
+    set(gca, 'xDir', 'reverse')
 
     
 
