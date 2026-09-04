@@ -23,14 +23,14 @@
 
 
 %pox2217_TFCD4 Good Ca1 but Sub is weak.  Done
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-19_13-37-05_TFC_D4/Record Node 117';
-% csc_idx = 1:4:96;
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-19_13-37-05_TFCD4/Record Node 117';
+% csc_idx = 1:96;
 % ts_prime = 0;
-% csc_idx = {'CH59', 'CH157'};
+% swr_idx = {'CH59', 'CH157'};
 
-%pox2217_TFCD5 Done mild SWR on Sub
+%pox2217_TFCD5 Done mild SWR on Sub Needs spikes
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-20_22-52-37_TFCD5/Record Node 117';
-% csc_idx = 1:4:96;
+% csc_idx = 1:96;
 % ts_prime = 0;
 % csc_idx = {'CH124', 'CH145'};
 
@@ -44,10 +44,10 @@
 % csc_idx = {'CH51', 'CH141'};
 
 %pox3567_TFCD2  done good Sub SWR, okay Ca1
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-21_15-41-32_TFCD2/Record Node 117';
-% csc_idx = 1:4:96;
-% ts_prime = 0;
-% csc_idx = {'CH63', 'CH133'};
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-21_15-41-32_TFCD2/Record Node 117';
+csc_idx = 1:96;
+ts_prime = 0;
+swr_idx = {'CH63', 'CH133'};
 
 %pox3567_TFCD3 % NO SWR??!?! No good spikes 
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-22_13-44-28_TFCD3/Record Node 117';
@@ -71,10 +71,10 @@
 %%%%%   3568   %%%%%%% 
 
 %pox3568_TFCD1 % DONE Good CA1 and Sub. Needs Spikes. 
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-20_12-49-38_TFCD1/Record Node 117';
-csc_idx = 1:96;
-ts_prime = 0;
-swr_idx = {'CH55', 'CH141'};
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-20_12-49-38_TFCD1/Record Node 117';
+% csc_idx = 1:96;
+% ts_prime = 0;
+% swr_idx = {'CH65', 'CH136'};
 
 %pox3568_TFCD2 % DONE Best CA1 and SWR, Spikes. 
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
@@ -135,12 +135,13 @@ swr_idx = {'CH55', 'CH141'};
 % ts_prime = 0;
 % csc_idx = {'CH75', 'CH149'}; % CH71 and 115 are also decent for CA1
 %% load the spikes if present
-%
-% if ~exist('phy_dir', 'var') && exist('csc_dir', 'var')
-%     parts = strsplit(csc_dir, '/');
-%     phy_dir = fullfile(parts{1:end-1}, 'kilosort4'); % Construct phy_dir from csc_dir
-% end
-% cd(phy_dir)
+
+if ~exist('phy_dir', 'var') && exist('csc_dir', 'var')
+    parts = strsplit(csc_dir, '/');
+    phy_dir = fullfile(parts{1:end-1}, 'kilosort4'); % Construct phy_dir from csc_dir
+    if ispc;  phy_dir = ['C:\' phy_dir]; end
+end
+cd(phy_dir)
 params = OE_load_params(phy_dir);
 
 S = OE_phy2TS(phy_dir, params);
@@ -173,29 +174,30 @@ T = readtable([csc_dir filesep 'settings.xml']);
 csc_names = T.index_1Attribute(3,:);
 k_idx =  logical(T.enabledAttribute(3,:));
 csc_names(~k_idx) = []; 
+csc_names = csc_names+1; % offset o indexing. 
 
-if isempty(csc_dir)
-    csc = [];
-    OE_evts =[];
-else
+% if isempty(csc_dir)
+%     csc = [];
+%     OE_evts =[];
+% else
     csc_list = dir([csc_dir filesep '*CH*.continuous']);
-
-    % sort the csc based on channel number.
+% 
+%     % sort the csc based on channel number.
     for ii = length(csc_list):-1:1
-        ch_idx =  strfind(csc_list(ii).name,'_CH');
-        con_idx =  strfind(csc_list(ii).name,'.continuous');
-        csc_num(ii) = str2double(csc_list(ii).name(ch_idx+3:con_idx));
+        % ch_idx =  strfind(csc_list(ii).name,'_CH');
+        % con_idx =  strfind(csc_list(ii).name,'.continuous');
+        % csc_num(ii) = str2double(csc_list(ii).name(ch_idx+3:con_idx));
         csc_name{ii} = csc_list(ii).name;
     end
-
-    % sort
-    [~, sort_idx] = sort(csc_num);
-    csc_list = csc_list(sort_idx);
-
-    if ~isempty(csc_idx)  && isnumeric(csc_idx(1))
-        csc_list(~ismember(1:length(csc_list), csc_idx))= [];
-
-    elseif  ~isempty(csc_idx)  && iscell(csc_idx) % if csc_idx is a string look for those patterns
+% 
+%     % sort
+%     [~, sort_idx] = sort(csc_num);
+%     csc_list = csc_list(sort_idx);
+% 
+%     if ~isempty(csc_idx)  && isnumeric(csc_idx(1))
+%         csc_list(~ismember(1:length(csc_list), csc_idx))= [];
+% 
+%     elseif  ~isempty(csc_idx)  && iscell(csc_idx) % if csc_idx is a string look for those patterns
 
         temp_list = [];
 
@@ -212,7 +214,7 @@ else
 
         csc_list = temp_list;
 
-    end
+    % end
 
 
     csc= []; labels = [];
@@ -257,8 +259,7 @@ else
 
     OE_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs, 0);
 
-end
-
+% end
 % session info
 
 parts = strsplit(csc_dir,'/'); 
@@ -329,19 +330,23 @@ csc_r = restrict(csc, mov_iv);
 
 %%   Detect CA1 SWRS
 
-    swrs_ca1 = MS_SWR_detector(csc_r,csc.label{1});
+    swrs_ca1 = MS_SWR_detector(csc_r,swr_idx(1));
 
 % manually select
 % swr_k = MS_manual_IV_selection(csc, swrs_ca1, .2);
 % swrs_ca1 = SelectIV([], swrs_ca1, logical(swr_k))
 %%   Detect Sub SWRS
 close all
-    swrs_sub = MS_SWR_detector(csc_r,csc.label{2});
+    swrs_sub = MS_SWR_detector(csc_r,swr_idx(2));
 
 % swr_k = MS_manual_IV_selection(csc, swrs_sub, .2);
 % swrs_sub = SelectIV([], swrs_sub, logical(swr_k))
+
+%% get the deep vs superficial classifciation
+
+[S, rip_out] = HF_deep_super(S,csc, swrs_ca1, 'A4x16', 1:64);
 %% collect the data
-load("all_TFC.mat")
+% load("all_TFC.mat")
 this_name = [subject '_' sess_id];
 
 all_TFC.(this_name).csc = csc;
@@ -357,10 +362,12 @@ OE_evts.label = {'context' 'TFC_on' 'mov', 'tone1', 'tone2', 'lick', 'eye'};
 
 all_TFC.(this_name).evts=OE_evts;
 
-if exist('S', 'var')
-    all_TFC.(this_name).S=S;
-end
-save('all_TFC.mat', 'all_TFC')
+all_TFC.(this_name).swr_idx = swr_idx;
+
+% if exist('S', 'var')
+%     all_TFC.(this_name).S=S;
+% end
+% save('all_TFC.mat', 'all_TFC')
 
 data = []; 
 data.(this_name) = all_TFC.(this_name); 
@@ -390,12 +397,14 @@ cfg.f = [1 400];
 csc_f = FilterLFP(cfg, data.(this_name).csc); 
 
 ca1 = csc_f; 
-ca1.data(2,:) = []; %remove the second channel; 
+ca1_idx = find(contains(csc.label, swr_idx(1)));
+ca1.data(~ca1_idx,:) = []; %remove the second channel; 
 ca1.label = []; 
 ca1.label{1} = 'Ca1'; 
 
 sub = csc_f; 
-sub.data(1,:) = []; %remove the second channel; 
+sub_idx = find(contains(csc.label, swr_idx(1)));
+sub.data(~sub_idx,:) = []; %remove the second channel; 
 sub.label = []; 
 sub.label{1} = 'Sub'; 
 
@@ -414,6 +423,7 @@ cfg.lfpHeight = 15;
 cfg.lfpSpacing =15; 
 cfg.lfp(1) = ca1; 
 cfg.lfp(2) = sub;
+cfg.target = []; 
 cfg.evt = data.(this_name).swrs_ca1; 
 cfg.openNewFig = 0; % stops it from opening a new figure 
 MultiRaster(cfg, data.(this_name).S)

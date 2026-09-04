@@ -1,6 +1,10 @@
-function S_out = HF_deep_super(S, csc, swr_iv, probe, chan_idx)
+function [S_out, rip_out] = HF_deep_super(S, csc, swr_iv, probe, chan_idx)
 
-%% HF_deep_super: uses the SWR times to create a ripple average for all the channels on a shank by shank basis. Determines the middle of the ripple using
+%% HF_deep_super: uses the SWR times to create a ripple average for all the
+%  channels on a shank by shank basis. Determines deep vs superficial 
+%  cutoff using the methods from Petersen et al. 2022 with the addition of
+%  a Hampel outlier identifier (1 sample) and fitting a sine wave to the
+%  mean voltage in the -40-12ms range.  
 %
 %
 %
@@ -43,6 +47,7 @@ if strcmpi(probe, 'A4x16')
     x_space = [8.66 8.66, repmat([0 17.3], 1,7)]; % space between probes x in um;
     xcoords   = [x_space, x_space , x_space , x_space];                    %repmat([1 2 3 4]', 1, Nchannels/4);
     xcoords   = xcoords(:);
+    ref_idx = [1 2 17 18 33 34 49 50]; 
 elseif strcmpi(probe, 'Buz32')
     shank{1} = 1:8;
     shank{2} = 9:16;
@@ -52,7 +57,7 @@ elseif strcmpi(probe, 'Buz32')
     ycoords   = ycoords(:);
     xcoords = repmat([0 8.5 17 17+8.5 17+8.5*2 34+8.5 34+17 51+8.5 ],1,4); % space between probes x in um;
     xcoords   = xcoords(:);
-
+ref_idx = []; 
 elseif strcmpi(probe, 'A5x12')
     shank{1} = 1:12;
     shank{2} = 13:24;
@@ -64,6 +69,7 @@ elseif strcmpi(probe, 'A5x12')
     x_space = repmat([0 20], 1,6); % space between probes x in um;
     xcoords   = [x_space, x_space , (ones(1,16))+10, x_space , x_space ];                    %repmat([1 2 3 4]', 1, Nchannels/4);
     xcoords   = xcoords(:);
+    ref_idx = []; 
 end
 
 n = length(shank);
@@ -95,12 +101,14 @@ s_idx = [1 2 3; 5 6 7; 9 10 11; 13 14 15; 17 18 19];
 p_idx  = 4:4:20;
 c_ord = MS_linspecer(length(shank{1}));
 
+flip_idx = []; 
 for ii = 1:length(shank)
 
     % channels for the current shank
     this_ch = chan_idx(shank{ii});
-
-
+    rm_idx = find(ismember(this_ch, ref_idx)); %Remove ref channels if needed.
+    
+    c_ord(rm_idx,:) = repmat([.5 .5 .5], length(rm_idx), 1);
 
     win = .125;
     rippleAvg = [];
@@ -138,8 +146,35 @@ for ii = 1:length(shank)
 
     d_idx = nearest_idx([-.0408, -0.0128], tvec);
     ripple_diff = mean(rippleAvg(:,d_idx(1):d_idx(2)),2); 
+    this_idx = ismember(1:length(ripple_diff), rm_idx); 
+
+    % apply hampel outlier detector for bad channels
+    y = hampel(ripple_diff(~this_idx),1);
 
 
+    % fit a sine wave for smoothing
+    fit_out = fit((1:length(ripple_diff(~this_idx)))', y, 'sin1');
+    s_fit= fit_out((1:length(ripple_diff(~this_idx))));
+
+
+
+    % find the crossing point (first above 0)
+
+    flip_idx = find(diff(sign(s_fit)) ~= 0);
+    if isempty(flip_idx) && sum(sign(s_fit) >0 ) == length(s_fit) % if everything above the later
+        deep_idx = true(size(this_ch));
+        super_idx = logical(~deep_idx);
+    elseif isempty(flip_idx) && sum(sign(s_fit) < 0 ) == length(s_fit) % if everything is below. 
+        deep_idx = false(size(this_ch));
+        super_idx = logical(~deep_idx);
+    else
+        deep_idx = zeros(size(this_ch));
+        deep_idx(1:flip_idx+length(rm_idx)) = 1;
+
+        deep_idx = logical(deep_idx);
+        super_idx = logical(~deep_idx);
+    end
+    s_fit = [NaN NaN s_fit'];
 
     figure(10+ii)
     clf
@@ -164,7 +199,7 @@ for ii = 1:length(shank)
     end
     xlim([-.080 .08])
     set(gca, "XTick", -.08:.04:.08, 'XtickLabel', [-.08:.04:.08]*1000)
-
+    xline([-.0408, -0.0128])
 
     % make the probe out of rectangles
     fac = 800;
@@ -174,7 +209,7 @@ for ii = 1:length(shank)
         rectangle('Position', [x_off , (ycoords(this_ch(kk)))-300, 6/fac, 12], ...
             'FaceColor', c_ord(kk,:), 'EdgeColor', 'none');
 
-            text(x_off, (ycoords(this_ch(kk)))-300, num2str(this_ch(kk)), VerticalAlignment='middle', HorizontalAlignment='right')
+        text(x_off, (ycoords(this_ch(kk)))-300, num2str(this_ch(kk)), VerticalAlignment='middle', HorizontalAlignment='right')
 
     end
 
@@ -196,6 +231,11 @@ for ii = 1:length(shank)
     b.FaceColor = 'flat';
     b.CData = flipud(c_ord);
     b.EdgeColor = 'none';
+    
+    plot(ycoords(this_ch), s_fit, '-k')
+    scatter(ycoords(deep_idx), s_fit(deep_idx), 50, 'filled','markerfacecolor',  'b')
+    scatter(ycoords(super_idx), s_fit(super_idx), 50, 'filled','markerfacecolor',  'r')
+
 
     % eb = errorbar(ycoords(this_ch), mean(ripplePow,2, 'omitnan'), MS_SEM_vec(ripplePow'), 'vertical');
     % eb.LineStyle = 'none';
@@ -212,7 +252,7 @@ for ii = 1:length(shank)
     subplot(2,3, 6)
     cla
     hold on
-    b=bar(ycoords(this_ch), mean(ripplePow, 2)');
+    b=bar(ycoords(this_ch), mean(ripplePow, 2, 'omitnan')');
     b.FaceColor = 'flat';
     b.CData = flipud(c_ord);
     b.EdgeColor = 'none';
@@ -228,5 +268,30 @@ for ii = 1:length(shank)
     ylim([0 inf])
     set(gca, 'xDir', 'reverse')
 
+% collect the outputs
+rip_out{ii} = []; 
+rip_out{ii}.deep = deep_idx; 
+rip_out{ii}.super = super_idx; 
+rip_out{ii}.flip = flip_idx;
+
+rip_out{ii}.rippleAvg = rippleAvg;
+rip_out{ii}.rippleAvg_f = rippleAvg_f;
+rip_out{ii}.ripplePow = ripplePow; 
+rip_out{ii}.ycoords = ycoords(this_ch); 
 
 end
+
+
+%% apply the cutoffs to to the spike file using the channel with the maximum spike amplitude. 
+deep_chan = []; 
+
+for ii = 1:length(rip_out)
+    this_ch = chan_idx(shank{ii});
+
+    deep_chan = [deep_chan this_ch(rip_out{ii}.deep)]; 
+
+end
+
+S_out = S; 
+
+S_out.usr.deep = ismember(S_out.usr.ch, deep_chan); 

@@ -107,8 +107,10 @@ end
 
 % update the usr fields. 
 for ii = 1:length(usr_params)
-S.usr.(usr_params{ii})  = usr.(usr_params{ii})(idx);
+    S.usr.(usr_params{ii})  = usr.(usr_params{ii})(idx);
 end
+
+S.usr.deep = NaN(size(S.usr.amp)); 
 
 S.cfg.history.mfun{1} = mfilename;
 S.cfg.history.cfg{1} = [];
