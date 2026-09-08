@@ -43,11 +43,11 @@
 % ts_prime = 0;
 % csc_idx = {'CH51', 'CH141'};
 
-%pox3567_TFCD2  done good Sub SWR, okay Ca1
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-21_15-41-32_TFCD2/Record Node 117';
-csc_idx = 1:96;
-ts_prime = 0;
-swr_idx = {'CH63', 'CH133'};
+%pox3567_TFCD2  done good Sub SWR, okay Ca1  REDONE
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-21_15-41-32_TFCD2/Record Node 117';
+% csc_idx = 1:96;
+% ts_prime = 0;
+% swr_idx = {'CH63', 'CH133'};
 
 %pox3567_TFCD3 % NO SWR??!?! No good spikes 
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-22_13-44-28_TFCD3/Record Node 117';
@@ -55,11 +55,11 @@ swr_idx = {'CH63', 'CH133'};
 % ts_prime = 0;
 % csc_idx = {'CH51', 'CH141'};
 
-%pox3567_TFCD4 % done Spikes done
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-23_15-53-07_TFCD4/Record Node 117';
-% csc_idx = 60:96;
-% ts_prime = 0;
-% csc_idx = {'CH63', 'CH145', 'CH149', 'CH150',  'CH154', 'CH158'};
+%pox3567_TFCD4 % CA1 good, no SUB,  Spikes REdone
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-23_15-53-07_TFCD4/Record Node 117';
+csc_idx = 1:96;
+ts_prime = 0;
+swr_idx = {'CH63' 'CH158'};
 
 % pox3567_TFCD5 % Done nice CA1 and good Sub spikes done
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-24_14-10-03_TFCD5/Record Node 117';
@@ -282,14 +282,18 @@ end
 % csc.cfg.hdr(3:end) = []; 
 %% csc check
 
+% restrict for speed
+
+csc_r = restrict(csc, csc.tvec(1), csc.tvec(1)+500);
+
 figure(1010)
 clf;
 hold on
-for ii = 1:size(csc.data,1)
+for ii = 1:size(csc_r.data,1)
 
-    plot(csc.tvec, csc.data(ii,:)+ii*500);
-    lab{ii} = csc.label{ii};
-    y_t(ii) = median(csc.data(ii,:)+ii*500);
+    plot(csc_r.tvec, csc_r.data(ii,:)+ii*500);
+    lab{ii} = csc_r.label{ii};
+    y_t(ii) = median(csc_r.data(ii,:)+ii*500);
 end
 set(gca, 'YTick', y_t, 'YTickLabel', lab)
 
@@ -332,7 +336,7 @@ csc_r = restrict(csc, mov_iv);
 
     swrs_ca1 = MS_SWR_detector(csc_r,swr_idx(1));
 
-% manually select
+% % manually select
 % swr_k = MS_manual_IV_selection(csc, swrs_ca1, .2);
 % swrs_ca1 = SelectIV([], swrs_ca1, logical(swr_k))
 %%   Detect Sub SWRS

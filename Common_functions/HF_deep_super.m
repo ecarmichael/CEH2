@@ -97,11 +97,11 @@ csc_f = FilterLFP(cfg_swr, csc);
 %% loop over shanks
 
 % subplot index
-s_idx = [1 2 3; 5 6 7; 9 10 11; 13 14 15; 17 18 19];
-p_idx  = 4:4:20;
+% s_idx = [1 2 3; 5 6 7; 9 10 11; 13 14 15; 17 18 19];
+% p_idx  = 4:4:20;
 c_ord = MS_linspecer(length(shank{1}));
 
-flip_idx = []; 
+% flip_idx = []; 
 for ii = 1:length(shank)
 
     % channels for the current shank
@@ -144,7 +144,7 @@ for ii = 1:length(shank)
     % species (rats and mice). The algorith will look for the point where 
     % the polarity of the sharp-wave flips.
 
-    d_idx = nearest_idx([-.0408, -0.0128], tvec);
+    d_idx = nearest_idx([-.030, -0], tvec);
     ripple_diff = mean(rippleAvg(:,d_idx(1):d_idx(2)),2); 
     this_idx = ismember(1:length(ripple_diff), rm_idx); 
 
@@ -176,6 +176,10 @@ for ii = 1:length(shank)
     end
     s_fit = [NaN NaN s_fit'];
 
+
+    flip_ch = find(deep_idx); 
+    flip_ch = flip_ch(end); 
+
     figure(10+ii)
     clf
 
@@ -184,7 +188,11 @@ for ii = 1:length(shank)
     cla;
     hold on
     for kk = 1:length(this_ch)
-        plot(tvec, (rippleAvg(kk, :)*.1) + ycoords(this_ch(kk)), 'color', c_ord(kk,:))
+        if kk == flip_ch
+            plot(tvec, (rippleAvg(kk, :)*.1) + ycoords(this_ch(kk)), 'color', 'k', 'linewidth', 2)
+        else
+            plot(tvec, (rippleAvg(kk, :)*.1) + ycoords(this_ch(kk)), 'color', c_ord(kk,:))
+        end
     end
     ylim([min(ycoords(this_ch))-50 max(ycoords(this_ch))+50])
     set(gca, "XTick", -.12:.04:.12, 'XtickLabel', [-.12:.04:.12]*1000)
@@ -195,11 +203,15 @@ for ii = 1:length(shank)
     cla;
     hold on
     for kk = 1:length(this_ch)
-        plot(tvec, rippleAvg(kk, :), 'color', c_ord(kk,:))
+        if kk == flip_ch
+            plot(tvec, rippleAvg(kk, :), 'color', 'k')
+        else
+            plot(tvec, rippleAvg(kk, :), 'color', c_ord(kk,:))
+        end
     end
     xlim([-.080 .08])
     set(gca, "XTick", -.08:.04:.08, 'XtickLabel', [-.08:.04:.08]*1000)
-    xline([-.0408, -0.0128])
+    xline([-.030, -0])
 
     % make the probe out of rectangles
     fac = 800;
@@ -209,8 +221,11 @@ for ii = 1:length(shank)
         rectangle('Position', [x_off , (ycoords(this_ch(kk)))-300, 6/fac, 12], ...
             'FaceColor', c_ord(kk,:), 'EdgeColor', 'none');
 
-        text(x_off, (ycoords(this_ch(kk)))-300, num2str(this_ch(kk)), VerticalAlignment='middle', HorizontalAlignment='right')
-
+        if kk == flip_ch
+            text(x_off, (ycoords(this_ch(kk)))-300, num2str(this_ch(kk)), VerticalAlignment='middle', HorizontalAlignment='right', fontweight = 'bold')
+        else
+            text(x_off, (ycoords(this_ch(kk)))-300, num2str(this_ch(kk)), VerticalAlignment='middle', HorizontalAlignment='right')
+        end
     end
 
     % add the filtered means
