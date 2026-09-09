@@ -47,7 +47,9 @@ if strcmpi(probe, 'A4x16')
     x_space = [8.66 8.66, repmat([0 17.3], 1,7)]; % space between probes x in um;
     xcoords   = [x_space, x_space , x_space , x_space];                    %repmat([1 2 3 4]', 1, Nchannels/4);
     xcoords   = xcoords(:);
-    ref_idx = [1 2 17 18 33 34 49 50]; 
+    xcoords_off = [x_space, x_space+150 , x_space+300 , x_space+450]; % with the offsets.
+    xcoords_off = xcoords_off(:);
+    ref_idx = [1 2 17 18 33 34 49 50];
 elseif strcmpi(probe, 'Buz32')
     shank{1} = 1:8;
     shank{2} = 9:16;
@@ -57,7 +59,10 @@ elseif strcmpi(probe, 'Buz32')
     ycoords   = ycoords(:);
     xcoords = repmat([0 8.5 17 17+8.5 17+8.5*2 34+8.5 34+17 51+8.5 ],1,4); % space between probes x in um;
     xcoords   = xcoords(:);
-ref_idx = []; 
+    xcoords_off = [[0 8.5 17 17+8.5 17+8.5*2 34+8.5 34+17 51+8.5 ], [0 8.5 17 17+8.5 17+8.5*2 34+8.5 34+17 51+8.5 ]+200,...
+        [0 8.5 17 17+8.5 17+8.5*2 34+8.5 34+17 51+8.5 ]+400 , [0 8.5 17 17+8.5 17+8.5*2 34+8.5 34+17 51+8.5 ]+600]; % with the offsets.
+    xcoords_off = xcoords_off(:);
+    ref_idx = [];
 elseif strcmpi(probe, 'A5x12')
     shank{1} = 1:12;
     shank{2} = 13:24;
@@ -69,7 +74,9 @@ elseif strcmpi(probe, 'A5x12')
     x_space = repmat([0 20], 1,6); % space between probes x in um;
     xcoords   = [x_space, x_space , (ones(1,16))+10, x_space , x_space ];                    %repmat([1 2 3 4]', 1, Nchannels/4);
     xcoords   = xcoords(:);
-    ref_idx = []; 
+    xcoords_off   = [x_space, x_space+160 , (ones(1,16)*320)+10, x_space +480, x_space+640];                    %repmat([1 2 3 4]', 1, Nchannels/4);
+    xcoords_off = xcoords_off(:);
+    ref_idx = [];
 end
 
 n = length(shank);
@@ -144,7 +151,7 @@ for ii = 1:length(shank)
     % species (rats and mice). The algorith will look for the point where 
     % the polarity of the sharp-wave flips.
 
-    d_idx = nearest_idx([-.030, -0], tvec);
+    d_idx = nearest_idx([-.020, 0.01], tvec);
     ripple_diff = mean(rippleAvg(:,d_idx(1):d_idx(2)),2); 
     this_idx = ismember(1:length(ripple_diff), rm_idx); 
 
@@ -211,7 +218,7 @@ for ii = 1:length(shank)
     end
     xlim([-.080 .08])
     set(gca, "XTick", -.08:.04:.08, 'XtickLabel', [-.08:.04:.08]*1000)
-    xline([-.030, -0])
+    xline([-.020, 0.01])
 
     % make the probe out of rectangles
     fac = 800;
@@ -310,3 +317,83 @@ end
 S_out = S; 
 
 S_out.usr.deep = ismember(S_out.usr.ch, deep_chan); 
+
+%% plot the location of the spikes
+
+
+figure(616)
+set(gcf, "Position", [300 300 800 400])
+clf
+
+subplot(1,10,1:7)
+cla
+hold on
+for ii = 1:length(ycoords)
+         rectangle('Position', [xcoords_off(ii) , (ycoords(ii)), 6, 12], ...
+            'FaceColor', 'k', 'EdgeColor', 'none');
+end
+
+% plot the flip positions
+for ii  = length(rip_out):-1:1
+    layer_x(ii) = xcoords_off(shank{ii}(rip_out{ii}.flip)); 
+    layer_y(ii) = rip_out{ii}.ycoords(rip_out{ii}.flip); 
+end
+
+pyr_int = interp1(layer_x, layer_y, layer_x(1)-mode(diff(layer_x)):mode(diff(layer_x)):layer_x(end)+mode(diff(layer_x)), 'linear', 'extrap');
+x_int = layer_x(1)-mode(diff(layer_x)):mode(diff(layer_x)):layer_x(end)+mode(diff(layer_x));
+    plot(x_int, pyr_int+50, '.--', 'color', [.5 .5 .5])
+    plot(x_int, pyr_int, '.--', 'color', [.25 .25 .25])
+   plot(x_int, pyr_int-50, '.--', 'color', [.5 .5 .5])
+
+   % shape = 
+ca1 = [x_int fliplr(x_int); pyr_int-50, fliplr(pyr_int)+50]'; 
+
+plot(polyshape(ca1), 'FaceColor', [.25 .25 .25], 'FaceAlpha',.2)
+
+   % add the cells
+    c_d = 0; c_s = 0; 
+   v_ord = MS_linspecer(5);
+   these_S = SelectTS([], S_out, ismember(S_out.usr.ch, chan_idx));
+   jit = MS_randn_range(1,length(these_S.t), -10, 10);
+   for ii = 1:length(these_S.t)
+       if these_S.usr.deep(ii)
+           c_d = c_d+1;
+           if c_d == 1
+               % d_s = scatter(these_S.usr.pos(ii,1)+jit(ii), these_S.usr.pos(ii,2), 200,  'filled', '^', 'MarkerFaceColor', v_ord(5,:));
+               d_s = scatter(xcoords_off(these_S.usr.ch(ii))+jit(ii), ycoords(these_S.usr.ch(ii))+jit(ii), 200,  'filled', '^', 'MarkerFaceColor', v_ord(5,:));
+           else
+               % scatter(xcoords_off(these_S.usr.ch(ii))+jit(ii), ycoords(these_S.usr.ch(ii))+jit(ii), 200,  'filled', '^', 'MarkerFaceColor', v_ord(5,:))
+               scatter(these_S.usr.pos(ii,1)+jit(ii), these_S.usr.depth(ii), 200,  'filled', '^', 'MarkerFaceColor', v_ord(5,:));
+           end
+       else
+           c_s = c_s+1;
+           if c_s == 1
+               % s_s = scatter(these_S.usr.pos(ii,1)+jit(ii), these_S.usr.pos(ii,2), 200,  'filled', '^', 'MarkerFaceColor', v_ord(3,:));
+               s_s = scatter(xcoords_off(these_S.usr.ch(ii))+jit(ii), ycoords(these_S.usr.ch(ii))+jit(ii), 200, 'filled', '^', 'MarkerFaceColor', v_ord(3,:));
+           else
+               % scatter(xcoords_off(these_S.usr.ch(ii))+jit(ii), ycoords(these_S.usr.ch(ii))+jit(ii), 200, 'filled', '^', 'MarkerFaceColor', v_ord(3,:));
+               scatter(these_S.usr.pos(ii,1)+jit(ii), these_S.usr.depth(ii), 200,  'filled', '^', 'MarkerFaceColor', v_ord(3,:));
+           end
+       end
+   end
+
+xlim([layer_x(1)-50, layer_x(end)+50])
+ylabel('depth (um)'); 
+xlabel('position (um)')
+legend([d_s s_s], {'deep', 'super'}, 'box', 'off')
+
+% add the layer names
+text(layer_x(end)+50, median(pyr_int(end-1:end))+75, 'S.O.')
+text(layer_x(end)+50,  median(pyr_int(end-1:end)), 'S.Pyr.')
+text(layer_x(end)+50,  median(pyr_int(end-1:end))-75, 'S.R.')
+
+subplot(1,10,9:10)
+
+cell_offsets = [ycoords(these_S.usr.ch(these_S.usr.deep))]
+
+histogram((these_S.usr.depth(these_S.usr.deep)), min(ycoords)-50:10: max(ycoords)+50)
+
+  view(90,90)
+    xlim([min(ycoords)-50 max(ycoords)+50])
+    ylim([0 inf])
+    set(gca, 'xDir', 'reverse')

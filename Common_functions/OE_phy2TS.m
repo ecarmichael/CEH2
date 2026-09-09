@@ -95,13 +95,16 @@ idx = find(isGood);
 idx = idx(s_idx); 
 good_clusters_ids = good_clusters_ids(s_idx);
 
-S = [];
+S = []; pos = []; 
 S.type = 'ts';
 for ii = length(good_clusters_ids):-1:1
     S.t{ii} = (spike_times(spike_clusters == good_clusters_ids(ii)));
     S.label{ii} = [num2str(usr.ch(idx(ii))) '-' num2str(usr.cluster_id(idx(ii)))]; 
-    % S.usr{ii}.shank = chan_shanks(ii); 
-    % S.usr{ii}.pos(:) = chan_pos(ii,:); 
+    pos(ii,1) = mean(spk_pos(spike_clusters == good_clusters_ids(ii),1));
+    pos(ii,2) = mean(spk_pos(spike_clusters == good_clusters_ids(ii),2));
+
+    % shank = chan_shanks(ii); 
+    % pos(ii) = chan_pos(ii,:); 
     % S.usr{ii}.chan = double(chan_map(ii)); 
 end
 
@@ -109,6 +112,7 @@ end
 for ii = 1:length(usr_params)
     S.usr.(usr_params{ii})  = usr.(usr_params{ii})(idx);
 end
+S.usr.pos= pos; 
 
 S.usr.deep = NaN(size(S.usr.amp)); 
 
