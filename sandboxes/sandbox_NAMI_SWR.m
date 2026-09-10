@@ -56,16 +56,16 @@
 % csc_idx = {'CH51', 'CH141'};
 
 %pox3567_TFCD4 % CA1 good, no SUB,  Spikes REdone
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-23_15-53-07_TFCD4/Record Node 117';
-csc_idx = 1:96;
-ts_prime = 0;
-swr_idx = {'CH63' 'CH158'};
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-23_15-53-07_TFCD4/Record Node 117';
+% csc_idx = 1:96;
+% ts_prime = 0;
+% swr_idx = {'CH63' 'CH158'};
 
 % pox3567_TFCD5 % Done nice CA1 and good Sub spikes done
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-24_14-10-03_TFCD5/Record Node 117';
-% csc_idx = 1:4:96;
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-24_14-10-03_TFCD5/Record Node 117';
+% csc_idx = 1:96;
 % ts_prime = 0;
-% csc_idx = {'CH5', 'CH153'};
+% swr_idx = {'CH5', 'CH143'};
 
 
 %%%%%   3568   %%%%%%% 
@@ -349,6 +349,10 @@ close all
 %% get the deep vs superficial classifciation
 
 [S, rip_out] = HF_deep_super(S,csc, swrs_ca1, 'A4x16', 1:64);
+S.usr.deep = double(S.usr.deep);
+S.usr.deep(~S.loc) = NaN; 
+S.usr.rel_depth(~S.loc) = NaN; 
+
 %% collect the data
 % load("all_TFC.mat")
 this_name = [subject '_' sess_id];
@@ -368,9 +372,9 @@ all_TFC.(this_name).evts=OE_evts;
 
 all_TFC.(this_name).swr_idx = swr_idx;
 
-% if exist('S', 'var')
-%     all_TFC.(this_name).S=S;
-% end
+if exist('S', 'var')
+    all_TFC.(this_name).S=S;
+end
 % save('all_TFC.mat', 'all_TFC')
 
 data = []; 

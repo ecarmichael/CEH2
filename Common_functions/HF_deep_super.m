@@ -191,7 +191,7 @@ for ii = 1:length(shank)
     clf
 
     % raw Ripple triggered average with spacing. 
-    subplot(2,3,[1 4])
+    subplot(2,5,[1 2 6 7])
     cla;
     hold on
     for kk = 1:length(this_ch)
@@ -202,11 +202,12 @@ for ii = 1:length(shank)
         end
     end
     ylim([min(ycoords(this_ch))-50 max(ycoords(this_ch))+50])
+    xlim([-.080 .080])
     set(gca, "XTick", -.12:.04:.12, 'XtickLabel', [-.12:.04:.12]*1000)
 
 
     % no offset a la Mizuseki 2014
-    subplot(2,3,2)
+    subplot(2,5,3)
     cla;
     hold on
     for kk = 1:length(this_ch)
@@ -236,7 +237,7 @@ for ii = 1:length(shank)
     end
 
     % add the filtered means
-    subplot(2,3,5)
+    subplot(2,5,8)
     cla;
     hold on
     for kk = 1:length(this_ch)
@@ -246,7 +247,7 @@ for ii = 1:length(shank)
 
 
 
-    subplot(2,3, 3)
+    subplot(2,5, 4)
     cla
     hold on
     b=bar(ycoords(this_ch), ripple_diff');
@@ -271,7 +272,7 @@ for ii = 1:length(shank)
 
     
 
-    subplot(2,3, 6)
+    subplot(2,5, 9)
     cla
     hold on
     b=bar(ycoords(this_ch), mean(ripplePow, 2, 'omitnan')');
@@ -294,30 +295,34 @@ for ii = 1:length(shank)
 rip_out{ii} = []; 
 rip_out{ii}.deep = deep_idx; 
 rip_out{ii}.super = super_idx; 
-rip_out{ii}.flip = flip_idx;
+rip_out{ii}.flip = flip_ch;
 
 rip_out{ii}.rippleAvg = rippleAvg;
 rip_out{ii}.rippleAvg_f = rippleAvg_f;
 rip_out{ii}.ripplePow = ripplePow; 
 rip_out{ii}.ycoords = ycoords(this_ch); 
+rip_out{ii}.rel_ycoords = ycoords(this_ch) - ycoords(this_ch(flip_ch)); 
 
 end
 
 
 %% apply the cutoffs to to the spike file using the channel with the maximum spike amplitude. 
 deep_chan = []; 
-
+rel_depth = []; 
 for ii = 1:length(rip_out)
     this_ch = chan_idx(shank{ii});
 
     deep_chan = [deep_chan this_ch(rip_out{ii}.deep)]; 
+
+    rel_depth = [rel_depth ; rip_out{ii}.rel_ycoords];
 
 end
 
 S_out = S; 
 
 S_out.usr.deep = ismember(S_out.usr.ch, deep_chan); 
-
+S_out.usr.rel_depth = NaN(size(S_out.usr.ch));
+S_out.usr.rel_depth(ismember(S_out.usr.ch, chan_idx)) = rel_depth(S_out.usr.ch(ismember(S_out.usr.ch, chan_idx))); 
 %% plot the location of the spikes
 
 
@@ -340,6 +345,7 @@ for ii  = length(rip_out):-1:1
 end
 
 pyr_int = interp1(layer_x, layer_y, layer_x(1)-mode(diff(layer_x)):mode(diff(layer_x)):layer_x(end)+mode(diff(layer_x)), 'linear', 'extrap');
+pyr_int = [pyr_int(1) layer_y pyr_int(end)]; 
 x_int = layer_x(1)-mode(diff(layer_x)):mode(diff(layer_x)):layer_x(end)+mode(diff(layer_x));
     plot(x_int, pyr_int+50, '.--', 'color', [.5 .5 .5])
     plot(x_int, pyr_int, '.--', 'color', [.25 .25 .25])
@@ -362,8 +368,8 @@ plot(polyshape(ca1), 'FaceColor', [.25 .25 .25], 'FaceAlpha',.2)
                % d_s = scatter(these_S.usr.pos(ii,1)+jit(ii), these_S.usr.pos(ii,2), 200,  'filled', '^', 'MarkerFaceColor', v_ord(5,:));
                d_s = scatter(xcoords_off(these_S.usr.ch(ii))+jit(ii), ycoords(these_S.usr.ch(ii))+jit(ii), 200,  'filled', '^', 'MarkerFaceColor', v_ord(5,:));
            else
-               % scatter(xcoords_off(these_S.usr.ch(ii))+jit(ii), ycoords(these_S.usr.ch(ii))+jit(ii), 200,  'filled', '^', 'MarkerFaceColor', v_ord(5,:))
-               scatter(these_S.usr.pos(ii,1)+jit(ii), these_S.usr.depth(ii), 200,  'filled', '^', 'MarkerFaceColor', v_ord(5,:));
+               scatter(xcoords_off(these_S.usr.ch(ii))+jit(ii), ycoords(these_S.usr.ch(ii))+jit(ii), 200,  'filled', '^', 'MarkerFaceColor', v_ord(5,:))
+               % scatter(these_S.usr.pos(ii,1)+jit(ii), these_S.usr.depth(ii), 200,  'filled', '^', 'MarkerFaceColor', v_ord(5,:));
            end
        else
            c_s = c_s+1;
@@ -371,8 +377,8 @@ plot(polyshape(ca1), 'FaceColor', [.25 .25 .25], 'FaceAlpha',.2)
                % s_s = scatter(these_S.usr.pos(ii,1)+jit(ii), these_S.usr.pos(ii,2), 200,  'filled', '^', 'MarkerFaceColor', v_ord(3,:));
                s_s = scatter(xcoords_off(these_S.usr.ch(ii))+jit(ii), ycoords(these_S.usr.ch(ii))+jit(ii), 200, 'filled', '^', 'MarkerFaceColor', v_ord(3,:));
            else
-               % scatter(xcoords_off(these_S.usr.ch(ii))+jit(ii), ycoords(these_S.usr.ch(ii))+jit(ii), 200, 'filled', '^', 'MarkerFaceColor', v_ord(3,:));
-               scatter(these_S.usr.pos(ii,1)+jit(ii), these_S.usr.depth(ii), 200,  'filled', '^', 'MarkerFaceColor', v_ord(3,:));
+               scatter(xcoords_off(these_S.usr.ch(ii))+jit(ii), ycoords(these_S.usr.ch(ii))+jit(ii), 200, 'filled', '^', 'MarkerFaceColor', v_ord(3,:));
+               % scatter(these_S.usr.pos(ii,1)+jit(ii), these_S.usr.depth(ii), 200,  'filled', '^', 'MarkerFaceColor', v_ord(3,:));
            end
        end
    end
@@ -388,12 +394,11 @@ text(layer_x(end)+50,  median(pyr_int(end-1:end)), 'S.Pyr.')
 text(layer_x(end)+50,  median(pyr_int(end-1:end))-75, 'S.R.')
 
 subplot(1,10,9:10)
-
-cell_offsets = [ycoords(these_S.usr.ch(these_S.usr.deep))]
-
-histogram((these_S.usr.depth(these_S.usr.deep)), min(ycoords)-50:10: max(ycoords)+50)
+hold on
+histogram((these_S.usr.rel_depth(these_S.usr.deep)), min(these_S.usr.rel_depth)-50:25: max(these_S.usr.rel_depth)+50, 'FaceColor',v_ord(5,:))
+histogram((these_S.usr.rel_depth(~these_S.usr.deep)), min(these_S.usr.rel_depth)-50:25: max(these_S.usr.rel_depth)+50, 'FaceColor',v_ord(3,:))
 
   view(90,90)
-    xlim([min(ycoords)-50 max(ycoords)+50])
+    xlim([min(these_S.usr.rel_depth)-50 max(these_S.usr.rel_depth)+50])
     ylim([0 inf])
     set(gca, 'xDir', 'reverse')
