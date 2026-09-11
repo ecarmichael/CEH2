@@ -62,7 +62,7 @@
 % swr_idx = {'CH63' 'CH158'};
 
 % pox3567_TFCD5 % Done nice CA1 and good Sub spikes done
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-24_14-10-03_TFCD5/Record Node 117';
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-24_14-10-03_TFCD5/Record Node 117';
 % csc_idx = 1:96;
 % ts_prime = 0;
 % swr_idx = {'CH5', 'CH143'};
@@ -70,17 +70,17 @@ csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/
 
 %%%%%   3568   %%%%%%% 
 
-%pox3568_TFCD1 % DONE Good CA1 and Sub. Needs Spikes. 
+%pox3568_TFCD1 % DONE Good CA1 and Sub. Redone. 
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-20_12-49-38_TFCD1/Record Node 117';
 % csc_idx = 1:96;
 % ts_prime = 0;
 % swr_idx = {'CH65', 'CH136'};
 
 %pox3568_TFCD2 % DONE Best CA1 and SWR, Spikes. 
-% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
-% csc_idx = 1:4:96;
-% ts_prime = 0;
-% csc_idx = {'CH124', 'CH149'};
+csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
+csc_idx = 1:96;
+ts_prime = 0;
+swr_idx = {'CH124', 'CH149'};
 
 %pox3568_TFCD3 % DONE CA1 good, no Sub SWR. 
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-22_14-58-53_TFCD3/Record Node 117';
@@ -98,9 +98,9 @@ csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/
 % pox3568_TFCD5 % Great Sub SWR and good CA1 (some spike contam). Needs
 % spikes.
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-24_16-56-18_TFCD5\Record Node 117';
-% csc_idx = 65:77; %1:4:96;
+% csc_idx = 1:96;
 % ts_prime = 0;
-% csc_idx = {'CH13', 'CH134'};
+% swr_idx = {'CH13', 'CH134'};
 
 %%%%%   3256   Pox %%%%%%% 
 
@@ -137,7 +137,15 @@ csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/
 %% load the spikes if present
 
 if ~exist('phy_dir', 'var') && exist('csc_dir', 'var')
+    if ~contains(csc_dir, '/')
+            parts = strsplit(csc_dir, '\');
+    else
     parts = strsplit(csc_dir, '/');
+    end
+
+    if contains(parts{1}, 'C:')
+        parts(1) = [];
+    end
     phy_dir = fullfile(parts{1:end-1}, 'kilosort4'); % Construct phy_dir from csc_dir
     if ispc;  phy_dir = ['C:\' phy_dir]; end
 end

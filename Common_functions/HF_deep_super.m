@@ -185,7 +185,11 @@ for ii = 1:length(shank)
 
 
     flip_ch = find(deep_idx); 
+    if isempty(flip_ch)
+        flip_ch = 1; 
+    else
     flip_ch = flip_ch(end); 
+    end
 
     figure(10+ii)
     clf
@@ -344,9 +348,10 @@ for ii  = length(rip_out):-1:1
     layer_y(ii) = rip_out{ii}.ycoords(rip_out{ii}.flip); 
 end
 
-pyr_int = interp1(layer_x, layer_y, layer_x(1)-mode(diff(layer_x)):mode(diff(layer_x)):layer_x(end)+mode(diff(layer_x)), 'linear', 'extrap');
+pyr_int = interp1(layer_x, layer_y,[layer_x(1)-mode(diff(layer_x)) layer_x layer_x(end)+mode(diff(layer_x))], 'linear', 'extrap');
 pyr_int = [pyr_int(1) layer_y pyr_int(end)]; 
-x_int = layer_x(1)-mode(diff(layer_x)):mode(diff(layer_x)):layer_x(end)+mode(diff(layer_x));
+x_int = [layer_x(1)-mode(diff(layer_x)) layer_x layer_x(end)+mode(diff(layer_x))];
+
     plot(x_int, pyr_int+50, '.--', 'color', [.5 .5 .5])
     plot(x_int, pyr_int, '.--', 'color', [.25 .25 .25])
    plot(x_int, pyr_int-50, '.--', 'color', [.5 .5 .5])
