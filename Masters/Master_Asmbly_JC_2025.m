@@ -1480,114 +1480,133 @@ xlim([0.5 5.5])
 
 % WAKE vs POST vs SHUFF RATE
 subplot(2,4,8); cla
-fprintf('<strong>Rate wake vs Shuff</strong>\n')
+fprintf('<strong>Rate wake vs REM</strong>\n')
+rate_data = wake_r_tbl{1}.Rate(~wake_a_idx); 
+ctrl_idx = wake_r_tbl{1}.ctrl(~wake_a_idx);
 
-[h, p, stats] = MS_rain_plot(wake_r_tbl{1}.Rate(~wake_a_idx),wake_r_tbl{1}.ctrl(~wake_a_idx),[f_ord(2,:); hex2rgb('#808080')],'ttest2', 1:2, 'wiskers');
+data_1 = rate_data(ctrl_idx == 0);
 
-h(1).sc{1}.SizeData = 1; h(2).sc{1}.SizeData = 1; 
-% h(1).sc{1}.MarkerEdgeColor = 'none'; h(2).sc{1}.MarkerEdgeColor = 'none'; 
-% 
-% set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2, 'LineWidth', 1)
-% xlabel('Reactivations/min')
-% set(gca,'ytick', 1:2, 'yticklabel', {'Wake' 'Shuff'}, 'yTickLabelRotation', 0, 'fontsize', 7);
-% ylim([.5 2.5]); xlim([0 8])
-if p < 0.05 
-    fprintf('Wake aRate vs shuffle: <strong> Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),...
-        mean(wake_r_tbl{1}.Rate(~wake_a_idx & wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & wake_r_tbl{1}.ctrl)),stats.df, stats.tstat, p)
-else
-    fprintf('Wake aRate vs shuffle: Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),...
-        mean(wake_r_tbl{1}.Rate(~wake_a_idx & wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & wake_r_tbl{1}.ctrl)),stats.df, stats.tstat, p)
-end
+rate_data = POST_r_tbl{1}.Rate(~post_r_a_idx); 
+ctrl_idx = POST_r_tbl{1}.ctrl(~post_r_a_idx);
 
-% rate per assembly POST 
-% subplot(2,4,8); cla
-hold on
-fprintf('<strong>Rate POST vs Shuff</strong>\n')
-[h, p, stats] = MS_rain_plot(POST_r_tbl{1}.Rate(~post_r_a_idx & post_r_n_idx),POST_r_tbl{1}.ctrl(~post_r_a_idx & post_r_n_idx),[f_ord(5,:); hex2rgb('#808080')],'ttest2', 3:4, 'wiskers');
+data_3 = rate_data(ctrl_idx == 0);
+
+[h, p, stats] = MS_rain_plot([data_1; data_3]',[zeros(size(data_1)); ones(size(data_3))],[f_ord(2,:); f_ord(5,:)],'ttest2', 1:2, 'wiskers');
 
 h(1).sc{1}.SizeData = 1; h(2).sc{1}.SizeData = 1; 
 h(1).sc{1}.MarkerEdgeColor = 'none'; h(2).sc{1}.MarkerEdgeColor = 'none'; 
-
-set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'LineWidth', 1)
+% 
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2, 'LineWidth', 1)
 xlabel('Reactivations/min')
-set(gca,'ytick', 1:4, 'yticklabel', {'Wake', 'Shuff', 'Post' 'Shuff'}, 'yTickLabelRotation', 0, 'fontsize', 7);
-ylim([.5 4.5]); xlim([0 8])
+set(gca,'ytick', 1:2, 'yticklabel', {'Wake' 'REMpost'}, 'yTickLabelRotation', 0, 'fontsize', 7);
+ylim([0.5 3.5]); xlim([0 8])
+% if p < 0.05 
+%     fprintf('Wake aRate vs shuffle: <strong> Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),...
+%         mean(wake_r_tbl{1}.Rate(~wake_a_idx & wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & wake_r_tbl{1}.ctrl)),stats.df, stats.tstat, p)
+% else
+%     fprintf('Wake aRate vs shuffle: Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),...
+%         mean(wake_r_tbl{1}.Rate(~wake_a_idx & wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & wake_r_tbl{1}.ctrl)),stats.df, stats.tstat, p)
+% end
 
-if p < 0.05 
-    fprintf('POST aRate vs shuffle: <strong> Post aRate mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),...
-        mean(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),stats.df, stats.tstat, p)
-else
-    fprintf('POST aRate vs shuffle: Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),...
-        mean(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),stats.df, stats.tstat, p)
-end
-
-[h, p, ~, stats] = ttest2(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl), POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl));
-if h 
-    fprintf('wake aRate vs POST: <strong> Wake mean:  %.2f%s %.2f | POST mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),...
-        mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),stats.df, stats.tstat, p)
-else
-    fprintf('wake aRate vs POST: Wake mean:  %.2f%s %.2f | POST mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),...
-        mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),stats.df, stats.tstat, p)
-end
+% rate per assembly POST 
+% subplot(2,4,8); cla
+% hold on
+% fprintf('<strong>Rate POST vs Shuff</strong>\n')
+% % [h, p, stats] = MS_rain_plot(POST_r_tbl{1}.Rate(~post_r_a_idx & post_r_n_idx),POST_r_tbl{1}.ctrl(~post_r_a_idx & post_r_n_idx),[f_ord(5,:); hex2rgb('#808080')],'ttest2', 3:4, 'wiskers');
+% [h, p, stats] = MS_rain_plot(POST_r_tbl{1}.Rate(~post_r_a_idx ),POST_r_tbl{1}.ctrl(~post_r_a_idx),[f_ord(5,:); hex2rgb('#808080')],'ttest2', 3:4, 'wiskers');
+% 
+% h(1).sc{1}.SizeData = 1; h(2).sc{1}.SizeData = 1; 
+% h(1).sc{1}.MarkerEdgeColor = 'none'; h(2).sc{1}.MarkerEdgeColor = 'none'; 
+% 
+% set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'LineWidth', 1)
+% xlabel('Reactivations/min')
+% set(gca,'ytick', 1:4, 'yticklabel', {'Wake', 'Shuff', 'Post' 'Shuff'}, 'yTickLabelRotation', 0, 'fontsize', 7);
+% ylim([.5 4.5]); xlim([0 8])
+% 
+% if p < 0.05 
+%     fprintf('POST aRate vs shuffle: <strong> Post aRate mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),...
+%         mean(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),stats.df, stats.tstat, p)
+% else
+%     fprintf('POST aRate vs shuffle: Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),...
+%         mean(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),stats.df, stats.tstat, p)
+% end
+% 
+% [h, p, ~, stats] = ttest2(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl), POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl));
+% if h 
+%     fprintf('wake aRate vs POST: <strong> Wake mean:  %.2f%s %.2f | POST mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),...
+%         mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),stats.df, stats.tstat, p)
+% else
+%     fprintf('wake aRate vs POST: Wake mean:  %.2f%s %.2f | POST mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),...
+%         mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),stats.df, stats.tstat, p)
+% end
 
 % save it
-% exportgraphics(gcf, [fig_dir filesep 'Fig_2_Assembly_aRate.pdf'], 'ContentType', 'vector');
+exportgraphics(gcf, [fig_dir filesep 'Fig_2_Assembly_aRate.pdf'], 'ContentType', 'vector');
 
 %% MultiComps
- 
-% N assemblies wake vs REM vs shuffles
-
-data_1 = wake_n_Asmbly(~anx_idx, 1); 
-data_2 = wake_s_Asmbly(~anx_idx, 1); 
-data_3 = Post_n_Asmbly(~anx_idx, 1); 
-data_4 = Post_s_Asmbly(~anx_idx, 1); 
-
-% make a table
-N_sig_tbl = array2table([data_1, data_2, data_3, data_4], 'VariableNames', {'Wake', 'Wake S', 'REM', 'REM_S'});
-
-N_sig_tbl2 = table([data_1; data_2; data_3; data_4],categorical([zeros(size(data_1)); ones(size(data_2)); ones(size(data_3))+1;ones(size(data_4))+2]),...
-    categorical([zeros(size(data_1)); zeros(size(data_2)); ones(size(data_3));ones(size(data_4))]),...
-    categorical([zeros(size(data_1)); ones(size(data_2)); zeros(size(data_3));ones(size(data_4))]),...
-    'VariableNames', {'NSig', 'Type', 'Grp', 'Ctrl'});
-
-[p, tbl, stats, terms] = anovan(N_sig_tbl2.NSig,{N_sig_tbl2.Ctrl N_sig_tbl2.Grp},'model',2,'varnames',{'Ctrl','Grp'})
-% [c, m, h, names] = multcompare(stats);
-
-
-[results,~,~,gnames]  = multcompare(stats,"Dimension",[1 2]);
-
-tbl = array2table(results,"VariableNames", ...
-    ["Group","Control Group","Lower Limit","Difference","Upper Limit","P-value"]);
-tbl.("Group") = gnames(tbl.("Group"));
-tbl.("Control Group") = gnames(tbl.("Control Group")); 
+% 
+% % N assemblies wake vs REM vs shuffles
+% rate_data = wake_r_tbl{1}.Rate(~wake_a_idx); 
+% ctrl_idx = wake_r_tbl{1}.ctrl(~wake_a_idx);
+% 
+% data_1 = rate_data(ctrl_idx == 0);
+% data_2 = rate_data(ctrl_idx == 1);
+% 
+% 
+% rate_data = POST_r_tbl{1}.Rate(~post_r_a_idx); 
+% ctrl_idx = POST_r_tbl{1}.ctrl(~post_r_a_idx);
+% 
+% data_3 = rate_data(ctrl_idx == 0);
+% data_4 = rate_data(ctrl_idx == 1);
+% 
+% % make a table
+% % N_sig_tbl = array2table([data_1; data_2; data_3; data_4], 'VariableNames', {'Wake', 'Wake S', 'REM', 'REM_S'});
+% 
+% N_sig_tbl2 = table([data_1; data_2; data_3; data_4],...
+%     categorical([zeros(size(data_1)); ones(size(data_2)); ones(size(data_3))+1; ones(size(data_4))+2]),...
+%     categorical([zeros(size(data_1)); zeros(size(data_2)); ones(size(data_3));ones(size(data_4))]),...
+%     categorical([zeros(size(data_1)); ones(size(data_2)); zeros(size(data_3));ones(size(data_4))]),...
+%     'VariableNames', {'Rate', 'Type', 'Grp', 'Ctrl'});
+% % 
+% [p, tbl, stats, terms] = anovan(N_sig_tbl2.Rate,{N_sig_tbl2.Ctrl N_sig_tbl2.Grp},'model',2,'varnames',{'Ctrl','Grp'})
+% % [c, m, h, names] = multcompare(stats);
+% % 
+% % 
+% figure(1111)
+% [results,~,~,gnames]  = multcompare(stats,"Dimension",[1 2]);
+% 
+% tbl = array2table(results,"VariableNames", ...
+%     ["Group","Control Group","Lower Limit","Difference","Upper Limit","P-value"]);
+% tbl.("Group") = gnames(tbl.("Group"));
+% tbl.("Control Group") = gnames(tbl.("Control Group")); 
 
 
 % within design
-withinDesign = table(categorical([1 1 2 2].'), categorical([1 2 1 2].'), 'VariableNames', {'cond', 'shuff'}); % within-desing
+% withinDesign = table(categorical([1 1 2 2].'), categorical([1 2 1 2].'), 'VariableNames', {'cond', 'shuff'}); % within-desing
 
 % withinDesign = table([1, 2, 3, 4]', 'VariableNames', {'Type'});
 
 % Fit the RM
-rm = fitrm(N_sig_tbl, 'Wake-REM_S ~ 1', 'WithinDesign', withinDesign);
+% rm = fitrm(N_sig_tbl, 'Wake-REM_S ~ 1', 'WithinDesign', withinDesign);
 
-ranovatbl = ranova(rm,'withinmodel', 'cond*shuff');
+% ranovatbl = ranova(rm,'withinmodel', 'cond*shuff');
 
 % partial eta for condition above: 0.8146203
 
 % post-hoc TK
-posthoc_results = multcompare(rm, 'cond');
+% posthoc_results = multcompare(rm, 'cond');
 
 
 
-% Rate of Reactivations across assemblies for wake and Post REM. 
-rate_tbl = table(double([wake_r_tbl{1}.Rate(~wake_a_idx);  POST_r_tbl{1}.Rate(~post_r_a_idx)]),...
-    categorical([wake_r_tbl{1}.ctrl(~wake_a_idx); POST_r_tbl{1}.ctrl(~post_r_a_idx)+2]),...
-    categorical([wake_r_tbl{1}.ctrl(~wake_a_idx); POST_r_tbl{1}.ctrl(~post_r_a_idx)]),...
-    categorical([zeros(size(wake_r_tbl{1}.ctrl(~wake_a_idx))); ones(size(POST_r_tbl{1}.ctrl(~post_r_a_idx)))]), 'VariableNames', {'Rate', 'Type', 'Ctrl', 'Grp'}); 
-
-% glm for better estimate
-mdl = fitglme(rate_tbl, 'Rate ~ Ctrl*Grp'); %Ctrl * Grp');
-
+% % Rate of Reactivations across assemblies for wake and Post REM. 
+% rate_tbl = table(double([wake_r_tbl{1}.Rate(~wake_a_idx);  POST_r_tbl{1}.Rate(~post_r_a_idx)]),...
+%     categorical([wake_r_tbl{1}.ctrl(~wake_a_idx); POST_r_tbl{1}.ctrl(~post_r_a_idx)+2]),...
+%     categorical([wake_r_tbl{1}.ctrl(~wake_a_idx); POST_r_tbl{1}.ctrl(~post_r_a_idx)]),...
+%     categorical([zeros(size(wake_r_tbl{1}.ctrl(~wake_a_idx))); ones(size(POST_r_tbl{1}.ctrl(~post_r_a_idx)))]), 'VariableNames', {'Rate', 'Type', 'Ctrl', 'Grp'}); 
+% 
+% % glm for better estimate
+% mdl = fitglme(rate_tbl, 'Rate ~ Ctrl*Grp'); %Ctrl * Grp');
+% 
 
 % make a simpel table
 % pad for uneven
@@ -1599,19 +1618,19 @@ mdl = fitglme(rate_tbl, 'Rate ~ Ctrl*Grp'); %Ctrl * Grp');
 
 
 % repeated measures anova
-withinDesign = table(categorical([1 1 2 2].'), categorical([1 2 1 2].'), 'VariableNames', {'cond', 'shuff'}); % within-desing
-
-% withinDesign = table([1, 2, 3, 4]', 'VariableNames', {'Type'});
-
-% Fit the RM
-rm = fitrm(N_sig_tbl, 'Wake-REM_S ~ 1', 'WithinDesign', withinDesign);
-
-ranovatbl = ranova(rm,'withinmodel', 'cond*shuff');
-
-% partial eta for condition above: 0.8146203
-
-% post-hoc TK
-posthoc_results = multcompare(rm, 'cond');
+% withinDesign = table(categorical([1 1 2 2].'), categorical([1 2 1 2].'), 'VariableNames', {'cond', 'shuff'}); % within-desing
+% 
+% % withinDesign = table([1, 2, 3, 4]', 'VariableNames', {'Type'});
+% 
+% % Fit the RM
+% rm = fitrm(N_sig_tbl, 'Wake-REM_S ~ 1', 'WithinDesign', withinDesign);
+% 
+% ranovatbl = ranova(rm,'withinmodel', 'cond*shuff');
+% 
+% % partial eta for condition above: 0.8146203
+% 
+% % post-hoc TK
+% posthoc_results = multcompare(rm, 'cond');
 
 
 % simple anova. 

@@ -524,7 +524,7 @@ set(gcf,'Units','inch','OuterPosition',f_pos);
 subplot(2,4,1)
   
 % [h, p, stats] = MS_rain_plot([data_1; data_2], [ones(size(data_1)), ones(size(data_2))*2], [f_ord(2,:); hex2rgb('#808080')],'ttest2', 1:2, 'wiskers');
-[h, eb, sc, p, stats] = MS_bar_w_err(data_1,data_2, [f_ord(2,:); hex2rgb('#808080')],1, 'ttest', 1:2); 
+[h, eb, sc, p, stats] = MS_bar_w_err(data_1,data_2, [f_ord(2,:); hex2rgb('#808080')],1, 'signrank', 1:2); 
 
 
 eb.LineWidth = .5; %eb.Color = 'k'; eb.LineStyle = "--"; 
@@ -532,14 +532,20 @@ h.LineWidth = .8; h.EdgeColor = "none";
 sc{1}.SizeData = 10; sc{2}.SizeData = 10; 
 sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = 'k'; 
 sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+set(gca,'xtick', [1 2], 'xticklabel', {'Post' 'Shuff'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 4.5])
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
+ylabel('N Detected Assemblies')
 
 hold on
 fprintf('<strong>Rate POST vs Shuff</strong>\n')
 
 
+subplot(2,4,2)
 
 % [h, p, stats] = MS_rain_plot([data_1; data_2], [ones(size(data_1)), ones(size(data_2))*2], [f_ord(5,:); hex2rgb('#808080')],'ttest2', 1:2, 'wiskers');
-[h, eb, sc, p, stats] = MS_bar_w_err(data_3,data_4, [f_ord(5,:); hex2rgb('#808080')],1, 'ttest', 4:5); 
+[h, eb, sc, p, stats] = MS_bar_w_err((data_3./data_1)*100,(data_4./data_1)*100, [f_ord(5,:); hex2rgb('#808080')],1, 'ttest', 1:2); 
 
 
 eb.LineWidth = .5; %eb.Color = 'k'; eb.LineStyle = "--"; 
@@ -548,14 +554,31 @@ sc{1}.SizeData = 10; sc{2}.SizeData = 10;
 sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = 'k'; 
 sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
 
+ylim([0 100])
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
-ylabel('N Sig. Assemblies')
-set(gca,'xtick', [1 2 4 5], 'xticklabel', {'Wake', 'Shuff', 'Post' 'Shuff'}, 'XTickLabelRotation', 0, 'fontsize', 7);
-xlim([0.5 5.5])
+ylabel('% awake Assemblies')
+set(gca,'xtick', [1 2], 'xticklabel', {'Post' 'Shuff'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 4.5])
 
+exportgraphics(gcf, ['Fig2g_h.pdf'])
 
-% stats:
+%% stats:
 
+% % make a table
+% N_sig_tbl = array2table([data_1', data_2', data_3', data_4'], 'VariableNames', {'Wake', 'Wake S', 'REM', 'REM_S'});
+% 
+% 
+% % within design
+% withinDesign = table(categorical([1 1 2 2].'), categorical([1 2 1 2].'), 'VariableNames', {'cond', 'shuff'}); % within-desing
+% 
+% % withinDesign = table([1, 2, 3, 4]', 'VariableNames', {'Type'});
+% 
+% % Fit the RM
+% rm = fitrm(N_sig_tbl, 'Wake-REM_S ~ 1', 'WithinDesign', withinDesign);
+% 
+% ranovatbl = ranova(rm,'withinmodel', 'cond+shuff');
+% 
+% fprtinf
 
 
 
