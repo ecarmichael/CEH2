@@ -51,7 +51,6 @@ if ~isempty(stats)
             % disp('using ttest2')
             [h, p, ~,stats] = ttest2(data_a, data_b);
             eff_s = meanEffectSize(data_a, data_b, "Effect","cohen");
-
         case 'ranksum'
             % disp('using ranksum')
             [h, p, ~,stats] = ranksum(data_a, data_b);
@@ -59,7 +58,7 @@ if ~isempty(stats)
 
         case 'signrank'
             % disp('using signrank')
-            [h, p, ~,stats] = signrank(data_a, data_b);
+            [p, h, stats] = signrank(data_a', data_b');
 
             plot([offsets_a, offsets_b]', [data_a ;data_b], '-', 'Color', [.5 .5 .5])
             eff_s = meanEffectSize(data_a, data_b, "Effect","cohen", 'Paired',true);
@@ -91,14 +90,29 @@ if ~isempty(stats)
         plot(x_vals, [max(data_pool, [], 'all')*1.05 max(data_pool, [], 'all')*1.05], '-k', 'linewidth', 1)
     end
 
-    if p(1) < 0.05
-        fprintf('<strong>%s</strong> - t(<strong>%d</strong>) = <strong>%.2f</strong>, p = <strong>%.5f</strong> ',stats_test, stats.df,stats.tstat, p)
-    else
-        fprintf('<strong>%s</strong> - t(%d) = %.2f, p = %.5f ',stats_test, stats.df,stats.tstat, p)
-    end
+    if contains(stats_test , 'test')
+        if p(1) < 0.05
+            fprintf('<strong>%s</strong> - t(<strong>%d</strong>) = <strong>%.2f</strong>, p = <strong>%.5f</strong> ',stats_test, stats.df,stats.tstat, p)
+        else
+            fprintf('<strong>%s</strong> - t(%d) = %.2f, p = %.5f ',stats_test, stats.df,stats.tstat, p)
+        end
 
     fprintf('| Cohen d = %.2f \n', eff_s.Effect);
     fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f) \n\n',mean(data_a, 'omitnan'),MS_SEM(data_a),mean(data_b, 'omitnan'),MS_SEM(data_b))
+
+
+    else
+        if p(1) < 0.05
+            fprintf('<strong>%s</strong> - W = <strong>%.2f</strong>, p = <strong>%.5f</strong> ',stats_test, stats.signedrank, p)
+        else
+            fprintf('<strong>%s</strong> - W = %.2f, p = %.5f ',stats_test,stats.signedrank, p)
+        end
+
+    fprintf('| Cohen d = %.2f \n', eff_s.Effect);
+    fprintf('Group A (%.2f +/- %.2f)  Vs Group B (%.2f +/- %.2f) \n\n',median(data_a, 'omitnan'),MS_SEM(data_a),median(data_b, 'omitnan'),MS_SEM(data_b))
+
+
+    end
 
 end
 
