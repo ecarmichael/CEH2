@@ -38,10 +38,10 @@
 %%%%%   3567   %%%%%%% 
 
 %pox3567_TFCD1 % done some sub swr, no spikes yet. 
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-20_17-44-01_TFCD1/Record Node 117';
-% csc_idx = 1:4:96;
-% ts_prime = 0;
-% csc_idx = {'CH51', 'CH141'};
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-20_17-44-01_TFCD1/Record Node 117';
+csc_idx = 1:4:96;
+ts_prime = 0;
+swr_idx = {'CH51', 'CH141'};
 
 %pox3567_TFCD2  done good Sub SWR, okay Ca1  REDONE
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-21_15-41-32_TFCD2/Record Node 117';
@@ -77,10 +77,10 @@
 % swr_idx = {'CH65', 'CH136'};
 
 %pox3568_TFCD2 % DONE Best CA1 and SWR, Spikes. 
-csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
-csc_idx = 1:96;
-ts_prime = 0;
-swr_idx = {'CH124', 'CH149'};
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
+% csc_idx = 1:96;
+% ts_prime = 0;
+% swr_idx = {'CH124', 'CH149'};
 
 %pox3568_TFCD3 % DONE CA1 good, no Sub SWR. 
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-22_14-58-53_TFCD3/Record Node 117';
@@ -90,9 +90,9 @@ swr_idx = {'CH124', 'CH149'};
 
 % pox3568_TFCD4 % DONE great CA1 and SWR (some spike contamination) needs Spikes. 
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-23_18-12-36_TFCD4\Record Node 117';
-% csc_idx = 1:4:96;
+% csc_idx = 1:96;
 % ts_prime = 0;
-% csc_idx = {'CH63', 'CH157'};
+% swr_idx = {'CH63', 'CH157'};
 
 
 % pox3568_TFCD5 % Great Sub SWR and good CA1 (some spike contam). Needs
@@ -270,7 +270,11 @@ csc_names = csc_names+1; % offset o indexing.
 % end
 % session info
 
-parts = strsplit(csc_dir,'/'); 
+if ~contains(csc_dir, '/')
+    parts = strsplit(csc_dir, '\');
+else
+    parts = strsplit(csc_dir, '/');
+end
 s_idx = contains(parts, '2026'); % find the folder containing '2026' since all the sessions of interest are from this time. 
 sess = parts{s_idx}; 
 subject = lower(sess(strfind(sess, 'Pox'): strfind(sess, 'Pox')+6));
