@@ -1,4 +1,4 @@
-function [emp_idx, labels, boxes] = MS_DLC_EPM_super(data_dir, save_dir, boxes, plt_mov)
+function [emp_idx, labels, boxes] = MS_DLC_EPM_super(fname, save_dir, boxes, plt_mov)
 
 if nargin < 2
     save_dir = [];
@@ -12,25 +12,27 @@ elseif nargin <4
     
 end
 
-cd(data_dir)
+% cd(data_dir)
 
-a_list = dir('*.avi');
-fnames = dir('*filtered.csv');
+% a_list = dir('*.avi');
+% fnames = dir('*filtered.csv');
+% 
+% if length(a_list) ~= length(fnames)
+% 
+%     error('# of .avi files and # of label h5 files are not equal')
+% end
 
-if length(a_list) ~= length(fnames)
-    
-    error('# of .avi files and # of label h5 files are not equal')
-end
+splt_idx = strfind(fname, '_super'); 
 
-
+    vid_name = [fname(1:splt_idx-1) '.mp4'];
 
 %% Load and scale the position data from DLC
 
 conv_f = [1 1];
 
-tsd = MS_DLC2TSD(data_dir, [],conv_f, 0);
+   tsd = MS_DLC2TSD_single(fname, vid_name);
 
-if (tsd.tvec(end) - tsd.tvec(1)) > 600
+if (tsd.tvec(end) - tsd.tvec(1)) > 605
     
     s_idx = nearest_idx(5, tsd.tvec);
     e_idx = nearest_idx(605, tsd.tvec);
@@ -41,7 +43,14 @@ if (tsd.tvec(end) - tsd.tvec(1)) > 600
     
 end
 
-%% plot to checl
+%% pick the head and neck index
+if sum(contains(tsd.label, 'left_hip')) > 0 % if using the superanimal model
+    head_idx = [37 38];
+    body_idx = [17 18]; %Which body node to use.
+else
+    head_idx = [3 4];
+    body_idx = [5 6]; %Which body node to use.
+end
 
 
 
@@ -54,7 +63,7 @@ clf
 hold on
 
 imagesc(tsd.mean_frame)
-plot(tsd.data(3,:), tsd.data(4,:), '.');
+plot(tsd.data(head_idx(1),:), tsd.data(head_idx(2),:), '.');
 
 if isempty(boxes)
     
@@ -82,70 +91,82 @@ hold on
 plot(xcross, 'FaceColor', [0 1 0], 'FaceAlpha', .5, 'EdgeColor', [0 1 0], 'LineWidth', 5);
 
 %% vectorize occupancy
+if sum(contains(tsd.label, 'left_hip')) > 0 % if using the superanimal model
 
+head_idx = [37 38];
+body_idx = [17 18]; %Which body node to use.
+else 
 head_idx = [3 4];
 body_idx = [5 6]; %Which body node to use.
-
+end
 % find points where the head is not close to the body
 
 e_dist = sqrt(((tsd.data(head_idx(1),:) - tsd.data(body_idx(1),:)).^2)+((tsd.data(head_idx(2),:) - tsd.data(body_idx(2),:)).^2));
 
 
 %
-% figure(878)
-% clf
-% imagesc(tsd.mean_frame)
-% colormap('bone')
-%
-% hold on
-%
-% plot(close_p, 'FaceColor',[ 0 0 1], 'EdgeColor',[0 0 1], 'FaceAlpha', .2)
-% plot(open_p, 'FaceColor',[ 1 1 0], 'EdgeColor',[1 1 0], 'FaceAlpha', .2)
-% plot(xcross, 'FaceColor', [0 1 0], 'FaceAlpha', .5, 'EdgeColor', [0 1 0], 'LineWidth', 3);
-% plot(open_wR_p, 'FaceColor', [0 1 1], 'FaceAlpha', .5, 'EdgeColor', [0 1 1], 'LineWidth', 3);
-% plot(open_wL_p, 'FaceColor', [1 0 1], 'FaceAlpha', .5, 'EdgeColor', [1 0 1], 'LineWidth', 3);
 
-
-[c_in, c_on] = inpolygon(tsd.data(body_idx(1),:), tsd.data(body_idx(2),:), close_p.Vertices(:,1), close_p.Vertices(:,2));
+[c_in, c_on] = inpolygon(tsd.data(head_idx(1),:), tsd.data(head_idx(2),:), close_p.Vertices(:,1), close_p.Vertices(:,2));
 c_idx = c_in | c_on;
 
 % [oWR_in, oWR_on] = inpolygon(tsd.data(body_idx(1),:), tsd.data(body_idx(2),:), open_wR_p.Vertices(:,1), open_wR_p.Vertices(:,2));
 %
 % [oWL_in, oWL_on] = inpolygon(tsd.data(body_idx(1),:), tsd.data(body_idx(2),:), open_wL_p.Vertices(:,1), open_wL_p.Vertices(:,2));
 
-[o_in, o_on] = inpolygon(tsd.data(body_idx(1),:), tsd.data(body_idx(2),:), open_p.Vertices(:,1), open_p.Vertices(:,2));
+[o_in, o_on] = inpolygon(tsd.data(head_idx(1),:), tsd.data(head_idx(2),:), open_p.Vertices(:,1), open_p.Vertices(:,2));
 % o_idx = o_in | o_on | oWR_in | oWR_on | oWL_in | oWL_on;
 o_idx = o_in | o_on;
 
 
-[x_in, x_on] = inpolygon(tsd.data(body_idx(1),:), tsd.data(body_idx(2),:), xcross.Vertices(:,1), xcross.Vertices(:,2));
+[x_in, x_on] = inpolygon(tsd.data(head_idx(1),:), tsd.data(head_idx(2),:), xcross.Vertices(:,1), xcross.Vertices(:,2));
 x_idx = x_in | x_on;
 
-c_idx = c_idx & (~x_idx & ~o_idx);
-o_idx = o_idx & (~x_idx & ~c_idx);
-n_idx = ~x_idx & ~o_idx & ~c_idx;
+c_idx = c_idx & (~x_idx | ~o_idx);
+o_idx = o_idx & ~x_idx & ~c_idx;
 
 % get putative head dips.
 [h_o_in, h_o_on] = inpolygon(tsd.data(head_idx(1),:), tsd.data(head_idx(2),:), open_p.Vertices(:,1), open_p.Vertices(:,2));
+h_o = (h_o_in | h_o_on) & ~(c_idx | x_idx);
 
 [h_wr_in, h_wr_on] = inpolygon(tsd.data(head_idx(1),:), tsd.data(head_idx(2),:), open_wR_p.Vertices(:,1), open_wR_p.Vertices(:,2));
 [h_wl_in, h_wl_on] = inpolygon(tsd.data(head_idx(1),:), tsd.data(head_idx(2),:), open_wL_p.Vertices(:,1), open_wL_p.Vertices(:,2));
 
-d_idx = (h_wr_in | h_wr_on | h_wl_in | h_wl_on) & ~(h_o_in | h_o_on)  & ~(c_idx | x_idx);
+d_idx = (h_wr_in | h_wr_on | h_wl_in | h_wl_on) & ~h_o;  %& (~c_idx | ~x_idx);
 
 
 c_idx = c_idx & ~d_idx;
 
+n_idx = ~x_idx & ~o_idx & ~c_idx & ~d_idx;
+c_idx = c_idx & ~n_idx; 
+o_idx = o_idx & ~n_idx; 
+x_idx = x_idx & ~n_idx; 
+d_idx = d_idx & ~n_idx; 
 
-% p1 = plot(tsd.data(body_idx(1),c_idx),tsd.data(body_idx(2),c_idx),'b+'); % points inside
-% p2 = plot(tsd.data(body_idx(1),o_idx),tsd.data(body_idx(2),o_idx),'yo'); % points outside
-% p3 = plot(tsd.data(body_idx(1),x_idx),tsd.data(body_idx(2),x_idx),'gs'); % points outside
-% p4 = plot(tsd.data(body_idx(1),n_idx),tsd.data(body_idx(2),n_idx),'kd'); % points outside
+% p1 = plot(tsd.data(head_idx(1),c_idx),tsd.data(head_idx(2),c_idx),'b+'); % points inside
+% p2 = plot(tsd.data(head_idx(1),o_idx),tsd.data(head_idx(2),o_idx),'yo'); % points outside
+% p3 = plot(tsd.data(head_idx(1),x_idx),tsd.data(head_idx(2),x_idx),'gs'); % points outside
+% p4 = plot(tsd.data(head_idx(1),n_idx),tsd.data(head_idx(2),n_idx),'kd'); % points outside
 % p5 = plot(tsd.data(head_idx(1),d_idx),tsd.data(head_idx(2),d_idx),'rx'); % points outside
+% 
 
+figure(878)
+clf
+imagesc(tsd.mean_frame)
+colormap('bone')
 
+hold on
 
+plot(close_p, 'FaceColor',[ 0 0 1], 'EdgeColor',[0 0 1], 'FaceAlpha', .2)
+plot(open_p, 'FaceColor',[ 1 1 0], 'EdgeColor',[1 1 0], 'FaceAlpha', .2)
+plot(xcross, 'FaceColor', [0 1 0], 'FaceAlpha', .5, 'EdgeColor', [0 1 0], 'LineWidth', 3);
+plot(open_wR_p, 'FaceColor', [0 1 1], 'FaceAlpha', .5, 'EdgeColor', [0 1 1], 'LineWidth', 3);
+plot(open_wL_p, 'FaceColor', [1 0 1], 'FaceAlpha', .5, 'EdgeColor', [1 0 1], 'LineWidth', 3);
 
+plot(tsd.data(head_idx(1),c_idx), tsd.data(head_idx(2),c_idx), '.c', 'MarkerSize', 12);
+plot(tsd.data(head_idx(1),o_idx), tsd.data(head_idx(2),o_idx), 'or', 'MarkerSize', 12);
+plot(tsd.data(head_idx(1),x_idx), tsd.data(head_idx(2),x_idx), 'xg', 'MarkerSize', 12);
+plot(tsd.data(head_idx(1),d_idx), tsd.data(head_idx(2),d_idx), 'sm', 'MarkerSize', 12);
+plot(tsd.data(head_idx(1),n_idx),tsd.data(head_idx(2),n_idx),'.','color',  [.5 .5 .5], 'MarkerSize', 12); % points outside
 
 % lg.String(1:5)  = [];
 %% collect the data
@@ -231,7 +252,7 @@ for ii = 1:length(d_entries)
     d_idx(d_entries(ii):d_exits(ii)) = 1;
 end
 d_idx = logical(d_idx);
-
+d_idx = d_idx & ~n_idx & ~c_idx & ~o_idx; 
 emp_idx(d_idx) = 4;
 
 
@@ -246,7 +267,8 @@ fprintf('EMP: %0.1f%% open | %0.1f%% closed | %0.1f%% xcross | %0.1f%% head dips
 figure(8818)
 clf
 subplot(2,2,2)
-p = pie([(sum(c_idx)/length(c_idx)),(sum(o_idx)/length(o_idx)), (sum(x_idx)/length(x_idx)),(sum(d_idx)/length(d_idx))],[0 1 1 1],'%.3f%%');
+d_len = sum(~n_idx); % get the length of the data without missing times. 
+p = pie([(sum(c_idx)/d_len),(sum(o_idx)/d_len), (sum(x_idx)/d_len),(sum(d_idx)/d_len)],[0 1 1 1],'%.3f%%');
 
 c = 0;
 for ip = 1:2:length(p)
@@ -265,8 +287,8 @@ plot(tsd.tvec,emp_idx-0.5, 'k', 'linewidth', .5);
 plot(tsd.tvec(c_idx), emp_idx(c_idx)-.5,'.', 'color', c_ord(1,:), 'markersize', 22)
 plot(tsd.tvec(o_idx), emp_idx(o_idx)-.5,'.', 'color', c_ord(2,:), 'markersize', 22)
 plot(tsd.tvec(x_idx), emp_idx(x_idx)-.5,'.', 'color', c_ord(3,:), 'markersize', 22)
-plot(tsd.tvec(n_idx), emp_idx(n_idx)-.5,'.', 'color', c_ord(4,:), 'markersize', 22)
-plot(tsd.tvec(d_idx), emp_idx(d_idx)-.5,'.', 'color', c_ord(5,:), 'markersize', 22)
+plot(tsd.tvec(n_idx), emp_idx(n_idx)-.5,'.', 'color', [.5 .5 .5], 'markersize', 22)
+plot(tsd.tvec(d_idx), emp_idx(d_idx)-.5,'.', 'color', c_ord(4,:), 'markersize', 22)
 xlim([tsd.tvec(1), tsd.tvec(end)])
 set(gca,'ytick', -.5:3.5, 'yticklabel', {'none', 'closed', 'open', 'cross', 'head dip'})
 hline(0:3);
@@ -286,14 +308,14 @@ hold on
 plot(close_p, 'FaceColor',c_ord(1,:), 'EdgeColor',c_ord(1,:), 'FaceAlpha', .1)
 plot(open_p, 'FaceColor',c_ord(2,:), 'EdgeColor',c_ord(2,:), 'FaceAlpha', .1)
 plot(xcross, 'FaceColor', c_ord(3,:), 'FaceAlpha', .1, 'EdgeColor', c_ord(3,:), 'LineWidth', 3);
-plot(open_wR_p, 'FaceColor', c_ord(5,:), 'FaceAlpha', .1, 'EdgeColor', c_ord(5,:), 'LineWidth', 3);
-plot(open_wL_p, 'FaceColor', c_ord(5,:), 'FaceAlpha', .1, 'EdgeColor', c_ord(5,:), 'LineWidth', 3);
+plot(open_wR_p, 'FaceColor', c_ord(5,:), 'FaceAlpha', .1, 'EdgeColor', c_ord(4,:), 'LineWidth', 3);
+plot(open_wL_p, 'FaceColor', c_ord(5,:), 'FaceAlpha', .1, 'EdgeColor', c_ord(4,:), 'LineWidth', 3);
 
-p1 = plot(tsd.data(body_idx(1),c_idx),tsd.data(body_idx(2),c_idx),'.','color', c_ord(1,:), 'markersize', 12); % points inside
-p2 = plot(tsd.data(body_idx(1),o_idx),tsd.data(body_idx(2),o_idx),'.','color',  c_ord(2,:), 'markersize', 12); % points outside
-p3 = plot(tsd.data(body_idx(1),x_idx),tsd.data(body_idx(2),x_idx),'.','color',  c_ord(3,:), 'markersize', 12); % points outside
-p4 = plot(tsd.data(body_idx(1),n_idx),tsd.data(body_idx(2),n_idx),'.','color',  c_ord(4,:), 'markersize', 12); % points outside
-p5 = plot(tsd.data(head_idx(1),d_idx),tsd.data(head_idx(2),d_idx),'.','color',  c_ord(5,:), 'markersize', 12); % points outside
+p1 = plot(tsd.data(head_idx(1),c_idx),tsd.data(head_idx(2),c_idx),'.','color', c_ord(1,:), 'markersize', 12); % points inside
+p2 = plot(tsd.data(head_idx(1),o_idx),tsd.data(head_idx(2),o_idx),'o','color',  c_ord(2,:), 'markersize', 12); % points outside
+p3 = plot(tsd.data(head_idx(1),x_idx),tsd.data(head_idx(2),x_idx),'x','color',  c_ord(3,:), 'markersize', 12); % points outside
+p4 = plot(tsd.data(head_idx(1),n_idx),tsd.data(head_idx(2),n_idx),'.','color',  [.5 .5 .5], 'markersize', 12); % points outside
+p5 = plot(tsd.data(head_idx(1),d_idx),tsd.data(head_idx(2),d_idx),'s','color',  c_ord(4,:), 'markersize', 12); % points outside
 
 lg = legend([p1 p2 p3 p4 p5], {'closed idx', 'open idx', 'x idx', 'none idx', 'dip idx'});
 
@@ -354,14 +376,14 @@ boxes.open_wL = open_wL_p;
 
 %% info
 
-this_dir = cd;
-parts = strsplit(this_dir, filesep); 
+% this_dir = cd;
+parts = strsplit(vid_name, '_'); 
 
-m_idx = 1+find(contains(parts, 'EPM')); 
-d_idx = m_idx+2; 
+% m_idx = 1+find(contains(parts, 'EPM')); 
+% d_idx = m_idx+2; 
 
-info.subject = parts{m_idx};
-info.date = parts{d_idx};
+info.subject = parts{1};
+info.date = vid_name(strfind(vid_name,info.subject)+length(info.subject)+1:strfind(vid_name,'EPM')-2);
 
 
 

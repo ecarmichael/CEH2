@@ -126,6 +126,7 @@ for iS = 1:length(f_list)
         out.Spk_sub_std{iS} = mean(S_out_sub_std, 1);
         out.Spk_sub_atyp{iS} = mean(S_out_sub_atyp, 1);
         out.Spk_loc{iS} = this_sess.S.loc';
+        out.Spk_deep{iS} = this_sess.S.usr.deep; 
         cfg_rate = [];
         cfg_rate.DetectGaps = 1;
         this_sess.S = MS_spike_rates(this_sess.S, this_sess.csc.tvec, 2);

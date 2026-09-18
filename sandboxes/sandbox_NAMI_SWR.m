@@ -38,10 +38,10 @@
 %%%%%   3567   %%%%%%% 
 
 %pox3567_TFCD1 % done some sub swr, no spikes yet. 
-csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-20_17-44-01_TFCD1/Record Node 117';
-csc_idx = 1:4:96;
-ts_prime = 0;
-swr_idx = {'CH51', 'CH141'};
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-20_17-44-01_TFCD1/Record Node 117';
+% csc_idx = 1:96;
+% ts_prime = 0;
+% swr_idx = {'CH51', 'CH141'};
 
 %pox3567_TFCD2  done good Sub SWR, okay Ca1  REDONE
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-21_15-41-32_TFCD2/Record Node 117';
@@ -59,13 +59,13 @@ swr_idx = {'CH51', 'CH141'};
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-23_15-53-07_TFCD4/Record Node 117';
 % csc_idx = 1:96;
 % ts_prime = 0;
-% swr_idx = {'CH63' 'CH158'};
+% swr_idx = {'CH63' 'CH143' 'CH130' 'CH142'}; % uses mean sub. 
 
 % pox3567_TFCD5 % Done nice CA1 and good Sub spikes done
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3567_2026-06-24_14-10-03_TFCD5/Record Node 117';
 % csc_idx = 1:96;
 % ts_prime = 0;
-% swr_idx = {'CH5', 'CH143'};
+% swr_idx = {'CH56', 'CH143' 'CH144'};
 
 
 %%%%%   3568   %%%%%%% 
@@ -74,13 +74,13 @@ swr_idx = {'CH51', 'CH141'};
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-20_12-49-38_TFCD1/Record Node 117';
 % csc_idx = 1:96;
 % ts_prime = 0;
-% swr_idx = {'CH65', 'CH136'};
+% swr_idx = {'CH65', 'CH136' 'CH134' 'CH144' 'CH141'};
 
 %pox3568_TFCD2 % DONE Best CA1 and SWR, Spikes. 
-% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
-% csc_idx = 1:96;
-% ts_prime = 0;
-% swr_idx = {'CH124', 'CH149'};
+csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
+csc_idx = 1:96;
+ts_prime = 0;
+swr_idx = {'CH124', 'CH149'};
 
 %pox3568_TFCD3 % DONE CA1 good, no Sub SWR. 
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-22_14-58-53_TFCD3/Record Node 117';
@@ -135,6 +135,7 @@ swr_idx = {'CH51', 'CH141'};
 % ts_prime = 0;
 % csc_idx = {'CH75', 'CH149'}; % CH71 and 115 are also decent for CA1
 %% load the spikes if present
+c_dir = cd; 
 
 if ~exist('phy_dir', 'var') && exist('csc_dir', 'var')
     if ~contains(csc_dir, '/')
@@ -171,7 +172,7 @@ win = winter(round(sum(S.loc==1)*1.5));
 S.c_ord = [win(1:sum(S.loc==1),:); flipud(neb(end-sum(S.loc==0)+1:end,:))]; 
 % 
 
-
+cd(c_dir)
 
 %% load the csc
 
@@ -236,6 +237,9 @@ csc_names = csc_names+1; % offset o indexing.
     csc.cfg.hdr{ii}.SamplingFrequency = info.header.sampleRate;
     % csc.data = [csc.data, NaN(length(csc.data),length(csc_list)-1)]; % pad the NaNa
 
+    % hold the sampling frequency
+    fs = csc.cfg.hdr{1}.SamplingFrequency;
+
     cfg_in.decimateFactor = 15;
     csc = decimate_tsd(cfg_in, csc);
 
@@ -249,7 +253,6 @@ csc_names = csc_names+1; % offset o indexing.
         csc.cfg.hdr{ii}.SamplingFrequency = info.header.sampleRate ./ cfg_in.decimateFactor;
 
     end
-    fs = csc.cfg.hdr{1}.SamplingFrequency;
 
     % csc.data = csc.data';
     csc.label = labels;
@@ -265,7 +268,7 @@ csc_names = csc_names+1; % offset o indexing.
     % load the OE version of the events.
     evts_list = dir([csc_dir filesep '*Data*.events']);
 
-    OE_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs, 0);
+    OE_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs, csc_prime);
 
 % end
 % session info
@@ -284,6 +287,20 @@ else
     sess_id = sess(strfind(sess, 'LT'):end);
 end
 
+% make a quick test plot
+figure(10101)
+clf
+hold on
+plot(S)
+plot(csc.tvec, csc.data(1,:)/100); 
+
+% vline(OE_evts.t{contains(OE_evts.label, '5')}, 'b')
+vline(OE_evts.t{contains(OE_evts.label, '11')}, 'g')
+vline(OE_evts.t{contains(OE_evts.label, '13')}, 'b')
+
+xlim([csc.tvec(1)-20 csc.tvec(end)+20])
+
+
 
 %% make an average LFP channel if needed
 
@@ -301,9 +318,15 @@ csc_r = restrict(csc, csc.tvec(1), csc.tvec(1)+500);
 figure(1010)
 clf;
 hold on
+swr_ch = ismember(csc_r.label, swr_idx);
 for ii = 1:size(csc_r.data,1)
 
-    plot(csc_r.tvec, csc_r.data(ii,:)+ii*500);
+    if swr_ch(ii)
+        plot(csc_r.tvec, csc_r.data(ii,:)+ii*500,'k', 'LineWidth',1);
+    else
+        plot(csc_r.tvec, csc_r.data(ii,:)+ii*500);
+    end
+
     lab{ii} = csc_r.label{ii};
     y_t(ii) = median(csc_r.data(ii,:)+ii*500);
 end
@@ -343,20 +366,40 @@ mov_iv = ResizeIV(cfg_resize, mov_iv);
 
 
 csc_r = restrict(csc, mov_iv);
+mov_r = restrict(mov_rate, mov_iv); 
 
+figure(10101)
+plot(csc_r.tvec, (csc_r.data(1,:)/100)-5)
+plot(mov_rate.tvec, ((mov_rate.data(1,:)/max(mov_rate.data(1,:)))*10)-10)
+ylim([-10 inf])
 %%   Detect CA1 SWRS
 
     swrs_ca1 = MS_SWR_detector(csc_r,swr_idx(1));
 
 % % manually select
 % swr_k = MS_manual_IV_selection(csc, swrs_ca1, .2);
+% swr_k_idx = ismember( 1:length(swrs_ca1.tend), swr_k)
 % swrs_ca1 = SelectIV([], swrs_ca1, logical(swr_k))
 %%   Detect Sub SWRS
 close all
-    swrs_sub = MS_SWR_detector(csc_r,swr_idx(2));
+if length(swr_idx) > 2
+    disp('Getting the mean lfp for Sub')
 
+    this_idx = find(contains(csc_r.label, swr_idx));
+    csc_r_m = csc_r; 
+    csc_r_m.data = mean(csc_r.data(this_idx,:));
+    csc_r_m.label{1} = 'sub_mean';
+    csc_r_m.label(2:end) = [];
+    csc_r_m.cfg.hdr(2:end) = [];
+    swrs_sub = MS_SWR_detector(csc_r_m,csc_r_m.label(1));
+% 
+else
+
+    swrs_sub = MS_SWR_detector(csc_r,swr_idx(2));
+end
 % swr_k = MS_manual_IV_selection(csc, swrs_sub, .2);
-% swrs_sub = SelectIV([], swrs_sub, logical(swr_k))
+% swr_k_idx = ismember( 1:length(swrs_sub.tend), swr_k)
+% swrs_sub = SelectIV([], swrs_sub, logical(swr_k_idx))
 
 %% get the deep vs superficial classifciation
 
@@ -384,6 +427,10 @@ all_TFC.(this_name).evts=OE_evts;
 
 all_TFC.(this_name).swr_idx = swr_idx;
 
+all_TFC.(this_name).phy_dir = phy_dir; 
+all_TFC.(this_name).csc_dir = csc_dir; 
+
+
 if exist('S', 'var')
     all_TFC.(this_name).S=S;
 end
@@ -394,6 +441,7 @@ data.(this_name) = all_TFC.(this_name);
 
 save([this_name '.mat'], 'data', '-v7.3')
 
+disp('data saved')
 %% split out the all_TFC for speed. 
 
 f_list  = fieldnames(all_TFC);
