@@ -4,10 +4,10 @@
 %%%%%   2217   %%%%%%% 
 
 %pox2217_TFCD1 % no good sub SWR
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-16_16-29-44_TFC_D1/Record Node 117';
-% csc_idx = 1:4:96;
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox2217_2026-06-16_16-29-44_TFCD1\Record Node 117';
+% csc_idx = 1:96;
 % ts_prime = 0;
-% csc_idx = {'CH59'}; % no good Sub SWR
+% swr_idx = {'CH59'}; % no good Sub SWR
 
 %pox2217_TFCD2 % no good SWR not done. 
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-17_13-41-15_TFC_D2/Record Node 117';
@@ -77,22 +77,22 @@
 % swr_idx = {'CH65', 'CH136' 'CH134' 'CH144' 'CH141'};
 
 %pox3568_TFCD2 % DONE Best CA1 and SWR, Spikes. 
-csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
-csc_idx = 1:96;
-ts_prime = 0;
-swr_idx = {'CH124', 'CH149'};
-
-%pox3568_TFCD3 % DONE CA1 good, no Sub SWR. 
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-22_14-58-53_TFCD3/Record Node 117';
-% csc_idx = [1 5 9 65:77]; %csc_idx = 1:4:96;
+% csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-21_17-05-21_TFCD2\Record Node 117';
+% csc_idx = 1:96;
 % ts_prime = 0;
-% csc_idx = {'CH71', 'CH145'};
+% swr_idx = {'CH124', 'CH149'};
+
+%pox3568_TFCD3 % DONE CA1 good, no Sub SWR. Not sure Sub probe was in Sub. 
+% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3568_2026-06-22_14-58-53_TFCD3/Record Node 117';
+% csc_idx =  1:96;
+% ts_prime = 0;
+% swr_idx = {'CH74'};
 
 % pox3568_TFCD4 % DONE great CA1 and SWR (some spike contamination) needs Spikes. 
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-23_18-12-36_TFCD4\Record Node 117';
 % csc_idx = 1:96;
 % ts_prime = 0;
-% swr_idx = {'CH63', 'CH157'};
+% swr_idx = {'CH51', 'CH142'};
 
 
 % pox3568_TFCD5 % Great Sub SWR and good CA1 (some spike contam). Needs
@@ -100,7 +100,9 @@ swr_idx = {'CH124', 'CH149'};
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3568_2026-06-24_16-56-18_TFCD5\Record Node 117';
 % csc_idx = 1:96;
 % ts_prime = 0;
-% swr_idx = {'CH13', 'CH134'};
+% swr_idx = {'CH71' 'CH134'};
+% swr_ca1_idx = {'CH51', }
+
 
 %%%%%   3256   Pox %%%%%%% 
 
@@ -134,6 +136,29 @@ swr_idx = {'CH124', 'CH149'};
 % csc_idx = 1:4:96;
 % ts_prime = 0;
 % csc_idx = {'CH75', 'CH149'}; % CH71 and 115 are also decent for CA1
+
+%% as a loop structure
+
+data_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/';
+node = '/Record Node 117'; 
+csc_dir = {'Pox2217_2026-06-16_16-29-44_TFC_D1',...
+    'Pox2217_2026-06-17_13-41-15_TFC_D2',...
+    'Pox2217_2026-06-18_14-26-43_TFC_D3',...
+    'Pox2217_2026-06-19_13-37-05_TFCD4',...
+    'Pox2217_2026-06-20_22-52-37_TFCD5',...
+    'Pox3567_2026-06-20_17-44-01_TFCD1',...
+    'Pox3567_2026-06-21_15-41-32_TFCD2',...
+    'Pox3567_2026-06-22_13-44-28_TFCD3',...
+    'Pox3567_2026-06-23_15-53-07_TFCD4',...
+    'Pox3567_2026-06-24_14-10-03_TFCD5',...
+    'Pox3568_2026-06-20_12-49-38_TFCD1',...
+    'Pox3568_2026-06-21_17-05-21_TFCD2',...
+    'Pox3568_2026-06-22_14-58-53_TFCD3',...
+    'Pox3568_2026-06-23_18-12-36_TFCD4',...
+    'Pox3568_2026-06-24_16-56-18_TFCD5'}; 
+csc_idx = 1:96; 
+% swr_idx = 
+
 %% load the spikes if present
 c_dir = cd; 
 
@@ -291,12 +316,14 @@ end
 figure(10101)
 clf
 hold on
+if exist('S', 'var'); 
 plot(S)
+end
 plot(csc.tvec, csc.data(1,:)/100); 
 
-% vline(OE_evts.t{contains(OE_evts.label, '5')}, 'b')
-vline(OE_evts.t{contains(OE_evts.label, '11')}, 'g')
-vline(OE_evts.t{contains(OE_evts.label, '13')}, 'b')
+vline(OE_evts.t{ismember(OE_evts.label, '4')}, '--r')
+vline(OE_evts.t{ismember(OE_evts.label, '11')}, 'g')
+vline(OE_evts.t{ismember(OE_evts.label, '13')}, 'b')
 
 xlim([csc.tvec(1)-20 csc.tvec(end)+20])
 

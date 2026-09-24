@@ -6,6 +6,7 @@
 f_list = dir('pox*.mat');
 k_idx = ones(length(f_list),1);
 
+plot_flag =1; 
 
 for iS = 1:length(f_list)
     % fname = 'pox3568_TFCD4'; % 3568 TFCD2/4/5 are all nice.
@@ -45,20 +46,29 @@ for iS = 1:length(f_list)
     end
     %% Get the relative timing of each Sub SWR compared to the nearest Ca1 SWR
     % get the center of the events
-    sub_cent = IVcenters(this_sess.swrs_sub);
-    ca1_cent = IVcenters(this_sess.swrs_ca1);
+    % sub_cent = IVcenters(this_sess.swrs_sub);
+    % ca1_cent = IVcenters(this_sess.swrs_ca1);
+
+    sub_onset = this_sess.swrs_sub.tstart;
+    ca1_onset = this_sess.swrs_ca1.tstart;
 
     % loop over the events and find pairs and their offest
 
     pair_swr = []; % make an empty place to put things.
-    offset_max = .75; % max time between CA1 peak and Sub peak + or minus.
+    offset_max = .05; % max time between CA1 peak and Sub peak + or minus.
 
-    for ii = length(sub_cent):-1:1
-        this_d = sub_cent(ii) - ca1_cent;
+    for ii = length(sub_onset):-1:1
+        this_d = sub_onset(ii) - ca1_onset;
+        
         co_evt = find(abs(this_d) < offset_max);
 
-        if isempty(co_evt) || length(co_evt) > 1
+        % co_evt = min(this_d(co_evt))
+
+        if isempty(co_evt)
             pair_swr(ii) = NaN;
+        elseif length(co_evt) > 1
+             [min_val, min_idx] = min(abs(this_d(co_evt)));
+             pair_swr(ii) =this_d(co_evt(min_idx));
         else
             pair_swr(ii) = this_d(co_evt);
         end
@@ -67,9 +77,11 @@ for iS = 1:length(f_list)
     % check for why the number of std or atyp don't sum to total Ca1/Sub.
 
     % make a new set of events for Ca1 leading or Sub leading
-    this_sess.swrs_sub_atyp = SelectIV([], this_sess.swrs_sub, pair_swr < -0.01);
-    this_sess.swrs_sub_std = SelectIV([], this_sess.swrs_sub, pair_swr > 0.01);
+    this_sess.swrs_sub_atyp = SelectIV([], this_sess.swrs_sub, pair_swr < -0.005);
+    this_sess.swrs_sub_std = SelectIV([], this_sess.swrs_sub, pair_swr >= -0.005);
 
+    fprintf('Sub SWR = %d | std = %d (%2.0f%%) | atyp = %d (%2.0f%%) \n', length(pair_swr), length(this_sess.swrs_sub_std.tstart),(length(this_sess.swrs_sub_std.tstart)/length(pair_swr))*100,...
+        length(this_sess.swrs_sub_atyp.tstart),(length(this_sess.swrs_sub_atyp.tstart)/length(pair_swr))*100)
     % find the CA1 SWRs that overlap with each Sub SWR type
     this_sess.swrs_ca1_atyp  = IntersectIV([], this_sess.swrs_ca1, this_sess.swrs_sub_atyp);
     this_sess.swrs_ca1_std  = IntersectIV([], this_sess.swrs_ca1, this_sess.swrs_sub_std);
@@ -84,7 +96,84 @@ for iS = 1:length(f_list)
     out.swr_sub_std_dur{iS} = out.swrs_sub_std{iS}.tend - out.swrs_sub_std{iS}.tstart;
     out.swr_sub_atyp_dur{iS} = out.swrs_sub_atyp{iS}.tend - out.swrs_sub_atyp{iS}.tstart;
 
-    %
+    % plot some examples
+    if plot_flag == 1
+
+        c_ord = MS_linspecer(5); 
+        figure(9990); clf
+        subplot(2,4,1:3)
+        cfg_tsd.target = this_sess.swr_idx{1};
+        PlotTSDfromIV(cfg_tsd, this_sess.swrs_ca1, this_sess.csc);
+        ax(1) = gca; 
+
+        subplot(2,4,5:7)
+        cfg_tsd.target = this_sess.swr_idx{2};
+        PlotTSDfromIV(cfg_tsd, this_sess.swrs_sub, this_sess.csc);
+        ax(2) = gca; 
+
+        linkaxes(ax, 'x')
+
+        subplot(2,4,4)
+        histogram(pair_swr, -offset_max:.01:offset_max)
+            y_max = ylim; 
+        hold on
+        rectangle('Position',[-.1, 0, .2, y_max(end)])
+        title('<-- Sub -- | -- CA1 -->')
+
+       subplot(2,4,8)
+        histogram(pair_swr, -offset_max:.01:offset_max)
+        xlim([-.1 .1])
+
+
+        figure(209)
+        clf
+
+        if length(this_sess.swrs_sub_std.tend) < 16
+            lim = length(this_sess.swrs_sub_std.tend);
+        else
+            lim = 16;
+        end
+        for ii = 1:lim
+            subplot(4,8,ii)
+            hold on
+            csc_r = restrict(this_sess.csc, this_sess.swrs_sub_std.tstart(ii)-.05, this_sess.swrs_sub_std.tend(ii)+.05); 
+            plot(csc_r.tvec, csc_r.data(ismember(csc_r.label, this_sess.swr_idx{2}),:), 'k')
+            plot(csc_r.tvec, csc_r.data(ismember(csc_r.label, this_sess.swr_idx{1}),:)-200, 'color', c_ord(1,:))
+
+            csc_swr = restrict(this_sess.csc, this_sess.swrs_sub_std.tstart(ii), this_sess.swrs_sub_std.tend(ii)); 
+            plot(csc_swr.tvec, csc_swr.data(ismember(csc_swr.label, this_sess.swr_idx{2}),:), 'color', c_ord(2,:))
+
+            xlim([csc_r.tvec(1) csc_r.tvec(end)])
+            xline(this_sess.swrs_sub_std.tstart(ii))
+            axis off
+        end
+
+        if length(this_sess.swrs_sub_atyp.tend) < 16
+            lim = length(this_sess.swrs_sub_atyp.tend); 
+        else
+            lim = 16; 
+        end
+        for ii = 1:lim
+            subplot(4,8,ii+16)
+            hold on
+            csc_r = restrict(this_sess.csc, this_sess.swrs_sub_atyp.tstart(ii)-.05, this_sess.swrs_sub_atyp.tend(ii)+.05); 
+            plot(csc_r.tvec, csc_r.data(ismember(csc_r.label, this_sess.swr_idx{2}),:), 'k')
+            plot(csc_r.tvec, csc_r.data(ismember(csc_r.label, this_sess.swr_idx{1}),:)-200, 'color', c_ord(5,:))
+
+            csc_swr = restrict(this_sess.csc, this_sess.swrs_sub_atyp.tstart(ii), this_sess.swrs_sub_atyp.tend(ii)); 
+            plot(csc_swr.tvec, csc_swr.data(ismember(csc_swr.label, this_sess.swr_idx{2}),:), 'color', c_ord(4,:))
+
+            xlim([csc_r.tvec(1) csc_r.tvec(end)])
+            xline(this_sess.swrs_sub_atyp.tstart(ii))
+            axis off
+        end
+
+    end
+
+
+    %% split based on filtered x-corr
+
+    
 
 
     %% quantify the participation of cells in the SWRs
@@ -601,7 +690,7 @@ if plot_flag
     csc_ft.label = [];
     csc_ft.label{1} = this_sess.csc.label{1};
 
-    [csc_ft_out, TFR] = Triggered_Spec_FT(csc_ft, ca1_cent, [], 80:.5:200, [], [-.25 .25], 1);
+    [csc_ft_out, TFR] = Triggered_Spec_FT(csc_ft, ca1_onset, [], 80:.5:200, [], [-.25 .25], 1);
     set(gcf,'Units','pixels','position',fig_size); % helpful to keep the figures the same size.
 
     xlim([-.05 .05]); ylabel('frequency (hz)'); xlabel('time from CA1 SWR center (ms)')
@@ -622,7 +711,7 @@ if plot_flag
     csc_ft.label = [];
     csc_ft.label{1} = this_sess.csc.label{2};
 
-    [csc_ft_out, TFR] = Triggered_Spec_FT(csc_ft, ca1_cent, [], 80:.5:200, [], [-.25 .25], 1);
+    [csc_ft_out, TFR] = Triggered_Spec_FT(csc_ft, ca1_onset, [], 80:.5:200, [], [-.25 .25], 1);
     set(gcf,'Units','pixels','position',fig_size); % helpful to keep the figures the same size.
 
     xlim([-.05 .05]); ylabel('frequency (hz)'); xlabel('time from CA1 SWR center (ms)')
