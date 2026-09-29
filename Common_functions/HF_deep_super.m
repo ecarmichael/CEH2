@@ -329,7 +329,7 @@ S_out.usr.rel_depth = NaN(size(S_out.usr.ch));
 S_out.usr.rel_depth(ismember(S_out.usr.ch, chan_idx)) = rel_depth(S_out.usr.ch(ismember(S_out.usr.ch, chan_idx))); 
 %% plot the location of the spikes
 
-
+try 
 figure(616)
 set(gcf, "Position", [300 300 800 400])
 clf
@@ -391,8 +391,11 @@ plot(polyshape(ca1), 'FaceColor', [.25 .25 .25], 'FaceAlpha',.2)
 xlim([layer_x(1)-50, layer_x(end)+50])
 ylabel('depth (um)'); 
 xlabel('position (um)')
+if exist('s_s','var')
 legend([d_s s_s], {'deep', 'super'}, 'box', 'off')
-
+else
+    legend([d_s], {'deep'}, 'box', 'off')
+end
 % add the layer names
 text(layer_x(end)+50, median(pyr_int(end-1:end))+75, 'S.O.')
 text(layer_x(end)+50,  median(pyr_int(end-1:end)), 'S.Pyr.')
@@ -407,3 +410,4 @@ histogram((these_S.usr.rel_depth(~these_S.usr.deep)), min(these_S.usr.rel_depth)
     xlim([min(these_S.usr.rel_depth)-50 max(these_S.usr.rel_depth)+50])
     ylim([0 inf])
     set(gca, 'xDir', 'reverse')
+end

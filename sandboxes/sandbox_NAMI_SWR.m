@@ -32,7 +32,7 @@
 % csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox2217_2026-06-20_22-52-37_TFCD5/Record Node 117';
 % csc_idx = 1:96;
 % ts_prime = 0;
-% csc_idx = {'CH124', 'CH145'};
+% swr_idx = {'CH124', 'CH138'};
 
 
 %%%%%   3567   %%%%%%% 
@@ -108,34 +108,34 @@
 
 %pox3256_TFCD1  %% no ripples at all? 
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-16_18-09-08_TFC_D1\Record Node 117';
-% csc_idx = 1:4:96;
+% csc_idx = 1:96;
 % ts_prime = 0;
-% csc_idx = {'CH51', 'CH143'};
+% swr_idx = {'CH51', 'CH143'};
 
 % pox3256_TFCD2 no ripples?
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-17_15-59-53_TFCD2\Record Node 117';
-% csc_idx = 1:4:96;
+% csc_idx = 1:96;
 % ts_prime = 0;
-% csc_idx = {'CH119', 'CH157'};
+% swr_idx = {'CH119', 'CH157'};
 
 % pox3256_TFCD3  %% no swr?? but has spikes
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-18_16-10-31_TFCD3\Record Node 117';
-% csc_idx = 1:4:96;
+% csc_idx = 1:96;
 % ts_prime = 0;
-% csc_idx = {'CH51', 'CH143'};
+% swr_idx = {'CH118', 'CH145'};
 
 
 %pox3256_TFCD4  %% done. CA1 great no Sub. Needs spikes. 
-% csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-19_21-06-37_TFCD4/Record Node 117';
-% csc_idx = 1:4:96;
-% ts_prime = 0;
-% csc_idx = {'CH119', 'CH145'}; % CH71 and 115 are also decent for CA1
+csc_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/Pox3265_2026-06-19_21-06-37_TFCD4/Record Node 117';
+csc_idx = 1:96;
+ts_prime = 0;
+swr_idx = {'CH70', 'CH145'}; % CH71 and 115 are also decent for CA1
 
 %pox3256_TFCD5 TO DO
 % csc_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\Pox3265_2026-06-20_21-00-10_TFCD5\Record Node 117';
-% csc_idx = 1:4:96;
+% csc_idx = 1:96;
 % ts_prime = 0;
-% csc_idx = {'CH75', 'CH149'}; % CH71 and 115 are also decent for CA1
+% swr_idx = {'CH75', 'CH149'}; % CH71 and 115 are also decent for CA1
 
 %% as a loop structure
 
@@ -370,7 +370,7 @@ set(gca, 'YTick', y_t, 'YTickLabel', lab)
 %
 % SWR_evts.t{2}(keep_idx) = [];
 
-%% get teh movement if present in the evts
+%% get the movement if present in the evts
 
 move_ts = ts({OE_evts.t{contains(OE_evts.label, '8')}});
 
