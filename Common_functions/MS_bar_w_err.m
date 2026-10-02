@@ -19,13 +19,13 @@ end
 if data_flag == 1
     hb = bar(x_vals, [mean(data_a, 'omitnan'), mean(data_b, 'omitnan')]', 'FaceColor', 'flat', 'EdgeColor','flat');
     hb.CData(1,:) = color(1,:);
-    hb.EdgeColor = color(1,:);
+    hb.EdgeColor = 'none';
     hb.LineWidth = 2;
     if hollow == 1
-                 hb.CData(2,:) = [1 1 1];
+        hb.CData(2,:) = [1 1 1];
+        hb.EdgeColor = color(1,:);
     else
-                 hb.CData(1,:) = color(2,:);
-
+        hb.CData(2,:) = color(2,:);
     end
 end
 hold on
