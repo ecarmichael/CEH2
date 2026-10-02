@@ -1,4 +1,4 @@
-function [h] = MS_asmbly_ephys_raster(S, tvec, A_temp, A_proj, idx)
+function [h, corr_mat] = MS_asmbly_ephys_raster(S, tvec, A_temp, A_proj, idx, tsd_in)
 %% :
 %
 %
@@ -21,7 +21,11 @@ function [h] = MS_asmbly_ephys_raster(S, tvec, A_temp, A_proj, idx)
 %% initialize
 
 if nargin < 5
-    idx = 5; 
+    idx = []; 
+end
+
+if isempty(idx)
+    idx = 1:size(A_temp,2); 
 end
 
 c_ord = MS_linspecer(length(idx));
@@ -53,16 +57,17 @@ n =  5;
 s_idx = reshape(1:n*m, n, m)'; 
 A_cells = []; A_cells_id = []; 
 for ii = 1:length(idx)
-    subplot(m,n, s_idx(ii,1))
+    subplot(m,n, s_idx(ii))
     cla
     hold on
     stem(A_temp(:,ii), 'color', [.8 .8 .8 .2])
 
-    a_idx = sum(zscore(A_temp(:,ii)) > 1, 2) > 0;
+    a_idx = sum(zscore(A_temp(:,idx(ii))) > 1, 2) > 0;
 
-    stem(find(a_idx), A_temp(find(a_idx),ii), 'color',c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
+    stem(find(a_idx), A_temp(find(a_idx),idx(ii)), 'color',c_ord(ii,:), 'MarkerFaceColor', c_ord(ii,:))
     ylim([-.2 .8])
     view(90,90)
+    text(0, .6,  ['A: ' num2str(idx(ii))], 'color', c_ord(ii,:), 'VerticalAlignment','top', 'HorizontalAlignment','left')
 
     A_cells = [A_cells, find(a_idx)']; 
     A_cells_id = [A_cells_id repmat(ii,1,  length(find(a_idx)))];
@@ -124,11 +129,14 @@ for ii = 1:length(idx)
 
 end
 
-% colour code the spikes
+
+
+
+%% colour code the spikes
 
 cell_ids = 1:length(A_temp); 
 
-rm_idx = ismember( cell_ids,A_cells);
+rm_idx = ismember(cell_ids,A_cells);
 
 c_ids = [A_cells, cell_ids(~rm_idx)]; 
 
@@ -158,13 +166,29 @@ cfg_mr.openNewFig = 0;
 h = MultiRaster(cfg_mr, S_sort);
 
 
+% add some LFP if exists
+if exist('tsd_in', 'var')
+
+hold on
+data_norm = MS_norm_range(tsd_in.data(1,:), -5, 5); 
+
+    plot(tsd_in.tvec, data_norm-5, 'color', 'k'); 
+
+    ylim([-10 inf])
+end
+
+
 % plot the projections
 ax(2) = subplot(m,n,s_idx(end,2:end));
 cla
 hold on
-for ii = idx
+for ii = 1:length(idx)
 
-    plot(tvec, A_proj(ii,:), 'color', c_ord(ii,:))
+    plot(tvec', A_proj(idx(ii),:), 'color', c_ord(ii,:), 'LineWidth',1.5)
 end
+% set(gca, 'YScale', 'log')
 linkaxes(ax, 'x')
 xlim([tvec(1) tvec(end)])
+
+
+%% 
