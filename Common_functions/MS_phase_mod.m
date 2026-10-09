@@ -31,6 +31,10 @@ elseif nargin < 4
     plot_flag = 0;
 end
 
+if isempty(k_idx)
+    k_idx = 1:length(csc.tvec);
+end
+
 cfg_def = [];
 cfg_def.f = [6 10]; % frequencies
 cfg_def.type = 'butter';
@@ -65,19 +69,19 @@ fprintf('\nCell #    ')
 for iC = length(S.t):-1:1
 
     s_phi = interp1(csc_f.tvec, phase, S.t{iC});
-    [s_phi_h,  b] = histcounts(s_phi, -pi:(pi/16):pi);
+    [s_phi_h,  b] = histcounts(s_phi, -pi:(pi/16):pi, "Normalization","percentage");
 
 
     mod_out.MVL(iC) = circ_r(s_phi_h,s_phi_h, -pi:(pi/16):pi); % get the mean vector length as a measure of how strong the theta locking is.
 
-    mod_out.mean(iC) = circ_mean(s_phi);
+    mod_out.mean(iC) = circ_mean(s_phi(~isnan(s_phi)));
     mod_out.phi{iC} = s_phi;
     mod_out.phi_s(iC,:) = s_phi_h;
 
     % grabs some shuffle values.
     for i_p_shuff = 500:-1:1
         mod_out.shuff_phi{iC}(i_p_shuff,:) = randsample(phase, length(S.t{iC}));
-        mod_out.shuff_phi_h{iC}(i_p_shuff,:) = histcounts(mod_out.shuff_phi{iC}(i_p_shuff,:), -pi:(pi/16):pi);
+        mod_out.shuff_phi_h{iC}(i_p_shuff,:) = histcounts(mod_out.shuff_phi{iC}(i_p_shuff,:), -pi:(pi/16):pi, "Normalization","percentage");
     end
 
     mod_out.shuff_MVL{iC} = circ_r(mod_out.shuff_phi{iC},[],2);
@@ -109,17 +113,23 @@ if plot_flag
     clf
     m = ceil(length(S.t)/6);
     n = ceil(length(S.t)/8);
-
+    c = 0; 
     for ii = 1:length(S.t)
-        subplot(n, m, ii)
+        if c >= m*n
+            figure
+            c = 0;
+        end
+        c = c+1; 
+
+        subplot(n, m, c)
         if mod_out.MVL_z(iC) > 2
-            polarplot(mod_out.phi_s(ii,:), 'LineWidth',2);
+            polarplot(mod_out.phi_z(ii,:), 'LineWidth',2);
         else
-            polarplot(mod_out.phi_s(ii,:));
+            polarplot(mod_out.phi_z(ii,:));
 
         end
-        hold on
-        polarplot(mod_out.shuff_mean_h{iC});
+        % hold on
+        % polarplot(mod_out.shuff_mean_h{iC});
 
         set(gca, 'ThetaZeroLocation', 'top', 'ThetaDir', 'clockwise', 'FontSize', 4)
 

@@ -282,9 +282,10 @@ csc_names = csc_names+1; % offset o indexing.
     % csc.data = csc.data';
     csc.label = labels;
 
-    csc_prime = csc.tvec(1); 
-    csc.tvec = csc.tvec - csc.tvec(1); 
-    % csc.tvec = csc.tvec - csc.tvec(1) + (csc.tvec(1) - ts_prime(1)); % zero out the csc.
+    csc_prime = csc.tvec(1) + ts_prime; 
+    % csc.tvec = csc.tvec - csc.tvec(1); 
+    % csc.tvec = csc.tvec + ts_prime; 
+    csc.tvec = csc.tvec - csc.tvec(1) + (csc.tvec(1) - ts_prime(1)); % zero out the csc.
     % csc.tvec = csc.tvec + ts_prime(1); % zero out the csc.
 
     % cfg_in.decimateFactor = 15;
@@ -460,6 +461,8 @@ all_TFC.(this_name).csc_dir = csc_dir;
 
 if exist('S', 'var')
     all_TFC.(this_name).S=S;
+    all_TFC.(this_name).ts_prime = ts_prime; 
+    all_TFC.(this_name).csc_prime = csc_prime; 
 end
 % save('all_TFC.mat', 'all_TFC')
 
@@ -481,6 +484,65 @@ save([f_list{iF} '.mat'], 'data');
 data = []; 
 
 end
+
+
+%% update the csc tvec alignment
+
+
+int_f = dir('pox*.mat'); 
+
+for ii = 1:length(int_f)
+
+    load(int_f(ii).name); 
+
+
+    this_name = fieldnames(data); 
+    this_name = this_name{1}; 
+
+    % get the ts_prime
+    ts_prime = readNPY([data.(this_name).phy_dir filesep 'timestamps.npy']);
+    ts_prime = ts_prime(1);
+
+
+    % get the csc_prime
+    [~, tvec, info] = load_open_ephys_data([data.(this_name).csc_dir filesep '158_RhythmData-A_CH1.continuous']);
+    csc_prime = tvec(1); 
+
+    offset = csc_prime - ts_prime; 
+
+
+    % plot to check
+    figure(ii)
+    clf
+    subplot(2,1,1)
+    plot(data.(this_name).S)
+    hold on
+    plot(data.(this_name).csc.tvec, data.(this_name).csc.data(find(ismember(data.(this_name).csc.label,data.(this_name).swr_idx{1})) ,:)/50);
+    ylim([-5 inf])
+    ievt = 2;
+    xlim([data.(this_name).swrs_ca1.tstart(ievt)-.25 data.(this_name).swrs_ca1.tend(ievt)+.25])
+
+
+    % update the spike times
+    for jj = length(data.(this_name).S.t)
+        data.(this_name).S.t{jj} = data.(this_name).S.t{jj} - offset; 
+    end
+
+    subplot(2,1,2)
+    plot(data.(this_name).S)
+    hold on
+    plot(data.(this_name).csc.tvec, data.(this_name).csc.data(find(ismember(data.(this_name).csc.label,data.(this_name).swr_idx{1})) ,:)/50);
+    ylim([-5 inf])
+    ievt = 2;
+    xlim([data.(this_name).swrs_ca1.tstart(ievt)-.25 data.(this_name).swrs_ca1.tend(ievt)+.25])
+
+
+
+end
+
+
+
+
 %% Figure 2a-d Show sample SWRS along with the raw, filtered, and spike slignments
 % this_sess = all_TFC; 
 
@@ -667,9 +729,9 @@ fprintf('Ca1 SWRs in baseline: <strong>%d</strong>   |    Sub SWRs in baseline: 
     length(swr_ca1_base.tstart),  length(swr_sub_base.tstart))
 
 % get the tone 1 periods 
-tone_t_1 = sort([this_data.evts.t{4}(1:2:end)) %what does sort mean and is this correct
+tone_t_1 = sort([this_data.evts.t{4}(1:2:end)]) %what does sort mean and is this correct
 
-swr_ca1_t1 = restrict(this_data.swrs_ca1, tone_t_1, %how long are the tones??); 
+swr_ca1_t1 = restrict(this_data.swrs_ca1, tone_t_1), %how long are the tones??); 
 swr_sub_t1 = restrict(this_data.swrs_sub, tone_t_1); 
 
 fprintf('Ca1 SWRs in tone 1 periods: <strong>%d</strong>   |    Sub SWRs in tone 1 peroids: <strong>%d</strong> \n',...
@@ -696,7 +758,7 @@ fprintf('Ca1 SWRs in tone 1 trace period: <strong>%d</strong>   |    Sub SWRs in
 
 
 % tone 2 trace period (20 sec after end of tone)
-tone_t_2end = sort([this_data.evts.t{5}(2:2:end))
+tone_t_2end = sort([this_data.evts.t{5}(2:2:end)])
 
 swr_ca1_t2trace = restrict(this_data.swrs_ca1, tone_t_2end, tone_t_2end + 20); 
 swr_sub_t2trace = restrict(this_data.swrs_sub, tone_t_2end, tone_t_2end + 20); 
