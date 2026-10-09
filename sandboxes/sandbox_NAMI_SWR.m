@@ -524,7 +524,7 @@ for ii = 1:length(int_f)
 
 
     % update the spike times
-    for jj = length(data.(this_name).S.t)
+    for jj = length(data.(this_name).S.t):-1:1
         data.(this_name).S.t{jj} = data.(this_name).S.t{jj} - offset; 
     end
 
