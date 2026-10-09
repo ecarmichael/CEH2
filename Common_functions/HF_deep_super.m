@@ -37,7 +37,7 @@ end
 
 
 %% setup the probe
-if strcmpi(probe, 'A4x16')
+if strcmpi(probe, '4x16')
     shank{1} = 1:16;
     shank{2} = 17:32;
     shank{3} = 33:48;
@@ -63,18 +63,18 @@ elseif strcmpi(probe, 'Buz32')
         [0 8.5 17 17+8.5 17+8.5*2 34+8.5 34+17 51+8.5 ]+400 , [0 8.5 17 17+8.5 17+8.5*2 34+8.5 34+17 51+8.5 ]+600]; % with the offsets.
     xcoords_off = xcoords_off(:);
     ref_idx = [];
-elseif strcmpi(probe, 'A5x12')
-    shank{1} = 1:12;
-    shank{2} = 13:24;
-    shank{3} = 24:40;
+elseif strcmpi(probe, '5x12')
+    shank{1} = 1:16;
+    shank{2} = 17:28;
+    shank{3} = 29:40;
     shank{4} = 41:52;
     shank{5} = 53:64;
-    ycoords = [repmat(0:-10:-110,1,2), [1500 1000 500 0:-100:-1200], repmat(0:-10:-110,1,2)];
+    ycoords = [ [1500 1000 500 0:-100:-1200], repmat(0:-10:-110,1,2), repmat(0:-10:-110,1,2)];
     ycoords = ycoords(:);
     x_space = repmat([0 20], 1,6); % space between probes x in um;
-    xcoords   = [x_space, x_space , (ones(1,16))+10, x_space , x_space ];                    %repmat([1 2 3 4]', 1, Nchannels/4);
+    xcoords   = [(ones(1,16))+10, x_space, x_space, x_space , x_space ];                    %repmat([1 2 3 4]', 1, Nchannels/4);
     xcoords   = xcoords(:);
-    xcoords_off   = [x_space, x_space+160 , (ones(1,16)*320)+10, x_space +480, x_space+640];                    %repmat([1 2 3 4]', 1, Nchannels/4);
+    xcoords_off   = [ (ones(1,16)*320)+10, x_space, x_space+160, x_space +480, x_space+640];                    %repmat([1 2 3 4]', 1, Nchannels/4);
     xcoords_off = xcoords_off(:);
     ref_idx = [];
 end

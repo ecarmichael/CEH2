@@ -430,8 +430,14 @@ end
 % swrs_sub = SelectIV([], swrs_sub, logical(swr_k_idx))
 
 %% get the deep vs superficial classifciation
-
-[S, rip_out] = HF_deep_super(S,csc, swrs_ca1, 'A4x16', 1:64);
+if contains(subject, 'SOM')
+    probe{1} = '5x12'; 
+    probe{2} = 'Buz32';
+elseif contains(subject, {'Pox2217','Pox3265', 'Pox3567', 'Pox3568'})
+    probe{1} = 'A4x16'; 
+    probe{2} = 'Buz32'; 
+end
+[S, rip_out] = HF_deep_super(S,csc, swrs_ca1, probe{1}, 1:64);
 S.usr.deep = double(S.usr.deep);
 S.usr.deep(~S.loc) = NaN; 
 S.usr.rel_depth(~S.loc) = NaN; 
@@ -463,6 +469,7 @@ if exist('S', 'var')
     all_TFC.(this_name).S=S;
     all_TFC.(this_name).ts_prime = ts_prime; 
     all_TFC.(this_name).csc_prime = csc_prime; 
+    All_TFC.(this_name).probe = probe; 
 end
 % save('all_TFC.mat', 'all_TFC')
 
@@ -487,7 +494,11 @@ end
 
 
 %% update the csc tvec alignment
-
+if ispc
+    root_dir = [];
+elseif ismac
+    root_dir = '/Users/ecar/Williams Lab Dropbox/'; 
+end
 
 int_f = dir('pox*.mat'); 
 
@@ -500,12 +511,21 @@ for ii = 1:length(int_f)
     this_name = this_name{1}; 
 
     % get the ts_prime
-    ts_prime = readNPY([data.(this_name).phy_dir filesep 'timestamps.npy']);
+    ts_dir = data.(this_name).phy_dir; 
+    dir_idx = strfind(ts_dir, 'Williams Lab Dropbox'); 
+
+    ts_dir = [root_dir filesep strrep(ts_dir(dir_idx+21:end), '\', filesep)]; 
+    ts_prime = readNPY([ ts_dir filesep 'timestamps.npy']);
     ts_prime = ts_prime(1);
 
 
     % get the csc_prime
-    [~, tvec, info] = load_open_ephys_data([data.(this_name).csc_dir filesep '158_RhythmData-A_CH1.continuous']);
+    csc_dir = data.(this_name).csc_dir;
+    dir_idx = strfind(csc_dir, 'Williams Lab Dropbox'); 
+
+    csc_dir = [root_dir filesep strrep(csc_dir(dir_idx+21:end), '\', filesep)]; 
+
+    [~, tvec, info] = load_open_ephys_data([csc_dir filesep '158_RhythmData-A_CH1.continuous']);
     csc_prime = tvec(1); 
 
     offset = csc_prime - ts_prime; 
@@ -535,6 +555,10 @@ for ii = 1:length(int_f)
     ylim([-5 inf])
     ievt = 2;
     xlim([data.(this_name).swrs_ca1.tstart(ievt)-.25 data.(this_name).swrs_ca1.tend(ievt)+.25])
+
+    % save the data back
+
+    
 
 
 
