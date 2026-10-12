@@ -495,7 +495,7 @@ end
 
 %% update the csc tvec alignment
 if ispc
-    root_dir = [];
+    root_dir = 'C:\Users\ecar\Williams Lab Dropbox\';
 elseif ismac
     root_dir = '/Users/ecar/Williams Lab Dropbox/'; 
 end
@@ -531,32 +531,56 @@ for ii = 1:length(int_f)
     offset = csc_prime - ts_prime; 
 
 
-    % plot to check
-    figure(ii)
-    clf
-    subplot(2,1,1)
-    plot(data.(this_name).S)
-    hold on
-    plot(data.(this_name).csc.tvec, data.(this_name).csc.data(find(ismember(data.(this_name).csc.label,data.(this_name).swr_idx{1})) ,:)/50);
-    ylim([-5 inf])
-    ievt = 2;
-    xlim([data.(this_name).swrs_ca1.tstart(ievt)-.25 data.(this_name).swrs_ca1.tend(ievt)+.25])
-
+    S_og = data.(this_name).S; 
 
     % update the spike times
     for jj = length(data.(this_name).S.t):-1:1
         data.(this_name).S.t{jj} = data.(this_name).S.t{jj} - offset; 
     end
 
-    subplot(2,1,2)
+
+    % plot to check
+    figure(ii)
+    clf
+
+    ax(1) = subplot(2,1,1);
+    plot(S_og)
+    hold on
+    plot(data.(this_name).csc.tvec, data.(this_name).csc.data(find(ismember(data.(this_name).csc.label,data.(this_name).swr_idx{1})) ,:)/50);
+    ylim([-5 inf])
+    
+
+      ax(2)=  subplot(2,1,2);
     plot(data.(this_name).S)
     hold on
     plot(data.(this_name).csc.tvec, data.(this_name).csc.data(find(ismember(data.(this_name).csc.label,data.(this_name).swr_idx{1})) ,:)/50);
     ylim([-5 inf])
-    ievt = 2;
-    xlim([data.(this_name).swrs_ca1.tstart(ievt)-.25 data.(this_name).swrs_ca1.tend(ievt)+.25])
+
+    linkaxes(ax, 'x')
+
+    for kk  =1:10
+        if kk > length(data.(this_name).swrs_ca1.tstart)
+            save([this_name '.mat'], 'data', '-v7.3')
+
+            disp([this_name ' saved'])
+
+
+            continue
+        else
+        xlim([data.(this_name).swrs_ca1.tstart(kk)-.5 data.(this_name).swrs_ca1.tend(kk)+.5])
+
+        pause(1)
+        end
+    end
+
 
     % save the data back
+
+    save(['inter_offset' filesep this_name '.mat'], 'data', '-v7.3')
+
+    disp([this_name ' saved'])
+
+    clearvars -except ii int_f root_dir
 
     
 
