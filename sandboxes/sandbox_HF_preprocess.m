@@ -32,45 +32,47 @@ all_csc_dir = {'Pox2217_2026-06-16_16-29-44_TFC_D1',...
     'Pox3568_2026-06-24_16-56-18_TFCD5',...
     'SOM1_2026-10-06_13-42-35_LT2',...
     'SOM2_2026-10-06_11-23-25_LT1',...
-    'SOM2_2026-10-09_13-23-44_LT4'};
+    'SOM2_2026-10-09_13-23-44_LT4',...
+    'Pox3564_2026-10-12_11-29-35_LT1'};
 
-all_swr_idx{1} = {'CH59'};
-all_swr_idx{2} = {'CH13'};
-all_swr_idx{3} = {'CH119' 'CH157'};
-all_swr_idx{4} = {'CH59' 'CH157'};
-all_swr_idx{5} = {'CH124' 'CH138'};
-all_swr_idx{6} = {'CH51' 'CH141'};
-all_swr_idx{7} = {'CH63' 'CH133'};
-all_swr_idx{8} = {'CH51' 'CH141'};
-all_swr_idx{9} = {'CH63' 'CH143' 'CH130' 'CH142'};
-all_swr_idx{10} = {'CH56', 'CH143' 'CH144'};
-all_swr_idx{11} = {'CH65', 'CH136' 'CH134' 'CH144' 'CH141'};
-all_swr_idx{12} = {'CH124', 'CH149'};
-all_swr_idx{13} = {'CH74'};
-all_swr_idx{14} = {'CH51', 'CH142'};
-all_swr_idx{15} = {'CH71' 'CH134'};
-all_swr_idx{16} = {'CH51', 'CH143'};
-all_swr_idx{17} = {'CH119', 'CH157'};
-all_swr_idx{18} = {'CH118', 'CH145'};
-all_swr_idx{19} = {'CH70', 'CH145'};
-all_swr_idx{20} = {'CH75', 'CH149'}; % CH71 and 115 are also decent for CA1
-all_swr_idx{21} = {'CH77'};
-all_swr_idx{22} = {'CH70'};
-all_swr_idx{23} = {'CH70'};
+ca1_swr_idx{1} = {'CH59'}; sub_swr_idx{1} = {[]};
+ca1_swr_idx{2} = {'CH13'}; sub_swr_idx{2} = {[]};
+ca1_swr_idx{3} = {'CH119'}; sub_swr_idx{3} = {'CH157'};
+ca1_swr_idx{4} = {'CH59'};  sub_swr_idx{4} = {'CH157'};
+ca1_swr_idx{5} = {'CH124'};  sub_swr_idx{5} = {'CH138'};
+ca1_swr_idx{6} = {'CH51'};  sub_swr_idx{6} = {'CH141'};
+ca1_swr_idx{7} = {'CH63'};  sub_swr_idx{7} = {'CH133'};
+ca1_swr_idx{8} = {'CH51'};  sub_swr_idx{8} = {'CH141'};
+ca1_swr_idx{9} = {'CH63'};  sub_swr_idx{9} = {'CH143' 'CH130' 'CH142'};
+ca1_swr_idx{10} = {'CH56'};  sub_swr_idx{10} = {'CH143' 'CH144'};
+ca1_swr_idx{11} = {'CH65'};  sub_swr_idx{11} = {'CH136' 'CH134' 'CH144' 'CH141'};
+ca1_swr_idx{12} = {'CH124'};  sub_swr_idx{12} = {'CH149'};
+ca1_swr_idx{13} = {'CH74'};  sub_swr_idx{13} = {[]}; 
+ca1_swr_idx{14} = {'CH51'};  sub_swr_idx{14} =  {'CH142'};
+ca1_swr_idx{15} = {'CH71'};  sub_swr_idx{15} = {'CH134'};
+ca1_swr_idx{16} = {'CH51'};  sub_swr_idx{16} = {'CH143'};
+ca1_swr_idx{17} = {'CH119'};  sub_swr_idx{17} = {'CH157'};
+ca1_swr_idx{18} = {'CH118'};  sub_swr_idx{18} = {'CH145'};
+ca1_swr_idx{19} = {'CH70'};  sub_swr_idx{19} = {'CH145'};
+ca1_swr_idx{20} = {'CH75'  'CH71' 'CH115'};  sub_swr_idx{20} = {'CH149'}; % CH71 and 115 are also decent for CA1
+ca1_swr_idx{21} = {'CH77'};  sub_swr_idx{21} = {[]};
+ca1_swr_idx{22} = {'CH70'};  sub_swr_idx{22} = {[]};
+ca1_swr_idx{23} = {'CH72'};  sub_swr_idx{23} = {'CH152'};
+ca1_swr_idx{24} = {'CH66' 'CH74', 'CH70', 'CH71', 'CH77'};  sub_swr_idx{24} = {'CH157', 'CH147', 'CH153', 'CH150'};
 
 csc_idx = 1:96;
 
 probe_type{1} = {'pox2217' 'pox3265' 'pox3567' 'pox3568'}; % A4x16 & Buz32
-probe_type{2} = {'som1' 'som2'};  % 5x12 & Buz32
+probe_type{2} = {'som1' 'som2' 'pox3564', 'pox3567B'};  % 5x12 & Buz32
 
 %% loop
 
 
 
-for iS = 22
+for iS = 24
 
     csc_dir = [data_dir all_csc_dir{iS} filesep 'Record Node 117'];
-    swr_idx = all_swr_idx{iS};
+    swr_idx = ca1_swr_idx{iS};
 
 
     %% spikes
@@ -142,8 +144,6 @@ for iS = 22
 
     csc_list = temp_list;
 
-
-
     csc= []; labels = [];
 
     % get the first channel with the time vector.
@@ -168,7 +168,6 @@ for iS = 22
         labels{ii} = info.header.channel;
         csc.cfg.hdr{ii} = info.header;
         csc.cfg.hdr{ii}.SamplingFrequency = info.header.sampleRate ./ cfg_in.decimateFactor;
-
     end
 
     csc.label = labels;
@@ -187,9 +186,8 @@ for iS = 22
 
     OE_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs, ts_prime);
 
-    % end
-    % session info
 
+    % session info
     if ~contains(csc_dir, '/')
         parts = strsplit(csc_dir, '\');
     else
@@ -313,9 +311,12 @@ for iS = 22
 
     %% determine the probe type
 
-    if sum(contains(probe_type{2}, subject))>0
+    if sum(ismember(probe_type{2}, subject))>0
         probe{1} = '5x12'; probe{2} = 'Buz32'; 
-    elseif sum(contains(probe_type{1}, subject))>0
+
+        % reclassify spikes on shank 1 as being CA1 or DG
+        
+    elseif sum(ismember(probe_type{1}, subject))>0
         probe{1} = '4x16'; probe{2} = 'Buz32'; 
     end
 
