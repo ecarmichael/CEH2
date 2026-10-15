@@ -33,7 +33,9 @@ all_csc_dir = {'Pox2217_2026-06-16_16-29-44_TFC_D1',...
     'SOM1_2026-10-06_13-42-35_LT2',...
     'SOM2_2026-10-06_11-23-25_LT1',...
     'SOM2_2026-10-09_13-23-44_LT4',...
-    'Pox3564_2026-10-12_11-29-35_LT1'};
+    'SOM2_2026-10-10_12-08-36_LT5',...
+    'Pox3564_2026-10-12_11-29-35_LT1',...
+    'Som2_2026-10-13_11-41-22_TFCD2'};
 
 ca1_swr_idx{1} = {'CH59'}; sub_swr_idx{1} = {[]};
 ca1_swr_idx{2} = {'CH13'}; sub_swr_idx{2} = {[]};
@@ -58,7 +60,9 @@ ca1_swr_idx{20} = {'CH75'  'CH71' 'CH115'};  sub_swr_idx{20} = {'CH149'}; % CH71
 ca1_swr_idx{21} = {'CH77'};  sub_swr_idx{21} = {[]};
 ca1_swr_idx{22} = {'CH70'};  sub_swr_idx{22} = {[]};
 ca1_swr_idx{23} = {'CH72'};  sub_swr_idx{23} = {'CH152'};
-ca1_swr_idx{24} = {'CH66' 'CH74', 'CH70', 'CH71', 'CH77'};  sub_swr_idx{24} = {'CH157', 'CH147', 'CH153', 'CH150'};
+ca1_swr_idx{24} = {'CH88' 'CH102', 'CH122', 'CH116'};  sub_swr_idx{24} = {'CH139', 'CH132', 'CH149', 'CH155'};
+ca1_swr_idx{25} = {'CH66' 'CH74', 'CH70', 'CH71', 'CH77'};  sub_swr_idx{24} = {'CH157', 'CH147', 'CH153', 'CH150'};
+ca1_swr_idx{26} = {'CH66' 'CH74', 'CH70', 'CH71', 'CH77'};  sub_swr_idx{24} = {'CH157', 'CH147', 'CH153', 'CH150'};
 
 csc_idx = 1:96;
 
@@ -69,7 +73,7 @@ probe_type{2} = {'som1' 'som2' 'pox3564', 'pox3567B'};  % 5x12 & Buz32
 
 
 
-for iS = 24
+for iS = 26
 
     csc_dir = [data_dir all_csc_dir{iS} filesep 'Record Node 117'];
     swr_idx = ca1_swr_idx{iS};
@@ -320,6 +324,17 @@ for iS = 24
         probe{1} = '4x16'; probe{2} = 'Buz32'; 
     end
 
+    if strcmp(probe{1}, '5x12')
+        dg_chan = (S.usr.ch > 8 & S.usr.ch < 17); 
+        S_dg = SelectTS([], S, dg_chan);
+        S_dg.loc = S.loc(dg_chan); 
+        S_dg.c_ord = spring(sum(dg_chan));
+
+
+        S = SelectTS([], S, ~dg_chan);
+        S.loc = S.loc(~dg_chan); 
+        S.c_ord(dg_chan,:) = [];
+    end
     %% collect the data
     % load("all_TFC.mat")
     this_name = [subject '_' sess_id];
@@ -347,7 +362,11 @@ for iS = 24
         all_TFC.(this_name).S=S;
         all_TFC.(this_name).ts_prime = ts_prime;
         all_TFC.(this_name).csc_prime = csc_prime;
-        All_TFC.(this_name).probe = probe;
+        all_TFC.(this_name).probe = probe;
+
+        if exist('S_dg', 'var')
+            all_TFC.(this_name).S_dg=S_dg;
+        end
     end
     % save('all_TFC.mat', 'all_TFC')
 
