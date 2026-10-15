@@ -62,7 +62,7 @@ ca1_swr_idx{22} = {'CH70'};  sub_swr_idx{22} = {[]};
 ca1_swr_idx{23} = {'CH72'};  sub_swr_idx{23} = {'CH152'};
 ca1_swr_idx{24} = {'CH88' 'CH102', 'CH122', 'CH116'};  sub_swr_idx{24} = {'CH139', 'CH132', 'CH149', 'CH155'};
 ca1_swr_idx{25} = {'CH66' 'CH74', 'CH70', 'CH71', 'CH77'};  sub_swr_idx{24} = {'CH157', 'CH147', 'CH153', 'CH150'};
-ca1_swr_idx{26} = {'CH66' 'CH74', 'CH70', 'CH71', 'CH77'};  sub_swr_idx{24} = {'CH157', 'CH147', 'CH153', 'CH150'};
+ca1_swr_idx{26} = {'CH65' 'CH77', 'CH70', 'CH76'};  sub_swr_idx{24} = {'CH151', 'CH145', 'CH158'};
 
 csc_idx = 1:96;
 
