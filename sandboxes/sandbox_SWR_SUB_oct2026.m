@@ -3,7 +3,7 @@
 clear all
 
 
-f_list = dir('pox*.mat');
+f_list = dir('*o*.mat');
 k_idx = ones(length(f_list),1);
 
 plot_flag =1;
@@ -116,7 +116,7 @@ ylabel('log Firing rate')
 
 
 
-%% try some assembly stuff
+%% movement
 
 
 this_rate = MS_spike2rate(this_sess.S, this_sess.csc.tvec, .025, 0); 
@@ -125,22 +125,48 @@ this_rate = MS_spike2rate(this_sess.S, this_sess.csc.tvec, .025, 0);
 mov_ts = ts({this_sess.evts.t{find(ismember(this_sess.evts.label, 'mov'))}}, {'move_binary'});
 
 mov_rate =  MS_spike2rate(mov_ts, this_rate.tvec, .025, 0);
-move_idx =  mov_rate.data > 0; 
+move_rate_idx =  mov_rate.data > 0; 
 
-if length(move_idx) ~= length(this_rate.tvec)
-    pad = length(move_idx) - length(this_rate.tvec);
-    move_idx(end+(abs(pad))) = 0; 
+if length(move_rate_idx) ~= length(this_rate.tvec)
+    pad = length(move_rate_idx) - length(this_rate.tvec);
+    move_rate_idx(end+(abs(pad))) = 0; 
 end
 
 
 
-this_asmbly = MS_asmbly_ephys(this_rate, move_idx);
+cfg_mov = [];
+cfg_mov.threshold = .001;
+cfg_mov.dcn = '<';
+cfg_mov.operation = '<';
+cfg_mov.minlen = .5;
+
+mov_iv = TSDtoIV(cfg_mov, mov_rate);
+
+% pad movement
+
+cfg_resize.d = [-.5 +.5];
+
+mov_iv = ResizeIV(cfg_resize, mov_iv);
+
+move_idx = zeros(size(this_sess.csc.tvec)); 
+for ii = 1:length(mov_iv.tstart)
+    idx = nearest_idx([mov_iv.tstart(ii) mov_iv.tend(ii)], this_sess.csc.tvec);
+move_idx(idx(1):idx(2)) = 1; 
+end
+
+
+csc_r = restrict(this_sess.csc, mov_iv);
+S_r  = restrict(this_sess.S, mov_iv); 
+%% try some assembly stuff
+
+this_asmbly = MS_asmbly_ephys(this_rate, move_rate_idx);
 
 % this_asmbly = MS_asmbly_members(this_asmbly)
 
 %% get the phase locking to theta and maybe gamma
 
-theta_csc = MS_select_tsd(this_sess.csc, 55);
+
+theta_csc = MS_select_tsd(this_sess.csc, 17);
 
 mod_out = MS_phase_mod([], theta_csc, this_sess.S, move_idx, plot_flag)
 

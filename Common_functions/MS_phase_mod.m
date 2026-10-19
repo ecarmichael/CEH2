@@ -37,13 +37,13 @@ end
 
 cfg_def = [];
 cfg_def.f = [6 10]; % frequencies
-cfg_def.type = 'butter';
+cfg_def.type = 'fdesign';
 cfg_def.order = 4;
 cfg_def.band = 'bandpass'; % only implemented for butterworth
 cfg_def.R = 0.5; % passband ripple (in dB) for Chebyshev filters only
 
 % power threshold
-cfg_def.pow_thresh = []; % if empty don't use.
+% cfg_def.pow_thresh = []; % if empty don't use.
 
 
 cfg = ProcessConfig2(cfg_def, cfg_in);
@@ -58,8 +58,10 @@ phase = angle(hilbert(csc_f.data(1,:)));
 
 amp = abs(hilbert(csc_f.data(1,:)));
 
-if ~isempty(cfg.pow_thresh)
-    k_idx = amp > cfg.pow_thresh;
+if isfield(cfg, 'pow_thresh')
+    if ~isempty(cfg.pow_thresh)
+        k_idx = amp > cfg.pow_thresh;
+    end
 end
 
 %%

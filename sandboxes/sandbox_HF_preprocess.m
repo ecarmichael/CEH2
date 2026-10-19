@@ -5,72 +5,89 @@ if ismac
     data_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/';
     inter_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/HF_Sub_SWR/inter_offset';
 elseif ispc
-    data_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/';
-    inter_dir = 'C:\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Inter_data\HF_Sub_SWR\inter_offset';
+    data_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\';
+    inter_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Inter_data\HF_Sub_SWR\inter_offset';
 
 end
-node = '/Record Node 117';
-all_csc_dir = {'Pox2217_2026-06-16_16-29-44_TFC_D1',...
-    'Pox2217_2026-06-17_13-41-15_TFC_D2',...
-    'Pox2217_2026-06-18_14-26-43_TFC_D3',...
-    'Pox2217_2026-06-19_13-37-05_TFCD4',...
-    'Pox2217_2026-06-20_22-52-37_TFCD5',...
-    'Pox3265_2026-06-16_18-09-08_TFCD1',...
-    'Pox3265_2026-06-17_15-59-53_TFCD2',...
-    'Pox3265_2026-06-18_16-10-31_TFCD3',...
-    'Pox3265_2026-06-19_21-06-37_TFCD4',...
-    'Pox3265_2026-06-20_21-00-10_TFCD5',...
-    'Pox3567_2026-06-20_17-44-01_TFCD1',...
-    'Pox3567_2026-06-21_15-41-32_TFCD2',...
-    'Pox3567_2026-06-22_13-44-28_TFCD3',...
-    'Pox3567_2026-06-23_15-53-07_TFCD4',...
-    'Pox3567_2026-06-24_14-10-03_TFCD5',...
-    'Pox3568_2026-06-20_12-49-38_TFCD1',...
-    'Pox3568_2026-06-21_17-05-21_TFCD2',...
-    'Pox3568_2026-06-22_14-58-53_TFCD3',...
-    'Pox3568_2026-06-23_18-12-36_TFCD4',...
-    'Pox3568_2026-06-24_16-56-18_TFCD5',...
-    'SOM1_2026-10-06_13-42-35_LT2',...
-    'SOM2_2026-10-06_11-23-25_LT1',...
-    'SOM2_2026-10-09_13-23-44_LT4'};
+node = [filesep 'Record Node 117'];
 
-all_swr_idx{1} = {'CH59'};
-all_swr_idx{2} = {'CH13'};
-all_swr_idx{3} = {'CH119' 'CH157'};
-all_swr_idx{4} = {'CH59' 'CH157'};
-all_swr_idx{5} = {'CH124' 'CH138'};
-all_swr_idx{6} = {'CH51' 'CH141'};
-all_swr_idx{7} = {'CH63' 'CH133'};
-all_swr_idx{8} = {'CH51' 'CH141'};
-all_swr_idx{9} = {'CH63' 'CH143' 'CH130' 'CH142'};
-all_swr_idx{10} = {'CH56', 'CH143' 'CH144'};
-all_swr_idx{11} = {'CH65', 'CH136' 'CH134' 'CH144' 'CH141'};
-all_swr_idx{12} = {'CH124', 'CH149'};
-all_swr_idx{13} = {'CH74'};
-all_swr_idx{14} = {'CH51', 'CH142'};
-all_swr_idx{15} = {'CH71' 'CH134'};
-all_swr_idx{16} = {'CH51', 'CH143'};
-all_swr_idx{17} = {'CH119', 'CH157'};
-all_swr_idx{18} = {'CH118', 'CH145'};
-all_swr_idx{19} = {'CH70', 'CH145'};
-all_swr_idx{20} = {'CH75', 'CH149'}; % CH71 and 115 are also decent for CA1
-all_swr_idx{21} = {'CH77'};
-all_swr_idx{22} = {'CH70'};
-all_swr_idx{23} = {'CH70'};
+all_csc_dir = [];  ca1_swr_idx = []; sub_swr_idx = []; 
+all_csc_dir{1} = 'Pox2217_2026-06-16_16-29-44_TFC_D1'; ca1_swr_idx{1} = {'CH59'}; sub_swr_idx{1} = {[]};
+all_csc_dir{2} = 'Pox2217_2026-06-17_13-41-15_TFC_D2'; ca1_swr_idx{2} = {'CH13'}; sub_swr_idx{2} = {[]};
+all_csc_dir{3} = 'Pox2217_2026-06-18_14-26-43_TFC_D3'; ca1_swr_idx{3} = {'CH119'}; sub_swr_idx{3} = {'CH157'};
+all_csc_dir{4} = 'Pox2217_2026-06-19_13-37-05_TFCD4'; ca1_swr_idx{4} = {'CH59'};  sub_swr_idx{4} = {'CH157'};
+all_csc_dir{5} = 'Pox2217_2026-06-20_22-52-37_TFCD5'; ca1_swr_idx{5} = {'CH124'};  sub_swr_idx{5} = {'CH138'};
+all_csc_dir{6} = 'Pox3265_2026-06-16_18-09-08_TFCD1'; ca1_swr_idx{6} = {'CH51'};  sub_swr_idx{6} = {'CH141'};
+all_csc_dir{7} = 'Pox3265_2026-06-17_15-59-53_TFCD2'; ca1_swr_idx{7} = {'CH63'};  sub_swr_idx{7} = {'CH133'};
+all_csc_dir{8} = 'Pox3265_2026-06-18_16-10-31_TFCD3'; ca1_swr_idx{8} = {'CH51'};  sub_swr_idx{8} = {'CH141'};
+all_csc_dir{9} = 'Pox3265_2026-06-19_21-06-37_TFCD4'; ca1_swr_idx{9} = {'CH63'};  sub_swr_idx{9} = {'CH143' 'CH130' 'CH142'};
+all_csc_dir{10} = 'Pox3265_2026-06-20_21-00-10_TFCD5'; ca1_swr_idx{10} = {'CH56'};  sub_swr_idx{10} = {'CH143' 'CH144'};
+all_csc_dir{11} = 'Pox3567_2026-06-20_17-44-01_TFCD1'; ca1_swr_idx{11} = {'CH65'};  sub_swr_idx{11} = {'CH136' 'CH134' 'CH144' 'CH141'};
+all_csc_dir{12} = 'Pox3567_2026-06-21_15-41-32_TFCD2'; ca1_swr_idx{12} = {'CH124'};  sub_swr_idx{12} = {'CH149'};
+all_csc_dir{13} = 'Pox3567_2026-06-22_13-44-28_TFCD3'; ca1_swr_idx{13} = {'CH74'};  sub_swr_idx{13} = {[]}; 
+all_csc_dir{14} = 'Pox3567_2026-06-23_15-53-07_TFCD4'; ca1_swr_idx{14} = {'CH51'};  sub_swr_idx{14} =  {'CH142'};
+all_csc_dir{15} = 'Pox3567_2026-06-24_14-10-03_TFCD5'; ca1_swr_idx{15} = {'CH71'};  sub_swr_idx{15} = {'CH134'};
+all_csc_dir{16} = 'Pox3568_2026-06-20_12-49-38_TFCD1'; ca1_swr_idx{16} = {'CH51'};  sub_swr_idx{16} = {'CH143'};
+all_csc_dir{17} = 'Pox3568_2026-06-21_17-05-21_TFCD2'; ca1_swr_idx{17} = {'CH119'};  sub_swr_idx{17} = {'CH157'};
+all_csc_dir{18} = 'Pox3568_2026-06-22_14-58-53_TFCD3'; ca1_swr_idx{18} = {'CH118'};  sub_swr_idx{18} = {'CH145'};
+all_csc_dir{19} = 'Pox3568_2026-06-23_18-12-36_TFCD4'; ca1_swr_idx{19} = {'CH70'};  sub_swr_idx{19} = {'CH145'};
+all_csc_dir{20} = 'Pox3568_2026-06-24_16-56-18_TFCD5'; ca1_swr_idx{20} = {'CH75'  'CH71' 'CH115'};  sub_swr_idx{20} = {'CH149'}; % CH71 and 115 are also decent for CA1
+all_csc_dir{21} = 'SOM1_2026-10-05_15-20-59_LT1';      ca1_swr_idx{21} = {''};  sub_swr_idx{21} = {[]};
+all_csc_dir{22} = 'SOM1_2026-10-06_13-42-35_LT2';      ca1_swr_idx{22} = {'CH77'};  sub_swr_idx{22} = {[]};
+all_csc_dir{23} = 'SOM1_2026-10-07_16-35-07_LT3';      ca1_swr_idx{23} = {''};  sub_swr_idx{23} = {[]};
+all_csc_dir{end+1} = 'SOM1_2026-10-08_16-02-31_LT4';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM1_2026-10-09_15-02-08_LT5';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Som1_2026-10-12_14-35-53_TFCD1';     ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM1_2026-10-13_09-36-51_TFCD2';     ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM1_2026-10-14_14-47-04_TFCD3';     ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM1_2026-10-15_11-42-39_TFCD4';     ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Som1_2026-10-16_15-32-52_TFCD5';     ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+% SOM 2
+all_csc_dir{end+1} = 'SOM2_2026-10-06_11-23-25_LT1';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM2_2026-10-07_10-33-39_LT2';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM2_2026-10-08_14-38-55_LT3';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM2_2026-10-09_13-23-44_LT4';       ca1_swr_idx{end+1} = {'CH72'};  sub_swr_idx{end+1} = {'CH152'};
+all_csc_dir{end+1} = 'SOM2_2026-10-10_12-08-36_LT5';       ca1_swr_idx{end+1} = {'CH88' 'CH102', 'CH122', 'CH116'};  sub_swr_idx{end+1} = {'CH139', 'CH132', 'CH149', 'CH155'};
+all_csc_dir{end+1} = 'Som2_2026-10-12_17-07-42_TFCD1';     ca1_swr_idx{end+1} = {'CH70', 'CH75', 'CH80'};  sub_swr_idx{end+1} = {'CH156', 'CH158', 'CH160'};
+all_csc_dir{end+1} = 'Som2_2026-10-13_11-41-22_TFCD2';     ca1_swr_idx{end+1} = {'CH65' 'CH77', 'CH70', 'CH76'};  sub_swr_idx{end+1} = {'CH151', 'CH145', 'CH158'};
+all_csc_dir{end+1} = 'SOM2_2026-10-14_16-19-06_TFCD3';     ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM2_2026-10-15_14-16-32_TFCD4';     ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Som2_2026-10-16_19-02-55_TFCD5';     ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+% Pox3456
+all_csc_dir{end+1} = 'Pox3564_2026-10-12_11-29-35_LT1';    ca1_swr_idx{end+1} = {'CH66' 'CH74', 'CH70', 'CH71', 'CH77'};  sub_swr_idx{end+1} = {'CH157', 'CH147', 'CH153', 'CH150'};
+all_csc_dir{end+1} = 'Pox3564_2026-10-13_14-02-56_LT2';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Pox3564_2026-10-14_09-47-57_LT3';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Pox3564_2026-10-15_16-29-59_LT4';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Pox3564_2026-10-16_08-43-36_LT5';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Pox3564_2026-10-19_11-00-11_TFCD1';  ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+% Pox3576
+all_csc_dir{end+1} = 'Pox3576_2026-10-12_12-53-56_LT1';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Pox3576_2026-10-13_15-34-57_LT2';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Pox3576_2026-10-14_11-26-23_LT3';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Pox3576_2026-10-15_18-00-51_LT4';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Pox3576_2026-10-16_13-14-05_LT5';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+
+
+% all_csc_dir{23} = 'SOM2_2026-10-09_13-23-44_LT4';      ca1_swr_idx{23} = {'CH72'};  sub_swr_idx{23} = {'CH152'};
+% all_csc_dir{24} = 'SOM2_2026-10-10_12-08-36_LT5';      ca1_swr_idx{24} = {'CH88' 'CH102', 'CH122', 'CH116'};  sub_swr_idx{24} = {'CH139', 'CH132', 'CH149', 'CH155'};
+% all_csc_dir{25} = 'Pox3564_2026-10-12_11-29-35_LT1';   ca1_swr_idx{25} = {'CH66' 'CH74', 'CH70', 'CH71', 'CH77'};  sub_swr_idx{24} = {'CH157', 'CH147', 'CH153', 'CH150'};
+% all_csc_dir{26} = 'Som2_2026-10-13_11-41-22_TFCD2';    ca1_swr_idx{26} = {'CH65' 'CH77', 'CH70', 'CH76'};  sub_swr_idx{24} = {'CH151', 'CH145', 'CH158'};
+ 
 
 csc_idx = 1:96;
 
 probe_type{1} = {'pox2217' 'pox3265' 'pox3567' 'pox3568'}; % A4x16 & Buz32
-probe_type{2} = {'som1' 'som2'};  % 5x12 & Buz32
+probe_type{2} = {'som1' 'som2' 'pox3564', 'pox3567B'};  % 5x12 & Buz32
+
+to_cut = []; 
 
 %% loop
 
 
-
-for iS = 22
+for iS = 39:40 %[31 32 33 38 39 40]
 
     csc_dir = [data_dir all_csc_dir{iS} filesep 'Record Node 117'];
-    swr_idx = all_swr_idx{iS};
+    swr_idx = ca1_swr_idx{iS};
 
 
     %% spikes
@@ -89,6 +106,15 @@ for iS = 22
         if ispc;  phy_dir = ['C:\' phy_dir];
         elseif ismac;   phy_dir = ['/' phy_dir] ;end
     end
+
+    % check if the session has been cut
+    if  ~exist([phy_dir filesep 'cluster_info.tsv'], 'file')
+        to_cut{end+1} = all_csc_dir{iS}; 
+        clearvars -except all_csc_dir iS data_dir inter_dir node probe_type csc_idx ca1_swr_idx to_cut
+
+        continue
+    end
+
     cd(phy_dir)
     params = OE_load_params(phy_dir);
 
@@ -142,8 +168,6 @@ for iS = 22
 
     csc_list = temp_list;
 
-
-
     csc= []; labels = [];
 
     % get the first channel with the time vector.
@@ -168,7 +192,6 @@ for iS = 22
         labels{ii} = info.header.channel;
         csc.cfg.hdr{ii} = info.header;
         csc.cfg.hdr{ii}.SamplingFrequency = info.header.sampleRate ./ cfg_in.decimateFactor;
-
     end
 
     csc.label = labels;
@@ -187,9 +210,8 @@ for iS = 22
 
     OE_evts = OE_LoadEvents([evts_list.folder filesep evts_list.name], fs, ts_prime);
 
-    % end
-    % session info
 
+    % session info
     if ~contains(csc_dir, '/')
         parts = strsplit(csc_dir, '\');
     else
@@ -248,7 +270,7 @@ for iS = 22
 
     csc_r = restrict(csc, csc.tvec(1), csc.tvec(1)+500);
 
-    figure(1010)
+    figure(100+iS)
     clf;
     hold on
     if exist('swr_idx', 'var')
@@ -268,6 +290,8 @@ for iS = 22
         y_t(ii) = median(csc_r.data(ii,:)+ii*500);
     end
     set(gca, 'YTick', y_t, 'YTickLabel', lab)
+
+        title(all_csc_dir{iS})
 
     % vline(SWR_evts.t{2}, 'r')
 
@@ -305,20 +329,35 @@ for iS = 22
     csc_r = restrict(csc, mov_iv);
     mov_r = restrict(mov_rate, mov_iv);
 
-    figure(10101)
+    figure(1000+iS)
     plot(csc_r.tvec, (csc_r.data(1,:)/100)-5)
     plot(mov_rate.tvec, ((mov_rate.data(1,:)/max(mov_rate.data(1,:)))*10)-10)
     ylim([-10 inf])
+    title(all_csc_dir{iS})
 
 
     %% determine the probe type
 
-    if sum(contains(probe_type{2}, subject))>0
+    if sum(ismember(probe_type{2}, subject))>0
         probe{1} = '5x12'; probe{2} = 'Buz32'; 
-    elseif sum(contains(probe_type{1}, subject))>0
+
+        % reclassify spikes on shank 1 as being CA1 or DG
+        
+    elseif sum(ismember(probe_type{1}, subject))>0
         probe{1} = '4x16'; probe{2} = 'Buz32'; 
     end
 
+    if strcmp(probe{1}, '5x12')
+        dg_chan = (S.usr.ch > 8 & S.usr.ch < 17); 
+        S_dg = SelectTS([], S, dg_chan);
+        S_dg.loc = S.loc(dg_chan); 
+        S_dg.c_ord = spring(sum(dg_chan));
+
+
+        S = SelectTS([], S, ~dg_chan);
+        S.loc = S.loc(~dg_chan); 
+        S.c_ord(dg_chan,:) = [];
+    end
     %% collect the data
     % load("all_TFC.mat")
     this_name = [subject '_' sess_id];
@@ -346,7 +385,11 @@ for iS = 22
         all_TFC.(this_name).S=S;
         all_TFC.(this_name).ts_prime = ts_prime;
         all_TFC.(this_name).csc_prime = csc_prime;
-        All_TFC.(this_name).probe = probe;
+        all_TFC.(this_name).probe = probe;
+
+        if exist('S_dg', 'var')
+            all_TFC.(this_name).S_dg=S_dg;
+        end
     end
     % save('all_TFC.mat', 'all_TFC')
 
@@ -357,7 +400,7 @@ for iS = 22
 
     disp('data saved')
 
-        
+    clearvars -except all_csc_dir iS data_dir inter_dir node probe_type csc_idx ca1_swr_idx to_cut
 end
 
 

@@ -371,7 +371,7 @@ mov_iv = TSDtoIV(cfg_mov, mov_rate);
 
 % pad movement
 
-cfg_resize.d = [+.5 -.5];
+cfg_resize.d = [-.5 +.5];
 
 mov_iv = ResizeIV(cfg_resize, mov_iv);
 
