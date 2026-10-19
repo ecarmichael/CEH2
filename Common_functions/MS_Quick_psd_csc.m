@@ -6,7 +6,7 @@ function psd = MS_Quick_psd_csc(csc, Chan_to_use)
 
 
 if nargin < 2
-    Chan_to_use = 1:lenth(csc.length); 
+    Chan_to_use = 1:length(csc.label); 
 end
 
 
