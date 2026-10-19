@@ -140,11 +140,11 @@ this_asmbly = MS_asmbly_ephys(this_rate, move_idx);
 
 %% get the phase locking to theta and maybe gamma
 
-theta_csc = MS_select_tsd(this_sess.csc, 9);
+theta_csc = MS_select_tsd(this_sess.csc, 55);
 
 mod_out = MS_phase_mod([], theta_csc, this_sess.S, move_idx, plot_flag)
 
-
+mod_out.mod_idx = mod_out.MVL_z > 1.97; 
 %% check the phase locking of assemblies to theta
 
 
