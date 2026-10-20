@@ -1,5 +1,56 @@
 % HF_preprocessing
 
+% check for outstanding data to preprocess
+
+fnames = dir('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/*'); 
+fnames(1:3) = []; 
+for ii = length(fnames):-1:1
+    Name{ii} = fnames(ii).name; 
+    Path{ii} = [fnames(ii).folder filesep fnames(ii).name]; 
+
+    if exist([Path{ii} filesep 'kilosort4'], 'dir')
+        Cut(ii) = true;
+    else
+        Cut(ii) = false; 
+    end
+
+    if exist([Path{ii} filesep 'kilosort4' filesep 'timestamps.npy'], 'file')
+        Timestamps(ii) = true;
+    else
+        Timestamps(ii) = false; 
+    end
+
+    % session info
+    sess = Name{ii};
+    if contains(sess, 'Pox')
+        subject{ii} = lower(sess(strfind(sess, 'Pox'): strfind(sess, 'Pox')+6));
+    elseif contains(lower(sess), 'som')
+        subject{ii} = lower(sess(strfind(lower(sess), 'som'): strfind(lower(sess), 'som')+3));
+    end
+    if contains(sess, 'TFC')
+        sess_id{ii} = strrep(sess(strfind(sess, 'TFC'):end), '_', '');
+    else
+        sess_id{ii} = sess(strfind(sess, 'LT'):end);
+    end
+
+    % check if the data has already been processed
+    pnames = dir('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/HF_Sub_SWR/inter_offset/*.mat'); 
+
+    pnames = {pnames.name}; 
+
+    if sum(contains(lower(pnames), lower(subject{ii})) & contains(lower(pnames), lower(sess_id{ii}))) >0
+        Processed(ii) = true;
+    else
+        Processed(ii) = false;
+    end
+
+fprintf('%s :  Kilo: %d   |   TS: %d   | Processed:  %d\n', Name{ii}, Cut(ii), Timestamps(ii), Processed(ii))
+    
+end
+
+tbl = table(Name, Path, Cut, Timestamps, Processed,'VariableNames',{'Name', 'Dir', 'Cut', 'Timestamps', 'Processed'}); 
+
+
 %% setup the data
 if ismac
     data_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/';
