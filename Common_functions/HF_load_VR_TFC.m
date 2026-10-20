@@ -45,14 +45,47 @@ vr.pos.tvec = int_t;
 
 %% interval data
 vr.evt = ts; 
+if ismissing(vr_tbl.context(1))
+    disp('TFCD3')
+    vr_tbl.context(:) = 'Context_A'; 
+end
+
+Cons = unique(vr_tbl.context); 
+
+phases = unique(vr_tbl.phase); 
+for iP = 1:length(phases)
+    if sum(contains({'none' 'system'}, phases{iP}) >0)
+        continue
+    else
+    phase_idx = ismember(vr_tbl.phase, phases{iP}); 
+    phase_tran = find(diff(phase_idx)>0)-1;
+    vr.evt.label{end+1} = phases{iP};
+    vr.evt.t{end+1} = vr_tbl.time(phase_tran);
+
+    if sum(contains('tone' , phases{iP}) >0)
+
+        for iC = 1:length(Con)
+            con_idx = ismember(vr_tbl.context, Cons{iC});
+        phase_idx = ismember(vr_tbl.phase, phases{iP});
+        phase_con_idx = phase_idx &con_idx; 
+
+        phase_con_tran = find(diff(phase_con_idx)>0)-1;
+        vr.evt.label{end+1} = [phases{iP} '-' Cons{iC}];
+        vr.evt.t{end+1} = vr_tbl.time(phase_con_tran);
+
+        end
+
+    end
+end
+
 
 % phases
-% phases = unique(vr_tbl.phase(ismember(vr_tbl.event, "-"))); 
-% for iP = 1:length(phases)
-%     vr.evt.label{end+1} = phases{iP};
-%     p_idx = ismember(vr_tbl.phase, phases{iP}) & ismember(vr_tbl.event, "-"); 
-%     vr.evt.t{end+1} = vr_tbl.time(p_idx);
-% end
+phases = unique(vr_tbl.phase(ismember(vr_tbl.event, "-"))); 
+for iP = 1:length(phases)
+    vr.evt.label{end+1} = phases{iP};
+    p_idx = ismember(vr_tbl.phase, phases{iP}) & ismember(vr_tbl.event, "-"); 
+    vr.evt.t{end+1} = vr_tbl.time(p_idx);
+end
 
 % other events
 evts = unique(vr_tbl.event(~ismember(vr_tbl.event, ""))); 
@@ -63,11 +96,12 @@ end
 
 % get the context states
 Cons = unique(vr_tbl.context);
-if isscalar(Cons)
-    vr.evt.label{end+1} = Cons{iC};
-    con_t = vr_tbl.time(ismember(vr_tbl.context, Cons(iC)));
-    vr.evt.t{end+1} = [con_t(1) con_t(end)];
-else
+% for iC = 1:length(Cons)
+% if isscalar(Cons)
+%     vr.evt.label{end+1} = Cons{iC};
+%     con_t = vr_tbl.time(ismember(vr_tbl.context, Cons(iC)));
+%     vr.evt.t{end+1} = [con_t(1) con_t(end)];
+% else
     for iC = 1:length(Cons)
         vr.evt.label{end+1} = [Cons{iC} '_on'];
         these_con = ismember(vr_tbl.context, Cons{iC});
@@ -91,7 +125,7 @@ else
             vr.evt.t{end}(end+1) = vr_tbl.time(end); 
         end
     end
-end
+% end
 
 
 %% figure for varification

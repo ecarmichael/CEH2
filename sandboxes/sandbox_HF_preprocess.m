@@ -9,6 +9,12 @@ for ii = length(fnames):-1:1
     Path{ii} = [fnames(ii).folder filesep fnames(ii).name]; 
 
     if exist([Path{ii} filesep 'kilosort4'], 'dir')
+        Kilo(ii) = true;
+    else
+        Kilo(ii) = false; 
+    end
+
+    if exist([Path{ii} filesep 'kilosort4' filesep 'cluster_info.tsv'], 'file')
         Cut(ii) = true;
     else
         Cut(ii) = false; 
@@ -44,11 +50,11 @@ for ii = length(fnames):-1:1
         Processed(ii) = false;
     end
 
-fprintf('%s :  Kilo: %d   |   TS: %d   | Processed:  %d\n', Name{ii}, Cut(ii), Timestamps(ii), Processed(ii))
+fprintf('%s :  Kilo: %d   |  Cut: %d  |TS: %d   | Processed:  %d\n', Name{ii}, Kilo(ii), Cut(ii), Timestamps(ii), Processed(ii))
     
 end
 
-tbl = table(Name, Path, Cut, Timestamps, Processed,'VariableNames',{'Name', 'Dir', 'Cut', 'Timestamps', 'Processed'}); 
+tbl = table(Name, Path, Kilo, Cut, Timestamps, Processed,'VariableNames',{'Name', 'Dir','Kilo',  'Cut', 'Timestamps', 'Processed'}); 
 
 
 %% setup the data
@@ -63,29 +69,36 @@ end
 node = [filesep 'Record Node 117'];
 
 all_csc_dir = [];  ca1_swr_idx = []; sub_swr_idx = []; 
-all_csc_dir{1} = 'Pox2217_2026-06-16_16-29-44_TFC_D1'; ca1_swr_idx{1} = {'CH59'}; sub_swr_idx{1} = {[]};
-all_csc_dir{2} = 'Pox2217_2026-06-17_13-41-15_TFC_D2'; ca1_swr_idx{2} = {'CH13'}; sub_swr_idx{2} = {[]};
-all_csc_dir{3} = 'Pox2217_2026-06-18_14-26-43_TFC_D3'; ca1_swr_idx{3} = {'CH119'}; sub_swr_idx{3} = {'CH157'};
-all_csc_dir{4} = 'Pox2217_2026-06-19_13-37-05_TFCD4'; ca1_swr_idx{4} = {'CH59'};  sub_swr_idx{4} = {'CH157'};
-all_csc_dir{5} = 'Pox2217_2026-06-20_22-52-37_TFCD5'; ca1_swr_idx{5} = {'CH124'};  sub_swr_idx{5} = {'CH138'};
-all_csc_dir{6} = 'Pox3265_2026-06-16_18-09-08_TFCD1'; ca1_swr_idx{6} = {'CH51'};  sub_swr_idx{6} = {'CH141'};
-all_csc_dir{7} = 'Pox3265_2026-06-17_15-59-53_TFCD2'; ca1_swr_idx{7} = {'CH63'};  sub_swr_idx{7} = {'CH133'};
-all_csc_dir{8} = 'Pox3265_2026-06-18_16-10-31_TFCD3'; ca1_swr_idx{8} = {'CH51'};  sub_swr_idx{8} = {'CH141'};
-all_csc_dir{9} = 'Pox3265_2026-06-19_21-06-37_TFCD4'; ca1_swr_idx{9} = {'CH63'};  sub_swr_idx{9} = {'CH143' 'CH130' 'CH142'};
-all_csc_dir{10} = 'Pox3265_2026-06-20_21-00-10_TFCD5'; ca1_swr_idx{10} = {'CH56'};  sub_swr_idx{10} = {'CH143' 'CH144'};
-all_csc_dir{11} = 'Pox3567_2026-06-20_17-44-01_TFCD1'; ca1_swr_idx{11} = {'CH65'};  sub_swr_idx{11} = {'CH136' 'CH134' 'CH144' 'CH141'};
-all_csc_dir{12} = 'Pox3567_2026-06-21_15-41-32_TFCD2'; ca1_swr_idx{12} = {'CH124'};  sub_swr_idx{12} = {'CH149'};
-all_csc_dir{13} = 'Pox3567_2026-06-22_13-44-28_TFCD3'; ca1_swr_idx{13} = {'CH74'};  sub_swr_idx{13} = {[]}; 
-all_csc_dir{14} = 'Pox3567_2026-06-23_15-53-07_TFCD4'; ca1_swr_idx{14} = {'CH51'};  sub_swr_idx{14} =  {'CH142'};
-all_csc_dir{15} = 'Pox3567_2026-06-24_14-10-03_TFCD5'; ca1_swr_idx{15} = {'CH71'};  sub_swr_idx{15} = {'CH134'};
-all_csc_dir{16} = 'Pox3568_2026-06-20_12-49-38_TFCD1'; ca1_swr_idx{16} = {'CH51'};  sub_swr_idx{16} = {'CH143'};
-all_csc_dir{17} = 'Pox3568_2026-06-21_17-05-21_TFCD2'; ca1_swr_idx{17} = {'CH119'};  sub_swr_idx{17} = {'CH157'};
-all_csc_dir{18} = 'Pox3568_2026-06-22_14-58-53_TFCD3'; ca1_swr_idx{18} = {'CH118'};  sub_swr_idx{18} = {'CH145'};
-all_csc_dir{19} = 'Pox3568_2026-06-23_18-12-36_TFCD4'; ca1_swr_idx{19} = {'CH70'};  sub_swr_idx{19} = {'CH145'};
-all_csc_dir{20} = 'Pox3568_2026-06-24_16-56-18_TFCD5'; ca1_swr_idx{20} = {'CH75'  'CH71' 'CH115'};  sub_swr_idx{20} = {'CH149'}; % CH71 and 115 are also decent for CA1
-all_csc_dir{21} = 'SOM1_2026-10-05_15-20-59_LT1';      ca1_swr_idx{21} = {''};  sub_swr_idx{21} = {[]};
-all_csc_dir{22} = 'SOM1_2026-10-06_13-42-35_LT2';      ca1_swr_idx{22} = {'CH77'};  sub_swr_idx{22} = {[]};
-all_csc_dir{23} = 'SOM1_2026-10-07_16-35-07_LT3';      ca1_swr_idx{23} = {''};  sub_swr_idx{23} = {[]};
+% all_csc_dir{end+1} = 'Pox2217_2026-06-16_16-29-44_TFC_D1'; ca1_swr_idx{end+1} = {'CH59'}; sub_swr_idx{1} = {[]};
+% all_csc_dir{end+1} = 'Pox2217_2026-06-16_16-29-44_TFC_D1'; ca1_swr_idx{end+1} = {'CH59'}; sub_swr_idx{1} = {[]};
+all_csc_dir{end+1} = 'Pox2217_2026-06-11_13-03-39_LT3'; ca1_swr_idx{end+1} = {'CH59'}; sub_swr_idx{1} = {[]};
+all_csc_dir{end+1} = 'Pox2217_2026-06-12_14-50-13_LT4'; ca1_swr_idx{end+1} = {'CH59'}; sub_swr_idx{1} = {[]};
+all_csc_dir{end+1} = 'Pox2217_2026-06-13_20-41-46_LT5'; ca1_swr_idx{end+1} = {'CH59'}; sub_swr_idx{1} = {[]};
+
+all_csc_dir{end+1} = 'Pox2217_2026-06-16_16-29-44_TFCD1'; ca1_swr_idx{end+1} = {'CH59'}; sub_swr_idx{1} = {[]};
+all_csc_dir{end+1} = 'Pox2217_2026-06-17_13-41-15_TFCD2'; ca1_swr_idx{end+1} = {'CH13'}; sub_swr_idx{2} = {[]};
+all_csc_dir{end+1} = 'Pox2217_2026-06-18_14-26-43_TFCD3'; ca1_swr_idx{end+1} = {'CH119'}; sub_swr_idx{3} = {'CH157'};
+all_csc_dir{end+1} = 'Pox2217_2026-06-19_13-37-05_TFCD4'; ca1_swr_idx{end+1} = {'CH59'};  sub_swr_idx{4} = {'CH157'};
+all_csc_dir{end+1} = 'Pox2217_2026-06-20_22-52-37_TFCD5'; ca1_swr_idx{end+1} = {'CH124'};  sub_swr_idx{5} = {'CH138'};
+
+all_csc_dir{end+1} = 'Pox3265_2026-06-16_18-09-08_TFCD1'; ca1_swr_idx{end+1} = {'CH51'};  sub_swr_idx{6} = {'CH141'};
+all_csc_dir{end+1} = 'Pox3265_2026-06-17_15-59-53_TFCD2'; ca1_swr_idx{end+1} = {'CH63'};  sub_swr_idx{7} = {'CH133'};
+all_csc_dir{end+1} = 'Pox3265_2026-06-18_16-10-31_TFCD3'; ca1_swr_idx{end+1} = {'CH51'};  sub_swr_idx{8} = {'CH141'};
+all_csc_dir{end+1} = 'Pox3265_2026-06-19_21-06-37_TFCD4'; ca1_swr_idx{end+1} = {'CH63'};  sub_swr_idx{9} = {'CH143' 'CH130' 'CH142'};
+all_csc_dir{end+1} = 'Pox3265_2026-06-20_21-00-10_TFCD5'; ca1_swr_idx{end+1} = {'CH56'};  sub_swr_idx{10} = {'CH143' 'CH144'};
+all_csc_dir{end+1} = 'Pox3567_2026-06-20_17-44-01_TFCD1'; ca1_swr_idx{end+1} = {'CH65'};  sub_swr_idx{11} = {'CH136' 'CH134' 'CH144' 'CH141'};
+all_csc_dir{end+1} = 'Pox3567_2026-06-21_15-41-32_TFCD2'; ca1_swr_idx{end+1} = {'CH124'};  sub_swr_idx{12} = {'CH149'};
+all_csc_dir{end+1} = 'Pox3567_2026-06-22_13-44-28_TFCD3'; ca1_swr_idx{end+1} = {'CH74'};  sub_swr_idx{13} = {[]}; 
+all_csc_dir{end+1} = 'Pox3567_2026-06-23_15-53-07_TFCD4'; ca1_swr_idx{end+1} = {'CH51'};  sub_swr_idx{14} =  {'CH142'};
+all_csc_dir{end+1} = 'Pox3567_2026-06-24_14-10-03_TFCD5'; ca1_swr_idx{end+1} = {'CH71'};  sub_swr_idx{15} = {'CH134'};
+all_csc_dir{end+1} = 'Pox3568_2026-06-20_12-49-38_TFCD1'; ca1_swr_idx{end+1} = {'CH51'};  sub_swr_idx{16} = {'CH143'};
+all_csc_dir{end+1} = 'Pox3568_2026-06-21_17-05-21_TFCD2'; ca1_swr_idx{end+1} = {'CH119'};  sub_swr_idx{17} = {'CH157'};
+all_csc_dir{end+1} = 'Pox3568_2026-06-22_14-58-53_TFCD3'; ca1_swr_idx{end+1} = {'CH118'};  sub_swr_idx{18} = {'CH145'};
+all_csc_dir{end+1} = 'Pox3568_2026-06-23_18-12-36_TFCD4'; ca1_swr_idx{end+1} = {'CH70'};  sub_swr_idx{19} = {'CH145'};
+all_csc_dir{end+1} = 'Pox3568_2026-06-24_16-56-18_TFCD5'; ca1_swr_idx{end+1} = {'CH75'  'CH71' 'CH115'};  sub_swr_idx{20} = {'CH149'}; % CH71 and 115 are also decent for CA1
+all_csc_dir{end+1} = 'SOM1_2026-10-05_15-20-59_LT1';      ca1_swr_idx{end+1} = {''};  sub_swr_idx{21} = {[]};
+all_csc_dir{end+1} = 'SOM1_2026-10-06_13-42-35_LT2';      ca1_swr_idx{end+1} = {'CH77'};  sub_swr_idx{22} = {[]};
+all_csc_dir{end+1} = 'SOM1_2026-10-07_16-35-07_LT3';      ca1_swr_idx{end+1} = {''};  sub_swr_idx{23} = {[]};
 all_csc_dir{end+1} = 'SOM1_2026-10-08_16-02-31_LT4';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'SOM1_2026-10-09_15-02-08_LT5';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'Som1_2026-10-12_14-35-53_TFCD1';     ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
@@ -132,10 +145,13 @@ probe_type{2} = {'som1' 'som2' 'pox3564', 'pox3567B'};  % 5x12 & Buz32
 
 to_cut = []; 
 
+for ii  = 1:length(all_csc_dir)
+    fprintf('%d - %s\n', ii,all_csc_dir{ii})
+end
 %% loop
 
 
-for iS = 40 %[31 32 33 38 39 40]
+for iS = [31 33 36 45 47 48 50 51 54]
 
     csc_dir = [data_dir all_csc_dir{iS} filesep 'Record Node 117'];
     swr_idx = ca1_swr_idx{iS};
@@ -282,7 +298,7 @@ for iS = 40 %[31 32 33 38 39 40]
     end
 
     % make a quick test plot
-    figure(10101)
+    figure(iS)
     clf
     hold on
     if exist('S', 'var')
@@ -302,8 +318,10 @@ for iS = 40 %[31 32 33 38 39 40]
     if contains(OE_evts.label, '16')
         vline(OE_evts.t{ismember(OE_evts.label, '16')}, 'm')
     end
-    vline(OE_evts.t{ismember(OE_evts.label, '8')}, 'c')
+    if contains(OE_evts.label, '8')
 
+        vline(OE_evts.t{ismember(OE_evts.label, '8')}, 'c')
+    end
     xlim([csc.tvec(1)-20 csc.tvec(end)+20])
 
 
@@ -455,6 +473,10 @@ for iS = 40 %[31 32 33 38 39 40]
 end
 
 
+
+
+%%%%%%%%% Get the events file  %%%%%%%%%%
+%% 
 
 
 
