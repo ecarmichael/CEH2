@@ -84,7 +84,7 @@ to_cut = [];
 %% loop
 
 
-for iS = 39:40 %[31 32 33 38 39 40]
+for iS = 40 %[31 32 33 38 39 40]
 
     csc_dir = [data_dir all_csc_dir{iS} filesep 'Record Node 117'];
     swr_idx = ca1_swr_idx{iS};
