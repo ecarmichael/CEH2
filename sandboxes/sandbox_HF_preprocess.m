@@ -2,28 +2,28 @@
 
 % check for outstanding data to preprocess
 
-fnames = dir('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/*'); 
-fnames(1:3) = []; 
+fnames = dir('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/*');
+fnames(1:3) = [];
 for ii = length(fnames):-1:1
-    Name{ii} = fnames(ii).name; 
-    Path{ii} = [fnames(ii).folder filesep fnames(ii).name]; 
+    Name{ii} = fnames(ii).name;
+    Path{ii} = [fnames(ii).folder filesep fnames(ii).name];
 
     if exist([Path{ii} filesep 'kilosort4'], 'dir')
         Kilo(ii) = true;
     else
-        Kilo(ii) = false; 
+        Kilo(ii) = false;
     end
 
     if exist([Path{ii} filesep 'kilosort4' filesep 'cluster_info.tsv'], 'file')
         Cut(ii) = true;
     else
-        Cut(ii) = false; 
+        Cut(ii) = false;
     end
 
     if exist([Path{ii} filesep 'kilosort4' filesep 'timestamps.npy'], 'file')
         Timestamps(ii) = true;
     else
-        Timestamps(ii) = false; 
+        Timestamps(ii) = false;
     end
 
     % session info
@@ -40,9 +40,9 @@ for ii = length(fnames):-1:1
     end
 
     % check if the data has already been processed
-    pnames = dir('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/HF_Sub_SWR/inter_offset/*.mat'); 
+    pnames = dir('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/HF_Sub_SWR/inter_offset/*.mat');
 
-    pnames = {pnames.name}; 
+    pnames = {pnames.name};
 
     if sum(contains(lower(pnames), lower(subject{ii})) & contains(lower(pnames), lower(sess_id{ii}))) >0
         Processed(ii) = true;
@@ -50,14 +50,14 @@ for ii = length(fnames):-1:1
         Processed(ii) = false;
     end
 
-fprintf('%s :  Kilo: %d   |  Cut: %d  |TS: %d   | Processed:  %d\n', Name{ii}, Kilo(ii), Cut(ii), Timestamps(ii), Processed(ii))
-    
+    fprintf('%s :  Kilo: %d   |  Cut: %d  |TS: %d   | Processed:  %d\n', Name{ii}, Kilo(ii), Cut(ii), Timestamps(ii), Processed(ii))
+
 end
 
 fprintf('total :  Kilo: %d   |  Cut: %d  |   TS: %d   | Processed:  %d\n', sum(Kilo), sum(Cut), sum(Timestamps), sum(Processed))
 
 
-tbl = table(Name, Path, Kilo, Cut, Timestamps, Processed,'VariableNames',{'Name', 'Dir','Kilo',  'Cut', 'Timestamps', 'Processed'}); 
+tbl = table(Name, Path, Kilo, Cut, Timestamps, Processed,'VariableNames',{'Name', 'Dir','Kilo',  'Cut', 'Timestamps', 'Processed'});
 
 
 %% setup the data
@@ -67,11 +67,10 @@ if ismac
 elseif ispc
     data_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\';
     inter_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Inter_data\HF_Sub_SWR\inter_offset';
-
 end
 node = [filesep 'Record Node 117'];
 
-all_csc_dir = [];  ca1_swr_idx = []; sub_swr_idx = []; 
+all_csc_dir = [];  ca1_swr_idx = []; sub_swr_idx = [];
 % all_csc_dir{end+1} = 'Pox2217_2026-06-16_16-29-44_TFC_D1'; ca1_swr_idx{end+1} = {'CH59'}; sub_swr_idx{1} = {[]};
 % all_csc_dir{end+1} = 'Pox2217_2026-06-16_16-29-44_TFC_D1'; ca1_swr_idx{end+1} = {'CH59'}; sub_swr_idx{1} = {[]};
 all_csc_dir{end+1} = 'Pox2217_2026-06-11_13-03-39_LT3'; ca1_swr_idx{end+1} = {'CH59'}; sub_swr_idx{1} = {[]};
@@ -91,7 +90,7 @@ all_csc_dir{end+1} = 'Pox3265_2026-06-19_21-06-37_TFCD4'; ca1_swr_idx{end+1} = {
 all_csc_dir{end+1} = 'Pox3265_2026-06-20_21-00-10_TFCD5'; ca1_swr_idx{end+1} = {'CH56'};  sub_swr_idx{10} = {'CH143' 'CH144'};
 all_csc_dir{end+1} = 'Pox3567_2026-06-20_17-44-01_TFCD1'; ca1_swr_idx{end+1} = {'CH65'};  sub_swr_idx{11} = {'CH136' 'CH134' 'CH144' 'CH141'};
 all_csc_dir{end+1} = 'Pox3567_2026-06-21_15-41-32_TFCD2'; ca1_swr_idx{end+1} = {'CH124'};  sub_swr_idx{12} = {'CH149'};
-all_csc_dir{end+1} = 'Pox3567_2026-06-22_13-44-28_TFCD3'; ca1_swr_idx{end+1} = {'CH74'};  sub_swr_idx{13} = {[]}; 
+all_csc_dir{end+1} = 'Pox3567_2026-06-22_13-44-28_TFCD3'; ca1_swr_idx{end+1} = {'CH74'};  sub_swr_idx{13} = {[]};
 all_csc_dir{end+1} = 'Pox3567_2026-06-23_15-53-07_TFCD4'; ca1_swr_idx{end+1} = {'CH51'};  sub_swr_idx{14} =  {'CH142'};
 all_csc_dir{end+1} = 'Pox3567_2026-06-24_14-10-03_TFCD5'; ca1_swr_idx{end+1} = {'CH71'};  sub_swr_idx{15} = {'CH134'};
 all_csc_dir{end+1} = 'Pox3568_2026-06-20_12-49-38_TFCD1'; ca1_swr_idx{end+1} = {'CH51'};  sub_swr_idx{16} = {'CH143'};
@@ -139,14 +138,14 @@ all_csc_dir{end+1} = 'Pox3576_2026-10-16_13-14-05_LT5';    ca1_swr_idx{end+1} = 
 % all_csc_dir{24} = 'SOM2_2026-10-10_12-08-36_LT5';      ca1_swr_idx{24} = {'CH88' 'CH102', 'CH122', 'CH116'};  sub_swr_idx{24} = {'CH139', 'CH132', 'CH149', 'CH155'};
 % all_csc_dir{25} = 'Pox3564_2026-10-12_11-29-35_LT1';   ca1_swr_idx{25} = {'CH66' 'CH74', 'CH70', 'CH71', 'CH77'};  sub_swr_idx{24} = {'CH157', 'CH147', 'CH153', 'CH150'};
 % all_csc_dir{26} = 'Som2_2026-10-13_11-41-22_TFCD2';    ca1_swr_idx{26} = {'CH65' 'CH77', 'CH70', 'CH76'};  sub_swr_idx{24} = {'CH151', 'CH145', 'CH158'};
- 
+
 
 csc_idx = 1:96;
 
 probe_type{1} = {'pox2217' 'pox3265' 'pox3567' 'pox3568'}; % A4x16 & Buz32
 probe_type{2} = {'som1' 'som2' 'pox3564', 'pox3567B'};  % 5x12 & Buz32
 
-to_cut = []; 
+to_cut = [];
 
 for ii  = 1:length(all_csc_dir)
     fprintf('%d - %s\n', ii,all_csc_dir{ii})
@@ -179,7 +178,7 @@ for iS = [31 33 36 45 47 48 50 51 54]
 
     % check if the session has been cut
     if  ~exist([phy_dir filesep 'cluster_info.tsv'], 'file')
-        to_cut{end+1} = all_csc_dir{iS}; 
+        to_cut{end+1} = all_csc_dir{iS};
         clearvars -except all_csc_dir iS data_dir inter_dir node probe_type csc_idx ca1_swr_idx to_cut
 
         continue
@@ -363,7 +362,7 @@ for iS = [31 33 36 45 47 48 50 51 54]
     end
     set(gca, 'YTick', y_t, 'YTickLabel', lab)
 
-        title(all_csc_dir{iS})
+    title(all_csc_dir{iS})
 
     % vline(SWR_evts.t{2}, 'r')
 
@@ -411,23 +410,23 @@ for iS = [31 33 36 45 47 48 50 51 54]
     %% determine the probe type
 
     if sum(ismember(probe_type{2}, subject))>0
-        probe{1} = '5x12'; probe{2} = 'Buz32'; 
+        probe{1} = '5x12'; probe{2} = 'Buz32';
 
         % reclassify spikes on shank 1 as being CA1 or DG
-        
+
     elseif sum(ismember(probe_type{1}, subject))>0
-        probe{1} = '4x16'; probe{2} = 'Buz32'; 
+        probe{1} = '4x16'; probe{2} = 'Buz32';
     end
 
     if strcmp(probe{1}, '5x12')
-        dg_chan = (S.usr.ch > 8 & S.usr.ch < 17); 
+        dg_chan = (S.usr.ch > 8 & S.usr.ch < 17);
         S_dg = SelectTS([], S, dg_chan);
-        S_dg.loc = S.loc(dg_chan); 
+        S_dg.loc = S.loc(dg_chan);
         S_dg.c_ord = spring(sum(dg_chan));
 
 
         S = SelectTS([], S, ~dg_chan);
-        S.loc = S.loc(~dg_chan); 
+        S.loc = S.loc(~dg_chan);
         S.c_ord(dg_chan,:) = [];
     end
     %% collect the data
@@ -479,7 +478,49 @@ end
 
 
 %%%%%%%%% Get the events file  %%%%%%%%%%
-%% 
+%%
+
+if ismac
+    data_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/';
+    inter_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/HF_Sub_SWR/inter_offset';
+elseif ispc
+    data_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\';
+    inter_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Inter_data\HF_Sub_SWR\inter_offset';
+end
+
+fname = dir([inter_dir filesep '*.mat']);
+
+for ii = 1:length(fname)
+
+    if  contains(fname(ii).name, 'TFC')
+        load([fname(ii).folder filesep fname(ii).name])
+
+        this_name = fieldnames(data);
+
+        csv_name = dir([data.(this_name{1}).phy_dir(1:end-9) '*.csv'] );
+
+        vr_data = HF_load_VR_TFC([csv_name.folder filesep csv_name.name]);
+
+        % align to the OE timeframe
+        TFC_on_idx = find(contains(data.(this_name{1}).evts.label, 'TFC_on'));
+        if ~isempty(TFC_on_idx)
+            on_t = data.(this_name{1}).evts.t{TFC_on_idx};
+            % align vr events
+            % ts
+            for ee = 1:length(vr_data.evt.t)
+                vr_data.evt.t{ee} = vr_data.evt.t{ee} + on_t;
+            end
+            % iv
+            iv_f = fieldnames(vr_data.IV);
+            for vv = 1:length(iv_f)
+
+                vr_data.IV.(iv_f{vv}).tstart = vr_data.IV.(iv_f{vv}).tstart  + on_t;
+                vr_data.IV.(iv_f{vv}).tend = vr_data.IV.(iv_f{vv}).tend  + on_t;
+
+            end
+        end
+    end
+end
 
 
 
@@ -532,3 +573,8 @@ for  iS = 1
     S.usr.rel_depth(~S.loc) = NaN;
 
 end
+
+
+
+
+
