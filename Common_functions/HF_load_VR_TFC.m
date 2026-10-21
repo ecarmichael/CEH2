@@ -45,63 +45,92 @@ vr.pos.tvec = int_t;
 
 %% interval data
 vr.evt = ts; 
+vr.IV = []; 
+Cons = unique(vr_tbl.context); 
+
 if ismissing(vr_tbl.context(1))
     disp('TFCD3')
     vr_tbl.context(:) = 'Context_A'; 
-end
+    vr.IV.Context_A = iv([vr_tbl.time(1) vr_tbl.timed(end)]); 
 
-Cons = unique(vr_tbl.context); 
 
-phases = unique(vr_tbl.phase); 
-for iP = 1:length(phases)
-    if sum(contains({'none' 'system'}, phases{iP}) >0)
-        continue
-    else
-    phase_idx = ismember(vr_tbl.phase, phases{iP}); 
-    phase_tran = find(diff(phase_idx)>0)-1;
-    vr.evt.label{end+1} = phases{iP};
-    vr.evt.t{end+1} = vr_tbl.time(phase_tran);
+else
+    for ii = 1:length(Cons)
+       idx = ismember(vr_tbl.context, Cons{ii});
+       % tran = find(diff([0; idx])>0);
+       % if strcmpi(vr_tbl.context(1), Cons{ii})
+       %     vr.IV.(Cons{ii}) = iv(vr_tbl.time([1; find(diff([0; idx])>0)]), vr_tbl.time(find(diff([0; idx])<0)));
+       % else
+       %     vr.IV.(Cons{ii}) = iv(vr_tbl.time(find(diff([0; idx])>0)), vr_tbl.time(find(diff([0; idx])<0)));
+       % end
 
-    if sum(contains('tone' , phases{iP}) >0)
-
-        for iC = 1:length(Con)
-            con_idx = ismember(vr_tbl.context, Cons{iC});
-        phase_idx = ismember(vr_tbl.phase, phases{iP});
-        phase_con_idx = phase_idx &con_idx; 
-
-        phase_con_tran = find(diff(phase_con_idx)>0)-1;
-        vr.evt.label{end+1} = [phases{iP} '-' Cons{iC}];
-        vr.evt.t{end+1} = vr_tbl.time(phase_con_tran);
-
-        end
+       if strcmpi(vr_tbl.context(end), Cons{ii})
+           vr.IV.(Cons{ii}) = iv(vr_tbl.time(find(diff([0; idx])>0)), vr_tbl.time([find(diff([0; idx])<0); length(vr_tbl.time)]));
+       else
+           vr.IV.(Cons{ii}) = iv(vr_tbl.time(find(diff([0; idx])>0)), vr_tbl.time(find(diff([0; idx])<0)));
+       end
 
     end
+
 end
 
 
-% phases
-phases = unique(vr_tbl.phase(ismember(vr_tbl.event, "-"))); 
+
+% 
+phases = unique(vr_tbl.phase);
 for iP = 1:length(phases)
-    vr.evt.label{end+1} = phases{iP};
-    p_idx = ismember(vr_tbl.phase, phases{iP}) & ismember(vr_tbl.event, "-"); 
-    vr.evt.t{end+1} = vr_tbl.time(p_idx);
+    if sum(contains({'none' 'system', 'done'}, phases{iP}) >0)
+        continue
+    else
+        phase_idx = ismember(vr_tbl.phase, phases{iP});
+        phase_tran = find(diff(phase_idx)>0);
+        vr.evt.label{end+1} = phases{iP};
+        vr.evt.t{end+1} = vr_tbl.time(phase_tran);
+% 
+%         vr.IV.(phases{iP}) = iv(vr_tbl.time(find(diff(phase_idx)>0)), vr_tbl.time(find(diff(phase_idx)<0))); 
+% 
+% 
+%         if sum(contains({'tone1', 'tone2'} , phases{iP}) >0)
+% 
+%             for iC = 1:length(Cons)
+%                 con_idx = ismember(vr_tbl.context, Cons{iC});
+%                 phase_idx = ismember(vr_tbl.phase, phases{iP});
+%                 phase_con_idx = phase_idx &con_idx;
+% 
+%                 phase_con_tran = find(diff(phase_con_idx)>0)-1;
+%                 vr.evt.label{end+1} = [phases{iP} '-' Cons{iC}];
+%                 vr.evt.t{end+1} = vr_tbl.time(phase_con_tran);
+% 
+%             end
+% 
+        end
 end
 
-% other events
+
+
+% % phases
+% phases = unique(vr_tbl.phase(ismember(vr_tbl.event, "-"))); 
+% for iP = 1:length(phases)
+%     vr.evt.label{end+1} = phases{iP};
+%     p_idx = ismember(vr_tbl.phase, phases{iP}) & ismember(vr_tbl.event, "-"); 
+%     vr.evt.t{end+1} = vr_tbl.time(p_idx);
+% end
+% 
+% % other events
 evts = unique(vr_tbl.event(~ismember(vr_tbl.event, ""))); 
 for iE  = length(evts):-1:1
     vr.evt.label{end+1} = evts{iE};
     vr.evt.t{end+1} = vr_tbl.time(ismember(vr_tbl.event, evts{iE}));
 end
-
-% get the context states
+% 
+% % get the context states
 Cons = unique(vr_tbl.context);
-% for iC = 1:length(Cons)
-% if isscalar(Cons)
-%     vr.evt.label{end+1} = Cons{iC};
-%     con_t = vr_tbl.time(ismember(vr_tbl.context, Cons(iC)));
-%     vr.evt.t{end+1} = [con_t(1) con_t(end)];
-% else
+% % for iC = 1:length(Cons)
+% % if isscalar(Cons)
+% %     vr.evt.label{end+1} = Cons{iC};
+% %     con_t = vr_tbl.time(ismember(vr_tbl.context, Cons(iC)));
+% %     vr.evt.t{end+1} = [con_t(1) con_t(end)];
+% % else
     for iC = 1:length(Cons)
         vr.evt.label{end+1} = [Cons{iC} '_on'];
         these_con = ismember(vr_tbl.context, Cons{iC});
@@ -139,7 +168,7 @@ c_ord = MS_linspecer(length(vr.evt.label));
 
 for ii = 1:length(vr.evt.label)
     if strcmp(vr.evt.label{ii}, 'pos') || strcmp(vr.evt.label{ii}, 'Lick') 
-        continue
+       plot(vr.evt.t{ii} , ones(size(vr.evt.t{ii}))*ii,"square", 'markerfacecolor', c_ord(ii,:), 'markeredgecolor', c_ord(ii,:))
     else
         % xline(vr.evt.t, 'color', c_ord(ii,:))
         % for jj = 1:length(vr.evt.t)
@@ -149,11 +178,26 @@ for ii = 1:length(vr.evt.label)
         % end
     end
 end
+    
+if isfield(vr,'IV')
+    f_list = fieldnames(vr.IV);
 
+    for ff = 1:length(f_list)
+        for jj  = 1:length(vr.IV.(f_list{ff}).tstart)
+
+            rectangle('Position',[vr.IV.(f_list{ff}).tstart(jj), ff+ii,vr.IV.(f_list{ff}).tend(jj) - vr.IV.(f_list{ff}).tstart(jj), 1],...
+                'FaceColor',c_ord(ff,:));
+        end
+    end
+   set(gca, 'YTick', 0:(length(vr.evt.label) +length(f_list)), 'YTickLabel', ['mov' vr.evt.label f_list'])
+
+else
+       set(gca, 'YTick', 0:(length(vr.evt.label) +length(f_list)), 'YTickLabel', ['mov' vr.evt.label f_list'])
+
+end
 % s_list = replace(s_list, '_pos', ' +'); 
 % s_list = replace(s_list, '_neg', ' -'); 
 
-set(gca, 'YTick', 0:1:length(vr.evt.label), 'YTickLabel', ['mov' vr.evt.label])
 
 
 

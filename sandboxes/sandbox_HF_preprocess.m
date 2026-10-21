@@ -54,6 +54,9 @@ fprintf('%s :  Kilo: %d   |  Cut: %d  |TS: %d   | Processed:  %d\n', Name{ii}, K
     
 end
 
+fprintf('total :  Kilo: %d   |  Cut: %d  |   TS: %d   | Processed:  %d\n', sum(Kilo), sum(Cut), sum(Timestamps), sum(Processed))
+
+
 tbl = table(Name, Path, Kilo, Cut, Timestamps, Processed,'VariableNames',{'Name', 'Dir','Kilo',  'Cut', 'Timestamps', 'Processed'}); 
 
 
