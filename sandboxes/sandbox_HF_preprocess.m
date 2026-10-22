@@ -164,8 +164,8 @@ for ii  = 1:length(all_csc_dir)
 end
 %% loop
 
-
-for iS = [31 33 36 45 47 48 50 51 54]
+% needs cutting 48
+for iS = [49 51:60]
 
     csc_dir = [data_dir all_csc_dir{iS} filesep 'Record Node 117'];
     swr_idx = ca1_swr_idx{iS};
@@ -356,7 +356,7 @@ for iS = [31 33 36 45 47 48 50 51 54]
     figure(100+iS)
     clf;
     hold on
-    if exist('swr_idx', 'var')
+    if ~isempty(swr_idx{1})  
         swr_ch = ismember(csc_r.label, swr_idx);
     else
         swr_ch = zeros(1,length(csc_r.label));

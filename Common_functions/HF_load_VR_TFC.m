@@ -51,7 +51,7 @@ Cons = unique(vr_tbl.context);
 if ismissing(vr_tbl.context(1))
     disp('TFCD3')
     vr_tbl.context(:) = 'Context_A'; 
-    vr.IV.Context_A = iv([vr_tbl.time(1) vr_tbl.timed(end)]); 
+    vr.IV.Context_A = iv([vr_tbl.time(1) vr_tbl.time(end)]); 
 
 
 else
