@@ -1,4 +1,4 @@
-function [SWR_evts, cfg_swr] = MS_SWR_detector(csc, chan_to_use, plot_flag)
+function [SWR_evts, cfg_swr] = MS_SWR_detector(csc, chan_to_use, plot_flag, plot_color)
 %% MS_SWR_detector: default SWR detector. Meant for speed, not accuracy.
 %
 %
@@ -24,9 +24,12 @@ function [SWR_evts, cfg_swr] = MS_SWR_detector(csc, chan_to_use, plot_flag)
 if nargin == 1
     chan_to_use = [];
     plot_flag = 1;
+    plot_color = 'r'; 
 elseif nargin == 2
     plot_flag = 1;
-    
+    plot_color = 'r'; 
+elseif nargin == 3
+    plot_color = 'r'; 
 end
 
 
@@ -115,7 +118,8 @@ cfg_swr.nCycles_operation = '>='; % number of cycles
 if plot_flag
     cfg_plot.display = 'iv'; %'iv';
     cfg_plot.title = 'num';
-    PlotTSDfromIV(cfg_plot, SWR_evts, csc)
+cfg_plot.fgcol    = plot_color; 
+PlotTSDfromIV(cfg_plot, SWR_evts, csc)
     
 end
 

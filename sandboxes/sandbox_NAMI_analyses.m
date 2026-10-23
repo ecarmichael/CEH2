@@ -3,12 +3,12 @@
 
 
 %% loop over all the sessions of interest. Ultimately you will be able to loop over the sessions and hold the metrics of interest in order to get some session/subject level comparisons.
-f_list = dir('pox*.mat');
-k_idx = ones(length(f_list),1);
+f_list = dir('*.mat');
+% k_idx = ones(length(f_list),1);
 
-plot_flag =1; 
+plot_flag =0; 
 
-for iS = 1:length(f_list)
+for iS = 27:length(f_list)
     % fname = 'pox3568_TFCD4'; % 3568 TFCD2/4/5 are all nice.
 
 
@@ -312,11 +312,11 @@ for iS = 1:length(f_list)
     % NAMI TO DO:  same as above for the other measures.
     % restrict data to the post period.
     % ca1
-    swr_ca1_post = restrict(this_sess.swrs_ca1, this_sess.evts.t{2}(2), this_sess.csc.tvec(end));
+    swr_ca1_post = restrict(this_sess.swrs_ca1, this_sess.csc.tvec(end)-300, this_sess.csc.tvec(end));
     %sub
-    swr_sub_post = restrict(this_sess.swrs_sub, this_sess.evts.t{2}(2), this_sess.csc.tvec(end));
-    swr_sub_std_post = restrict(this_sess.swrs_sub_std, this_sess.evts.t{2}(2), this_sess.csc.tvec(end));
-    swr_sub_atyp_post = restrict(this_sess.swrs_sub_atyp, this_sess.evts.t{2}(2), this_sess.csc.tvec(end));
+    swr_sub_post = restrict(this_sess.swrs_sub, this_sess.csc.tvec(end)-300, this_sess.csc.tvec(end));
+    swr_sub_std_post = restrict(this_sess.swrs_sub_std, this_sess.csc.tvec(end)-300, this_sess.csc.tvec(end));
+    swr_sub_atyp_post = restrict(this_sess.swrs_sub_atyp, this_sess.csc.tvec(end)-300, this_sess.csc.tvec(end));
 
     fprintf('Ca1 SWRs in Post: <strong>%d</strong> \n', length(swr_ca1_post.tstart))
     fprintf('Sub SWRs in Post: <strong>%d</strong> \n', length(swr_sub_post.tstart))
@@ -450,7 +450,7 @@ for iS = 1:length(f_list)
     out.swr_prop{iS} = swr_counts ./ (swr_counts(:,3) + swr_counts(:,4));
     out.swr_rows{iS} = swr_counts_rows;
 
-    clearvars -except iS out f_list k_idx
+    clearvars -except iS out f_list k_idx plot_flag
 end % end cross sessions.
 
 
@@ -473,7 +473,7 @@ hab_idx = contains(out.sess, 'TFCD1') | contains(out.sess, 'TFCD2');
 train_idx = contains(out.sess, 'TFCD3');
 test_idx = contains(out.sess, 'TFCD4') | contains(out.sess, 'TFCD5');
 LT_idx = contains(out.sess, 'LT'); 
-pox_idx = contains(out.sub, '3265'); 
+pox_idx = contains(out.sub, {'3265' '3564' 'pox1'}); 
 k_idx = logical(k_idx'); 
 
 
@@ -507,9 +507,9 @@ ft_size = 12;  %font size
 plot_flag =1;
 
 if ispc
-    fig_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Inter_data\HF_Sub_SWR\Nami_figs';
+    fig_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Inter_data\HF_Sub_SWR\inter_offset\Nami_figs';
 else
-    fig_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/HF_Sub_SWR/Nami_figs';
+    fig_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/HF_Sub_SWR/inter_offset/Nami_figs';
 end
 
 %% plot all of the data from across the subjects  %%%%%%%%%%%%%%%%%%%%%%%%%

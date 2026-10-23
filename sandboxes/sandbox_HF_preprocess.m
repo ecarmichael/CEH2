@@ -75,7 +75,7 @@ all_csc_dir = [];  ca1_swr_idx = []; sub_swr_idx = [];
 % all_csc_dir{end+1} = 'Pox2217_2026-06-16_16-29-44_TFC_D1'; ca1_swr_idx{end+1} = {'CH59'}; sub_swr_idx{1} = {[]};
 all_csc_dir{end+1} = 'Pox2217_2026-06-11_13-03-39_LT3'; ca1_swr_idx{end+1} = {'CH9'}; sub_swr_idx{end+1} = {'CH137'};
 all_csc_dir{end+1} = 'Pox2217_2026-06-12_14-50-13_LT4'; ca1_swr_idx{end+1} = {'CH74'}; sub_swr_idx{end+1} = {'CH160'};
-all_csc_dir{end+1} = 'Pox2217_2026-06-13_20-41-46_LT5'; ca1_swr_idx{end+1} = {'C118', 'CH77'}; sub_swr_idx{end+1} = {'CH155', 'CH156'};
+all_csc_dir{end+1} = 'Pox2217_2026-06-13_20-41-46_LT5'; ca1_swr_idx{end+1} = {'CH118', 'CH77'}; sub_swr_idx{end+1} = {'CH155', 'CH156'};
 
 all_csc_dir{end+1} = 'Pox2217_2026-06-16_16-29-44_TFCD1'; ca1_swr_idx{end+1} = {'CH59'}; sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'Pox2217_2026-06-17_13-41-15_TFCD2'; ca1_swr_idx{end+1} = {'CH13'}; sub_swr_idx{end+1} = {[]};
@@ -94,11 +94,6 @@ all_csc_dir{end+1} = 'Pox3265_2026-06-18_16-10-31_TFCD3'; ca1_swr_idx{end+1} = {
 all_csc_dir{end+1} = 'Pox3265_2026-06-19_21-06-37_TFCD4'; ca1_swr_idx{end+1} = {'CH63'};  sub_swr_idx{end+1} = {'CH143' 'CH130' 'CH142'};
 all_csc_dir{end+1} = 'Pox3265_2026-06-20_21-00-10_TFCD5'; ca1_swr_idx{end+1} = {'CH56'};  sub_swr_idx{end+1} = {'CH143' 'CH144'};
 % pox3567
-% all_csc_dir{end+1} = 'Pox3564_2026-10-12_11-29-35_LT1';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
-all_csc_dir{end+1} = 'Pox3564_2026-10-13_14-02-56_LT2';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {'CH143'};
-all_csc_dir{end+1} = 'Pox3564_2026-10-14_09-47-57_LT3';       ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {'CH135'};
-% all_csc_dir{end+1} = 'Pox3564_2026-10-15_16-29-59_LT4';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
-% all_csc_dir{end+1} = 'Pox3564_2026-10-16_08-43-36_LT5';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
 
 all_csc_dir{end+1} = 'Pox3567_2026-06-20_17-44-01_TFCD1'; ca1_swr_idx{end+1} = {'CH65'};  sub_swr_idx{end+1} = {'CH136' 'CH134' 'CH144' 'CH141'};
 all_csc_dir{end+1} = 'Pox3567_2026-06-21_15-41-32_TFCD2'; ca1_swr_idx{end+1} = {'CH124'};  sub_swr_idx{end+1} = {'CH149'};
@@ -110,34 +105,34 @@ all_csc_dir{end+1} = 'Pox3568_2026-06-21_17-05-21_TFCD2'; ca1_swr_idx{end+1} = {
 all_csc_dir{end+1} = 'Pox3568_2026-06-22_14-58-53_TFCD3'; ca1_swr_idx{end+1} = {'CH118'};  sub_swr_idx{end+1} = {'CH145'};
 all_csc_dir{end+1} = 'Pox3568_2026-06-23_18-12-36_TFCD4'; ca1_swr_idx{end+1} = {'CH70'};  sub_swr_idx{end+1} = {'CH145'};
 all_csc_dir{end+1} = 'Pox3568_2026-06-24_16-56-18_TFCD5'; ca1_swr_idx{end+1} = {'CH75'  'CH71' 'CH115'};  sub_swr_idx{end+1} = {'CH149'}; % CH71 and 115 are also decent for CA1
-all_csc_dir{end+1} = 'SOM1_2026-10-05_15-20-59_LT1';      ca1_swr_idx{end+1} = {'CH70', 'CH80', 'CH74'};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM1_2026-10-05_15-20-59_LT1';      ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'SOM1_2026-10-06_13-42-35_LT2';      ca1_swr_idx{end+1} = {'CH77'};  sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'SOM1_2026-10-07_16-35-07_LT3';      ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'SOM1_2026-10-08_16-02-31_LT4';       ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
-all_csc_dir{end+1} = 'SOM1_2026-10-09_15-02-08_LT5';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
-all_csc_dir{end+1} = 'Som1_2026-10-12_14-35-53_TFCD1';     ca1_swr_idx{end+1} = {'CH72', 'CH78'};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM1_2026-10-09_15-02-08_LT5';       ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Som1_2026-10-12_14-35-53_TFCD1';     ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'SOM1_2026-10-13_09-36-51_TFCD2';     ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'SOM1_2026-10-14_14-47-04_TFCD3';     ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
-all_csc_dir{end+1} = 'SOM1_2026-10-15_11-42-39_TFCD4';     ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM1_2026-10-15_11-42-39_TFCD4';     ca1_swr_idx{end+1} = {'CH76', 'CH69','CH73'};  sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'Som1_2026-10-16_15-32-52_TFCD5';     ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
 % SOM 2
-all_csc_dir{end+1} = 'SOM2_2026-10-06_11-23-25_LT1';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
-all_csc_dir{end+1} = 'SOM2_2026-10-07_10-33-39_LT2';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
-all_csc_dir{end+1} = 'SOM2_2026-10-08_14-38-55_LT3';       ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
-all_csc_dir{end+1} = 'SOM2_2026-10-09_13-23-44_LT4';       ca1_swr_idx{end+1} = {'CH72'};  sub_swr_idx{end+1} = {'CH152'};
+all_csc_dir{end+1} = 'SOM2_2026-10-06_11-23-25_LT1';       ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM2_2026-10-07_10-33-39_LT2';       ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM2_2026-10-08_14-38-55_LT3';       ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM2_2026-10-09_13-23-44_LT4';       ca1_swr_idx{end+1} = {'CH87', 'CH67', 'CH88'};  sub_swr_idx{end+1} = {'CH160', 'CH146'};
 all_csc_dir{end+1} = 'SOM2_2026-10-10_12-08-36_LT5';       ca1_swr_idx{end+1} = {'CH122', 'CH116'};  sub_swr_idx{end+1} = {'CH143', 'CH142'};
 all_csc_dir{end+1} = 'Som2_2026-10-12_17-07-42_TFCD1';     ca1_swr_idx{end+1} = {'CH70', 'CH75', 'CH80'};  sub_swr_idx{end+1} = {'CH156', 'CH158', 'CH160'};
 all_csc_dir{end+1} = 'Som2_2026-10-13_11-41-22_TFCD2';     ca1_swr_idx{end+1} = {'CH65' 'CH77', 'CH70', 'CH76'};  sub_swr_idx{end+1} = {'CH151', 'CH145', 'CH158'};
-all_csc_dir{end+1} = 'SOM2_2026-10-14_16-19-06_TFCD3';     ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM2_2026-10-14_16-19-06_TFCD3';     ca1_swr_idx{end+1} = {'CH76', 'CH73'};  sub_swr_idx{end+1} = {'CH131', 'CH134'};
 all_csc_dir{end+1} = 'SOM2_2026-10-15_14-16-32_TFCD4';     ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
-all_csc_dir{end+1} = 'Som2_2026-10-16_19-02-55_TFCD5';     ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Som2_2026-10-16_19-02-55_TFCD5';     ca1_swr_idx{end+1} = {'CH74', 'CH73'};  sub_swr_idx{end+1} = {'CH130', 'CH131'};
 % Pox3564
-all_csc_dir{end+1} = 'Pox3564_2026-10-12_11-29-35_LT1';    ca1_swr_idx{end+1} = {'CH102', 'CH126', 'CH103'};  sub_swr_idx{end+1} = {''};
-all_csc_dir{end+1} = 'Pox3564_2026-10-13_14-02-56_LT2';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Pox3564_2026-10-12_11-29-35_LT1';    ca1_swr_idx{end+1} = {'CH102', 'CH126', 'CH103'};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Pox3564_2026-10-13_14-02-56_LT2';    ca1_swr_idx{end+1} = {'CH105', 'CH125'};  sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'Pox3564_2026-10-14_09-47-57_LT3';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
-all_csc_dir{end+1} = 'Pox3564_2026-10-15_16-29-59_LT4';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
-all_csc_dir{end+1} = 'Pox3564_2026-10-16_08-43-36_LT5';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
-all_csc_dir{end+1} = 'Pox3564_2026-10-19_11-00-11_TFCD1';  ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Pox3564_2026-10-15_16-29-59_LT4';    ca1_swr_idx{end+1} = {'CH89', 'CH66'};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Pox3564_2026-10-16_08-43-36_LT5';    ca1_swr_idx{end+1} = {'CH126', 'CH106'};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'Pox3564_2026-10-19_11-00-11_TFCD1';  ca1_swr_idx{end+1} = {'CH92', 'CH89'};  sub_swr_idx{end+1} = {[]};
 % Pox3576
 all_csc_dir{end+1} = 'Pox3576_2026-10-12_12-53-56_LT1';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'Pox3576_2026-10-13_15-34-57_LT2';    ca1_swr_idx{end+1} = {''};  sub_swr_idx{end+1} = {[]};
@@ -591,6 +586,9 @@ end
 
 
 %% quickly loop over sessions to get the CA1 and Sub SWR channels if they don't already exist
+clearvars -except all_csc_dir ca1_swr_idx sub_swr_idx
+
+
 if ismac
     data_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/';
     inter_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/HF_Sub_SWR/inter_offset';
@@ -601,7 +599,7 @@ end
 
 fname = dir([inter_dir filesep '*.mat']);
 
-for iS = 21:length(fname)
+for iS = 10:length(fname)
 
     load([fname(iS).folder filesep fname(iS).name])
 
@@ -621,9 +619,14 @@ for iS = 21:length(fname)
 
 
 
-    % if isfield(this_sess, 'swrs_ca1')
-    %     disp(length(this_sess.swrs_ca1.tstart))
-    % else
+    if isfield(this_sess, 'swrs_ca1')
+        disp(length(this_sess.swrs_ca1.tstart))
+        swr_count(iS,1) = length(this_sess.swrs_ca1.tstart); 
+        swr_count(iS,2) = length(this_sess.swrs_sub.tstart);
+        sub_count{iS} = sub_name; 
+        sess_count{iS} = sess_name; 
+
+    else
                 csc_r = restrict(this_sess.csc, this_sess.csc.tvec(1), this_sess.csc.tvec(1)+500);
 
                 figure(100+iS)
@@ -675,7 +678,7 @@ for iS = 21:length(fname)
             end
             % % manually select
             % swr_k = MS_manual_IV_selection(csc, swrs_ca1, .2);
-            % swr_k_idx = ismember( 1:length(swrs_ca1.tend), swr_k)
+            % swr_k_idx = ismember( 1:length(swrs_ca1.tend), sort(swr_k))
             % swrs_ca1 = SelectIV([], swrs_ca1, logical(swr_k))
         else
             swrs_ca1 = iv();
@@ -696,16 +699,16 @@ for iS = 21:length(fname)
                 csc_r_m.label{1} = ['sub_mean: ' cell2mat(sub_swr_idx{this_idx})];
                 csc_r_m.label(2:end) = [];
                 csc_r_m.cfg.hdr(2:end) = [];
-                swrs_sub = MS_SWR_detector(csc_r_m,csc_r_m.label(1));
+                swrs_sub = MS_SWR_detector(csc_r_m,csc_r_m.label(1), 1, 'b');
 
             else
 
                 swrs_sub = MS_SWR_detector(csc_r,sub_swr_idx{this_idx});
             end
             % % manually select
-            % swr_k = MS_manual_IV_selection(csc, swrs_sub, .2);
-            % swr_k_idx = ismember( 1:length(swrs_sub.tend), swr_k)
-            % swrs_sub = SelectIV([], swrs_ca1, logical(swr_k))
+            % swr_k = MS_manual_IV_selection(csc_r_m, swrs_sub, .2);
+            % swr_k_idx = ismember( 1:length(swrs_sub.tend), sort(swr_k))
+            % swrs_sub = SelectIV([], swrs_sub, logical(swr_k))
 
         else
             swrs_sub = iv();
@@ -718,6 +721,50 @@ for iS = 21:length(fname)
 
         save([inter_dir filesep this_name{1} '.mat'], 'data', '-v7.3')
         close all
-    % end
+    end
 end
 
+%% append the deep and superficial split
+
+
+clearvars -except all_csc_dir ca1_swr_idx sub_swr_idx
+
+
+if ismac
+    data_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Pox/';
+    inter_dir = '/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/HF_Sub_SWR/inter_offset';
+elseif ispc
+    data_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Pox\';
+    inter_dir = 'C:\Users\ecar\Williams Lab Dropbox\Williams Lab Team Folder\Eric\Wheel\Inter_data\HF_Sub_SWR\inter_offset';
+end
+
+fname = dir([inter_dir filesep '*.mat']);
+
+for iS = length(fname):-1:1
+
+    load([fname(iS).folder filesep fname(iS).name])
+
+    this_name = fieldnames(data);
+
+    this_sess = data.(this_name{1});
+    
+    if ~isfield(this_sess.S.usr, 'rel_depth')
+
+    [this_sess.S, this_sess.rip_out] = HF_deep_super(this_sess.S,this_sess.csc, this_sess.swrs_ca1, this_sess.probe{1}, 1:64);
+    this_sess.S.usr.deep = double(this_sess.S.usr.deep);
+    this_sess.S.usr.deep(~this_sess.S.loc) = NaN;
+    this_sess.S.usr.rel_depth(~this_sess.S.loc) = NaN;
+
+    % save it back 
+        data.(this_name{1}).S = this_sess.S; 
+
+        save([inter_dir filesep this_name{1} '.mat'], 'data', '-v7.3')
+        close all
+
+    end
+
+
+
+
+
+end
