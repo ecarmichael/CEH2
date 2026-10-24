@@ -92,26 +92,34 @@ figure(101)
 clf
 
 subplot(2,2,1)
-scatter(sub_id(keep_idx)+MS_randn_range(1,length(sub_id(keep_idx)),-.1, .1), swr_count(keep_idx,1), 50, 'markerfacecolor', c_ord(1,:))
+hold on
+boxchart(sub_id(keep_idx), swr_count(keep_idx,1), 'BoxFaceColor',c_ord(1,:)); 
+scatter(sub_id(keep_idx)+MS_randn_range(1,length(sub_id(keep_idx)),-.1, .1), swr_count(keep_idx,1), 50, 'markerfacecolor', c_ord(1,:), 'markeredgecolor', c_ord(1,:))
 ylim([0 max(swr_count(keep_idx,:), [], 'all')])
 ylabel('basline SWR count')
 set(gca,'xtick',1:length(sub_n),  'XTickLabel', sub_n)
 
 subplot(2,2,2)
-scatter(sub_id(keep_idx)+MS_randn_range(1,length(sub_id(keep_idx)),-.1, .1), swr_count(keep_idx,2), 50, 'markerfacecolor', c_ord(2,:))
+hold on
+boxchart(sub_id(keep_idx), swr_count(keep_idx,2), 'BoxFaceColor',c_ord(2,:)); 
+scatter(sub_id(keep_idx)+MS_randn_range(1,length(sub_id(keep_idx)),-.1, .1), swr_count(keep_idx,2), 50, 'markerfacecolor', c_ord(2,:), 'markeredgecolor', c_ord(2,:))
 set(gca, 'XTickLabel', sub_n)
 ylim([0 max(swr_count, [], 'all')])
 set(gca,'xtick',1:length(sub_n),  'XTickLabel', sub_n)
 
 
 subplot(2,2,3)
-scatter(sub_id(keep_idx)+MS_randn_range(1,length(sub_id(keep_idx)),-.1, .1), swr_ca1_rate(keep_idx), 50, 'markerfacecolor', c_ord(1,:))
+hold on
+boxchart(sub_id(keep_idx), swr_ca1_rate(keep_idx), 'BoxFaceColor',c_ord(1,:)); 
+scatter(sub_id(keep_idx)+MS_randn_range(1,length(sub_id(keep_idx)),-.1, .1), swr_ca1_rate(keep_idx), 50, 'markerfacecolor', c_ord(1,:), 'markeredgecolor', c_ord(1,:))
 ylim([0 max([swr_ca1_rate(keep_idx) swr_sub_rate(keep_idx)])])
 ylabel('basline SWR rate (Hz)')
 set(gca,'xtick',1:length(sub_n),  'XTickLabel', sub_n)
 
 subplot(2,2,4)
-scatter(sub_id(keep_idx)+MS_randn_range(1,length(sub_id(keep_idx)),-.1, .1), swr_sub_rate(keep_idx), 50, 'markerfacecolor', c_ord(2,:))
+hold on
+boxchart(sub_id(keep_idx), swr_sub_rate(keep_idx), 'BoxFaceColor',c_ord(2,:)); 
+scatter(sub_id(keep_idx)+MS_randn_range(1,length(sub_id(keep_idx)),-.1, .1), swr_sub_rate(keep_idx), 50, 'markerfacecolor', c_ord(2,:), 'markeredgecolor', c_ord(2,:))
 set(gca, 'XTickLabel', sub_n)
 ylim([0 max([swr_ca1_rate(keep_idx) swr_sub_rate(keep_idx)])])
 set(gca,'xtick',1:length(sub_n),  'XTickLabel', sub_n)

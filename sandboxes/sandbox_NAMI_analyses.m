@@ -520,41 +520,45 @@ if plot_flag == 1
     figure(301)
     clf
     subplot(2,3,1)
-    MS_bar_w_err(Spk_std(Spk_loc& Spk_pyr ),  Spk_atyp(Spk_loc& Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2, 1);
-    ylim([0 100])
-    set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100], 'YTickLabel', {'0','1', '10', '100'},'fontsize', 10)
+    % MS_rain_plot([Spk_std(Spk_loc& Spk_pyr ) Spk_atyp(Spk_loc& Spk_pyr)], [zeros(size(Spk_atyp(Spk_loc& Spk_pyr))) ones(size(Spk_atyp(Spk_loc& Spk_pyr)))], c_ord([1,3],:),'ttest2', 1:2); 
+        % set(gca, 'yTickLabel', {'Std', 'Atyp'}, 'xscale', 'log','xtick', [0 1 10 100 150], 'xTickLabel', {'0','1', '10', '100' '150'},'fontsize', 10)
+    [hb, eb, sc, p, stats]= MS_bar_w_err(Spk_std(Spk_loc& Spk_pyr),  Spk_atyp(Spk_loc& Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2, 1);
+
+    % MS_bar_w_err(Spk_std(Spk_loc& Spk_pyr),  Spk_atyp(Spk_loc& Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2, 1);
+    ylim([0 500])
+    set(gca, 'xtick', 1:2, 'xTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100 500], 'yTickLabel', {'0','1', '10', '100' '500'},'fontsize', 10)
     title('Ca1 Pyramidal Cells')
     ylabel({'Within Ripple';'Firing Rate (Hz)'})
 
 
     subplot(2,3,2)
-    [hb, eb, sc, p, stats]= MS_bar_w_err(Spk_std(~Spk_loc& Spk_pyr),  Spk_atyp(~Spk_loc& Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2, 1);
-    ylim([0 100])
-    set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100], 'YTickLabel', {'0','1', '10', '100'},'fontsize', 10)
+    [hb, eb, sc, p, stats]= MS_bar_w_err(Spk_std(~Spk_loc& Spk_pyr),  Spk_atyp(~Spk_loc& Spk_pyr), c_ord([2,3],:), 1, 'ttest', 1:2, 1);
+    ylim([0 500])
+    set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100 500], 'YTickLabel', {'0','1', '10', '100' '500'},'fontsize', 10)
     title('Sub Pyramidal Cells')
 
 
     %
      subplot(2,3,4)
-     MS_bar_w_err(Spk_std(Spk_loc & ~Spk_pyr),  Spk_atyp(Spk_loc & ~Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2);
-     ylim([0 200])
-     set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100], 'YTickLabel', {'0','1', '10', '100'},'fontsize', 10)
+     MS_bar_w_err(Spk_std(Spk_loc & ~Spk_pyr),  Spk_atyp(Spk_loc & ~Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2, 1);
+     ylim([0 500])
+     set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100 500], 'YTickLabel', {'0','1', '10', '100', '500'},'fontsize', 10)
      title('Ca1 interneurons')
      ylabel({'Within Ripple';'Firing Rate (Hz)'})
 
      subplot(2,3,5)
-    [hb, eb, sc, p, stats]= MS_bar_w_err(Spk_std(~Spk_loc& ~Spk_pyr),  Spk_atyp(~Spk_loc & ~Spk_pyr), c_ord([1,3],:), 1, 'ttest', 1:2);
+    [hb, eb, sc, p, stats]= MS_bar_w_err(Spk_std(~Spk_loc& ~Spk_pyr),  Spk_atyp(~Spk_loc & ~Spk_pyr), c_ord([2,3],:), 1, 'ttest', 1:2, 1);
     % hb.E
-    hb.FaceColor = 'none';
-        ylim([0 200])
-     set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100], 'YTickLabel', {'0','1', '10', '100'},'fontsize', 10)
+    % hb.FaceColor = 'none';
+        ylim([0 500])
+     set(gca, 'XTickLabel', {'Std', 'Atyp'}, 'yscale', 'log','ytick', [0 1 10 100 500], 'YTickLabel', {'0','1', '10', '100', '500'},'fontsize', 10)
      title('Sub interneurons')
 
-
-     subplot(2,3,3)
-     c = MS_linspecer(2); 
-
-     scatter(Spk_std - Spk_atyp, Spk_rate, 10,Spk_loc, 'filled')
+     % 
+     % subplot(2,3,3)
+     % c = MS_linspecer(2); 
+     % 
+     % scatter(Spk_std - Spk_atyp, Spk_rate, 10,Spk_loc, 'filled')
         
     % exportgraphics(gcf, [fig_dir filesep 'Spikes_in_SWRs.pdf'], 'ContentType', 'vector');
 end
@@ -596,7 +600,7 @@ title(['Sub SWRs in ' cond ' '])
 ylabel('% of Sub SWRs')
 
 cond = 'all';
-subplot(2,3,4)
+subplot(2,3,2)
 cla
 h1 = MS_bar_w_err(squeeze(swr_prop.(cond)(1,4,:))', squeeze(swr_prop.(cond)(2,4,:))', [c_ord(1,:)*.75; c_ord(1,:)], 1, 'ttest', 1:2);
 h1.EdgeColor = 'none';
@@ -608,7 +612,7 @@ title(['Sub SWRs in ' cond ' '])
 
 % overall
 cond = 'all';
-subplot(2,3,2)
+subplot(2,3,3)
 cla
 data1 = squeeze(mean(swr_prop.(cond)(1:2,4,:), 'omitmissing'))'; 
 data2 = squeeze(swr_prop.(cond)(3,4,:))';
@@ -627,7 +631,7 @@ title(['Sub SWRs in ' cond ' '])
 ylabel('% of Atypical Sub SWRs')
 
 cond = 'hab';
-subplot(2,3,3)
+subplot(2,3,4)
 cla
 data1 = squeeze(mean(swr_prop.(cond)(1:2,4,:), 'omitmissing'))'; 
 data2 = squeeze(swr_prop.(cond)(3,4,:))';
@@ -642,6 +646,7 @@ MS_bar_w_err4(data1(~n_idx)',data2(~n_idx)', data3(~n_idx)', data4(~n_idx)',...
 ylim([0 100])
 set(gca,'XTickLabel', {'pre+post', 'baseline', 'tones', 'trace'})
 title(['Sub SWRs in ' cond ' '])
+ylabel('% of Atypical Sub SWRs')
 
 
 cond = 'train';
