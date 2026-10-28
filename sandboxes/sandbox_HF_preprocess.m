@@ -26,6 +26,12 @@ for ii = length(fnames):-1:1
         Timestamps(ii) = false;
     end
 
+    if exist([Path{ii} filesep 'Record Node 112' filesep 'experiment1' filesep 'recording2'], 'dir')
+        split_rec(ii) = true;
+    else
+        split_rec(ii) = false;
+    end
+
     % session info
     sess = Name{ii};
     if contains(sess, 'Pox')
@@ -38,6 +44,8 @@ for ii = length(fnames):-1:1
     else
         sess_id{ii} = sess(strfind(sess, 'LT'):end);
     end
+
+
 
     % check if the data has already been processed
     pnames = dir('/Users/ecar/Williams Lab Dropbox/Williams Lab Team Folder/Eric/Wheel/Inter_data/HF_Sub_SWR/inter_offset/*.mat');
@@ -54,7 +62,7 @@ for ii = length(fnames):-1:1
 
 end
 
-fprintf('total :  Kilo: %d   |  Cut: %d  |   TS: %d   | Processed:  %d\n', sum(Kilo), sum(Cut), sum(Timestamps), sum(Processed))
+fprintf('total : %d  |  Kilo: %d   |  Cut: %d  |   TS: %d   | Processed:  %d\n',length(Kilo), sum(Kilo), sum(Cut), sum(Timestamps), sum(Processed))
 
 
 tbl = table(Name, Path, Kilo, Cut, Timestamps, Processed,'VariableNames',{'Name', 'Dir','Kilo',  'Cut', 'Timestamps', 'Processed'});
