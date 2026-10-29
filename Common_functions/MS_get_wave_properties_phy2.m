@@ -1,4 +1,4 @@
-function [wave_prop] = MS_get_wave_properties_phy2(S, wave, wave_tvec, plot_flag)
+function S = MS_get_wave_properties_phy2(S, waves,win_tvec, plot_flag)
 %% MS_get_wave_properties_phy2:
 %
 %
@@ -11,210 +11,185 @@ function [wave_prop] = MS_get_wave_properties_phy2(S, wave, wave_tvec, plot_flag
 %    - plot_flag: [logical]  0 = no plots, 1 = plots.
 %
 %    Outputs:
-%    - wave_prop  [struct] containing:
-%                    - burting_idx
-%                    - spike_width
-%                    - peak_val
-%                    - trough_val
-%                    - peak2trough
+%    - S [struct]  TS structure with the features added to the 'usr' field.
+%
 %
 %
 %
 %
 % EC 2021-07-22   initial version
-%
+% EC 2026-10-29:  PHy2 version based on https://www.cell.com/neuron/fulltext/S0896-6273(25)00665-8#sec-8
 %
 %
 %% initialize
-if nargin < 4
+if nargin < 3
     plot_flag = 0;
 end
 
-%%
+%% loop over cells
 
-spike_rate = S.usr.fr(1);
 
-log_isi = log10(mean(diff(S.t{1})));
-ISI = diff(S.t{1});
+for ii = length(S.t)
 
-%% get the autocorrelation (from vandermeerlab.org wiki: https://rcweb.dartmouth.edu/~mvdm/wiki/doku.php?id=analysis:nsb2016:week9)
-xbin_centers = -.025-0.001:0.001:0.025+0.001; % first and last bins are to be deleted later
-ac = zeros(size(xbin_centers));
+    log_isi = log10(mean(diff(S.t{ii})));
+    ISI = diff(S.t{ii});
 
-for iSpk = 1:length(S.t{1})
-    
-    relative_spk_t = S.t{1} - S.t{1}(iSpk);
-    
-    ac = ac + hist(relative_spk_t,xbin_centers); % note that hist() puts all spikes outside the bin centers in the first and last bins! delete later.
-    
+    % %% get the autocorrelation (from vandermeerlab.org wiki: https://rcweb.dartmouth.edu/~mvdm/wiki/doku.php?id=analysis:nsb2016:week9)
+    % xbin_centers = -.025-0.001:0.001:0.025+0.001; % first and last bins are to be deleted later
+    % ac = zeros(size(xbin_centers));
+    %
+    % for iSpk = 1:length(S.t{1})
+    %
+    %     relative_spk_t = S.t{1} - S.t{1}(iSpk);
+    %
+    %     ac = ac + hist(relative_spk_t,xbin_centers); % note that hist() puts all spikes outside the bin centers in the first and last bins! delete later.
+    %
+    % end
+    %
+    % xbin = xbin_centers(2:end-1); % remove unwanted bins
+    % zero_idx = find(xbin == 0);
+    % ac = ac(2:end-1);
+    % ac(zero_idx) = 0;
+    %
+    %
+    %
+    % % ac = ac./max(ac); % normalize
+    % if plot_flag
+    %     figure
+    %     clf;
+    %     subplot(2,3,3)
+    %     bar(xbin*1000, ac)
+    %     xlabel('Lag (ms)');
+    %
+    %     subplot(2,3,6)
+    %     histogram(log10(ISI),50,'Normalization', 'probability')
+    %     % set(gca, 'XScale', 'log')
+    %     xlabel('ISI (sec)');
+    %     xline(prctile(log10(ISI), 10), '--', '10th prctl')
+    %     xlim(log10([0.0001 1]))
+    %     set(gca, 'XTickLabel', 10.^get(gca, 'xtick'))
+    %
+    % end
+    %
+    % bin_idx_2_6 = zero_idx +2: zero_idx+6;
+    % bin_idx_2_20 = zero_idx +2: zero_idx+20;
+
+
+
+    % bursting propensity
+    burst_idx = sum(ISI < .010) / sum(ISI > .010);
+
+
+    %% wave features
+    wave = waves(ii,:);
+
+    %zero
+    z_idx = nearest_idx(0, win_tvec);
+
+    % trough
+    [t, t_idx] = min(wave);
+
+    % (post-trough) peak
+    [p, p_idx] = max(wave(z_idx:end));
+    p_idx = p_idx+z_idx;
+
+    % pre peak
+    [pre, pre_idx] = max(wave(1:z_idx));
+
+    % duration
+    dur = win_tvec(p_idx) - win_tvec(t_idx);
+
+    % amplitude
+
+    % trough - peak ratio
+    troughPeakRatio = abs(t / p);
+
+    % repolarization slope
+    repolSlope = (p - t) / (win_tvec(p_idx) - win_tvec(t_idx));
+
+    % pre-peak to trough ratio
+    prePeakTroughRatio = abs(pre / t);
+    % trough - peak ratio
+
+    % repol slope: the slope of the linear fit between the trough and 0.3 ms after the trough	mV/ms
+    x =win_tvec(z_idx:nearest_idx(0.3,win_tvec));
+    y = wave(z_idx:nearest_idx(0.3,win_tvec));
+    repol_coeffs = polyfit(x, y, 1); % linear
+    repol_slope = repol_coeffs(1);
+    repol_int = repol_coeffs(2);
+
+    repol_fit = polyval(repol_coeffs, x);
+
+
+    % recovery slope: 	the slope of the linear fit between the post-trough peak and 0.3 ms after the peak	mV/ms
+    x =win_tvec(p_idx:nearest_idx(win_tvec(p_idx)+0.3,win_tvec));
+    y = wave(p_idx:nearest_idx(win_tvec(p_idx)+0.3,win_tvec));
+    recov_coeffs = polyfit(x, y, 1); % linear
+    recov_slope = recov_coeffs(1);
+    recov_int = recov_coeffs(2);
+
+    recov_fit = polyval(recov_coeffs, x);
+
+
+    % plot
+    if plot_flag
+
+        figure(1010)
+        clf
+        hold on
+        plot(win_tvec, wave, 'k', LineWidth=2)
+        plot(win_tvec(p_idx) ,p,".c", 'MarkerSize',20)
+        plot(win_tvec(t_idx) ,t,".g", 'MarkerSize',20)
+        plot(win_tvec(pre_idx) ,pre,".y", 'MarkerSize',20)
+
+        plot([win_tvec(p_idx) win_tvec(p_idx)],[p p*1.25],"-k")
+
+        plot([win_tvec(p_idx) win_tvec(p_idx)],[p p*1.25],"-k")
+        text(win_tvec(p_idx),p*1.25,"peak", 'VerticalAlignment','baseline')
+
+        plot([win_tvec(t_idx) win_tvec(t_idx+3)],[t t],"-k")
+        text(win_tvec(t_idx+3),t,"trough", 'VerticalAlignment','middle')
+
+        plot([win_tvec(pre_idx) win_tvec(pre_idx)],[pre pre*1.25],"-k")
+        text(win_tvec(pre_idx),pre*1.25,"pre-peak", 'VerticalAlignment','baseline')
+
+        %peak trough
+        plot(win_tvec([t_idx,p_idx]),[p,p],"-b")
+        text(win_tvec(t_idx), p*1.1, ['dur: ' num2str(dur,2) 'ms'], 'VerticalAlignment','baseline')
+
+        plot(win_tvec([t_idx,t_idx]),[p,t],"-b")
+        text(win_tvec(t_idx), (p-abs(t))/2, ['Peak-Trough ratio: ' num2str(troughPeakRatio,2) ], 'VerticalAlignment','baseline', 'Rotation',90)
+
+        % pre peak to trough
+        plot(win_tvec([pre_idx,t_idx]),[t,t],"-m")
+
+        plot(win_tvec([pre_idx,pre_idx]),[pre,t],"-m")
+        text(win_tvec(pre_idx), (pre-abs(t))/2, ['prePeak-Trough ratio: ' num2str(prePeakTroughRatio,2) ], 'VerticalAlignment','baseline', 'Rotation',90)
+
+
+        % text((win_tvec(t_idx)-win_tvec(p_idx))+win_tvec(p_idx),p*1.1,num2str(width))
+
+        % repol
+        % plot(win_tvec(z_idx:nearest_idx(0.3,win_tvec)), wave(z_idx:nearest_idx(0.3,win_tvec)), 'r')
+        plot(win_tvec(z_idx:nearest_idx(0.3,win_tvec)), repol_fit, '--r', 'LineWidth',2)
+
+        % recovery
+        plot(win_tvec(p_idx:nearest_idx(win_tvec(p_idx)+0.3,win_tvec)), recov_fit, '--r', 'LineWidth',2)
+
+    end
+
+    %% collect the features
+
+    S.usr.wave(ii,:) = wave;
+    S.usr.wave_tvec(ii,:) = win_tvec; 
+    S.usr.peak(ii) = p;
+    S.usr.trough(ii) = t;
+    S.usr.pre(ii) = pre;
+    S.usr.peak(ii) = p;
+    S.usr.dur(ii) = dur;
+    S.usr.pt_ratio(ii) = troughPeakRatio;
+    S.usr.pre_t_ratio(ii) = prePeakTroughRatio;
+    S.usr.repol_slope(ii) = repol_slope;
+    S.usr.recov_slope(ii) = recov_slope;
+
 end
-
-xbin = xbin_centers(2:end-1); % remove unwanted bins
-zero_idx = find(xbin == 0);
-ac = ac(2:end-1);
-ac(zero_idx) = 0;
-
-
-
-% ac = ac./max(ac); % normalize
-if plot_flag
-    figure
-    clf;
-    subplot(2,3,3)
-    bar(xbin*1000, ac)
-    xlabel('Lag (ms)');
-    
-    subplot(2,3,6)
-    histogram(log10(ISI),50,'Normalization', 'probability')
-    % set(gca, 'XScale', 'log')
-    xlabel('ISI (sec)');
-    xline(prctile(log10(ISI), 10), '--', '10th prctl')
-    xlim(log10([0.0001 1]))
-    set(gca, 'XTickLabel', 10.^get(gca, 'xtick'))
-
-end
-
-bin_idx_2_6 = zero_idx +2: zero_idx+6;
-bin_idx_2_20 = zero_idx +2: zero_idx+20;
-
-%% get spike waveform measures
-
-z_idx = nearest_idx(0, wave_tvec); 
-
-% if max(abs(wave_))
-
-
-best_wave = wave(1, :);
-baseline = mean(best_wave(1:nearest_idx( -.5,wave_tvec))); 
-% best_wave = (best_wave./baseline)-1; 
-
-[p_max, p_idx] = max(best_wave(1:z_idx));
-[t_max, ~] = min(best_wave(p_idx:end));
-t_idx = find(best_wave == t_max); 
-if length(t_idx)>1
-    t_idx = t_idx(1); 
-end
-
-% % check that valley flows
-
-% if wave_tvec(t_idx)< wave_tvec(p_idx)
-%     best_wave = -best_wave;
-%     [p_max, p_idx] = max(best_wave);
-%     [t_max, t_idx] = min(best_wave);
-% end
-
-
-pt_ratio = abs(p_max/t_max);
-width = (wave_tvec(t_idx) - wave_tvec(p_idx));
-
-% properties from:
-% get the valley.
-[val_val, val_idx]= min(best_wave(p_idx:end)); % find the lowest point after the peak.
-
-val_idx = val_idx + p_idx -1; % adjust for peak index.
-
-
-% get the rise using the first positive slope ( T1 in
-% http://humanspatialcognitionlab.org/wp-content/uploads/2014/10/ViskEtal07.pdf)
-[~, rise_idx] = max(diff(diff(best_wave(1:p_idx))));
-
-% [~, rise_idx] = max(diff(best_wave));%> 0, 1);
-
-% fall idx using first negative after peak (T3)
-
-fall_idx = find(best_wave(p_idx:end) <=0, 1);
-fall_idx = fall_idx +p_idx-1; % compensate for max idx
-
-% get the return to baseline ('0' or T5 in the Viskontas et al. 2007
-% example).
-return_idx = find(best_wave(val_idx:end) >=0, 1);
-if isempty(return_idx)
-    return_idx = length(best_wave(val_idx:end)); % if the wave doesnt return just get the last value
-end
-return_idx = return_idx+val_idx-1; %compensate for val_idx offset.
-
-
-% get 'waveform duration' (ms);
-wave_dur = wave_tvec(return_idx) - wave_tvec(rise_idx);
-
-% get the slope ratio
-slopes_ratio = abs((((best_wave(p_idx)) - best_wave(rise_idx)) / (wave_tvec(p_idx) - wave_tvec(rise_idx)))/...
-    (((best_wave(fall_idx)) - best_wave(p_idx)) / (wave_tvec(fall_idx) - wave_tvec(p_idx))));
-
-% get the 25% to 75% interval
-rise_fall_inter =abs( ((wave_tvec(p_idx) - wave_tvec(rise_idx))*.25 +wave_tvec(rise_idx)) - ((wave_tvec(fall_idx) - wave_tvec(p_idx))*.75+wave_tvec(p_idx)));
-
-% get the peak to valley ratio
-pt_ratio = best_wave(p_idx) / best_wave(val_idx);
-
-% bursting propensity
-burst_idx = sum(ISI < .010) / sum(ISI > .010);
-      
-%%
-      
-if plot_flag
-    figure
-    subplot(2,3,[1 2 4 5])
-    cla
-    plot(wave_tvec,best_wave)
-    
-    hold on
-
-
-
-%         plot(wave_tvec([rise_idx,return_idx]),[t_max,t_max]-abs(t_max*.2),"-b")
-        
-
-    plot(wave_tvec([p_idx,t_idx]),[p_max,p_max],"-r")
-    text(wave_tvec(t_idx), p_max - abs(t_max), 'Peak:Vally')
-    y_lim = ylim;
-    ylim([y_lim(1) y_lim(2)*1.1]);
-    plot(wave_tvec([t_idx,t_idx]),[p_max,t_max],"-r")
-    text((wave_tvec(t_idx)-wave_tvec(p_idx))+wave_tvec(p_idx),p_max*1.1,num2str(width))
-    
-    
-        plot(wave_tvec(p_idx),p_max,"*")
-    text(wave_tvec(p_idx),p_max,"peak")
-    plot(wave_tvec(t_idx),t_max,"*")
-    text(wave_tvec(t_idx),t_max,"valley")
-    plot(wave_tvec(fall_idx),best_wave(fall_idx),"*")
-    text(wave_tvec(fall_idx),best_wave(fall_idx), 'fall')
-    plot(wave_tvec(return_idx),best_wave(return_idx),"*")
-    text(wave_tvec(return_idx),best_wave(return_idx),"return")
-    
-    plot(wave_tvec(rise_idx),best_wave(rise_idx),"*")
-    text(wave_tvec(rise_idx),best_wave(rise_idx),"rise")
-    
-    set(gca, 'XTickLabel', get(gca, 'xtick')*1000)
-end
-% width_arrow = annotation('doublearrow');
-% width_arrow.Parent = width_arrow.CurrentAxes;  % associate annotation with current axes
-% % now you can use data units
-% width_arrow.X = [p_idx p_max];
-% width_arrow.Y = [t_idx p_max];
-
-%hold on
-%x=[p_idx,p_max];
-%y=[t_idx,p_max];
-%annotation('doublearrow',x,y,'String','Width')
-%hold off
-
-%% collect the properties
-
-wave_prop.wave = wave;
-wave_prop.firing_rate = spike_rate;
-wave_prop.ISI = diff(S.t{1}); 
-wave_prop.burstingidx = [];
-wave_prop.spike_width = width;
-wave_prop.peak_val = p_max;
-wave_prop.trough_val = t_max;
-wave_prop.pt_ratio = pt_ratio;
-% Viskontas et al. 2006
-wave_prop.wave_dur = wave_dur;
-wave_prop.slopes_ratio = slopes_ratio;
-wave_prop.rise_fall_inter = rise_fall_inter;
-wave_prop.burst_idx = burst_idx;
-
-
-wave_prop.auto_corr.ac = ac; 
-wave_prop.auto_corr.xbin = xbin; 
