@@ -103,9 +103,13 @@ for ii = length(S.t):-1:1
     dur = win_tvec(p_idx) - win_tvec(t_idx);
 
     % amplitude
+    amp = abs(p) - abs(t); 
+
+    % pre- peak symmetry ('ab_ratio' in cell explorer)
+     pre_peak_r =  (p-pre)/(pre+p); 
 
     % trough - peak ratio
-    troughPeakRatio = abs(t / p);
+    troughPeakRatio = abs(p) / abs(t);
 
     % repolarization slope
     repolSlope = (p - t) / (win_tvec(p_idx) - win_tvec(t_idx));
@@ -179,7 +183,13 @@ for ii = length(S.t):-1:1
         % recovery
         plot(win_tvec(p_idx:nearest_idx(win_tvec(p_idx)+0.3,win_tvec)), recov_fit, '--r', 'LineWidth',2)
 
+
+        title(['Cell #: ' num2str(ii)])
+
+            % pause
     end
+
+
 
     %% collect the features
 
@@ -188,8 +198,10 @@ for ii = length(S.t):-1:1
     S.usr.peak(ii) = p;
     S.usr.trough(ii) = t;
     S.usr.pre(ii) = pre;
-    S.usr.peak(ii) = p;
+    S.usr.amp(ii) = amp;
     S.usr.dur(ii) = dur;
+    S.usr.pre_peak_ratio(ii) = pre_peak_r; 
+    S.usr.pre_t_dur(ii)  = win_tvec(t_idx) - win_tvec(pre_idx); 
     S.usr.pt_ratio(ii) = troughPeakRatio;
     S.usr.pre_t_ratio(ii) = prePeakTroughRatio;
     S.usr.repol_slope(ii) = repol_slope;
@@ -197,6 +209,8 @@ for ii = length(S.t):-1:1
 
 
     %% try some basic dimentionality reduction and clustering
+
+    % map_dat = [dur; troughPeakRatio; prePeakTroughRatio; repol_slope; recov_slope]; 
 
     % wave_map = umap
 end
