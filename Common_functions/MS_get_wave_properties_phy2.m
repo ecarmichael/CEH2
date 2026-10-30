@@ -29,7 +29,7 @@ end
 %% loop over cells
 
 
-for ii = length(S.t)
+for ii = length(S.t):-1:1
 
     log_isi = log10(mean(diff(S.t{ii})));
     ISI = diff(S.t{ii});
@@ -83,18 +83,21 @@ for ii = length(S.t)
     %% wave features
     wave = waves(ii,:);
 
-    %zero
+    %key time points
     z_idx = nearest_idx(0, win_tvec);
+    one_idx =  nearest_idx(1, win_tvec);
+    neg_idx = nearest_idx(-.25, win_tvec); 
 
     % trough
     [t, t_idx] = min(wave);
 
     % (post-trough) peak
-    [p, p_idx] = max(wave(z_idx:end));
+    [p, p_idx] = max(wave(z_idx:one_idx));
     p_idx = p_idx+z_idx;
 
     % pre peak
-    [pre, pre_idx] = max(wave(1:z_idx));
+    [pre, pre_idx] = max(wave(neg_idx:z_idx));
+    pre_idx = pre_idx+(neg_idx-1); 
 
     % duration
     dur = win_tvec(p_idx) - win_tvec(t_idx);
@@ -192,4 +195,8 @@ for ii = length(S.t)
     S.usr.repol_slope(ii) = repol_slope;
     S.usr.recov_slope(ii) = recov_slope;
 
+
+    %% try some basic dimentionality reduction and clustering
+
+    % wave_map = umap
 end

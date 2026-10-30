@@ -58,6 +58,7 @@ m = memmapfile(dat_dir, 'Format', {'int16', [nChan, nSamples], 'x'});
 
 %% loop over cells and extract some waveforms.
 waves = NaN(length(S.t), win_samples);
+w_sign = zeros(length(S.t),1);
 
 for ii = 1:length(S.t)
 
@@ -87,13 +88,38 @@ for ii = 1:length(S.t)
 
     % Flip waveforms so their dominant deflection is negative.
     z_idx = nearest_idx(0, win_tvec); 
-    [p, p_idx] = max(abs(waves(ii,:)));
-    [~, t_idx] = max(abs(waves(ii,z_idx:end)));
 
-    if p>0
+
+    %check if the trough is before the zero point and if so, redo the  
+   [all_t all_t_idx] = min(waves(ii,:)); 
+
+   % if all_t_idx < z_idx
+   % 
+   %     this_wave = [];
+   %     for jj = length(start_idx) :-1:1
+   %         % for cc = nChan:-1:1
+   %         this_wave(jj,:) = m.Data.x(S.usr.ch(ii)+1, start_idx(jj) + win_s(1) - (z_idx-all_t_idx):start_idx(jj)+win_s(end)-(z_idx-all_t_idx));
+   % 
+   %         this_base = (this_wave(jj,1:abs(win_s(1))));
+   %         this_wave(jj,:) = (this_wave(jj,:) - mean(this_base))/std(this_base);     %(this_wave(jj,:) - this_base)-1;
+   %         % end
+   %     end
+   % 
+   %     waves(ii,:) = median(this_wave,1);
+   % 
+   % end
+
+
+
+    [t, t_idx] = min((waves(ii,z_idx:end)));
+    [p, p_idx] = max((waves(ii,1:(t_idx+z_idx)-1)));
+    [p_all, p_all_idx] = max(waves(ii,:)); 
+
+    if abs(p)>abs(t)  || t > 0  % p_all_idx < all_t_idx
     %if p_idx < t_idx+z_idx
         % if waves(ii, nearest_idx(0, win_tvec)) > 0
         waves(ii,:) = -waves(ii,:);
+        w_sign(ii) = 1; 
     end
 
     all_waves{ii} = this_wave;
@@ -111,12 +137,21 @@ S_out = MS_get_wave_properties_phy2(S, waves,win_tvec,  1);
 %% quick plot
 figure(101)
 clf
-n = ceil(length(S.t)/6);
+pause(.1)
+n = ceil(length(S.t)/7);
 mm = ceil(length(S.t)/6);
 
 for cc = 1:length(S.t)
     subplot(n,mm,cc)
-    plot(win_s,waves(cc,:))
+    hold on
+        plot(win_s,waves(cc,:), 'k')
+
+    if w_sign(cc)
+        plot(win_s, -waves(cc,:), '--r');
+    else
+        plot(win_s, waves(cc,:),  '--r');
+    end
+    xline(0, 'k:');
     title(sprintf('Unit %d', cc));
 
 end
