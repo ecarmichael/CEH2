@@ -1,7 +1,12 @@
 % % Master_Fig1_lfp_stats
-
+if ispc
 lfp_dir = 'C:\Users\ecarm\Williams Lab Dropbox\Eric Carmichael\Comp_Can_inter\LFP';
 save_dir =  'C:\Users\ecarm\Desktop\REM_figs';
+elseif ismac
+    lfp_dir = '/Users/ecar/Williams Lab Dropbox/Eric Carmichael/Comp_Can_inter/LFP';
+    save_dir =  '/Users/ecar/Desktop/REM_figs';
+end
+
 
 cd(lfp_dir)
 %%  loop over the concatenated sleep LFP data for each session and
