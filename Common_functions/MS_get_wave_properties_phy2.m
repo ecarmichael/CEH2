@@ -141,8 +141,16 @@ for ii = length(S.t):-1:1
     % plot
     if plot_flag
 
-        figure(1010)
-        clf
+        if ii == length(S.t)
+            figure(1010);
+            clf;
+            tiledlayout(ceil(length(S.t)/5), ceil(length(S.t)/4));
+        else
+            nexttile
+
+        end
+        % figure(1010)
+        % clf
         hold on
         plot(win_tvec, wave, 'k', LineWidth=2)
         plot(win_tvec(p_idx) ,p,".c", 'MarkerSize',20)
@@ -152,26 +160,26 @@ for ii = length(S.t):-1:1
         plot([win_tvec(p_idx) win_tvec(p_idx)],[p p*1.25],"-k")
 
         plot([win_tvec(p_idx) win_tvec(p_idx)],[p p*1.25],"-k")
-        text(win_tvec(p_idx),p*1.25,"peak", 'VerticalAlignment','baseline')
+        text(win_tvec(p_idx),p*1.25,"p", 'VerticalAlignment','baseline')
 
         plot([win_tvec(t_idx) win_tvec(t_idx+3)],[t t],"-k")
-        text(win_tvec(t_idx+3),t,"trough", 'VerticalAlignment','middle')
+        text(win_tvec(t_idx+3),t,"t", 'VerticalAlignment','middle')
 
         plot([win_tvec(pre_idx) win_tvec(pre_idx)],[pre pre*1.25],"-k")
-        text(win_tvec(pre_idx),pre*1.25,"pre-peak", 'VerticalAlignment','baseline')
+        text(win_tvec(pre_idx),pre*1.25,"pre-p", 'VerticalAlignment','baseline')
 
         %peak trough
         plot(win_tvec([t_idx,p_idx]),[p,p],"-b")
         text(win_tvec(t_idx), p*1.1, ['dur: ' num2str(dur,2) 'ms'], 'VerticalAlignment','baseline')
 
         plot(win_tvec([t_idx,t_idx]),[p,t],"-b")
-        text(win_tvec(t_idx), (p-abs(t))/2, ['Peak-Trough ratio: ' num2str(troughPeakRatio,2) ], 'VerticalAlignment','baseline', 'Rotation',90)
+        text(win_tvec(t_idx), (p-abs(t))/2, ['PTR: ' num2str(troughPeakRatio,2) ], 'VerticalAlignment','baseline', 'Rotation',90)
 
         % pre peak to trough
         plot(win_tvec([pre_idx,t_idx]),[t,t],"-m")
 
         plot(win_tvec([pre_idx,pre_idx]),[pre,t],"-m")
-        text(win_tvec(pre_idx), (pre-abs(t))/2, ['prePeak-Trough ratio: ' num2str(prePeakTroughRatio,2) ], 'VerticalAlignment','baseline', 'Rotation',90)
+        text(win_tvec(pre_idx), (pre-abs(t))/2, ['prePTR: ' num2str(prePeakTroughRatio,2) ], 'VerticalAlignment','baseline', 'Rotation',90)
 
 
         % text((win_tvec(t_idx)-win_tvec(p_idx))+win_tvec(p_idx),p*1.1,num2str(width))
@@ -192,7 +200,7 @@ for ii = length(S.t):-1:1
 
 
     %% collect the features
-
+    S.usr.isi(ii) = mean(ISI);
     S.usr.wave(ii,:) = wave;
     S.usr.wave_tvec(ii,:) = win_tvec; 
     S.usr.peak(ii) = p;

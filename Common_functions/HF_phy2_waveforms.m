@@ -115,7 +115,7 @@ for ii = 1:length(S.t)
     [p, p_idx] = max((waves(ii,1:(t_idx+z_idx)-1)));
     [p_all, p_all_idx] = max(waves(ii,:)); 
 
-    if abs(p)>abs(t)  || t > 0  % p_all_idx < all_t_idx
+    if  (p_all_idx > all_t_idx) && (all_t_idx > p_all_idx)%abs(p)>abs(t)  || t > 0  %
     %if p_idx < t_idx+z_idx
         % if waves(ii, nearest_idx(0, win_tvec)) > 0
         waves(ii,:) = -waves(ii,:);
@@ -130,37 +130,52 @@ end
 S_out = MS_get_wave_properties_phy2(S, waves,win_tvec,  1);
 
 
+%%
+
+S_out = MS_get_wave_properties_phy2_manual(S, waves,win_tvec,  1);
 
 %% test umap
 
 c_ord = MS_linspecer(3); 
 
-wave_prop = [S_out.usr.dur; S_out.usr.pt_ratio; S_out.usr.pre_t_ratio;S_out.usr.pre_t_dur; S_out.usr.pre_peak_ratio; S_out.usr.repol_slope; S_out.usr.recov_slope]';
+wave_prop = [S_out.usr.fr'; S_out.usr.isi; S_out.usr.dur; S_out.usr.pt_ratio]'; %; S_out.usr.pre_t_ratio;S_out.usr.pre_t_dur; S_out.usr.pre_peak_ratio; S_out.usr.repol_slope; S_out.usr.recov_slope]';
 
-man_class = [0 1 0 1 0 1 1,...
-             1 1 1 1 1 1 1,...
-             0 0 0 0 1 1 1,...
-             1 1 0 1 0 0 0,...
-             0 0 0 0 0 0 0,...
-             0 0 0];
 
-wave_map = umap(wave_prop, 'NumDimensions',3);
+% try a random forest classifier
+
+% t = templateTree(NumVariablesToSample="all"); 
+% Mdl = fitcensemble(X, Y, 'Method', 'Bag', ...
+%     'NumLearningCycles', 100, ...
+%     'Learners', t);
+
+
+
+% man_class = [0 1 0 1 0 1 1,...
+%              1 1 1 1 1 1 1,...
+%              0 0 0 0 1 1 1,...
+%              1 1 0 1 0 0 0,...
+%              0 0 0 0 0 0 0,...
+%              0 0 0];
+man_class = (S_out.usr.dur >.4);
+
+wave_map = umap(wave_prop, 'NumDimensions',2);
 
 figure(900)
 clf
 subplot(2,2,1)
 
-scatter(wave_prop(:,1),wave_prop(:,2), 50,c_ord(man_class+1,:), 'filled')
-xlabel('duration'); 
-ylabel('pt ratio')
+scatter(wave_prop(:,1),wave_prop(:,3), 50,c_ord(man_class+1,:), 'filled')
+xlabel('FR'); 
+ylabel('duration')
 zlabel('pre t ratio')
 
 subplot(2,2,2)
-scatter(wave_map(:,1),wave_map(:,2), 50,c_ord(man_class+1,:), 'filled')
+gscatter(wave_map(:,1),wave_map(:,2), man_class+1,c_ord)
 
 title("2-D Embedding")%% wave characteristics based on NeuroPix Ultra paper
 
 subplot(2,2,3)
+wave_map = umap(wave_prop, 'NumDimensions',3);
 
 scatter3(wave_prop(:,1),wave_prop(:,2), wave_prop(:,3), 50,c_ord(man_class+1,:), 'filled')
 xlabel('duration'); 

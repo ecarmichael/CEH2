@@ -113,7 +113,7 @@ all_csc_dir{end+1} = 'Pox3568_2026-06-21_17-05-21_TFCD2'; ca1_swr_idx{end+1} = {
 all_csc_dir{end+1} = 'Pox3568_2026-06-22_14-58-53_TFCD3'; ca1_swr_idx{end+1} = {'CH118'};  sub_swr_idx{end+1} = {'CH145'};
 all_csc_dir{end+1} = 'Pox3568_2026-06-23_18-12-36_TFCD4'; ca1_swr_idx{end+1} = {'CH70'};  sub_swr_idx{end+1} = {'CH145'};
 all_csc_dir{end+1} = 'Pox3568_2026-06-24_16-56-18_TFCD5'; ca1_swr_idx{end+1} = {'CH75'  'CH71' 'CH115'};  sub_swr_idx{end+1} = {'CH149'}; % CH71 and 115 are also decent for CA1
-all_csc_dir{end+1} = 'SOM1_2026-10-05_15-20-59_LT1';      ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
+all_csc_dir{end+1} = 'SOM1_2026-10-05_15-20-59_LT1';      ca1_swr_idx{end+1} = {'CH108'};  sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'SOM1_2026-10-06_13-42-35_LT2';      ca1_swr_idx{end+1} = {'CH77'};  sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'SOM1_2026-10-07_16-35-07_LT3';      ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
 all_csc_dir{end+1} = 'SOM1_2026-10-08_16-02-31_LT4';       ca1_swr_idx{end+1} = {[]};  sub_swr_idx{end+1} = {[]};
