@@ -1,4 +1,4 @@
-function [p, p_in_mem, p_in_n_mem] = MS_Asmbly_participation(Proj_in, Temp_in, data_in, R_thresh, plot_flag)
+function [p, p_in_mem, p_in_n_mem] = MS_Asmbly_participation(Proj_in, Temp_in, data_in, R_thresh,method, plot_flag)
 %% MS_Asmbly_participation:
 %
 %
@@ -21,8 +21,19 @@ function [p, p_in_mem, p_in_n_mem] = MS_Asmbly_participation(Proj_in, Temp_in, d
 %% initialize
 
 if nargin < 5
-    plot_flag = false; 
+    method = 'SD';
+    plot_flag = false;
+elseif nargin < 6
+    plot_flag = false;
 end
+
+fprintf('Finding members using: <strong>%s</strong>\n', method)
+
+
+p = cell(1, size(Temp_in, 2));
+p_in_mem = nan(1, size(Temp_in, 2));
+p_in_n_mem = nan(1, size(Temp_in, 2));
+
 
 p = [];
 %% loop over assemblies and get the
@@ -32,8 +43,16 @@ for iA = size(Temp_in,2):-1:1
     % grab the 'significant cells in the assembly
     z_weight = zscore(Temp_in(:,iA));
 
-    M_idx = z_weight > 1.96; % pull out the indicies of the best cells.
+    if strcmpi(method, 'otsu')
 
+        [o_data] = abs(Temp_in(:,iA));
+        o_thresh = otsuthresh(o_data);
+        o_thresh = o_thresh*(max(o_data)-min(o_data)) + min(o_data);
+        M_idx = Temp_in(:,iA) > o_thresh;
+    else
+
+        M_idx = z_weight > 1.96; % pull out the indicies of the best cells.
+    end
     % identify significant reactivations.
     R_idx = find(Proj_in(iA,:) > R_thresh);
 

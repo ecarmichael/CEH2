@@ -250,7 +250,7 @@ end
 
 clearvars pre_R_str post_R_str pre_R_str_vec post_R_str_vec k_idx s_idx this*
 
-%% get the pre and post detected assembly stats and the rexpression in wake as well as the wake assemblies present in pre-rem on novel (already have this). 
+%% get the pre and post detected assembly stats and the re-expression in wake as well as the wake assemblies present in pre-rem on novel (already have this). 
 for iA = length(A_out):-1:1 % loop over sessions
     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
 
@@ -320,13 +320,13 @@ for iA = 1:length(A_out) % loop over sessions
     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
 
         % wake
-        [p, p_in_mem, p_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.P_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.wake_data, A_out{iA}{iB}.A_Shuff.w_thresh);
+        [p, p_in_mem, p_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.P_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.wake_data, A_out{iA}{iB}.A_Shuff.w_thresh, 'otsu');
 
         % pre (wake templates)
-        [p_pre, pre_in_mem, pre_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.REM_Pre_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.REM_Pre_data, A_out{iA}{iB}.REM_Pre_stats.R_thresh);
+        [p_pre, pre_in_mem, pre_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.REM_Pre_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.REM_Pre_data, A_out{iA}{iB}.REM_Pre_stats.R_thresh, 'otsu');
 
         % post (wake temps)
-        [p_post, post_in_mem, post_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.REM_Post_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.REM_Post_data, A_out{iA}{iB}.REM_Post_stats.R_thresh);
+        [p_post, post_in_mem, post_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.REM_Post_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.REM_Post_data, A_out{iA}{iB}.REM_Post_stats.R_thresh, 'otsu');
 
         % get the relative changes in participation (cell x cell0 in each assembly.
         p_diff_in = []; p_diff_out = []; A_cent = NaN(size(p)); A_cent_loc = []; 
