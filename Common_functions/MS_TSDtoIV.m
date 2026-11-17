@@ -78,6 +78,21 @@ switch cfg.method
         
         temp_data = tiedrank(temp_data)./length(temp_data); % assign percentile to each data point    
         
+
+    case 'median zscore'
+        if isempty(cfg.bad_idx)
+            [temp_data,mu,sigma] = zscore(temp_data);
+        else
+            mu = nanmedian(temp_data);
+            sigma = nanstd(temp_data);
+            temp_data = (temp_data - mu)/sigma;
+        end
+        switch cfg.dcn
+            case '>'
+                thr_out = mu + cfg.threshold.*sigma; % store threshold for output argument
+            case '<'
+                thr_out = mu - cfg.threshold.*sigma;
+        end
 end
 
 % detect crossings
