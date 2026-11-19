@@ -59,6 +59,8 @@ for ii = length(h_list):-1:1
 
     all_hypno_ratio(ii,:) = [w, sws, rem, q, t]./length(Hypno.data); 
     all_hypno_time(ii,:)  = all_hypno_ratio(ii,:).*(t_dur/60); 
+    parts = strsplit(h_list(ii).name, '_'); 
+    all_hypno_sess{ii} = parts(1:end-4); 
 clear Hypno
 
 end
