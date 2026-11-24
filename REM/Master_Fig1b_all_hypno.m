@@ -108,7 +108,7 @@ for iA = 1:length(A_list)
         out.hypno.td_r = TD_ratio;
 
         title(upper(A_list{iA}))
-        save([inter_dir filesep 'Hypno_data_' upper(A_list{iA})],'out', '-mat')
+        save([inter_dir filesep 'Hypno_data_' upper(A_list{iA}) '.mat'],'out', '-mat')
 
         clearvars out csc emg lfp emg_data
     end

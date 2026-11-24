@@ -27,7 +27,7 @@ elseif nargin < 6
     plot_flag = false;
 end
 
-fprintf('Finding members using: <strong>%s</strong>\n', method)
+% fprintf('Finding members using: <strong>%s</strong>\n', method)
 
 
 p = cell(1, size(Temp_in, 2));
@@ -49,9 +49,11 @@ for iA = size(Temp_in,2):-1:1
         o_thresh = otsuthresh(o_data);
         o_thresh = o_thresh*(max(o_data)-min(o_data)) + min(o_data);
         M_idx = Temp_in(:,iA) > o_thresh;
-    else
-
+    elseif strcmpi(method, 'sd')
         M_idx = z_weight > 1.96; % pull out the indicies of the best cells.
+
+    elseif isnumeric(method)
+        M_idx = z_weight > method; % pull out the indicies of the best cells.
     end
     % identify significant reactivations.
     R_idx = find(Proj_in(iA,:) > R_thresh);
@@ -79,6 +81,8 @@ for iA = size(Temp_in,2):-1:1
 
         p{iA}.out_A = sum(data_in(Proj_in(iA,:) < R_thresh,:)>0',1) ./ sum(Proj_in(iA,:) < R_thresh);
 
+
+        p{iA}.z_weight = z_weight; 
         % keep single value per assemblies for simple plotting/sorting
         % Store the computed probabilities in the output variables
         p_in_mem(iA) = p{iA}.in_A_mem;
