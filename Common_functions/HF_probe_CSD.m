@@ -185,13 +185,13 @@ elseif contains(lower(band), 'theta')
 end
     % compute CSD
     [csd, csd_inds]= csd5pt_Schomburg(data, abs(mode(diff(this_pos))));
-
-
-    % smooth the 
-    % tsd the CSD for easier restriction
     csd_tsd{iS} = tsd(csc_f.tvec, csd,num2cell(csd_inds));
-    % end
 
+
+    [csd_wide, csd_inds]= csd5pt_Schomburg(this_csc.data, abs(mode(diff(this_pos))));
+    csd_wide_tsd{iS} = tsd(csc_f.tvec, csd_wide,num2cell(csd_inds));
+
+  
 
     %% get the mean across events
 
@@ -205,6 +205,8 @@ end
 
         %% average the csd across events
         all_csd = []; all_evt_csc =[];  all_csd_peak = []; 
+        all_wide_csd = []; all_wide_evt_csc =[];  all_wide_csd_peak = []; 
+
         for ee = length(evt_idx):-1:1
 
             all_csd(:,:,ee) = csd_tsd{iS}.data(:,evt_idx(ee)-win_idx:evt_idx(ee)+win_idx);
@@ -212,6 +214,13 @@ end
 
             % lds_method
             all_evt_csc(:,:,ee) = data(:,evt_idx(ee)-win_idx:evt_idx(ee)+win_idx);
+
+            % wide
+            all_wide_csd(:,:,ee) = csd_wide_tsd{iS}.data(:,evt_idx(ee)-win_idx:evt_idx(ee)+win_idx);
+            all_wide_csd_peak(:,ee) = csd_wide_tsd{iS}.data(:,evt_idx(ee));
+
+            % lds_method
+            all_wide_evt_csc(:,:,ee) = data(:,evt_idx(ee)-win_idx:evt_idx(ee)+win_idx);
 
         end
 
@@ -252,15 +261,21 @@ end
     csc_r = restrict(this_csc, 0 ,1500);
     csc_f_r = restrict(csc_f, 0 ,1500);
     csd_r = restrict(csd_tsd{iS}, 0, 1500);
+    csd_wide_r = restrict(csd_wide_tsd{iS}, 0, 1500);
 
     figure(100+iS)
     clf;
-    ax(1) = subplot(2,4,1:2);
+    ax(1) = subplot(2,6,1:2);
 
     imagesc(csd_r.tvec,csd_inds, csd_r.data)
     set(gca, 'YTickLabel', this_pos(csd_inds), 'YDir', 'reverse')
 
-    ax(2) = subplot(2,4,3:4);
+    ax(2) = subplot(2,6,3:4);
+    imagesc(csd_r.tvec,csd_inds, csd_wide_r.data)
+    set(gca, 'YTickLabel', this_pos(csd_inds), 'YDir', 'reverse')
+
+
+    ax(3) = subplot(2,6,5:6);
     hold on
     lab =[]; y_t = [];
     for ii = 1:size(csc_r.data,1)
@@ -273,13 +288,13 @@ end
         y_t(ii) = ii;
     end
     set(gca, 'YTick', y_t, 'YTickLabel', this_pos, 'YDir', 'reverse')
-
+    xline(evt_cent, 'r')
     linkaxes(ax, 'xy')
 
     % ylim([1:size(csc_r.data,1)])
 
     if exist('all_csd', 'var')
-        subplot(2,4,5)
+        subplot(2,6,7)
         cla
         hold on
         imagesc(evt_tvec, csd_inds,mean(all_csd, 3));
@@ -294,7 +309,7 @@ end
         title('Event-averaged CSD');
         xlim([-.1 .1])
 
-        subplot(2,4,6)
+        subplot(2,6,8)
         cla
         plot( normalize(mean(all_csd_peak,2)), csd_inds, '-.');
         set(gca, 'YTickLabel', this_pos(csd_inds), 'YDir', 'reverse')
@@ -302,8 +317,24 @@ end
         title('CSD at peak');
         xlim([-1 1])
 
+        subplot(2,6,9)
+        cla
+        hold on
+        imagesc(evt_tvec, csd_inds,mean(all_wide_csd, 3));
+        % add in the signals. 
+        for ii = 1:size(mean_evt_csc,1)
+            plot(evt_tvec, (mean_evt_csc(ii,:)/50)+ii);
+        end
+        set(gca, 'YTick', y_t, 'YTickLabel', this_pos, 'YDir', 'reverse')
+
+        xlabel('Time (s)');
+        ylabel('CSD position');
+        title('Event-averaged CSD');
+        xlim([-.1 .1])
+
+
         % same thing with the LDS version
-        subplot(2,4,7)
+        subplot(2,6,10)
         cla
         hold on
         imagesc(evt_tvec, 2:length(this_pos)-1,lds_csd);
@@ -317,7 +348,7 @@ end
         title('LDS CSD');
         xlim([-.1 .1])
 
-        subplot(2,4,8)
+        subplot(2,6,11)
         cla
         plot( normalize(lds_csd_peak), 2:length(this_pos)-1, '-.');
         set(gca, 'YTickLabel', this_pos(2:length(this_pos)-1), 'YDir', 'reverse')

@@ -121,8 +121,23 @@ if ~isempty(stats)
 
         case 'KW' % nonparametric version of anova1
             % disp('using ks')
-            [h, p, stats_out.stats] = kruskalwallis([d_mat(1,:)', d_mat(2,:)', d_mat(3,:)']);
+            [p,stats_out.a_tbl, stats_out.stats] = kruskalwallis(d_mat',[], 'off');
+            stats_out.stats.chi2 = stats_out.a_tbl{2,5};
 
+            if p(1) > 0.05; h =1; else h=0; end
+
+            [results, means] = multcompare(stats_out.stats, 'display', 'off');
+            stats_out.stats.std = means(:,2);
+
+            stats_out.m_tbl =  array2table(results,"VariableNames", ...
+                ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
+
+            % print the results
+            if p(1) < 0.05
+                fprintf('<strong>%s</strong> - %c(<strong>%d</strong>,<strong>%d</strong>): <strong>%.2f</strong> p = <strong>%.5f</strong>\n',stats, char(967), stats_out.a_tbl{2,3},stats_out.a_tbl{3,3}, stats_out.stats.chi2, stats_out.a_tbl{2,6})
+            else
+                fprintf('<strong>%s</strong> - %c(%d,%d): %.2f p = %.5f \n',stats, char(967),stats_out.a_tbl{2,3},stats_out.a_tbl{3,3}, stats_out.stats.chi2, stats_out.a_tbl{2,6})
+            end
 
     end
 

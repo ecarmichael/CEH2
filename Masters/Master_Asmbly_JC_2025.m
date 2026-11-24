@@ -215,7 +215,7 @@ for iA = length(A_out):-1:1 % loop over sessions
 end
 
 
-%% recompute the event based reactivaton strength as mean react strength above the R thresh. 
+%% recompute the event based reactivation strength as mean react strength above the R thresh. 
 for iA = length(A_out):-1:1 % loop over sessions
     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
         %post
@@ -250,7 +250,7 @@ end
 
 clearvars pre_R_str post_R_str pre_R_str_vec post_R_str_vec k_idx s_idx this*
 
-%% get the pre and post detected assembly stats and the re-expression in wake as well as the wake assemblies present in pre-rem on novel (already have this). 
+%% get the pre and post detected assembly stats and the rexpression in wake as well as the wake assemblies present in pre-rem on novel (already have this). 
 for iA = length(A_out):-1:1 % loop over sessions
     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
 
@@ -320,13 +320,13 @@ for iA = 1:length(A_out) % loop over sessions
     for iB = length(A_out{iA}):-1:1 % loop over window sizes [not typically used]
 
         % wake
-        [p, p_in_mem, p_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.P_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.wake_data, A_out{iA}{iB}.A_Shuff.w_thresh, 'otsu');
+        [p, p_in_mem, p_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.P_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.wake_data, A_out{iA}{iB}.A_Shuff.w_thresh);
 
         % pre (wake templates)
-        [p_pre, pre_in_mem, pre_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.REM_Pre_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.REM_Pre_data, A_out{iA}{iB}.REM_Pre_stats.R_thresh, 'otsu');
+        [p_pre, pre_in_mem, pre_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.REM_Pre_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.REM_Pre_data, A_out{iA}{iB}.REM_Pre_stats.R_thresh);
 
         % post (wake temps)
-        [p_post, post_in_mem, post_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.REM_Post_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.REM_Post_data, A_out{iA}{iB}.REM_Post_stats.R_thresh, 'otsu');
+        [p_post, post_in_mem, post_in_n_mem] = MS_Asmbly_participation(A_out{iA}{iB}.REM_Post_proj, A_out{iA}{iB}.P_temp,A_out{iA}{iB}.REM_Post_data, A_out{iA}{iB}.REM_Post_stats.R_thresh);
 
         % get the relative changes in participation (cell x cell0 in each assembly.
         p_diff_in = []; p_diff_out = []; A_cent = NaN(size(p)); A_cent_loc = []; 
@@ -788,7 +788,7 @@ set(gcf,'Units','inch','OuterPosition',f_pos);
 
 
 subplot(2,4,1)
-[h, eb, sc] = MS_bar_w_err4(p_open(~novel_idx & ~anx_idx)*100, p_open(H1_idx)*100, p_open(H5_idx)*100, p_open(switch_idx)*100, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'anova1', 1:4, {'Fam' 'Anx', 'Fam Anx', 'Anx Switch'});
+[h, eb, sc] = MS_bar_w_err4(p_open(~novel_idx & ~anx_idx)*100, p_open(H1_idx)*100, p_open(H5_idx)*100, p_open(switch_idx)*100, [f_ord(5,:);f_ord(1,:); .8 .8 .8; .8 .2 .8],1, 'KW', 1:4, {'Fam' 'Anx', 'Fam Anx', 'Anx Switch'});
 eb.LineWidth = 1; eb.CapSize = 6; 
 h.LineWidth = .8; h.EdgeColor = "none";
 sc{1}.SizeData = 5; sc{2}.SizeData = 5; sc{3}.SizeData = 5; sc{4}.SizeData = 5; 
@@ -800,7 +800,7 @@ set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4)
 ylabel('% Open')
 set(gca, 'xticklabel', {'Fam' 'Anx', 'Fam Anx', 'Anx Switch'}, 'XTickLabelRotation', 0, 'fontsize', 7)% 'ytick', [0 .1 1 10]);
 xlim([0.5 4.5])
-yline(1, '--', 'color', hex2rgb('#808080'));
+yline(50, '--', 'color', hex2rgb('#808080'));
 ylim([0 100])
 
 
@@ -884,7 +884,7 @@ figure(1013)
 clf
 set(gcf,'Units','inch','OuterPosition',[1 6 6.25*2 5]);
 
-plt_idx = [3 12 13 15 5 9 14 17 4 8 16 2 7 11 18  ]; 
+plt_idx = [3 12 13 15 5 9 14 17 4 8 16  ]; 
 
 for ii = 1:length(plt_idx)
     if ii < 12
@@ -903,13 +903,46 @@ for ii = 1:length(plt_idx)
     xlim([0 100]); ylim([0 A_out{plt_idx(ii)}{1}.behav.time(end)])
     box off
     set(gca, 'xtick', [], 'ytick', []);
-    title([A_out{plt_idx(ii)}{1}.info.subject '_' A_out{plt_idx(ii)}{1}.info.session], 'FontSize',7)
+    title([A_out{plt_idx(ii)}{1}.info.subject ' ' A_out{plt_idx(ii)}{1}.info.session], 'FontSize',7)
     if ii == 1
         ylabel('Time', 'FontSize',7)
     end
 end
 
-% exportgraphics(gcf, [fig_dir filesep 'FigS_HAT_trace.pdf'], 'ContentType', 'vector');
+exportgraphics(gcf, [fig_dir filesep 'FigS_HAT_trace.pdf'], 'ContentType', 'vector');
+
+% same thing but for LT
+figure(1014)
+clf
+set(gcf,'Units','inch','OuterPosition',[1 6 6.25*2 5]);
+
+plt_idx = [1 6 10 2 7 11 18]; 
+
+for ii = 1:length(plt_idx)
+    if ii < 12
+        c = '#FD161A';
+    else
+        c = '#FFFFFF';
+    end
+    subplot(2,8,ii)
+    hold on
+    % if strcmp(A_out{plt_idx(ii)}{1}.info.session, 'HATDSwitch') || (strcmp(A_out{plt_idx(ii)}{1}.info.subject, 'pv1191') && strcmp(A_out{plt_idx(ii)}{1}.info.session, 'HATD1'))
+    %     rectangle('Position',[50, 0, 100, A_out{plt_idx(ii)}{1}.behav.time(end)], 'facecolor', hex2rgb(c), 'EdgeColor', 'none', 'facealpha', .2)
+    % else
+    %     rectangle('Position',[0, 0, 50, A_out{plt_idx(ii)}{1}.behav.time(end)], 'facecolor', hex2rgb(c), 'EdgeColor', 'none', 'facealpha', .2)
+    % end
+    plot(A_out{plt_idx(ii)}{1}.behav.position(:,1),A_out{plt_idx(ii)}{1}.behav.time, 'k', 'linewidth',2)
+    xlim([0 100]); ylim([0 A_out{plt_idx(ii)}{1}.behav.time(end)])
+    box off
+    set(gca, 'xtick', [], 'ytick', []);
+    title([A_out{plt_idx(ii)}{1}.info.subject ' ' A_out{plt_idx(ii)}{1}.info.session], 'FontSize',7)
+    if ii == 1
+        ylabel('Time', 'FontSize',7)
+    end
+end
+
+exportgraphics(gcf, [fig_dir filesep 'FigS_LT_trace.pdf'], 'ContentType', 'vector');
+
 
 %% grab the number of detectable assemblies across conditions for the novel day
 x_cond_mat = []; 
@@ -1124,6 +1157,7 @@ for iB = length(bin_size):-1:1
     % Maps_wake = these_maps
     Assmbly_tbls{iB}.Pre = table(Pre_Rate, Pre_Sess, Pre_aNum,PRE_Cent', (PRE_Cent > 50)', 'VariableNames', {'Rate', 'Sess', 'aNum', 'Cent', 'Open'}); 
     Assmbly_tbls{iB}.Post = table(Post_Rate, Post_Sess, Post_aNum, POST_Cent', (POST_Cent > 50)', 'VariableNames', {'Rate', 'Sess', 'aNum', 'Cent', 'Open'}); 
+    Assmbly_tbls{iB}.wake = table(wake_rate', wake_Sess', wake_aNum', 'VariableNames', {'Rate', 'Sess', 'aNum'}); 
 
     % wake table
     wake_r_tbl{iB} = table(wake_ctrl', wake_rate', wake_Sess',wake_aNum',  'VariableNames',{'ctrl', 'Rate', 'Sess', 'aNum'});
@@ -1476,19 +1510,26 @@ set(gca,'xtick', [1 2 4 5], 'xticklabel', {'Wake', 'Shuff', 'Post' 'Shuff'}, 'XT
 xlim([0.5 5.5])
 
 
+exportgraphics(gcf, [fig_dir filesep 'Fig_2_Assembly_N.pdf'], 'ContentType', 'vector');
 
 
-% WAKE vs POST vs SHUFF RATE
-subplot(2,4,8); cla
+%% WAKE vs POST vs SHUFF RATE
+diary([fig_dir filesep 'Fig_2_Assembly_aRate.txt'])
+
+f_pos = [1 6 6.25 3.4]; 
+figure(301)
+clf
+set(gcf,'Units','inch','OuterPosition',f_pos);
+
+
+subplot(2,4,1); cla
 fprintf('<strong>Rate wake vs REM</strong>\n')
 rate_data = wake_r_tbl{1}.Rate(~wake_a_idx); 
 ctrl_idx = wake_r_tbl{1}.ctrl(~wake_a_idx);
-
 data_1 = rate_data(ctrl_idx == 0);
 
 rate_data = POST_r_tbl{1}.Rate(~post_r_a_idx); 
 ctrl_idx = POST_r_tbl{1}.ctrl(~post_r_a_idx);
-
 data_3 = rate_data(ctrl_idx == 0);
 
 [h, p, stats] = MS_rain_plot([data_1; data_3]',[zeros(size(data_1)); ones(size(data_3))],[f_ord(2,:); f_ord(5,:)],'ttest2', 1:2, 'wiskers');
@@ -1500,49 +1541,123 @@ set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2, 
 xlabel('Reactivations/min')
 set(gca,'ytick', 1:2, 'yticklabel', {'Wake' 'REMpost'}, 'yTickLabelRotation', 0, 'fontsize', 7);
 ylim([0.5 3.5]); xlim([0 8])
-% if p < 0.05 
-%     fprintf('Wake aRate vs shuffle: <strong> Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),...
-%         mean(wake_r_tbl{1}.Rate(~wake_a_idx & wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & wake_r_tbl{1}.ctrl)),stats.df, stats.tstat, p)
-% else
-%     fprintf('Wake aRate vs shuffle: Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),...
-%         mean(wake_r_tbl{1}.Rate(~wake_a_idx & wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & wake_r_tbl{1}.ctrl)),stats.df, stats.tstat, p)
-% end
 
-% rate per assembly POST 
-% subplot(2,4,8); cla
-% hold on
-% fprintf('<strong>Rate POST vs Shuff</strong>\n')
-% % [h, p, stats] = MS_rain_plot(POST_r_tbl{1}.Rate(~post_r_a_idx & post_r_n_idx),POST_r_tbl{1}.ctrl(~post_r_a_idx & post_r_n_idx),[f_ord(5,:); hex2rgb('#808080')],'ttest2', 3:4, 'wiskers');
-% [h, p, stats] = MS_rain_plot(POST_r_tbl{1}.Rate(~post_r_a_idx ),POST_r_tbl{1}.ctrl(~post_r_a_idx),[f_ord(5,:); hex2rgb('#808080')],'ttest2', 3:4, 'wiskers');
+
+
+% wake vs REM Novel vs Fam
+subplot(2,4,2); cla
+fprintf('<strong>Rate wake vs REM  X Novel Fam </strong>\n')
+
+rate_data = wake_r_tbl{1}.Rate(wake_n_idx);
+ctrl_idx = wake_r_tbl{1}.ctrl(wake_n_idx);
+data_1 = rate_data(ctrl_idx == 0);
+
+rate_data = wake_r_tbl{1}.Rate(wake_f_idx);
+ctrl_idx = wake_r_tbl{1}.ctrl(wake_f_idx);
+data_2 = rate_data(ctrl_idx == 0);
+
+rate_data = POST_r_tbl{1}.Rate(post_r_n_idx);
+ctrl_idx = POST_r_tbl{1}.ctrl(post_r_n_idx);
+data_3 = rate_data(ctrl_idx == 0);
+
+rate_data = POST_r_tbl{1}.Rate(post_r_f_idx);
+ctrl_idx = POST_r_tbl{1}.ctrl(post_r_f_idx);
+data_4 = rate_data(ctrl_idx == 0);
+
+
+hold on
+[h, p, stats] = MS_rain_plot([data_1; data_2]',[zeros(size(data_1)); ones(size(data_2));],[f_ord(2,:); f_ord(5,:)],'ttest2', 1:2, 'wiskers');
+h(1).sc{1}.SizeData = 1; h(2).sc{1}.SizeData = 1; 
+h(1).sc{1}.MarkerEdgeColor = 'none'; h(2).sc{1}.MarkerEdgeColor = 'none';
+
+[h, p, stats] = MS_rain_plot([data_3; data_4]',[zeros(size(data_3)); ones(size(data_4));],[f_ord(2,:); f_ord(5,:)],'ttest2', 4:5, 'wiskers');
+h(1).sc{1}.SizeData = 1; h(2).sc{1}.SizeData = 1; 
+h(1).sc{1}.MarkerEdgeColor = 'none'; h(2).sc{1}.MarkerEdgeColor = 'none'; 
 % 
-% h(1).sc{1}.SizeData = 1; h(2).sc{1}.SizeData = 1; 
-% h(1).sc{1}.MarkerEdgeColor = 'none'; h(2).sc{1}.MarkerEdgeColor = 'none'; 
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2, 'LineWidth', 1)
+xlabel('Reactivations/min')
+set(gca,'ytick', [1 2 4 5], 'yticklabel', {'Wake Nov' 'Wake Fam' 'REM Nov' 'REM FAM'}, 'yTickLabelRotation', 0, 'fontsize', 7);
+ylim([0.5 5.5]); xlim([0 8])
+
+
+
+% FAM vs ANX X wake vs REM 
+subplot(2,4,3)
+rate_data = wake_r_tbl{1}.Rate(wake_f_idx);
+ctrl_idx = wake_r_tbl{1}.ctrl(wake_f_idx);
+data_1 = rate_data(ctrl_idx == 0);
+
+rate_data = wake_r_tbl{1}.Rate(wake_a_idx);
+ctrl_idx = wake_r_tbl{1}.ctrl(wake_a_idx);
+data_2 = rate_data(ctrl_idx == 0);
+
+rate_data = POST_r_tbl{1}.Rate(post_r_f_idx);
+ctrl_idx = POST_r_tbl{1}.ctrl(post_r_f_idx);
+data_3 = rate_data(ctrl_idx == 0);
+
+rate_data = POST_r_tbl{1}.Rate(post_r_a_idx);
+ctrl_idx = POST_r_tbl{1}.ctrl(post_r_a_idx);
+data_4 = rate_data(ctrl_idx == 0);
+
+
+hold on
+[h, p, stats] = MS_rain_plot([data_1; data_2]',[zeros(size(data_1)); ones(size(data_2));],[f_ord(5,:); f_ord(1,:)],'ttest2', 1:2, 'wiskers');
+h(1).sc{1}.SizeData = 1; h(2).sc{1}.SizeData = 1; 
+h(1).sc{1}.MarkerEdgeColor = 'none'; h(2).sc{1}.MarkerEdgeColor = 'none';
+
+[h, p, stats] = MS_rain_plot([data_3; data_4]',[zeros(size(data_3)); ones(size(data_4));],[f_ord(5,:); f_ord(1,:)],'ttest2', 4:5, 'wiskers');
+h(1).sc{1}.SizeData = 1; h(2).sc{1}.SizeData = 1; 
+h(1).sc{1}.MarkerEdgeColor = 'none'; h(2).sc{1}.MarkerEdgeColor = 'none'; 
 % 
-% set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*4, 'LineWidth', 1)
-% xlabel('Reactivations/min')
-% set(gca,'ytick', 1:4, 'yticklabel', {'Wake', 'Shuff', 'Post' 'Shuff'}, 'yTickLabelRotation', 0, 'fontsize', 7);
-% ylim([.5 4.5]); xlim([0 8])
-% 
-% if p < 0.05 
-%     fprintf('POST aRate vs shuffle: <strong> Post aRate mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),...
-%         mean(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),stats.df, stats.tstat, p)
-% else
-%     fprintf('POST aRate vs shuffle: Wake mean:  %.2f%s %.2f | shuff mean: %.2f%s %.2f, t(%d): %.2f, p = %.3f\n', mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),...
-%         mean(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & POST_r_tbl{1}.ctrl==1)),stats.df, stats.tstat, p)
-% end
-% 
-% [h, p, ~, stats] = ttest2(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl), POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl));
-% if h 
-%     fprintf('wake aRate vs POST: <strong> Wake mean:  %.2f%s %.2f | POST mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f</strong>\n', mean(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),...
-%         mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),stats.df, stats.tstat, p)
-% else
-%     fprintf('wake aRate vs POST: Wake mean:  %.2f%s %.2f | POST mean: %.2f%s %.2f, t(%d): %.2f, p = %.5f\n', mean(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),177, MS_SEM(wake_r_tbl{1}.Rate(~wake_a_idx & ~wake_r_tbl{1}.ctrl)),...
-%         mean(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),177, MS_SEM(POST_r_tbl{1}.Rate(~post_r_a_idx & ~POST_r_tbl{1}.ctrl)),stats.df, stats.tstat, p)
-% end
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2, 'LineWidth', 1)
+xlabel('Reactivations/min')
+set(gca,'ytick', [1 2 4 5], 'yticklabel', {'Wake FAM' 'Wake ANX' 'REM FAM' 'REM ANX'}, 'yTickLabelRotation', 0, 'fontsize', 7);
+ylim([0.5 5.5]); xlim([0 8])
+
+
+
+subplot(2,4,4); cla
+fprintf('<strong>Sess: Ctrl vs Anx Wake Rate A:</strong> \n')
+[h, eb, sc, p, stats] = MS_bar_w_err(data_1,data_2, [hex2rgb('#808080'); f_ord(1,:)],1, 'ttest2', 1:2); 
+eb.LineWidth = 1; %eb.Color = 'k'; eb.LineStyle = "--"; 
+h.LineWidth = 1; %h.FaceColor = "none";
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
+sc{1}.MarkerFaceColor = 'k'; sc{2}.MarkerFaceColor = 'k'; 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
+
+fprintf('<strong>Sess: Ctrl vs Anx REM Rate A:</strong> \n')
+[h, eb, sc, p, stats] = MS_bar_w_err(data_3,data_4, [hex2rgb('#808080'); f_ord(1,:)],1, 'ttest2', 4:5); 
+eb.LineWidth = 1; eb.Color = 'k'; %eb.LineStyle = "--"; 
+h.LineWidth = 1; h.FaceColor = "none"; h.EdgeColor = f_ord(1,:);
+sc{1}.SizeData = 5; sc{2}.SizeData = 5; 
+sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = f_ord(1,:); 
+sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none';
+
+% ylim([0 5])
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
+ylabel({'Wake'; 'Activations/min'})
+set(gca, 'ytick', [1 2 4 5],'xticklabel', {'Wake Nov' 'Wake Fam' 'REM Nov' 'REM Fam'}, 'XTickLabelRotation', 0, 'fontsize', 7);
+xlim([0.5 5.5])
+
+
+% number of Sig A fam vs Anx
+data_1 = Assmbly_tbls{iB}.wake.Rate(wake_n_idx & ~wake_a_idx);
+data_2 = Assmbly_tbls{iB}.wake.Rate(wake_f_idx & ~wake_a_idx);
+
+data_3 = Assmbly_tbls{iB}.Post.Rate(post_f_idx & ~post_a_idx);
+data_4 = Assmbly_tbls{iB}.Post.Rate(post_a_idx );
+
+subplot(2,4,7)
+fprintf('<strong>Ctrl vs Anx Post Rate:</strong> \n')
+data_1 = Assmbly_tbls{iB}.Post.Rate(post_f_idx & ~post_a_idx);
+data_2 = Assmbly_tbls{iB}.Post.Rate(post_a_idx );
+
+[h, eb, sc, p, stats] = MS_bar_w_err(data_1, data_2, [hex2rgb('#808080'); f_ord(1,:)],1, 'ttest2', 1:2); 
+
 
 % save it
 exportgraphics(gcf, [fig_dir filesep 'Fig_2_Assembly_aRate.pdf'], 'ContentType', 'vector');
-
+diary off
 %% MultiComps
 % 
 % % N assemblies wake vs REM vs shuffles
@@ -1687,6 +1802,7 @@ else
 end
 
 
+
 %% Figure 5: Anxiety vs familiar
 
 f_pos = [1 6 6.25 3.4]; 
@@ -1733,7 +1849,7 @@ sc{1}.MarkerFaceColor = hex2rgb('#808080'); sc{2}.MarkerFaceColor = f_ord(1,:);
 sc{1}.MarkerEdgeColor = 'none'; sc{2}.MarkerEdgeColor = 'none'; 
 ylim([0 5])
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength',get(gca, 'TickLength')*2)
-ylabel({'Mean Wake'; 'Activations/min'})
+ylabel({'Wake'; 'Activations/min'})
 set(gca, 'ytick', [0 2.5 5],'xticklabel', {'Ctrl' 'Anx'}, 'XTickLabelRotation', 0, 'fontsize', 7);
 xlim([0.5 3.5])
 
@@ -1838,9 +1954,9 @@ else
         mean(Assmbly_tbls{iB}.Post.Rate(anx_idx)),177, MS_SEM(Post_r_Asmbly(anx_idx)),stats.df, stats.tstat, p)
 end
 
-exportgraphics(gcf, [fig_dir filesep 'Fig_5_Anx.pdf'], 'ContentType', 'vector');
+% exportgraphics(gcf, [fig_dir filesep 'Fig_5_Anx.pdf'], 'ContentType', 'vector');
 
-%% %%%% same thing but Rate
+%% %%%% same thing but Rate on a session mean basis
 % set up plots for counts
 f_pos = [3 6 6 4]; clf; 
 fig = figure('Name','Assembly Quantification: Rate', 'Units','inch','position',f_pos);

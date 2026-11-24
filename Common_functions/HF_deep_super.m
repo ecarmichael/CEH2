@@ -76,7 +76,7 @@ elseif strcmpi(probe, '5x12')
     xcoords   = xcoords(:);
     xcoords_off   = [ (ones(1,16)*320)+10, x_space, x_space+160, x_space +480, x_space+640];                    %repmat([1 2 3 4]', 1, Nchannels/4);
     xcoords_off = xcoords_off(:);
-    ref_idx = [];
+    ref_idx = [1 2 3];
 end
 
 n = length(shank);
@@ -259,7 +259,7 @@ for ii = 1:length(shank)
     b.CData = flipud(c_ord);
     b.EdgeColor = 'none';
     
-    plot(ycoords(this_ch), s_fit, '-k')
+    plot(ycoords(this_ch(~this_idx)), s_fit(~isnan(s_fit)), '-k')
     scatter(ycoords(deep_idx), s_fit(deep_idx), 50, 'filled','markerfacecolor',  'b')
     scatter(ycoords(super_idx), s_fit(super_idx), 50, 'filled','markerfacecolor',  'r')
 
