@@ -42,7 +42,17 @@ end
 if isempty(cfg.fc) % no filelist provided, load everything
     
     cfg.fc = FindFiles('*.ncs'); % swapped to lower case.
-    
+
+    % sort based on csc number. 
+    csc_num = []; 
+    for ii = length(cfg.fc):-1:1
+        
+        p = strsplit(cfg.fc{ii}, filesep); 
+        csc_num(ii) = str2double(extract(p{end}, digitsPattern));
+    end
+
+    [~, s_idx] = sort(csc_num);
+    cfg.fc = cfg.fc(s_idx); 
 else
     
     if ~isa(cfg.fc,'cell')
@@ -55,7 +65,7 @@ if isempty(FindFiles(cfg.fc{1}))
     error('File does not exist in directory. Check spelling.');
 end
 
-fc = sort(cfg.fc);
+fc = cfg.fc;
 nFiles = length(fc);
 
 % track sample counts for different files, throw error if not equal
